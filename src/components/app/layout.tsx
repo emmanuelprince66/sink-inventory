@@ -1,0 +1,16 @@
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSideBar";
+import { TopBar } from "./TopBar";
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <main className=" w-full bg-primary-green-600 ">
+        <TopBar />
+
+        <div className="p-4 h-100vh w-full">{children}</div>
+      </main>
+    </SidebarProvider>
+  );
+}
