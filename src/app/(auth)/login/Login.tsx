@@ -57,6 +57,7 @@ const Login = () => {
                     <FormControl>
                       <Input
                         type="password"
+                        showPasswordToggle
                         placeholder="Enter password"
                         {...field}
                         onChange={(e) => {

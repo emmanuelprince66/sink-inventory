@@ -3,7 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useSignUpMutation } from "@/api/auth/signup-user";
+import { useVerifyOtpMutation } from "@/api/auth/verify-otp";
 import { isValidPhoneNumber } from "react-phone-number-input";
+import { useToast } from "../toast/useToast";
+import { useState } from "react";
 
 // Define form schema
 const formSchema = z
@@ -43,7 +46,19 @@ const formSchema = z
 export type SignUpFormValues = z.infer<typeof formSchema>;
 
 export const useSignUpForm = () => {
+  const { showToast } = useToast();
+
   const { mutate: signup, isPending } = useSignUpMutation();
+  const { mutate: verifyOtp, isPending: isVerifying } = useVerifyOtpMutation();
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState("");
+
+  const [userEmail, setUserEmail] = useState("");
+
+  const closeOtpModal = () => {
+    setShowOtpModal(false);
+    setOtp("");
+  };
 
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(formSchema),
@@ -57,24 +72,72 @@ export const useSignUpForm = () => {
     },
     mode: "onChange",
   });
+  const handleVerifyOtp = () => {
+    if (!otp || otp.length !== 6) {
+      showToast("Please enter a valid 6-digit OTP", "error");
+      return;
+    }
+
+    verifyOtp(
+      { token: otp, email: userEmail },
+      {
+        onSuccess: (response) => {
+          showToast("Account verified successfully!", "success");
+          closeOtpModal();
+          // You might want to redirect or perform other actions here
+          // For example:
+          // router.push('/dashboard');
+        },
+        onError: (error) => {
+          showToast(error.message || "Invalid OTP. Please try again.", "error");
+        },
+      }
+    );
+  };
+
+  const handleResendOtp = async () => {
+    try {
+      // Replace with your actual OTP resend API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      showToast("OTP resent successfully!", "success");
+    } catch (error) {
+      showToast("Failed to resend OTP. Please try again.", "error");
+    }
+  };
 
   const onSubmit = (values: SignUpFormValues) => {
-    console.log("Form submitted:", values);
-
     const payload = {
       firstname: values.firstname,
       lastname: values.lastname,
-      phone: values.phone, // Will be in international format (e.g. "+12133734253")
+      phone: values.phone,
       email: values.email,
       password: values.password,
     };
 
-    signup(payload);
+    signup(payload, {
+      onSuccess: () => {
+        setUserEmail(values.email);
+        setShowOtpModal(true);
+        showToast(
+          "Signup successful! Check your email for the OTP,Pin Valid For 10 minutes.",
+          "success"
+        );
+      },
+      onError: (error) => {
+        // Your existing error handling
+      },
+    });
   };
-
   return {
     form,
     onSubmit,
+    closeOtpModal,
+    showOtpModal,
+    handleVerifyOtp,
+    handleResendOtp,
+    otp,
+    isVerifying,
+    setOtp,
     formSchema,
     isSubmitting: isPending,
   };

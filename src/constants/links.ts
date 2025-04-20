@@ -1,14 +1,13 @@
 import {
-  Calendar,
   Home,
-  Inbox,
-  Search,
   Settings,
-  LogOut,
   UsersRound,
   DollarSign,
+  Handshake,
+  AirVent,
   SquarePercent,
   ChartSpline,
+  PcCase,
   ShoppingBag,
 } from "lucide-react";
 export const links = [
@@ -21,6 +20,21 @@ export const links = [
     title: "Customers",
     url: "/customers",
     icon: UsersRound,
+  },
+  {
+    title: "Supplier",
+    url: "/supply",
+    icon: AirVent,
+  },
+  {
+    title: "POS",
+    url: "/pos",
+    icon: PcCase,
+  },
+  {
+    title: "Business",
+    url: "/business",
+    icon: Handshake,
   },
   {
     title: "Expenses",

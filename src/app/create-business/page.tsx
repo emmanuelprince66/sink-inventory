@@ -1,5 +1,5 @@
-import CreateBusiness from "./CreateBusiness";
+import CreateBusinessForm from "./CreateBusinessForm";
 
 export const profile = () => {
-  return <CreateBusiness />;
+  return <CreateBusinessForm />;
 };

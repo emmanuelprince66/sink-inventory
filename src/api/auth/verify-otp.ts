@@ -1,9 +1,8 @@
 import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
-import { useToast } from "@/hooks/toast/useToast";
 
-const signUpUser = async (body: any) => {
-  const response = await fetch(`/api/signup`, {
+const verifyUserOTP = async (body: any) => {
+  const response = await fetch(`/api/verify-otp`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,26 +18,24 @@ const signUpUser = async (body: any) => {
   return response.json();
 };
 
-type QueryFnType = typeof signUpUser;
+type QueryFnType = typeof verifyUserOTP;
 
-export const useSignUpMutation = (config?: MutationConfig<QueryFnType>) => {
-  const { showToast } = useToast();
-
+export const useVerifyOtpMutation = (config?: MutationConfig<QueryFnType>) => {
   return useMutation({
-    mutationKey: [queryKey.auth.signup],
-    mutationFn: signUpUser,
+    mutationKey: [queryKey.auth.verifyOtp],
+    mutationFn: verifyUserOTP,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error logging in:", error);
 
       // Extract the most specific error message available
-      const errorMessage =
-        error?.details?.message ||
-        error?.error ||
-        error?.message ||
-        "Error logging in";
+      //   const errorMessage =
+      //     error?.details?.message ||
+      //     error?.error ||
+      //     error?.message ||
+      //     "Error logging in";
 
-      showToast(errorMessage, "error");
+      //   showToast(errorMessage, "error");
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

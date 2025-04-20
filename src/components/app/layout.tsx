@@ -9,7 +9,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className=" w-full bg-primary-green-600 ">
         <TopBar />
 
-        <div className="p-4 h-100vh w-full">{children}</div>
+        <div className="p-4 h-[80vh]  w-full md:w-[80%] mx-auto">
+          {children}
+        </div>
       </main>
     </SidebarProvider>
   );

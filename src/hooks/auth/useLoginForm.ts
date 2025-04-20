@@ -2,44 +2,78 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useLoginMutation } from "@/api/auth/login-user";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/toast/useToast";
 
-// Enhanced form schema with proper email validation
+// Enhanced form schema with comprehensive validation
 const formSchema = z.object({
   email: z
     .string()
     .min(1, { message: "Email is required" })
     .email({ message: "Please enter a valid email address" })
-    .max(100, { message: "Email must be less than 100 characters" }),
+    .max(100)
+    .transform((val) => val.toLowerCase().trim()),
   password: z
     .string()
-    .min(6, { message: "Password must be at least 6 characters" })
-    .max(50, { message: "Password must be less than 50 characters" })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, {
+    .min(8, { message: "Password must be at least 8 characters" })
+    .max(50)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/, {
       message:
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+        "Password must contain at least one uppercase, lowercase, number, and special character",
     }),
 });
 
 export type LoginFormValues = z.infer<typeof formSchema>;
 
-export const useLoginForm = () => {
-  const { mutate: login, isPending } = useLoginMutation();
+export const useLoginForm = (options?: { redirectTo?: string }) => {
+  const router = useRouter();
+  const { showToast } = useToast();
+
+  const {
+    mutate: login,
+    isPending,
+    isError,
+    error,
+  } = useLoginMutation({
+    onSuccess: () => {
+      showToast("Login successful", "success");
+      router.push(options?.redirectTo || "/overview");
+      router.refresh();
+    },
+    onError: (error) => {
+      showToast(error?.message || "An error occurred during login", "error");
+    },
+  });
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
     },
-    mode: "onChange", // Changed to onChange for better responsiveness
+    mode: "onBlur", // More performant than onChange for complex validation
+    criteriaMode: "all", // Show all validation errors at once
   });
 
   const onSubmit = (values: LoginFormValues) => {
-    login(values); // No need for async/await since mutate is already a promise
+    login(values, {
+      onError: (error) => {
+        // Handle specific API errors
+        if (error.statusCode === 401) {
+          form.setError("password", {
+            type: "manual",
+            message: "Invalid credentials",
+          });
+        }
+      },
+    });
   };
 
   return {
     form,
     onSubmit,
     isSubmitting: isPending,
+    isError,
+    error,
   };
 };

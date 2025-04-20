@@ -2,8 +2,8 @@ import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 
-const signUpUser = async (body: any) => {
-  const response = await fetch(`/api/signup`, {
+const createBusiness = async (body: any) => {
+  const response = await fetch(`/api/create-business`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,17 +19,19 @@ const signUpUser = async (body: any) => {
   return response.json();
 };
 
-type QueryFnType = typeof signUpUser;
+type QueryFnType = typeof createBusiness;
 
-export const useSignUpMutation = (config?: MutationConfig<QueryFnType>) => {
+export const useCreateBusinessMutation = (
+  config?: MutationConfig<QueryFnType>
+) => {
   const { showToast } = useToast();
 
   return useMutation({
-    mutationKey: [queryKey.auth.signup],
-    mutationFn: signUpUser,
+    mutationKey: [queryKey.business.createBusiness],
+    mutationFn: createBusiness,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
-      console.log("Error logging in:", error);
+      console.log("Error creating business:", error);
 
       // Extract the most specific error message available
       const errorMessage =
@@ -42,7 +44,7 @@ export const useSignUpMutation = (config?: MutationConfig<QueryFnType>) => {
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      // showToast("Successfully signed up", "success");
+      showToast("Business Created Sucessfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

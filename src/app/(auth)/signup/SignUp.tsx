@@ -1,3 +1,4 @@
+// SignUp.tsx
 "use client";
 
 import WelcomeScreen from "@/components/app/WelcomeScreen";
@@ -15,11 +16,25 @@ import { Spinner } from "@/components/ui/spinner";
 import { useSignUpForm } from "@/hooks/auth/useSignUpForm";
 import Link from "next/link";
 import "react-phone-number-input/style.css";
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { PhoneInput } from "@/components/app/PhoneInput";
+import { CustomModal } from "@/components/app/CustomModal";
+import { OtpInput } from "@/components/app/OtpInput";
 
 const SignUp = () => {
-  const { form, onSubmit, isSubmitting } = useSignUpForm();
+  const {
+    form,
+    onSubmit,
+    otp,
+    setOtp,
+    isSubmitting,
+    showOtpModal,
+    closeOtpModal,
+    handleVerifyOtp,
+    handleResendOtp,
+    isVerifying,
+  } = useSignUpForm();
+
+  console.log("otp", otp);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -159,6 +174,43 @@ const SignUp = () => {
           </Link>
         </div>
       </div>
+
+      {/* verify otp modal */}
+      <CustomModal
+        isOpen={showOtpModal} // FIXED: Removed the negation
+        onClose={closeOtpModal}
+        trigger={true}
+        title="Verify OTP"
+        description="Enter the 6-digit code sent to your email"
+      >
+        <div className="grid gap-4 py-4">
+          <OtpInput
+            value={otp}
+            onChange={(value) => setOtp(value)}
+            length={6}
+          />
+
+          <div className="flex flex-col gap-2 mt-4">
+            <Button
+              className="w-full h-[48px]"
+              onClick={handleVerifyOtp}
+              disabled={isVerifying || otp.length !== 6}
+            >
+              {isVerifying ? <Spinner /> : "Verify OTP"}
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-[48px]"
+              onClick={handleResendOtp}
+              disabled={isVerifying}
+            >
+              Resend OTP
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
+      {/* verify otp modal end */}
     </div>
   );
 };

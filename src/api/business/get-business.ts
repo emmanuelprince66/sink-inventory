@@ -7,10 +7,10 @@ import {
 } from "@/lib/react-query";
 
 export async function getAllBusiness() {
-  const response = await fetch("/api/follow-up/uncompleted", { method: "GET" });
+  const response = await fetch("/api/businesses", { method: "GET" });
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || "Failed to fetch follow ups");
+    throw new Error(errorData.message || "Failed to fetch  businesses");
   }
   const data = await response.json();
   return data;
@@ -19,7 +19,7 @@ export async function getAllBusiness() {
 type QueryFnType = typeof getAllBusiness;
 type options = QueryConfigType<QueryFnType>;
 
-export const useGetAllFollowUpQuery = (config?: options) => {
+export const useGetAllBusinessQuery = (config?: options) => {
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
       if ([404, 401].includes(error.status)) return false;
