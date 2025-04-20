@@ -1,5 +1,5 @@
-import { BusinessType } from "@/constants/types";
 import { Ellipsis, Pencil, Trash2 } from "lucide-react";
+import { BusinessType } from "./types/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
