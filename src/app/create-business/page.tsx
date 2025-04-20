@@ -1,5 +1,5 @@
 import CreateBusinessForm from "./CreateBusinessForm";
 
-export const profile = () => {
+export default function CreateBusinessPage() {
   return <CreateBusinessForm />;
-};
+}
