@@ -4,11 +4,11 @@ import { cookies } from "next/headers";
 import { BaseUrl } from "@/constants/base-url";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
-  // Get the access token from cookies
-  const cookieStore = await cookies(); // cookies() is synchronous
+  const { params } = context;
+  const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
   if (!accessToken) {
@@ -18,23 +18,15 @@ export async function GET(
     );
   }
 
-  const id = params.id;
-  const search = req.nextUrl.searchParams.get("search") || "";
-  const status = req.nextUrl.searchParams.get("status") || "";
-
-  console.log("URL:", req.url);
-  console.log("ID:", id);
-  console.log("Search:", search);
-  console.log("Status:", status);
+  const search = request.nextUrl.searchParams.get("search") || "";
+  const status = request.nextUrl.searchParams.get("status") || "";
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}customer/${params.id}/`);
-  // Add query parameters if they exist
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
 
   try {
-    // Make the API request
     const response = await fetch(apiUrl.toString(), {
       method: "GET",
       headers: {
@@ -45,7 +37,6 @@ export async function GET(
     });
 
     if (!response.ok) {
-      // If the API response is not OK, forward the error
       const errorData = await response.json();
       return NextResponse.json(
         { error: errorData.message || "Failed to fetch customer data" },
@@ -53,10 +44,7 @@ export async function GET(
       );
     }
 
-    // Parse the successful response
     const data = await response.json();
-
-    // Return the data to the frontend
     return NextResponse.json({
       success: true,
       data,
