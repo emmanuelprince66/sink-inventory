@@ -10,13 +10,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
+import { CircleAlert } from "lucide-react";
 
 const AddCustomer = () => {
   const { form, onSubmit } = useCustomerHook();
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           {/* First Name and Last Name in same row */}
           <FormField
             control={form.control}
@@ -37,7 +38,7 @@ const AddCustomer = () => {
             name="phone"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Phone</FormLabel>
+                <FormLabel>Phone Number</FormLabel>
                 <FormControl>
                   <Input placeholder="Phone number...." {...field} />
                 </FormControl>
@@ -49,12 +50,12 @@ const AddCustomer = () => {
           {/* Email Field */}
           <FormField
             control={form.control}
-            name="wallet"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Wallet</FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Wallet address" {...field} />
+                  <Input placeholder="Enter email...." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -63,7 +64,7 @@ const AddCustomer = () => {
 
           <Button
             type="submit"
-            className="w-full h-[48px]"
+            className="w-full h-[48px] "
             // disabled={isSubmitting}
           >
             Save
@@ -71,6 +72,19 @@ const AddCustomer = () => {
           </Button>
         </form>
       </Form>
+
+      <div
+        className={
+          "flex w-full border border-blue-600 mt-4 rounded-sm  items-start gap-3 bg-blue-200 text-blue-600 p-3"
+        }
+      >
+        <CircleAlert />
+
+        <p className="text-blue-600 text-sm">
+          You should ask your customers for permission before you subscribe them
+          to your marketing emails or SMS
+        </p>
+      </div>
     </div>
   );
 };

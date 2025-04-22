@@ -1,27 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useDebounce } from "./useDebounce";
 
 const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
   phone: z.string().min(1, "Phone number is required"),
-  wallet: z.string().min(1, "Wallet address is required"),
+  email: z
+    .string()
+    .email({ message: "Please enter a valid email address" })
+    .min(1, "Email address is required"),
 });
 
 export type CustomerFormValues = z.infer<typeof CustomerSchema>;
 
+// Create this custom hook in your hooks folder
+
 export const useCustomerHook = () => {
+  const business_id = useBusinessStore((state) => state.business_id);
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms debounce
+
+  const filterOptions = [
+    "All",
+    "Most Active",
+    "Least Active",
+    "Debts",
+  ] as const;
+  const [activeFilter, setActiveFilter] = useState<
+    (typeof filterOptions)[number]
+  >(filterOptions[0]);
+
+  // Only search when term has at least 3 characters
+  const searchTerm = debouncedSearchTerm.length >= 3 ? debouncedSearchTerm : "";
+
+  const {
+    data: CustomerData,
+    isLoading: CustomerLoading,
+    error: CustomerError,
+  } = useGetCustomerQuery({
+    params: {
+      id: business_id,
+      search: searchTerm,
+      status: activeFilter === "All" ? "" : activeFilter,
+    },
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Refetch data when filter changes
+
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
+  const [openUpdateCustomerWalletModal, setOpenUpdateCustomerWalletModal] =
+    useState(false);
+
+  const closeOpenUpdateCustomerWalletModal = () =>
+    setOpenUpdateCustomerWalletModal(false);
+  const openUpdateCustomerWalletModalFunc = () =>
+    setOpenUpdateCustomerWalletModal(true);
   const closeOpenCustomerModal = () => setOpenAddCustomerModal(false);
   const openCustomerModalFunc = () => setOpenAddCustomerModal(true);
+
+  const handleRowClick = (row: any) => {
+    console.log("Clicked row:", row.original);
+    console.log("Clicked row ID:", row.id);
+
+    // Perform any additional actions here
+  };
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(CustomerSchema),
     defaultValues: {
       name: "",
       phone: "",
-      wallet: "",
+      email: "",
     },
     mode: "onChange",
   });
@@ -30,18 +85,39 @@ export const useCustomerHook = () => {
     const payload = {
       name: values.name,
       phone: values.phone,
-      wallet: values.wallet,
+      email: values.email,
     };
-
     console.log("payload", payload);
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  const handleFilterChange = (filter: (typeof filterOptions)[number]) => {
+    setActiveFilter(filter);
+  };
+
+  console.log("CustomerData", CustomerData);
 
   return {
     openAddCustomerModal,
     form,
     closeOpenCustomerModal,
     onSubmit,
+    closeOpenUpdateCustomerWalletModal,
+    openUpdateCustomerWalletModalFunc,
     CustomerSchema,
+    openUpdateCustomerWalletModal,
     openCustomerModalFunc,
+    handleRowClick,
+    CustomerData,
+    CustomerLoading,
+    CustomerError,
+    searchInput,
+    handleSearchChange,
+    filterOptions,
+    activeFilter,
+    handleFilterChange,
   };
 };

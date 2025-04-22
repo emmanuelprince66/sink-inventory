@@ -16,11 +16,7 @@ const formSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" })
-    .max(50)
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/, {
-      message:
-        "Password must contain at least one uppercase, lowercase, number, and special character",
-    }),
+    .max(50),
 });
 
 export type LoginFormValues = z.infer<typeof formSchema>;
@@ -37,7 +33,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   } = useLoginMutation({
     onSuccess: () => {
       showToast("Login successful", "success");
-      router.push(options?.redirectTo || "/overview");
+      router.push(options?.redirectTo || "/create-business");
       router.refresh();
     },
     onError: (error) => {

@@ -9,12 +9,12 @@ import { Spinner } from "@/components/app/Spinner";
 import { BusinessTable } from "./BusinessTable";
 import { CustomModal } from "@/components/app/CustomModal";
 import CreateBusinessForm from "@/app/create-business/CreateBusinessForm";
-
-const AllBusiness = () => {
+const AllBusiness = ({ section }: { section?: string }) => {
   const {
     AllBusinessData,
     AllBusinessLoading,
     closeCreateBusinessModal,
+    handleRowClick,
     openCreateBusinessModal,
     openCreateBusinessModalFunc,
   } = useBusinessHook();
@@ -27,9 +27,15 @@ const AllBusiness = () => {
     );
   }
 
-  if (AllBusinessData?.length === 0) {
+  console.log("AllBusinessData", AllBusinessData);
+  if (!AllBusinessLoading && AllBusinessData?.results?.length === 0) {
     return (
-      <NoBusiness openCreateBusinessModalFunc={openCreateBusinessModalFunc} />
+      <NoBusiness
+        section={section}
+        closeCreateBusinessModal={closeCreateBusinessModal}
+        openCreateBusinessModal={openCreateBusinessModal}
+        openCreateBusinessModalFunc={openCreateBusinessModalFunc}
+      />
     );
   }
 
@@ -53,7 +59,10 @@ const AllBusiness = () => {
       </div>
 
       <div className="w-full mt-6">
-        <BusinessTable data={AllBusinessData} />
+        <BusinessTable
+          data={AllBusinessData}
+          handleRowClick={section === "start" ? handleRowClick : undefined}
+        />
       </div>
 
       <CustomModal

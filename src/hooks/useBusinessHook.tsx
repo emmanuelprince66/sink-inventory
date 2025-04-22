@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
 import { useCreateBusinessMutation } from "@/api/business/create-business";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useRouter } from "next/navigation";
 
 const businessSchema = z.object({
   logo: z.any().optional(), // Handle file input
@@ -20,7 +22,20 @@ export type BusinessFormValues = z.infer<typeof businessSchema>;
 export const useBusinessHook = () => {
   const { mutate: CreateBusiness, isPending: isSubmitting } =
     useCreateBusinessMutation();
+  const router = useRouter();
+
   const [openCreateBusinessModal, setOpenCreateBusinessModal] = useState(false);
+  const setBusinessId = useBusinessStore((state) => state.setBusinessId);
+
+  const handleRowClick = (row: any) => {
+    console.log("Clicked row:", row.original);
+    console.log("Clicked row ID:", row.id);
+    setBusinessId(row?.original?.id);
+
+    router.push(`/overview`); // Navigate to the business details page
+
+    // Perform any additional actions here
+  };
 
   console.log("openCreate", openCreateBusinessModal);
 
@@ -62,6 +77,7 @@ export const useBusinessHook = () => {
     openCreateBusinessModalFunc,
     isSubmitting,
     closeCreateBusinessModal,
+    handleRowClick,
     setOpenCreateBusinessModal,
   };
 };

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 import { SearchInput } from "@/components/app/SearchInput";
+import { Spinner } from "@/components/app/Spinner";
 
 interface CustomerCardData {
   title: string;
@@ -30,7 +31,13 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
     >
       <div className="flex flex-col gap-6 items-start">
         <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p className="font-[600] text-xl text-primary-black-100">{amount}</p>
+        <p
+          className={`font-[600] text-xl ${
+            isDebtCard ? "text-red-600" : "text-primary-black-10"
+          } `}
+        >
+          {amount}
+        </p>
       </div>
     </CustomCard>
   );
@@ -41,16 +48,18 @@ const Customers = () => {
     openAddCustomerModal,
     closeOpenCustomerModal,
     openCustomerModalFunc,
+    filterOptions,
+    CustomerData,
+
+    CustomerLoading,
+    handleRowClick,
+    handleFilterChange,
+    activeFilter,
+    handleSearchChange,
   } = useCustomerHook();
 
-  const filterOptions = ["All", "Most Active", "Least Active ", "Debts"];
-  const [activeFilter, setActiveFilter] = useState(filterOptions[0]);
+  console.log("CustomerData", CustomerData);
 
-  const CustomerData: CustomerCardData[] = [
-    { title: "Total Wallet Balance", amount: "N12,345" },
-    { title: "Total Debt", amount: "1,234" },
-    { title: "Total Suppliers", amount: "N8,642" },
-  ];
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
       <div className="flex items-center justify-between w-full">
@@ -70,40 +79,62 @@ const Customers = () => {
           </div>
         </div>
       </div>
-      {/* cards container */}
-      <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {CustomerData.map((data, index) => (
-          <CustomCustomerCard
-            key={index}
-            title={data.title}
-            amount={data.amount}
+
+      {CustomerLoading || !CustomerData ? (
+        <div className="w-full h-full flex flex-col justify-center items-center mt-8">
+          <Spinner size={"xLarge"} className="text-primary-green-300" />
+        </div>
+      ) : (
+        <>
+          {/* cards container */}
+          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CustomCustomerCard
+              title={"Total Customers"}
+              amount={CustomerData?.data?.results?.customer_count}
+            />
+
+            <CustomCustomerCard
+              title={"Total Debt"}
+              amount={CustomerData?.data?.results?.total_debt}
+            />
+
+            <CustomCustomerCard
+              title={"Total Wallet"}
+              amount={CustomerData?.data?.results?.total_wallet}
+            />
+          </div>
+          {/* cards container content */}
+
+          {/* Second filter */}
+          <div className="flex gap-3 mt-4 mb-3">
+            {filterOptions.map((filter) => (
+              <Button
+                key={filter}
+                className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                  activeFilter === filter
+                    ? "bg-primary-green-300 text-white"
+                    : "bg-primary-green-200 text-primary-black-100"
+                }`}
+                onClick={() => handleFilterChange(filter)}
+              >
+                {filter}
+              </Button>
+            ))}
+          </div>
+          {/* Second filter end */}
+          {/* search input */}
+          <div className="w-1/2">
+            <SearchInput placeholder="Search.... " className="" />
+          </div>
+
+          {/* all customers */}
+          <AllCustomers
+            customersData={CustomerData}
+            handleRowClick={handleRowClick}
+            customerLoading={CustomerLoading}
           />
-        ))}
-      </div>
-      {/* cards container content */}
-
-      {/* Second filter */}
-      <div className="flex gap-3 mt-4 mb-3">
-        {filterOptions.map((option) => (
-          <Button
-            key={option}
-            className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-              activeFilter === option
-                ? "bg-primary-green-300 text-white"
-                : "bg-primary-green-200 text-primary-black-100"
-            }`}
-            onClick={() => setActiveFilter(option)}
-          >
-            {option}
-          </Button>
-        ))}
-      </div>
-      {/* Second filter end */}
-      {/* search input */}
-      <SearchInput placeholder="Search.... " className="" />
-
-      {/* all customers */}
-      <AllCustomers />
+        </>
+      )}
 
       {/* modal to add supply */}
 

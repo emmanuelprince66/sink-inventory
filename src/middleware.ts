@@ -2,12 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = [
-  "/login",
-  "/signup",
-  "/create-business",
-  "/forgot-password",
-];
+const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
@@ -18,7 +13,7 @@ export function middleware(request: NextRequest) {
 
   if (isPublicPath && accessToken) {
     // If user is logged in and tries to access public path, redirect to overview
-    return NextResponse.redirect(new URL("/overview", request.nextUrl));
+    return NextResponse.redirect(new URL("/create-business", request.nextUrl));
   }
 
   if (!isPublicPath && !accessToken) {

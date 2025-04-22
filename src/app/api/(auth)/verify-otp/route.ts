@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { BaseUrl } from "@/constants/base-url";
 
 export async function POST(request: Request) {
-  const url = `${BaseUrl}auth/verify_reset_code/`;
+  const url = `${BaseUrl}auth/verify-phone/`;
   const requestData = await request.json();
 
   try {
@@ -24,34 +24,12 @@ export async function POST(request: Request) {
       return NextResponse.json(errorData, { status: response.status });
     }
 
-    console.log("response", response);
     const data = await response.json();
-    console.log("data", data);
 
-    // Return JSON response instead of redirect
-    // return NextResponse.json(data, {
-    //   status: 200,
-    //   headers: {
-    //     "Set-Cookie": [
-    //       `accessToken=${
-    //         data.tokens.access
-    //       }; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600${
-    //         process.env.NODE_ENV === "production" ? "; Secure" : ""
-    //       }`,
-    //       `refreshToken=${
-    //         data.tokens.refresh
-    //       }; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${
-    //         process.env.NODE_ENV === "production" ? "; Secure" : ""
-    //       }`,
-    //       `user=${JSON.stringify(
-    //         data
-    //       )}; Path=/; SameSite=Strict; Max-Age=604800${
-    //         process.env.NODE_ENV === "production" ? "; Secure" : ""
-    //       }`,
-    //     ].join(", "),
-    //   },
-    // });
+    // Return the successful response to the client
+    return NextResponse.json(data, { status: 200 });
   } catch (error) {
+    console.error("Error in verify-otp:", error);
     return NextResponse.json(
       { error: "Failed to process login" },
       { status: 500 }

@@ -9,4 +9,7 @@ export const queryKey = {
     logout: "logout",
     verifyOtp: "verifyOtp",
   },
+  customers: {
+    getAllCustomers: "get-all-customers",
+  },
 };

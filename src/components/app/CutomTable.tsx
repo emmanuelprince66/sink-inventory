@@ -5,6 +5,7 @@ import {
   SortingState,
   getSortedRowModel,
   useReactTable,
+  Row,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -24,6 +25,8 @@ interface CustomTableProps<TData> {
   loading?: boolean;
   noDataText?: string | React.ReactNode;
   tableHeader?: React.ReactNode;
+  onRowClick?: (row: Row<TData>) => void;
+  rowClassName?: string | ((row: Row<TData>) => string);
 }
 
 export function CustomTable<TData>({
@@ -32,6 +35,8 @@ export function CustomTable<TData>({
   loading = false,
   noDataText = "No data found",
   tableHeader,
+  onRowClick,
+  rowClassName,
 }: CustomTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -45,6 +50,23 @@ export function CustomTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleRowClick = (row: Row<TData>) => {
+    if (onRowClick) {
+      onRowClick(row);
+      // You can perform additional actions here if needed
+    }
+  };
+
+  const getRowClass = (row: Row<TData>) => {
+    const baseClass = "border-b border-gray-200 hover:bg-gray-50";
+    const additionalClass =
+      typeof rowClassName === "function" ? rowClassName(row) : rowClassName;
+
+    return `${baseClass} ${additionalClass || ""} ${
+      onRowClick ? "cursor-pointer" : ""
+    }`;
+  };
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -105,10 +127,11 @@ export function CustomTable<TData>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
-                className="border-b border-gray-200 hover:bg-gray-50"
+                className={getRowClass(row)}
+                onClick={() => handleRowClick(row)}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-6 py-4">
+                  <TableCell key={cell.id} className="px-6 py-4 cursor-pointer">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

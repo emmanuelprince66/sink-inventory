@@ -7,6 +7,7 @@ import { useVerifyOtpMutation } from "@/api/auth/verify-otp";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useToast } from "../toast/useToast";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Define form schema
 const formSchema = z
@@ -48,12 +49,14 @@ export type SignUpFormValues = z.infer<typeof formSchema>;
 export const useSignUpForm = () => {
   const { showToast } = useToast();
 
+  const router = useRouter();
+
   const { mutate: signup, isPending } = useSignUpMutation();
   const { mutate: verifyOtp, isPending: isVerifying } = useVerifyOtpMutation();
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otp, setOtp] = useState("");
 
-  const [userEmail, setUserEmail] = useState("");
+  const [userPhone, setUserPhone] = useState("");
 
   const closeOtpModal = () => {
     setShowOtpModal(false);
@@ -79,14 +82,15 @@ export const useSignUpForm = () => {
     }
 
     verifyOtp(
-      { token: otp, email: userEmail },
+      { token: otp, phone: userPhone },
       {
         onSuccess: (response) => {
+          console.log("response", response);
           showToast("Account verified successfully!", "success");
           closeOtpModal();
           // You might want to redirect or perform other actions here
           // For example:
-          // router.push('/dashboard');
+          router.push("/login");
         },
         onError: (error) => {
           showToast(error.message || "Invalid OTP. Please try again.", "error");
@@ -116,7 +120,7 @@ export const useSignUpForm = () => {
 
     signup(payload, {
       onSuccess: () => {
-        setUserEmail(values.email);
+        setUserPhone(values.phone);
         setShowOtpModal(true);
         showToast(
           "Signup successful! Check your email for the OTP,Pin Valid For 10 minutes.",

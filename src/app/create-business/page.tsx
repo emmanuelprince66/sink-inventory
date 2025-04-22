@@ -1,5 +1,5 @@
-import CreateBusinessForm from "./CreateBusinessForm";
+import StartBusiness from "./StartBusiness";
 
-export default function CreateBusinessPage() {
-  return <CreateBusinessForm />;
+export default function page() {
+  return <StartBusiness />;
 }
