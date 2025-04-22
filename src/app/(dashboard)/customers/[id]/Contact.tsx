@@ -10,19 +10,13 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
 
-interface ContactProps {
-  id: string;
-}
-
-const Contact: React.FC<ContactProps> = ({ id }) => {
+const Contact = () => {
   const {
     closeOpenUpdateCustomerWalletModal,
     openUpdateCustomerWalletModalFunc,
     openUpdateCustomerWalletModal,
   } = useCustomerHook();
   const [filter, setFilter] = useState<"history" | "transactions">("history");
-
-  console.log("Contact params", id);
 
   const contactData = {
     fullName: "Ola",
