@@ -5,9 +5,11 @@ import { BaseUrl } from "@/constants/base-url";
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { params } = context;
+  // Await the params promise
+  const { id } = await params;
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -22,7 +24,7 @@ export async function GET(
   const status = request.nextUrl.searchParams.get("status") || "";
 
   // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}customer/${params.id}/`);
+  const apiUrl = new URL(`${BaseUrl}customer/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
 
