@@ -31,7 +31,14 @@ const OrderHistory = () => {
 
         {/* Second filter end */}
         {/* search input */}
-        <SearchInput placeholder="Search.... " className="" />
+        <SearchInput
+          placeholder="Search.... "
+          className=""
+          onValueChange={(value: string) => {
+            console.log(value);
+          }}
+          value=""
+        />
         {/* search input ends */}
 
         <NoOrders />
