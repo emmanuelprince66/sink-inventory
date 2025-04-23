@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 import { SearchInput } from "@/components/app/SearchInput";
-import { Spinner } from "@/components/app/Spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomerCardData {
   title: string;
@@ -49,16 +49,14 @@ const Customers = () => {
     closeOpenCustomerModal,
     openCustomerModalFunc,
     filterOptions,
+    searchInput,
     CustomerData,
-
     CustomerLoading,
     handleRowClick,
     handleFilterChange,
     activeFilter,
     handleSearchChange,
   } = useCustomerHook();
-
-  console.log("CustomerData", CustomerData);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -81,9 +79,47 @@ const Customers = () => {
       </div>
 
       {CustomerLoading || !CustomerData ? (
-        <div className="w-full h-full flex flex-col justify-center items-center mt-8">
-          <Spinner size={"xLarge"} className="text-primary-green-300" />
-        </div>
+        <>
+          {/* Skeleton for cards */}
+          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <CustomCard key={index} className="w-full border-gray-200">
+                <div className="flex flex-col gap-6 items-start">
+                  <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
+                  <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                </div>
+              </CustomCard>
+            ))}
+          </div>
+
+          {/* Skeleton for filters */}
+          <div className="flex gap-3 mt-4 mb-3">
+            {Array.from({ length: filterOptions.length }).map((_, index) => (
+              <Skeleton
+                key={index}
+                className="h-14 w-[70px] rounded-md bg-[#eef4ef]"
+              />
+            ))}
+          </div>
+
+          {/* Skeleton for search */}
+          <div className="w-1/2">
+            <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+          </div>
+
+          {/* Skeleton for AllCustomers table */}
+          <div className="w-full">
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-16 w-full bg-[#eef4ef] mt-2"
+                />
+              ))}
+            </div>
+          </div>
+        </>
       ) : (
         <>
           {/* cards container */}
@@ -124,7 +160,21 @@ const Customers = () => {
           {/* Second filter end */}
           {/* search input */}
           <div className="w-1/2">
-            <SearchInput placeholder="Search.... " className="" />
+            <SearchInput
+              placeholder="Search customers..."
+              value={searchInput}
+              onValueChange={handleSearchChange}
+            />
+            {CustomerLoading && (
+              <div className="mt-1 text-sm text-muted-foreground">
+                Searching...
+              </div>
+            )}
+            {searchInput.length > 0 && searchInput.length < 3 && (
+              <div className="mt-1 text-sm text-muted-foreground">
+                Type at least 3 characters to search
+              </div>
+            )}
           </div>
 
           {/* all customers */}
@@ -137,19 +187,16 @@ const Customers = () => {
       )}
 
       {/* modal to add supply */}
-
       <CustomModal
         isOpen={openAddCustomerModal}
         onClose={closeOpenCustomerModal}
         trigger={false}
         title="Add Customer"
-        description="Add more customer "
       >
         <div className="w-full ">
           <AddCustomer />
         </div>
       </CustomModal>
-      {/* modal to add supply endss*/}
     </div>
   );
 };

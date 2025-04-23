@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
+import { Pagination } from "./Pagination";
 
 interface CustomTableProps<TData> {
   columns: ColumnDef<TData>[];
@@ -27,6 +28,13 @@ interface CustomTableProps<TData> {
   tableHeader?: React.ReactNode;
   onRowClick?: (row: Row<TData>) => void;
   rowClassName?: string | ((row: Row<TData>) => string);
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (size: number) => void;
+  };
 }
 
 export function CustomTable<TData>({
@@ -37,6 +45,7 @@ export function CustomTable<TData>({
   tableHeader,
   onRowClick,
   rowClassName,
+  pagination,
 }: CustomTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
@@ -69,7 +78,7 @@ export function CustomTable<TData>({
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm mb-9">
       {tableHeader}
 
       <Table>
@@ -152,6 +161,15 @@ export function CustomTable<TData>({
           )}
         </TableBody>
       </Table>
+      {pagination && (
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          pageSize={pagination.pageSize}
+          onPageChange={pagination.onPageChange}
+          onPageSizeChange={pagination.onPageSizeChange}
+        />
+      )}
     </div>
   );
 }

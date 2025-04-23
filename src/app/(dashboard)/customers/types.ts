@@ -30,3 +30,46 @@ export interface CustomerResponse {
   pages: number;
   results: CustomerSummary;
 }
+
+export interface CustomerHistoryProps {
+  data: CustomerHistoryData[];
+  message: string;
+  success: boolean;
+}
+
+interface CustomerHistoryProductsProps {
+  image: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface CustomerHistoryData {
+  attendance: string;
+  attendant: string;
+  balance: string;
+  created_at: string;
+  id: string;
+  method: string;
+  payment_status: string;
+  products: CustomerHistoryProductsProps[];
+  total_price: string;
+}
+
+export interface CustomerWalletTrxProps {
+  data: CustomerWalletTrxData[];
+  message: string;
+  success: boolean;
+}
+
+export interface CustomerWalletTrxData {
+  amount: number;
+  attendance: string;
+  balance: number;
+  created_at: string;
+  id: string;
+  initial: number;
+  note: any;
+  payment_method: string;
+  type: string;
+}

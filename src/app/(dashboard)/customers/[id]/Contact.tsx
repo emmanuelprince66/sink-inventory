@@ -9,22 +9,29 @@ import { CustomerTransactions } from "./CustomerTransactions";
 import { CustomModal } from "@/components/app/CustomModal";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
+import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const Contact = () => {
+const Contact = ({ id }: { id: string }) => {
+  console.log("Contact", id);
+
+  const {
+    CustomerData,
+    CustomerLoading,
+    CustomerPurchaseHistory,
+    CustomerPurchaseHistoryLoading,
+    CustomerWalletTrxLoading,
+    CustomerWalletTrx,
+  } = useGetCustomerByIdHook(id);
+
+  console.log("www-4", CustomerWalletTrx);
+
   const {
     closeOpenUpdateCustomerWalletModal,
     openUpdateCustomerWalletModalFunc,
     openUpdateCustomerWalletModal,
   } = useCustomerHook();
   const [filter, setFilter] = useState<"history" | "transactions">("history");
-
-  const contactData = {
-    fullName: "Ola",
-    email: "myemail@gmail.com",
-    phone: "08167766555",
-    totalPurchaseValue: "20,000",
-    walletBalance: "10,000",
-  };
 
   return (
     <div className="w-full flex flex-col items-start gap-5">
@@ -66,25 +73,41 @@ const Contact = () => {
       <div className="flex w-full justify-between items-start">
         <div className="flex flex-col items-start gap-2">
           {/* Full Name */}
-          <div className="">
+          <div className="flex gap-2 items-center">
             <span className="text-gray-600 text-md font-semibold">
               Full Name:{" "}
             </span>
-            <span className="text-primary-black-100">
-              {contactData.fullName}
+            <span className="text-primary-black-100 ">
+              {!CustomerData || CustomerLoading ? (
+                <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
+              ) : (
+                ` ${CustomerData?.data?.name}`
+              )}
             </span>
           </div>
 
           {/* Email */}
-          <div>
+          <div className="flex gap-2 items-center">
             <span className="text-gray-600 text-md font-semibold">Email: </span>
-            <span className="text-gray-400 text-md">{contactData.email}</span>
+            <span className="text-primary-black-100 ">
+              {!CustomerData || CustomerLoading ? (
+                <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
+              ) : (
+                ` ${CustomerData?.data?.email}`
+              )}
+            </span>
           </div>
 
           {/* Phone */}
-          <div>
+          <div className="flex gap-2 items-center">
             <span className="text-gray-600 text-md font-semibold">Phone: </span>
-            <span className="text-gray-400 text-md">{contactData.phone}</span>
+            <span className="text-primary-black-100 ">
+              {!CustomerData || CustomerLoading ? (
+                <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
+              ) : (
+                ` ${CustomerData?.data?.phone}`
+              )}
+            </span>
           </div>
 
           {/* Purchase Value */}
@@ -93,16 +116,20 @@ const Contact = () => {
               Total Purchase Value:
             </span>
             <span className="text-primary-green-300 text-md font-[600]">
-              {contactData.totalPurchaseValue}
+              {CustomerData?.data.totalPurchaseValue || ""}
             </span>
           </div>
           {/* Purchase Value */}
-          <div className="flex gap-1 items-center">
+          <div className="flex gap-2 items-center">
             <span className="text-gray-600 text-md font-semibold">
-              Wallet Balance:
+              Wallet Balance:{" "}
             </span>
-            <span className="text-primary-green-300 font-[600] text-md">
-              {contactData.walletBalance}
+            <span className="text-primary-green-300 ">
+              {!CustomerData || CustomerLoading ? (
+                <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
+              ) : (
+                ` ${CustomerData?.data?.wallet}`
+              )}
             </span>
           </div>
         </div>
@@ -118,17 +145,23 @@ const Contact = () => {
         className="w-full mt-6"
       >
         <TabsList className="w-[400px]">
-          <TabsTrigger value="products">Purchase History</TabsTrigger>
-          <TabsTrigger value="history">Wallet Transactions</TabsTrigger>
+          <TabsTrigger value="history">Purchase History</TabsTrigger>
+          <TabsTrigger value="transactions">Wallet Transactions </TabsTrigger>
         </TabsList>
         <div className="w-full h-[1px] bg-gray-200 mt-[-8px]" />
 
         {/* Content conditional rendering */}
         <TabsContent value="history">
-          <CustomerHistory />
+          <CustomerHistory
+            data={CustomerPurchaseHistory}
+            loading={CustomerPurchaseHistoryLoading}
+          />
         </TabsContent>
         <TabsContent value="transactions">
-          <CustomerTransactions />
+          <CustomerTransactions
+            data={CustomerWalletTrx}
+            loading={CustomerWalletTrxLoading}
+          />
         </TabsContent>
       </Tabs>
 

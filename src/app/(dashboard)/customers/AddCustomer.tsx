@@ -11,9 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { CircleAlert } from "lucide-react";
+import { Spinner } from "@/components/app/Spinner";
 
 const AddCustomer = () => {
-  const { form, onSubmit } = useCustomerHook();
+  const { form, onSubmit, createCustomerLoading } = useCustomerHook();
   return (
     <div>
       <Form {...form}>
@@ -65,10 +66,9 @@ const AddCustomer = () => {
           <Button
             type="submit"
             className="w-full h-[48px] "
-            // disabled={isSubmitting}
+            disabled={createCustomerLoading}
           >
-            Save
-            {/* {isSubmitting ? <Spinner /> : "Sign Up"} */}
+            {createCustomerLoading ? <Spinner /> : "Save"}
           </Button>
         </form>
       </Form>

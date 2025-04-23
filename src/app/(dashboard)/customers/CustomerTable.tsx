@@ -1,5 +1,5 @@
 import { CustomTable } from "@/components/app/CutomTable";
-import React from "react";
+import React, { useState } from "react";
 import { ApiResponse, CustomerResponse, CustomerType } from "./types";
 import { columns } from "./columns";
 
@@ -14,6 +14,8 @@ const CustomerTable = ({
   loading,
   handleRowClick,
 }: CustomerTableProps) => {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   return (
     <>
       <CustomTable
@@ -22,6 +24,16 @@ const CustomerTable = ({
         data={response?.data?.results?.data}
         loading={loading}
         noDataText="No customers found" // Updated text
+        pagination={{
+          currentPage: page,
+          totalPages: response?.data?.pages || 1,
+          pageSize,
+          onPageChange: setPage,
+          onPageSizeChange: (newSize) => {
+            setPageSize(newSize);
+            setPage(1); // Reset to first page when page size changes
+          },
+        }}
       />
     </>
   );

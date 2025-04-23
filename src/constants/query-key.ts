@@ -1,3 +1,5 @@
+import { create } from "domain";
+
 export const queryKey = {
   business: {
     getAllBusiness: "get-all-business",
@@ -11,5 +13,9 @@ export const queryKey = {
   },
   customers: {
     getAllCustomers: "get-all-customers",
+    createCustomer: "create-customer",
+    getCustomerById: "get-customer-by-id",
+    customerPurchaseHistory: "customer-purchase-history",
+    customerWalletTrx: "customer-wallet-trx",
   },
 };

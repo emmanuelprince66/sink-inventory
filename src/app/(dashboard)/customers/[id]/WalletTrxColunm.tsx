@@ -1,7 +1,8 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { ArrowRightIcon } from "lucide-react";
+import { CustomerWalletTrxData } from "../types";
 
-import { CustomerType } from "./types";
-export const columns: ColumnDef<CustomerType>[] = [
+export const columns: ColumnDef<CustomerWalletTrxData>[] = [
   //   {
   //     accessorKey: "logo",
   //     header: "",
@@ -20,46 +21,38 @@ export const columns: ColumnDef<CustomerType>[] = [
   //     },
   //   },
   {
-    accessorKey: "name",
-    header: "Name",
+    accessorKey: "amount",
+    header: "Deposit",
     cell: ({ row }) => {
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-gray-500">{customer.amount}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "phone",
-    header: "Phone Number",
+    accessorKey: "created_at",
+    header: "Date Created",
     cell: ({ row }) => {
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-gray-500">{customer.created_at}</p>
         </div>
       );
     },
   },
 
   {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
+    accessorKey: "",
+    header: "",
+    id: "cast-or",
     cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
-
       return (
         <div className="font-medium">
-          <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {customer.wallet}
-          </p>
+          <ArrowRightIcon />
         </div>
       );
     },

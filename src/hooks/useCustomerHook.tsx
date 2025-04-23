@@ -5,6 +5,8 @@ import { z } from "zod";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useDebounce } from "./useDebounce";
+import { useCreateCustomerMutation } from "@/api/customer/create-customer";
+import { useRouter } from "next/navigation";
 
 const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
@@ -21,21 +23,36 @@ export type CustomerFormValues = z.infer<typeof CustomerSchema>;
 
 export const useCustomerHook = () => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const router = useRouter();
+  const { mutate: createCustomer, isPending: createCustomerLoading } =
+    useCreateCustomerMutation({
+      businessId: business_id, // Convert null to undefined
+    });
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms debounce
-
   const filterOptions = [
     "All",
     "Most Active",
     "Least Active",
     "Debts",
   ] as const;
+
+  const filterMapping = {
+    All: "",
+    "Most Active": "MOST_ACTIVE",
+    "Least Active": "LEAST_ACTIVE",
+    Debts: "DEBTS",
+  } as const;
   const [activeFilter, setActiveFilter] = useState<
     (typeof filterOptions)[number]
   >(filterOptions[0]);
 
-  // Only search when term has at least 3 characters
-  const searchTerm = debouncedSearchTerm.length >= 3 ? debouncedSearchTerm : "";
+  console.log("activeFilter", activeFilter);
+  // Only search when term has at least 3 characters or is empty (to reset)
+  const searchTerm =
+    debouncedSearchTerm.length >= 3 || debouncedSearchTerm.length === 0
+      ? debouncedSearchTerm
+      : null;
 
   const {
     data: CustomerData,
@@ -45,7 +62,7 @@ export const useCustomerHook = () => {
     params: {
       id: business_id,
       search: searchTerm,
-      status: activeFilter === "All" ? "" : activeFilter,
+      status: filterMapping[activeFilter],
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -65,6 +82,7 @@ export const useCustomerHook = () => {
   const openCustomerModalFunc = () => setOpenAddCustomerModal(true);
 
   const handleRowClick = (row: any) => {
+    router.push(`/customers/${row.original.id}`);
     console.log("Clicked row:", row.original);
     console.log("Clicked row ID:", row.id);
 
@@ -88,10 +106,15 @@ export const useCustomerHook = () => {
       email: values.email,
     };
     console.log("payload", payload);
+
+    createCustomer({
+      payload,
+      businessId: business_id,
+    });
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
   };
 
   const handleFilterChange = (filter: (typeof filterOptions)[number]) => {
@@ -112,6 +135,7 @@ export const useCustomerHook = () => {
     openCustomerModalFunc,
     handleRowClick,
     CustomerData,
+    createCustomerLoading,
     CustomerLoading,
     CustomerError,
     searchInput,

@@ -46,9 +46,15 @@ export const useGetCustomerQuery = ({
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
       if ([404, 401].includes(error.status)) return false;
-      return failureCount < 2; // Retry once (total 2 attempts)
+      return failureCount < 2;
     },
-    queryKey: [queryKey.customers.getAllCustomers, params.id],
+    // Include all parameters in the query key
+    queryKey: [
+      queryKey.customers.getAllCustomers,
+      params.id,
+      params.search,
+      params.status,
+    ],
     queryFn: () => fetchCustomers(params),
     ...config,
   });
