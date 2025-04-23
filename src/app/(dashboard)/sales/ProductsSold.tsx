@@ -31,7 +31,12 @@ const ProductsSold = () => {
       </div>
       {/* Second filter end */}
       {/* search input */}
-      <SearchInput placeholder="Search.... " className="" />
+      <SearchInput
+        placeholder="Search.... "
+        className=""
+        value=""
+        onValueChange={() => {}}
+      />
       {/* search input ends */}
     </>
   );
