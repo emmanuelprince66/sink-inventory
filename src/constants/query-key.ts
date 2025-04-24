@@ -17,5 +17,6 @@ export const queryKey = {
     getCustomerById: "get-customer-by-id",
     customerPurchaseHistory: "customer-purchase-history",
     customerWalletTrx: "customer-wallet-trx",
+    updateWalletBalance: "update-wallet-balance",
   },
 };

@@ -6,7 +6,6 @@ import {
 } from "@/lib/react-query";
 
 export const fetchCustomerWalletTrx = async (id: string) => {
-  console.log("useQuery:", useQuery); //
   const response = await fetch(`/api/customers/${id}/wallet-trx`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();

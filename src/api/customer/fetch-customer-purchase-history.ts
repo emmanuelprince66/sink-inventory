@@ -6,7 +6,6 @@ import {
 } from "@/lib/react-query";
 
 export const fetchCustomerPurchaseHistory = async (id: string) => {
-  console.log("useQuery:", useQuery); //
   const response = await fetch(`/api/customers/${id}/purchase-history`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();

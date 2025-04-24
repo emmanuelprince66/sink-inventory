@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import { CustomModal } from "@/components/app/CustomModal";
-import { useCustomerHook } from "@/hooks/useCustomerHook";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
 import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,16 +20,14 @@ const Contact = ({ id }: { id: string }) => {
     CustomerPurchaseHistory,
     CustomerPurchaseHistoryLoading,
     CustomerWalletTrxLoading,
-    CustomerWalletTrx,
-  } = useGetCustomerByIdHook(id);
-
-  console.log("www-4", CustomerWalletTrx);
-
-  const {
     closeOpenUpdateCustomerWalletModal,
     openUpdateCustomerWalletModalFunc,
     openUpdateCustomerWalletModal,
-  } = useCustomerHook();
+    CustomerWalletTrx,
+  } = useGetCustomerByIdHook(id);
+
+  console.log("www-4", CustomerData);
+
   const [filter, setFilter] = useState<"history" | "transactions">("history");
 
   return (
@@ -174,7 +171,7 @@ const Contact = ({ id }: { id: string }) => {
         title="Update Wallet Balance"
       >
         <div className="w-full ">
-          <UpdateCustomerWallet />
+          <UpdateCustomerWallet wallet={CustomerData?.data?.wallet} />
         </div>
       </CustomModal>
     </div>

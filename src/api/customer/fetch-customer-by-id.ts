@@ -6,7 +6,7 @@ import {
 } from "@/lib/react-query";
 
 export const fetchCustomerById = async (id: string) => {
-  console.log("useQuery:", useQuery); //
+  // console.log("useQuery:", useQuery); //
   const response = await fetch(`/api/customers/${id}/customer-by-id`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();
@@ -25,6 +25,7 @@ export const useFetchCustomerById = (id: any, config?: options) => {
     },
     queryKey: [queryKey.customers.getCustomerById, id],
     queryFn: () => fetchCustomerById(id),
+    staleTime: 1000 * 60 * 5,
     ...config,
   });
 };
