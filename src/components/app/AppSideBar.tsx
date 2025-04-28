@@ -1,5 +1,11 @@
 "use client";
 import { LogOut } from "lucide-react";
+
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { useLogoutMutation } from "@/api/auth/logout-user";
 import sink from "@/assets/sink.png";
 import {
   Sidebar,
@@ -12,11 +18,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import Image from "next/image";
-import Link from "next/link";
 import { links } from "@/constants/links";
-import { useLogoutMutation } from "@/api/auth/logout-user";
-import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils"; // Assuming you have a classnames utility
 
 export function AppSidebar() {

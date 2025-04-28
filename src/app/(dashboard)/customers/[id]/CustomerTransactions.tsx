@@ -1,6 +1,9 @@
 import React from "react";
-import { CustomerWalletTrxProps } from "../types";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
+import { CustomerWalletTrxProps } from "../types";
+
 import CustomerWalletTrxTable from "./CustomerWalletTrxTable";
 
 export const CustomerTransactions = ({

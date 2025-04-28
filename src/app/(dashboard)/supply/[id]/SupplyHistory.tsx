@@ -1,4 +1,5 @@
 import { Supplier } from "../types";
+
 import NoSupplyHistory from "./NoSupplyHistory";
 import SupplyHistoryTable from "./SupplyHistoryTable";
 

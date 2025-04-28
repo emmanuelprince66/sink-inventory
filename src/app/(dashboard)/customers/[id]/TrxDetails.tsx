@@ -1,6 +1,8 @@
 import React from "react";
+
 import { X, User, Wallet } from "lucide-react";
 import moment from "moment";
+
 import { CustomerWalletTrxData } from "../types";
 
 const TrxDetails = ({

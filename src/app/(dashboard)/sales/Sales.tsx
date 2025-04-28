@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { CustomCard } from "@/components/app/CustomCard";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
-import { useEffect, useState } from "react";
+
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
 

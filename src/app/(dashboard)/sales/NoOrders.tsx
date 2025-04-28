@@ -1,5 +1,6 @@
-import { Plus } from "lucide-react";
 import React from "react";
+
+import { Plus } from "lucide-react";
 
 const NoOrders = () => {
   return (

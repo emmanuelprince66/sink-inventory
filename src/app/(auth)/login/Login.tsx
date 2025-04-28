@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import WelcomeScreen from "@/components/app/WelcomeScreen";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,9 +13,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useLoginForm } from "@/hooks/auth/useLoginForm";
 import { Spinner } from "@/components/ui/spinner";
-import Link from "next/link";
+import { useLoginForm } from "@/hooks/auth/useLoginForm";
 
 const Login = () => {
   const { form, onSubmit, isSubmitting } = useLoginForm();

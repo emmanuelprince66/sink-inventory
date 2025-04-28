@@ -1,6 +1,7 @@
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { useSalesHook } from "@/hooks/useSalesHook";
+
 import NoOrders from "./NoOrders";
 import ProductSoldTable from "./ProductSoldTable";
 import { SalesHistoryResponse } from "./types";

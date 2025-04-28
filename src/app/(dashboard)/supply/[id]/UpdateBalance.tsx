@@ -1,7 +1,5 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
 import {
   Form,
   FormControl,
@@ -19,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
+import { cn } from "@/lib/utils";
 
 const UpdateBalance = ({ wallet }: { wallet: number }) => {
   const isDebt = wallet < 0;

@@ -1,12 +1,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+
+import Image from "next/image";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Image from "next/image";
+
 import { BusinessType } from "./types/types";
 export const columns: ColumnDef<BusinessType>[] = [
   {

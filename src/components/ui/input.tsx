@@ -1,7 +1,9 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
+
 import { FaRegEyeSlash } from "react-icons/fa";
 import { IoEyeOutline } from "react-icons/io5";
+
+import { cn } from "@/lib/utils";
 
 interface InputProps extends React.ComponentProps<"input"> {
   icon?: React.ReactNode;

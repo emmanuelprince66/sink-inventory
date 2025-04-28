@@ -1,12 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
+
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
 import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
+
 import AddSupplier from "./AddSupplier";
 import AllSupply from "./AllSupply";
 

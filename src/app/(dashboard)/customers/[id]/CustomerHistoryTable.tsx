@@ -1,9 +1,12 @@
 import React from "react";
-import { CustomerHistoryProps } from "../types";
-import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
-import { CustomTable } from "@/components/app/CutomTable";
-import { columns } from "./historyColunm";
+
 import { CustomModal } from "@/components/app/CustomModal";
+import { CustomTable } from "@/components/app/CutomTable";
+import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
+
+import { CustomerHistoryProps } from "../types";
+
+import { columns } from "./historyColunm";
 import HistoryMoreDetails from "./HistoryMoreDetails";
 
 const CustomerHistoryTable = ({

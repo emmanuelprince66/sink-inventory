@@ -1,14 +1,17 @@
 "use client";
 
 import React, { ReactNode, useState } from "react";
-import NoBusiness from "./NoBusiness"; // Import your NoBusiness component
-import { Button } from "@/components/ui/button";
+
 import { Plus } from "lucide-react";
-import { useBusinessHook } from "@/hooks/useBusinessHook";
-import { Spinner } from "@/components/app/Spinner";
-import { BusinessTable } from "./BusinessTable";
-import { CustomModal } from "@/components/app/CustomModal";
+
 import CreateBusinessForm from "@/app/create-business/CreateBusinessForm";
+import { CustomModal } from "@/components/app/CustomModal";
+import { Spinner } from "@/components/app/Spinner";
+import { Button } from "@/components/ui/button";
+import { useBusinessHook } from "@/hooks/useBusinessHook";
+
+import { BusinessTable } from "./BusinessTable";
+import NoBusiness from "./NoBusiness"; // Import your NoBusiness component
 const AllBusiness = ({ section }: { section?: string }) => {
   const {
     AllBusinessData,

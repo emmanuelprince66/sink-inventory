@@ -1,11 +1,5 @@
 import { Ellipsis, Pencil, Trash2 } from "lucide-react";
-import { BusinessType } from "./types/types";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import Image from "next/image";
 
 import {
@@ -14,6 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import { BusinessType } from "./types/types";
 
 const BusinessCard = ({ business }: { business: BusinessType }) => {
   return (

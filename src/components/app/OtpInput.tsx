@@ -1,8 +1,9 @@
 // components/app/OtpInput.tsx
 "use client";
 
-import { Input } from "@/components/ui/input";
 import { useEffect, useRef } from "react";
+
+import { Input } from "@/components/ui/input";
 
 interface OtpInputProps {
   value: string;

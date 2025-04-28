@@ -1,9 +1,12 @@
 import React from "react";
+
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import Link from "next/link";
-import { CustomModal } from "@/components/app/CustomModal";
+
 import CreateBusinessForm from "@/app/create-business/CreateBusinessForm";
+import { CustomModal } from "@/components/app/CustomModal";
+import { Button } from "@/components/ui/button";
 
 const NoBusiness = ({
   openCreateBusinessModalFunc,

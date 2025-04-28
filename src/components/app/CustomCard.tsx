@@ -1,5 +1,6 @@
 // components/ui/custom-card.tsx
-import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
+
 import {
   Card,
   CardContent,
@@ -8,7 +9,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface CustomCardProps {
   children: ReactNode;

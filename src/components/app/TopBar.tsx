@@ -1,5 +1,6 @@
 // components/TopBar.tsx
 import { ChevronDown, User } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import { SidebarTrigger } from "../ui/sidebar";
 
 export function TopBar() {

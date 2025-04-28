@@ -1,4 +1,5 @@
 import { CustomTable } from "@/components/app/CutomTable";
+
 import { columns } from "./OrderHistoryColumn";
 import { SalesOrderData } from "./types";
 

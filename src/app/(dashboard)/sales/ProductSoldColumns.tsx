@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+
 import { SalesDataItem } from "./types";
 
 export const columns: ColumnDef<SalesDataItem>[] = [

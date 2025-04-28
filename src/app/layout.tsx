@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+
 import { Nunito } from "next/font/google";
+
 import "./globals.css";
-import { ToastProvider } from "@/providers/ToastProvider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProviders";
+import { ToastProvider } from "@/providers/ToastProvider";
 
 // 👉 Correct Nunito font setup
 const nunito = Nunito({

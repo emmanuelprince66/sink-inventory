@@ -1,11 +1,14 @@
 "use client";
+import { useState } from "react";
+
+import { ArrowLeft, Edit, Plus } from "lucide-react";
+
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
-import { ArrowLeft, Edit, Plus } from "lucide-react";
-import { useState } from "react";
+
 import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";

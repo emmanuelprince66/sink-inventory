@@ -1,8 +1,10 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
 import React from "react";
+
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
 
 const spinnerVariants = cva(
   "animate-spin inline-block rounded-full border-2 border-solid border-current border-t-transparent",

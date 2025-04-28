@@ -1,5 +1,6 @@
-import { columns } from "./columns";
 import { CustomTable } from "@/components/app/CutomTable";
+
+import { columns } from "./columns";
 import { BusinessResponse } from "./types/types";
 
 interface BusinessTableProps {

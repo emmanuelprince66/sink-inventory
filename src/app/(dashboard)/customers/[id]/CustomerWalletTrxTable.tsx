@@ -1,10 +1,14 @@
 import React from "react";
-import { CustomerWalletTrxProps } from "../types";
-import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
-import { CustomTable } from "@/components/app/CutomTable";
-import { columns } from "./WalletTrxColunm";
-import TrxDetails from "./TrxDetails";
+
 import { CustomModal } from "@/components/app/CustomModal";
+import { CustomTable } from "@/components/app/CutomTable";
+import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
+
+import { CustomerWalletTrxProps } from "../types";
+
+import TrxDetails from "./TrxDetails";
+import { columns } from "./WalletTrxColunm";
+
 
 const CustomerWalletTrxTable = ({
   data,

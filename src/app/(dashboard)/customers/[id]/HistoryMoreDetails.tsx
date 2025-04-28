@@ -1,10 +1,14 @@
 import React from "react";
-import { CustomerHistoryData } from "../types";
+
 import { X, CheckCircle } from "lucide-react";
-import Image from "next/image";
 import moment from "moment";
+
+import Image from "next/image";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+
+import { CustomerHistoryData } from "../types";
 
 const HistoryMoreDetails = ({
   historyDetailsData,

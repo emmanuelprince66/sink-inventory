@@ -1,4 +1,5 @@
 import { ColumnDef } from "@tanstack/react-table";
+
 import { Supplier } from "./types";
 
 export const columns: ColumnDef<Supplier>[] = [

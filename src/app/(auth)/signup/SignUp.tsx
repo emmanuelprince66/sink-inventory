@@ -1,6 +1,11 @@
 // SignUp.tsx
 "use client";
 
+import Link from "next/link";
+
+import { CustomModal } from "@/components/app/CustomModal";
+import { OtpInput } from "@/components/app/OtpInput";
+import { PhoneInput } from "@/components/app/PhoneInput";
 import WelcomeScreen from "@/components/app/WelcomeScreen";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useSignUpForm } from "@/hooks/auth/useSignUpForm";
-import Link from "next/link";
 import "react-phone-number-input/style.css";
-import { PhoneInput } from "@/components/app/PhoneInput";
-import { CustomModal } from "@/components/app/CustomModal";
-import { OtpInput } from "@/components/app/OtpInput";
 
 const SignUp = () => {
   const {

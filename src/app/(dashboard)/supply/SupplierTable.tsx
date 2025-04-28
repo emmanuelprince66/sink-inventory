@@ -1,5 +1,7 @@
-import { CustomTable } from "@/components/app/CutomTable";
 import { useState } from "react";
+
+import { CustomTable } from "@/components/app/CutomTable";
+
 import { columns } from "./column";
 import { SupplierResponse } from "./types";
 

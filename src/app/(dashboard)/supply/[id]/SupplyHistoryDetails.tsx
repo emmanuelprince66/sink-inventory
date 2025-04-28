@@ -1,7 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, PersonStandingIcon } from "lucide-react";
 import moment from "moment";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+
 import { SupplyHistory } from "../types";
 const SupplyHistoryDetails = ({
   supplierDetails,

@@ -1,10 +1,13 @@
-import { useFetchSupplierByIdQuery } from "@/api/supply/fetch-single-supplier";
-import { useUpdateSupplyWalletMutation } from "@/api/supply/update-balance";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "next/navigation";
 import { useState } from "react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { useParams } from "next/navigation";
+
+import { useFetchSupplierByIdQuery } from "@/api/supply/fetch-single-supplier";
+import { useUpdateSupplyWalletMutation } from "@/api/supply/update-balance";
 
 const WalletTrxSchema = z.object({
   amount: z.string().min(1, "Amount is required"),

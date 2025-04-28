@@ -1,7 +1,9 @@
 import React from "react";
+
 import Image from "next/image";
-import sink from "@/assets/sink.png";
+
 import welcome from "@/assets/auth/welcome.png";
+import sink from "@/assets/sink.png";
 
 const WelcomeScreen = () => {
   return (

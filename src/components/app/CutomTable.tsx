@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ColumnDef,
   flexRender,
@@ -7,6 +9,9 @@ import {
   useReactTable,
   Row,
 } from "@tanstack/react-table";
+import { ArrowDown, ArrowUp } from "lucide-react";
+
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -15,9 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowDown, ArrowUp } from "lucide-react";
-import { useState } from "react";
+
 import { Pagination } from "./Pagination";
 
 interface CustomTableProps<TData> {

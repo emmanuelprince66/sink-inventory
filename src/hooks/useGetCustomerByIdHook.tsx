@@ -1,12 +1,17 @@
+import { useState } from "react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { useParams } from "next/navigation";
+
 import { useFetchCustomerById } from "@/api/customer/fetch-customer-by-id";
 import { useFetchCustomerPurchaseHistory } from "@/api/customer/fetch-customer-purchase-history";
 import { useFetchCustomerWalletTrx } from "@/api/customer/fetch-customer-wallet-trx";
 import { useUpdateWalletBalanceMutation } from "@/api/customer/update-wallet";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+
+
 
 const WalletTrxSchema = z.object({
   amount: z.string().min(1, "Amount is required"),

@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowRightIcon } from "lucide-react";
+
 import { CustomerWalletTrxData } from "../types";
 
 export const columns: ColumnDef<CustomerWalletTrxData>[] = [

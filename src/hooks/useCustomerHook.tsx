@@ -1,12 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+
+import { useRouter } from "next/navigation";
+
+import { useCreateCustomerMutation } from "@/api/customer/create-customer";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+
 import { useDebounce } from "./useDebounce";
-import { useCreateCustomerMutation } from "@/api/customer/create-customer";
-import { useRouter } from "next/navigation";
 
 const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),

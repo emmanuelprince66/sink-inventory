@@ -1,6 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { CustomerHistoryData } from "../types";
 import { ArrowRightIcon } from "lucide-react";
+
+import { CustomerHistoryData } from "../types";
 
 export const columns: ColumnDef<CustomerHistoryData>[] = [
   //   {

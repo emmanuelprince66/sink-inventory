@@ -1,7 +1,9 @@
-import { CustomTable } from "@/components/app/CutomTable";
 import React, { useState } from "react";
-import { ApiResponse, CustomerResponse, CustomerType } from "./types";
+
+import { CustomTable } from "@/components/app/CutomTable";
+
 import { columns } from "./columns";
+import { ApiResponse, CustomerResponse, CustomerType } from "./types";
 
 interface CustomerTableProps {
   response: ApiResponse<CustomerResponse>; // Changed from data to response

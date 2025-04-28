@@ -1,7 +1,10 @@
 import React from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
-import CustomerHistoryTable from "./CustomerHistoryTable";
+
 import { CustomerHistoryProps } from "../types";
+
+import CustomerHistoryTable from "./CustomerHistoryTable";
 
 const CustomerHistory = ({
   data,

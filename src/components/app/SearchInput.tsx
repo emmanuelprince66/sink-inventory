@@ -1,7 +1,9 @@
 // components/ui/search-input.tsx
 import * as React from "react";
-import { cn } from "@/lib/utils";
+
 import { Search, X } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 interface SearchInputProps extends React.ComponentProps<"input"> {
   containerClassName?: string;

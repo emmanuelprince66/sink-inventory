@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import AllBusiness from "./AllBusiness";
 const Business = () => {
   return (

@@ -1,8 +1,10 @@
 import React from "react";
-import NoCustomer from "./NoCustomer";
+
 import { useCustomerHook } from "@/hooks/useCustomerHook";
-import { ApiResponse, CustomerResponse } from "./types";
+
 import CustomerTable from "./CustomerTable";
+import NoCustomer from "./NoCustomer";
+import { ApiResponse, CustomerResponse } from "./types";
 
 const AllCustomers = ({
   customersData,

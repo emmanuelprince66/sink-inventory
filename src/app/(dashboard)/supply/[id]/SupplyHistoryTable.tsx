@@ -1,7 +1,9 @@
 import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
 import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
+
 import { Supplier } from "../types";
+
 import { columns } from "./column";
 import SupplyHistoryDetails from "./SupplyHistoryDetails";
 
