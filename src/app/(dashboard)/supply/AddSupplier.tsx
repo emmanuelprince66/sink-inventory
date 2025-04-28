@@ -1,4 +1,5 @@
-import React from "react";
+import { Spinner } from "@/components/app/Spinner";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -7,12 +8,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { useSupplyHook } from "@/hooks/useSupplyHook";
 import { Input } from "@/components/ui/input";
+import { useSupplyHook } from "@/hooks/useSupplyHook";
 
 const AddSupplier = () => {
-  const { form, onSubmit } = useSupplyHook();
+  const { form, onSubmit, createSupplierLoading } = useSupplyHook();
   return (
     <div>
       <Form {...form}>
@@ -64,10 +64,9 @@ const AddSupplier = () => {
           <Button
             type="submit"
             className="w-full h-[48px]"
-            // disabled={isSubmitting}
+            disabled={createSupplierLoading}
           >
-            Save
-            {/* {isSubmitting ? <Spinner /> : "Sign Up"} */}
+            {createSupplierLoading ? <Spinner /> : "Save"}
           </Button>
         </form>
       </Form>

@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { SalesDataItem } from "./types";
 
-import { CustomerType } from "./types";
-export const columns: ColumnDef<CustomerType>[] = [
+export const columns: ColumnDef<SalesDataItem>[] = [
   //   {
   //     accessorKey: "logo",
   //     header: "",
@@ -23,54 +23,48 @@ export const columns: ColumnDef<CustomerType>[] = [
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
-      const customer = row.original;
+      const product = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-gray-500">{product.name}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "phone",
-    header: "Phone Number",
+    accessorKey: "unit_sold",
+    header: "Unit Sold",
     cell: ({ row }) => {
-      const customer = row.original;
+      const product = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-gray-500">{product.unit_sold}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "revenue",
+    header: "Revenue",
+    cell: ({ row }) => {
+      const product = row.original;
+      return (
+        <div className="font-medium">
+          <p className="text-sm text-gray-500">{product.revenue}</p>
         </div>
       );
     },
   },
 
   {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
+    accessorKey: "profit",
+    header: "Profit",
     cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
+      const product = row.original;
 
       return (
         <div className="font-medium">
-          <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {customer.wallet}
-          </p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "",
-    header: "Action",
-    cell: () => {
-      return (
-        <div className="font-medium">
-          <p className="text-sm text-green-500">View more</p>
+          <p className="text-sm text-gray-500">{product.profit}</p>
         </div>
       );
     },

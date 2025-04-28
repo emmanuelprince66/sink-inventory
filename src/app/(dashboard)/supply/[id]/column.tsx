@@ -1,12 +1,12 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { SupplyHistory } from "../types";
 
-import { CustomerType } from "./types";
-export const columns: ColumnDef<CustomerType>[] = [
+export const columns: ColumnDef<SupplyHistory>[] = [
   //   {
   //     accessorKey: "logo",
   //     header: "",
   //     cell: ({ row }) => {
-  //       const customer = row.original;
+  //       const supplier = row.original;
   //       return (
   //         <div className="relative h-10 w-10 rounded-md overflow-hidden">
   //           <Image
@@ -23,10 +23,10 @@ export const columns: ColumnDef<CustomerType>[] = [
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
-      const customer = row.original;
+      const supplier = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-gray-500">{supplier.created_at}</p>
         </div>
       );
     },
@@ -35,10 +35,10 @@ export const columns: ColumnDef<CustomerType>[] = [
     accessorKey: "phone",
     header: "Phone Number",
     cell: ({ row }) => {
-      const customer = row.original;
+      const supplier = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-gray-500">{supplier.status}</p>
         </div>
       );
     },
@@ -48,18 +48,11 @@ export const columns: ColumnDef<CustomerType>[] = [
     accessorKey: "wallet",
     header: "Wallet Balance",
     cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
+      const supplier = row.original;
 
       return (
         <div className="font-medium">
-          <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {customer.wallet}
-          </p>
+          <p className="text-sm text-gray-500">{supplier.cost_price}</p>
         </div>
       );
     },

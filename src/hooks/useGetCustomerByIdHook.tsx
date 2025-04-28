@@ -1,12 +1,12 @@
 import { useFetchCustomerById } from "@/api/customer/fetch-customer-by-id";
 import { useFetchCustomerPurchaseHistory } from "@/api/customer/fetch-customer-purchase-history";
 import { useFetchCustomerWalletTrx } from "@/api/customer/fetch-customer-wallet-trx";
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { useParams } from "next/navigation";
-import { z } from "zod";
 import { useUpdateWalletBalanceMutation } from "@/api/customer/update-wallet";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const WalletTrxSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
@@ -21,6 +21,7 @@ export const useGetCustomerByIdHook = (id?: string) => {
   const customerId = id || params.id;
   const { data: CustomerData, isLoading: CustomerLoading } =
     useFetchCustomerById(customerId);
+  const [selectedOption, setSelectedOption] = useState<string>("DEPOSIT");
 
   const { mutate: updateWalletBalance, isPending: isUpdatingWallet } =
     useUpdateWalletBalanceMutation();
@@ -33,6 +34,8 @@ export const useGetCustomerByIdHook = (id?: string) => {
   } = useFetchCustomerPurchaseHistory(id);
   const { data: CustomerWalletTrx, isLoading: CustomerWalletTrxLoading } =
     useFetchCustomerWalletTrx(id);
+
+  console.log("CustomerWalletTrx", CustomerWalletTrx);
 
   const [historyDetailsData, setHistoryDetailsData] = useState<any>({});
   const [openHistoryDetailsModal, setOpenHistoryDetailsModal] = useState(false);
@@ -67,6 +70,11 @@ export const useGetCustomerByIdHook = (id?: string) => {
     setWalletTrxDetails(row?.original);
     openWalletTrxDetailsModalFunc();
   };
+  const handleSelectOption = (option: string) => {
+    setSelectedOption(option);
+  };
+
+  console.log("selectedOption", selectedOption);
 
   const form = useForm<WalletTrxFormValues>({
     resolver: zodResolver(WalletTrxSchema),
@@ -91,9 +99,12 @@ export const useGetCustomerByIdHook = (id?: string) => {
       payload: {
         amount: values.amount,
         payment_method: values.payment_method,
+        type: selectedOption,
         note: values.note,
       },
     });
+
+    closeOpenUpdateCustomerWalletModal();
   };
 
   return {
@@ -112,9 +123,11 @@ export const useGetCustomerByIdHook = (id?: string) => {
     openWalletTrxDetailsModal,
     walletTrxDetails,
     openHistoryDetailsModalFunc,
+    selectedOption,
     closeHistoryDetailsModal,
     closeWalletTrxDetailsModal,
     isUpdatingWallet,
+    handleSelectOption,
     handleHistoryRowClick,
     CustomerWalletTrxLoading,
     CustomerPurchaseHistoryLoading,

@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { SalesOrder } from "./types";
 
-import { CustomerType } from "./types";
-export const columns: ColumnDef<CustomerType>[] = [
+export const columns: ColumnDef<SalesOrder>[] = [
   //   {
   //     accessorKey: "logo",
   //     header: "",
@@ -20,50 +20,54 @@ export const columns: ColumnDef<CustomerType>[] = [
   //     },
   //   },
   {
-    accessorKey: "name",
-    header: "Name",
+    accessorKey: "order_id",
+    header: "Order ID",
     cell: ({ row }) => {
-      const customer = row.original;
+      const order = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-gray-500">{order.id}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "phone",
-    header: "Phone Number",
+    accessorKey: "created_at",
+    header: "Created At",
     cell: ({ row }) => {
-      const customer = row.original;
+      const order = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-gray-500">{order.created_at}</p>
         </div>
       );
     },
   },
-
   {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
+    accessorKey: "total_price",
+    header: "Total Price",
     cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
-
+      const order = row.original;
       return (
         <div className="font-medium">
-          <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {customer.wallet}
-          </p>
+          <p className="text-sm text-gray-500">{order.total_price}</p>
         </div>
       );
     },
   },
+  {
+    accessorKey: "status",
+    header: "Payment Status",
+    cell: ({ row }) => {
+      const order = row.original;
+      return (
+        <div className="font-medium">
+          <p className="text-sm text-gray-500">{order.payment_status}</p>
+        </div>
+      );
+    },
+  },
+
   {
     accessorKey: "",
     header: "Action",

@@ -1,15 +1,14 @@
 "use client";
-import React, { useState } from "react";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+import { SearchInput } from "@/components/app/SearchInput";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
-import { useCustomerHook } from "@/hooks/useCustomerHook";
-import { Button } from "@/components/ui/button";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
-import { SearchInput } from "@/components/app/SearchInput";
-import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomerCardData {
   title: string;

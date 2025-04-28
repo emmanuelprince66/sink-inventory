@@ -1,13 +1,7 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
 import {
   Form,
   FormControl,
@@ -24,55 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
+import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
 
-const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
-  const {
-    form,
-    onSubmit,
-    isUpdatingWallet,
-    handleSelectOption,
-    selectedOption,
-  } = useGetCustomerByIdHook();
+const UpdateBalance = ({ wallet }: { wallet: number }) => {
+  const isDebt = wallet < 0;
+  const { form, onSubmit, isUpdatingWallet } = useFetchSingleSupplyHook();
   console.log("wallet", wallet);
 
   return (
     <div className="flex w-full flex-col items-start gap-3">
       <div className="border bg-white    border-green-300 rounded w-full p-4 flex flex-col justify-between items-center">
-        <div className="flex justify-between items-start w-full">
-          <p className="text-primary-black-100 font-bold capitalize">
-            {selectedOption?.toLocaleLowerCase()}
-          </p>
-
-          <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={"outline"}>Select an option</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-primary-green-200 border-none">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white"
-                    onSelect={() => handleSelectOption("DEPOSIT")}
-                  >
-                    Deposit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white"
-                    onSelect={() => handleSelectOption("WITHDRAWAL")}
-                  >
-                    Withdrawal
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
         <span className="flex gap-2 items-center w-full">
           <p>Balance : </p>
-          <p className="text-bold text-primary-green-300">{wallet}</p>
+          <p className={cn("", isDebt ? "text-red-500" : "text-green-300")}>
+            {wallet}
+          </p>
         </span>
       </div>
 
@@ -88,7 +48,7 @@ const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
               name="amount"
               render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Add Amount</FormLabel>
+                  <FormLabel>Add amount to repay</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter an amount...." {...field} />
                   </FormControl>
@@ -114,12 +74,6 @@ const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
                     </FormControl>
                     <SelectContent className="bg-white cursor-pointer border border-green-100">
                       <SelectItem
-                        value="MYCLIQ"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
-                      >
-                        Mycliq
-                      </SelectItem>
-                      <SelectItem
                         value="CASH"
                         className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
                       >
@@ -130,6 +84,40 @@ const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
                         className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
                       >
                         Bank Transfer
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="payment_type"
+              render={({ field }) => (
+                <FormItem className="flex-1 w-full bg-white">
+                  <FormLabel>Payment Type</FormLabel> {/* Updated label */}
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full border border-green-300">
+                        <SelectValue placeholder="Select a payment method" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                      <SelectItem
+                        value="DEPOSIT"
+                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                      >
+                        Deposit
+                      </SelectItem>
+                      <SelectItem
+                        value="REFUND"
+                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                      >
+                        Refund
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -170,4 +158,4 @@ const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
   );
 };
 
-export default UpdateCustomerWallet;
+export default UpdateBalance;
