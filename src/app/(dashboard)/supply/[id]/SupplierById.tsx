@@ -120,7 +120,6 @@ const SupplierById = ({ id }: { id: string }) => {
 
               <SupplyHistory
                 SupplierByIdData={SupplierByIdData}
-                handleRowClick={handleSupplyHistoryRowClick}
                 SupplierByIdLoading={SupplierByIdLoading}
               />
             </div>
@@ -160,7 +159,6 @@ const SupplierById = ({ id }: { id: string }) => {
           <div className="w-full">
             <SupplyHistory
               SupplierByIdData={SupplierByIdData?.data}
-              handleRowClick={handleSupplyHistoryRowClick}
               SupplierByIdLoading={SupplierByIdLoading}
             />
           </div>
