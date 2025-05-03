@@ -7,7 +7,7 @@ import {
 
 type fetchSalesHistoryProps = {
   id: string;
-  status?: string;
+  type?: string;
   search?: string;
   attendanceId?: string;
   start_date?: string;
@@ -17,25 +17,36 @@ type fetchSalesHistoryProps = {
 export const fetchSalesHistory = async ({
   id,
   search = "",
-  status = "",
+  type = "",
   start_date = "",
   end_date = "",
   attendanceId = "",
 }: fetchSalesHistoryProps) => {
-  // Safely construct URL with search params
   const url = new URL(`/api/sales/${id}`, window.location.origin);
-  if (search) url.searchParams.append("search", search);
-  if (status) url.searchParams.append("status", status);
-  if (start_date) url.searchParams.append("start_date", start_date);
-  if (end_date) url.searchParams.append("end_date", end_date);
-  if (attendanceId) url.searchParams.append("attendanceId", attendanceId);
 
-  const response = await fetch(url.toString(), { method: "GET" });
+  const params = new URLSearchParams();
+  if (search) params.append("search", search);
+  if (type) params.append("type", type);
+  if (start_date) params.append("start_date", start_date);
+  if (end_date) params.append("end_date", end_date);
+  if (attendanceId) params.append("attendanceId", attendanceId);
+
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
-    const error = new Error("Error fetching sales history data");
-    // Attach status code for retry logic
-    (error as any).status = response.status;
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(
+      errorData.message || "Error fetching sales history data"
+    );
+    (error as any).type = response.type;
+    (error as any).data = errorData;
     throw error;
   }
 
@@ -52,25 +63,21 @@ export const useFetchSalesHistoryQuery = ({
   params,
   ...config
 }: useFectchSalesHistoryOptions) => {
-  console.log("params", params);
-
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
-      if ([404, 401].includes(error.status)) return false;
+      if ([404, 401].includes(error.type)) return false;
       return failureCount < 2;
     },
-    // Include all parameters in the query key
-
     queryKey: [
       queryKey.sales.getAllSalesHistory,
       params.id,
       params.search,
-      params.status,
+      params.type,
       params.start_date,
       params.end_date,
-      params.attendanceId,
     ],
     queryFn: () => fetchSalesHistory(params),
+    staleTime: 1000 * 60 * 5, // 5 minutes
     ...config,
   });
 };

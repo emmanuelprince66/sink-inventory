@@ -27,4 +27,10 @@ export const queryKey = {
     getAllSalesHistory: "get-all-sales",
     getAllOrdersHistory: "get-all-orders",
   },
+  inventory: {
+    getAllInventory: "get-all-inventory",
+  },
+  categories: {
+    getAllCategories: "get-all-categories",
+  },
 };

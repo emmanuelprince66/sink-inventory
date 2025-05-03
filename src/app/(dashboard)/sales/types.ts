@@ -50,9 +50,10 @@ interface Product {
   // Add product properties based on the actual data structure
   // Since the product details weren't fully shown in the example,
   // you'll need to complete this based on the actual data
-  id?: string;
-  name?: string;
-  quantity?: number;
-  price?: string;
+  id: string;
+  name: string;
+  quantity: number;
+  price: string;
+  image: string;
   // ... any other product fields
 }
