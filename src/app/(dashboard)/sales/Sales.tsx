@@ -85,7 +85,14 @@ const Sales = () => {
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
             Sales
           </p>
-          <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+
+          <div className="flex items-center gap-2">
+            <Button className="bg-primary-green-200 border-primary-green-300">
+              Attendants
+            </Button>
+
+            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+          </div>
         </div>
       </div>
 

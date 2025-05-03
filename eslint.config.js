@@ -1,18 +1,39 @@
-import ts from "@typescript-eslint/eslint-plugin"; // Add this import
-import { defineConfig } from "eslint/config";
+import nextPlugin from "@next/eslint-plugin-next";
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
-export default defineConfig([
+export default [
   {
     files: ["**/*.{ts,tsx}"],
     plugins: {
-      "@typescript-eslint": ts, // Add this plugin registration
+      "@typescript-eslint": tsPlugin,
+      react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
+      "jsx-a11y": jsxA11yPlugin,
+      "@next/next": nextPlugin,
+    },
+    languageOptions: {
+      parser: require("@typescript-eslint/parser"),
+      parserOptions: {
+        project: "./tsconfig.json",
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
     rules: {
       "@typescript-eslint/no-unused-vars": [
-        // Now properly recognized
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+      "react/react-in-jsx-scope": "off",
+      "@next/next/no-html-link-for-pages": "error",
     },
   },
-]);
+  {
+    files: ["**/*.{js,jsx}"],
+    extends: ["plugin:@next/next/recommended"],
+  },
+];
