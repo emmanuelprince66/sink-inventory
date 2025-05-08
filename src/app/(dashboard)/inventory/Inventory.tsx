@@ -5,9 +5,12 @@ import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
+import Link from "next/link";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import { cn } from "@/lib/utils"; // Assuming you're using the cn utility
 import { useState } from "react";
+import AddService from "./AddService";
 import AllInventory from "./AllInventory";
 interface Category {
   id: string;
@@ -75,17 +78,26 @@ const CustomInventoryCard = ({
 };
 
 const Inventory = () => {
+  const [searchInput, setSearchInput] = useState("");
+  const [addServiceModal, setAddServiceModal] = useState(false);
+  const closeAddServiceModal = () => setAddServiceModal(false);
+  const openddServiceModal = () => setAddServiceModal(true);
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+
   const {
     InventoryData,
     CategoriesData,
     InventoryDataLoading,
     CategoriesDataLoading,
-  } = useInventoryHook();
+  } = useInventoryHook({
+    searchInput,
+    selectedCategoryId,
+    closeAddServiceModal,
+  });
 
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
-  );
-  const [searchInput, setSearchInput] = useState("");
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
@@ -109,6 +121,14 @@ const Inventory = () => {
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
             Inventory
           </p>
+
+          <div className="gap-1 flex items-center">
+            <Button onClick={openddServiceModal}>Add Service</Button>
+
+            <Link href={"/product/add-product"}>
+              <Button>Add Product</Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -144,18 +164,18 @@ const Inventory = () => {
           />
         </div>
       )}
-      <div className="flex items-center gap-2 my-2">
+      <div className="w-[100%] items-center flex justify-between my-2">
         <p className="text-primary-black-100 mr-2">Categories</p>
 
         {/* "View More" Button - Subtle outline style */}
-        <Button className="px-3 py-1 rounded-md text-xs border border-gray-300 hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
-          View More
-        </Button>
 
-        {/* "Add Category" Button - Solid green style */}
-        <Button className="px-3 py-1 rounded-md text-xs  border-gray-300  hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
-          Add Category
-        </Button>
+        <Link href={"/categories"}>
+          <div className="flex gap-2 items-center">
+            <Button className="px-3 py-1 rounded-md text-xs border border-gray-300 hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
+              View More
+            </Button>
+          </div>
+        </Link>
       </div>
 
       {CategoriesDataLoading || !CategoriesData ? (
@@ -229,6 +249,15 @@ const Inventory = () => {
       ) : (
         <AllInventory data={InventoryData} loading={InventoryDataLoading} />
       )}
+
+      <CustomModal
+        isOpen={addServiceModal} // FIXED: Removed the negation
+        onClose={closeAddServiceModal}
+        trigger={false}
+        title="Add New Service"
+      >
+        <AddService />
+      </CustomModal>
     </div>
   );
 };

@@ -9,7 +9,7 @@ type fetchSalesHistoryProps = {
   id: string;
   type?: string;
   search?: string;
-  attendanceId?: string;
+  attendance_id?: string;
   start_date?: string;
   end_date?: string;
 };
@@ -20,8 +20,9 @@ export const fetchSalesHistory = async ({
   type = "",
   start_date = "",
   end_date = "",
-  attendanceId = "",
+  attendance_id = "",
 }: fetchSalesHistoryProps) => {
+  console.log("attendance_id", attendance_id);
   const url = new URL(`/api/sales/${id}`, window.location.origin);
 
   const params = new URLSearchParams();
@@ -29,7 +30,7 @@ export const fetchSalesHistory = async ({
   if (type) params.append("type", type);
   if (start_date) params.append("start_date", start_date);
   if (end_date) params.append("end_date", end_date);
-  if (attendanceId) params.append("attendanceId", attendanceId);
+  if (attendance_id) params.append("attendance_id", attendance_id);
 
   url.search = params.toString();
 
@@ -75,9 +76,10 @@ export const useFetchSalesHistoryQuery = ({
       params.type,
       params.start_date,
       params.end_date,
+      params.attendance_id,
     ],
     queryFn: () => fetchSalesHistory(params),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    // staleTime: 1000 * 60 * 5, // 5 minutes
     ...config,
   });
 };

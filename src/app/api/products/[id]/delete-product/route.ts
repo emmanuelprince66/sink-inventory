@@ -3,12 +3,14 @@ import { BaseUrl } from "@/constants/base-url";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Await the params promise
   const { id } = await params;
+
+  console.log("id--4", id);
 
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
@@ -19,26 +21,11 @@ export async function GET(
       { status: 401 }
     );
   }
-
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const type = request.nextUrl.searchParams.get("type") || "";
-  const start_date = request.nextUrl.searchParams.get("start_date") || "";
-  const end_date = request.nextUrl.searchParams.get("end_date") || "";
-  const attendance_id = request.nextUrl.searchParams.get("attendance_id") || "";
-
-  console.log("attendance_id", attendance_id);
-
-  // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}sale/sales_history/${id}/`);
-  if (search) apiUrl.searchParams.append("search", search);
-  if (type) apiUrl.searchParams.append("type", type);
-  if (start_date) apiUrl.searchParams.append("start_date", start_date);
-  if (end_date) apiUrl.searchParams.append("end_date", end_date);
-  if (attendance_id) apiUrl.searchParams.append("attendance_id", attendance_id);
+  const apiUrl = new URL(`${BaseUrl}product/single_delete/${id}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
-      method: "GET",
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
@@ -46,22 +33,34 @@ export async function GET(
       cache: "no-store",
     });
 
+    console.log("res", response);
+
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.message || "Failed to fetch sales history data" },
+        { error: errorData.message || "Failed to delete Product" },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    // For DELETE, the response might be empty, so we don't always expect JSON
+    let data;
+    try {
+      data = await response.json();
+
+      console.log("data", data);
+    } catch (e) {
+      console.error("Error parsing response:", e);
+      data = null;
+    }
+
     return NextResponse.json({
       success: true,
       data,
-      message: "Sales history data fetched successfully",
+      message: "Product deleted successfully",
     });
   } catch (error) {
-    console.error("Error fetching sales history data:", error);
+    console.error("Error deleting product:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -5,18 +5,18 @@ import {
   useQuery,
 } from "@/lib/react-query";
 
-export const fetchCustomerById = async (id: string) => {
+export const fetchAttendants = async (id: string) => {
   // console.log("useQuery:", useQuery); //
-  const response = await fetch(`/api/customers/${id}/customer-by-id`);
+  const response = await fetch(`/api/attendants/${id}`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();
 };
 
-type QueryFnType = typeof fetchCustomerById;
+type QueryFnType = typeof fetchAttendants;
 
 type options = QueryConfigType<QueryFnType>;
 
-export const useFetchCustomerById = (id: any, config?: options) => {
+export const useFetchAttendants = (id: any, config?: options) => {
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
       if ([404, 401].includes(error.status)) return false;
@@ -24,7 +24,7 @@ export const useFetchCustomerById = (id: any, config?: options) => {
       else return false;
     },
     queryKey: [queryKey.customers.getCustomerById, id],
-    queryFn: () => fetchCustomerById(id),
+    queryFn: () => fetchAttendants(id),
     staleTime: 1000 * 60 * 5,
     ...config,
   });

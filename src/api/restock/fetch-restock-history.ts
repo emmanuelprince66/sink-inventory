@@ -5,26 +5,26 @@ import {
   useQuery,
 } from "@/lib/react-query";
 
-export const fetchCustomerById = async (id: string) => {
+export const fetchRestockHistory = async (id: string) => {
   // console.log("useQuery:", useQuery); //
-  const response = await fetch(`/api/customers/${id}/customer-by-id`);
+  const response = await fetch(`/api/restock/${id}`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();
 };
 
-type QueryFnType = typeof fetchCustomerById;
+type QueryFnType = typeof fetchRestockHistory;
 
 type options = QueryConfigType<QueryFnType>;
 
-export const useFetchCustomerById = (id: any, config?: options) => {
+export const useFetchRestockHistoryQuery = (id: any, config?: options) => {
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
       if ([404, 401].includes(error.status)) return false;
       else if (failureCount < 1) return true;
       else return false;
     },
-    queryKey: [queryKey.customers.getCustomerById, id],
-    queryFn: () => fetchCustomerById(id),
+    queryKey: [queryKey.products.getRestockHistory, id],
+    queryFn: () => fetchRestockHistory(id),
     staleTime: 1000 * 60 * 5,
     ...config,
   });

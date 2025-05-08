@@ -1,3 +1,4 @@
+import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -25,9 +26,15 @@ export const useSalesHook = (
   activeFilter?: keyof typeof filterMapping | undefined,
   activeFilterTwo?: keyof typeof filterMappingTwo | undefined,
   dateRange?: DateRange | undefined,
-  searchInput?: any
+  searchInput?: any,
+  attendantId?: any
 ) => {
   const business_id = useBusinessStore((state) => state.business_id);
+
+  const { data: AttendantsData, isLoading: AttendantsLoading } =
+    useFetchAttendants(business_id);
+
+  console.log("Attendanrs", AttendantsData);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
 
   const [orderDetails, setOrderDetails] = useState<any>({});
@@ -53,6 +60,7 @@ export const useSalesHook = (
   } = useFetchSalesHistoryQuery({
     params: {
       id: business_id,
+      attendance_id: attendantId,
       search: searchTerm,
       type: activeFilter && filterMapping[activeFilter],
       start_date: dateRange?.from
@@ -95,12 +103,15 @@ export const useSalesHook = (
     searchTerm,
     refetchSales,
     refetchOrders,
+    attendantId,
   ]);
 
   return {
     SalesData,
     SalesLoading,
     SalesError,
+    AttendantsData,
+    AttendantsLoading,
     openOrderHistoryModal,
     orderDetails,
     handleOrderHistoryRowClick,

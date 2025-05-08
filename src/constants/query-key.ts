@@ -29,8 +29,17 @@ export const queryKey = {
   },
   inventory: {
     getAllInventory: "get-all-inventory",
+    addService: "add-service",
+  },
+  products: {
+    getProductsById: "get-products-by-id",
+    getRestockHistory: "restock-history",
+    addRestockItem: "add-restock-item",
+    deleteProduct: "delete-product",
+    editProduct: "edit-product",
   },
   categories: {
     getAllCategories: "get-all-categories",
+    updateCategory: "update-category",
   },
 };

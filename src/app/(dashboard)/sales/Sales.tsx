@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomCard } from "@/components/app/CustomCard";
+import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
+import ShowAllAttendants from "./ShowAllAttendants";
 
 const productFilterOptions = [
   "All",
@@ -49,6 +51,11 @@ const Sales = () => {
     to: new Date(),
   });
   const [searchInput, setSearchInput] = useState("");
+  const [ShowAttendants, setShowAttendants] = useState(false);
+  const closeAttendantsModal = () => setShowAttendants(false);
+  const [attendantId, setAttendantId] = useState("");
+
+  const openAttendantsModal = () => setShowAttendants(true);
   const [activeProductFilter, setActiveProductFilter] = useState<
     (typeof productFilterOptions)[number]
   >(productFilterOptions[0]);
@@ -59,13 +66,26 @@ const Sales = () => {
     "products"
   );
 
-  const { SalesData, SalesLoading, SalesOrderData, SalesOrderLoading } =
-    useSalesHook(
-      activeProductFilter,
-      activeOrderFilter,
-      dateRange,
-      searchInput
-    );
+  const handleClickAttendants = (attendants: any) => {
+    setAttendantId(attendants?.id);
+    closeAttendantsModal();
+    console.log("444", attendants);
+  };
+
+  const {
+    SalesData,
+    SalesLoading,
+    AttendantsData,
+    AttendantsLoading,
+    SalesOrderData,
+    SalesOrderLoading,
+  } = useSalesHook(
+    activeProductFilter,
+    activeOrderFilter,
+    dateRange,
+    searchInput,
+    attendantId
+  );
 
   const totalProfit = useMemo(() => {
     return SalesData?.data?.results?.data.reduce(
@@ -87,7 +107,10 @@ const Sales = () => {
           </p>
 
           <div className="flex items-center gap-2">
-            <Button className="bg-primary-green-200 border-primary-green-300">
+            <Button
+              className=" border-primary-green-300"
+              onClick={openAttendantsModal}
+            >
               Attendants
             </Button>
 
@@ -217,6 +240,20 @@ const Sales = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* attendants Modal */}
+      <CustomModal
+        isOpen={ShowAttendants} // FIXED: Removed the negation
+        onClose={closeAttendantsModal}
+        trigger={false}
+        title="Store Attendants"
+      >
+        <ShowAllAttendants
+          AttendantsData={AttendantsData}
+          AttendantsLoading={AttendantsLoading}
+          handleClickAttendants={handleClickAttendants}
+        />
+      </CustomModal>
     </div>
   );
 };

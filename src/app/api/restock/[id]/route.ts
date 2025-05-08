@@ -19,22 +19,7 @@ export async function GET(
       { status: 401 }
     );
   }
-
-  const search = request.nextUrl.searchParams.get("search") || "";
-  const type = request.nextUrl.searchParams.get("type") || "";
-  const start_date = request.nextUrl.searchParams.get("start_date") || "";
-  const end_date = request.nextUrl.searchParams.get("end_date") || "";
-  const attendance_id = request.nextUrl.searchParams.get("attendance_id") || "";
-
-  console.log("attendance_id", attendance_id);
-
-  // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}sale/sales_history/${id}/`);
-  if (search) apiUrl.searchParams.append("search", search);
-  if (type) apiUrl.searchParams.append("type", type);
-  if (start_date) apiUrl.searchParams.append("start_date", start_date);
-  if (end_date) apiUrl.searchParams.append("end_date", end_date);
-  if (attendance_id) apiUrl.searchParams.append("attendance_id", attendance_id);
+  const apiUrl = new URL(`${BaseUrl}product/restock/${id}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
@@ -49,7 +34,7 @@ export async function GET(
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.message || "Failed to fetch sales history data" },
+        { error: errorData.message || "Failed to fetch Restock data" },
         { status: response.status }
       );
     }
@@ -58,10 +43,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data,
-      message: "Sales history data fetched successfully",
+      message: "Restock data fetched successfully",
     });
   } catch (error) {
-    console.error("Error fetching sales history data:", error);
+    console.error("Error fetching Restock data:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
