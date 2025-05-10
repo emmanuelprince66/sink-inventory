@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-const RestockItem = ({ data }: { data: any }) => {
+const RestockItem = ({ data }: { data?: any }) => {
   const {
     restockHistory,
     SupplierData,
