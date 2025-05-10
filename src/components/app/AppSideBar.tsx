@@ -6,7 +6,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { useLogoutMutation } from "@/api/auth/logout-user";
-import sink from "@/assets/sink.png";
 import {
   Sidebar,
   SidebarContent,
@@ -32,7 +31,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="bg-[#001e06] py-6 mb-8">
             <div className="w-24 h-24">
               <Image
-                src={sink.src}
+                src="/assets/sink.png"
                 alt="sink-logo"
                 className="w-full h-full object-contain"
                 priority
