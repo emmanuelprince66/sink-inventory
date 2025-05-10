@@ -1,9 +1,4 @@
-import React from "react";
-
 import Image from "next/image";
-
-import welcome from "@/assets/auth/welcome.png";
-import sink from "@/assets/sink.png";
 
 const WelcomeScreen = () => {
   return (
@@ -13,7 +8,7 @@ const WelcomeScreen = () => {
         {" "}
         {/* absolute positioning */}
         <Image
-          src={sink}
+          src="/assets/sink.png"
           alt="sink-logo"
           className="w-full h-full object-contain"
           priority
@@ -23,7 +18,7 @@ const WelcomeScreen = () => {
       {/* Welcome image remains centered */}
       <div className="flex-1 flex items-center justify-center">
         <Image
-          src={welcome}
+          src="assets/auth/welcome.png"
           alt="welcome"
           className="max-w-full max-h-[70vh] object-contain"
           priority
