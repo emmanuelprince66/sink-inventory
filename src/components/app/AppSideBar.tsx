@@ -32,10 +32,12 @@ export function AppSidebar() {
           <SidebarGroupLabel className="bg-[#001e06] py-6 mb-8">
             <div className="w-24 h-24">
               <Image
-                src={sink}
+                src={sink.src}
                 alt="sink-logo"
                 className="w-full h-full object-contain"
                 priority
+                width={150}
+                height={150}
               />
             </div>
           </SidebarGroupLabel>
