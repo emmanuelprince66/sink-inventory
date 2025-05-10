@@ -2,6 +2,7 @@ export const queryKey = {
   business: {
     getAllBusiness: "get-all-business",
     createBusiness: "create-business",
+    getBusinessById: "get-business-by-id",
   },
   auth: {
     login: "login",
@@ -26,6 +27,7 @@ export const queryKey = {
   sales: {
     getAllSalesHistory: "get-all-sales",
     getAllOrdersHistory: "get-all-orders",
+    createSale: "create-sale",
   },
   inventory: {
     getAllInventory: "get-all-inventory",
@@ -36,10 +38,14 @@ export const queryKey = {
     getRestockHistory: "restock-history",
     addRestockItem: "add-restock-item",
     deleteProduct: "delete-product",
+    deleteService: "delete-service",
     editProduct: "edit-product",
   },
   categories: {
     getAllCategories: "get-all-categories",
     updateCategory: "update-category",
+  },
+  bank: {
+    getAllBanks: "get-all-banks",
   },
 };

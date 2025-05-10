@@ -4,6 +4,7 @@ import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
+import moment from "moment";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -26,6 +27,16 @@ const addProductSchema = z
     type: z.string().min(1, "Type is required"),
     percentage_discount: z.string().min(1, "Percentage Discount is required"),
     due_date: z.string().optional(),
+    image: z
+      .instanceof(File, { message: "Product image is required" })
+      .refine(
+        (file) => file.size <= 5 * 1024 * 1024,
+        "File size must be less than 5MB"
+      )
+      .refine(
+        (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+        "Only .jpg, .png, and .webp formats are supported"
+      ),
     amount_paid: z.string().optional(),
   })
   .superRefine((data, ctx) => {
@@ -69,7 +80,7 @@ export const useProductHook = ({ id }: { id?: string }) => {
 
   const { mutate: addProduct, isPending: addProductPending } =
     useAddProductMutation({
-      businessId: business_id,
+      businessId: business_id || "", // Provide fallback empty string
     });
 
   const form = useForm<addProductFormValues>({
@@ -79,6 +90,7 @@ export const useProductHook = ({ id }: { id?: string }) => {
       sku: "",
       category: "",
       date: "",
+      image: undefined,
       supplier: "",
       stock_quantity: "",
       low_stock_tresh: "",
@@ -123,32 +135,53 @@ export const useProductHook = ({ id }: { id?: string }) => {
     { label: "Partial Payment", value: "PART" },
   ];
 
-  const onSubmit = (values: addProductFormValues) => {
-    const payload = {
-      name: values.item_name,
-      sku: values.sku,
-      category_id: values.category,
-      expiry_date: values.date,
-      supplier_id: values.supplier,
-      stock_quantity: Number(values.stock_quantity),
-      low_stock_tresh: Number(values.low_stock_tresh),
-      stock_status: values.stock_status,
-      product_unit: values.product_unit,
-      cost_price: Number(values.cost_price),
-      selling_price: Number(values.selling_price),
-      payment_method: values.payment_method,
-      discount_value: Number(values.discount_value),
-      type: values.type,
-      percentage_discount: Number(values.percentage_discount),
-      ...(values.payment_method === "CREDIT" && { due_date: values.due_date }),
-      ...(values.payment_method === "PART" && {
-        amount_paid: Number(values.amount_paid),
-        due_date: values.due_date,
-      }),
-    };
-    console.log("payload", payload);
+  const onSubmit = async (values: addProductFormValues) => {
+    if (!business_id) {
+      // Handle error case
+      return;
+    }
+    const formData = new FormData();
+
+    // Format dates using moment
+    const formattedExpiryDate = values.date
+      ? moment(values.date).format("YYYY-MM-DD")
+      : "";
+    const formattedDueDate = values.due_date
+      ? moment(values.due_date).format("YYYY-MM-DD")
+      : "";
+
+    // Append all fields to formData
+    formData.append("name", values.item_name);
+    formData.append("sku", values.sku);
+    formData.append("category_id", values.category);
+    formData.append("expiry_date", formattedExpiryDate); // Use formatted date
+    formData.append("supplier_id", values.supplier);
+    formData.append("quantity", values.stock_quantity);
+    formData.append("low_stock_tresh", values.low_stock_tresh);
+    formData.append("stock_status", values.stock_status);
+    formData.append("product_unit", values.product_unit);
+    formData.append("cost_price", values.cost_price);
+    formData.append("selling_price", values.selling_price);
+    formData.append("payment_method", values.payment_method);
+    formData.append("discount_value", values.discount_value);
+    formData.append("type", values.type);
+    formData.append("percentage_discount", values.percentage_discount);
+    formData.append("image", values.image); // Append the file
+
+    // Conditional fields with formatted dates
+    if (values.payment_method === "CREDIT") {
+      formData.append("due_date", formattedDueDate);
+    }
+
+    if (values.payment_method === "PART") {
+      formData.append("amount_paid", values.amount_paid || "");
+      formData.append("due_date", formattedDueDate);
+    }
+
+    console.log("formData", formData);
+
     addProduct({
-      payload,
+      payload: formData,
       businessId: business_id,
     });
   };

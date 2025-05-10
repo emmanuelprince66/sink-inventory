@@ -21,7 +21,7 @@ export async function DELETE(
       { status: 401 }
     );
   }
-  const apiUrl = new URL(`${BaseUrl}product/single_product/${id}/`);
+  const apiUrl = new URL(`${BaseUrl}service/single_service/${id}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
@@ -38,7 +38,7 @@ export async function DELETE(
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.message || "Failed to delete Product" },
+        { error: errorData.message || "Failed to delete service" },
         { status: response.status }
       );
     }
@@ -57,10 +57,10 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       data,
-      message: "Product deleted successfully",
+      message: "Service deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting product:", error);
+    console.error("Error deleting service:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

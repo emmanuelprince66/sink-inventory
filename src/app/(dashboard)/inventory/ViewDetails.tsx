@@ -4,7 +4,7 @@ import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 const ViewDetails = ({ data }: { data: any }) => {
-  const { handleDeleteProduct, isDeleting } = useInventoryHook({});
+  const { handleDeleteProduct, deleting } = useInventoryHook({});
 
   return (
     <div className="bg-[#FEFFFE] p-6 rounded-lg shadow-sm border border-gray-200 max-w-4xl mx-auto">
@@ -71,12 +71,12 @@ const ViewDetails = ({ data }: { data: any }) => {
           </Link>
 
           <Button
-            disabled={isDeleting}
-            onClick={() => handleDeleteProduct(data?.id)}
+            disabled={deleting}
+            onClick={() => handleDeleteProduct(data?.id, data?.type)}
             className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
           >
             <Trash2 size={16} />
-            {isDeleting ? "Deleting..." : "Delete"}
+            {deleting ? "Deleting..." : "Delete"}
           </Button>
         </div>
       </div>

@@ -10,6 +10,8 @@ type FetchInventoryProps = {
   category_id?: string;
   type?: string;
   search?: string;
+  page?: number;
+  limit?: number;
 };
 
 export const fetchInventory = async ({
@@ -17,18 +19,20 @@ export const fetchInventory = async ({
   search = "",
   type = "",
   category_id = "",
+  page = 1,
+  limit = 15,
 }: FetchInventoryProps) => {
-  // Safely construct URL with search params
   const url = new URL(`/api/inventory/${id}`, window.location.origin);
   if (search) url.searchParams.append("search", search);
   if (type) url.searchParams.append("type", type);
   if (category_id) url.searchParams.append("category_id", category_id);
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("limit", limit.toString());
 
   const response = await fetch(url.toString(), { method: "GET" });
 
   if (!response.ok) {
     const error = new Error("Error fetching answers data");
-    // Attach status code for retry logic
     (error as any).status = response.status;
     throw error;
   }
@@ -57,6 +61,7 @@ export const useGetInventoryQuery = ({
       params.id,
       params.search,
       params.type,
+      params.page,
       params.category_id,
     ],
     queryFn: () => fetchInventory(params),

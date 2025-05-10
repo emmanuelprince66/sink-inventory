@@ -2,24 +2,16 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-interface CreateProductPayload {
-  // Define your customer creation payload type here
-  [key: string]: any;
+interface AddProductVariables {
+  businessId: string;
+  payload: FormData;
 }
+const addProduct = async ({ businessId, payload }: AddProductVariables) => {
+  console.log("payload", payload);
 
-const addProduct = async ({
-  businessId,
-  payload,
-}: {
-  businessId: any;
-  payload: CreateProductPayload;
-}) => {
   const response = await fetch(`/api/products/${businessId}/add-product`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: payload,
   });
 
   if (!response.ok) {
@@ -31,31 +23,25 @@ const addProduct = async ({
 
 type QueryFnType = typeof addProduct;
 
-interface UseAddProductMutationOptions extends MutationConfig<QueryFnType> {
-  businessId: string | null;
+interface UseAddProductMutationOptions {
+  businessId: string; // Remove null from type
+  config?: MutationConfig<QueryFnType>;
 }
 
 export const useAddProductMutation = ({
   businessId,
-  ...config
+  config,
 }: UseAddProductMutationOptions) => {
   const { showToast } = useToast();
 
   return useMutation({
     mutationKey: [queryKey.inventory.addService, businessId],
-    mutationFn: (payload: CreateProductPayload) =>
-      addProduct({ businessId, payload }),
+    mutationFn: addProduct,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error creating product:", error);
-
       const errorMessage =
-        error?.message ||
-        error?.error ||
-        error?.message ||
-        "Error creating Product";
-
-      showToast(errorMessage, "error");
+        error?.message || error?.error || "Error creating Product";
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

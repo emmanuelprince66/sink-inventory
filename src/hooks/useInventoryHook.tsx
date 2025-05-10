@@ -7,8 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useDeleteServiceMutation } from "@/api/products/delete-service";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useState } from "react";
+import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
 const AddServiceSchema = z.object({
@@ -59,6 +61,7 @@ export const useInventoryHook = ({
   productId?: string | null;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const { showToast } = useToast();
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
 
@@ -72,13 +75,25 @@ export const useInventoryHook = ({
     useDeleteProductMutation({
       onSuccess: (data) => {
         console.log("data", data);
+        showToast(data.message, "success");
+        // Optional: Invalidate queries or update cache
+      },
+      // You can add other callbacks here if needed
+    });
+  const { mutate: deleteService, isPending: isDeletingService } =
+    useDeleteServiceMutation({
+      onSuccess: (data) => {
+        showToast(data.message, "success");
         // Optional: Invalidate queries or update cache
       },
       // You can add other callbacks here if needed
     });
 
-  const handleDeleteProduct = (id: string) => {
-    deleteProduct(id);
+  const handleDeleteProduct = (id: string, type: string) => {
+    if (type === "PRODUCT") {
+      deleteProduct(id);
+    }
+    deleteService(id);
   };
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500); // 500ms debounce
@@ -176,7 +191,7 @@ export const useInventoryHook = ({
     onSubmitEditSellingPrice,
     editProductPending,
     handleDeleteProduct,
-    isDeleting,
+    deleting: isDeleting || isDeletingService,
     editSellingPriceForm,
     onSubmit,
     CategoriesDataLoading,

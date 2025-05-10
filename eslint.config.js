@@ -1,11 +1,10 @@
-import nextPlugin from "@next/eslint-plugin-next";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser"; // Import the parser directly
-import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
-import reactPlugin from "eslint-plugin-react";
-import reactHooksPlugin from "eslint-plugin-react-hooks";
+const nextPlugin = require("@next/eslint-plugin-next");
+const tsPlugin = require("@typescript-eslint/eslint-plugin");
+const jsxA11yPlugin = require("eslint-plugin-jsx-a11y");
+const reactPlugin = require("eslint-plugin-react");
+const reactHooksPlugin = require("eslint-plugin-react-hooks");
 
-export default [
+module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
     plugins: {
@@ -16,7 +15,7 @@ export default [
       "@next/next": nextPlugin,
     },
     languageOptions: {
-      parser: tsParser, // Use the imported parser
+      parser: require("@typescript-eslint/parser"),
       parserOptions: {
         project: "./tsconfig.json",
         ecmaFeatures: {

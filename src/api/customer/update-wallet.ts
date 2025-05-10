@@ -1,6 +1,6 @@
-import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
+import { MutationConfig, useMutation } from "@/lib/react-query";
 
 interface UpdateWalletPayload {
   [key: string]: any;

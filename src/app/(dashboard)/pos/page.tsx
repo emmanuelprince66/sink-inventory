@@ -1,7 +1,11 @@
-import React from "react";
+import Pos from "./Pos";
 
 const page = () => {
-  return <div></div>;
+  return (
+    <>
+      <Pos />
+    </>
+  );
 };
 
 export default page;
