@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: false, // Change to true if you want to allow build with TS errors
+    ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: false, // Change to true if you want to allow build with ESLint errors
-  },
+  // Remove the entire eslint block
   images: {
     domains: ["sync-bck.s3.amazonaws.com"],
   },
