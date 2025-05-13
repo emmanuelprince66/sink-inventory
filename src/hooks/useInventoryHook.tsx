@@ -166,13 +166,11 @@ export const useInventoryHook = ({
     closeAddServiceModal();
   };
   const onSubmitEditSellingPrice = (values: EditSellingPriceFormValues) => {
-    const payload = {
-      selling_price: Number(values.selling_price),
-    };
-    console.log("payload--3", payload);
+    const formData = new FormData();
+    formData.append("selling_price", String(values.selling_price));
 
     editProduct({
-      payload,
+      payload: formData,
       productId: productId,
     });
 

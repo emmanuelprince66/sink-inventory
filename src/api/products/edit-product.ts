@@ -2,11 +2,11 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-interface EditProduvtVariables {
+interface EditProductProps {
   productId: any;
   payload: FormData;
 }
-const addProduct = async ({ productId, payload }: EditProduvtVariables) => {
+const addProduct = async ({ productId, payload }: EditProductProps) => {
   console.log("payload", payload);
 
   const response = await fetch(`/api/products/${productId}/edit-product`, {
