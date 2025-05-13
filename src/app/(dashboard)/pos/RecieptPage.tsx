@@ -1,3 +1,4 @@
+"use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";

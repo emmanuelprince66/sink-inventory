@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { formatToNaira } from "@/utils/formatMoney";
 import {

@@ -1,5 +1,4 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
