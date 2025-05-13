@@ -107,7 +107,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const inventory = row.original;
       return (
         <div className="font-medium">
-          {formatToNaira(inventory.selling_price)}
+          {formatToNaira(inventory.selling_price || inventory.amount || 0)}
         </div>
       );
     },

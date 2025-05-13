@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { [key: string]: string | string[] } }
 ) {
-  const { id: productId } = params;
+  // Extract the id from params - it could be string or string[]
+  const productId = Array.isArray(params.id) ? params.id[0] : params.id;
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
