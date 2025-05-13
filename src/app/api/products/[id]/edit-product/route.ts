@@ -4,64 +4,51 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { [key: string]: string | string[] } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Extract the id from params - it could be string or string[]
-  const productId = Array.isArray(params.id) ? params.id[0] : params.id;
-
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-
-  // Authentication check
-  if (!accessToken) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Unauthorized",
-        message: "Please authenticate first",
-      },
-      { status: 401 }
-    );
-  }
-
-  // Validate productId
-  if (!productId) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Product ID is required",
-        message: "No product identifier provided",
-      },
-      { status: 400 }
-    );
-  }
-
   try {
-    // Get FormData from request
-    const formData = await request.formData();
-    console.log("Received FormData entries:");
+    const { id: productId } = await params; // Await the params promise
+    const cookieStore = await cookies();
+    const accessToken = cookieStore.get("accessToken")?.value;
 
-    // Log all FormData entries for debugging
-    const formDataEntries = Array.from(formData.entries());
-    for (const [key, value] of formDataEntries) {
-      console.log(key, value);
+    // Authentication check
+    if (!accessToken) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+          message: "Please authenticate first",
+        },
+        { status: 401 }
+      );
     }
 
+    // Validate productId
+    if (!productId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Product ID is required",
+          message: "No product identifier provided",
+        },
+        { status: 400 }
+      );
+    }
+
+    const formData = await request.formData();
     const apiUrl = `${BaseUrl}product/single_product/${productId}/`;
 
-    // Forward FormData directly to your API
     const response = await fetch(apiUrl, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-      body: formData, // Send FormData directly
+      body: formData,
     });
 
     const responseData = await response.json();
 
     if (!response.ok) {
-      console.error("Backend API error:", responseData);
       return NextResponse.json(
         {
           success: false,
