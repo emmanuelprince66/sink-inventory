@@ -34,7 +34,7 @@ export type BusinessFormValues = z.infer<typeof businessSchema>;
 export const useBusinessHook = ({
   closeCreateBusinessModal,
 }: {
-  closeCreateBusinessModal: () => void;
+  closeCreateBusinessModal?: () => void;
 }) => {
   const { mutate: CreateBusiness } = useCreateBusinessMutation();
   const router = useRouter();
@@ -129,7 +129,7 @@ export const useBusinessHook = ({
     CreateBusiness(formData, {
       onSuccess: () => {
         setLoading(false);
-        closeCreateBusinessModal();
+        if (closeCreateBusinessModal) closeCreateBusinessModal();
       },
       onError: (error) => {
         // Handle specific API errors

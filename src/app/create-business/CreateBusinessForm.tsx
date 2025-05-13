@@ -25,7 +25,7 @@ import { useBusinessHook } from "@/hooks/useBusinessHook";
 const CreateBusinessForm = ({
   closeCreateBusinessModal,
 }: {
-  closeCreateBusinessModal: () => void;
+  closeCreateBusinessModal?: () => void;
 }) => {
   const { form, onSubmit, businessTypeOptions, loading, currencyOptions } =
     useBusinessHook({ closeCreateBusinessModal });
