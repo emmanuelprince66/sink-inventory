@@ -10,8 +10,8 @@ const WelcomeScreen = () => {
           alt="sink-logo"
           className="w-full h-full object-contain"
           priority
-          width={150}
-          height={150}
+          width={100}
+          height={100}
         />
       </div>
 
@@ -22,8 +22,8 @@ const WelcomeScreen = () => {
           alt="welcome"
           className="max-w-full max-h-[70vh] object-contain"
           priority
-          width={150}
-          height={150}
+          width={100}
+          height={100}
         />
       </div>
     </div>

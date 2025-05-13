@@ -2,6 +2,7 @@
 
 import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
@@ -15,7 +16,11 @@ import { useState } from "react";
 // Dynamically import CheckoutPage with SSR disabled
 const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ssr: false, // This will only load on client side
-  loading: () => <div>Loading checkout...</div>, // Optional loading component
+  loading: () => (
+    <div className="w-full h-full">
+      <Spinner />
+    </div>
+  ), // Optional loading component
 });
 
 const Pos = () => {
