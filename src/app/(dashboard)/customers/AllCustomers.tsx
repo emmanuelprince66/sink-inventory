@@ -1,7 +1,3 @@
-import React from "react";
-
-import { useCustomerHook } from "@/hooks/useCustomerHook";
-
 import CustomerTable from "./CustomerTable";
 import NoCustomer from "./NoCustomer";
 import { ApiResponse, CustomerResponse } from "./types";

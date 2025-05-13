@@ -6,6 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
@@ -68,6 +69,17 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "sku",
+    header: "Sku",
+    cell: ({ row }) => {
+      const inventory = row.original;
+      // const isOutOfStock =
+      //   inventory.quantity === 0 || inventory.quantity === null;
+
+      return <div className="font-medium">{inventory.sku ?? "-"}</div>;
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
@@ -95,7 +107,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const inventory = row.original;
       return (
         <div className="font-medium">
-          {inventory.selling_price?.toFixed(2) || "0.00"}
+          {formatToNaira(inventory.selling_price)}
         </div>
       );
     },

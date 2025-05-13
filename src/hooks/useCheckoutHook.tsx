@@ -4,10 +4,22 @@ import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useCreateSalesMutation } from "@/api/sales/create-sales";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
-export const useCheckoutHook = ({ searchInput }: { searchInput?: string }) => {
+export const useCheckoutHook = ({
+  searchInput,
+  setShowPrintReceiptView,
+  closeSureModal,
+  setCreateSaleResponse,
+}: {
+  searchInput?: string;
+  setShowPrintReceiptView?: any;
+  closeSureModal?: any;
+  setCreateSaleResponse?: any;
+}) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const { showToast } = useToast();
 
   const { data: BusinessData, isLoading: BusinessDataLoading } =
     useFetchBusinessById(business_id);
@@ -40,6 +52,13 @@ export const useCheckoutHook = ({ searchInput }: { searchInput?: string }) => {
   const { mutate: createSale, isPending: createSalePending } =
     useCreateSalesMutation({
       businessId: business_id, // Convert null to undefined
+      onSuccess: (data: any) => {
+        console.log("data", data);
+        showToast("Sale created successfully", "success");
+        setCreateSaleResponse(data);
+        closeSureModal();
+        setShowPrintReceiptView(true);
+      },
     });
 
   return {

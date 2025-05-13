@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { SupplyHistory } from "../types";
 
 export const columns: ColumnDef<SupplyHistory>[] = [
@@ -53,7 +54,9 @@ export const columns: ColumnDef<SupplyHistory>[] = [
 
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{supplier.cost_price}</p>
+          <p className="text-sm text-gray-500">
+            {formatToNaira(supplier.cost_price)}
+          </p>
         </div>
       );
     },

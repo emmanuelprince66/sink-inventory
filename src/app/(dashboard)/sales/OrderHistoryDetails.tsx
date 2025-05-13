@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SalesOrder } from "./types";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import Image from "next/image";
 
 const OrderHistoryDetails = ({
@@ -97,7 +98,7 @@ const OrderHistoryDetails = ({
                   <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t">
                     <div className="col-span-6 font-medium">Total</div>
                     <div className="col-span-2 text-right font-medium">
-                      {parseFloat(orderDetails.total_price).toLocaleString()}
+                      {formatToNaira(parseFloat(orderDetails.total_price))}
                     </div>
                   </div>
                 </div>

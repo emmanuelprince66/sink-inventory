@@ -1,14 +1,11 @@
-import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
+import { MutationConfig, useMutation } from "@/lib/react-query";
 
 const createBusiness = async (body: any) => {
-  const response = await fetch(`/api/create-business`, {
+  const response = await fetch(`/api/businesses/create-business`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
+    body: body,
   });
 
   if (!response.ok) {

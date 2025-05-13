@@ -4,6 +4,7 @@ import moment from "moment";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { SupplyHistory } from "../types";
 const SupplyHistoryDetails = ({
   supplierDetails,
@@ -69,7 +70,7 @@ const SupplyHistoryDetails = ({
                         {supplierDetails.quantity}
                       </div>
                       <div className="col-span-1 text-right">
-                        {supplierDetails.cost_price.toLocaleString()}
+                        {formatToNaira(supplierDetails.cost_price)}
                       </div>
                       <div className="col-span-2 text-right font-medium">
                         {(
@@ -85,7 +86,7 @@ const SupplyHistoryDetails = ({
                   <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t">
                     <div className="col-span-6 font-medium">Total</div>
                     <div className="col-span-2 text-right font-medium">
-                      {Number(supplierDetails.cost_price)}
+                      {formatToNaira(Number(supplierDetails.cost_price))}
                     </div>
                   </div>
                 </div>

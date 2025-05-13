@@ -27,7 +27,7 @@ import { useProductHook } from "@/hooks/useProductHook";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const AddProduct = () => {
   const {
@@ -53,18 +53,36 @@ const AddProduct = () => {
             name="image"
             render={({ field }) => {
               const fileInputRef = useRef<HTMLInputElement>(null);
+              const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+              // Handle file change separately from rendering preview
+              const handleFileChange = (
+                e: React.ChangeEvent<HTMLInputElement>
+              ) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  field.onChange(file);
+                  if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                  }
+                  setPreviewUrl(URL.createObjectURL(file));
+                }
+              };
 
               return (
                 <FormItem className="flex flex-col items-center gap-2">
                   <FormLabel>Product Image</FormLabel>
-                  <div className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
-                    {field.value ? (
+                  <div
+                    className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {previewUrl ||
+                    (typeof field.value === "string" && field.value) ? (
                       <>
                         <img
                           src={
-                            typeof field.value === "string"
-                              ? field.value
-                              : URL.createObjectURL(field.value)
+                            previewUrl ||
+                            (typeof field.value === "string" ? field.value : "")
                           }
                           alt="Product preview"
                           className="w-full h-full object-cover"
@@ -74,7 +92,11 @@ const AddProduct = () => {
                           className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                           onClick={(e) => {
                             e.stopPropagation();
-                            field.onChange(null);
+                            field.onChange(undefined);
+                            if (previewUrl) {
+                              URL.revokeObjectURL(previewUrl);
+                              setPreviewUrl(null);
+                            }
                           }}
                         >
                           ×
@@ -107,12 +129,7 @@ const AddProduct = () => {
                       accept="image/*"
                       className="hidden"
                       ref={fileInputRef}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          field.onChange(file);
-                        }
-                      }}
+                      onChange={handleFileChange}
                     />
                   </FormControl>
                   <Button

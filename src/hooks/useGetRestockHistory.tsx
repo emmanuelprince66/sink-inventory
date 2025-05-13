@@ -12,7 +12,7 @@ const RestockSchema = z
   .object({
     name: z.string().min(1, "Customer name is required"),
     qty: z.coerce.number().min(1, "Stock Quantity is required"),
-    supplier: z.string().min(1, "Supplier is required"),
+    supplier: z.string().optional(),
     cost_price: z.coerce.number().min(1, "Unit Cost Price is required"),
     selling_price: z.coerce.number().min(1, "Unit Selling Price is required"),
     payment_method: z.string().min(1, "Payment Method is required"),

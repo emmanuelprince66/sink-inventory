@@ -1,16 +1,21 @@
 import {
-  Home,
-  Settings,
-  UsersRound,
+  AirVent,
+  ChartSpline,
   DollarSign,
   Handshake,
-  AirVent,
-  SquarePercent,
-  ChartSpline,
+  Home,
   PcCase,
+  Settings,
   ShoppingBag,
+  SquarePercent,
+  UsersRound,
 } from "lucide-react";
 export const links = [
+  {
+    title: "Point Of Sales",
+    url: "/pos",
+    icon: PcCase,
+  },
   {
     title: "Overview",
     url: "/overview",
@@ -26,11 +31,7 @@ export const links = [
     url: "/supply",
     icon: AirVent,
   },
-  {
-    title: "POS",
-    url: "/pos",
-    icon: PcCase,
-  },
+
   {
     title: "Business",
     url: "/business",

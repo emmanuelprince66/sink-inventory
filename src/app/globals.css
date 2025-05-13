@@ -16,7 +16,13 @@
 .animate-spin {
   animation: spin 1s linear infinite;
 }
-
+/* Add this to your global CSS */
+.receipt-container {
+  background-color: white !important;
+  color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
 @theme {
   --color-primary-green-100: #0d261c;
   --color-primary-green-200: #eef4ef;

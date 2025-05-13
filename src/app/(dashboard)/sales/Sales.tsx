@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import OrderHistory from "./OrderHistory";
@@ -134,17 +135,20 @@ const Sales = () => {
         <div className="w-1/2 grid grid-cols-2 md:grid-cols-4 gap-4">
           <CustomSalesCard
             title={"Revenue"}
-            amount={SalesData?.data?.results?.revenue}
+            amount={formatToNaira(SalesData?.data?.results?.revenue)}
           />
           <CustomSalesCard
             title={"Product Cost"}
-            amount={SalesData?.data?.results?.cost}
+            amount={formatToNaira(SalesData?.data?.results?.cost)}
           />
           <CustomSalesCard
             title={"Items Sold"}
             amount={SalesData?.data?.results?.orders}
           />
-          <CustomSalesCard title={"Profit"} amount={totalProfit} />
+          <CustomSalesCard
+            title={"Profit"}
+            amount={formatToNaira(totalProfit)}
+          />
         </div>
       )}
 

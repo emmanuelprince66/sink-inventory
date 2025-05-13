@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { usePosHook } from "@/hooks/usePosHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -33,7 +34,17 @@ const Pos = () => {
     }
     return statusColors.DEFAULT;
   };
+
   const handleAddToCart = (cart: any) => {
+    // Check if item is out of stock or has 0 quantity
+    if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
+      console.error(
+        "Cannot add item to cart: Item is out of stock or has 0 quantity"
+      );
+      showToast("This item is out of stock", "error");
+      return;
+    }
+
     const itemExists = cartItems.some((item) => item.id === cart.id);
     if (itemExists) {
       showToast("Item already exists in cart", "error");
@@ -52,8 +63,6 @@ const Pos = () => {
   };
 
   const totalPages = ProductData?.data?.pages || 1;
-
-  console.log("ProductData", ProductData);
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -92,46 +101,66 @@ const Pos = () => {
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {ProductData?.data?.results?.data?.map((product: any) => (
-                  <div
-                    key={product.id}
-                    onClick={() => handleAddToCart(product)}
-                    className="border hover:border-green-300 border-gray-200 rounded-lg p-3 transition-shadow duration-300 cursor-pointer group"
-                  >
-                    <div className="relative h-32 mb-2 rounded overflow-hidden bg-gray-100">
-                      {product.image ? (
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                          unoptimized
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          No Image
-                        </div>
-                      )}
+                {ProductData?.data?.results?.data?.map((product: any) => {
+                  const isOutOfStock =
+                    product.quantity === 0 || product.status === "OUT-OF-STOCK";
+                  return (
+                    <div
+                      key={product.id}
+                      onClick={() => !isOutOfStock && handleAddToCart(product)}
+                      className={`border rounded-lg p-3 transition-shadow duration-300 ${
+                        isOutOfStock
+                          ? "border-gray-200 cursor-not-allowed opacity-50"
+                          : "hover:border-green-300 border-gray-200 cursor-pointer group"
+                      }`}
+                    >
+                      <div className="relative h-32 mb-2 rounded overflow-hidden bg-gray-100">
+                        {product.image ? (
+                          <Image
+                            src={product.image}
+                            alt={product.name}
+                            fill
+                            className={`object-cover ${
+                              !isOutOfStock &&
+                              "group-hover:scale-105 transition-transform duration-300"
+                            }`}
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            No Image
+                          </div>
+                        )}
+                        {/* {isOutOfStock && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70">
+                            <span className="text-red-500 font-bold">
+                              Out of Stock
+                            </span>
+                          </div>
+                        )} */}
+                      </div>
+                      <h3 className="font-medium text-sm truncate">
+                        {product.name}
+                      </h3>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="text-sm font-semibold text-primary">
+                          {formatToNaira(
+                            product.selling_price || product.amount
+                          ) ?? "N/A"}
+                        </p>
+                        {product.type === "PRODUCT" && (
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
+                              product.status
+                            )}`}
+                          >
+                            {product.status || "N/A"}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <h3 className="font-medium text-sm truncate">
-                      {product.name}
-                    </h3>
-                    <div className="flex justify-between items-center mt-1">
-                      <p className="text-sm font-semibold text-primary">
-                        {product.selling_price?.toLocaleString() ?? "Service"}
-                      </p>
-                      {product.type === "PRODUCT" && (
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                            product.status
-                          )}`}
-                        >
-                          {product.status || "N/A"}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Pagination Controls */}

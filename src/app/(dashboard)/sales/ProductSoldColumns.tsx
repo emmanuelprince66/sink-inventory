@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { SalesDataItem } from "./types";
 
 export const columns: ColumnDef<SalesDataItem>[] = [
@@ -51,7 +52,9 @@ export const columns: ColumnDef<SalesDataItem>[] = [
       const product = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{product.revenue}</p>
+          <p className="text-sm text-gray-500">
+            {formatToNaira(product.revenue)}
+          </p>
         </div>
       );
     },

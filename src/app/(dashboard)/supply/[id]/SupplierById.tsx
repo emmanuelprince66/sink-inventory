@@ -10,12 +10,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
 import { cn } from "@/lib/utils";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import SupplyHistory from "./SupplyHistory";
 import UpdateBalance from "./UpdateBalance";
 
 interface SupplierCardData {
   title: string;
-  amount: number;
+  amount: any;
 }
 
 const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
@@ -110,11 +111,11 @@ const SupplierById = ({ id }: { id: string }) => {
             <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
               <CustomSupplyCard
                 title={"Purchase Value"}
-                amount={purchaseValue}
+                amount={formatToNaira(purchaseValue)}
               />
               <CustomSupplyCard
                 title={"Wallet Balance"}
-                amount={SupplierByIdData?.data?.wallet}
+                amount={formatToNaira(SupplierByIdData?.data?.wallet)}
               />
               <CustomSupplyCard
                 title={"Total Supplies"}
@@ -150,7 +151,7 @@ const SupplierById = ({ id }: { id: string }) => {
                     : "text-primary-black-100"
                 } `}
               >
-                {SupplierByIdData?.data?.wallet}
+                {formatToNaira(SupplierByIdData?.data?.wallet)}
               </p>
             </div>
             <p className="font-[300] text-xs  text-gray-500">

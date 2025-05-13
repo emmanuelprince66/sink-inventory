@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { formatToNaira } from "@/utils/formatMoney";
 import { MinusCircle, PlusCircle, Trash2, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
@@ -15,6 +16,7 @@ interface CartItem {
   selling_price: number;
   cost_price: number;
   category?: string;
+  amount?: number;
   quantity?: number;
   status: string;
   type: string;
@@ -44,7 +46,9 @@ const CheckoutPage = ({
   console.log("customer", customer);
   // Calculate the subtotal
   const subtotal = cartItems.reduce((total, item) => {
-    return total + item.selling_price * (item.cartQuantity || 1);
+    return (
+      total + (item.amount || item.selling_price) * (item.cartQuantity || 1)
+    );
   }, 0);
 
   // Calculate tax (assuming 10% for example)
@@ -54,14 +58,23 @@ const CheckoutPage = ({
   // Calculate total
   const total = subtotal + tax;
 
-  // Function to increment item quantity
+  // Function to increment item quantity with check against available quantity
   const incrementQuantity = (itemId: string) => {
     setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId
-          ? { ...item, cartQuantity: (item.cartQuantity || 1) + 1 }
-          : item
-      )
+      prev.map((item) => {
+        if (item.id === itemId) {
+          // Check if current quantity is less than available quantity
+          // If quantity is undefined or null, default to a large number like 999
+          const availableQuantity = item.quantity ?? 999;
+          const currentQuantity = item.cartQuantity || 1;
+
+          // Only increment if we haven't reached the available quantity
+          if (currentQuantity < availableQuantity) {
+            return { ...item, cartQuantity: currentQuantity + 1 };
+          }
+        }
+        return item;
+      })
     );
   };
 
@@ -93,6 +106,7 @@ const CheckoutPage = ({
           setShowReceipt={setShowReceipt}
           attendant={attendant}
           customer={customer}
+          clearCartFunc={clearCartFunc}
         />
       ) : (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg p-4 space-y-4">
@@ -161,8 +175,15 @@ const CheckoutPage = ({
                         </h3>
                         <p className="text-sm text-gray-500">SKU: {item.sku}</p>
                         <p className="text-sm font-semibold text-[#52b661]">
-                          {formatPrice(item.selling_price)}
+                          {formatToNaira(
+                            item.selling_price || item?.amount || 0
+                          )}
                         </p>
+                        {item.quantity !== undefined && (
+                          <p className="text-xs text-gray-500">
+                            Available: {item.quantity}
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex flex-col items-end space-y-2 ml-2">
@@ -172,6 +193,7 @@ const CheckoutPage = ({
                             size="icon"
                             className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
                             onClick={() => decrementQuantity(item.id)}
+                            disabled={(item.cartQuantity || 1) <= 1}
                           >
                             <MinusCircle size={16} className="text-[#52b661]" />
                           </Button>
@@ -185,6 +207,10 @@ const CheckoutPage = ({
                             size="icon"
                             className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
                             onClick={() => incrementQuantity(item.id)}
+                            disabled={
+                              (item.cartQuantity || 1) >=
+                              (item.quantity ?? Infinity)
+                            }
                           >
                             <PlusCircle size={16} className="text-[#52b661]" />
                           </Button>
@@ -217,26 +243,27 @@ const CheckoutPage = ({
                 <span className="text-gray-600">
                   Subtotal ({cartItems.length} items)
                 </span>
-                <span className="font-medium">{formatPrice(subtotal)}</span>
+                <span className="font-medium">{formatToNaira(subtotal)}</span>
               </div>
 
-              <div className="flex justify-between">
+              {/* <div className="flex justify-between">
                 <span className="text-gray-600">Tax (10%)</span>
                 <span className="font-medium">{formatPrice(tax)}</span>
-              </div>
+              </div> */}
 
               <Separator className="my-2 bg-[#52b661]/30" />
 
               <div className="flex justify-between">
                 <span className="font-bold text-lg text-gray-800">Total</span>
                 <span className="font-bold text-lg text-[#52b661]">
-                  {formatPrice(total)}
+                  {formatToNaira(total)}
                 </span>
               </div>
 
               <Button
                 className="w-full mt-3 py-3 text-base font-semibold bg-[#52b661] hover:bg-[#52b661]/90"
                 onClick={() => setShowReceipt(true)}
+                disabled={cartItems.length === 0}
               >
                 Complete Order
               </Button>

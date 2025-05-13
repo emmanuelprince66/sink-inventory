@@ -2,24 +2,16 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-interface EditProductPropType {
-  // Define your customer creation payload type here
-  [key: string]: any;
-}
-
-const editProduct = async ({
-  productId,
-  payload,
-}: {
+interface EditProduvtVariables {
   productId: any;
-  payload: EditProductPropType;
-}) => {
+  payload: FormData;
+}
+const addProduct = async ({ productId, payload }: EditProduvtVariables) => {
+  console.log("payload", payload);
+
   const response = await fetch(`/api/products/${productId}/edit-product`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: payload,
   });
 
   if (!response.ok) {
@@ -29,37 +21,31 @@ const editProduct = async ({
   return response.json();
 };
 
-type QueryFnType = typeof editProduct;
+type QueryFnType = typeof addProduct;
 
-interface UseEditProductMutationOptions extends MutationConfig<QueryFnType> {
-  productId: any;
+interface UseEditProductMutationOptions {
+  productId: any; // Remove null from type
+  config?: MutationConfig<QueryFnType>;
 }
 
 export const useEditProductMutation = ({
   productId,
-  ...config
+  config,
 }: UseEditProductMutationOptions) => {
   const { showToast } = useToast();
 
   return useMutation({
     mutationKey: [queryKey.products.editProduct, productId],
-    mutationFn: (payload: EditProductPropType) =>
-      editProduct({ productId, payload }),
+    mutationFn: addProduct,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error editing product:", error);
-
       const errorMessage =
-        error?.message ||
-        error?.error ||
-        error?.message ||
-        "Error editing Product";
-
-      showToast(errorMessage, "error");
+        error?.message || error?.error || "Error editing Product";
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Product updated successfully", "success");
+      showToast("Product Updated successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

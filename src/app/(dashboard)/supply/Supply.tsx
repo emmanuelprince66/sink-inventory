@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
 import { cn } from "@/lib/utils";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import AddSupplier from "./AddSupplier";
 import AllSupply from "./AllSupply";
 
@@ -107,11 +108,13 @@ const Supply = () => {
           <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
             <CustomSupplyCard
               title={"Total Wallet Balance"}
-              amount={SupplierData?.data?.results?.wallet_balance}
+              amount={formatToNaira(
+                SupplierData?.data?.results?.wallet_balance
+              )}
             />
             <CustomSupplyCard
               title={"Total Debt"}
-              amount={SupplierData?.data?.results?.debt}
+              amount={formatToNaira(SupplierData?.data?.results?.debt)}
             />
             <CustomSupplyCard
               title={"Total suppliers"}

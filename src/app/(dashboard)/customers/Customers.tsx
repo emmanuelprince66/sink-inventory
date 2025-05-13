@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { cn } from "@/lib/utils";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 
@@ -132,12 +133,12 @@ const Customers = () => {
 
             <CustomCustomerCard
               title={"Total Debt"}
-              amount={CustomerData?.data?.results?.total_debt}
+              amount={formatToNaira(CustomerData?.data?.results?.total_debt)}
             />
 
             <CustomCustomerCard
               title={"Total Wallet"}
-              amount={CustomerData?.data?.results?.total_wallet}
+              amount={formatToNaira(CustomerData?.data?.results?.total_wallet)}
             />
           </div>
           {/* cards container content */}

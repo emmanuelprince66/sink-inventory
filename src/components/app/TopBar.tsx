@@ -1,4 +1,7 @@
 // components/TopBar.tsx
+
+"use client";
+
 import { ChevronDown, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -9,9 +12,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { SidebarTrigger } from "../ui/sidebar";
 
 export function TopBar() {
+  const business_id = useBusinessStore((state) => state.business_id);
+
+  const { data: BusinessData, isLoading: BusinessDataLoading } =
+    useFetchBusinessById(business_id);
+
+  const business = BusinessData?.data?.[0] || {};
+
+  console.log("BusinessData", business);
   // Replace with actual user data from your auth provider
   const userName = "John Doe";
 
@@ -24,7 +37,13 @@ export function TopBar() {
           <div className="flex justify-between items-center w-full">
             <p className="text-sm font-semibold md:text-lg">
               Welcome back,{" "}
-              <span className="text-primary-green-300">{userName}</span>
+              <span className="text-primary-green-300">
+                {BusinessDataLoading
+                  ? "Loading..."
+                  : business?.owner?.firstname +
+                    " " +
+                    business?.owner?.lastname}
+              </span>
             </p>
             <div className="md:hidden">
               <SidebarTrigger />

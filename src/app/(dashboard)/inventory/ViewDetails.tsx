@@ -6,6 +6,8 @@ import Link from "next/link";
 const ViewDetails = ({ data }: { data: any }) => {
   const { handleDeleteProduct, deleting } = useInventoryHook({});
 
+  console.log("data", data);
+
   return (
     <div className="bg-[#FEFFFE] p-6 rounded-lg shadow-sm border border-gray-200 max-w-4xl mx-auto">
       <div className="flex flex-col gap-6">
@@ -44,7 +46,9 @@ const ViewDetails = ({ data }: { data: any }) => {
               <DetailItem label="Discount" value="N/A" />
               <DetailItem
                 label="Selling Price"
-                value={`$${(data?.amount / 100).toFixed(2)}`}
+                value={`N${(data?.selling_price || data?.amount / 100).toFixed(
+                  2
+                )}`}
               />
               <DetailItem label="Total Stock Value" value="N/A" />
               <DetailItem label="Supplied by" value="N/A" spanFull />

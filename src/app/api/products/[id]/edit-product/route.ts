@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id: productId } = await params;
+  const { id: productId } = params;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -15,7 +15,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized - No access token provided",
+        error: "Unauthorized",
         message: "Please authenticate first",
       },
       { status: 401 }
@@ -35,51 +35,25 @@ export async function PATCH(
   }
 
   try {
-    const requestData = await request.json();
-    console.log("Received data:", requestData);
+    // Get FormData from request
+    const formData = await request.formData();
+    console.log("Received FormData entries:");
 
-    // Extract payload from the request data
-    const payload = requestData.payload;
-
-    console.log("payload", payload);
-
-    // Validate payload structure
-    if (!payload || typeof payload !== "object") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request format",
-          message: "Payload must be an object",
-          details: { received: payload },
-        },
-        { status: 400 }
-      );
+    // Log all FormData entries for debugging
+    const formDataEntries = Array.from(formData.entries());
+    for (const [key, value] of formDataEntries) {
+      console.log(key, value);
     }
 
-    // // Validate required fields
-    // if (!payload.name) {
-    //   return NextResponse.json(
-    //     {
-    //       success: false,
-    //       error: "Validation error",
-    //       message: "Product name is required",
-    //       details: { missing_fields: ["name"] },
-    //     },
-    //     { status: 422 }
-    //   );
-    // }
-
     const apiUrl = `${BaseUrl}product/single_product/${productId}/`;
-    console.log("Forwarding to:", apiUrl);
 
+    // Forward FormData directly to your API
     const response = await fetch(apiUrl, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify(payload),
-      cache: "no-store",
+      body: formData, // Send FormData directly
     });
 
     const responseData = await response.json();
@@ -91,20 +65,18 @@ export async function PATCH(
           success: false,
           message: responseData.message || "Failed to edit product",
           error: responseData.error || "Product edit failed",
-          details: responseData.details || null,
         },
         { status: response.status }
       );
     }
 
-    // Successful response
     return NextResponse.json(
       {
         success: true,
         data: responseData,
         message: "Product updated successfully",
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Server error:", error);
@@ -112,10 +84,7 @@ export async function PATCH(
       {
         success: false,
         error: "Internal server error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
+        message: "An unexpected error occurred",
       },
       { status: 500 }
     );

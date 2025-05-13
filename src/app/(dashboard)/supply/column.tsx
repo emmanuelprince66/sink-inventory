@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { Supplier } from "./types";
 
 export const columns: ColumnDef<Supplier>[] = [
@@ -59,7 +60,7 @@ export const columns: ColumnDef<Supplier>[] = [
               isNegative ? "text-red-500" : "text-gray-500"
             }`}
           >
-            {supplier.wallet}
+            {formatToNaira(supplier.wallet)}
           </p>
         </div>
       );

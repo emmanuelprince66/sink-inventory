@@ -9,6 +9,7 @@ import Link from "next/link";
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { cn } from "@/lib/utils"; // Assuming you're using the cn utility
+import { formatToNaira } from "@/utils/formatMoney";
 import { useState } from "react";
 import AddService from "./AddService";
 import AllInventory from "./AllInventory";
@@ -149,17 +150,19 @@ const Inventory = () => {
         <div className="w-1/2 grid grid-cols-2 md:grid-cols-4 gap-4">
           <CustomInventoryCard
             title={"Inventory Value"}
-            amount={InventoryData?.data?.results?.inventory_value}
+            amount={formatToNaira(
+              InventoryData?.data?.results?.inventory_value
+            )}
             type="value"
           />
           <CustomInventoryCard
             title={"Profit"}
-            amount={InventoryData?.data?.results?.profit}
+            amount={formatToNaira(InventoryData?.data?.results?.profit)}
             type="profit"
           />
           <CustomInventoryCard
             title={"Selling"}
-            amount={InventoryData?.data?.results?.selling_price}
+            amount={formatToNaira(InventoryData?.data?.results?.selling_price)}
             type="other"
           />
         </div>

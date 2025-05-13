@@ -15,21 +15,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/toast/useToast";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import PrintReceiptView from "./PrintReceiptView";
 
 const ReceiptPage = ({
   cart,
   attendant,
+  clearCartFunc,
   customer,
   setShowReceipt,
 }: {
   cart: any;
   attendant: any;
   customer: any;
+  clearCartFunc: any;
   setShowReceipt: any;
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
@@ -37,6 +42,7 @@ const ReceiptPage = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const [isChecked, setIsChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [createSaleResponse, setCreateSaleResponse] = useState(null);
   const [selectedBank, setSelectedBank] = useState("");
   const [partialAmount, setPartialAmount] = useState("");
   const [partialPaymentMethod, setPartialPaymentMethod] = useState(""); // New state for partial payment method
@@ -53,6 +59,10 @@ const ReceiptPage = ({
     amount: "",
     bank: "",
   });
+
+  const { showToast } = useToast();
+
+  console.log("sales response", createSaleResponse);
   const [remainingAmount, setRemainingAmount] = useState(0);
 
   const [sureModal, setSureModal] = useState(false);
@@ -60,6 +70,7 @@ const ReceiptPage = ({
   const closeSureModal = () => setSureModal(false);
   const openSureModal = () => setSureModal(true);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
+  const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
 
   const {
     BusinessData,
@@ -68,14 +79,20 @@ const ReceiptPage = ({
     BankDataLoading,
     BankData,
     BusinessDataLoading,
-  } = useCheckoutHook({});
+  } = useCheckoutHook({
+    closeSureModal,
+    setShowPrintReceiptView,
+    setCreateSaleResponse,
+  });
 
   // Get the first business from the array
   const business = BusinessData?.data?.[0] || {};
 
   // Calculate total
   const total = cart.reduce((sum: number, item: any) => {
-    return sum + (item.selling_price || 0) * (item.cartQuantity || 1);
+    return (
+      sum + (item.amount || item.selling_price || 0) * (item.cartQuantity || 1)
+    );
   }, 0);
 
   // Set initial remaining amount when the component loads or when total changes
@@ -187,7 +204,7 @@ const ReceiptPage = ({
     if (isChecked) {
       // For split payments
       if (remainingAmount > 0) {
-        console.log("Error: All payments must be covered");
+        showToast("All payments must be covered", "error");
         return null;
       }
 
@@ -202,17 +219,17 @@ const ReceiptPage = ({
       // For single payment
       // Validate based on payment method
       if (!paymentMethod) {
-        console.log("Error: Payment method is required");
+        showToast("Payment method is required", "error");
         return null;
       }
 
       if (paymentMethod === "BANK_TRANSFER" && !selectedBank) {
-        console.log("Error: Bank selection is required");
+        showToast("Bank selection is required", "error");
         return null;
       }
 
       if (paymentMethod === "CREDIT" && !dueDate) {
-        console.log("Error: Due date is required for credit payments");
+        showToast("Due date is required for credit payments", "error");
         return null;
       }
 
@@ -223,20 +240,21 @@ const ReceiptPage = ({
           parseFloat(partialAmount) >= total
         ) {
           console.log(
-            "Error: Valid partial amount is required (greater than 0 and less than total)"
+            "Valid partial amount is required (greater than 0 and less than total)"
           );
+
           return null;
         }
         if (!dueDate) {
-          console.log("Error: Due date is required for partial payments");
+          showToast("Due date is required for partial payments", "error");
           return null;
         }
         if (!partialPaymentMethod) {
-          console.log("Error: Partial payment method is required");
+          showToast("Partial payment method is required", "error");
           return null;
         }
         if (partialPaymentMethod === "BANK_TRANSFER" && !selectedBank) {
-          console.log("Error: Bank selection is required for bank transfer");
+          showToast("Bank selection is required for bank transfer", "error");
           return null;
         }
       }
@@ -265,14 +283,15 @@ const ReceiptPage = ({
         date: selectedDate
           ? format(selectedDate, "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
-        customer: customer?.id || null,
-        attendant: attendant?.id || null,
+
         description: "Sales transaction", // You can customize this
         products: cart.map((item: any) => ({
           id: item.id,
           quantity: item.cartQuantity || 1,
           unit_price: item.selling_price || 0,
         })),
+        ...(customer?.id && { customer: customer.id }),
+        ...(attendant?.id && { attendant: attendant.id }),
       };
 
       if (isChecked) {
@@ -343,306 +362,240 @@ const ReceiptPage = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-start gap-3">
-      <div
-        className="w-10 h-10 rounded-full p-2 bg-green-50 cursor-pointer"
-        onClick={() => setShowReceipt(false)}
-      >
-        <ArrowBigLeftDash color="green" />
-      </div>
-
-      <div className="w-full">
-        <p className="text-xs mb-1">Sales Date</p>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className="w-full pl-3 text-left font-normal border border-primary-green-300 bg-white"
-            >
-              {selectedDate ? (
-                format(selectedDate, "PPP")
-              ) : (
-                <span>Pick a sales date</span>
-              )}
-              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              className="bg-white"
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              disabled={(date) => date < new Date()}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div className="w-full">
-        <p className="text-xs mb-1">Sales Summary</p>
-
-        <div className="w-full bg-primary-green-200 p-4 rounded-lg flex items-center gap-4">
-          {business?.logo && (
-            <img
-              src={business.logo}
-              alt={business.name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-white"
-            />
-          )}
-          <div>
-            <p className="text-sm ">Store : {business?.name}</p>
-            <p className=" text-sm">
-              Address: {business?.city}, {business?.state}, {business?.country}
-            </p>
-            {business?.owner?.phone && (
-              <p className=" text-sm">Phone: {business.owner.phone}</p>
-            )}
-            {business?.owner?.email && (
-              <p className=" text-sm">Email: {business.owner.email}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Cart Table */}
-      <div className="w-full mt-4">
-        <p className="text-xs mb-1">Items</p>
-        <div className="w-full overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-primary-green-200 text-left">
-                <th className="p-2 border border-primary-green-300">#</th>
-                <th className="p-2 border border-primary-green-300">Item</th>
-                <th className="p-2 border border-primary-green-300">Qty</th>
-                <th className="p-2 border border-primary-green-300">Price</th>
-                <th className="p-2 border border-primary-green-300">
-                  Sub-Total
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.map((item: any, index: number) => (
-                <tr key={item.id} className="border-b border-primary-green-300">
-                  <td className="p-2 border border-primary-green-300">
-                    {index + 1}
-                  </td>
-                  <td className="p-2 border border-primary-green-300">
-                    <div className="flex items-center gap-2">
-                      {item.image && (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-10 h-10 rounded object-cover"
-                        />
-                      )}
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        {item.category && (
-                          <p className="text-xs text-gray-500">
-                            {item.category}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-2 border border-primary-green-300">
-                    {item.cartQuantity || 1}
-                  </td>
-                  <td className="p-2 border border-primary-green-300">
-                    ₦{item.selling_price?.toLocaleString() || "0"}
-                  </td>
-                  <td className="p-2 border border-primary-green-300">
-                    ₦
-                    {(
-                      (item.selling_price || 0) * (item.cartQuantity || 1)
-                    ).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-primary-green-200 font-bold">
-                <td
-                  colSpan={4}
-                  className="p-2 border border-primary-green-300 text-right"
-                >
-                  Total:
-                </td>
-                <td className="p-2 border border-primary-green-300">
-                  ₦{total.toLocaleString()}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      {/* customer details */}
-      <p className="text-xs mb-1">Customer details</p>
-
-      {customer ? (
-        <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
-          <p>{customer.name || "N/A"}</p>
-        </div>
+    <>
+      {showPrintReceiptView ? (
+        <PrintReceiptView
+          setShowReceipt={setShowReceipt}
+          setShowPrintReceiptView={setShowPrintReceiptView}
+          createSaleResponse={createSaleResponse}
+          cart={cart}
+          business={business}
+          clearCartFunc={clearCartFunc}
+        />
       ) : (
-        <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
-          <p>No customer selected</p>
-        </div>
-      )}
-
-      {/* customer details */}
-      <p className="text-xs mb-1">Attendant responsible</p>
-      {attendant && (
-        <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
-          <p>{attendant.name || "N/A"}</p>
-        </div>
-      )}
-      {/* Split Bill Toggle */}
-      <div className="w-full bg-primary-green-200 flex flex-end p-4 rounded-lg">
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isChecked}
-            onChange={() => {
-              setIsChecked(!isChecked);
-              setSplitPayments([]);
-              setPaymentMethod("");
-              setSelectedBank("");
-              setPartialAmount("");
-              setPartialPaymentMethod("");
-              setDueDate(undefined);
-              setTempSplitPayment({
-                method: "",
-                amount: "",
-                bank: "",
-              });
-            }}
-            className="sr-only peer" // Hide default input
-          />
-          {/* Switch Track */}
-          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-          {/* Optional Label */}
-          <span className="ml-2 text-sm font-medium text-gray-700">
-            Split Bill (Multiple Payment Methods)
-          </span>
-        </label>
-      </div>
-      {/* Payment Method Section */}
-      {!isChecked && (
-        <div className="w-full space-y-4">
-          <p className="text-xs mb-1">Payment Method</p>
-          <Select
-            value={paymentMethod}
-            onValueChange={(value) => {
-              setPaymentMethod(value);
-              setSelectedBank("");
-              setPartialAmount("");
-              setPartialPaymentMethod("");
-              setDueDate(undefined);
-            }}
+        <div className="w-full flex flex-col items-start gap-3">
+          <div
+            className="w-10 h-10 rounded-full p-2 bg-green-50 cursor-pointer"
+            onClick={() => setShowReceipt(false)}
           >
-            <SelectTrigger className="w-full bg-white border border-primary-green-300">
-              <SelectValue placeholder="Select payment method" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200">
-              {paymentMethodOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <ArrowBigLeftDash color="green" />
+          </div>
 
-          {/* Conditional fields based on payment method selection */}
-          {paymentMethod === "BANK_TRANSFER" && (
-            <div className="space-y-2 mt-2">
-              <p className="text-xs">Select Bank</p>
-              <Select value={selectedBank} onValueChange={setSelectedBank}>
+          <div className="w-full">
+            <p className="text-xs mb-1">Sales Date</p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className="w-full pl-3 text-left font-normal border border-primary-green-300 bg-white"
+                >
+                  {selectedDate ? (
+                    format(selectedDate, "PPP")
+                  ) : (
+                    <span>Pick a sales date</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  className="bg-white"
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  // disabled={(date) => date < new Date()}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="w-full">
+            <p className="text-xs mb-1">Sales Summary</p>
+
+            <div className="w-full bg-primary-green-200 p-4 rounded-lg flex items-center gap-4">
+              {business?.logo && (
+                <img
+                  src={business.logo}
+                  alt={business.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white"
+                />
+              )}
+              <div>
+                <p className="text-sm ">Store : {business?.name}</p>
+                <p className=" text-sm">
+                  Address: {business?.city}, {business?.state},{" "}
+                  {business?.country}
+                </p>
+                {business?.owner?.phone && (
+                  <p className=" text-sm">Phone: {business.owner.phone}</p>
+                )}
+                {business?.owner?.email && (
+                  <p className=" text-sm">Email: {business.owner.email}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Cart Table */}
+          <div className="w-full mt-4">
+            <p className="text-xs mb-1">Items</p>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-primary-green-200 text-left">
+                    <th className="p-2 border border-primary-green-300">#</th>
+                    <th className="p-2 border border-primary-green-300">
+                      Item
+                    </th>
+                    <th className="p-2 border border-primary-green-300">Qty</th>
+                    <th className="p-2 border border-primary-green-300">
+                      Price
+                    </th>
+                    <th className="p-2 border border-primary-green-300">
+                      Sub-Total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cart.map((item: any, index: number) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-primary-green-300"
+                    >
+                      <td className="p-2 border border-primary-green-300">
+                        {index + 1}
+                      </td>
+                      <td className="p-2 border border-primary-green-300">
+                        <div className="flex items-center gap-2">
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-10 h-10 rounded object-cover"
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            {item.category && (
+                              <p className="text-xs text-gray-500">
+                                {item.category}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-2 border border-primary-green-300">
+                        {item.cartQuantity || 1}
+                      </td>
+                      <td className="p-2 border border-primary-green-300">
+                        ₦
+                        {item.amount?.toLocaleString() ||
+                          item.selling_price?.toLocaleString() ||
+                          "0"}
+                      </td>
+                      <td className="p-2 border border-primary-green-300">
+                        {(item.amount || item.selling_price || 0) *
+                          (item.cartQuantity || 1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-primary-green-200 font-bold">
+                    <td
+                      colSpan={4}
+                      className="p-2 border border-primary-green-300 text-right"
+                    >
+                      Total:
+                    </td>
+                    <td className="p-2 border border-primary-green-300">
+                      {formatToNaira(total)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* customer details */}
+          <p className="text-xs mb-1">Customer details</p>
+
+          {customer ? (
+            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+              <p>{customer.name || "N/A"}</p>
+            </div>
+          ) : (
+            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+              <p>No customer selected</p>
+            </div>
+          )}
+
+          {/* customer details */}
+          <p className="text-xs mb-1">Attendant responsible</p>
+          {attendant && (
+            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+              <p>{attendant.name || "N/A"}</p>
+            </div>
+          )}
+          {/* Split Bill Toggle */}
+          <div className="w-full bg-primary-green-200 flex flex-end p-4 rounded-lg">
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isChecked}
+                onChange={() => {
+                  setIsChecked(!isChecked);
+                  setSplitPayments([]);
+                  setPaymentMethod("");
+                  setSelectedBank("");
+                  setPartialAmount("");
+                  setPartialPaymentMethod("");
+                  setDueDate(undefined);
+                  setTempSplitPayment({
+                    method: "",
+                    amount: "",
+                    bank: "",
+                  });
+                }}
+                className="sr-only peer" // Hide default input
+              />
+              {/* Switch Track */}
+              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+              {/* Optional Label */}
+              <span className="ml-2 text-sm font-medium text-gray-700">
+                Split Bill (Multiple Payment Methods)
+              </span>
+            </label>
+          </div>
+          {/* Payment Method Section */}
+          {!isChecked && (
+            <div className="w-full space-y-4">
+              <p className="text-xs mb-1">Payment Method</p>
+              <Select
+                value={paymentMethod}
+                onValueChange={(value) => {
+                  setPaymentMethod(value);
+                  setSelectedBank("");
+                  setPartialAmount("");
+                  setPartialPaymentMethod("");
+                  setDueDate(undefined);
+                }}
+              >
                 <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                  <SelectValue placeholder="Select bank" />
+                  <SelectValue placeholder="Select payment method" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border border-gray-200">
-                  {BankData?.data?.map((bank: any) => (
-                    <SelectItem key={bank.id} value={bank.id}>
-                      {bank.bank_name}
+                  {paymentMethodOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
 
-          {paymentMethod === "CREDIT" && (
-            <div className="space-y-2 mt-2">
-              <p className="text-xs">Due Date</p>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
-                  >
-                    {dueDate ? (
-                      format(dueDate, "PPP")
-                    ) : (
-                      <span>Pick a due date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    className="bg-white"
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          )}
-
-          {paymentMethod === "PARTIAL" && (
-            <div className="space-y-4 mt-2">
-              <div>
-                <p className="text-xs mb-1">Partial Amount</p>
-                <Input
-                  type="number"
-                  value={partialAmount}
-                  onChange={(e) => setPartialAmount(e.target.value)}
-                  placeholder="Enter amount"
-                  className="w-full bg-white border border-primary-green-300"
-                />
-                {partialAmount && parseFloat(partialAmount) >= total && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Partial amount must be less than total amount
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <p className="text-xs mb-1">Partial Payment Method</p>
-                <Select
-                  value={partialPaymentMethod}
-                  onValueChange={(value) => {
-                    setPartialPaymentMethod(value);
-                    setSelectedBank("");
-                  }}
-                >
-                  <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    <SelectItem value="CASH">Cash</SelectItem>
-                    <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {partialPaymentMethod === "BANK_TRANSFER" && (
+              {/* Conditional fields based on payment method selection */}
+              {paymentMethod === "BANK_TRANSFER" && (
                 <div className="space-y-2 mt-2">
                   <p className="text-xs">Select Bank</p>
                   <Select value={selectedBank} onValueChange={setSelectedBank}>
@@ -660,257 +613,356 @@ const ReceiptPage = ({
                 </div>
               )}
 
-              <div>
-                <p className="text-xs mb-1">Due Date</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
-                    >
-                      {dueDate ? (
-                        format(dueDate, "PPP")
-                      ) : (
-                        <span>Pick a due date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      className="bg-white"
-                      mode="single"
-                      selected={dueDate}
-                      onSelect={setDueDate}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
+              {paymentMethod === "CREDIT" && (
+                <div className="space-y-2 mt-2">
+                  <p className="text-xs">Due Date</p>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
+                      >
+                        {dueDate ? (
+                          format(dueDate, "PPP")
+                        ) : (
+                          <span>Pick a due date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        className="bg-white"
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={setDueDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {paymentMethod === "PARTIAL" && (
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <p className="text-xs mb-1">Partial Amount</p>
+                    <Input
+                      type="number"
+                      value={partialAmount}
+                      onChange={(e) => setPartialAmount(e.target.value)}
+                      placeholder="Enter amount"
+                      className="w-full bg-white border border-primary-green-300"
                     />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Split Bill Section */}
-      {isChecked && (
-        <div className="w-full space-y-4">
-          {/* Remaining Amount Display */}
-          <div
-            className={`w-full p-4 rounded-lg ${
-              remainingAmount > 0
-                ? "bg-orange-100 text-orange-800"
-                : "bg-green-100 text-green-800"
-            } font-medium`}
-          >
-            {remainingAmount > 0
-              ? `Remaining Amount: ₦${remainingAmount.toLocaleString()}`
-              : "All payments have been added ✓"}
-          </div>
-
-          {/* Split Payment Form */}
-          <div className="w-full p-4 border border-primary-green-300 rounded-lg space-y-4">
-            <p className="font-medium">Add Payment</p>
-
-            <div className="space-y-2">
-              <p className="text-xs">Payment Method</p>
-              <Select
-                value={tempSplitPayment.method}
-                onValueChange={(value) =>
-                  setTempSplitPayment({ ...tempSplitPayment, method: value })
-                }
-              >
-                <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                  <SelectValue placeholder="Select payment method" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200">
-                  {availableSplitPaymentMethods.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-xs">Amount</p>
-              <Input
-                type="number"
-                value={tempSplitPayment.amount}
-                onChange={(e) =>
-                  setTempSplitPayment({
-                    ...tempSplitPayment,
-                    amount: e.target.value,
-                  })
-                }
-                placeholder="Enter amount"
-                className="w-full bg-white border border-primary-green-300"
-              />
-              {tempSplitPayment.amount &&
-                parseFloat(tempSplitPayment.amount) > remainingAmount && (
-                  <p className="text-xs text-red-500">
-                    Amount cannot exceed remaining balance
-                  </p>
-                )}
-            </div>
-
-            {/* Conditional fields for split payment */}
-            {tempSplitPayment.method === "BANK_TRANSFER" && (
-              <div className="space-y-2 mt-2">
-                <p className="text-xs">Select Bank</p>
-                <Select
-                  value={tempSplitPayment.bank}
-                  onValueChange={(value) =>
-                    setTempSplitPayment({ ...tempSplitPayment, bank: value })
-                  }
-                >
-                  <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                    <SelectValue placeholder="Select bank" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border border-gray-200">
-                    {BankData?.data?.map((bank: any) => (
-                      <SelectItem key={bank.id} value={bank.id}>
-                        {bank.bank_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {tempSplitPayment.method === "CREDIT" && (
-              <div className="space-y-2 mt-2">
-                <p className="text-xs">Due Date</p>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
-                    >
-                      {dueDate ? (
-                        format(dueDate, "PPP")
-                      ) : (
-                        <span>Pick a due date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      className="bg-white"
-                      mode="single"
-                      selected={dueDate}
-                      onSelect={setDueDate}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-
-            {splitPaymentError && (
-              <p className="text-xs text-red-500">{splitPaymentError}</p>
-            )}
-
-            <Button
-              className="w-full bg-primary-green-300 text-white mt-2"
-              onClick={handleAddSplitPayment}
-            >
-              Add Payment
-            </Button>
-          </div>
-
-          {/* Split Payments Summary */}
-          {splitPayments.length > 0 && (
-            <div className="w-full p-4 border border-primary-green-300 rounded-lg">
-              <p className="font-medium mb-4">Payment Summary</p>
-              <div className="space-y-2">
-                {splitPayments.map((payment, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {paymentMethodOptions.find(
-                          (opt) => opt.value === payment.method
-                        )?.label || payment.method}
+                    {partialAmount && parseFloat(partialAmount) >= total && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Partial amount must be less than total amount
                       </p>
-                      <p className="text-sm text-gray-600">
-                        ₦{payment.amount.toLocaleString()}
-                      </p>
-                      {payment.bank && (
-                        <p className="text-xs text-gray-500">
-                          Bank: {payment.bank}
-                        </p>
-                      )}
-                      {payment.dueDate && (
-                        <p className="text-xs text-gray-500">
-                          Due: {format(payment.dueDate, "PPP")}
-                        </p>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => removeSplitPayment(index)}
-                    >
-                      <X size={16} />
-                    </Button>
+                    )}
                   </div>
-                ))}
-              </div>
+
+                  <div>
+                    <p className="text-xs mb-1">Partial Payment Method</p>
+                    <Select
+                      value={partialPaymentMethod}
+                      onValueChange={(value) => {
+                        setPartialPaymentMethod(value);
+                        setSelectedBank("");
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                        <SelectValue placeholder="Select payment method" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200">
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="BANK_TRANSFER">
+                          Bank Transfer
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {partialPaymentMethod === "BANK_TRANSFER" && (
+                    <div className="space-y-2 mt-2">
+                      <p className="text-xs">Select Bank</p>
+                      <Select
+                        value={selectedBank}
+                        onValueChange={setSelectedBank}
+                      >
+                        <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                          <SelectValue placeholder="Select bank" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200">
+                          {BankData?.data?.map((bank: any) => (
+                            <SelectItem key={bank.id} value={bank.id}>
+                              {bank.bank_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div>
+                    <p className="text-xs mb-1">Due Date</p>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
+                        >
+                          {dueDate ? (
+                            format(dueDate, "PPP")
+                          ) : (
+                            <span>Pick a due date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          className="bg-white"
+                          mode="single"
+                          selected={dueDate}
+                          onSelect={setDueDate}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {/* Submit Button */}
-      <div className="mt-5 mb-3 w-full">
-        <Button
-          className="w-full bg-primary-green-300 text-white"
-          onClick={openSureModal}
-          disabled={isSubmitDisabled()}
-        >
-          Pay ₦{total.toLocaleString()}
-        </Button>
-      </div>
+          {/* Split Bill Section */}
+          {isChecked && (
+            <div className="w-full space-y-4">
+              {/* Remaining Amount Display */}
+              <div
+                className={`w-full p-4 rounded-lg ${
+                  remainingAmount > 0
+                    ? "bg-orange-100 text-orange-800"
+                    : "bg-green-100 text-green-800"
+                } font-medium`}
+              >
+                {remainingAmount > 0
+                  ? `Remaining Amount: ₦${remainingAmount.toLocaleString()}`
+                  : "All payments have been added ✓"}
+              </div>
 
-      <CustomModal
-        isOpen={sureModal} // FIXED: Removed the negation
-        onClose={closeSureModal}
-        trigger={false}
-        title=""
-      >
-        <div className="flex w-full items-center flex-col justify-center">
-          <p className="text-sm text-gray-500">
-            Are you sure you want to make this payment?
-          </p>
+              {/* Split Payment Form */}
+              <div className="w-full p-4 border border-primary-green-300 rounded-lg space-y-4">
+                <p className="font-medium">Add Payment</p>
 
-          <div className="flex gap-3 justify-center mt-4  items-center w-full">
+                <div className="space-y-2">
+                  <p className="text-xs">Payment Method</p>
+                  <Select
+                    value={tempSplitPayment.method}
+                    onValueChange={(value) =>
+                      setTempSplitPayment({
+                        ...tempSplitPayment,
+                        method: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border border-gray-200">
+                      {availableSplitPaymentMethods.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs">Amount</p>
+                  <Input
+                    type="number"
+                    value={tempSplitPayment.amount}
+                    onChange={(e) =>
+                      setTempSplitPayment({
+                        ...tempSplitPayment,
+                        amount: e.target.value,
+                      })
+                    }
+                    placeholder="Enter amount"
+                    className="w-full bg-white border border-primary-green-300"
+                  />
+                  {tempSplitPayment.amount &&
+                    parseFloat(tempSplitPayment.amount) > remainingAmount && (
+                      <p className="text-xs text-red-500">
+                        Amount cannot exceed remaining balance
+                      </p>
+                    )}
+                </div>
+
+                {/* Conditional fields for split payment */}
+                {tempSplitPayment.method === "BANK_TRANSFER" && (
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs">Select Bank</p>
+                    <Select
+                      value={tempSplitPayment.bank}
+                      onValueChange={(value) =>
+                        setTempSplitPayment({
+                          ...tempSplitPayment,
+                          bank: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                        <SelectValue placeholder="Select bank" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200">
+                        {BankData?.data?.map((bank: any) => (
+                          <SelectItem key={bank.id} value={bank.id}>
+                            {bank.bank_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {tempSplitPayment.method === "CREDIT" && (
+                  <div className="space-y-2 mt-2">
+                    <p className="text-xs">Due Date</p>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className="w-full pl-3 text-left font-normal bg-white border border-primary-green-300"
+                        >
+                          {dueDate ? (
+                            format(dueDate, "PPP")
+                          ) : (
+                            <span>Pick a due date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          className="bg-white"
+                          mode="single"
+                          selected={dueDate}
+                          onSelect={setDueDate}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                {splitPaymentError && (
+                  <p className="text-xs text-red-500">{splitPaymentError}</p>
+                )}
+
+                <Button
+                  className="w-full bg-primary-green-300 text-white mt-2"
+                  onClick={handleAddSplitPayment}
+                >
+                  Add Payment
+                </Button>
+              </div>
+
+              {/* Split Payments Summary */}
+              {splitPayments.length > 0 && (
+                <div className="w-full p-4 border border-primary-green-300 rounded-lg">
+                  <p className="font-medium mb-4">Payment Summary</p>
+                  <div className="space-y-2">
+                    {splitPayments.map((payment, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {paymentMethodOptions.find(
+                              (opt) => opt.value === payment.method
+                            )?.label || payment.method}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            ₦{payment.amount.toLocaleString()}
+                          </p>
+                          {payment.bank && (
+                            <p className="text-xs text-gray-500">
+                              Bank: {payment.bank}
+                            </p>
+                          )}
+                          {payment.dueDate && (
+                            <p className="text-xs text-gray-500">
+                              Due: {format(payment.dueDate, "PPP")}
+                            </p>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700"
+                          onClick={() => removeSplitPayment(index)}
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <div className="mt-5 mb-3 w-full">
             <Button
-              className="bg-primary-green-300 text-white "
-              onClick={handleSubmitPayment}
-              disabled={createSalePending}
+              className="w-full bg-primary-green-300 text-white"
+              onClick={openSureModal}
+              disabled={isSubmitDisabled()}
             >
-              {createSalePending ? <Spinner /> : "Yes"}
-            </Button>
-
-            <Button
-              variant={"outline"}
-              className="border border-primary-green-300 text-black"
-              onClick={closeSureModal}
-            >
-              No
+              Pay {formatToNaira(total)}
             </Button>
           </div>
+
+          <CustomModal
+            isOpen={sureModal} // FIXED: Removed the negation
+            onClose={closeSureModal}
+            trigger={false}
+            title=""
+          >
+            <div className="flex w-full items-center flex-col justify-center">
+              <p className="text-sm text-gray-500">
+                Are you sure you want to make this payment?
+              </p>
+
+              <div className="flex gap-3 justify-center mt-4  items-center w-full">
+                <Button
+                  className="bg-primary-green-300 text-white "
+                  onClick={handleSubmitPayment}
+                  disabled={createSalePending}
+                >
+                  {createSalePending ? <Spinner /> : "Yes"}
+                </Button>
+
+                <Button
+                  variant={"outline"}
+                  className="border border-primary-green-300 text-black"
+                  onClick={closeSureModal}
+                >
+                  No
+                </Button>
+              </div>
+            </div>
+          </CustomModal>
         </div>
-      </CustomModal>
-    </div>
+      )}
+    </>
   );
 };
 

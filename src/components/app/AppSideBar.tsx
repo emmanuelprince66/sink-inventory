@@ -28,10 +28,10 @@ export function AppSidebar() {
     <Sidebar className="z-10 bg-white border-gray-200">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="bg-[#001e06] py-6 mb-8">
-            <div className="w-24 h-24">
+          <SidebarGroupLabel className="py-6 mb-8">
+            <div className="w-100 h-100">
               <Image
-                src="/assets/sink.png"
+                src="/assets/h-1.png"
                 alt="sink-logo"
                 className="w-full h-full object-contain"
                 priority
@@ -53,8 +53,8 @@ export function AppSidebar() {
                     className={cn(
                       "transition-colors duration-200 my-2 py-1 rounded",
                       isActive
-                        ? "bg-primary-green-100 text-white"
-                        : "hover:bg-primary-green-100 hover:text-white"
+                        ? "bg-primary-green-300 text-white"
+                        : "hover:bg-primary-green-300 hover:text-white"
                     )}
                   >
                     <SidebarMenuButton asChild>
@@ -63,7 +63,7 @@ export function AppSidebar() {
                         className="flex items-center font-[600]"
                       >
                         <item.icon className="mr-2" />
-                        <p>{item.title}</p>
+                        <p className="text-[18px] font-normal">{item.title}</p>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
