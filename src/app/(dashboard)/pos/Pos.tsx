@@ -1,6 +1,5 @@
 "use client";
 
-import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +9,6 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import CheckoutPage from "./CheckoutPage";
 
 const Pos = () => {
   const [searchInput, setSearchInput] = useState("");
@@ -221,7 +219,7 @@ const Pos = () => {
         </main>
 
         {/* Cart Sidebar */}
-        <aside className="w-[30%] h-full bg-gray-50 p-4 overflow-y-auto">
+        {/* <aside className="w-[30%] h-full bg-gray-50 p-4 overflow-y-auto">
           {cartItems.length > 0 ? (
             <CheckoutPage
               setCartItems={setCartItems}
@@ -231,7 +229,7 @@ const Pos = () => {
           ) : (
             <NoCartItem />
           )}
-        </aside>
+        </aside> */}
       </div>
     </div>
   );
