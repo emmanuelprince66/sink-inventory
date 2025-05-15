@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { useDeleteServiceMutation } from "@/api/products/delete-service";
 import { useEditProductMutation } from "@/api/products/edit-product";
+import { useEditServiceMutation } from "@/api/products/edit-service";
 import { useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
@@ -54,11 +55,15 @@ export const useInventoryHook = ({
   productId,
   selectedCategoryId,
   closeAddServiceModal,
+  type,
+  product,
 }: {
   searchInput?: string;
+  type?: string;
   selectedCategoryId?: string | null;
   closeAddServiceModal?: any;
   productId?: string | null;
+  product?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
@@ -67,6 +72,10 @@ export const useInventoryHook = ({
 
   const { mutate: editProduct, isPending: editProductPending } =
     useEditProductMutation({
+      productId: productId,
+    });
+  const { mutate: editService, isPending: editServicePending } =
+    useEditServiceMutation({
       productId: productId,
     });
 
@@ -95,6 +104,8 @@ export const useInventoryHook = ({
     }
     deleteService(id);
   };
+
+  console.log("type", type);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500); // 500ms debounce
   const { mutate: createService, isPending: isCreatingService } =
@@ -131,6 +142,18 @@ export const useInventoryHook = ({
   console.log("InventoryData", InventoryData);
   console.log("CategoriesData", CategoriesData);
 
+  const getCategoryIdForEditServiceFunc = () => {
+    if (type === "SERVICE" && CategoriesData) {
+      const productCat = CategoriesData?.data?.find(
+        (category: any) => category.name === product.category
+      ).id;
+
+      return productCat;
+    }
+
+    return null;
+  };
+
   const editSellingPriceForm = useForm<EditSellingPriceFormValues>({
     resolver: zodResolver(EditSellingPriceSchema) as any, // Temporary workaround
     defaultValues: {
@@ -150,7 +173,7 @@ export const useInventoryHook = ({
     mode: "onChange",
   });
 
-  const onSubmit = (values: AddServiceFormValues) => {
+  const onSubmit = (values: any) => {
     const payload = {
       name: values.service_name,
       description: values.description,
@@ -167,12 +190,25 @@ export const useInventoryHook = ({
   };
   const onSubmitEditSellingPrice = (values: EditSellingPriceFormValues) => {
     const formData = new FormData();
-    formData.append("selling_price", String(values.selling_price));
 
-    editProduct({
-      payload: formData,
-      productId: productId,
-    });
+    console.log("type", type);
+    if (type === "PRODUCT") {
+      formData.append("selling_price", String(values.selling_price));
+
+      editProduct({
+        payload: formData,
+        productId: productId,
+      });
+    } else {
+      formData.append("amount", String(values.selling_price));
+      // formData.append("category_id", getCategoryIdForEditServiceFunc());
+      // formData.append("name", product.name);
+
+      editService({
+        payload: formData,
+        productId: productId,
+      });
+    }
 
     // createService({
     //   payload,
@@ -187,7 +223,7 @@ export const useInventoryHook = ({
     isCreatingService,
     form,
     onSubmitEditSellingPrice,
-    editProductPending,
+    loading: editProductPending || editServicePending,
     handleDeleteProduct,
     deleting: isDeleting || isDeletingService,
     editSellingPriceForm,

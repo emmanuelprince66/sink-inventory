@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { CustomTable } from "@/components/app/CutomTable";
 
 import { columns } from "./columns";
-import { ApiResponse, CustomerResponse, CustomerType } from "./types";
+import { ApiResponse, CustomerResponse } from "./types";
 
 interface CustomerTableProps {
   response: ApiResponse<CustomerResponse>; // Changed from data to response
@@ -21,7 +21,7 @@ const CustomerTable = ({
   return (
     <>
       <CustomTable
-        onRowClick={handleRowClick}
+        // onRowClick={handleRowClick}
         columns={columns}
         data={response?.data?.results?.data}
         loading={loading}

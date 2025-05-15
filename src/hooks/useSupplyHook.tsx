@@ -5,8 +5,10 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useRouter } from "next/navigation";
+import { useToast } from "./toast/useToast";
 
 import { useCreateSupplierMutation } from "@/api/supply/create-supplier";
+import { useDeleteSupplierMutation } from "@/api/supply/delete-supplier";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 const SupplySchema = z.object({
@@ -17,20 +19,39 @@ const SupplySchema = z.object({
 
 export type SupplyFormValues = z.infer<typeof SupplySchema>;
 
-export const useSupplyHook = () => {
+export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { data: SupplierData, isLoading: SupplierLoading } =
     useFetchSupplierDataQuery(business_id);
+  const { showToast } = useToast();
+
+  const [supplierId, setSupplierId] = useState("");
 
   const { mutate: createSupplier, isPending: createSupplierLoading } =
     useCreateSupplierMutation({
       businessId: business_id, // Convert null to undefined
     });
+
   const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
   const closeOpenSupplyModal = () => setOpenAddSupplyModal(false);
   const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
   const router = useRouter();
 
+  const { mutate: deleteSupplier, isPending: deleteSupplierLoading } =
+    useDeleteSupplierMutation({
+      onSuccess: (data) => {
+        console.log("data", data);
+        showToast(data.message, "success");
+
+        if (closeModal) closeModal();
+        // Optional: Invalidate queries or update cache
+      },
+      // You can add other callbacks here if needed
+    });
+
+  const handleDeleteSupplier = (supplier: any) => {
+    deleteSupplier(supplier.id);
+  };
   const form = useForm<SupplyFormValues>({
     resolver: zodResolver(SupplySchema),
     defaultValues: {
@@ -71,6 +92,8 @@ export const useSupplyHook = () => {
     SupplierLoading,
     closeOpenSupplyModal,
     createSupplierLoading,
+    handleDeleteSupplier,
+    deleteSupplierLoading,
     handleRowClick,
     onSubmit,
     SupplySchema,

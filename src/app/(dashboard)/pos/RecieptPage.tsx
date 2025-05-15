@@ -45,6 +45,8 @@ const ReceiptPage = ({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [createSaleResponse, setCreateSaleResponse] = useState(null);
   const [selectedBank, setSelectedBank] = useState("");
+  const [selectedBankForSplitPayment, setSelectedBankForSplitPayment] =
+    useState("");
   const [partialAmount, setPartialAmount] = useState("");
   const [partialPaymentMethod, setPartialPaymentMethod] = useState(""); // New state for partial payment method
   const [splitPayments, setSplitPayments] = useState<
@@ -61,6 +63,10 @@ const ReceiptPage = ({
     bank: "",
   });
 
+  console.log("tempSplitPayment", tempSplitPayment);
+
+  console.log("partial_payment", partialPaymentMethod);
+
   const { showToast } = useToast();
 
   console.log("sales response", createSaleResponse);
@@ -72,6 +78,7 @@ const ReceiptPage = ({
   const openSureModal = () => setSureModal(true);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
+  console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
 
   const {
     BusinessData,
@@ -126,13 +133,13 @@ const ReceiptPage = ({
         { label: "Mycliq", value: "MYCLIQ" },
         { label: "Credit", value: "CREDIT" },
         { label: "Partial", value: "PARTIAL" },
-        { label: "Bank Transfer", value: "BANK_TRANSFER" },
+        { label: "Bank Transfer", value: "BANK" },
         { label: "Advance", value: "ADVANCE" },
       ]
     : [
         { label: "Cash", value: "CASH" },
         { label: "Mycliq", value: "MYCLIQ" },
-        { label: "Bank Transfer", value: "BANK_TRANSFER" },
+        { label: "Bank Transfer", value: "BANK" },
       ];
 
   // For split payments, filter out methods already used
@@ -164,7 +171,7 @@ const ReceiptPage = ({
     }
 
     // Bank validation for bank transfer
-    if (tempSplitPayment.method === "BANK_TRANSFER" && !tempSplitPayment.bank) {
+    if (tempSplitPayment.method === "BANK" && !tempSplitPayment.bank) {
       setSplitPaymentError("Bank selection is required for bank transfers");
       return;
     }
@@ -182,6 +189,8 @@ const ReceiptPage = ({
       ...(tempSplitPayment.bank && { bank: tempSplitPayment.bank }),
       ...(dueDate && { dueDate }),
     };
+
+    console.log("newPayment", newPayment);
 
     setSplitPayments([...splitPayments, newPayment]);
 
@@ -224,7 +233,7 @@ const ReceiptPage = ({
         return null;
       }
 
-      if (paymentMethod === "BANK_TRANSFER" && !selectedBank) {
+      if (paymentMethod === "BANK" && !selectedBank) {
         showToast("Bank selection is required", "error");
         return null;
       }
@@ -254,7 +263,7 @@ const ReceiptPage = ({
           showToast("Partial payment method is required", "error");
           return null;
         }
-        if (partialPaymentMethod === "BANK_TRANSFER" && !selectedBank) {
+        if (partialPaymentMethod === "BANK" && !selectedBank) {
           showToast("Bank selection is required for bank transfer", "error");
           return null;
         }
@@ -298,10 +307,12 @@ const ReceiptPage = ({
       if (isChecked) {
         // For split payments
         apiPayload.method = "MULTIPLE";
+
+        apiPayload.bank = selectedBankForSplitPayment;
         apiPayload.multiple_payments = splitPayments.map((payment) => ({
           name: payment.method,
           amount: payment.amount.toString(),
-          ...(payment.bank && { bank: payment.bank }),
+          // ...(payment.bank && { bank: payment.bank }),
           ...(payment.dueDate && {
             due_date: format(payment.dueDate, "yyyy-MM-dd"),
           }),
@@ -320,7 +331,7 @@ const ReceiptPage = ({
           }
         }
 
-        if (paymentMethod === "BANK_TRANSFER") {
+        if (paymentMethod === "BANK") {
           apiPayload.bank = selectedBank;
         }
 
@@ -346,7 +357,7 @@ const ReceiptPage = ({
       return remainingAmount > 0;
     } else {
       if (!paymentMethod) return true;
-      if (paymentMethod === "BANK_TRANSFER" && !selectedBank) return true;
+      if (paymentMethod === "BANK" && !selectedBank) return true;
       if (paymentMethod === "CREDIT" && !dueDate) return true;
       if (paymentMethod === "PARTIAL") {
         if (!partialAmount || !dueDate || !partialPaymentMethod) return true;
@@ -355,8 +366,7 @@ const ReceiptPage = ({
           parseFloat(partialAmount) >= total
         )
           return true;
-        if (partialPaymentMethod === "BANK_TRANSFER" && !selectedBank)
-          return true;
+        if (partialPaymentMethod === "BANK" && !selectedBank) return true;
       }
       return false;
     }
@@ -596,7 +606,7 @@ const ReceiptPage = ({
               </Select>
 
               {/* Conditional fields based on payment method selection */}
-              {paymentMethod === "BANK_TRANSFER" && (
+              {paymentMethod === "BANK" && (
                 <div className="space-y-2 mt-2">
                   <p className="text-xs">Select Bank</p>
                   <Select value={selectedBank} onValueChange={setSelectedBank}>
@@ -677,14 +687,12 @@ const ReceiptPage = ({
                       </SelectTrigger>
                       <SelectContent className="bg-white border border-gray-200">
                         <SelectItem value="CASH">Cash</SelectItem>
-                        <SelectItem value="BANK_TRANSFER">
-                          Bank Transfer
-                        </SelectItem>
+                        <SelectItem value="BANK">Bank Transfer</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {partialPaymentMethod === "BANK_TRANSFER" && (
+                  {partialPaymentMethod === "BANK" && (
                     <div className="space-y-2 mt-2">
                       <p className="text-xs">Select Bank</p>
                       <Select
@@ -805,17 +813,19 @@ const ReceiptPage = ({
                 </div>
 
                 {/* Conditional fields for split payment */}
-                {tempSplitPayment.method === "BANK_TRANSFER" && (
+                {tempSplitPayment.method === "BANK" && (
                   <div className="space-y-2 mt-2">
                     <p className="text-xs">Select Bank</p>
                     <Select
                       value={tempSplitPayment.bank}
-                      onValueChange={(value) =>
+                      onValueChange={(value) => {
+                        setSelectedBankForSplitPayment(value);
+
                         setTempSplitPayment({
                           ...tempSplitPayment,
                           bank: value,
-                        })
-                      }
+                        });
+                      }}
                     >
                       <SelectTrigger className="w-full bg-white border border-primary-green-300">
                         <SelectValue placeholder="Select bank" />

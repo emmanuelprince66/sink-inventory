@@ -10,13 +10,17 @@ interface OrderHistoryProps {
   activeFilter: string;
   setActiveFilter: any;
   filterOptions: readonly string[];
+  setPage: any;
+  page: any;
 }
 
 const OrderHistory = ({
   SalesOrderData,
+  setPage,
   filterOptions,
   activeFilter,
   setActiveFilter,
+  page,
   loading,
 }: OrderHistoryProps) => {
   return (
@@ -46,7 +50,12 @@ const OrderHistory = ({
             ))}
           </div>
         ) : SalesOrderData?.data?.results?.length > 0 ? (
-          <OrderHistoryTable response={SalesOrderData} loading={false} />
+          <OrderHistoryTable
+            setPage={setPage}
+            response={SalesOrderData}
+            loading={false}
+            page={page}
+          />
         ) : (
           <div className="w-full h-full flex flex-col justify-center items-center mt-8">
             <NoOrders />

@@ -117,6 +117,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: "Action",
     cell: ({ row }) => {
       const inventory = row.original;
+      console.log("inventory---4", inventory);
       const canRestock = inventory.sold > 0;
       const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
 
@@ -148,9 +149,9 @@ export const columns: ColumnDef<InventoryItem>[] = [
             >
               <DropdownMenuItem
                 onClick={openEditPriceModalFunc}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors"
               >
-                Edit Product Price
+                Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={openViewDetailsFunc}
@@ -178,7 +179,11 @@ export const columns: ColumnDef<InventoryItem>[] = [
             trigger={false}
             title="Edit product price"
           >
-            <EditProductPrice id={inventory.id} />
+            <EditProductPrice
+              productId={inventory.id}
+              product={inventory}
+              type={inventory.type}
+            />
           </CustomModal>
           {/*  */}
 

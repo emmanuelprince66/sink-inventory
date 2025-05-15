@@ -52,7 +52,7 @@ const Supply = () => {
     openSupplyModalFunc,
     SupplierData,
     SupplierLoading,
-  } = useSupplyHook();
+  } = useSupplyHook({});
   console.log("supplier data", SupplierData);
 
   return (

@@ -21,7 +21,7 @@ const SupplierTable = ({
   return (
     <>
       <CustomTable
-        onRowClick={handleRowClick}
+        // onRowClick={handleRowClick}
         columns={columns}
         data={response?.data?.results?.data}
         loading={loading}

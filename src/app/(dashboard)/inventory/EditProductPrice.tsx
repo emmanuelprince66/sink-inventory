@@ -10,13 +10,19 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
-const EditProductPrice = ({ id }: { id: any }) => {
-  const { editSellingPriceForm, onSubmitEditSellingPrice, editProductPending } =
-    useInventoryHook({
-      productId: id,
-    });
+const EditProductPrice = ({
+  productId,
+  product,
+  type,
+}: {
+  productId: any;
+  type: any;
+  product: any;
+}) => {
+  const { editSellingPriceForm, onSubmitEditSellingPrice, loading } =
+    useInventoryHook({ productId, type, product });
 
-  console.log("EditProductPrice", id);
+  console.log("EditProductPrice", productId);
   return (
     <div className="w-full">
       <Form {...editSellingPriceForm}>
@@ -39,12 +45,8 @@ const EditProductPrice = ({ id }: { id: any }) => {
             )}
           />
 
-          <Button
-            type="submit"
-            className="w-full h-[48px] "
-            disabled={editProductPending}
-          >
-            {editProductPending ? <Spinner /> : "Save"}
+          <Button type="submit" className="w-full h-[48px] " disabled={loading}>
+            {loading ? <Spinner /> : "Save"}
           </Button>
         </form>
       </Form>

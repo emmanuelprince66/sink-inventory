@@ -31,7 +31,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="py-6 mb-8">
             <div className="w-100 h-100">
               <Image
-                src="/assets/h-1.png"
+                src="/asset/h-1.png"
                 alt="sink-logo"
                 className="w-full h-full object-contain"
                 priority

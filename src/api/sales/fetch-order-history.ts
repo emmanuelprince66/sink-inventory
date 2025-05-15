@@ -12,6 +12,8 @@ type fetchOrderHistoryProps = {
   attendanceId?: string;
   start_date?: string;
   end_date?: string;
+  page?: number;
+  limit?: number;
 };
 
 export const fetchOrderHistory = async ({
@@ -19,6 +21,8 @@ export const fetchOrderHistory = async ({
   search = "",
   status = "",
   start_date = "",
+  page = 1,
+  limit = 15,
   end_date = "",
 }: fetchOrderHistoryProps) => {
   // Safely construct URL with search params
@@ -27,6 +31,9 @@ export const fetchOrderHistory = async ({
   if (status) url.searchParams.append("status", status);
   if (start_date) url.searchParams.append("start_date", start_date);
   if (end_date) url.searchParams.append("end_date", end_date);
+
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("limit", limit.toString());
 
   const response = await fetch(url.toString(), { method: "GET" });
 
@@ -66,6 +73,7 @@ export const useFetchOrderHistoryQuery = ({
       params.status,
       params.start_date,
       params.end_date,
+      params.page,
     ],
     queryFn: () => fetchOrderHistory(params),
     ...config,

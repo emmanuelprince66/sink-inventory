@@ -1,12 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useToast } from "./toast/useToast";
 
 import { useRouter } from "next/navigation";
 
 import { useCreateCustomerMutation } from "@/api/customer/create-customer";
+import { useDeleteCustomerMutation } from "@/api/customer/delete-customer";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
@@ -25,20 +27,27 @@ export type CustomerFormValues = z.infer<typeof CustomerSchema>;
 
 // Create this custom hook in your hooks folder
 
-export const useCustomerHook = () => {
+export const useCustomerHook = ({
+  closeModal,
+}: {
+  closeModal?: () => void;
+}) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const router = useRouter();
+  const { showToast } = useToast();
 
   const { mutate: createCustomer, isPending: createCustomerLoading } =
     useCreateCustomerMutation({
       businessId: business_id, // Convert null to undefined
     });
 
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms debounce
   const filterOptions = [
     "All",
     "Most Active",
+    "New",
     "Least Active",
     "Debts",
   ] as const;
@@ -47,11 +56,30 @@ export const useCustomerHook = () => {
     All: "",
     "Most Active": "MOST_ACTIVE",
     "Least Active": "LEAST_ACTIVE",
+    New: "NEW",
     Debts: "DEBTS",
   } as const;
   const [activeFilter, setActiveFilter] = useState<
     (typeof filterOptions)[number]
   >(filterOptions[0]);
+
+  const { mutate: deleteCustomer, isPending: deleteCustomerLoading } =
+    useDeleteCustomerMutation({
+      onSuccess: (data) => {
+        console.log("data", data);
+        showToast(data.message, "success");
+
+        if (closeModal) closeModal();
+        // Optional: Invalidate queries or update cache
+      },
+      // You can add other callbacks here if needed
+    });
+
+  const handleDeleteCustomer = (customer: any) => {
+    console.log("customer", customer);
+    setCustomerId(customer.id);
+    deleteCustomer(customer?.id);
+  };
 
   // console.log("activeFilter", activeFilter);
   // Only search when term has at least 3 characters or is empty (to reset)
@@ -132,8 +160,10 @@ export const useCustomerHook = () => {
     CustomerSchema,
 
     openCustomerModalFunc,
+    handleDeleteCustomer,
     handleRowClick,
     CustomerData,
+    deleteCustomerLoading,
     createCustomerLoading,
     CustomerLoading,
     CustomerError,

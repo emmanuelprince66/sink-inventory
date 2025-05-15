@@ -55,6 +55,7 @@ const Sales = () => {
   const [ShowAttendants, setShowAttendants] = useState(false);
   const closeAttendantsModal = () => setShowAttendants(false);
   const [attendantId, setAttendantId] = useState("");
+  const [page, setPage] = useState(1);
 
   const openAttendantsModal = () => setShowAttendants(true);
   const [activeProductFilter, setActiveProductFilter] = useState<
@@ -85,7 +86,8 @@ const Sales = () => {
     activeOrderFilter,
     dateRange,
     searchInput,
-    attendantId
+    attendantId,
+    page
   );
 
   const totalProfit = useMemo(() => {
@@ -240,6 +242,8 @@ const Sales = () => {
               activeFilter={activeOrderFilter}
               setActiveFilter={setActiveOrderFilter}
               filterOptions={orderFilterOptions}
+              setPage={setPage}
+              page={page}
             />
           )}
         </TabsContent>

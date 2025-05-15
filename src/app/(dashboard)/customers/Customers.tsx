@@ -8,8 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { formatToNaira } from "@/utils/formatMoney";
+import { useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 
@@ -46,6 +49,10 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
 };
 
 const Customers = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
   const {
     openAddCustomerModal,
     closeOpenCustomerModal,
@@ -58,7 +65,7 @@ const Customers = () => {
     handleFilterChange,
     activeFilter,
     handleSearchChange,
-  } = useCustomerHook();
+  } = useCustomerHook({});
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -68,14 +75,18 @@ const Customers = () => {
             Customers
           </p>
 
-          <div
-            className="text-[14px] md:text-[20px]"
-            onClick={openCustomerModalFunc}
-          >
-            <Button className="flex items-center py-0 md:py-[25px]">
-              <Plus />
-              Add Customer
-            </Button>
+          <div className="flex gap-2 items-center">
+            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+
+            <div
+              className="text-[14px] md:text-[20px]"
+              onClick={openCustomerModalFunc}
+            >
+              <Button className="flex items-center py-0 md:py-[25px]">
+                <Plus />
+                Add Customer
+              </Button>
+            </div>
           </div>
         </div>
       </div>

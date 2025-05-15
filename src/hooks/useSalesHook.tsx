@@ -1,6 +1,7 @@
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
+import { useReverseSaleQuery } from "@/api/sales/reverse-sale";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -27,12 +28,23 @@ export const useSalesHook = (
   activeFilterTwo?: keyof typeof filterMappingTwo | undefined,
   dateRange?: DateRange | undefined,
   searchInput?: any,
-  attendantId?: any
+  attendantId?: any,
+  page?: any
 ) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const [productId, setProductId] = useState("");
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
+
+  const { data: ReverseSale, isLoading: ReverseSaleLoading } =
+    useReverseSaleQuery(productId);
+
+  console.log("ReverseSale", ReverseSale);
+
+  const handleReverseSale = (id: any) => {
+    setProductId(id);
+  };
 
   console.log("Attendanrs", AttendantsData);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
@@ -81,6 +93,8 @@ export const useSalesHook = (
     params: {
       id: business_id,
       search: searchTerm,
+      page,
+      limit: 15,
       status: activeFilterTwo && filterMappingTwo[activeFilterTwo],
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
@@ -91,6 +105,8 @@ export const useSalesHook = (
     },
     enabled: !!business_id,
   });
+
+  console.log("SalesOrderData", SalesOrderData);
 
   // Refetch when any critical parameter changes
   useEffect(() => {
@@ -110,7 +126,11 @@ export const useSalesHook = (
     SalesData,
     SalesLoading,
     SalesError,
+
+    handleReverseSale,
     AttendantsData,
+    ReverseSaleLoading,
+    page,
     AttendantsLoading,
     openOrderHistoryModal,
     orderDetails,
