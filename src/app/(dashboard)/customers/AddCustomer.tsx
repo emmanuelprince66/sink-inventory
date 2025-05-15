@@ -1,5 +1,3 @@
-import React from "react";
-
 import { CircleAlert } from "lucide-react";
 
 import { Spinner } from "@/components/app/Spinner";
@@ -15,10 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 
-
-
 const AddCustomer = () => {
-  const { form, onSubmit, createCustomerLoading } = useCustomerHook();
+  const { form, onSubmit, createCustomerLoading } = useCustomerHook({});
   return (
     <div>
       <Form {...form}>

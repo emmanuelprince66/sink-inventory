@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
 
 const AddSupplier = () => {
-  const { form, onSubmit, createSupplierLoading } = useSupplyHook();
+  const { form, onSubmit, createSupplierLoading } = useSupplyHook({});
   return (
     <div>
       <Form {...form}>
