@@ -22,6 +22,7 @@ const OrderHistoryTable = ({
     handleOrderHistoryRowClick,
     closeOpenOrderHistoryModal,
     orderDetails,
+    handleReverseSale,
   } = useSalesHook();
 
   // Initialize pageSize with the limit from API response or default to 15
@@ -73,7 +74,10 @@ const OrderHistoryTable = ({
         title="Order Details"
       >
         <div className="w-full">
-          <OrderHistoryDetails orderDetails={orderDetails} />
+          <OrderHistoryDetails
+            handleReverseSale={handleReverseSale}
+            orderDetails={orderDetails}
+          />
         </div>
       </CustomModal>
     </>

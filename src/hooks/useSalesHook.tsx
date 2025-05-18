@@ -1,7 +1,7 @@
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
-import { useReverseSaleQuery } from "@/api/sales/reverse-sale";
+import { useReverseSaleMutation } from "@/api/sales/reverse-sale";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import moment from "moment";
 import { useEffect, useState } from "react";
@@ -32,18 +32,26 @@ export const useSalesHook = (
   page?: any
 ) => {
   const business_id = useBusinessStore((state) => state.business_id);
+
+  console.log("business_id", business_id);
   const [productId, setProductId] = useState("");
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
 
-  const { data: ReverseSale, isLoading: ReverseSaleLoading } =
-    useReverseSaleQuery(productId);
+  const { mutate: reverseSale, isPending: ReverseSalePending } =
+    useReverseSaleMutation({
+      onSuccess: (data) => {
+        console.log("Sale reversed successfully", data);
+      },
+      onError: (error, variables, context) => {
+        console.error("Error reversing sale:", error);
+      },
+    });
 
-  console.log("ReverseSale", ReverseSale);
-
-  const handleReverseSale = (id: any) => {
-    setProductId(id);
+  const handleReverseSale = (productId: any) => {
+    console.log("productId", productId);
+    reverseSale(productId);
   };
 
   console.log("Attendanrs", AttendantsData);
@@ -129,7 +137,7 @@ export const useSalesHook = (
 
     handleReverseSale,
     AttendantsData,
-    ReverseSaleLoading,
+    ReverseSalePending,
     page,
     AttendantsLoading,
     openOrderHistoryModal,

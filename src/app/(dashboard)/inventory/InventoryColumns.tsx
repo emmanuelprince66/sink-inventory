@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
 import EditProductPrice from "./EditProductPrice";
+import TransferProduct from "./TransferProduct";
 import { InventoryItem } from "./type";
 import ViewDetails from "./ViewDetails";
 
@@ -118,7 +119,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
     cell: ({ row }) => {
       const inventory = row.original;
       console.log("inventory---4", inventory);
-      const canRestock = inventory.sold > 0;
+      const canRestock = inventory.type === "PRODUCT";
       const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
 
       const [openViewDetails, setOpenViewDetails] = useState(false);
@@ -133,6 +134,9 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const openEditPriceModalFunc = (e: React.MouseEvent) => {
         setOpenEditPriceModal(true);
       };
+
+      const [transferProductModal, setTransferProductModal] = useState(false);
+      const closeTransferProductModal = () => setTransferProductModal(false);
 
       return (
         <>
@@ -171,6 +175,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
               >
                 {canRestock ? "Quick restock" : "Cannot restock"}
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setTransferProductModal(true)}
+                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+              >
+                Transfer Product
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <CustomModal
@@ -205,6 +215,20 @@ export const columns: ColumnDef<InventoryItem>[] = [
           >
             <RestockItem data={inventory} />
           </CustomModal>
+
+          <CustomModal
+            isOpen={transferProductModal}
+            onClose={closeTransferProductModal}
+            trigger={false}
+            title="Transfer Product"
+          >
+            <TransferProduct
+              closeTransferProductModal={closeTransferProductModal}
+              inventory={inventory}
+            />
+          </CustomModal>
+
+          {/* transfer product */}
         </>
       );
     },

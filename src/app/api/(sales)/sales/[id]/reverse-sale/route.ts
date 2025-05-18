@@ -22,14 +22,16 @@ export async function GET(
   const apiUrl = new URL(`${BaseUrl}sale/reverse/${id}/`);
 
   try {
-    const response = await fetch(apiUrl.toString(), {
-      method: "GET",
+    const response = await fetch(apiUrl, {
+      method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        // "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      cache: "no-store",
+      body: JSON.stringify({ id }),
     });
+
+    console.log("response ", response);
 
     if (!response.ok) {
       const errorData = await response.json();

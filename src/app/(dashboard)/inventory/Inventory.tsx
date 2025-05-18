@@ -1,18 +1,18 @@
 "use client";
 
 import { CustomCard } from "@/components/app/CustomCard";
+import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
-import Link from "next/link";
-
-import { CustomModal } from "@/components/app/CustomModal";
-import { cn } from "@/lib/utils"; // Assuming you're using the cn utility
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import Link from "next/link";
 import { useState } from "react";
 import AddService from "./AddService";
 import AllInventory from "./AllInventory";
+
 interface Category {
   id: string;
   name: string;
@@ -28,7 +28,7 @@ interface CategoriesResponse {
 interface CustomInventoryCardProps {
   title: string;
   amount: number | string;
-  type: "value" | "profit" | "other"; // More specific type definition
+  type: "value" | "profit" | "other";
   className?: string;
 }
 
@@ -38,7 +38,6 @@ const CustomInventoryCard = ({
   type,
   className,
 }: CustomInventoryCardProps) => {
-  // Define color variants
   const variants = {
     value: {
       bg: "bg-primary-green-200 border border-gray-100",
@@ -57,7 +56,6 @@ const CustomInventoryCard = ({
     },
   };
 
-  // Get the appropriate variant based on type
   const variant = variants[type] || variants.other;
 
   return (
@@ -83,7 +81,6 @@ const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
-
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
@@ -105,16 +102,14 @@ const Inventory = () => {
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
-    // You might want to do something else with the ID here
   };
 
   const handleAllClick = () => {
     setSelectedCategoryId(null);
-    // Reset any other filter logic here
   };
 
-  console.log("InventoryData", InventoryData);
-  console.log("CategoriesData", CategoriesData);
+  // Handlers for new buttons
+
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
       <div className="flex items-center justify-between w-full">
@@ -123,11 +118,22 @@ const Inventory = () => {
             Inventory
           </p>
 
-          <div className="gap-1 flex items-center">
+          <div className="gap-2 flex items-center flex-wrap">
+            {/* Primary Buttons */}
             <Button onClick={openddServiceModal}>Add Service</Button>
-
-            <Link href={"/product/add-product"}>
+            <Link href={"/upload-product"}>
               <Button>Add Product</Button>
+            </Link>
+
+            {/* Secondary Buttons */}
+
+            <Link href={"/product/upload-product"}>
+              <Button
+                variant="outline"
+                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50"
+              >
+                <span className="hidden md:inline">Upload</span> CSV
+              </Button>
             </Link>
           </div>
         </div>
@@ -167,11 +173,9 @@ const Inventory = () => {
           />
         </div>
       )}
+
       <div className="w-[100%] items-center flex justify-between my-2">
         <p className="text-primary-black-100 mr-2">Categories</p>
-
-        {/* "View More" Button - Subtle outline style */}
-
         <Link href={"/categories"}>
           <div className="flex gap-2 items-center">
             <Button className="px-3 py-1 rounded-md text-xs border border-gray-300 hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
@@ -194,7 +198,6 @@ const Inventory = () => {
         </div>
       ) : (
         <div className="flex gap-3 mb-4 flex-wrap">
-          {/* All button */}
           <Button
             className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
               selectedCategoryId === null
@@ -206,7 +209,6 @@ const Inventory = () => {
             All
           </Button>
 
-          {/* Category buttons */}
           {CategoriesData.data.map((category: Category) => (
             <Button
               key={category.id}
@@ -223,8 +225,6 @@ const Inventory = () => {
         </div>
       )}
 
-      {/* seachh */}
-
       <div className="w-full md:w-1/2 mb-4 mt-4">
         <SearchInput
           placeholder="Search ..."
@@ -237,8 +237,6 @@ const Inventory = () => {
           </div>
         )}
       </div>
-
-      {/* all inventort */}
 
       {InventoryDataLoading || !InventoryData ? (
         <div className="w-full">
@@ -253,8 +251,10 @@ const Inventory = () => {
         <AllInventory data={InventoryData} loading={InventoryDataLoading} />
       )}
 
+      {/*  */}
+
       <CustomModal
-        isOpen={addServiceModal} // FIXED: Removed the negation
+        isOpen={addServiceModal}
         onClose={closeAddServiceModal}
         trigger={false}
         title="Add New Service"

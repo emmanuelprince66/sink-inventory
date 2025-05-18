@@ -1,31 +1,51 @@
 import { queryKey } from "@/constants/query-key";
-import {
-  ExtractFnReturnType,
-  QueryConfigType,
-  useQuery,
-} from "@/lib/react-query";
+import { useToast } from "@/hooks/toast/useToast";
+import { MutationConfig, useMutation } from "@/lib/react-query";
 
-export const fetchBank = async (id: string) => {
-  // console.log("useQuery:", useQuery); //
-  const response = await fetch(`/api/sales/reverse-sale/${id}/`);
-  if (!response.ok) throw new Error("Error reversing sale");
+const reverseSale = async (id: string) => {
+  const response = await fetch(`/api/sales/${id}/reverse-sale`, {
+    method: "POST",
+    // headers: {
+    //   "Content-Type": "application/json",
+    // },
+    body: JSON.stringify({ id }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw errorData;
+  }
   return response.json();
 };
 
-type QueryFnType = typeof fetchBank;
+type QueryFnType = typeof reverseSale;
 
-type options = QueryConfigType<QueryFnType>;
+interface UseReverseSaleOptions extends MutationConfig<QueryFnType> {
+  // Additional options can be added here if needed
+}
 
-export const useReverseSaleQuery = (id: any, config?: options) => {
-  return useQuery<ExtractFnReturnType<QueryFnType>>({
-    retry(failureCount, error: any) {
-      if ([404, 401].includes(error.status)) return false;
-      else if (failureCount < 1) return true;
-      else return false;
+export const useReverseSaleMutation = (config?: UseReverseSaleOptions) => {
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationKey: [queryKey.sales.reverseSale],
+    mutationFn: (id: string) => {
+      if (!id) {
+        throw new Error("Product ID is required");
+      }
+      return reverseSale(id);
     },
-    queryKey: [queryKey.sales.reverseSale, id],
-    queryFn: () => fetchBank(id),
-    staleTime: 1000 * 60 * 5,
+    retry: false,
+    onError: (error: any, variables: any, context: any) => {
+      console.log("Error reversing sale:", error);
+      const errorMessage = error?.message || "Error reversing sale";
+      showToast(errorMessage, "error");
+      config?.onError?.(error, variables, context);
+    },
+    onSuccess: (data: any, variables: any, context: any) => {
+      showToast("Sale reversed successfully", "success");
+      config?.onSuccess?.(data, variables, context);
+    },
     ...config,
   });
 };

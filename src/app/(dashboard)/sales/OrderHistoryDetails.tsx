@@ -1,19 +1,24 @@
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Undo2 } from "lucide-react";
 import moment from "moment";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SalesOrder } from "./types";
 
+import { Spinner } from "@/components/app/Spinner";
+import { useSalesHook } from "@/hooks/useSalesHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import Image from "next/image";
 
 const OrderHistoryDetails = ({
   orderDetails,
+  handleReverseSale,
 }: {
   orderDetails: SalesOrder;
+  handleReverseSale: any;
 }) => {
   console.log("orderDetails", orderDetails);
+  const { ReverseSalePending } = useSalesHook();
 
   // Format the date using moment.js
   const formattedDate = moment(orderDetails.created_at).format(
@@ -139,21 +144,40 @@ const OrderHistoryDetails = ({
             <Card className="m-4 border-0">
               <CardContent className="p-4 ">
                 <div className="flex justify-start flex-col items-center w-full">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex gap-2 items-center">
-                      <span className="text-primary-green-300 bg-primary-100 rounded ">
-                        {/* {orderDetails?.status?.toLocaleLowerCase()} */}{" "}
-                        Store
-                      </span>
-                      <CheckCircle className="text-green-500" size={12} />
-                    </div>
-                  </div>
-                  <div className="w-full">
-                    <p className="text-sm text-gray-500">Payment Method</p>
-                    <p className="font-medium">{orderDetails.method}</p>
+                  <div className="flex justify-between items-start w-full">
+                    <div className="flex flex-col gap-2 items-start">
+                      <div className="flex justify-between items-center w-full">
+                        <div className="flex gap-2 items-center">
+                          <span className="text-primary-green-300 bg-primary-100 rounded ">
+                            {/* {orderDetails?.status?.toLocaleLowerCase()} */}{" "}
+                            Store
+                          </span>
+                          <CheckCircle className="text-green-500" size={12} />
+                        </div>
+                      </div>
+                      <div className="w-full">
+                        <p className="text-sm text-gray-500">Payment Method</p>
+                        <p className="font-medium">{orderDetails.method}</p>
 
-                    <p className="text-sm text-gray-500 mt-3">Transaction ID</p>
-                    <p className="text-sm">#{transactionId}</p>
+                        <p className="text-sm text-gray-500 mt-3">
+                          Transaction ID
+                        </p>
+                        <p className="text-sm">#{transactionId}</p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => handleReverseSale(orderDetails?.id)}
+                      className=" w-[180px] bg-yellow-50 rounded-lg  gap-2 p-2 px-2 flex items-center justify-center border border-yellow-100  cursor-pointer"
+                    >
+                      {ReverseSalePending ? (
+                        <Spinner />
+                      ) : (
+                        <>
+                          <Undo2 /> Reverse Sale
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>

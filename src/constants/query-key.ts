@@ -44,6 +44,8 @@ export const queryKey = {
     deleteService: "delete-service",
     editProduct: "edit-product",
     editService: "edit-service",
+    transferProduct: "transfer-product",
+    bulkUpload: "bulk-upload",
   },
   categories: {
     getAllCategories: "get-all-categories",
