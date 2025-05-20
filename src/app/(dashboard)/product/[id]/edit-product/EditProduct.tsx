@@ -44,7 +44,7 @@ const EditProduct = ({ id }: { id: string }) => {
     SupplierLoading,
     paymentMethodOptions,
     CategoriesDataLoading,
-  } = useProductHook({});
+  } = useProductHook({ id });
   return (
     <>
       {!ProductData || loading ? (
@@ -65,17 +65,20 @@ const EditProduct = ({ id }: { id: string }) => {
                 control={form.control}
                 name="image"
                 render={({ field }) => {
-                  const fileInputRef = useRef<HTMLInputElement>(null);
                   const [previewUrl, setPreviewUrl] = useState<string | null>(
                     // Initialize with existing image URL if available
                     typeof field.value === "string" ? field.value : null
                   );
 
+                  const fileInputRef = useRef<HTMLInputElement>(null);
+
                   // Handle both File objects and string URLs
                   const currentPreview = field.value
-                    ? typeof field.value === "string"
+                    ? typeof field.value === "string" && field.value !== ""
                       ? field.value
-                      : URL.createObjectURL(field.value)
+                      : field.value instanceof File
+                      ? URL.createObjectURL(field.value)
+                      : null
                     : null;
 
                   return (
@@ -236,7 +239,7 @@ const EditProduct = ({ id }: { id: string }) => {
                     <FormLabel>Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value} // This will be set by form.reset() in your useEffect
+                      value={field.value} // This will be set by form.reset() in your useEffect
                     >
                       <FormControl>
                         <SelectTrigger className="w-full border border-green-300">
@@ -273,10 +276,7 @@ const EditProduct = ({ id }: { id: string }) => {
                 render={({ field }) => (
                   <FormItem className="flex-1 w-full bg-white">
                     <FormLabel>Supplier</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full border border-green-300">
                           <SelectValue placeholder="Select a Supplier" />

@@ -92,8 +92,8 @@ const SalesAnalytics = ({
     datasets: [
       {
         data: [
-          SalesAnalyticData.data.total_profit,
-          SalesAnalyticData.data.expenses,
+          SalesAnalyticData?.data.total_profit,
+          SalesAnalyticData?.data.expenses,
         ],
         backgroundColor: ["#4CAF50", "#8BC34A"],
         borderColor: ["#388E3C", "#689F38"],
@@ -153,23 +153,23 @@ const SalesAnalytics = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomSalesCard
           title="Total Revenue"
-          amount={SalesAnalyticData.data.total_Revenue}
-          change={SalesAnalyticData.data.total_Revenue_change}
+          amount={SalesAnalyticData?.data.total_Revenue}
+          change={SalesAnalyticData?.data.total_Revenue_change}
         />
         <CustomSalesCard
           title="Total Profit"
-          amount={SalesAnalyticData.data.total_profit}
-          change={SalesAnalyticData.data.total_profit_change}
+          amount={SalesAnalyticData?.data.total_profit}
+          change={SalesAnalyticData?.data.total_profit_change}
         />
         <CustomSalesCard
           title="Avg. Transaction"
-          amount={SalesAnalyticData.data.average_transaction_value}
-          change={SalesAnalyticData.data.average_transaction_value_change}
+          amount={SalesAnalyticData?.data.average_transaction_value}
+          change={SalesAnalyticData?.data.average_transaction_value_change}
         />
         <CustomSalesCard
           title="Transactions"
-          amount={SalesAnalyticData.data.transaction_count}
-          change={SalesAnalyticData.data.transaction_count_change}
+          amount={SalesAnalyticData?.data.transaction_count}
+          change={SalesAnalyticData?.data.transaction_count_change}
         />
       </div>
 
@@ -190,15 +190,17 @@ const SalesAnalytics = ({
           <div className="h-full flex flex-col">
             <h3 className="font-[600] text-lg mb-4">Payment Methods</h3>
             <div className="space-y-4 flex-grow">
-              {SalesAnalyticData.data.transaction_breakdown.map(
+              {SalesAnalyticData?.data?.transaction_breakdown.map(
                 (method: any, index: any) => (
                   <div
                     key={index}
                     className="flex justify-between items-center w-full"
                   >
-                    <span className="font-medium">{method.payment_method}</span>
+                    <span className="font-medium">
+                      {method?.payment_method}
+                    </span>
                     <span className="font-semibold">
-                      {formatToNaira(method.total_amount)}
+                      {formatToNaira(method?.total_amount)}
                     </span>
                   </div>
                 )

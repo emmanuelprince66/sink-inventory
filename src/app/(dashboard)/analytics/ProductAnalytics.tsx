@@ -68,14 +68,16 @@ const ProductAnalytics = ({
     datasets: [
       {
         label: "Current Stock",
-        data: [ProductAnalyticData.data.fast_moving_product.quantity_sold * 2], // Example calculation
+        data: [
+          ProductAnalyticData?.data?.fast_moving_product?.quantity_sold * 2,
+        ], // Example calculation
         backgroundColor: "#4CAF50",
         borderRadius: { topLeft: 8, topRight: 8 },
         barPercentage: 0.4,
       },
       {
         label: "Units Sold",
-        data: [ProductAnalyticData.data.fast_moving_product.quantity_sold],
+        data: [ProductAnalyticData?.data?.fast_moving_product?.quantity_sold],
         backgroundColor: "#2196F3",
         borderRadius: { topLeft: 8, topRight: 8 },
         barPercentage: 0.4,
@@ -120,16 +122,16 @@ const ProductAnalytics = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomProductCard
           title="Total Products"
-          value={ProductAnalyticData.data.total_products}
+          value={ProductAnalyticData?.data?.total_products}
         />
         <CustomProductCard
           title="Low Stock"
-          value={ProductAnalyticData.data.low_stock}
+          value={ProductAnalyticData?.data?.low_stock}
           description="Products with limited stock"
         />
         <CustomProductCard
           title="Out of Stock"
-          value={ProductAnalyticData.data.out_of_stock}
+          value={ProductAnalyticData?.data?.out_of_stock}
           description="Products needing restock"
         />
         <CustomProductCard
@@ -142,11 +144,12 @@ const ProductAnalytics = ({
                 {ProductAnalyticData.data.fast_moving_product.product__image ? (
                   <img
                     src={
-                      ProductAnalyticData.data.fast_moving_product
+                      ProductAnalyticData?.data?.fast_moving_product
                         .product__image
                     }
                     alt={
-                      ProductAnalyticData.data.fast_moving_product.product__name
+                      ProductAnalyticData?.data?.fast_moving_product
+                        ?.product__name
                     }
                     className="w-full h-full object-cover"
                   />
@@ -159,7 +162,10 @@ const ProductAnalytics = ({
 
               <div>
                 <p className="font-semibold text-sm">
-                  {ProductAnalyticData.data.fast_moving_product.product__name}
+                  {
+                    ProductAnalyticData?.data?.fast_moving_product
+                      ?.product__name
+                  }
                 </p>
                 <p className="text-xs text-gray-500">
                   <span className="font-medium text-primary-black-100">

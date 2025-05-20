@@ -42,6 +42,9 @@ export const useEditProductMutation = ({
       console.log("Error editing product:", error);
       const errorMessage =
         error?.message || error?.error || "Error editing Product";
+
+      showToast(errorMessage, "error");
+
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

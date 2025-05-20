@@ -14,6 +14,7 @@ import {
 
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import Link from "next/link";
 import { SidebarTrigger } from "../ui/sidebar";
 
 export function TopBar() {
@@ -61,10 +62,24 @@ export function TopBar() {
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+            <DropdownMenuContent
+              align="end"
+              className="bg-white border-gray-200 border"
+            >
+              <Link href="/business">
+                <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                  Business
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                Support
+              </DropdownMenuItem>
               <DropdownMenuItem className="text-red-600 focus:text-red-600">
                 Logout
               </DropdownMenuItem>

@@ -532,13 +532,11 @@ const PrintReceiptView = ({
                     {item.cartQuantity || 1}
                   </td>
                   <td className="text-right py-3 px-1">
-                    ₦
                     {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "0"}
                   </td>
                   <td className="text-right py-3 px-1 font-medium">
-                    ₦{" "}
                     {(
                       (item.selling_price || item.amount || 0) *
                       (item.cartQuantity || 1)

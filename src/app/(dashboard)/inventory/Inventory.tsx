@@ -121,7 +121,7 @@ const Inventory = () => {
           <div className="gap-2 flex items-center flex-wrap">
             {/* Primary Buttons */}
             <Button onClick={openddServiceModal}>Add Service</Button>
-            <Link href={"/upload-product"}>
+            <Link href={"/product/add-product"}>
               <Button>Add Product</Button>
             </Link>
 

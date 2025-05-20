@@ -56,7 +56,8 @@ const CheckoutPage = ({
   const tax = subtotal * taxRate;
 
   // Calculate total
-  const total = subtotal + tax;
+  // const total = subtotal + tax;
+  const total = subtotal;
 
   // Function to increment item quantity with check against available quantity
   const incrementQuantity = (itemId: string) => {

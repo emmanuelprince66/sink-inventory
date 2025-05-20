@@ -38,7 +38,9 @@ const ReceiptPage = ({
   clearCartFunc: any;
   setShowReceipt: any;
 }) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const business_id = useBusinessStore((state) => state.business_id);
   const [isChecked, setIsChecked] = useState(false);

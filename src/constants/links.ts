@@ -2,7 +2,6 @@ import {
   AirVent,
   ChartSpline,
   DollarSign,
-  Handshake,
   Home,
   PcCase,
   Settings,
@@ -32,11 +31,11 @@ export const links = [
     icon: AirVent,
   },
 
-  {
-    title: "Business",
-    url: "/business",
-    icon: Handshake,
-  },
+  // {
+  //   title: "Business",
+  //   url: "/business",
+  //   icon: Handshake,
+  // },
   {
     title: "Expenses",
     url: "/expenses",

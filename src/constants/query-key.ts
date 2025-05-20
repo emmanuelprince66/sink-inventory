@@ -58,5 +58,7 @@ export const queryKey = {
   },
   bank: {
     getAllBanks: "get-all-banks",
+    createBank: "create-bank",
+    deleteBank: "delete-bank",
   },
 };
