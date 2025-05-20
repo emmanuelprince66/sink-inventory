@@ -120,19 +120,19 @@ const CustomerAnalytics = ({
               {/* Placeholder for customer image - replace with actual image if available */}
               <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
                 <span className="text-xs text-gray-400">
-                  {CustomerAnalyticData.data.top_customer.name
-                    ? CustomerAnalyticData.data.top_customer.name.charAt(0)
+                  {CustomerAnalyticData?.data?.top_customer.name
+                    ? CustomerAnalyticData?.data?.top_customer?.name.charAt(0)
                     : "?"}
                 </span>
               </div>
               <div>
                 <p className="font-semibold text-sm">
-                  {CustomerAnalyticData.data.top_customer.name || "No data"}
+                  {CustomerAnalyticData?.data?.top_customer?.name || "No data"}
                 </p>
                 <p className="text-xs text-gray-500">
                   Last purchase{" "}
                   {formatToNaira(
-                    CustomerAnalyticData.data.top_customer.last_amount
+                    CustomerAnalyticData?.data?.top_customer?.last_amount
                   ) || "N/A"}{" "}
                 </p>
               </div>
