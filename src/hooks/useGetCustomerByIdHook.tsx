@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -11,8 +11,6 @@ import { useFetchCustomerPurchaseHistory } from "@/api/customer/fetch-customer-p
 import { useFetchCustomerWalletTrx } from "@/api/customer/fetch-customer-wallet-trx";
 import { useUpdateWalletBalanceMutation } from "@/api/customer/update-wallet";
 
-
-
 const WalletTrxSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   payment_method: z.string().min(1, "Payment method is required"),
@@ -21,24 +19,44 @@ const WalletTrxSchema = z.object({
 
 export type WalletTrxFormValues = z.infer<typeof WalletTrxSchema>;
 
-export const useGetCustomerByIdHook = (id?: string) => {
+export const useGetCustomerByIdHook = ({
+  closeModal,
+}: {
+  closeModal?: any;
+}) => {
   const params = useParams();
-  const customerId = id || params.id;
-  const { data: CustomerData, isLoading: CustomerLoading } =
-    useFetchCustomerById(customerId);
+  const customerId = params.id;
+  const {
+    data: CustomerData,
+    isLoading: CustomerLoading,
+    refetch: refetchCustomer,
+  } = useFetchCustomerById(customerId);
   const [selectedOption, setSelectedOption] = useState<string>("DEPOSIT");
 
-  const { mutate: updateWalletBalance, isPending: isUpdatingWallet } =
-    useUpdateWalletBalanceMutation();
+  const {
+    mutate: updateWalletBalance,
+    isPending: isUpdatingWallet,
+    isSuccess: isWalletUpdated,
+  } = useUpdateWalletBalanceMutation();
+
+  useEffect(() => {
+    if (isWalletUpdated) {
+      refetchCustomer();
+      if (closeModal) closeModal();
+    }
+  }, [isWalletUpdated]);
 
   console.log("CustomerData----4444", CustomerData);
 
   const {
     data: CustomerPurchaseHistory,
     isLoading: CustomerPurchaseHistoryLoading,
-  } = useFetchCustomerPurchaseHistory(id);
-  const { data: CustomerWalletTrx, isLoading: CustomerWalletTrxLoading } =
-    useFetchCustomerWalletTrx(id);
+  } = useFetchCustomerPurchaseHistory(customerId);
+  const {
+    data: CustomerWalletTrx,
+    isLoading: CustomerWalletTrxLoading,
+    refetch,
+  } = useFetchCustomerWalletTrx(customerId);
 
   console.log("CustomerWalletTrx", CustomerWalletTrx);
 
@@ -52,14 +70,6 @@ export const useGetCustomerByIdHook = (id?: string) => {
   const [openWalletTrxDetailsModal, setOpenWalletTrxDetailsModal] =
     useState(false);
 
-  const [openUpdateCustomerWalletModal, setOpenUpdateCustomerWalletModal] =
-    useState(false);
-
-  const closeOpenUpdateCustomerWalletModal = () =>
-    setOpenUpdateCustomerWalletModal(false);
-  const openUpdateCustomerWalletModalFunc = () => {
-    setOpenUpdateCustomerWalletModal(true);
-  };
   const openWalletTrxDetailsModalFunc = () =>
     setOpenWalletTrxDetailsModal(true);
   const closeWalletTrxDetailsModal = () => setOpenWalletTrxDetailsModal(false);
@@ -108,8 +118,6 @@ export const useGetCustomerByIdHook = (id?: string) => {
         note: values.note,
       },
     });
-
-    closeOpenUpdateCustomerWalletModal();
   };
 
   return {
@@ -121,9 +129,7 @@ export const useGetCustomerByIdHook = (id?: string) => {
     handleWalletTrxRowClick,
     historyDetailsData,
     form,
-    closeOpenUpdateCustomerWalletModal,
-    openUpdateCustomerWalletModalFunc,
-    openUpdateCustomerWalletModal,
+
     onSubmit,
     openWalletTrxDetailsModal,
     walletTrxDetails,

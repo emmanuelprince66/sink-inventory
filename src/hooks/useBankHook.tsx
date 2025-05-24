@@ -18,8 +18,8 @@ const bankSchema = z.object({
 // Expense tracking schema
 const expenseTrackingSchema = z
   .object({
-    minimum_charges: z.number().min(0, "Minimum charges must be positive"),
-    capped_charges: z.number().min(0, "Capped charges must be positive"),
+    min_fee: z.number().min(0, "Minimum charges must be positive"),
+    max_fee: z.number().min(0, "Capped charges must be positive"),
     percentage: z
       .number()
       .min(0, "Percentage must be positive")
@@ -30,12 +30,12 @@ const expenseTrackingSchema = z
     (data) => {
       // Either all expense fields are present or none are
       const hasAll =
-        data.minimum_charges !== undefined &&
-        data.capped_charges !== undefined &&
+        data.min_fee !== undefined &&
+        data.max_fee !== undefined &&
         data.percentage !== undefined;
       const hasNone =
-        data.minimum_charges === undefined &&
-        data.capped_charges === undefined &&
+        data.min_fee === undefined &&
+        data.max_fee === undefined &&
         data.percentage === undefined;
       return hasAll || hasNone;
     },
@@ -51,13 +51,7 @@ const combinedSchema = bankSchema.and(expenseTrackingSchema);
 
 export type BankFormValues = z.infer<typeof combinedSchema>;
 
-export const useBankHook = ({
-  closeDellBankModal,
-  closeAddBankModal,
-}: {
-  closeDellBankModal?: () => void;
-  closeAddBankModal?: () => void;
-}) => {
+export const useBankHook = ({ closeModal }: { closeModal?: () => void }) => {
   const { showToast } = useToast();
   const [bankId, setBankId] = useState<string | null>(null);
 
@@ -66,8 +60,9 @@ export const useBankHook = ({
       onSuccess: (data) => {
         console.log("data", data);
         showToast(data.message, "success");
+        refetchBank();
 
-        if (closeDellBankModal) closeDellBankModal();
+        if (closeModal) closeModal();
 
         // if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
@@ -80,8 +75,11 @@ export const useBankHook = ({
   };
 
   const business_id = useBusinessStore((state) => state.business_id);
-  const { data: BankData, isLoading: BankDataLoading } =
-    useFetchBankQuery(business_id);
+  const {
+    data: BankData,
+    isLoading: BankDataLoading,
+    refetch: refetchBank,
+  } = useFetchBankQuery(business_id);
 
   const {
     mutate: createBank,
@@ -92,8 +90,8 @@ export const useBankHook = ({
     onSuccess: (data) => {
       console.log("data---4", data);
       showToast(data.message, "success");
-
-      if (closeAddBankModal) closeAddBankModal();
+      refetchBank();
+      if (closeModal) closeModal();
 
       // Optional: Invalidate queries or update cache
     },

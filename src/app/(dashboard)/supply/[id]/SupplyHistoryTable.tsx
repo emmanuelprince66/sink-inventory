@@ -19,7 +19,7 @@ const SupplyHistoryTable = ({
     closeSupplyHistoryDetailsModal,
     showSupplyHistoryDetailsModal,
     handleSupplyHistoryRowClick,
-  } = useFetchSingleSupplyHook();
+  } = useFetchSingleSupplyHook({});
 
   console.log("show", showSupplyHistoryDetailsModal);
   return (

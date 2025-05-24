@@ -18,14 +18,14 @@ import {
 } from "@/components/ui/select";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 
-const AddService = () => {
+const AddService = ({ closeModal }: { closeModal: any }) => {
   const {
     form,
     onSubmit,
     CategoriesData,
     CategoriesDataLoading,
     isCreatingService,
-  } = useInventoryHook({});
+  } = useInventoryHook({ closeModal });
 
   return (
     <div className="w-full">

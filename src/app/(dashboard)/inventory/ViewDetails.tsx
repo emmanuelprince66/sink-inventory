@@ -3,8 +3,14 @@ import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 
-const ViewDetails = ({ data }: { data: any }) => {
-  const { handleDeleteProduct, deleting } = useInventoryHook({});
+const ViewDetails = ({
+  data,
+  closeModal,
+}: {
+  data: any;
+  closeModal?: () => void;
+}) => {
+  const { handleDeleteProduct, deleting } = useInventoryHook({ closeModal });
 
   console.log("data", data);
 

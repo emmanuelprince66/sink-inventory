@@ -19,9 +19,17 @@ import {
 import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
 import { cn } from "@/lib/utils";
 
-const UpdateBalance = ({ wallet }: { wallet: number }) => {
+const UpdateBalance = ({
+  wallet,
+  closeModal,
+}: {
+  wallet: number;
+  closeModal: () => void;
+}) => {
   const isDebt = wallet < 0;
-  const { form, onSubmit, isUpdatingWallet } = useFetchSingleSupplyHook();
+  const { form, onSubmit, isUpdatingWallet } = useFetchSingleSupplyHook({
+    closeModal,
+  });
   console.log("wallet", wallet);
 
   return (

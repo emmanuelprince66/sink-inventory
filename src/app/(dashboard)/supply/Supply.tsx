@@ -10,6 +10,7 @@ import { useSupplyHook } from "@/hooks/useSupplyHook";
 import { cn } from "@/lib/utils";
 
 import { formatToNaira } from "@/utils/formatMoney";
+import { useState } from "react";
 import AddSupplier from "./AddSupplier";
 import AllSupply from "./AllSupply";
 
@@ -46,13 +47,15 @@ const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
 
 const Supply = () => {
   const {
-    openAddSupplyModal,
     handleRowClick,
-    closeOpenSupplyModal,
-    openSupplyModalFunc,
+
     SupplierData,
     SupplierLoading,
   } = useSupplyHook({});
+
+  const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
+  const closeOpenSupplyModal = () => setOpenAddSupplyModal(false);
+  const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
   console.log("supplier data", SupplierData);
 
   return (
@@ -140,7 +143,7 @@ const Supply = () => {
         description=""
       >
         <div className="w-full">
-          <AddSupplier />
+          <AddSupplier closeModal={closeOpenSupplyModal} />
         </div>
       </CustomModal>
     </div>

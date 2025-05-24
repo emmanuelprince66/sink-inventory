@@ -21,8 +21,11 @@ export type SupplyFormValues = z.infer<typeof SupplySchema>;
 
 export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
   const business_id = useBusinessStore((state) => state.business_id);
-  const { data: SupplierData, isLoading: SupplierLoading } =
-    useFetchSupplierDataQuery(business_id);
+  const {
+    data: SupplierData,
+    isLoading: SupplierLoading,
+    refetch,
+  } = useFetchSupplierDataQuery(business_id);
   const { showToast } = useToast();
 
   const [supplierId, setSupplierId] = useState("");
@@ -30,11 +33,14 @@ export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
   const { mutate: createSupplier, isPending: createSupplierLoading } =
     useCreateSupplierMutation({
       businessId: business_id, // Convert null to undefined
+      onSuccess: (data) => {
+        console.log("data", data);
+        refetch();
+        if (closeModal) closeModal();
+        // Optional: Invalidate queries or update cache
+      },
     });
 
-  const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
-  const closeOpenSupplyModal = () => setOpenAddSupplyModal(false);
-  const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
   const router = useRouter();
 
   const { mutate: deleteSupplier, isPending: deleteSupplierLoading } =
@@ -42,6 +48,7 @@ export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
       onSuccess: (data) => {
         console.log("data", data);
         showToast(data.message, "success");
+        refetch();
 
         if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
@@ -86,17 +93,14 @@ export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
   };
 
   return {
-    openAddSupplyModal,
     form,
     SupplierData,
     SupplierLoading,
-    closeOpenSupplyModal,
     createSupplierLoading,
     handleDeleteSupplier,
     deleteSupplierLoading,
     handleRowClick,
     onSubmit,
     SupplySchema,
-    openSupplyModalFunc,
   };
 };

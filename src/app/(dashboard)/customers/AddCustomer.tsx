@@ -13,8 +13,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 
-const AddCustomer = () => {
-  const { form, onSubmit, createCustomerLoading } = useCustomerHook({});
+const AddCustomer = ({
+  closeOpenCustomerModal,
+}: {
+  closeOpenCustomerModal: any;
+}) => {
+  const { form, onSubmit, createCustomerLoading } = useCustomerHook({
+    closeModal: closeOpenCustomerModal,
+  });
   return (
     <div>
       <Form {...form}>

@@ -11,8 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
 
-const AddSupplier = () => {
-  const { form, onSubmit, createSupplierLoading } = useSupplyHook({});
+const AddSupplier = ({ closeModal }: { closeModal: () => void }) => {
+  const { form, onSubmit, createSupplierLoading } = useSupplyHook({
+    closeModal,
+  });
   return (
     <div>
       <Form {...form}>

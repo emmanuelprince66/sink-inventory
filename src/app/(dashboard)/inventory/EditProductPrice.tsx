@@ -14,13 +14,15 @@ const EditProductPrice = ({
   productId,
   product,
   type,
+  closeModal,
 }: {
   productId: any;
   type: any;
+  closeModal: any;
   product: any;
 }) => {
   const { editSellingPriceForm, onSubmitEditSellingPrice, loading } =
-    useInventoryHook({ productId, type, product });
+    useInventoryHook({ productId, type, product, closeModal });
 
   console.log("EditProductPrice", productId);
   return (

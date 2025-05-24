@@ -47,7 +47,7 @@ export const useBusinessHook = ({
     console.log("Clicked row ID:", row.id);
     setBusinessId(row?.original?.id);
 
-    router.push(`/overview`); // Navigate to the business details page
+    router.push(`/pos`); // Navigate to the business details page
 
     // Perform any additional actions here
   };

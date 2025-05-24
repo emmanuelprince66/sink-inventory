@@ -53,9 +53,11 @@ export type RestockFormValues = z.infer<typeof RestockSchema>;
 export const useGetRestockHistory = ({
   id,
   data,
+  closeModal,
 }: {
   id?: any;
   data?: any;
+  closeModal?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const params = useParams();
@@ -66,11 +68,16 @@ export const useGetRestockHistory = ({
 
   console.log("pId", pId);
 
-  const { data: restockHistory } = useFetchRestockHistoryQuery(business_id);
+  const { data: restockHistory, refetch } =
+    useFetchRestockHistoryQuery(business_id);
 
   const { mutate: restockProduct, isPending: restockProductPending } =
     useRestockProductMutation({
       productId: pId,
+      onSuccess: (data) => {
+        refetch();
+        if (closeModal) closeModal();
+      },
     });
 
   const form = useForm<RestockFormValues>({

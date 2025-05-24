@@ -44,21 +44,23 @@ const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
   );
 };
 
-const SupplierById = ({ id }: { id: string }) => {
+const SupplierById = () => {
   const {
     SupplierByIdData,
     SupplierByIdLoading,
-    openUpdateSupplyModalFunc,
-    closeUpdateSupplyWalletModal,
-    openUpdateSupplyWalletModal,
 
     handleSupplyHistoryRowClick,
-  } = useFetchSingleSupplyHook(id);
+  } = useFetchSingleSupplyHook({});
   const [purchaseValue, setPurchaseValue] = useState<any>();
 
-  console.log("supplierById---6", SupplierByIdData);
+  const [openUpdateSupplyWalletModal, setOpenUpdateSupplyWalletModal] =
+    useState(false);
 
-  console.log("iddd", id);
+  const closeUpdateSupplyWalletModal = () =>
+    setOpenUpdateSupplyWalletModal(false);
+  const openUpdateSupplyModalFunc = () => setOpenUpdateSupplyWalletModal(true);
+
+  console.log("supplierById---6", SupplierByIdData);
 
   useEffect(() => {
     if (SupplierByIdData) {
@@ -178,7 +180,10 @@ const SupplierById = ({ id }: { id: string }) => {
         title="Update Wallet Balance"
       >
         <div className="w-full ">
-          <UpdateBalance wallet={SupplierByIdData?.data?.wallet} />
+          <UpdateBalance
+            closeModal={closeUpdateSupplyWalletModal}
+            wallet={SupplierByIdData?.data?.wallet}
+          />
         </div>
       </CustomModal>
     </div>

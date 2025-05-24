@@ -40,11 +40,13 @@ const CustomCard = ({
 const CustomSalesCard = ({
   title,
   amount,
+  type,
   change,
 }: {
   title: string;
   amount: number | string;
   change?: number;
+  type?: string;
 }) => {
   // Format amount as currency
   const formattedAmount =
@@ -58,7 +60,7 @@ const CustomSalesCard = ({
       <div className="flex flex-col gap-2 items-start">
         <p className="font-[500] text-sm text-primary-black-100">{title}</p>
         <p className="font-[600] text-xl text-primary-black-100">
-          {formattedAmount}
+          {type === "transaction" ? amount : formattedAmount}
         </p>
         {change !== undefined && (
           <p
@@ -88,7 +90,10 @@ const SalesAnalytics = ({
 }) => {
   // Doughnut chart data
   const chartData = {
-    labels: ["Total Profit", "Expenses"],
+    labels: [
+      `Total Profit ${formatToNaira(SalesAnalyticData?.data.total_profit)} `,
+      `Expenses ${formatToNaira(SalesAnalyticData?.data.expenses)}`,
+    ],
     datasets: [
       {
         data: [
@@ -117,10 +122,7 @@ const SalesAnalytics = ({
               label += ": ";
             }
             if (context.parsed !== null) {
-              label += new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(context.parsed);
+              label += formatToNaira(context.parsed);
             }
             return label;
           },
@@ -170,6 +172,7 @@ const SalesAnalytics = ({
           title="Transactions"
           amount={SalesAnalyticData?.data.transaction_count}
           change={SalesAnalyticData?.data.transaction_count_change}
+          type="transaction"
         />
       </div>
 
@@ -178,7 +181,9 @@ const SalesAnalytics = ({
         {/* Doughnut Chart Card */}
         <CustomCard className="h-full border-gray-200" shadow>
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-lg mb-4">Net Profit</h3>
+            <h3 className="font-[600] text-lg mb-4">
+              Net Profit : {formatToNaira(SalesAnalyticData?.data.net_profit)}
+            </h3>
             <div className="flex-grow h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
             </div>

@@ -1,5 +1,3 @@
-import React from "react";
-
 import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
 import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
@@ -21,7 +19,7 @@ const CustomerHistoryTable = ({
     historyDetailsData,
     openHistoryDetailsModal,
     closeHistoryDetailsModal,
-  } = useGetCustomerByIdHook();
+  } = useGetCustomerByIdHook({});
 
   return (
     <>

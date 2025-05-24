@@ -9,6 +9,13 @@ export const queryKey = {
     signup: "signup",
     logout: "logout",
     verifyOtp: "verifyOtp",
+    resetInvitePassword: "reset-invite-Password",
+    changePassword: "change-password",
+  },
+  attendants: {
+    getAllAttendants: "get-all-attendants",
+    createAttendant: "create-attendant",
+    deleteAttendant: "delete-attendant",
   },
   customers: {
     getAllCustomers: "get-all-customers",
@@ -37,6 +44,13 @@ export const queryKey = {
     getProductAnalytics: "get-product-analytics",
     getCustomerAnalytics: "get-customer-analytics",
   },
+  expenses: {
+    getAllExpenses: "get-all-expenses",
+    createExpense: "create-expense",
+    deleteExpense: "delete-expense",
+    getExpenseById: "get-expense-by-id",
+    editExpense: "edit-expense",
+  },
   inventory: {
     getAllInventory: "get-all-inventory",
     addService: "add-service",
@@ -55,6 +69,7 @@ export const queryKey = {
   categories: {
     getAllCategories: "get-all-categories",
     updateCategory: "update-category",
+    createCategory: "create-category",
   },
   bank: {
     getAllBanks: "get-all-banks",

@@ -36,10 +36,22 @@ export const useCustomerHook = ({
   const router = useRouter();
   const { showToast } = useToast();
 
-  const { mutate: createCustomer, isPending: createCustomerLoading } =
-    useCreateCustomerMutation({
-      businessId: business_id, // Convert null to undefined
-    });
+  const {
+    mutate: createCustomer,
+    isPending: createCustomerLoading,
+    isSuccess: createCustomerSuccess,
+  } = useCreateCustomerMutation({
+    businessId: business_id, // Convert null to undefined
+    onSuccess: (data) => {
+      console.log("data", data);
+      showToast(data.message, "success");
+      refetch();
+      if (closeModal) closeModal();
+      // Optional: Invalidate queries or update cache
+    },
+
+    // You can add other callbacks here if needed
+  });
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
@@ -68,6 +80,7 @@ export const useCustomerHook = ({
       onSuccess: (data) => {
         console.log("data", data);
         showToast(data.message, "success");
+        refetch();
 
         if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
@@ -92,6 +105,7 @@ export const useCustomerHook = ({
     data: CustomerData,
     isLoading: CustomerLoading,
     error: CustomerError,
+    refetch,
   } = useGetCustomerQuery({
     params: {
       id: business_id,
@@ -103,11 +117,6 @@ export const useCustomerHook = ({
   });
 
   // Refetch data when filter changes
-
-  const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
-
-  const closeOpenCustomerModal = () => setOpenAddCustomerModal(false);
-  const openCustomerModalFunc = () => setOpenAddCustomerModal(true);
 
   const handleRowClick = (row: any) => {
     router.push(`/customers/${row.original.id}`);
@@ -149,17 +158,16 @@ export const useCustomerHook = ({
     setActiveFilter(filter);
   };
 
+  console.log("createCustomerSuccess", createCustomerSuccess);
+
   // console.log("CustomerData", CustomerData);
 
   return {
-    openAddCustomerModal,
     form,
-    closeOpenCustomerModal,
     onSubmit,
 
     CustomerSchema,
 
-    openCustomerModalFunc,
     handleDeleteCustomer,
     handleRowClick,
     CustomerData,

@@ -26,10 +26,10 @@ export type TransferProductFormValues = z.infer<typeof transferProductSchema>;
 
 export const useTransferProductHook = ({
   id,
-  closeTransferProductModal,
+  closeModal,
 }: {
   id: string;
-  closeTransferProductModal: any;
+  closeModal: any;
 }) => {
   const { showToast } = useToast();
   const business_id = useBusinessStore((state) => state.business_id);
@@ -67,7 +67,7 @@ export const useTransferProductHook = ({
           data.message || "Product transferred successfully",
           "success"
         );
-        closeTransferProductModal();
+        closeModal();
         form.reset();
       },
       onError: (error) => {

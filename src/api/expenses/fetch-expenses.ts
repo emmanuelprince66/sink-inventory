@@ -1,0 +1,80 @@
+import { queryKey } from "@/constants/query-key";
+import {
+  ExtractFnReturnType,
+  QueryConfigType,
+  useQuery,
+} from "@/lib/react-query";
+
+type fetchSalesExpensesProps = {
+  id: string;
+  search?: string;
+  category?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
+export const fetchExpenses = async ({
+  id,
+  search = "",
+  start_date = "",
+  end_date = "",
+  category = "",
+}: fetchSalesExpensesProps) => {
+  const url = new URL(`/api/expenses/${id}`, window.location.origin);
+
+  const params = new URLSearchParams();
+  if (search) params.append("search", search);
+  if (start_date) params.append("start_date", start_date);
+  if (end_date) params.append("end_date", end_date);
+  if (category) params.append("category", category);
+
+  url.search = params.toString();
+
+  const response = await fetch(url.toString(), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(
+      errorData.message || "Error fetching  expenses data"
+    );
+    (error as any).type = response.type;
+    (error as any).data = errorData;
+    throw error;
+  }
+
+  return response.json();
+};
+
+type QueryFnType = typeof fetchExpenses;
+
+type useFetchExpensesHistoryOptions = QueryConfigType<QueryFnType> & {
+  params: fetchSalesExpensesProps;
+};
+
+export const useFetchExpensesQuery = ({
+  params,
+  ...config
+}: useFetchExpensesHistoryOptions) => {
+  return useQuery<ExtractFnReturnType<QueryFnType>>({
+    retry(failureCount, error: any) {
+      if ([404, 401].includes(error.type)) return false;
+      return failureCount < 2;
+    },
+    queryKey: [
+      queryKey.expenses.getAllExpenses,
+      params.id,
+      params.search,
+      params.start_date,
+      params.end_date,
+      params.category,
+    ],
+    queryFn: () => fetchExpenses(params),
+    // staleTime: 1000 * 60 * 5, // 5 minutes
+    ...config,
+  });
+};

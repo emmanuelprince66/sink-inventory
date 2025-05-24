@@ -11,8 +11,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
 
-const EditCategory = ({ categoryObj }: { categoryObj: any }) => {
-  const { form, onSubmit, isEditing } = useGetAllCategories({ categoryObj });
+const EditCategory = ({
+  categoryObj,
+  closeModal,
+  type,
+}: {
+  categoryObj: any;
+  closeModal?: any;
+  type: string;
+}) => {
+  const { form, onSubmit, isEditing } = useGetAllCategories({
+    categoryObj,
+    closeModal,
+    type,
+  });
 
   return (
     <div className="w-full">

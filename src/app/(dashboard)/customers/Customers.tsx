@@ -12,7 +12,7 @@ import { DateRange } from "react-day-picker";
 
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { formatToNaira } from "@/utils/formatMoney";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 
@@ -53,10 +53,18 @@ const Customers = () => {
     from: new Date(),
     to: new Date(),
   });
+
+  const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
+
+  const closeOpenCustomerModal = useCallback(() => {
+    setOpenAddCustomerModal(false);
+  }, []);
+
+  const openCustomerModalFunc = useCallback(() => {
+    setOpenAddCustomerModal(true);
+  }, []);
+
   const {
-    openAddCustomerModal,
-    closeOpenCustomerModal,
-    openCustomerModalFunc,
     filterOptions,
     searchInput,
     CustomerData,
@@ -207,7 +215,7 @@ const Customers = () => {
         title="Add Customer"
       >
         <div className="w-full ">
-          <AddCustomer />
+          <AddCustomer closeOpenCustomerModal={closeOpenCustomerModal} />
         </div>
       </CustomModal>
     </div>

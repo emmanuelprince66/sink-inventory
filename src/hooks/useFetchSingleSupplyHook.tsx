@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -18,17 +18,31 @@ const WalletTrxSchema = z.object({
 
 export type WalletTrxFormValues = z.infer<typeof WalletTrxSchema>;
 
-export const useFetchSingleSupplyHook = (id?: string) => {
+export const useFetchSingleSupplyHook = ({
+  closeModal,
+}: {
+  closeModal?: () => void;
+}) => {
   const params = useParams();
-  const supplierId = id || params.id;
-  const { data: SupplierByIdData, isLoading: SupplierByIdLoading } =
-    useFetchSupplierByIdQuery(supplierId);
+  const supplierId = params.id;
+  const {
+    data: SupplierByIdData,
+    isLoading: SupplierByIdLoading,
+    refetch: refetchSupplier,
+  } = useFetchSupplierByIdQuery(supplierId);
 
-  const { mutate: updateWalletSupplyWallet, isPending: isUpdatingWallet } =
-    useUpdateSupplyWalletMutation();
+  const {
+    mutate: updateWalletSupplyWallet,
+    isPending: isUpdatingWallet,
+    isSuccess: isWalletUpdated,
+  } = useUpdateSupplyWalletMutation();
 
-  const [openUpdateSupplyWalletModal, setOpenUpdateSupplyWalletModal] =
-    useState(false);
+  useEffect(() => {
+    if (isWalletUpdated) {
+      refetchSupplier();
+      if (closeModal) closeModal();
+    }
+  }, [isWalletUpdated]);
 
   const [showSupplyHistoryDetailsModal, setShowSupplyHistoryDetailsModal] =
     useState(false);
@@ -38,9 +52,7 @@ export const useFetchSingleSupplyHook = (id?: string) => {
     setShowSupplyHistoryDetailsModal(true);
 
   const [supplierDetails, setSupplierDetails] = useState<any>({});
-  const closeUpdateSupplyWalletModal = () =>
-    setOpenUpdateSupplyWalletModal(false);
-  const openUpdateSupplyModalFunc = () => setOpenUpdateSupplyWalletModal(true);
+
   const handleSupplyHistoryRowClick = (row: any) => {
     console.log("row", row.original);
     setSupplierDetails(row?.original);
@@ -71,14 +83,11 @@ export const useFetchSingleSupplyHook = (id?: string) => {
       walletId: SupplierByIdData?.data?.id, // Pass walletId directly
       payload,
     });
-
-    closeUpdateSupplyWalletModal();
   };
 
   return {
     SupplierByIdData,
-    openUpdateSupplyWalletModal,
-    closeUpdateSupplyWalletModal,
+
     SupplierByIdLoading,
     isUpdatingWallet,
     onSubmit,
@@ -86,7 +95,6 @@ export const useFetchSingleSupplyHook = (id?: string) => {
     updateWalletSupplyWallet,
     showSupplyHistoryDetailsModal,
     closeSupplyHistoryDetailsModal,
-    openUpdateSupplyModalFunc,
     supplierDetails,
     openSupplyHistoryDetailsModalFunc,
     handleSupplyHistoryRowClick,

@@ -21,10 +21,10 @@ import { Loader2 } from "lucide-react";
 
 const TransferProductForm = ({
   inventory,
-  closeTransferProductModal,
+  closeModal,
 }: {
   inventory: any;
-  closeTransferProductModal: any;
+  closeModal: any;
 }) => {
   const {
     form,
@@ -36,7 +36,7 @@ const TransferProductForm = ({
     TargetInventoryLoading,
     isTransferring,
     handleBusinessChange,
-  } = useTransferProductHook({ id: inventory?.id, closeTransferProductModal });
+  } = useTransferProductHook({ id: inventory?.id, closeModal });
 
   return (
     <Form {...form}>

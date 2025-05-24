@@ -1,10 +1,12 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
 import { Edit } from "lucide-react";
 import { useState } from "react";
+import AddCategory from "./AddCategory";
 import EditCategory from "./EditCategory";
 
 const Categories = () => {
@@ -12,6 +14,10 @@ const Categories = () => {
   const [editModal, setEditModal] = useState(false);
   const closeEditModal = () => setEditModal(false);
   const [categoryObj, setCategoryObj] = useState({});
+
+  const [createModal, setCreateModal] = useState(false);
+  const handleOpenCreateModal = () => setCreateModal(true);
+  const handleCloseCreateModal = () => setCreateModal(false);
 
   const { CategoriesData, CategoriesDataLoading } =
     useGetAllCategories(categoryObj);
@@ -26,7 +32,12 @@ const Categories = () => {
 
   return (
     <div className="container mx-auto px-4 ">
-      <h1 className="text-2xl font-bold mb-6 text-gray-800">Categories</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">Categories</h1>
+        <Button onClick={handleOpenCreateModal} className="">
+          Add Category
+        </Button>
+      </div>
 
       <div className="w-full md:w-1/2 mb-4 mt-4">
         <SearchInput
@@ -102,7 +113,21 @@ const Categories = () => {
         trigger={false}
         title="Edit Category"
       >
-        <EditCategory categoryObj={categoryObj} />
+        <EditCategory
+          type="PRODUCT"
+          closeModal={closeEditModal}
+          categoryObj={categoryObj}
+        />
+      </CustomModal>
+
+      {/* attendants Modal */}
+      <CustomModal
+        isOpen={createModal} // FIXED: Removed the negation
+        onClose={handleCloseCreateModal}
+        trigger={false}
+        title="Create Category"
+      >
+        <AddCategory closeModal={handleCloseCreateModal} type="PRODUCT" />
       </CustomModal>
     </div>
   );

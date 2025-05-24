@@ -14,8 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { useBankHook } from "@/hooks/useBankHook";
 
-export const AddBankForm = () => {
-  const { form, onSubmit, createBankLoading } = useBankHook({});
+export const AddBankForm = ({ closeModal }: { closeModal?: () => void }) => {
+  const { form, onSubmit, createBankLoading } = useBankHook({ closeModal });
   // const { isSubmitting } = form.formState;
 
   return (
@@ -86,7 +86,7 @@ export const AddBankForm = () => {
               {/* Minimum Charges */}
               <FormField
                 control={form.control}
-                name="minimum_charges"
+                name="min_fee"
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Minimum Charges</FormLabel>
@@ -110,7 +110,7 @@ export const AddBankForm = () => {
               {/* Capped Charges */}
               <FormField
                 control={form.control}
-                name="capped_charges"
+                name="max_fee"
                 render={({ field }) => (
                   <FormItem className="w-full">
                     <FormLabel>Capped Charges</FormLabel>

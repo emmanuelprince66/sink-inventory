@@ -187,12 +187,13 @@ export const columns: ColumnDef<InventoryItem>[] = [
             isOpen={openEditPriceModal}
             onClose={() => setOpenEditPriceModal(false)}
             trigger={false}
-            title="Edit product price"
+            title={`Edit ${inventory.type.toLocaleLowerCase()} price`}
           >
             <EditProductPrice
               productId={inventory.id}
               product={inventory}
               type={inventory.type}
+              closeModal={() => setOpenEditPriceModal(false)}
             />
           </CustomModal>
           {/*  */}
@@ -203,7 +204,10 @@ export const columns: ColumnDef<InventoryItem>[] = [
             trigger={false}
             title="View Details"
           >
-            <ViewDetails data={inventory} />
+            <ViewDetails
+              closeModal={() => setOpenViewDetails(false)}
+              data={inventory}
+            />
           </CustomModal>
 
           {/* restock */}
@@ -213,7 +217,10 @@ export const columns: ColumnDef<InventoryItem>[] = [
             trigger={false}
             title="Restock Product"
           >
-            <RestockItem data={inventory} />
+            <RestockItem
+              closeModal={() => setOpenRestockModal(false)}
+              data={inventory}
+            />
           </CustomModal>
 
           <CustomModal
@@ -223,7 +230,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
             title="Transfer Product"
           >
             <TransferProduct
-              closeTransferProductModal={closeTransferProductModal}
+              closeModal={closeTransferProductModal}
               inventory={inventory}
             />
           </CustomModal>

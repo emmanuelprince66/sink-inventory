@@ -13,8 +13,15 @@ import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
 
-const Contact = ({ id }: { id: string }) => {
-  console.log("Contact", id);
+const Contact = () => {
+  const [openUpdateCustomerWalletModal, setOpenUpdateCustomerWalletModal] =
+    useState(false);
+
+  const closeOpenUpdateCustomerWalletModal = () =>
+    setOpenUpdateCustomerWalletModal(false);
+  const openUpdateCustomerWalletModalFunc = () => {
+    setOpenUpdateCustomerWalletModal(true);
+  };
 
   const {
     CustomerData,
@@ -22,11 +29,9 @@ const Contact = ({ id }: { id: string }) => {
     CustomerPurchaseHistory,
     CustomerPurchaseHistoryLoading,
     CustomerWalletTrxLoading,
-    closeOpenUpdateCustomerWalletModal,
-    openUpdateCustomerWalletModalFunc,
-    openUpdateCustomerWalletModal,
+
     CustomerWalletTrx,
-  } = useGetCustomerByIdHook(id);
+  } = useGetCustomerByIdHook({});
 
   console.log("www-4", CustomerData);
 
@@ -173,7 +178,10 @@ const Contact = ({ id }: { id: string }) => {
         title="Update Wallet Balance"
       >
         <div className="w-full ">
-          <UpdateCustomerWallet wallet={CustomerData?.data?.wallet} />
+          <UpdateCustomerWallet
+            closeModal={closeOpenUpdateCustomerWalletModal}
+            wallet={CustomerData?.data?.wallet}
+          />
         </div>
       </CustomModal>
     </div>

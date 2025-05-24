@@ -26,14 +26,20 @@ import {
 } from "@/components/ui/select";
 import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
 
-const UpdateCustomerWallet = ({ wallet }: { wallet: string | number }) => {
+const UpdateCustomerWallet = ({
+  wallet,
+  closeModal,
+}: {
+  wallet: string | number;
+  closeModal: () => void;
+}) => {
   const {
     form,
     onSubmit,
     isUpdatingWallet,
     handleSelectOption,
     selectedOption,
-  } = useGetCustomerByIdHook();
+  } = useGetCustomerByIdHook({ closeModal });
   console.log("wallet", wallet);
 
   return (

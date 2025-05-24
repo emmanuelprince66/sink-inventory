@@ -93,7 +93,6 @@ const Inventory = () => {
   } = useInventoryHook({
     searchInput,
     selectedCategoryId,
-    closeAddServiceModal,
   });
 
   const handleSearchChange = (value: string) => {
@@ -259,7 +258,7 @@ const Inventory = () => {
         trigger={false}
         title="Add New Service"
       >
-        <AddService />
+        <AddService closeModal={closeAddServiceModal} />
       </CustomModal>
     </div>
   );

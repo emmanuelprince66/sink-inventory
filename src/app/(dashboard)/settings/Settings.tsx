@@ -2,6 +2,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Bank } from "./bank/Bank";
+import ChangePassword from "./change-password/ChangePassword";
+import VeiwStaff from "./staff/VeiwStaff";
 
 const SettingsOptionsTab = [
   "Bank",
@@ -47,19 +49,11 @@ const Settings = () => {
           </TabsContent>
 
           <TabsContent value="Staff">
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">Staff Settings</h2>
-              <p>Manage your staff members and permissions here.</p>
-              {/* Add your staff management components here */}
-            </div>
+            <VeiwStaff />
           </TabsContent>
 
           <TabsContent value="Security & Privacy">
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">Security & Privacy</h2>
-              <p>Configure your security settings and privacy preferences.</p>
-              {/* Add security and privacy components here */}
-            </div>
+            <ChangePassword />
           </TabsContent>
 
           <TabsContent value="Premium">

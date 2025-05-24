@@ -14,7 +14,7 @@ export const Bank = () => {
   const closeDellBankModal = () => setOpenDelBankModal(false);
 
   const { BankData, BankDataLoading, handleDeleteBank, deleteBankLoading } =
-    useBankHook({ closeDellBankModal, closeAddBankModal });
+    useBankHook({ closeModal: closeDellBankModal });
   const [bankData, setBankData] = useState<any>(null);
 
   const handleDeleteBankFunc = () => {
@@ -119,7 +119,7 @@ export const Bank = () => {
         trigger={false}
         title="Add Bank"
       >
-        <AddBankForm />
+        <AddBankForm closeModal={closeAddBankModal} />
       </CustomModal>
       <CustomModal
         isOpen={openDelBankModal} // FIXED: Removed the negati justify-center w-full mt-3">on

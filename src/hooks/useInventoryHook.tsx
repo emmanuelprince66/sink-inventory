@@ -10,7 +10,7 @@ import { z } from "zod";
 import { useDeleteServiceMutation } from "@/api/products/delete-service";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useEditServiceMutation } from "@/api/products/edit-service";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
@@ -54,14 +54,14 @@ export const useInventoryHook = ({
   searchInput,
   productId,
   selectedCategoryId,
-  closeAddServiceModal,
+  closeModal,
   type,
   product,
 }: {
   searchInput?: string;
   type?: string;
   selectedCategoryId?: string | null;
-  closeAddServiceModal?: any;
+  closeModal?: any;
   productId?: string | null;
   product?: any;
 }) => {
@@ -70,14 +70,34 @@ export const useInventoryHook = ({
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
 
-  const { mutate: editProduct, isPending: editProductPending } =
-    useEditProductMutation({
-      productId: productId,
-    });
-  const { mutate: editService, isPending: editServicePending } =
-    useEditServiceMutation({
-      productId: productId,
-    });
+  const {
+    mutate: editProduct,
+    isPending: editProductPending,
+    isSuccess: editProductSuccess,
+  } = useEditProductMutation({
+    productId: productId,
+  });
+  const {
+    mutate: editService,
+    isPending: editServicePending,
+    isSuccess: editServiceSuccess,
+  } = useEditServiceMutation({
+    productId: productId,
+  });
+
+  useEffect(() => {
+    if (editServiceSuccess) {
+      refetchInventory();
+      if (closeModal) closeModal();
+    }
+  }, [editServiceSuccess]);
+
+  useEffect(() => {
+    if (editProductSuccess) {
+      refetchInventory();
+      if (closeModal) closeModal();
+    }
+  }, [editProductSuccess]);
 
   console.log("product", productId);
   const { mutate: deleteProduct, isPending: isDeleting } =
@@ -85,6 +105,8 @@ export const useInventoryHook = ({
       onSuccess: (data) => {
         console.log("data", data);
         showToast(data.message, "success");
+        refetchInventory();
+        if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
       },
       // You can add other callbacks here if needed
@@ -93,6 +115,9 @@ export const useInventoryHook = ({
     useDeleteServiceMutation({
       onSuccess: (data) => {
         showToast(data.message, "success");
+
+        refetchInventory();
+        if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
       },
       // You can add other callbacks here if needed
@@ -108,26 +133,39 @@ export const useInventoryHook = ({
   console.log("type", type);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500); // 500ms debounce
-  const { mutate: createService, isPending: isCreatingService } =
-    useAddServiceMutation({
-      businessId: business_id, // Convert null to undefined
-    });
+  const {
+    mutate: createService,
+    isPending: isCreatingService,
+    isSuccess: isCreatingServiceSuccess,
+  } = useAddServiceMutation({
+    businessId: business_id, // Convert null to undefined
+  });
+
+  useEffect(() => {
+    if (isCreatingServiceSuccess) {
+      refetchInventory();
+      if (closeModal) closeModal();
+    }
+  }, [isCreatingServiceSuccess]);
 
   const searchTerm =
     debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
       ? debouncedSearchTerm
       : null;
 
-  const { data: InventoryData, isLoading: InventoryDataLoading } =
-    useGetInventoryQuery({
-      params: {
-        id: business_id,
-        search: searchTerm,
-        category_id: selectedCategoryId,
-      },
-      enabled: !!business_id,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    });
+  const {
+    data: InventoryData,
+    isLoading: InventoryDataLoading,
+    refetch: refetchInventory,
+  } = useGetInventoryQuery({
+    params: {
+      id: business_id,
+      search: searchTerm,
+      category_id: selectedCategoryId,
+    },
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   const { data: CategoriesData, isLoading: CategoriesDataLoading } =
     useGetCategoriesQuery({
@@ -186,7 +224,6 @@ export const useInventoryHook = ({
       payload,
       businessId: business_id,
     });
-    closeAddServiceModal();
   };
   const onSubmitEditSellingPrice = (values: EditSellingPriceFormValues) => {
     const formData = new FormData();

@@ -27,7 +27,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 
-const RestockItem = ({ data }: { data?: any }) => {
+const RestockItem = ({
+  data,
+  closeModal,
+}: {
+  data?: any;
+  closeModal?: any;
+}) => {
   const {
     restockHistory,
     SupplierData,
@@ -36,7 +42,7 @@ const RestockItem = ({ data }: { data?: any }) => {
     restockProductPending,
     onSubmit,
     paymentMethodOptions,
-  } = useGetRestockHistory({ data });
+  } = useGetRestockHistory({ data, closeModal });
 
   console.log("form", form.getValues());
 

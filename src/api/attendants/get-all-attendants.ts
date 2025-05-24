@@ -23,7 +23,7 @@ export const useFetchAttendants = (id: any, config?: options) => {
       else if (failureCount < 1) return true;
       else return false;
     },
-    queryKey: [queryKey.customers.getCustomerById, id],
+    queryKey: [queryKey.attendants.getAllAttendants, id],
     queryFn: () => fetchAttendants(id),
     staleTime: 1000 * 60 * 5,
     ...config,
