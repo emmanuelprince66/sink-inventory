@@ -100,7 +100,7 @@ const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
         title="Add Customer"
       >
         <div className="w-full ">
-          <AddCustomer />
+          <AddCustomer closeOpenCustomerModal={closeOpenCustomerModal} />
         </div>
       </CustomModal>
     </>

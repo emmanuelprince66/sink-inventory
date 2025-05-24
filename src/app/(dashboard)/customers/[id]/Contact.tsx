@@ -13,7 +13,7 @@ import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
 
-const Contact = () => {
+const Contact = ({ id }: { id: string }) => {
   const [openUpdateCustomerWalletModal, setOpenUpdateCustomerWalletModal] =
     useState(false);
 

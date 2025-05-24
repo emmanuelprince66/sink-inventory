@@ -44,7 +44,7 @@ const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
   );
 };
 
-const SupplierById = () => {
+const SupplierById = ({ id }: { id: string }) => {
   const {
     SupplierByIdData,
     SupplierByIdLoading,
