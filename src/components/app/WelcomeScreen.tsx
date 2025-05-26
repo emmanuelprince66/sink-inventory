@@ -6,7 +6,7 @@ const WelcomeScreen = () => {
       {/* Logo positioned at the top left */}
       <div className="w-24 h-24 absolute top-8 left-8">
         <Image
-          src="/asset/sink.png" // Correct (has leading slash)
+          src="/asset/sink.png"
           alt="sink-logo"
           className="w-full h-full object-contain"
           priority
@@ -22,7 +22,6 @@ const WelcomeScreen = () => {
           alt="welcome-logo"
           className="w-full  object-contain"
           priority
-          unoptimized={true}
           width={500} // Increased for better quality
           height={500}
         />

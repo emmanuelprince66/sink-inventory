@@ -56,7 +56,6 @@ export const useExpensesHook = ({
   const { mutate: deleteExpense, isPending: deleteExpenseLoading } =
     useDeleteExpenseMutation({
       onSuccess: (data) => {
-        console.log("data", data);
         showToast(data.message, "success");
         ExpensesDataRefetch();
 
@@ -83,7 +82,6 @@ export const useExpensesHook = ({
     useCreateExpensesMutation({
       businessId: business_id, // Convert null to undefined
       onSuccess: (data) => {
-        console.log("data---4", data);
         showToast(data.message, "success");
         ExpensesDataRefetch();
         if (closeModal) closeModal();
@@ -202,7 +200,6 @@ export const useExpensesHook = ({
         payload.note = values.note.trim();
       }
 
-      console.log("Valid payload:", payload);
       editExpense({
         expenseId: expenseId,
         payload,
@@ -252,11 +249,8 @@ export const useExpensesHook = ({
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-  console.log("CategoriesData", CategoriesData);
-
   useEffect(() => {
     if (expenseId && ExpenseData && !ExpenseDataLoading) {
-      console.log("ExpenseData in the hook", ExpenseData?.data?.category?.id);
       const initialValues = {
         name: ExpenseData?.data?.name || "",
         category_id: ExpenseData?.data?.category?.id || "",
@@ -265,7 +259,6 @@ export const useExpensesHook = ({
         note: ExpenseData?.data?.note || "",
       };
 
-      console.log("Initializing form with:", initialValues);
       editForm.reset(initialValues);
     }
   }, [expenseId, ExpenseData, ExpenseDataLoading, editForm]);
