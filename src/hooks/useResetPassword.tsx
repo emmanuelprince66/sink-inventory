@@ -11,13 +11,18 @@ const resetPasswordSchema = z.object({
 });
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export const useResetPasswordHook = () => {
+export const useResetPasswordHook = ({
+  setShowLogin,
+}: {
+  setShowLogin: any;
+}) => {
   const { showToast } = useToast();
 
   const { mutate: resetInvitePassword, isPending: resetInvitePasswordLoading } =
     useResetInvitePasswordMutation({
       onSuccess: (data) => {
         showToast(data.message, "success");
+        setShowLogin(true);
       },
       onError: (error) => {
         showToast(error.message, "error");

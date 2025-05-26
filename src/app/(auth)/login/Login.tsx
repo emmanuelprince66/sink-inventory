@@ -18,7 +18,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { useLoginForm } from "@/hooks/auth/useLoginForm";
 
 const Login = () => {
-  const { form, onSubmit, showLogin, isSubmitting } = useLoginForm();
+  const { form, onSubmit, showLogin, setShowLogin, isSubmitting } =
+    useLoginForm();
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -98,7 +99,7 @@ const Login = () => {
           </div>
         </div>
       ) : (
-        <ResetPassword />
+        <ResetPassword setShowLogin={setShowLogin} />
       )}
     </div>
   );

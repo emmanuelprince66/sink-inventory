@@ -5,6 +5,7 @@ import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBankHook } from "@/hooks/useBankHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { AddBankForm } from "./AddBankForm";
@@ -12,6 +13,7 @@ import { AddBankForm } from "./AddBankForm";
 export const Bank = () => {
   const closeAddBankModal = () => setOpenAddBankModal(false);
   const closeDellBankModal = () => setOpenDelBankModal(false);
+  const { user } = useUserRole();
 
   const { BankData, BankDataLoading, handleDeleteBank, deleteBankLoading } =
     useBankHook({ closeModal: closeDellBankModal });
@@ -38,7 +40,9 @@ export const Bank = () => {
     <>
       <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center p-4">
         <div className="w-full flex justify-end">
-          <Button onClick={openAddBankModalFunc}>Add Bank</Button>
+          {user && user?.role === "OWNER" && (
+            <Button onClick={openAddBankModalFunc}>Add Bank</Button>
+          )}
         </div>
         {BankDataLoading ? (
           <div className="w-full  space-y-2">

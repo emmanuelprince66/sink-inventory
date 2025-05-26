@@ -13,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useResetPasswordHook } from "@/hooks/useResetPassword";
 
-const ResetPassword = () => {
-  const { form, onSubmit, resetInvitePasswordLoading } = useResetPasswordHook();
+const ResetPassword = ({ setShowLogin }: { setShowLogin: any }) => {
+  const { form, onSubmit, resetInvitePasswordLoading } = useResetPasswordHook({
+    setShowLogin,
+  });
   return (
     <>
       <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">

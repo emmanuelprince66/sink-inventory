@@ -18,7 +18,7 @@ const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ssr: false, // This will only load on client side
   loading: () => (
     <div className="w-full h-full">
-      <Spinner />
+      <Spinner className="text-primary-green-300" />
     </div>
   ), // Optional loading component
 });

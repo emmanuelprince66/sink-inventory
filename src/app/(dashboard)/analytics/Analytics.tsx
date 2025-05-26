@@ -3,6 +3,7 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import ShowAllAttendants from "../sales/ShowAllAttendants";
@@ -10,12 +11,20 @@ import CustomerAnalytics from "./CustomerAnalytics";
 import ProductAnalytics from "./ProductAnalytics";
 import SalesAnalytics from "./SalesAnalytics";
 import SkeletonComp from "./SkeletonComp";
-const AnalyticsOptionsTab = ["Sales", "Products", "Customers"] as const;
+
 const Analytics = () => {
+  const { user } = useUserRole();
+
+  const AnalyticsOptionsTab =
+    user?.role === "OWNER"
+      ? (["Sales", "Products", "Customers"] as const)
+      : (["Sales"] as const);
+
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
   });
+
   const [attendantId, setAttendantId] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [ShowAttendants, setShowAttendants] = useState(false);
@@ -46,6 +55,8 @@ const Analytics = () => {
     setAttendantId("");
     setAttendantsName("");
   };
+
+  console.log("productAnalyticData", ProductAnalyticData);
 
   const handleClickAttendants = (attendants: any) => {
     setAttendantId(attendants?.id);
@@ -105,23 +116,26 @@ const Analytics = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="Products" className="p-6">
-              {ProductAnalyticLoading ? (
-                <SkeletonComp />
-              ) : (
-                <ProductAnalytics ProductAnalyticData={ProductAnalyticData} />
-              )}
-            </TabsContent>
-
-            <TabsContent value="Customers" className="p-6">
-              {CustomerAnalyticLoading ? (
-                <SkeletonComp />
-              ) : (
-                <CustomerAnalytics
-                  CustomerAnalyticData={CustomerAnalyticData}
-                />
-              )}
-            </TabsContent>
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Products" className="p-6">
+                {ProductAnalyticLoading ? (
+                  <SkeletonComp />
+                ) : (
+                  <ProductAnalytics ProductAnalyticData={ProductAnalyticData} />
+                )}
+              </TabsContent>
+            )}
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Customers" className="p-6">
+                {CustomerAnalyticLoading ? (
+                  <SkeletonComp />
+                ) : (
+                  <CustomerAnalytics
+                    CustomerAnalyticData={CustomerAnalyticData}
+                  />
+                )}
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>

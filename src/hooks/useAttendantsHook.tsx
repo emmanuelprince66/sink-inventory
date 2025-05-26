@@ -15,10 +15,17 @@ const staffSchema = z.object({
 
 export type AddStaffFormValues = z.infer<typeof staffSchema>;
 
-export const useAttendantsHook = () => {
+export const useAttendantsHook = ({
+  closeModal,
+}: {
+  closeModal?: () => void;
+}) => {
   const business_id = useBusinessStore((state) => state.business_id);
-  const { data: AttendantsData, isLoading: AttendantsLoading } =
-    useFetchAttendants(business_id);
+  const {
+    data: AttendantsData,
+    isLoading: AttendantsLoading,
+    refetch,
+  } = useFetchAttendants(business_id);
 
   const { showToast } = useToast();
 
@@ -26,6 +33,8 @@ export const useAttendantsHook = () => {
     useDeleteAttendantMutation({
       onSuccess: (data) => {
         console.log("data", data);
+        refetch();
+        if (closeModal) closeModal();
         showToast(data.message, "success");
 
         //   if (closeDellBankModal) closeDellBankModal();
@@ -35,9 +44,9 @@ export const useAttendantsHook = () => {
       },
       // You can add other callbacks here if needed
     });
-  const handleDeleteAttendant = (bank: any) => {
-    console.log("customer", bank);
-    deleteAttendant(bank?.id);
+  const handleDeleteAttendant = (staff: any) => {
+    console.log("customer", staff);
+    deleteAttendant(staff?.id);
   };
 
   const {
@@ -47,6 +56,8 @@ export const useAttendantsHook = () => {
   } = useCreateStaffMutation({
     businessId: business_id,
     onSuccess: (data) => {
+      refetch();
+      if (closeModal) closeModal();
       showToast(data.message, "success");
     },
     onError: (error) => {
@@ -86,6 +97,9 @@ export const useAttendantsHook = () => {
     AttendantsLoading,
     form,
     onSubmit,
+    handleDeleteAttendant,
+    deleteAttendant,
+    deleteAttendantLoading,
     createStaffLoading,
   };
 };

@@ -1,20 +1,31 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import { Bank } from "./bank/Bank";
 import ChangePassword from "./change-password/ChangePassword";
 import VeiwStaff from "./staff/VeiwStaff";
 
-const SettingsOptionsTab = [
-  "Bank",
-  "Staff",
-  "Security & Privacy",
-  "Premium",
-  "Notifications",
-  "Currency & Localization",
-] as const;
-
 const Settings = () => {
+  const { user } = useUserRole();
+
+  const SettingsOptionsTab =
+    user?.role === "OWNER"
+      ? [
+          "Bank",
+          "Staff",
+          "Security & Privacy",
+          "Premium",
+          "Notifications",
+          "Currency & Localization",
+        ]
+      : ([
+          "Bank",
+          "Security & Privacy",
+          "Notifications",
+          "Currency & Localization",
+        ] as const);
+
   const [activeTab, setActiveTab] =
     useState<(typeof SettingsOptionsTab)[number]>("Bank");
 
@@ -48,21 +59,25 @@ const Settings = () => {
             <Bank />
           </TabsContent>
 
-          <TabsContent value="Staff">
-            <VeiwStaff />
-          </TabsContent>
+          {user && user?.role === "OWNER" && (
+            <TabsContent value="Staff">
+              <VeiwStaff />
+            </TabsContent>
+          )}
 
           <TabsContent value="Security & Privacy">
             <ChangePassword />
           </TabsContent>
 
-          <TabsContent value="Premium">
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">Premium Features</h2>
-              <p>Upgrade to access premium features.</p>
-              {/* Add premium features components here */}
-            </div>
-          </TabsContent>
+          {user && user?.role === "OWNER" && (
+            <TabsContent value="Premium">
+              <div className="p-4">
+                <h2 className="text-xl font-semibold mb-4">Premium Features</h2>
+                <p>Upgrade to access premium features.</p>
+                {/* Add premium features components here */}
+              </div>
+            </TabsContent>
+          )}
 
           <TabsContent value="Notifications">
             <div className="p-4">

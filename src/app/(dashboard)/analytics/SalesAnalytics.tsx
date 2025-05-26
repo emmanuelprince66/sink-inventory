@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArcElement,
@@ -88,6 +89,8 @@ const SalesAnalytics = ({
   handleClearAttendant: any;
   attendantsName: any;
 }) => {
+  const { user } = useUserRole();
+
   // Doughnut chart data
   const chartData = {
     labels: [
@@ -134,12 +137,14 @@ const SalesAnalytics = ({
   return (
     <div className="w-full  py-8">
       <div className="w-full justify-end flex gap-3 mb-4 ">
-        <Button
-          className=" border-primary-green-300 "
-          onClick={openAttendantsModal}
-        >
-          {attendantsName ? `${attendantsName}` : "Select Attendant"}
-        </Button>
+        {user && user?.role === "OWNER" && (
+          <Button
+            className=" border-primary-green-300 "
+            onClick={openAttendantsModal}
+          >
+            {attendantsName ? `${attendantsName}` : "Select Attendant"}
+          </Button>
+        )}
 
         {attendantsName && (
           <Button
@@ -158,11 +163,15 @@ const SalesAnalytics = ({
           amount={SalesAnalyticData?.data.total_Revenue}
           change={SalesAnalyticData?.data.total_Revenue_change}
         />
-        <CustomSalesCard
-          title="Total Profit"
-          amount={SalesAnalyticData?.data.total_profit}
-          change={SalesAnalyticData?.data.total_profit_change}
-        />
+
+        {user && user?.role === "OWNER" && (
+          <CustomSalesCard
+            title="Total Profit"
+            amount={SalesAnalyticData?.data.total_profit}
+            change={SalesAnalyticData?.data.total_profit_change}
+          />
+        )}
+
         <CustomSalesCard
           title="Avg. Transaction"
           amount={SalesAnalyticData?.data.average_transaction_value}

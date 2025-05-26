@@ -551,7 +551,7 @@ const PrintReceiptView = ({
         {/* Payment summary */}
         <div className="flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
           <span>TOTAL:</span>
-          <span className="text-green-600">₦{formatToNaira(total)}</span>
+          <span className="text-green-600">{formatToNaira(total)}</span>
         </div>
 
         {/* Payment method */}

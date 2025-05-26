@@ -1,16 +1,15 @@
-import type { Metadata } from "next";
-
-import { Nunito } from "next/font/google";
-
-import "./globals.css";
+// app/layout.tsx
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProviders";
 import { ToastProvider } from "@/providers/ToastProvider";
+import type { Metadata } from "next";
+import { Nunito } from "next/font/google";
+import "./globals.css";
 
-// 👉 Correct Nunito font setup
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
-  display: "swap", // Optional: improves loading behavior
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +27,7 @@ export default function RootLayout({
       <body className={`${nunito.className} antialiased`}>
         <ReactQueryProvider>
           <ToastProvider />
-          {children}
+          <AuthProvider>{children}</AuthProvider>
         </ReactQueryProvider>
       </body>
     </html>

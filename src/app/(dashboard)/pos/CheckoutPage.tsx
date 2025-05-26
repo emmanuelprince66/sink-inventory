@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { MinusCircle, PlusCircle, Trash2, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
@@ -42,6 +43,9 @@ const CheckoutPage = ({
 
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
+  const { user } = useUserRole();
+
+  console.log("user", user);
 
   console.log("customer", customer);
   // Calculate the subtotal
@@ -115,25 +119,27 @@ const CheckoutPage = ({
           <div className="flex flex-col space-y-3">
             <h1 className="text-2xl font-bold text-gray-800">Checkout</h1>
 
-            <div className="grid grid-cols-1 gap-2">
-              <Button
-                variant="outline"
-                className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
-                onClick={() => setIsCustomerDrawerOpen(true)}
-              >
-                <UserPlus size={16} />
-                <span>{customer ? customer.name : "Add Customer"}</span>
-              </Button>
+            {user && user?.role === "OWNER" && (
+              <div className="grid grid-cols-1 gap-2">
+                <Button
+                  variant="outline"
+                  className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
+                  onClick={() => setIsCustomerDrawerOpen(true)}
+                >
+                  <UserPlus size={16} />
+                  <span>{customer ? customer.name : "Add Customer"}</span>
+                </Button>
 
-              <Button
-                onClick={() => setIsAttendantDrawerOpen(true)}
-                variant="outline"
-                className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
-              >
-                <Users size={16} />
-                <span>{attendant ? attendant.name : "Add Attendant"}</span>
-              </Button>
-            </div>
+                <Button
+                  onClick={() => setIsAttendantDrawerOpen(true)}
+                  variant="outline"
+                  className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
+                >
+                  <Users size={16} />
+                  <span>{attendant ? attendant.name : "Add Attendant"}</span>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Cart Items Section */}

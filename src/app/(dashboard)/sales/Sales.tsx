@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -51,6 +52,8 @@ const Sales = () => {
     from: new Date(),
     to: new Date(),
   });
+  const { user } = useUserRole();
+
   const [searchInput, setSearchInput] = useState("");
   const [ShowAttendants, setShowAttendants] = useState(false);
   const closeAttendantsModal = () => setShowAttendants(false);
@@ -110,12 +113,14 @@ const Sales = () => {
           </p>
 
           <div className="flex items-center gap-2">
-            <Button
-              className=" border-primary-green-300"
-              onClick={openAttendantsModal}
-            >
-              Attendants
-            </Button>
+            {user && user?.role === "OWNER" && (
+              <Button
+                className=" border-primary-green-300"
+                onClick={openAttendantsModal}
+              >
+                Attendants
+              </Button>
+            )}
 
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
           </div>
@@ -147,10 +152,13 @@ const Sales = () => {
             title={"Items Sold"}
             amount={SalesData?.data?.results?.orders}
           />
-          <CustomSalesCard
-            title={"Profit"}
-            amount={formatToNaira(totalProfit)}
-          />
+
+          {user && user?.role === "OWNER" && (
+            <CustomSalesCard
+              title={"Profit"}
+              amount={formatToNaira(totalProfit)}
+            />
+          )}
         </div>
       )}
 

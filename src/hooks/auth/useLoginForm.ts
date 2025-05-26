@@ -1,5 +1,6 @@
 import { useLoginMutation } from "@/api/auth/login-user";
 import { useToast } from "@/hooks/toast/useToast";
+import { useUserStore } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -25,20 +26,40 @@ export type LoginFormValues = z.infer<typeof formSchema>;
 export const useLoginForm = (options?: { redirectTo?: string }) => {
   const router = useRouter();
   const { showToast } = useToast();
+  const { login } = useUserStore();
 
   const [showLogin, setShowLogin] = useState(true);
 
   const {
-    mutate: login,
+    mutate: loginUser,
     isPending,
     isError,
     error,
   } = useLoginMutation({
     onSuccess: (data) => {
       console.log("Login successful", data);
+
+      login({
+        id: data.id,
+        email: data.email,
+        role: data.role,
+        is_verified: data.is_verified,
+        is_subscribed: data.is_subscribed,
+        subscription: data.subscription,
+        tokens: {
+          access: data.tokens.access,
+          refresh: data.tokens.refresh,
+        },
+      });
       showToast("Login successful", "success");
-      router.push(options?.redirectTo || "/create-business");
-      router.refresh();
+
+      if (data?.role === "OWNER") {
+        router.push(options?.redirectTo || "/create-business");
+        router.refresh();
+      } else if (data?.role === "ATTENDANT") {
+        router.push(options?.redirectTo || "/pos");
+        router.refresh();
+      }
     },
     onError: (error) => {
       if (error?.status_code === 403) {
@@ -63,7 +84,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   });
 
   const onSubmit = (values: LoginFormValues) => {
-    login(values, {
+    loginUser(values, {
       onError: (error) => {
         // Handle specific API errors
         if (error.statusCode === 401) {
@@ -82,6 +103,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     showLogin,
     isSubmitting: isPending,
     isError,
+    setShowLogin,
     error,
   };
 };

@@ -14,8 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAttendantsHook } from "@/hooks/useAttendantsHook";
 
-export const AddStaff = () => {
-  const { form, onSubmit, createStaffLoading } = useAttendantsHook();
+export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
+  const { form, onSubmit, createStaffLoading } = useAttendantsHook({
+    closeModal,
+  });
 
   return (
     <div className="flex h-full w-full items-center justify-center">

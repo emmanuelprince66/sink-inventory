@@ -65,13 +65,13 @@ const ReceiptPage = ({
     bank: "",
   });
 
-  console.log("tempSplitPayment", tempSplitPayment);
+  // console.log("tempSplitPayment", tempSplitPayment);
 
-  console.log("partial_payment", partialPaymentMethod);
+  // console.log("partial_payment", partialPaymentMethod);
 
   const { showToast } = useToast();
 
-  console.log("sales response", createSaleResponse);
+  // console.log("sales response", createSaleResponse);
   const [remainingAmount, setRemainingAmount] = useState(0);
 
   const [sureModal, setSureModal] = useState(false);
@@ -80,7 +80,7 @@ const ReceiptPage = ({
   const openSureModal = () => setSureModal(true);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
-  console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
+  // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
 
   const {
     BusinessData,

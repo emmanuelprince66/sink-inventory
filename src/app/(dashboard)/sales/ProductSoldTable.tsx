@@ -1,6 +1,5 @@
 import { CustomTable } from "@/components/app/CutomTable";
-
-import { columns } from "./ProductSoldColumns";
+import { useSalesColumns } from "./ProductSoldColumns";
 import { SalesHistoryResponse } from "./types";
 
 const ProductSoldTable = ({
@@ -10,6 +9,8 @@ const ProductSoldTable = ({
   response: SalesHistoryResponse;
   loading?: boolean;
 }) => {
+  const columns = useSalesColumns(); // Use the hook here
+
   return (
     <>
       <CustomTable

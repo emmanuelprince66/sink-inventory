@@ -1,10 +1,4 @@
 "use client";
-import { LogOut } from "lucide-react";
-
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import { useLogoutMutation } from "@/api/auth/logout-user";
 import {
   Sidebar,
@@ -18,11 +12,18 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { links } from "@/constants/links";
-import { cn } from "@/lib/utils"; // Assuming you have a classnames utility
+import { UserRole } from "@/lib/store/types";
+import { useUserRole } from "@/lib/store/user-store";
+import { cn } from "@/lib/utils";
+import { LogOut } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
+  const { hasPermission } = useUserRole();
 
   return (
     <Sidebar className="z-10 bg-white border-gray-200">
@@ -42,7 +43,13 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {links?.map((item) => {
+              {links.map((item: any) => {
+                // Check if user has permission for this link
+                const hasAccess = item.roles.some((role: UserRole) =>
+                  hasPermission(role)
+                );
+                if (!hasAccess) return null;
+
                 const isActive =
                   pathname === item.url ||
                   (item.url !== "/" && pathname.startsWith(item.url));
