@@ -56,16 +56,11 @@ const Analytics = () => {
     setAttendantsName("");
   };
 
-  console.log("productAnalyticData", ProductAnalyticData);
-
   const handleClickAttendants = (attendants: any) => {
     setAttendantId(attendants?.id);
     setAttendantsName(attendants?.name);
     closeAttendantsModal();
-    console.log("444", attendants);
   };
-
-  console.log("SalesAnalyticData", SalesAnalyticData);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">

@@ -15,8 +15,6 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublicPath = PUBLIC_PATHS.includes(path);
 
-  console.log("userRole", request.cookies.get("userRole")?.value);
-
   // Check for access token
   const accessToken = request.cookies.get("accessToken")?.value;
   const userRole = request.cookies.get("userRole")?.value as

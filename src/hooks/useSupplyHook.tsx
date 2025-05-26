@@ -34,7 +34,6 @@ export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
     useCreateSupplierMutation({
       businessId: business_id, // Convert null to undefined
       onSuccess: (data) => {
-        console.log("data", data);
         refetch();
         if (closeModal) closeModal();
         // Optional: Invalidate queries or update cache
@@ -46,7 +45,6 @@ export const useSupplyHook = ({ closeModal }: { closeModal?: () => void }) => {
   const { mutate: deleteSupplier, isPending: deleteSupplierLoading } =
     useDeleteSupplierMutation({
       onSuccess: (data) => {
-        console.log("data", data);
         showToast(data.message, "success");
         refetch();
 

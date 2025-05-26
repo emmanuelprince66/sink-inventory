@@ -7,8 +7,6 @@ interface EditProductProps {
   payload: FormData;
 }
 const addProduct = async ({ productId, payload }: EditProductProps) => {
-  console.log("payload", payload);
-
   const response = await fetch(`/api/products/${productId}/edit-product`, {
     method: "PATCH",
     body: payload,

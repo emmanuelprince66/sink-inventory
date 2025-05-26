@@ -288,7 +288,6 @@ export const useUploadCsvHook = () => {
       const parsedData = await parseFile(file);
       const errors = validateCsvData(parsedData);
 
-      console.log("parsedData", parsedData);
       setValidationErrors(errors);
 
       const products = parsedData.map((item: any) => ({
@@ -325,10 +324,6 @@ export const useUploadCsvHook = () => {
       setIsLoading(false);
     }
   };
-
-  console.log("file", file);
-  console.log("previewData", previewData);
-  console.log("validationErrors", validationErrors);
 
   const handleUploadSubmit = () => {
     if (validationErrors.length > 0) {

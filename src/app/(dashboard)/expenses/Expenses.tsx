@@ -53,8 +53,6 @@ const Expenses = () => {
     dateRange,
   });
 
-  console.log("ExpensesData", ExpensesData);
-
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };

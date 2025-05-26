@@ -7,8 +7,6 @@ interface AddProductVariables {
   payload: FormData;
 }
 const addProduct = async ({ businessId, payload }: AddProductVariables) => {
-  console.log("payload", payload);
-
   const response = await fetch(`/api/products/${businessId}/add-product`, {
     method: "POST",
     body: payload,

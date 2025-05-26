@@ -39,10 +39,6 @@ const EditExpense = () => {
     onSubmitEditForm: onSubmit,
   } = useExpensesHook({});
 
-  console.log("form", form.getValues());
-
-  console.log("ExpenseData", ExpenseData);
-
   return (
     <>
       {ExpenseDataLoading ||

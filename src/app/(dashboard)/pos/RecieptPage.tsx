@@ -342,8 +342,6 @@ const ReceiptPage = ({
         }
       }
 
-      console.log("API Payload:", apiPayload);
-
       createSale({
         apiPayload,
         businessId: business_id,

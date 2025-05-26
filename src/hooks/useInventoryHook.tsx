@@ -56,10 +56,12 @@ export const useInventoryHook = ({
   selectedCategoryId,
   closeModal,
   type,
+  page,
   product,
 }: {
   searchInput?: string;
   type?: string;
+  page?: number;
   selectedCategoryId?: string | null;
   closeModal?: any;
   productId?: string | null;
@@ -159,6 +161,8 @@ export const useInventoryHook = ({
     refetch: refetchInventory,
   } = useGetInventoryQuery({
     params: {
+      page,
+      limit: 15,
       id: business_id,
       search: searchTerm,
       category_id: selectedCategoryId,

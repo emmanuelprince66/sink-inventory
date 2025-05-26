@@ -18,7 +18,6 @@ const AllCustomers = ({
       </div>
     );
   }
-  console.log("AllCustomers", customersData?.data);
   return (
     <div className="w-full">
       {customersData?.data?.results?.data?.length > 0 && !customerLoading && (

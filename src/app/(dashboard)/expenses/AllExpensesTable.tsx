@@ -8,7 +8,6 @@ const AllExpensesTable = ({
   response: any;
   loading: any;
 }) => {
-  console.log("response", response);
   return (
     <>
       <CustomTable

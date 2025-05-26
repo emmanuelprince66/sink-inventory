@@ -34,7 +34,7 @@ export const links = [
     title: "Supplier",
     url: "/supply",
     icon: AirVent,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    roles: ["OWNER"],
   },
   {
     title: "Expenses",

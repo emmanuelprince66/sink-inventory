@@ -37,8 +37,6 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     error,
   } = useLoginMutation({
     onSuccess: (data) => {
-      console.log("Login successful", data);
-
       login({
         id: data.id,
         email: data.email,
@@ -65,8 +63,6 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       if (error?.status_code === 403) {
         showToast(error?.message || "An error occurred during login", "error");
         setShowLogin(false);
-
-        console.log("Login error", error);
       } else {
         showToast(error?.message || "An error occurred during login", "error");
       }

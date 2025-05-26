@@ -63,6 +63,8 @@ export const useGetInventoryQuery = ({
       params.type,
       params.page,
       params.category_id,
+      params.limit,
+      params.page,
     ],
     queryFn: () => fetchInventory(params),
     ...config,

@@ -16,6 +16,8 @@ export const queryKey = {
     getAllAttendants: "get-all-attendants",
     createAttendant: "create-attendant",
     deleteAttendant: "delete-attendant",
+    editAttendant: "edit-attendant",
+    getAttendantById: "get-attendant-by-id",
   },
   customers: {
     getAllCustomers: "get-all-customers",

@@ -45,9 +45,9 @@ const CheckoutPage = ({
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
   const { user } = useUserRole();
 
-  console.log("user", user);
+  // console.log("user", user);
 
-  console.log("customer", customer);
+  // console.log("customer", customer);
   // Calculate the subtotal
   const subtotal = cartItems.reduce((total, item) => {
     return (
@@ -119,17 +119,16 @@ const CheckoutPage = ({
           <div className="flex flex-col space-y-3">
             <h1 className="text-2xl font-bold text-gray-800">Checkout</h1>
 
-            {user && user?.role === "OWNER" && (
-              <div className="grid grid-cols-1 gap-2">
-                <Button
-                  variant="outline"
-                  className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
-                  onClick={() => setIsCustomerDrawerOpen(true)}
-                >
-                  <UserPlus size={16} />
-                  <span>{customer ? customer.name : "Add Customer"}</span>
-                </Button>
-
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                variant="outline"
+                className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
+                onClick={() => setIsCustomerDrawerOpen(true)}
+              >
+                <UserPlus size={16} />
+                <span>{customer ? customer.name : "Add Customer"}</span>
+              </Button>
+              {user && user?.role === "OWNER" && (
                 <Button
                   onClick={() => setIsAttendantDrawerOpen(true)}
                   variant="outline"
@@ -138,8 +137,8 @@ const CheckoutPage = ({
                   <Users size={16} />
                   <span>{attendant ? attendant.name : "Add Attendant"}</span>
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Cart Items Section */}

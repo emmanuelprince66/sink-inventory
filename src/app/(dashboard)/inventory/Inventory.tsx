@@ -84,6 +84,7 @@ const Inventory = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
+  const [page, setPage] = useState(1);
 
   const {
     InventoryData,
@@ -93,6 +94,7 @@ const Inventory = () => {
   } = useInventoryHook({
     searchInput,
     selectedCategoryId,
+    page,
   });
 
   const handleSearchChange = (value: string) => {
@@ -247,7 +249,12 @@ const Inventory = () => {
           </div>
         </div>
       ) : (
-        <AllInventory data={InventoryData} loading={InventoryDataLoading} />
+        <AllInventory
+          setPage={setPage}
+          page={page}
+          data={InventoryData}
+          loading={InventoryDataLoading}
+        />
       )}
 
       {/*  */}

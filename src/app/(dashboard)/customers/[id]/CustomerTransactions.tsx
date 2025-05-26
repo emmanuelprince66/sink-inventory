@@ -1,5 +1,3 @@
-import React from "react";
-
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { CustomerWalletTrxProps } from "../types";
@@ -13,7 +11,6 @@ export const CustomerTransactions = ({
   data: CustomerWalletTrxProps;
   loading: boolean;
 }) => {
-  console.log("CustomerTransactions", data);
   return (
     <div>
       <div>

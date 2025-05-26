@@ -33,8 +33,6 @@ const Contact = ({ id }: { id: string }) => {
     CustomerWalletTrx,
   } = useGetCustomerByIdHook({});
 
-  console.log("www-4", CustomerData);
-
   const [filter, setFilter] = useState<"history" | "transactions">("history");
 
   return (

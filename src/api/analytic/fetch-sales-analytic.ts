@@ -18,7 +18,6 @@ export const fetchSalesAnalytics = async ({
   end_date = "",
   attendance_id = "",
 }: fetchSalesAnalyticProps) => {
-  console.log("attendance_id", attendance_id);
   const url = new URL(`/api/analytics/${id}/sales`, window.location.origin);
 
   const params = new URLSearchParams();

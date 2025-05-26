@@ -3,7 +3,6 @@ import { Edit2 } from "lucide-react";
 import Link from "next/link";
 
 const ViewMore = ({ expenses }: { expenses: any }) => {
-  console.log("expenses", expenses);
   return (
     <>
       <div className="bg-[#FEFFFE] p-6 rounded-lg shadow-sm border w-full border-gray-200 max-w-4xl mx-auto">

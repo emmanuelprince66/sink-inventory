@@ -12,8 +12,6 @@ const ViewDetails = ({
 }) => {
   const { handleDeleteProduct, deleting } = useInventoryHook({ closeModal });
 
-  console.log("data", data);
-
   return (
     <div className="bg-[#FEFFFE] p-6 rounded-lg shadow-sm border border-gray-200 max-w-4xl mx-auto">
       <div className="flex flex-col gap-6">

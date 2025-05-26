@@ -47,8 +47,6 @@ export const useCreateStaffMutation = ({
       createStaff({ businessId, payload }),
     retry: false,
     onError: (error: any, variables: any, context: any) => {
-      console.log("Error creating Staff:", error);
-
       const errorMessage =
         error?.message ||
         error?.error ||

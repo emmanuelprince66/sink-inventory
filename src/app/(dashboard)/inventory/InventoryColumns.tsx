@@ -118,7 +118,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: "Action",
     cell: ({ row }) => {
       const inventory = row.original;
-      console.log("inventory---4", inventory);
       const canRestock = inventory.type === "PRODUCT";
       const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
 

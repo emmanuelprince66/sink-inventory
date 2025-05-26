@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAttendantsHook } from "@/hooks/useAttendantsHook";
 import { useUserRole } from "@/lib/store/user-store";
-import { Trash2 } from "lucide-react";
+import { Edit2Icon, Trash2 } from "lucide-react";
 import { useState } from "react";
 import AddStaff from "./AddStaff";
+import EditStaff from "./EditStaff";
 const VeiwStaff = () => {
+  const [editStaffModal, setEditStaffModal] = useState(false);
+  const closeEditStaffModal = () => setEditStaffModal(false);
+  const openEditStaffModal = () => setEditStaffModal(true);
   const [deleteAttendantModal, setDeleteAttendantModal] = useState(false);
   const closeDeleteAttendantModal = () => setDeleteAttendantModal(false);
   const openDeleteAttendantModal = () => setDeleteAttendantModal(true);
@@ -16,7 +20,9 @@ const VeiwStaff = () => {
     AttendantsLoading,
     deleteAttendantLoading,
     handleDeleteAttendant,
-  } = useAttendantsHook({ closeModal: closeDeleteAttendantModal });
+  } = useAttendantsHook({
+    closeModal: closeDeleteAttendantModal,
+  });
 
   const [staffData, setStaffData] = useState<any>(null);
 
@@ -24,6 +30,12 @@ const VeiwStaff = () => {
     console.log("staffData----1", staff);
     setStaffData(staff);
     openDeleteAttendantModal();
+  };
+
+  const handleEditStaff = (staff: any) => {
+    console.log("staffData----2", staff);
+    setStaffData(staff);
+    openEditStaffModal();
   };
 
   const deleteStaff = () => {
@@ -76,14 +88,24 @@ const VeiwStaff = () => {
                     </td>
 
                     <td className="whitespace-nowrap px-6 py-4 w-full">
-                      <button
-                        onClick={() => {
-                          handleDeleteStaffModal(staff);
-                        }}
-                        className="rounded p-1 cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={() => {
+                            handleEditStaff(staff);
+                          }}
+                          className="rounded p-1 cursor-pointer text-green-500 hover:bg-green-50 hover:text-green-700"
+                        >
+                          <Edit2Icon className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleDeleteStaffModal(staff);
+                          }}
+                          className="rounded p-1 cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -134,6 +156,14 @@ const VeiwStaff = () => {
             </Button>
           </div>
         </div>
+      </CustomModal>
+      <CustomModal
+        isOpen={editStaffModal} // FIXED: Removed the negation
+        onClose={closeEditStaffModal}
+        trigger={false}
+        title=""
+      >
+        <EditStaff staff={staffData} closeModal={closeEditStaffModal} />
       </CustomModal>
     </>
   );

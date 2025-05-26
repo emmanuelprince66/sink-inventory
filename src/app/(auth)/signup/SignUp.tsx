@@ -35,8 +35,6 @@ const SignUp = () => {
     isVerifying,
   } = useSignUpForm();
 
-  console.log("otp", otp);
-
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Welcome Screen (Left Side) */}

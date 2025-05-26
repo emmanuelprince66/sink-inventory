@@ -40,7 +40,6 @@ const UpdateCustomerWallet = ({
     handleSelectOption,
     selectedOption,
   } = useGetCustomerByIdHook({ closeModal });
-  console.log("wallet", wallet);
 
   return (
     <div className="flex w-full flex-col items-start gap-3">

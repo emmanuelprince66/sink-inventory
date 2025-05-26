@@ -24,7 +24,6 @@ const EditProductPrice = ({
   const { editSellingPriceForm, onSubmitEditSellingPrice, loading } =
     useInventoryHook({ productId, type, product, closeModal });
 
-  console.log("EditProductPrice", productId);
   return (
     <div className="w-full">
       <Form {...editSellingPriceForm}>

@@ -53,6 +53,13 @@ const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
             />
           </div>
 
+          <div className="w-full p-2">
+            <Button className="w-full h-12" onClick={openCustomerModalFunc}>
+              <Plus />
+              Add Customer
+            </Button>
+          </div>
+
           <div className="mt-2 space-y-4">
             {CustomerLoading ? (
               // Show skeleton loading states
@@ -82,13 +89,6 @@ const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
             ) : (
               <div>No customers found</div>
             )}
-
-            <div className="w-full p-2">
-              <Button className="w-full h-12" onClick={openCustomerModalFunc}>
-                <Plus />
-                Add Customer
-              </Button>
-            </div>
           </div>
         </SheetContent>
       </Sheet>

@@ -74,7 +74,6 @@ const Sales = () => {
   const handleClickAttendants = (attendants: any) => {
     setAttendantId(attendants?.id);
     closeAttendantsModal();
-    console.log("444", attendants);
   };
 
   const {

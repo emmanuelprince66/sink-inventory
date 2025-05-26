@@ -8,7 +8,6 @@ const ReverseSale = ({
 }) => {
   //   const { handleReverseSale } = useSalesHook();
 
-  console.log("product", product);
   return (
     <>
       <div className="w-full flex-col flex items-center justify-center gap-3">

@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
 const deleteAttendantById = async (id: string) => {
-  console.log("Deleting Attendant with ID:", id);
   const response = await fetch(`/api/attendants/${id}/delete`, {
     method: "DELETE",
   });
