@@ -1,6 +1,6 @@
 "use client";
 
-import ComingSoon from "@/components/app/ComingSoon";
+import { ComingSoon } from "@/components/app/ComingSoon";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
 const Overview = () => {
