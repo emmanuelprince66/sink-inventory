@@ -59,7 +59,6 @@ export const useAnalyticHook = ({
       enabled: !!business_id,
     });
 
-  console.log("CustomerAnalyticData", CustomerAnalyticData);
   return {
     SalesAnalyticData,
     AttendantsData,
