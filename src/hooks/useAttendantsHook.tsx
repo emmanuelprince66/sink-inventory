@@ -44,7 +44,6 @@ export const useAttendantsHook = ({
 
   const { data: attendantData, isLoading: AttendantLoading } =
     useFetchAttendantByIdQuery(attendantId, { enabled: !!attendantId });
-  console.log("attendantData----4", attendantData);
 
   const {
     mutate: editAttendant,
@@ -56,7 +55,6 @@ export const useAttendantsHook = ({
     if (editAttendantSuccess) {
       refetch();
       if (closeModal) closeModal();
-      showToast("Attendant updated successfully", "success");
       // Optional: Invalidate queries or update cache
     }
   }, [editAttendantSuccess]);

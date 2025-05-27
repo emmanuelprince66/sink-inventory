@@ -67,6 +67,11 @@ export function RouteGuard({
   ]);
 
   if (!isHydrated || isLoading || isChecking) {
+    console.log("Loading state:", {
+      isHydrated,
+      isLoading,
+      isChecking,
+    });
     return (
       <div className="flex items-center justify-center h-screen">
         <Spinner />

@@ -32,8 +32,6 @@ const EditStaff = ({
     attendantId: staff?.id,
   });
 
-  console.log("attendantData----3", attendantData);
-
   return (
     <>
       {AttendantLoading || !attendantData ? (
