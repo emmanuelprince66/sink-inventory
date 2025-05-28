@@ -4,9 +4,9 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev --turbopack",
     "build": "next build",
-    "start": "NODE_ENV=production node server.ts",
+    "start": "NODE_ENV=production node server.mjs",
     "type-check": "tsc --noEmit",
     "prebuild": "npm run type-check"
   },

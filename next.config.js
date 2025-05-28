@@ -4,8 +4,9 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   // Remove the entire eslint block
+  //
   images: {
-    domains: ["sync-bck.s3.amazonaws.com"],
+    remotePatterns: [new URL("https://sync-bck.s3.amazonaws.com/**")],
   },
 };
 
