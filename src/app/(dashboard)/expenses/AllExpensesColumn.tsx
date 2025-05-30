@@ -76,7 +76,7 @@ export const columns: ColumnDef<any>[] = [
 
       return (
         <div className="font-medium">
-          <p className="text-sm text-yellow-500">
+          <p className="text-sm text-red-500">
             {formatToNaira(expenses.amount)}
           </p>
         </div>
