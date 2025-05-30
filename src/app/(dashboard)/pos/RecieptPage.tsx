@@ -424,25 +424,25 @@ const ReceiptPage = ({
           <div className="w-full">
             <p className="text-xs mb-1">Sales Summary</p>
 
-            <div className="w-full bg-primary-green-200 p-4 rounded-lg flex items-center gap-4">
+            <div className="w-full bg-primary-green-200 p-1 rounded-lg flex items-center gap-4">
               {business?.logo && (
                 <img
                   src={business.logo}
                   alt={business.name}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-white"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white"
                 />
               )}
               <div>
-                <p className="text-sm ">Store : {business?.name}</p>
-                <p className=" text-sm">
+                <p className="text-xs ">Store : {business?.name}</p>
+                <p className=" text-xs">
                   Address: {business?.city}, {business?.state},{" "}
                   {business?.country}
                 </p>
                 {business?.owner?.phone && (
-                  <p className=" text-sm">Phone: {business.owner.phone}</p>
+                  <p className=" text-xs">Phone: {business.owner.phone}</p>
                 )}
                 {business?.owner?.email && (
-                  <p className=" text-sm">Email: {business.owner.email}</p>
+                  <p className=" text-xs">Email: {business.owner.email}</p>
                 )}
               </div>
             </div>
@@ -455,15 +455,19 @@ const ReceiptPage = ({
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-primary-green-200 text-left">
-                    <th className="p-2 border border-primary-green-300">#</th>
-                    <th className="p-2 border border-primary-green-300">
-                      Item
+                    <th className="p-2 text-xs border border-primary-green-300">
+                      #
                     </th>
-                    <th className="p-2 border border-primary-green-300">Qty</th>
-                    <th className="p-2 border border-primary-green-300">
+                    <th className="p-2 text-xs border border-primary-green-300">
+                      Item Details
+                    </th>
+                    <th className="p-2 text-xs border border-primary-green-300">
+                      Qty
+                    </th>
+                    <th className="p-2 text-xs border border-primary-green-300">
                       Price
                     </th>
-                    <th className="p-2 border border-primary-green-300">
+                    <th className="p-2 text-xs border border-primary-green-300">
                       Sub-Total
                     </th>
                   </tr>
@@ -474,38 +478,40 @@ const ReceiptPage = ({
                       key={item.id}
                       className="border-b border-primary-green-300"
                     >
-                      <td className="p-2 border border-primary-green-300">
+                      <td className="p-1 border border-primary-green-300">
                         {index + 1}
                       </td>
-                      <td className="p-2 border border-primary-green-300">
-                        <div className="flex items-center gap-2">
+                      <td className="p-1 border border-primary-green-300">
+                        <div className="flex items-center gap-1">
                           {item.image && (
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-10 h-10 rounded object-cover"
+                              className="w-5 h-5 rounded object-cover"
                             />
                           )}
                           <div>
-                            <p className="font-medium">{item.name}</p>
+                            <p className="font-medium text-[11px]">
+                              {item.name}
+                            </p>
                             {item.category && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-[10px] text-gray-500">
                                 {item.category}
                               </p>
                             )}
                           </div>
                         </div>
                       </td>
-                      <td className="p-2 border border-primary-green-300">
+                      <td className="p-2 border text-[10px] border-primary-green-300">
                         {item.cartQuantity || 1}
                       </td>
-                      <td className="p-2 border border-primary-green-300">
+                      <td className="p-2 text-[10px]  border border-primary-green-300">
                         ₦
                         {item.amount?.toLocaleString() ||
                           item.selling_price?.toLocaleString() ||
                           "0"}
                       </td>
-                      <td className="p-2 border border-primary-green-300">
+                      <td className="p-2 text-[10px]  border border-primary-green-300">
                         {(item.amount || item.selling_price || 0) *
                           (item.cartQuantity || 1)}
                       </td>
@@ -516,11 +522,11 @@ const ReceiptPage = ({
                   <tr className="bg-primary-green-200 font-bold">
                     <td
                       colSpan={4}
-                      className="p-2 border border-primary-green-300 text-right"
+                      className="p-2 border text-[11px]  border-primary-green-300 text-right"
                     >
                       Total:
                     </td>
-                    <td className="p-2 border border-primary-green-300">
+                    <td className="p-2 text-[11px]  border border-primary-green-300">
                       {formatToNaira(total)}
                     </td>
                   </tr>
@@ -533,24 +539,28 @@ const ReceiptPage = ({
           <p className="text-xs mb-1">Customer details</p>
 
           {customer ? (
-            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+            <div className=" w-full bg-primary-green-200 p-2 rounded-lg">
               <p>{customer.name || "N/A"}</p>
             </div>
           ) : (
-            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+            <div className=" w-full bg-primary-green-200 p-2 text-xs rounded-lg">
               <p>No customer selected</p>
             </div>
           )}
 
           {/* customer details */}
           <p className="text-xs mb-1">Attendant responsible</p>
-          {attendant && (
-            <div className=" w-full bg-primary-green-200 p-4 rounded-lg">
+          {attendant ? (
+            <div className=" w-full bg-primary-green-200 p-2 text-xs rounded-lg">
               <p>{attendant.name || "N/A"}</p>
+            </div>
+          ) : (
+            <div className=" w-full bg-primary-green-200 p-2 text-xs rounded-lg">
+              <p>No attendant selected</p>
             </div>
           )}
           {/* Split Bill Toggle */}
-          <div className="w-full bg-primary-green-200 flex flex-end p-4 rounded-lg">
+          <div className="w-full bg-primary-green-200 flex flex-end p-1 rounded-lg">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -574,7 +584,7 @@ const ReceiptPage = ({
               {/* Switch Track */}
               <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
               {/* Optional Label */}
-              <span className="ml-2 text-sm font-medium text-gray-700">
+              <span className="ml-3 text-sm font-medium text-[10px] text-gray-700">
                 Split Bill (Multiple Payment Methods)
               </span>
             </label>

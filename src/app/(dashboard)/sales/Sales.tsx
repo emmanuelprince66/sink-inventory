@@ -138,7 +138,7 @@ const Sales = () => {
           ))}
         </div>
       ) : (
-        <div className="w-1/2 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="w-[80%] grid grid-cols-2 md:grid-cols-4 gap-4">
           <CustomSalesCard
             title={"Revenue"}
             amount={formatToNaira(SalesData?.data?.results?.revenue)}

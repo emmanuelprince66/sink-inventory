@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <AppSidebar />
         <main className="w-full bg-primary-green-600">
           <TopBar />
-          <div className="p-4 h-[80vh] w-full md:w-[95%] mx-auto">
+          <div className="p-3 h-[80vh] w-full md:w-[95%] mx-auto">
             {children}
           </div>
         </main>

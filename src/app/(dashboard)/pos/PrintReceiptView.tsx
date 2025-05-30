@@ -209,7 +209,7 @@ const ReceiptPDFDocument = ({
         <Page size="A5" style={styles.page}>
           {/* Header */}
           <View style={styles.header}>
-            {business?.logo && <img src={business.logo} style={styles.logo} />}
+            {/* {business?.logo && <img src={business.logo} style={styles.logo} />} */}
             <Text style={styles.title}>PAYMENT RECEIPT</Text>
             <Text style={styles.subtitle}>TRANSACTION SUCCESSFUL</Text>
             <Text style={styles.businessInfo}>{business?.name || "STORE"}</Text>
@@ -412,7 +412,7 @@ const PrintReceiptView = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-4 p-4">
+    <div className="w-full flex flex-col items-center gap-4 p-1">
       {/* Top action bar */}
       <div className="w-full flex justify-between items-center no-print">
         <button
@@ -429,8 +429,9 @@ const PrintReceiptView = ({
           className="gap-2 bg-green-600 hover:bg-green-700"
           disabled={isPrinting}
         >
-          <PlusCircle size={18} />
-          Start New Sale
+          <PlusCircle size={11} />
+
+          <p className="text-sm"> Start New Sale</p>
         </Button>
       </div>
 
@@ -449,13 +450,13 @@ const PrintReceiptView = ({
           </p>
 
           <div className="w-full flex flex-col items-center gap-3">
-            {business?.logo && (
+            {/* {business?.logo && (
               <img
                 src={business?.logo}
                 alt={business?.name}
                 className="w-20 h-20 rounded-full object-cover border-2 border-green-100 shadow-sm"
               />
-            )}
+            )} */}
             <div className="flex flex-col items-center w-full">
               <p className="font-semibold text-base">{business?.name}</p>
               <p className="text-xs text-gray-500">
@@ -511,13 +512,13 @@ const PrintReceiptView = ({
                 <tr key={item.id} className="border-b border-gray-100">
                   <td className="py-3 px-1">
                     <div className="flex items-center gap-2">
-                      {item.image && (
+                      {/* {item.image && (
                         <img
                           src={item.image}
                           alt={item.name}
                           className="w-8 h-8 rounded-md object-cover"
                         />
-                      )}
+                      )} */}
                       <div>
                         <p className="font-medium">{item.name}</p>
                         {item.category && (

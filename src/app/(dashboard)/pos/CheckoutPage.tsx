@@ -114,10 +114,10 @@ const CheckoutPage = ({
           clearCartFunc={clearCartFunc}
         />
       ) : (
-        <div className="flex flex-col h-full bg-gray-50 rounded-lg p-4 space-y-4">
+        <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
           {/* Header Section */}
           <div className="flex flex-col space-y-3">
-            <h1 className="text-2xl font-bold text-gray-800">Checkout</h1>
+            <p className="text-2xl font-bold text-gray-800">Checkout</p>
 
             <div className="grid grid-cols-1 gap-2">
               <Button
@@ -126,7 +126,9 @@ const CheckoutPage = ({
                 onClick={() => setIsCustomerDrawerOpen(true)}
               >
                 <UserPlus size={16} />
-                <span>{customer ? customer.name : "Add Customer"}</span>
+                <span className="text-xs">
+                  {customer ? customer.name : "Add Customer"}
+                </span>
               </Button>
               {user && user?.role === "OWNER" && (
                 <Button
@@ -135,7 +137,9 @@ const CheckoutPage = ({
                   className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
                 >
                   <Users size={16} />
-                  <span>{attendant ? attendant.name : "Add Attendant"}</span>
+                  <p className="text-xs">
+                    {attendant ? attendant.name : "Add Attendant"}
+                  </p>
                 </Button>
               )}
             </div>
@@ -144,7 +148,7 @@ const CheckoutPage = ({
           {/* Cart Items Section */}
           <div className="flex flex-col flex-grow">
             <div className="flex justify-between items-center w-full mb-1">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              <h2 className="text-sm font-semibold text-gray-800 mb-3">
                 Cart Items ({cartItems.length})
               </h2>
               <Button
@@ -152,7 +156,7 @@ const CheckoutPage = ({
                 className="flex items-center justify-start border border-red-600 gap-2  "
                 onClick={clearCartFunc}
               >
-                <span className="text-red-600">Clear Cart</span>
+                <p className="text-red-600 text-xs">Clear Cart</p>
               </Button>
             </div>
 
@@ -164,8 +168,8 @@ const CheckoutPage = ({
               ) : (
                 <div className="divide-y divide-[#52b661]/10">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="p-4 flex items-start">
-                      <div className="h-16 w-16 rounded-md overflow-hidden mr-4 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
+                    <div key={item.id} className="p-1 flex items-start">
+                      <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
                         {item.image && (
                           <img
                             src={item.image}
@@ -176,17 +180,17 @@ const CheckoutPage = ({
                       </div>
 
                       <div className="flex-grow">
-                        <h3 className="font-medium text-gray-800">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">SKU: {item.sku}</p>
-                        <p className="text-sm font-semibold text-[#52b661]">
+                        <h3 className="font-sm text-gray-800">{item.name}</h3>
+                        <p className="text-[10px] text-gray-500">
+                          SKU: {item.sku}
+                        </p>
+                        <p className="text-[10px] font-semibold text-[#52b661]">
                           {formatToNaira(
                             item.selling_price || item?.amount || 0
                           )}
                         </p>
                         {item.quantity !== undefined && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-[8px] text-gray-500">
                             Available: {item.quantity}
                           </p>
                         )}
@@ -197,11 +201,11 @@ const CheckoutPage = ({
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                            className="h-8 w-8 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
                             onClick={() => decrementQuantity(item.id)}
                             disabled={(item.cartQuantity || 1) <= 1}
                           >
-                            <MinusCircle size={16} className="text-[#52b661]" />
+                            <MinusCircle size={3} className="text-[#52b661] " />
                           </Button>
 
                           <span className="w-8 text-center text-gray-700">
@@ -211,25 +215,23 @@ const CheckoutPage = ({
                           <Button
                             variant="outline"
                             size="icon"
-                            className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                            className="h-8 w-8  border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
                             onClick={() => incrementQuantity(item.id)}
                             disabled={
                               (item.cartQuantity || 1) >=
                               (item.quantity ?? Infinity)
                             }
                           >
-                            <PlusCircle size={16} className="text-[#52b661]" />
+                            <PlusCircle size={3} className="text-[#52b661]" />
                           </Button>
                         </div>
 
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-500 hover:bg-red-50"
+                        <div
+                          className="text-red-500 p-1 rounded-full cursor-pointer hover:bg-red-50"
                           onClick={() => removeFromCart(item.id)}
                         >
-                          <Trash2 size={16} />
-                        </Button>
+                          <Trash2 size={1} className="w-3 h-3" />
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -239,17 +241,19 @@ const CheckoutPage = ({
           </div>
 
           {/* Order Summary Section */}
-          <div className="bg-white rounded-lg shadow-sm p-4 border border-[#52b661]/20">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+          <div className="bg-white rounded-lg shadow-sm p-1 border border-[#52b661]/20">
+            <h2 className="text-sm font-semibold text-gray-800 mb-3">
               Order Summary
             </h2>
 
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">
+                <span className="text-gray-600 text-xs">
                   Subtotal ({cartItems.length} items)
                 </span>
-                <span className="font-medium">{formatToNaira(subtotal)}</span>
+                <span className="font-medium text-xs">
+                  {formatToNaira(subtotal)}
+                </span>
               </div>
 
               {/* <div className="flex justify-between">
@@ -260,8 +264,8 @@ const CheckoutPage = ({
               <Separator className="my-2 bg-[#52b661]/30" />
 
               <div className="flex justify-between">
-                <span className="font-bold text-lg text-gray-800">Total</span>
-                <span className="font-bold text-lg text-[#52b661]">
+                <span className="font-bold text-sm text-gray-800">Total</span>
+                <span className="font-bold text-sm text-[#52b661]">
                   {formatToNaira(total)}
                 </span>
               </div>
@@ -271,7 +275,7 @@ const CheckoutPage = ({
                 onClick={() => setShowReceipt(true)}
                 disabled={cartItems.length === 0}
               >
-                Complete Order
+                <p className="text-sm"> Complete Order</p>
               </Button>
             </div>
           </div>

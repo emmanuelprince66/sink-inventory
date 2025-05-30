@@ -9,6 +9,7 @@ import {
   ShoppingBag,
   SquarePercent,
   UsersRound,
+  WorkflowIcon,
 } from "lucide-react";
 
 export const links = [
@@ -40,6 +41,12 @@ export const links = [
     title: "Expenses",
     url: "/expenses",
     icon: DollarSign,
+    roles: ["OWNER"], // Only OWNER can access
+  },
+  {
+    title: "Campaign",
+    url: "/campaign",
+    icon: WorkflowIcon,
     roles: ["OWNER"], // Only OWNER can access
   },
   {
