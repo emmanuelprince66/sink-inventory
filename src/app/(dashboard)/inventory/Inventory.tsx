@@ -143,7 +143,7 @@ const Inventory = () => {
       <p className="text-primary-black-100">Overview</p>
 
       {InventoryDataLoading || !InventoryData ? (
-        <div className="flex gap-4 w-1/2">
+        <div className="flex gap-4 w-[80%]">
           {Array.from({ length: 4 }).map((_, index) => (
             <CustomCard key={index} className="w-full border-gray-200">
               <div className="flex flex-col gap-6 items-start">
@@ -154,7 +154,7 @@ const Inventory = () => {
           ))}
         </div>
       ) : (
-        <div className="w-1/2 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="w-[80%] grid grid-cols-2 md:grid-cols-4 gap-4">
           <CustomInventoryCard
             title={"Inventory Value"}
             amount={formatToNaira(

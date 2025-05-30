@@ -38,9 +38,7 @@ const createProductSchema = (isEditMode: boolean) => {
     date: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Expiry Date is required"),
-    supplier: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Supplier is required"),
+    supplier: isEditMode ? z.string().optional() : z.string().optional(),
     stock_quantity: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Stock Quantity is required"),
