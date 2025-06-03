@@ -8,6 +8,8 @@ export interface CustomerType {
   id: string;
   name: string;
   phone: string;
+  total_sales: number;
+  sales_count: number;
   wallet: number;
   email: string;
   profile_pic: string | null | any;

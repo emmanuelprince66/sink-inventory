@@ -168,7 +168,7 @@ const CheckoutPage = ({
               ) : (
                 <div className="divide-y divide-[#52b661]/10">
                   {cartItems.map((item) => (
-                    <div key={item.id} className="p-1 flex items-start">
+                    <div key={item.id} className="p-1 flex items-start ">
                       <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
                         {item.image && (
                           <img

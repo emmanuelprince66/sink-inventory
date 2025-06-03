@@ -381,6 +381,8 @@ const ReceiptPage = ({
           createSaleResponse={createSaleResponse}
           cart={cart}
           business={business}
+          attendant={attendant}
+          customer={customer}
           clearCartFunc={clearCartFunc}
         />
       ) : (

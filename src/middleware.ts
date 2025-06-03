@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { UserRole } from "./lib/store/types";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/forgot-password"];
+const PUBLIC_PATHS = ["/login", "/signup", "/forget-password"];
 const PROTECTED_PATHS = {
   "/inventory": ["OWNER", "ADMIN-ATTENDANT"],
   "/customers": ["OWNER", "ADMIN-ATTENDANT"],

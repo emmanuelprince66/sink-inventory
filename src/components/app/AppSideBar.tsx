@@ -15,6 +15,7 @@ import { links } from "@/constants/links";
 import { UserRole } from "@/lib/store/types";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
+import { deleteCookie } from "cookies-next";
 import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +23,14 @@ import { usePathname } from "next/navigation";
 
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
+
+  const handleLogOut = () => {
+    deleteCookie("accessToken");
+    deleteCookie("userRole");
+    deleteCookie("refreshToken");
+    localStorage.clear();
+    logout();
+  };
   const pathname = usePathname();
   const { hasPermission } = useUserRole();
 
@@ -82,7 +91,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenuButton
-          onClick={() => logout()}
+          onClick={handleLogOut}
           disabled={isPending}
           className={cn(
             "text-primary-red-100 cursor-pointer py-1 flex items-center font-[600]",

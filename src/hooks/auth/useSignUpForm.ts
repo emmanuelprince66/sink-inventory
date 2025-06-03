@@ -1,13 +1,13 @@
 // src/hooks/auth/useSignUpForm.ts
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { useSignUpMutation } from "@/api/auth/signup-user";
 import { useVerifyOtpMutation } from "@/api/auth/verify-otp";
-import { isValidPhoneNumber } from "react-phone-number-input";
-import { useToast } from "../toast/useToast";
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { z } from "zod";
+import { useToast } from "../toast/useToast";
 
 // Define form schema
 const formSchema = z
@@ -29,12 +29,12 @@ const formSchema = z
     }),
     password: z
       .string()
-      .min(6, { message: "Password must be at least 6 characters" })
-      .max(50, { message: "Password must be less than 50 characters" })
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, {
-        message:
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-      }),
+      .min(8, { message: "Password must be at least 8 characters" })
+      .max(50, { message: "Password must be less than 50 characters" }),
+    // .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/, {
+    //   message:
+    //     "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+    // }),
     confirmPassword: z.string().min(8, {
       message: "Please confirm your password.",
     }),

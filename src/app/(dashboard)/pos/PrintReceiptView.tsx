@@ -44,88 +44,85 @@ Font.register({
   ],
 });
 
-// PDF Styles - enhanced for better visual hierarchy
+// Updated PDF Styles to match the print receipt exactly
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    padding: 8,
     fontSize: 12,
     fontFamily: "Roboto",
     backgroundColor: "#ffffff",
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: "center",
-  },
-  logo: {
-    width: 60,
-    height: 60,
-    alignSelf: "center",
-    marginBottom: 10,
-    borderRadius: 30,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 8,
     color: "#16a34a",
   },
   subtitle: {
     color: "#16a34a",
-    marginBottom: 8,
+    marginBottom: 12,
     fontWeight: "bold",
+    fontSize: 14,
   },
-  businessInfo: {
+  businessName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  businessAddress: {
     fontSize: 10,
-    marginBottom: 15,
+    color: "#6b7280",
+    marginBottom: 4,
   },
-  businessDetails: {
+  contactInfo: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
+  },
+  contactText: {
     fontSize: 10,
-    marginTop: 3,
-    marginBottom: 5,
-    color: "#555555",
+    color: "#6b7280",
   },
-  dateBox: {
-    backgroundColor: "#f7f7f7",
-    padding: 8,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  dateInfo: {
-    fontSize: 10,
-  },
-  receiptNumber: {
-    fontSize: 10,
-    marginTop: 5,
-    fontStyle: "italic",
+  separator: {
+    marginHorizontal: 8,
+    color: "#6b7280",
   },
   table: {
     width: "100%",
-    marginVertical: 10,
+    marginVertical: 16,
   },
   tableHeader: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#16a34a",
-    paddingBottom: 5,
-    marginBottom: 8,
     backgroundColor: "#f0fdf4",
-    paddingTop: 5,
-    paddingHorizontal: 2,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  tableHeaderText: {
+    fontWeight: "bold",
+    fontSize: 12,
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    paddingVertical: 8,
+    borderBottomColor: "#f3f4f6",
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
   cellItem: {
     flex: 3,
-    paddingRight: 5,
+    paddingRight: 4,
   },
-  cellCategory: {
-    fontSize: 9,
-    color: "#666666",
-    marginTop: 2,
+  itemName: {
+    fontWeight: "bold",
+    fontSize: 12,
   },
   cellQty: {
     flex: 1,
@@ -134,67 +131,94 @@ const styles = StyleSheet.create({
   cellPrice: {
     flex: 2,
     textAlign: "right",
-    paddingRight: 5,
+    paddingRight: 4,
   },
   cellTotal: {
     flex: 2,
     textAlign: "right",
+    fontWeight: "bold",
   },
-  totalRow: {
+  totalSection: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 15,
-    paddingTop: 8,
-    borderTopWidth: 1,
+    justifyContent: "space-between",
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 2,
     borderTopColor: "#16a34a",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  totalLabel: {
+    fontWeight: "bold",
+    fontSize: 16,
   },
   totalAmount: {
     fontWeight: "bold",
+    fontSize: 16,
+    color: "#16a34a",
+  },
+  transactionDetails: {
+    backgroundColor: "#f9fafb",
+    borderRadius: 6,
+    padding: 12,
+    marginVertical: 16,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  detailLabel: {
     fontSize: 14,
+    color: "#6b7280",
+  },
+  detailValue: {
+    fontSize: 14,
+    fontWeight: "bold",
   },
   paymentMethodBox: {
-    marginTop: 20,
-    padding: 10,
+    marginTop: 16,
+    padding: 12,
     backgroundColor: "#f0fdf4",
-    borderRadius: 5,
+    borderRadius: 6,
   },
   paymentMethodTitle: {
     fontSize: 10,
-    color: "#666666",
+    color: "#6b7280",
+    marginBottom: 3,
   },
   paymentMethodValue: {
     fontSize: 12,
     fontWeight: "bold",
-    marginTop: 3,
     color: "#16a34a",
   },
   footer: {
-    marginTop: 40,
+    marginTop: 24,
     textAlign: "center",
-    fontSize: 10,
-    color: "#666",
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#eaeaea",
-    paddingTop: 15,
+    borderTopColor: "#e5e7eb",
   },
   thankyou: {
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 4,
   },
   poweredBy: {
-    marginTop: 10,
-    fontSize: 8,
-    color: "#888888",
+    marginTop: 4,
+    fontSize: 10,
+    color: "#9ca3af",
   },
 });
 
-// PDF Document Component
+// Updated PDF Document Component
 const ReceiptPDFDocument = ({
   cart,
   business,
   receiptNumber,
   createSaleResponse,
+  customer,
+  attendant,
   total,
 }: {
   cart: any[];
@@ -202,6 +226,8 @@ const ReceiptPDFDocument = ({
   receiptNumber: string;
   createSaleResponse: any;
   total: number;
+  customer: any;
+  attendant: any;
 }) => {
   try {
     return (
@@ -209,67 +235,58 @@ const ReceiptPDFDocument = ({
         <Page size="A5" style={styles.page}>
           {/* Header */}
           <View style={styles.header}>
-            {/* {business?.logo && <img src={business.logo} style={styles.logo} />} */}
             <Text style={styles.title}>PAYMENT RECEIPT</Text>
             <Text style={styles.subtitle}>TRANSACTION SUCCESSFUL</Text>
-            <Text style={styles.businessInfo}>{business?.name || "STORE"}</Text>
-            <Text style={styles.businessDetails}>
-              {business?.street && `${business.street}, `}
-              {business?.city && `${business.city}, `}
-              {business?.state || ""}
-            </Text>
-            {business?.owner?.phone && (
-              <Text style={styles.businessDetails}>
-                Phone: {business.owner.phone}
-              </Text>
-            )}
-            {business?.owner?.email && (
-              <Text style={styles.businessDetails}>
-                Email: {business.owner.email}
-              </Text>
-            )}
-          </View>
 
-          {/* Date & Receipt Number */}
-          <View style={styles.dateBox}>
-            <Text style={styles.dateInfo}>
-              Date:{" "}
-              {format(
-                new Date(createSaleResponse?.data?.created_at || Date.now()),
-                "MMMM d, yyyy, h:mm a"
-              )}
+            <Text style={styles.businessName}>{business?.name || "STORE"}</Text>
+            <Text style={styles.businessAddress}>
+              {business?.street && `${business.street}, `}
+              {business?.city}, {business?.state}, {business?.country}
             </Text>
-            <Text style={styles.receiptNumber}>Receipt #: {receiptNumber}</Text>
+
+            <View style={styles.contactInfo}>
+              {business?.owner?.email && (
+                <Text style={styles.contactText}>{business.owner.email}</Text>
+              )}
+              {business?.owner?.email && business?.owner?.phone && (
+                <Text style={styles.separator}>|</Text>
+              )}
+              {business?.owner?.phone && (
+                <Text style={styles.contactText}>{business.owner.phone}</Text>
+              )}
+            </View>
           </View>
 
           {/* Items Table */}
           <View style={styles.table}>
             {/* Table Header */}
             <View style={styles.tableHeader}>
-              <Text style={styles.cellItem}>ITEM</Text>
-              <Text style={styles.cellQty}>QTY</Text>
-              <Text style={styles.cellPrice}>PRICE</Text>
-              <Text style={styles.cellTotal}>TOTAL</Text>
+              <Text style={[styles.cellItem, styles.tableHeaderText]}>
+                ITEM
+              </Text>
+              <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text>
+              <Text style={[styles.cellPrice, styles.tableHeaderText]}>
+                PRICE
+              </Text>
+              <Text style={[styles.cellTotal, styles.tableHeaderText]}>
+                TOTAL
+              </Text>
             </View>
 
             {/* Table Rows */}
             {cart.map((item) => (
               <View key={item.id} style={styles.tableRow}>
                 <View style={styles.cellItem}>
-                  <Text>{item.name}</Text>
-                  {item.category && (
-                    <Text style={styles.cellCategory}>{item.category}</Text>
-                  )}
+                  <Text style={styles.itemName}>{item.name}</Text>
                 </View>
                 <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                 <Text style={styles.cellPrice}>
-                  {business?.currency || "₦"}{" "}
-                  {item.selling_price?.toLocaleString() || "0"}
+                  {formatToNaira(item.selling_price || item.amount) || "₦0"}
                 </Text>
                 <Text style={styles.cellTotal}>
-                  {business?.currency || "₦"}{" "}
                   {(
-                    (item.selling_price || 0) * (item.cartQuantity || 1)
+                    (item.selling_price || item.amount || 0) *
+                    (item.cartQuantity || 1)
                   ).toLocaleString()}
                 </Text>
               </View>
@@ -277,11 +294,38 @@ const ReceiptPDFDocument = ({
           </View>
 
           {/* Total */}
-          <View style={styles.totalRow}>
-            <Text style={{ fontWeight: "bold", marginRight: 10 }}>TOTAL:</Text>
-            <Text style={styles.totalAmount}>
-              {business?.currency || "₦"} {total.toLocaleString()}
-            </Text>
+          <View style={styles.totalSection}>
+            <Text style={styles.totalLabel}>TOTAL:</Text>
+            <Text style={styles.totalAmount}>{formatToNaira(total)}</Text>
+          </View>
+
+          {/* Transaction Details */}
+          <View style={styles.transactionDetails}>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Date:</Text>
+              <Text style={styles.detailValue}>
+                {format(
+                  new Date(createSaleResponse?.data?.created_at || Date.now()),
+                  "MMMM d, yyyy, h:mm a"
+                )}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Receipt No:</Text>
+              <Text style={styles.detailValue}>{receiptNumber}</Text>
+            </View>
+            {customer && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Customer:</Text>
+                <Text style={styles.detailValue}>{customer?.name}</Text>
+              </View>
+            )}
+            {attendant && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Attendant:</Text>
+                <Text style={styles.detailValue}>{attendant?.name}</Text>
+              </View>
+            )}
           </View>
 
           {/* Payment Method */}
@@ -296,11 +340,7 @@ const ReceiptPDFDocument = ({
 
           {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.thankyou}>THANK YOU FOR YOUR BUSINESS!</Text>
-            <Text style={styles.businessDetails}>
-              {business?.street && `${business.street}, `}
-              {business?.city || ""}
-            </Text>
+            <Text style={styles.thankyou}>THANK YOU!</Text>
             <Text style={styles.poweredBy}>Powered by Sync360</Text>
           </View>
         </Page>
@@ -324,17 +364,24 @@ const PrintReceiptView = ({
   cart,
   clearCartFunc,
   createSaleResponse,
+  customer,
+  attendant,
   business,
 }: {
   setShowReceipt: (show: boolean) => void;
   setShowPrintReceiptView: (show: boolean) => void;
   clearCartFunc: any;
   createSaleResponse: any;
+  customer: any;
+  attendant: any;
   cart: any[];
   business: any;
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+
+  console.log("customer", customer);
+  console.log("attendant", attendant);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -376,16 +423,21 @@ const PrintReceiptView = ({
           body { padding: 0; margin: 0; font-family: Arial, sans-serif; }
           .receipt-container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; }
           table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-          th { padding: 8px 4px; font-size: 14px; border-bottom: 2px solid #16a34a; background-color: #f0fdf4; }
-          td { padding: 10px 4px; font-size: 14px; border-bottom: 1px solid #e5e7eb; }
+          th { padding: 8px 4px; font-size: 12px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
+          td { padding: 12px 4px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
           .text-green-600 { color: #16a34a !important; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
-          img { max-height: 40px; max-width: 40px; object-fit: contain; }
-          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
-          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 20px; }
-          .payment-method { background-color: #f0fdf4; padding: 10px; border-radius: 4px; margin: 10px 0; }
-          .total-row { font-weight: bold; font-size: 16px; border-top: 2px solid #16a34a; padding-top: 10px; }
+          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
+          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 30px; }
+          .transaction-details { background-color: #f9fafb; padding: 12px; border-radius: 6px; margin: 15px 0; }
+          .payment-method { background-color: #f0fdf4; padding: 12px; border-radius: 6px; margin: 15px 0; }
+          .total-row { font-weight: bold; font-size: 14px; border-top: 2px solid #16a34a; padding-top: 12px; margin-top: 15px; }
+          .item-name { font-weight: bold; }
+          .detail-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          .detail-label { color: #6b7280; font-size: 10px; }
+          .detail-value { font-weight: bold; font-size: 10px; }
+          .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
         `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
@@ -430,15 +482,14 @@ const PrintReceiptView = ({
           disabled={isPrinting}
         >
           <PlusCircle size={11} />
-
           <p className="text-sm"> Start New Sale</p>
         </Button>
       </div>
 
-      {/* Receipt content */}
+      {/* Receipt content - Updated to match desired format */}
       <div
         ref={receiptRef}
-        className="receipt-container w-full max-w-md bg-white p-6 rounded-lg shadow-md border border-gray-200"
+        className="receipt-container w-full max-w-md bg-white p-1 rounded-lg shadow-md border border-gray-200"
       >
         {/* Receipt header */}
         <div className="receipt-header text-center mb-4 pb-3 border-b border-gray-200">
@@ -450,48 +501,28 @@ const PrintReceiptView = ({
           </p>
 
           <div className="w-full flex flex-col items-center gap-3">
-            {/* {business?.logo && (
-              <img
-                src={business?.logo}
-                alt={business?.name}
-                className="w-20 h-20 rounded-full object-cover border-2 border-green-100 shadow-sm"
-              />
-            )} */}
             <div className="flex flex-col items-center w-full">
               <p className="font-semibold text-base">{business?.name}</p>
               <p className="text-xs text-gray-500">
                 {business?.street && `${business.street}, `}
                 {business?.city}, {business?.state}, {business?.country}
               </p>
-              {business?.owner?.phone && (
-                <p className="text-xs text-gray-500">
-                  Phone: {business?.owner?.phone}
-                </p>
-              )}
-              {business?.owner?.email && (
-                <p className="text-xs text-gray-500">
-                  Email: {business?.owner?.email}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* Transaction details */}
-        <div className="bg-gray-50 rounded-md p-3 mb-4">
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Date:</span>
-              <span className="font-medium">
-                {format(
-                  new Date(createSaleResponse?.data?.created_at || Date.now()),
-                  "MMMM d, yyyy, h:mm a"
+              <div className="contact-info flex items-center gap-2 mt-1">
+                {business?.owner?.email && (
+                  <p className="text-xs text-gray-500">
+                    {business?.owner?.email}
+                  </p>
                 )}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Receipt No:</span>
-              <span className="font-medium">{receiptNumber}</span>
+                {business?.owner?.email && business?.owner?.phone && (
+                  <p className="text-gray-500">|</p>
+                )}
+                {business?.owner?.phone && (
+                  <p className="text-xs text-gray-500">
+                    {business?.owner?.phone}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -512,20 +543,8 @@ const PrintReceiptView = ({
                 <tr key={item.id} className="border-b border-gray-100">
                   <td className="py-3 px-1">
                     <div className="flex items-center gap-2">
-                      {/* {item.image && (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-8 h-8 rounded-md object-cover"
-                        />
-                      )} */}
                       <div>
-                        <p className="font-medium">{item.name}</p>
-                        {item.category && (
-                          <p className="text-gray-400 text-xs">
-                            {item.category}
-                          </p>
-                        )}
+                        <p className="item-name font-medium">{item.name}</p>
                       </div>
                     </div>
                   </td>
@@ -535,7 +554,7 @@ const PrintReceiptView = ({
                   <td className="text-right py-3 px-1">
                     {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
-                      "0"}
+                      "₦0"}
                   </td>
                   <td className="text-right py-3 px-1 font-medium">
                     {(
@@ -550,13 +569,48 @@ const PrintReceiptView = ({
         </div>
 
         {/* Payment summary */}
-        <div className="flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
+        <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
           <span>TOTAL:</span>
           <span className="text-green-600">{formatToNaira(total)}</span>
         </div>
 
+        {/* Transaction details */}
+        <div className="transaction-details bg-gray-50 rounded-md p-3 my-4">
+          <div className="space-y-1 text-sm">
+            <div className="detail-row flex justify-between">
+              <span className="detail-label text-gray-500">Date:</span>
+              <span className="detail-value font-medium">
+                {format(
+                  new Date(createSaleResponse?.data?.created_at || Date.now()),
+                  "MMMM d, yyyy, h:mm a"
+                )}
+              </span>
+            </div>
+            <div className="detail-row flex justify-between">
+              <span className="detail-label text-gray-500">Receipt No:</span>
+              <span className="detail-value font-medium">{receiptNumber}</span>
+            </div>
+            {customer && (
+              <div className="detail-row flex justify-between">
+                <span className="detail-label text-gray-500">Customer:</span>
+                <span className="detail-value font-medium">
+                  {customer?.name}
+                </span>
+              </div>
+            )}
+            {attendant && (
+              <div className="detail-row flex justify-between">
+                <span className="detail-label text-gray-500">Attendant:</span>
+                <span className="detail-value font-medium">
+                  {attendant?.name}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Payment method */}
-        <div className="mt-4 bg-green-50 p-3 rounded-md">
+        <div className="payment-method mt-4 bg-green-50 p-3 rounded-md">
           <p className="text-xs text-gray-500">PAYMENT METHOD:</p>
           <p className="capitalize font-semibold text-green-600">
             {(createSaleResponse?.data?.method || "cash")
@@ -566,7 +620,7 @@ const PrintReceiptView = ({
         </div>
 
         {/* Footer */}
-        <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+        <div className="receipt-footer mt-6 pt-4 border-t border-gray-200 text-center">
           <p className="font-bold text-base">THANK YOU!</p>
           <p className="mt-1 text-xs text-gray-400">Powered by Sync360</p>
         </div>
@@ -598,6 +652,8 @@ const PrintReceiptView = ({
               receiptNumber={receiptNumber}
               createSaleResponse={createSaleResponse}
               total={total}
+              customer={customer}
+              attendant={attendant}
             />
           }
           fileName={`receipt-${receiptNumber}.pdf`}

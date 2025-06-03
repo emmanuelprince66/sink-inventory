@@ -4,6 +4,7 @@ import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import { Bank } from "./bank/Bank";
 import ChangePassword from "./change-password/ChangePassword";
+import Subscription from "./premuim/Subscription";
 import VeiwStaff from "./staff/VeiwStaff";
 
 const Settings = () => {
@@ -39,12 +40,12 @@ const Settings = () => {
           onValueChange={(value) => setActiveTab(value as typeof activeTab)}
           className="w-full"
         >
-          <TabsList className="w-[74%] flex-wrap h-auto">
+          <TabsList className="w-full   flex-wrap h-auto">
             {SettingsOptionsTab.map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-black font-medium transition-colors ${
+                className={`px-4 py-2 rounded-md h-14  text-xs hover:text-black font-medium transition-colors ${
                   activeTab === tab
                     ? "bg-primary-green-300 text-white"
                     : "bg-primary-green-200 text-primary-black-100"
@@ -71,11 +72,7 @@ const Settings = () => {
 
           {user && user?.role === "OWNER" && (
             <TabsContent value="Premium">
-              <div className="p-4">
-                <h2 className="text-xl font-semibold mb-4">Premium Features</h2>
-                <p>Upgrade to access premium features.</p>
-                {/* Add premium features components here */}
-              </div>
+              <Subscription />
             </TabsContent>
           )}
 

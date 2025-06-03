@@ -62,7 +62,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">-</p>
+          <p className="text-sm text-gray-500">{customer?.total_sales}</p>
         </div>
       );
     },
@@ -74,7 +74,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">-</p>
+          <p className="text-sm text-gray-500">{customer?.sales_count}</p>
         </div>
       );
     },

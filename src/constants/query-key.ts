@@ -11,6 +11,13 @@ export const queryKey = {
     verifyOtp: "verifyOtp",
     resetInvitePassword: "reset-invite-Password",
     changePassword: "change-password",
+    forgetPassword: "forget-password",
+    verifyReset: "verify-reset",
+    resetPassword: "reset-password",
+  },
+  premium: {
+    getAllSubscriptions: "get-all-subscriptions",
+    getPremiumDetails: "get-premium-details",
   },
   attendants: {
     getAllAttendants: "get-all-attendants",

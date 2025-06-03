@@ -91,12 +91,15 @@ const Login = () => {
             </Form>
           </div>
 
-          <div className="w-full md:w-1/4 mx-auto mt-3 flex justify-between items-center">
+          <div className="w-full md:w-[60%] mx-auto  justify-center mt-3 flex gap-4 items-center">
             <p className="text-[14px]">Don't have an account yet?</p>
             <Link href="/signup">
               <p className="text-[14px] text-blue-500">Sign Up</p>
             </Link>
           </div>
+          <Link href="/forget-password">
+            <p className="text-[14px] text-red-700 mt-2">Forget Password</p>
+          </Link>
         </div>
       ) : (
         <ResetPassword setShowLogin={setShowLogin} />
