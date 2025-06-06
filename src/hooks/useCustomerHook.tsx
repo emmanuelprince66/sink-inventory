@@ -17,10 +17,7 @@ import { useDebounce } from "./useDebounce";
 const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
   phone: z.string().min(1, "Phone number is required"),
-  email: z
-    .string()
-    .email({ message: "Please enter a valid email address" })
-    .min(1, "Email address is required"),
+  email: z.string().optional(),
 });
 
 export type CustomerFormValues = z.infer<typeof CustomerSchema>;

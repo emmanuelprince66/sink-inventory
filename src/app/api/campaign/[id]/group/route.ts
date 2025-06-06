@@ -19,7 +19,7 @@ export async function GET(
       { status: 401 }
     );
   }
-  const apiUrl = new URL(`${BaseUrl}customer/single/${id}/`);
+  const apiUrl = new URL(`${BaseUrl}campaign/group/${id}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
@@ -34,7 +34,7 @@ export async function GET(
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.message || "Failed to fetch customer data" },
+        { error: errorData.message || "Failed to fetch campaign group data" },
         { status: response.status }
       );
     }
@@ -43,10 +43,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data,
-      message: "Customer data fetched successfully",
+      message: "campaign group data fetched successfully",
     });
   } catch (error) {
-    console.error("Error fetching customer data:", error);
+    console.error("Error fetching campaign group data:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

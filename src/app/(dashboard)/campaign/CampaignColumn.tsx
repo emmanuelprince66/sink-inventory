@@ -8,22 +8,21 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 
 import { CustomModal } from "@/components/app/CustomModal";
-import { formatToNaira } from "@/utils/formatMoney";
 import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
-import DeleteCustomer from "./DeleteCustomer";
-import { CustomerType } from "./types";
-export const columns: ColumnDef<CustomerType>[] = [
+import DeleteCampaign from "./DeleteCampaign";
+import EditCampaign from "./EditCampaign";
+export const columns: ColumnDef<any>[] = [
   //   {
   //     accessorKey: "logo",
   //     header: "",
   //     cell: ({ row }) => {
-  //       const customer = row.original;
+  //       const campaign = row.original;
   //       return (
   //         <div className="relative h-10 w-10 rounded-md overflow-hidden">
   //           <Image
-  //             src={customer.profile_pic}
-  //             alt={`${customer.name} logo`}
+  //             src={campaign.profile_pic}
+  //             alt={`${campaign.name} logo`}
   //             fill
   //             className="object-cover"
   //           />
@@ -35,67 +34,62 @@ export const columns: ColumnDef<CustomerType>[] = [
     accessorKey: "name",
     header: "Name",
     cell: ({ row }) => {
-      const customer = row.original;
+      const campaign = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-gray-500">{campaign?.name}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "phone",
-    header: "Phone Number",
+    accessorKey: "title",
+    header: "Title",
     cell: ({ row }) => {
-      const customer = row.original;
+      const campaign = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-gray-500">{campaign?.title}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "amount_spent",
-    header: "Total Amount Spent",
+    accessorKey: "channel",
+    header: "Channel",
     cell: ({ row }) => {
-      const customer = row.original;
+      const campaign = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer?.total_sales}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "total_trx",
-    header: "Total Transactions",
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer?.sales_count}</p>
+          <p className="text-sm text-gray-500">{campaign.channel}</p>
         </div>
       );
     },
   },
 
   {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
+    accessorKey: "user_count",
+    header: "Total User",
     cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
+      const campaign = row.original;
+      return (
+        <div className="font-medium">
+          <p className="text-sm text-gray-500">{campaign?.user_counts}</p>
+        </div>
+      );
+    },
+  },
+
+  {
+    accessorKey: "message",
+    header: "Message",
+    cell: ({ row }) => {
+      const campaign = row.original;
+      const isNegative = campaign.wallet < 0;
 
       return (
         <div className="font-medium">
-          <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
-            }`}
-          >
-            {formatToNaira(customer.wallet)}
-          </p>
+          <p className="text-sm text-gray-500">{campaign?.message}</p>
         </div>
       );
     },
@@ -105,7 +99,9 @@ export const columns: ColumnDef<CustomerType>[] = [
     header: "Action",
     cell: ({ row }) => {
       const router = useRouter();
-      const [deleteCustomerModal, setDeleteCustomerModal] = useState(false);
+      const [deleteCampaignModal, setDeleteCampaignModal] = useState(false);
+      const [editCampaignModal, setEditCampaignModal] = useState(false);
+
       return (
         <>
           <DropdownMenu>
@@ -120,30 +116,40 @@ export const columns: ColumnDef<CustomerType>[] = [
               className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
             >
               <DropdownMenuItem
-                onClick={() => router.push(`/customers/${row.original.id}`)}
+                onClick={() => setEditCampaignModal(true)}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
-                View more
+                Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                disabled={row.original.wallet < 0}
-                onClick={() => setDeleteCustomerModal(true)}
+                onClick={() => setDeleteCampaignModal(true)}
                 className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
               >
-                <span className=" text-red-500">Delete Customer</span>
+                <span className=" text-red-500">Delete campaign</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <CustomModal
-            isOpen={deleteCustomerModal}
-            onClose={() => setDeleteCustomerModal(false)}
+            isOpen={editCampaignModal}
+            onClose={() => setEditCampaignModal(false)}
             trigger={false}
-            title="Delete Customer"
+            title="Edit Campaign"
           >
-            <DeleteCustomer
-              closeModal={() => setDeleteCustomerModal(false)}
-              customer={row.original}
+            <EditCampaign
+              editData={row.original}
+              closeModal={() => setEditCampaignModal(false)}
+            />
+          </CustomModal>
+          <CustomModal
+            isOpen={deleteCampaignModal}
+            onClose={() => setDeleteCampaignModal(false)}
+            trigger={false}
+            title="Delete Campaign"
+          >
+            <DeleteCampaign
+              id={row.original?.id}
+              closeModal={() => setDeleteCampaignModal(false)}
             />
           </CustomModal>
         </>

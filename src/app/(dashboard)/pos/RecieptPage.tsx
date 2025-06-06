@@ -23,6 +23,7 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AddBankForm } from "../settings/bank/AddBankForm";
 import PrintReceiptView from "./PrintReceiptView";
 
 const ReceiptPage = ({
@@ -73,6 +74,9 @@ const ReceiptPage = ({
 
   // console.log("sales response", createSaleResponse);
   const [remainingAmount, setRemainingAmount] = useState(0);
+  const [openAddBankModal, setOpenAddBankModal] = useState(false);
+  const openAddBankModalFunc = () => setOpenAddBankModal(true);
+  const closeAddBankModal = () => setOpenAddBankModal(false);
 
   const [sureModal, setSureModal] = useState(false);
 
@@ -300,7 +304,7 @@ const ReceiptPage = ({
         products: cart.map((item: any) => ({
           id: item.id,
           quantity: item.cartQuantity || 1,
-          unit_price: item.selling_price || 0,
+          type: item.type,
         })),
         ...(customer?.id && { customer: customer.id }),
         ...(attendant?.id && { attendant: attendant.id }),
@@ -621,18 +625,35 @@ const ReceiptPage = ({
               {paymentMethod === "BANK" && (
                 <div className="space-y-2 mt-2">
                   <p className="text-xs">Select Bank</p>
-                  <Select value={selectedBank} onValueChange={setSelectedBank}>
-                    <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                      <SelectValue placeholder="Select bank" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border border-gray-200">
-                      {BankData?.data?.map((bank: any) => (
-                        <SelectItem key={bank.id} value={bank.id}>
-                          {bank.bank_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {BankData?.data?.length > 0 ? (
+                    <Select
+                      value={selectedBank}
+                      onValueChange={setSelectedBank}
+                    >
+                      <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                        <SelectValue placeholder="Select bank" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border border-gray-200">
+                        {BankData.data.map((bank: any) => (
+                          <SelectItem key={bank.id} value={bank.id}>
+                            {bank.bank_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                      <p className="text-sm text-gray-500 mb-3 text-center">
+                        You haven't added any bank accounts yet.
+                      </p>
+                      <button
+                        onClick={openAddBankModalFunc}
+                        className="px-4 py-2 cursor-pointer bg-primary-green-100 text-white rounded-md hover:bg-primary-green-300 transition-colors text-sm"
+                      >
+                        Add Bank
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -825,31 +846,46 @@ const ReceiptPage = ({
                 </div>
 
                 {/* Conditional fields for split payment */}
+                {/* Conditional fields for split payment */}
                 {tempSplitPayment.method === "BANK" && (
                   <div className="space-y-2 mt-2">
                     <p className="text-xs">Select Bank</p>
-                    <Select
-                      value={tempSplitPayment.bank}
-                      onValueChange={(value) => {
-                        setSelectedBankForSplitPayment(value);
-
-                        setTempSplitPayment({
-                          ...tempSplitPayment,
-                          bank: value,
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-full bg-white border border-primary-green-300">
-                        <SelectValue placeholder="Select bank" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border border-gray-200">
-                        {BankData?.data?.map((bank: any) => (
-                          <SelectItem key={bank.id} value={bank.id}>
-                            {bank.bank_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {BankData?.data?.length > 0 ? (
+                      <Select
+                        value={tempSplitPayment.bank}
+                        onValueChange={(value) => {
+                          setSelectedBankForSplitPayment(value);
+                          setTempSplitPayment({
+                            ...tempSplitPayment,
+                            bank: value,
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="w-full bg-white border border-primary-green-300">
+                          <SelectValue placeholder="Select bank" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border border-gray-200">
+                          {BankData.data.map((bank: any) => (
+                            <SelectItem key={bank.id} value={bank.id}>
+                              {bank.bank_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                        <p className="text-sm text-gray-500 mb-3 text-center">
+                          No bank accounts available. Please add a bank account
+                          first.
+                        </p>
+                        <button
+                          onClick={openAddBankModalFunc}
+                          className="px-4 py-2 cursor-pointer bg-primary-green-100 text-white rounded-md hover:bg-primary-green-300 transition-colors text-sm"
+                        >
+                          Add Bank
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -982,6 +1018,15 @@ const ReceiptPage = ({
                 </Button>
               </div>
             </div>
+          </CustomModal>
+
+          <CustomModal
+            isOpen={openAddBankModal} // FIXED: Removed the negation
+            onClose={closeAddBankModal}
+            trigger={false}
+            title="Add Bank"
+          >
+            <AddBankForm closeModal={closeAddBankModal} />
           </CustomModal>
         </div>
       )}

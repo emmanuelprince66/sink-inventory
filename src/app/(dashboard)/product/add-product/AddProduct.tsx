@@ -38,6 +38,7 @@ const AddProduct = () => {
     unitTypeOptions,
     addProductPending,
     SupplierData,
+    StatusTypeOptions,
     SupplierLoading,
     paymentMethodOptions,
     CategoriesDataLoading,
@@ -327,11 +328,29 @@ const AddProduct = () => {
             control={form.control}
             name="stock_status"
             render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Stock Status</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter Stock Status...." {...field} />
-                </FormControl>
+              <FormItem className="flex-1 w-full bg-white">
+                <FormLabel>Status</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full border border-green-300">
+                      <SelectValue placeholder="Select a payment method" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    {StatusTypeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -53,10 +53,16 @@ export const useSalesColumns = () => {
             header: "Profit",
             cell: ({ row }: { row: { original: SalesDataItem } }) => {
               const product = row.original;
+              const profit = product.profit;
+              const isPositive = profit >= 0;
               return (
                 <div className="font-medium">
-                  <p className="text-sm text-gray-500">
-                    {formatToNaira(product.profit)}
+                  <p
+                    className={`text-sm ${
+                      isPositive ? "text-green-500" : "text-red-500"
+                    }`}
+                  >
+                    {formatToNaira(profit)}
                   </p>
                 </div>
               );

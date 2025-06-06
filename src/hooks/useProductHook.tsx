@@ -35,9 +35,7 @@ const createProductSchema = (isEditMode: boolean) => {
     category: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Category is required"),
-    date: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Expiry Date is required"),
+    date: z.string().optional(),
     supplier: isEditMode ? z.string().optional() : z.string().optional(),
     stock_quantity: isEditMode
       ? z.string().optional()
@@ -60,15 +58,9 @@ const createProductSchema = (isEditMode: boolean) => {
     payment_method: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Payment Method is required"),
-    discount_value: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Discount Value is required"),
-    type: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Type is required"),
-    percentage_discount: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Percentage Discount is required"),
+    discount_value: z.string().optional(),
+    type: z.string().optional(),
+    percentage_discount: z.string().optional(),
     due_date: z.string().optional(),
     amount_paid: z.string().optional(),
   });
@@ -258,14 +250,14 @@ export const useProductHook = ({ id }: { id?: string }) => {
     );
     appendIfNotEmpty("supplier_id", values.supplier);
     appendIfNotEmpty("quantity", values.stock_quantity);
-    appendIfNotEmpty("low_stock_tresh", values.low_stock_tresh);
-    appendIfNotEmpty("stock_status", values.stock_status);
-    appendIfNotEmpty("product_unit", values.product_unit);
+    appendIfNotEmpty("low_stock_threshold", values.low_stock_tresh);
+    appendIfNotEmpty("status", values.stock_status);
+    appendIfNotEmpty("unit", values.product_unit);
     appendIfNotEmpty("cost_price", values.cost_price);
     appendIfNotEmpty("selling_price", values.selling_price);
     appendIfNotEmpty("payment_method", values.payment_method);
-    appendIfNotEmpty("discount_value", values.discount_value);
-    appendIfNotEmpty("type", values.type);
+    appendIfNotEmpty("discount", values.discount_value);
+    appendIfNotEmpty("discount_type", values.type);
     appendIfNotEmpty("percentage_discount", values.percentage_discount);
 
     // Payment-specific fields
@@ -298,13 +290,13 @@ export const useProductHook = ({ id }: { id?: string }) => {
           : "",
         supplier_id: values.supplier || "",
         quantity: values.stock_quantity || "",
-        low_stock_tresh: values.low_stock_tresh || "",
-        stock_status: values.stock_status || "",
-        product_unit: values.product_unit || "",
+        low_stock_threshold: values.low_stock_tresh || "",
+        status: values.stock_status || "",
+        unit: values.product_unit || "",
         cost_price: values.cost_price || "",
         selling_price: values.selling_price || "",
         payment_method: values.payment_method || "",
-        discount_value: values.discount_value || "",
+        discount_type: values.discount_value || "",
         type: values.type || "",
         percentage_discount: values.percentage_discount || "",
       };
@@ -351,6 +343,11 @@ export const useProductHook = ({ id }: { id?: string }) => {
     { label: "Rolls", value: "Rolls" },
     { label: "Pairs", value: "Pairs" },
   ];
+  const StatusTypeOptions = [
+    { label: "IN-STOCK", value: "IN-STOCK" },
+    { label: "LOW", value: "LOW" },
+    { label: "OUT-OF-STOCK", value: "OUT-OF-STOCK" },
+  ];
 
   const paymentMethodOptions = [
     { label: "Full Payment", value: "FULL" },
@@ -371,5 +368,6 @@ export const useProductHook = ({ id }: { id?: string }) => {
     SupplierData,
     SupplierLoading,
     CategoriesDataLoading,
+    StatusTypeOptions,
   };
 };

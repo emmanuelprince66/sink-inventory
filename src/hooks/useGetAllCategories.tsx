@@ -26,7 +26,6 @@ export const useGetAllCategories = ({
   type?: string;
   closeModal?: any;
 }) => {
-  console.log("categoryObj", categoryObj);
   const business_id = useBusinessStore((state) => state.business_id);
 
   const {
@@ -93,7 +92,6 @@ export const useGetAllCategories = ({
       },
     });
 
-  console.log("ExpensesCategoriesData", ExpensesCategoriesData);
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(CategorySchema),
     defaultValues: {

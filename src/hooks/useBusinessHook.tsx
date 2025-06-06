@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { useCreateBusinessMutation } from "@/api/business/create-business";
 import { useGetAllBusinessQuery } from "@/api/business/get-business";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useState } from "react";
 
@@ -41,10 +42,14 @@ export const useBusinessHook = ({
 
   const [loading, setLoading] = useState(false);
   const setBusinessId = useBusinessStore((state) => state.setBusinessId);
+  const setBusinessData = useBusinessDataStore(
+    (state) => state.setBusinessData
+  );
 
   const handleRowClick = (row: any) => {
     console.log("Clicked row:", row.original);
     console.log("Clicked row ID:", row.id);
+    setBusinessData(row?.original);
     setBusinessId(row?.original?.id);
 
     router.push(`/pos`); // Navigate to the business details page

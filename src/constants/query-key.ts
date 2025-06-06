@@ -19,6 +19,18 @@ export const queryKey = {
     getAllSubscriptions: "get-all-subscriptions",
     getPremiumDetails: "get-premium-details",
   },
+  campaign: {
+    getAllCampaigns: "get-all-campaigns",
+    getGroups: "get-groups",
+    createSenderID: "create-sender-id",
+    createCampaign: "create-campaign",
+    fundCampaign: "fund-campaign",
+    editGroup: "edit-group",
+    editCampaign: "edit-campaign",
+    deleteCampaign: "delete-campaign",
+    deleteGroup: "delete-group",
+    createGroup: "create-group",
+  },
   attendants: {
     getAllAttendants: "get-all-attendants",
     createAttendant: "create-attendant",
