@@ -307,7 +307,8 @@ const ReceiptPage = ({
           id: item.id,
           quantity: item.cartQuantity || 1,
           type: item.type,
-          unit_price: item.amount,
+          unit_price:
+            item?.type === "SERVICE" ? item.amount : item?.selling_price,
         })),
         ...(customer?.id && { customer: customer.id }),
         ...(attendant?.id && { attendant: attendant.id }),

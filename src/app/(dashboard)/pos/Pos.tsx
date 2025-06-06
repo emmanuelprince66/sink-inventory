@@ -28,6 +28,8 @@ const Pos = () => {
     searchInput,
   });
   const [cartItems, setCartItems] = useState<Array<any>>([]);
+
+  console.log("cartItems", cartItems);
   const { showToast } = useToast();
 
   const statusColors = {
