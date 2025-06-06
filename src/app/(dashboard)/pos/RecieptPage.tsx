@@ -291,6 +291,8 @@ const ReceiptPage = ({
     }
   };
 
+  console.log("cart", cart);
+
   const handleSubmitPayment = () => {
     const payload = createPayload();
     if (payload) {
@@ -305,6 +307,7 @@ const ReceiptPage = ({
           id: item.id,
           quantity: item.cartQuantity || 1,
           type: item.type,
+          unit_price: item.amount,
         })),
         ...(customer?.id && { customer: customer.id }),
         ...(attendant?.id && { attendant: attendant.id }),
@@ -345,6 +348,8 @@ const ReceiptPage = ({
           apiPayload.due_date = format(dueDate, "yyyy-MM-dd");
         }
       }
+
+      console.log("apiPayload", apiPayload);
 
       createSale({
         apiPayload,
