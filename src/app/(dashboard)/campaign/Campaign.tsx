@@ -15,6 +15,7 @@ import AddGroup from "./AddGroup";
 import AddSenderId from "./AddSenderId";
 import AllCampaigns from "./AllCampaigns";
 import AllGroups from "./AllGroups";
+import CampaignSettings from "./CampaignSettings";
 import FundCampaign from "./FundCampaign";
 
 const Campaign = () => {
@@ -193,7 +194,9 @@ const Campaign = () => {
             groupLoading={CampaignGroupLoading}
           />
         </TabsContent>
-        <TabsContent value="settings">Settings</TabsContent>
+        <TabsContent value="settings">
+          <CampaignSettings />
+        </TabsContent>
       </Tabs>
 
       <CustomModal

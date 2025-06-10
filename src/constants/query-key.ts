@@ -18,6 +18,7 @@ export const queryKey = {
   premium: {
     getAllSubscriptions: "get-all-subscriptions",
     getPremiumDetails: "get-premium-details",
+    subscribeUser: "subscribe-user",
   },
   campaign: {
     getAllCampaigns: "get-all-campaigns",

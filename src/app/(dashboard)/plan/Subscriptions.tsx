@@ -1,5 +1,6 @@
 "use client";
 import { CustomCard } from "@/components/app/CustomCard";
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumHook } from "@/hooks/usePremiumHook";
@@ -36,13 +37,36 @@ const Subscriptions = () => {
   const [page, setPage] = useState(1);
   const [selectedPeriod, setSelectedPeriod] =
     useState<BillingPeriod>("quarterly");
+  const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
 
-  const { UserPlanData, UserPlanDataLoading } = usePremiumHook({
-    searchInput,
-    page,
-  });
+  const { UserPlanData, UserPlanDataLoading, handleSubUser, subUserLoading } =
+    usePremiumHook({
+      searchInput,
+      page,
+    });
+
+  console.log("UserPlanData", UserPlanData);
+  console.log("selectedPeriod", selectedPeriod);
 
   const planData: PlanData[] = UserPlanData?.data?.results || [];
+
+  // Function to map billing period to API format
+  const mapPeriodToApiFormat = (period: BillingPeriod): string => {
+    const periodMapping: { [key in BillingPeriod]: string } = {
+      monthly: "MONTHLY",
+      quarterly: "QUARTERLY",
+      biannually: "BIANNUAL",
+      annually: "ANNUAL",
+    };
+    return periodMapping[period];
+  };
+
+  // Modified handleSubUser function to track which plan is loading
+  const handlePlanSelection = (plan: PlanData, period: BillingPeriod) => {
+    setLoadingPlanId(plan.id);
+    const apiPeriod = mapPeriodToApiFormat(period);
+    handleSubUser(plan, apiPeriod);
+  };
 
   // Function to format feature display
   const formatFeatureValue = (key: string, value: any) => {
@@ -221,8 +245,16 @@ const Subscriptions = () => {
 
               {/* Choose Plan Button */}
               <div className="mt-8 w-full ">
-                <Button className="w-full  hover:bg-primary-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200">
-                  Choose Plan
+                <Button
+                  disabled={subUserLoading && loadingPlanId === plan.id}
+                  onClick={() => handlePlanSelection(plan, selectedPeriod)}
+                  className="w-full  hover:bg-primary-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                >
+                  {subUserLoading && loadingPlanId === plan.id ? (
+                    <Spinner />
+                  ) : (
+                    "Choose Plan"
+                  )}
                 </Button>
               </div>
             </div>

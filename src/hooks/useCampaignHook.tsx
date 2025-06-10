@@ -6,6 +6,7 @@ import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useDebounce } from "./useDebounce";
@@ -66,7 +67,7 @@ export const useCampaignHook = ({
   const { showToast } = useToast();
   const isEditMode = !!editData;
   const isEditModeGroup = !!editGroupData;
-
+  const router = useRouter();
   const {
     data: CampaignData,
     isLoading: CampaignLoading,
@@ -238,9 +239,35 @@ export const useCampaignHook = ({
     useFundCampaignMutation({
       businessId: business_id,
       onSuccess: (data) => {
-        console.log("data---4", data);
-        showToast(data.message, "success");
-        if (closeModal) closeModal();
+        try {
+          // Validate the payment URL
+          if (!data?.data?.payment_url) {
+            throw new Error("No payment URL received");
+          }
+
+          const paymentUrl = new URL(data.data.payment_url);
+
+          // Close modal if exists
+          if (closeModal) closeModal();
+
+          // Show success message
+          showToast(data.message, "success");
+
+          // Redirect after short delay for UX
+          setTimeout(() => {
+            if (paymentUrl.hostname === window.location.hostname) {
+              router.push(data.data.payment_url);
+            } else {
+              window.location.href = data.data.payment_url;
+            }
+          }, 1000);
+        } catch (error) {
+          console.error("Redirect error:", error);
+          showToast("Failed to process payment", "error");
+        }
+      },
+      onError: (error) => {
+        showToast(error.message, "error");
       },
     });
 

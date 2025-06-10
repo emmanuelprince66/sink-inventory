@@ -281,7 +281,10 @@ const ReceiptPDFDocument = ({
                 </View>
                 <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                 <Text style={styles.cellPrice}>
-                  {formatToNaira(item.selling_price || item.amount) || "₦0"}
+                  {(
+                    (item.selling_price || item.amount || 0) *
+                    (item.cartQuantity || 1)
+                  ).toLocaleString()}
                 </Text>
                 <Text style={styles.cellTotal}>
                   {(
@@ -296,7 +299,7 @@ const ReceiptPDFDocument = ({
           {/* Total */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.totalAmount}>{formatToNaira(total)}</Text>
+            <Text style={styles.totalAmount}>{total}</Text>
           </View>
 
           {/* Transaction Details */}
