@@ -16,7 +16,7 @@ const Settings = () => {
           "Bank",
           "Staff",
           "Security & Privacy",
-          "Premium",
+          "Subscription",
           "Notifications",
           "Currency & Localization",
         ]
@@ -71,7 +71,7 @@ const Settings = () => {
           </TabsContent>
 
           {user && user?.role === "OWNER" && (
-            <TabsContent value="Premium">
+            <TabsContent value="Subscription">
               <Subscription />
             </TabsContent>
           )}

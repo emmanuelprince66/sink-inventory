@@ -48,8 +48,8 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
 
   const [selectAllCustomers, setSelectAllCustomers] = useState(false);
   const [selectAllGroups, setSelectAllGroups] = useState(false);
-  const [wordCount, setWordCount] = useState(0);
-  const [remainingWords, setRemainingWords] = useState(150);
+  const [charCount, setCharCount] = useState(0);
+  const [remainingChars, setRemainingChars] = useState(150);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -76,26 +76,10 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
     });
   }, [CustomersData?.data, searchInput]);
 
-  // Calculate word count and remaining words
   useEffect(() => {
-    let count = 0;
-    let inWord = false;
-
-    for (let i = 0; i < watchedMessage.length; i++) {
-      const isSpace =
-        watchedMessage[i] === " " ||
-        watchedMessage[i] === "\n" ||
-        watchedMessage[i] === "\t";
-      if (!isSpace && !inWord) {
-        count++;
-        inWord = true;
-      } else if (isSpace) {
-        inWord = false;
-      }
-    }
-
-    setWordCount(count);
-    setRemainingWords(150 - count);
+    const currentLength = watchedMessage.length; // Get the length of the string (character count)
+    setCharCount(currentLength);
+    setRemainingChars(150 - currentLength); // Calculate remaining characters
   }, [watchedMessage]);
 
   // Handle select all customers
@@ -282,19 +266,21 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
                         placeholder="Enter your campaign message..."
                         className="min-h-[120px]"
                         {...field}
+                        maxLength={150} // Add maxLength attribute for native HTML limiting
                       />
                     </FormControl>
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>Words: {wordCount}/150</span>
+                      {/* Display character count instead of word count */}
+                      <span>Characters: {charCount}/150</span>
                       <span
-                        className={remainingWords < 0 ? "text-red-500" : ""}
+                        className={remainingChars < 0 ? "text-red-500" : ""}
                       >
-                        Remaining: {remainingWords}
+                        Remaining: {remainingChars}
                       </span>
                     </div>
-                    {remainingWords < 0 && (
+                    {remainingChars < 0 && (
                       <p className="text-red-500 text-sm">
-                        Message exceeds 150 words limit
+                        Message exceeds 150 character limit
                       </p>
                     )}
                     <FormMessage />
@@ -502,7 +488,7 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
             </Button>
             <Button
               type="submit"
-              disabled={CreateCampaignLoading || remainingWords < 0}
+              disabled={CreateCampaignLoading || remainingChars < 0}
               className="min-w-[120px]"
             >
               {CreateCampaignLoading ? (

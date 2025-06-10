@@ -12,12 +12,14 @@ import { z } from "zod";
 import { useDebounce } from "./useDebounce";
 
 import { useCreateCampaignMutation } from "@/api/campaign/create-campaign";
+import { useCreateCampaignSettingsMutation } from "@/api/campaign/create-campaign-settings";
 import { useCreateGroupMutation } from "@/api/campaign/create-group";
 import { useDeleteCampaignMutation } from "@/api/campaign/delete-campaign";
 import { useDeleteGroupMutation } from "@/api/campaign/delete-group";
 import { useEditCampaignMutation } from "@/api/campaign/edit-campaign";
 import { useEditGroupMutation } from "@/api/campaign/edit-group";
 import { useFundCampaignMutation } from "@/api/campaign/fund-campaign";
+import { useFetchAllCampaignSettingsQuery } from "@/api/campaign/get-campaign-settings";
 import { useEffect } from "react";
 import { useToast } from "./toast/useToast";
 
@@ -55,11 +57,13 @@ export type FundCampaignValues = z.infer<typeof fundCampaignSchema>;
 export const useCampaignHook = ({
   closeModal,
   editGroupData,
+  resetSettings,
   searchInput,
   editData,
 }: {
   closeModal?: () => void;
   searchInput?: string;
+  resetSettings?: () => void;
   editData?: any;
   editGroupData?: any;
 }) => {
@@ -79,6 +83,13 @@ export const useCampaignHook = ({
     isLoading: CampaignGroupLoading,
     refetch: refetchGroup,
   } = useFetchCampaignGroupQuery(business_id);
+  const {
+    data: CampaignSettingsData,
+    isLoading: CampaignSettingsLoading,
+    refetch: refetchSettings,
+  } = useFetchAllCampaignSettingsQuery(business_id);
+
+  console.log("CampaignSettingsData", CampaignSettingsData);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
 
@@ -285,6 +296,27 @@ export const useCampaignHook = ({
         showToast("Failed to create campaign", "error");
       },
     });
+  const {
+    mutate: CreateCampaignSetting,
+    isPending: CreateCampaignSettingLoading,
+  } = useCreateCampaignSettingsMutation({
+    businessId: business_id,
+    onSuccess: (data) => {
+      console.log("data", data);
+
+      showToast(data.message, "success");
+      if (resetSettings) resetSettings();
+    },
+    onError: (error) => {
+      console.error("Campaign creation failed", error);
+      showToast("Failed to create campaign", "error");
+    },
+  });
+
+  const handleSaveSettings = (payload: any) => {
+    CreateCampaignSetting(payload);
+  };
+
   const { mutate: CreateGroup, isPending: CreateGroupLoading } =
     useCreateGroupMutation({
       businessId: business_id,
@@ -432,11 +464,14 @@ export const useCampaignHook = ({
     messageChannelOptions,
     deleteCampaignLoading,
     CreateSenderIdLoading,
+    CreateCampaignSettingLoading,
     onSubmitFundCampaign,
     fundCampaignForm,
     fundCampaignLoading,
     handleDeleteGroup,
     deleteGroupLoading,
+    handleSaveSettings,
+    CampaignSettingsLoading,
     onSubmitAddGroupForm,
     addGroupForm,
     CreateCampaignLoading: isEditMode
