@@ -2,12 +2,16 @@
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useGetRestockHistory } from "@/hooks/useGetRestockHistory";
 import { useState } from "react";
+import RestockHistoryData from "./RestockHistoryData";
 import RestockItem from "./RestockItem";
 
 const Restock = ({ id }: { id: any }) => {
-  const { restockHistory } = useGetRestockHistory({ id });
+  const { restockHistory, restockHistoryLoading } = useGetRestockHistory({
+    id,
+  });
   const [openRestockModal, setOpenRestockModal] = useState(false);
   const closeRestockModal = () => setOpenRestockModal(false);
   const handleOpenRestockModal = () => setOpenRestockModal(true);
@@ -22,6 +26,22 @@ const Restock = ({ id }: { id: any }) => {
         <Button onClick={handleOpenRestockModal}>Restock</Button>
       </div>
 
+      {restockHistoryLoading || !restockHistory ? (
+        <div className="w-full">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-16 w-full bg-[#eef4ef] mt-2" />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <RestockHistoryData
+          RestockHistoryData={restockHistory}
+          restockHistoryLoading={restockHistoryLoading}
+        />
+      )}
+
       {/* modal to add supply */}
       <CustomModal
         isOpen={openRestockModal}
@@ -30,7 +50,7 @@ const Restock = ({ id }: { id: any }) => {
         title="Restock Product"
       >
         <div className="w-full ">
-          <RestockItem />
+          <RestockItem closeModal={closeRestockModal} />
         </div>
       </CustomModal>
     </div>

@@ -66,6 +66,12 @@ const ViewDetails = ({
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
             </Link>
+            <Link href={`/inventory/${data?.id}/transfer-history`}>
+              <button className="w-full cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                <span className="font-medium">Transfer History</span>
+                <ArrowUpRight size={18} className="text-gray-500" />
+              </button>
+            </Link>
           </div>
         </div>
 

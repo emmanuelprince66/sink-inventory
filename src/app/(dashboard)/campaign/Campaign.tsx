@@ -75,7 +75,7 @@ const Campaign = () => {
               className=" border-primary-green-300"
               onClick={openCampaignModalFunc}
             >
-              Add Campaign
+              Send a Campaign
             </Button>
           </div>
         </div>
@@ -163,7 +163,7 @@ const Campaign = () => {
         <TabsList className="w-[400px]">
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="settings">Marketing Automation</TabsTrigger>
         </TabsList>
         <div className="w-full h-[1px] bg-gray-200 mt-[-8px]" />
 

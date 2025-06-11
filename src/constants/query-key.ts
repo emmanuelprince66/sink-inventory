@@ -89,6 +89,7 @@ export const queryKey = {
     editService: "edit-service",
     transferProduct: "transfer-product",
     bulkUpload: "bulk-upload",
+    transferHistory: "transfer-history",
   },
   categories: {
     getAllCategories: "get-all-categories",

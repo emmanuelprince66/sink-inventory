@@ -2,39 +2,28 @@
 
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
 import { CheckCircle2 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CampaignSettings = () => {
   const [isPurchaseMessageEnabled, setIsPurchaseMessageEnabled] =
     useState(false);
   const { showToast } = useToast();
 
-  const resetSettings = () => {
-    setIsPurchaseMessageEnabled(false);
-    setIsActiveCustomersEnabled(false);
-    setActiveCustomersMessage("");
-    setPurchaseMessage("");
-    setActiveCustomersSendingMethods({
-      sms: true,
-      whatsapp: false,
-      email: false, // Default to email for active customers
-    });
-    setSendingMethods({
-      sms: true,
-      whatsapp: false,
-      email: false, // Default to email for active customers
-    });
-  };
+  const {
+    handleSaveSettings,
+    CreateCampaignSettingLoading,
+    CampaignSettingsData,
+    CampaignSettingsLoading,
+  } = useCampaignHook({});
 
-  const { handleSaveSettings, CreateCampaignSettingLoading } = useCampaignHook({
-    resetSettings,
-  });
+  console.log("campaign----4", CampaignSettingsData);
 
   const [purchaseMessage, setPurchaseMessage] = useState("");
   const [sendingMethods, setSendingMethods] = useState({
@@ -135,6 +124,27 @@ const CampaignSettings = () => {
     };
   };
 
+  useEffect(() => {
+    if (CampaignSettingsData && !CampaignSettingsLoading) {
+      const settings = CampaignSettingsData?.data;
+      console.log("settings", settings);
+      setIsPurchaseMessageEnabled(settings.message_subscription);
+      setIsActiveCustomersEnabled(settings.inactive_message_subscription);
+      setActiveCustomersMessage(settings.inactive_message);
+      setPurchaseMessage(settings.purchase_message);
+      setSendingMethods({
+        sms: settings.purchase_message_channel === "SMS" || true,
+        whatsapp: settings.purchase_message_channel === "WHATSAPP" || false,
+        email: settings.purchase_message_channel === "EMAIL" || false,
+      });
+      setActiveCustomersSendingMethods({
+        sms: settings.inactive_message_channel === "SMS" || true,
+        whatsapp: settings.inactive_message_channel === "WHATSAPP" || false,
+        email: settings.inactive_message_channel === "EMAIL" || false,
+      });
+    }
+  }, [CampaignSettingsData, CampaignSettingsLoading]);
+
   // const handleSave = () => {
   //   const payload
   // }
@@ -196,8 +206,61 @@ const CampaignSettings = () => {
     handleSaveSettings(payload);
   };
 
+  if (CampaignSettingsLoading) {
+    return (
+      <div className="w-full h-full flex justify-center items-center mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full ">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={i}
+              className="bg-white w-full rounded-lg shadow-sm h-[300px] overflow-hidden"
+            >
+              <div className="flex h-full">
+                {/* Image placeholder - 30% width */}
+                <Skeleton className="w-[30%] h-full bg-[#eef4ef]" />
+
+                {/* Content placeholder - 70% width */}
+                <div className="w-[70%] p-6 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="space-y-2 w-[70%]">
+                      <Skeleton className="h-6 w-full bg-[#eef4ef]" />
+                      <Skeleton className="h-4 w-3/4 bg-[#eef4ef]" />
+                    </div>
+                    <Skeleton className="h-6 w-12 rounded-full bg-[#eef4ef]" />
+                  </div>
+
+                  <Skeleton className="h-32 w-full bg-[#eef4ef]" />
+
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-1/4 bg-[#eef4ef]" />
+                    <div className="flex gap-2">
+                      {[...Array(3)].map((_, i) => (
+                        <Skeleton key={i} className="h-8 w-20 bg-[#eef4ef]" />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 space-y-2 ">
+                    <Skeleton className="h-4 w-1/3 bg-[#eef4ef]" />
+                    <Skeleton className="h-4 w-full bg-[#eef4ef]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="container mx-auto py-8 px-4">
+      <p className="text-gray-600 text-sm leading-relaxed tracking-normal font-normal mb-4">
+        Unlock 80% Customer Retention with Our Marketing Automation Tools! Boost
+        your business growth and retain more customers with our powerful
+        marketing automation solutions. Setup the automation tools we built for
+        you.
+      </p>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Point of Purchase Message Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden self-start">

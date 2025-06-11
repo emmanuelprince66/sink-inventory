@@ -497,7 +497,7 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
                   Creating...
                 </>
               ) : (
-                "Create Campaign"
+                "Send Campaign"
               )}
             </Button>
           </div>

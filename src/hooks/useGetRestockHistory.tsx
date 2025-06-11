@@ -1,12 +1,15 @@
 import { useFetchRestockHistoryQuery } from "@/api/restock/fetch-restock-history";
 import { useRestockProductMutation } from "@/api/restock/restock-product";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useToast } from "./toast/useToast";
 
 const RestockSchema = z
   .object({
@@ -59,8 +62,11 @@ export const useGetRestockHistory = ({
   data?: any;
   closeModal?: any;
 }) => {
+  const { showToast } = useToast();
+
   const business_id = useBusinessStore((state) => state.business_id);
   const params = useParams();
+  const queryClient = useQueryClient();
 
   console.log("data", data);
 
@@ -68,14 +74,24 @@ export const useGetRestockHistory = ({
 
   console.log("pId", pId);
 
-  const { data: restockHistory, refetch } =
-    useFetchRestockHistoryQuery(business_id);
+  const {
+    data: restockHistory,
+    refetch,
+    isLoading: restockHistoryLoading,
+  } = useFetchRestockHistoryQuery(pId, {
+    enabled: !!pId,
+  });
 
   const { mutate: restockProduct, isPending: restockProductPending } =
     useRestockProductMutation({
       productId: pId,
       onSuccess: (data) => {
+        console.log("data", data);
+        showToast(data.message, "success");
         refetch();
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.inventory.getAllInventory],
+        });
         if (closeModal) closeModal();
       },
     });
@@ -107,17 +123,17 @@ export const useGetRestockHistory = ({
   const onSubmit = (values: RestockFormValues) => {
     const payload = {
       quantity: values.qty,
-      supplier_id: values.supplier,
       cost_price: values.cost_price,
       selling_price: values.selling_price,
       payment_method: values.payment_method,
+      ...(values.supplier && { supplier_id: values.supplier }), // Only add if supplier exists
       ...(values.payment_method === "CREDIT" && { due_date: values.due_date }),
       ...(values.payment_method === "PART" && {
         amount_paid: Number(values.amount_paid),
         due_date: values.due_date,
       }),
     };
-    console.log("payload", payload);
+    console.log("payload----5", payload);
 
     restockProduct({
       payload,
@@ -134,6 +150,7 @@ export const useGetRestockHistory = ({
   return {
     restockHistory,
     SupplierData,
+    restockHistoryLoading,
     SupplierLoading,
     form,
     restockProductPending,

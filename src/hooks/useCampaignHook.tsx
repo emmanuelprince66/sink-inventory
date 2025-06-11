@@ -305,7 +305,7 @@ export const useCampaignHook = ({
       console.log("data", data);
 
       showToast(data.message, "success");
-      if (resetSettings) resetSettings();
+      refetchSettings();
     },
     onError: (error) => {
       console.error("Campaign creation failed", error);
@@ -466,12 +466,14 @@ export const useCampaignHook = ({
     CreateSenderIdLoading,
     CreateCampaignSettingLoading,
     onSubmitFundCampaign,
+    CampaignSettingsData,
     fundCampaignForm,
     fundCampaignLoading,
     handleDeleteGroup,
+    CampaignSettingsLoading,
+    CreateCampaignSetting,
     deleteGroupLoading,
     handleSaveSettings,
-    CampaignSettingsLoading,
     onSubmitAddGroupForm,
     addGroupForm,
     CreateCampaignLoading: isEditMode
