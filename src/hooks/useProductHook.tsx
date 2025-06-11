@@ -2,6 +2,7 @@ import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useAddProductMutation } from "@/api/products/add-product";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
+import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -106,6 +107,10 @@ export const useProductHook = ({ id }: { id?: string }) => {
   // Data fetching
   const { data: ProductData, isLoading: ProductDataLoading } =
     useFetchProductByIdQuery(productId, { enabled: isEditMode });
+  const { data: TransferHistoryData, isLoading: TransferHistoryLoading } =
+    useFetchTransferHistoryQuery(productId, { enabled: !!productId });
+
+  console.log("TransferHistoryData", TransferHistoryData);
 
   const { data: CategoriesData, isLoading: CategoriesDataLoading } =
     useGetCategoriesQuery({
@@ -360,6 +365,8 @@ export const useProductHook = ({ id }: { id?: string }) => {
     onSubmit,
     form,
     editProductPending,
+    TransferHistoryLoading,
+    TransferHistoryData,
     addProductPending,
     CategoriesData,
     unitTypeOptions,

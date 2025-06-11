@@ -7,7 +7,7 @@ import {
 
 export const FetchTransferHistory = async (id: string) => {
   // console.log("useQuery:", useQuery); //
-  const response = await fetch(`/api/products/transfer_history/${id}`);
+  const response = await fetch(`/api/products/transfer-history/${id}`);
   if (!response.ok) throw new Error("Error fetching form data");
   return response.json();
 };

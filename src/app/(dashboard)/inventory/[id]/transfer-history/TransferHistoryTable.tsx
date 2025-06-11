@@ -1,20 +1,19 @@
 import { CustomTable } from "@/components/app/CutomTable";
-import { useRestockHistoryColumns } from "./RestockHistoryColumn";
-const RestockHistoryTable = ({
+import { useTransferHistoryColumns } from "./TransferHistoryColumn";
+const TransferHistoryTable = ({
   response,
   loading,
 }: {
   response: any;
   loading: any;
 }) => {
-  const columns = useRestockHistoryColumns(); // Use the hook here
-
+  const columns = useTransferHistoryColumns();
   return (
     <>
       <>
         <CustomTable
           loading={loading}
-          noDataText="No Restock History found"
+          noDataText="No Transfer History found"
           columns={columns}
           data={response?.data?.results}
         />
@@ -23,4 +22,4 @@ const RestockHistoryTable = ({
   );
 };
 
-export default RestockHistoryTable;
+export default TransferHistoryTable;

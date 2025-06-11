@@ -44,7 +44,7 @@ const ViewDetails = ({
           </div>
 
           {/* Right Column - Pricing */}
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             <div className="grid grid-cols-2 gap-4">
               <DetailItem label="Purchase Price" value="N/A" />
               <DetailItem label="Discount" value="N/A" />
@@ -59,15 +59,17 @@ const ViewDetails = ({
             </div>
 
             {/* Restock History Button */}
+          </div>
 
+          <div className="flex gap-2  items-center w-full">
             <Link href={`/inventory/${data?.id}/restock`}>
-              <button className="w-full cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+              <button className="w-[10rem] cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
                 <span className="font-medium">Restock History</span>
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
             </Link>
             <Link href={`/inventory/${data?.id}/transfer-history`}>
-              <button className="w-full cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+              <button className="w-[10rem] cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
                 <span className="font-medium">Transfer History</span>
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
