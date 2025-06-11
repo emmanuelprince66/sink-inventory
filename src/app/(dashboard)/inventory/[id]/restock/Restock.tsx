@@ -1,7 +1,6 @@
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetRestockHistory } from "@/hooks/useGetRestockHistory";
 import { useState } from "react";
@@ -23,7 +22,7 @@ const Restock = ({ id }: { id: any }) => {
         <h1 className="text-2xl font-bold mb-6 text-gray-800">
           Restock History
         </h1>
-        <Button onClick={handleOpenRestockModal}>Restock</Button>
+        {/* <Button onClick={handleOpenRestockModal}>Restock</Button> */}
       </div>
 
       {restockHistoryLoading || !restockHistory ? (
