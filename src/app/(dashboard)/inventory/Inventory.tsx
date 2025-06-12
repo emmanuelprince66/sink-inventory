@@ -96,6 +96,7 @@ const Inventory = () => {
     selectedCategoryId,
     page,
   });
+  console.log("InventoryData", InventoryData);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -252,7 +253,6 @@ const Inventory = () => {
         <AllInventory
           setPage={setPage}
           page={page}
-          data={InventoryData}
           loading={InventoryDataLoading}
         />
       )}

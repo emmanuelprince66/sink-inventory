@@ -1,18 +1,17 @@
+import { useInventoryHook } from "@/hooks/useInventoryHook";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
-import { DetailedInventoryResponse } from "./type";
 
 const AllInventory = ({
-  data,
   loading,
   setPage,
   page,
 }: {
-  data: DetailedInventoryResponse;
   loading: boolean;
   setPage: any;
   page: any;
 }) => {
+  const { InventoryData: data } = useInventoryHook({});
   return (
     <>
       <div className="w-full mt-3">

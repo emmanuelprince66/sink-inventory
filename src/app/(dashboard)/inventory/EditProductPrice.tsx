@@ -39,7 +39,7 @@ const EditProductPrice = ({
               <FormItem className="flex-1">
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Customer Name...." {...field} />
+                  <Input placeholder="Product Price....." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
