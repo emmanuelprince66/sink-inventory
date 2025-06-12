@@ -5,6 +5,7 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBusinessHook } from "@/hooks/useBusinessHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { BusinessTable } from "./BusinessTable";
@@ -14,7 +15,7 @@ const AllBusiness = ({ section }: { section?: string }) => {
   const [openCreateBusinessModal, setOpenCreateBusinessModal] = useState(false);
   const closeCreateBusinessModal = () => setOpenCreateBusinessModal(false);
   const openCreateBusinessModalFunc = () => setOpenCreateBusinessModal(true);
-
+  const { user } = useUserRole();
   const { AllBusinessData, AllBusinessLoading, handleRowClick } =
     useBusinessHook({ closeCreateBusinessModal });
 
@@ -58,15 +59,18 @@ const AllBusiness = ({ section }: { section?: string }) => {
             My Businesses
           </p>
         </div>
-        <div className="text-[14px] md:text-[20px]">
-          <Button
-            className="flex items-center py-0 md:py-[25px]"
-            onClick={openCreateBusinessModalFunc}
-          >
-            <Plus />
-            Add Business
-          </Button>
-        </div>
+
+        {user && user?.role === "OWNER" && (
+          <div className="text-[14px] md:text-[20px]">
+            <Button
+              className="flex items-center py-0 md:py-[25px]"
+              onClick={openCreateBusinessModalFunc}
+            >
+              <Plus />
+              Add Business
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="w-full mt-6">

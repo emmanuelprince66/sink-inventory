@@ -37,6 +37,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     error,
   } = useLoginMutation({
     onSuccess: (data) => {
+      console.log("data", data);
       login({
         id: data.id,
         email: data.email,
@@ -55,7 +56,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         router.push(options?.redirectTo || "/create-business");
         router.refresh();
       } else if (data?.role === "ATTENDANT") {
-        router.push(options?.redirectTo || "/pos");
+        router.push(options?.redirectTo || "/create-business");
         router.refresh();
       }
     },

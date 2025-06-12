@@ -64,13 +64,21 @@ const ViewDetails = ({
           <div className="flex gap-2  items-center w-full">
             <Link href={`/inventory/${data?.id}/restock`}>
               <button className="w-[10rem] cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
-                <span className="font-medium">Restock History</span>
+                <span className="font-medium text-xs">Restock History</span>
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
             </Link>
             <Link href={`/inventory/${data?.id}/transfer-history`}>
               <button className="w-[10rem] cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
-                <span className="font-medium">Transfer History</span>
+                <span className="font-medium text-xs">Transfer History</span>
+                <ArrowUpRight size={18} className="text-gray-500" />
+              </button>
+            </Link>
+            <Link href={`/inventory/${data?.id}/product-sold-history`}>
+              <button className="w-[10rem] cursor-pointer flex items-center justify-between mt-6 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+                <span className="font-medium text-xs">
+                  Product Sold History
+                </span>
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
             </Link>
