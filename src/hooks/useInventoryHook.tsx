@@ -13,6 +13,8 @@ import { useEditServiceMutation } from "@/api/products/edit-service";
 import { useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 
+import { queryKey } from "@/constants/query-key";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
 
 const AddServiceSchema = z.object({
@@ -70,6 +72,7 @@ export const useInventoryHook = ({
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
 
@@ -91,12 +94,18 @@ export const useInventoryHook = ({
   useEffect(() => {
     if (editServiceSuccess) {
       refetchInventory();
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
       if (closeModal) closeModal();
     }
   }, [editServiceSuccess]);
 
   useEffect(() => {
     if (editProductSuccess) {
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
       refetchInventory();
       if (closeModal) closeModal();
     }
@@ -160,6 +169,7 @@ export const useInventoryHook = ({
     data: InventoryData,
     isLoading: InventoryDataLoading,
     refetch: refetchInventory,
+    isRefetching: isRefetchingInventory,
   } = useGetInventoryQuery({
     params: {
       page,
@@ -261,7 +271,7 @@ export const useInventoryHook = ({
   return {
     InventoryData,
     CategoriesData,
-    InventoryDataLoading,
+    InventoryDataLoading: InventoryDataLoading || isRefetchingInventory,
     isCreatingService,
     form,
     onSubmitEditSellingPrice,

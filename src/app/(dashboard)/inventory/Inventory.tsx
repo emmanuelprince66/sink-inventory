@@ -11,7 +11,8 @@ import { formatToNaira } from "@/utils/formatMoney";
 import Link from "next/link";
 import { useState } from "react";
 import AddService from "./AddService";
-import AllInventory from "./AllInventory";
+import InventoryTable from "./InventoryTable";
+import NoInventory from "./NoInventory";
 
 interface Category {
   id: string;
@@ -77,7 +78,6 @@ const CustomInventoryCard = ({
 };
 
 const Inventory = () => {
-  const [searchInput, setSearchInput] = useState("");
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
@@ -85,6 +85,11 @@ const Inventory = () => {
     null
   );
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+  };
 
   const {
     InventoryData,
@@ -92,15 +97,11 @@ const Inventory = () => {
     InventoryDataLoading,
     CategoriesDataLoading,
   } = useInventoryHook({
-    searchInput,
     selectedCategoryId,
+    searchInput,
     page,
   });
   console.log("InventoryData", InventoryData);
-
-  const handleSearchChange = (value: string) => {
-    setSearchInput(value);
-  };
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -227,35 +228,54 @@ const Inventory = () => {
         </div>
       )}
 
-      <div className="w-full md:w-1/2 mb-4 mt-4">
-        <SearchInput
-          placeholder="Search ..."
-          value={searchInput}
-          onValueChange={handleSearchChange}
-        />
-        {searchInput.length > 0 && searchInput.length < 3 && (
-          <div className="mt-1 text-sm text-muted-foreground">
-            Type at least 3 characters to search
+      <div className="w-full mt-3">
+        <div className="w-full md:w-1/2 mb-4 mt-4">
+          <SearchInput
+            placeholder="Search ..."
+            value={searchInput}
+            onValueChange={handleSearchChange}
+          />
+          {searchInput.length > 0 && searchInput.length < 3 && (
+            <div className="mt-1 text-sm text-muted-foreground">
+              Type at least 3 characters to search
+            </div>
+          )}
+        </div>
+        {InventoryDataLoading || !InventoryData ? (
+          <div className="w-full">
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-16 w-full bg-[#eef4ef] mt-2"
+                />
+              ))}
+            </div>
           </div>
+        ) : (
+          <>
+            {InventoryData?.data?.results?.data?.length > 0 ? (
+              <InventoryTable
+                setPage={setPage}
+                page={page}
+                response={InventoryData}
+                loading={false}
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col justify-center items-center mt-8">
+                <NoInventory />
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {InventoryDataLoading || !InventoryData ? (
-        <div className="w-full">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full bg-[#eef4ef]" />
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-16 w-full bg-[#eef4ef] mt-2" />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <AllInventory
-          setPage={setPage}
-          page={page}
-          loading={InventoryDataLoading}
-        />
-      )}
+      {/* <AllInventory
+        setPage={setPage}
+        page={page}
+        loading={InventoryDataLoading}
+      /> */}
 
       {/*  */}
 
