@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -82,6 +83,19 @@ const ViewDetails = ({
                 <ArrowUpRight size={18} className="text-gray-500" />
               </button>
             </Link>
+          </div>
+        </div>
+
+        <div className="flex justify-between">
+          <div className="flex flex-col items-start gap-3">
+            <p>Quantity Returned</p>
+            <Input type="number" placeholder="Quantity Returned" />
+            <Button className="w-full">Submit</Button>
+          </div>
+          <div className="flex flex-col items-start gap-3">
+            <p>Quantity Damaged</p>
+            <Input type="number" placeholder="Quantity Damaged" />
+            <Button className="w-full">Submit</Button>
           </div>
         </div>
 

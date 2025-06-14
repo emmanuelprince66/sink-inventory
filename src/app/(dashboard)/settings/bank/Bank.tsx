@@ -101,14 +101,16 @@ export const Bank = () => {
                           : "N/A"}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <button
-                        onClick={() => handleOpenBankDelModal(bank)}
-                        className="rounded p-1 cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </td>
+                    {user && user?.role === "OWNER" && (
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <button
+                          onClick={() => handleOpenBankDelModal(bank)}
+                          className="rounded p-1 cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

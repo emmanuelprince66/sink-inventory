@@ -1,17 +1,18 @@
+"use client";
+
 import { useState } from "react";
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  SortingState,
   getSortedRowModel,
-  useReactTable,
   Row,
+  SortingState,
+  useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,

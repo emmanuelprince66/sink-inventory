@@ -62,6 +62,7 @@ export const queryKey = {
     getAllOrdersHistory: "get-all-orders",
     createSale: "create-sale",
     reverseSale: "reverse-sale",
+    salesDashboard: "sales-dashboard",
   },
   analytics: {
     getSalesAnalytics: "get-sales-analytics",
