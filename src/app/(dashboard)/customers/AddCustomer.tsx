@@ -15,11 +15,14 @@ import { useCustomerHook } from "@/hooks/useCustomerHook";
 
 const AddCustomer = ({
   closeOpenCustomerModal,
+  handleOpenNotSubscribeModal,
 }: {
   closeOpenCustomerModal: any;
+  handleOpenNotSubscribeModal?: () => void;
 }) => {
   const { form, onSubmit, createCustomerLoading } = useCustomerHook({
     closeModal: closeOpenCustomerModal,
+    handleOpenNotSubscribeModal,
   });
   return (
     <div>

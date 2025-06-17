@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Users,
   Users2,
-  Wallet,
   Zap,
 } from "lucide-react";
 
@@ -128,15 +127,15 @@ export default function Overview() {
         bgColor: "bg-blue-50 dark:bg-blue-900/30",
         changeColor: "text-green-500",
       },
-      {
-        title: "Current Balance",
-        value: `${data?.current_balance?.toLocaleString()}`,
-        change: "+0.0%",
-        icon: Wallet,
-        iconColor: "text-pink-500",
-        bgColor: "bg-pink-50 dark:bg-pink-900/30",
-        changeColor: "text-green-500",
-      },
+      // {
+      //   title: "Current Balance",
+      //   value: `${data?.current_balance?.toLocaleString()}`,
+      //   change: "+0.0%",
+      //   icon: Wallet,
+      //   iconColor: "text-pink-500",
+      //   bgColor: "bg-pink-50 dark:bg-pink-900/30",
+      //   changeColor: "text-green-500",
+      // },
       {
         title: "Today's Sales",
         value: data?.total_sales_today.toString(),
@@ -181,7 +180,7 @@ export default function Overview() {
       <Card className={`border-gray-200 shadow-sm ${bgColor} p-0`}>
         <div className="p-1 ">
           <div className="flex justify-between p-2 items-center">
-            <p className="text-[11px] font-medium">{title}</p>
+            <p className="text-sm font-medium">{title}</p>
           </div>
         </div>
         <div className="pt-0 p-0">
@@ -197,7 +196,7 @@ export default function Overview() {
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="text-center py-4 text-[10px] text-muted-foreground">
+            <div className="text-center py-4 text-sm text-muted-foreground">
               No items found
             </div>
           ) : (
@@ -205,7 +204,7 @@ export default function Overview() {
               <div className="flex items-start flex-col m-2 p-2 justify-between  rounded-lg bg-white shadow-xs">
                 <div className="flex items-center gap-2">
                   <Icon className={`h-3 w-3 ${iconColor}`} />
-                  <span className="text-[10px] font-medium line-clamp-1 pt-[2px]">
+                  <span className="text-sm font-medium line-clamp-1 pt-[2px]">
                     {items[0].name}
                   </span>
                 </div>
@@ -411,10 +410,12 @@ export default function Overview() {
 
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 p-4 md:p-6">
-      <p className="text-2xl font-bold">Overview</p>
+      <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+        Overview
+      </p>
       <main className="flex flex-1 flex-col gap-4">
         {/* Metrics Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           {SalesDashboardLoading
             ? [...Array(5)].map((_, index) => (
                 <MetricsCardSkeleton key={index} />
@@ -425,7 +426,7 @@ export default function Overview() {
                   className={`${metric.bgColor} border-gray-200 shadow-sm px-0 `}
                 >
                   <CardHeader className="flex flex-row items-center mt-3 justify-between pb-2 space-y-0">
-                    <CardTitle className="text-[10px] font-medium ">
+                    <CardTitle className="text-sm font-medium ">
                       {metric.title}
                     </CardTitle>
                     <metric.icon className={`h-3 w-3 ${metric.iconColor}`} />
@@ -442,8 +443,8 @@ export default function Overview() {
           {/* Quick Actions Card - Left Column */}
           <Card className="border-gray-200 shadow-sm py-2">
             <CardHeader>
-              <CardTitle className="text-[13px]">Quick Actions</CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardTitle className="text-sm font-bold">Quick Actions</CardTitle>
+              <CardDescription className="text-[14px]">
                 Frequently used actions for your store management.
               </CardDescription>
             </CardHeader>
@@ -518,7 +519,7 @@ export default function Overview() {
 
             {/* Expired Products */}
             <ProductStatusCard
-              title="expired"
+              title="Expired"
               type="expired"
               description="Expired Products"
               items={
@@ -576,8 +577,8 @@ export default function Overview() {
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
           <Card className="lg:col-span-4 border-gray-200 shadow-sm py-2">
             <CardHeader>
-              <CardTitle className="text-[13px]">Stock Levels</CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardTitle className="text-sm">Stock Levels</CardTitle>
+              <CardDescription className="text-[13px]">
                 Monitor your inventory status across categories.
               </CardDescription>
             </CardHeader>
@@ -594,10 +595,10 @@ export default function Overview() {
                         className="flex items-center gap-2"
                       >
                         <tab.icon className="h-3 w-3" />
-                        <span className="hidden sm:inline text-[10px]">
+                        <span className="hidden sm:inline text-[10px] md:text-sm">
                           {tab.label}
                         </span>
-                        <span className="sm:hidden text-[10px]">
+                        <span className="sm:hidden text-[10px] md:text-sm ">
                           {tab.shortLabel}
                         </span>
                       </TabsTrigger>
@@ -619,8 +620,8 @@ export default function Overview() {
 
           <Card className="lg:col-span-3 border-gray-200 shadow-sm py-2">
             <CardHeader>
-              <CardTitle className="text-[13px]">Stock Performance</CardTitle>
-              <CardDescription className="text-[10px]">
+              <CardTitle className="text-sm">Stock Performance</CardTitle>
+              <CardDescription className="text-[13px]">
                 Track your best and worst performing products.
               </CardDescription>
             </CardHeader>
@@ -637,10 +638,10 @@ export default function Overview() {
                         className="flex items-center gap-2"
                       >
                         <tab.icon className="h-4 w-4" />
-                        <span className="hidden sm:inline text-[10px]">
+                        <span className="hidden sm:inline text-[10px] md:text-sm">
                           {tab.label}
                         </span>
-                        <span className="sm:hidden text-[10px]">
+                        <span className="sm:hidden text-[10px] md:text-sm">
                           {tab.shortLabel}
                         </span>
                       </TabsTrigger>

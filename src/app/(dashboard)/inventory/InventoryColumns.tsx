@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
 import EditProductPrice from "./EditProductPrice";
+import SetDiscountModal from "./SetDiscountModal";
 import TransferProduct from "./TransferProduct";
 import { InventoryItem } from "./type";
 import ViewDetails from "./ViewDetails";
@@ -118,8 +119,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: "Action",
     cell: ({ row }) => {
       const inventory = row.original;
-      const canRestock = inventory.type === "PRODUCT";
+      const isProduct = inventory.type === "PRODUCT";
       const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
+      const [addDiscountModal, setAddDiscountModal] = useState(false);
+
+      const handleOpenSetDiscountModal = () => setAddDiscountModal(true);
+      const closeSetDiscountModal = () => setAddDiscountModal(false);
 
       const [openViewDetails, setOpenViewDetails] = useState(false);
       const [openRestockModal, setOpenRestockModal] = useState(false);
@@ -162,17 +167,31 @@ export const columns: ColumnDef<InventoryItem>[] = [
               >
                 <span className="">View more details</span>
               </DropdownMenuItem>
+              {isProduct && (
+                <DropdownMenuItem
+                  onClick={handleOpenSetDiscountModal}
+                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                >
+                  Set Discount
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={openViewDetailsFunc}
+                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+              >
+                <span className="">View more details</span>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleOpenRestockModal}
                 className={cn(
                   "cursor-pointer px-4 py-2 transition-colors",
-                  canRestock
+                  isProduct
                     ? "hover:bg-green-50 hover:text-green-600"
                     : "text-red-500 opacity-50 cursor-not-allowed"
                 )}
-                disabled={!canRestock}
+                disabled={!isProduct}
               >
-                {canRestock ? "Quick restock" : "Cannot restock"}
+                {isProduct ? "Quick restock" : "Cannot restock"}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setTransferProductModal(true)}
@@ -206,6 +225,18 @@ export const columns: ColumnDef<InventoryItem>[] = [
             <ViewDetails
               closeModal={() => setOpenViewDetails(false)}
               data={inventory}
+            />
+          </CustomModal>
+          <CustomModal
+            isOpen={addDiscountModal}
+            onClose={closeSetDiscountModal}
+            trigger={false}
+            title="Set Discount"
+          >
+            <SetDiscountModal
+              productId={inventory.id}
+              product={inventory}
+              closeModal={closeSetDiscountModal}
             />
           </CustomModal>
 

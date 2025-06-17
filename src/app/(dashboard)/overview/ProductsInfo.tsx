@@ -1,4 +1,5 @@
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 
 interface Product {
@@ -11,10 +12,26 @@ interface Product {
 
 const ProductsInfo = ({ data }: { data: Product[] }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
 
-  const filteredProducts = data.filter((product) =>
-    product.product__name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = data.filter((product) => {
+    // Filter by search term
+    const matchesSearch = product.product__name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    // Filter by tab selection
+    let matchesTab = true;
+    if (activeTab === "low") {
+      matchesTab = product.product__status === "LOW";
+    } else if (activeTab === "in-stock") {
+      matchesTab = product.product__status === "IN-STOCK";
+    } else if (activeTab === "out-of-stock") {
+      matchesTab = product.product__status === "OUT-OF-STOCK";
+    }
+
+    return matchesSearch && matchesTab;
+  });
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -32,11 +49,26 @@ const ProductsInfo = ({ data }: { data: Product[] }) => {
   return (
     <div className="p-1">
       {/* Search Bar */}
-
       <Input
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search products..."
+        className="mb-4"
       />
+
+      {/* Tabs */}
+      <Tabs
+        className="mt-3"
+        defaultValue="all"
+        onValueChange={(value) => setActiveTab(value)}
+      >
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="in-stock">In Stock</TabsTrigger>
+          <TabsTrigger value="low">Low Stock</TabsTrigger>
+          <TabsTrigger value="out-of-stock">Out of Stock</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Table */}
       <div className="bg-white rounded-lg shadow w-full mt-3">
@@ -75,13 +107,6 @@ const ProductsInfo = ({ data }: { data: Product[] }) => {
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="px-1 py-4 whitespace-nowrap">
                     <div className="flex items-center ">
-                      {/* <div className="flex-shrink-0 h-10 w-10">
-                        <img
-                          src={product.product__image}
-                          alt={product.product__name}
-                          className="h-10 w-10 rounded-md object-cover"
-                        />
-                      </div> */}
                       <div className="ml-4 overflow-hidden">
                         <div className="text-sm font-medium text-gray-900 truncate">
                           {product.product__name}

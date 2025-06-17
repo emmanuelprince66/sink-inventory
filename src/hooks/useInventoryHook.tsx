@@ -23,8 +23,13 @@ const AddServiceSchema = z.object({
   category: z.string().min(1, "Category name is required"),
   amount: z.string().min(1, "Amount is required"),
 });
+const AddDiscountSchema = z.object({
+  product_threshold: z.string().min(1, "Product threshold is required"),
+  price_discount: z.string().min(1, "Price discount is required"),
+});
 
 export type AddServiceFormValues = z.infer<typeof AddServiceSchema>;
+export type AddDiscountFormValues = z.infer<typeof AddDiscountSchema>;
 
 const EditSellingPriceSchema = z.object({
   selling_price: z
@@ -225,6 +230,22 @@ export const useInventoryHook = ({
     },
     mode: "onChange",
   });
+  const addDiscountForm = useForm<AddDiscountFormValues>({
+    resolver: zodResolver(AddDiscountSchema),
+    defaultValues: {
+      product_threshold: "",
+      price_discount: "",
+    },
+    mode: "onChange",
+  });
+
+  const addDiscountSubmit = (values: AddDiscountFormValues) => {
+    const payload = {
+      product_threshold: Number(values.product_threshold),
+      price_discount: Number(values.price_discount),
+    };
+    console.log("payload", payload);
+  };
 
   const onSubmit = (values: any) => {
     const payload = {
@@ -271,6 +292,8 @@ export const useInventoryHook = ({
   return {
     InventoryData,
     CategoriesData,
+    addDiscountSubmit,
+    addDiscountForm,
     InventoryDataLoading: InventoryDataLoading || isRefetchingInventory,
     isCreatingService,
     form,

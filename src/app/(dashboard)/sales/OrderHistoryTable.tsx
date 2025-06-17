@@ -1,6 +1,7 @@
 import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
 import { useSalesHook } from "@/hooks/useSalesHook";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useEffect, useState } from "react"; // Added useEffect
 import { columns } from "./OrderHistoryColumn";
 import OrderHistoryDetails from "./OrderHistoryDetails";
@@ -24,6 +25,8 @@ const OrderHistoryTable = ({
     orderDetails,
     handleReverseSale,
   } = useSalesHook();
+
+  const businessData = useBusinessDataStore((state) => state.businessData);
 
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
@@ -77,6 +80,7 @@ const OrderHistoryTable = ({
           <OrderHistoryDetails
             handleReverseSale={handleReverseSale}
             orderDetails={orderDetails}
+            business={businessData}
           />
         </div>
       </CustomModal>

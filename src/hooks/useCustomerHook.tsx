@@ -12,6 +12,7 @@ import { useDeleteCustomerMutation } from "@/api/customer/delete-customer";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
+import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useDebounce } from "./useDebounce";
 
 const CustomerSchema = z.object({
@@ -26,10 +27,17 @@ export type CustomerFormValues = z.infer<typeof CustomerSchema>;
 
 export const useCustomerHook = ({
   closeModal,
+  handleOpenNotSubscribeModal,
 }: {
   closeModal?: () => void;
+  handleOpenNotSubscribeModal?: () => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const isUserSubscribed = useIsUserSubscribeStore(
+    (state) => state.is_subscribed
+  );
+
+  console.log("isUserSubscribed", isUserSubscribed);
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -139,6 +147,11 @@ export const useCustomerHook = ({
       phone: values.phone,
       email: values.email,
     };
+
+    if (!isUserSubscribed?.is_subscribed) {
+      handleOpenNotSubscribeModal?.();
+      return;
+    }
     // console.log("payload", payload);
 
     createCustomer({

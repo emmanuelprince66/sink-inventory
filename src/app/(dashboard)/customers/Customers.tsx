@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { formatToNaira } from "@/utils/formatMoney";
 import { useCallback, useState } from "react";
 import AddCustomer from "./AddCustomer";
@@ -55,6 +56,9 @@ const Customers = () => {
   });
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
+  const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
+  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
 
   const closeOpenCustomerModal = useCallback(() => {
     setOpenAddCustomerModal(false);
@@ -73,7 +77,7 @@ const Customers = () => {
     handleFilterChange,
     activeFilter,
     handleSearchChange,
-  } = useCustomerHook({});
+  } = useCustomerHook({ handleOpenNotSubscribeModal });
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -90,9 +94,9 @@ const Customers = () => {
               className="text-[14px] md:text-[20px]"
               onClick={openCustomerModalFunc}
             >
-              <Button className="flex items-center py-0 md:py-[25px]">
+              <Button className="flex items-center py-0  ">
                 <Plus />
-                Add Customer
+                <p className="text-sm">Add Customer</p>
               </Button>
             </div>
           </div>
@@ -215,7 +219,21 @@ const Customers = () => {
         title="Add Customer"
       >
         <div className="w-full ">
-          <AddCustomer closeOpenCustomerModal={closeOpenCustomerModal} />
+          <AddCustomer
+            handleOpenNotSubscribeModal={handleOpenNotSubscribeModal}
+            closeOpenCustomerModal={closeOpenCustomerModal}
+          />
+        </div>
+      </CustomModal>
+      {/* modal to add supply */}
+      <CustomModal
+        isOpen={showNotSubscribeModal}
+        onClose={handleCloseNotSubscribeModal}
+        trigger={false}
+        title="Subscription Details"
+      >
+        <div className="w-full ">
+          <UserNotSubscribe />
         </div>
       </CustomModal>
     </div>

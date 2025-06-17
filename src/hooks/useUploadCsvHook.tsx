@@ -1,6 +1,10 @@
 import { useUploadProductsMutation } from "@/api/products/upload-bulk-product";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
+import { useRouter } from "next/navigation";
+
 import Papa from "papaparse";
 import { useState } from "react";
 import * as XLSX from "xlsx";
@@ -56,10 +60,13 @@ export const useUploadCsvHook = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const queryClient = useQueryClient();
+
   const [previewData, setPreviewData] = useState<ProductItem[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
     []
   );
+  const router = useRouter();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const formatApiError = (error: any): string => {
@@ -103,6 +110,10 @@ export const useUploadCsvHook = () => {
     onSuccess: (data) => {
       if (data.success) {
         setIsSuccess(true);
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.inventory.getAllInventory],
+        });
+        router.push("/inventory");
         setApiError(null);
       } else {
         setApiError(

@@ -22,8 +22,8 @@ export function QuickActionCard({
       <div className="mb-2 rounded-full bg-primary/10 p-2 text-primary">
         {icon}
       </div>
-      <h3 className="text-[12px] font-medium">{title}</h3>
-      <p className="text-[9px] text-muted-foreground text-center mt-1">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <p className="text-[13px] text-muted-foreground text-center mt-1">
         {description}
       </p>
     </Link>

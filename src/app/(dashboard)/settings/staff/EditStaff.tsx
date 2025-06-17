@@ -129,7 +129,7 @@ const EditStaff = ({
                   type="submit"
                   className="w-full h-[48px] mt-6"
                 >
-                  {editAttendantLoading ? <Spinner /> : "Edit "}
+                  {editAttendantLoading ? <Spinner /> : "Save"}
                 </Button>
               </form>
             </Form>
