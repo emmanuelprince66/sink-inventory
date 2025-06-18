@@ -12,7 +12,9 @@ import { useDeleteCustomerMutation } from "@/api/customer/delete-customer";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
+import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
 
 const CustomerSchema = z.object({
@@ -36,6 +38,7 @@ export const useCustomerHook = ({
   const isUserSubscribed = useIsUserSubscribeStore(
     (state) => state.is_subscribed
   );
+  const queryClient = useQueryClient();
 
   console.log("isUserSubscribed", isUserSubscribed);
   const router = useRouter();
@@ -50,6 +53,9 @@ export const useCustomerHook = ({
     onSuccess: (data) => {
       console.log("data", data);
       showToast(data.message, "success");
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.customers.getAllCustomers],
+      });
       refetch();
       if (closeModal) closeModal();
       // Optional: Invalidate queries or update cache

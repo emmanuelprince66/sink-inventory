@@ -60,7 +60,7 @@ const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
             </Button>
           </div>
 
-          <div className="mt-2 space-y-4">
+          <div className="mt-2 space-y-4 max-h-full overflow-y-auto w-full">
             {CustomerLoading ? (
               // Show skeleton loading states
               Array.from({ length: 5 }).map((_, index) => (
@@ -82,7 +82,9 @@ const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
                     <p className="text-sm text-gray-500">{customer.phone}</p>
                     <p className="text-sm text-gray-500">-</p>
 
-                    <p className="text-sm text-gray-500">{customer.email}</p>
+                    <p className="text-[12px] text-gray-500  ">
+                      {customer.email}
+                    </p>
                   </div>
                 </div>
               ))
