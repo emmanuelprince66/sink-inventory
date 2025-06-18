@@ -5,6 +5,7 @@ import { useEditExpenseMutation } from "@/api/expenses/edit-expense";
 import { useFetchExpensesByIdQuery } from "@/api/expenses/fetch-expense-by-id";
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useParams } from "next/navigation";
@@ -40,16 +41,21 @@ export const useExpensesHook = ({
   selectedCategory,
   closeModal,
   dateRange,
+  handleOpenNotSubscribeModal,
 }: {
   searchInput?: any;
   dateRange?: DateRange | undefined;
   selectedCategory?: string | null;
   closeModal?: () => void;
+  handleOpenNotSubscribeModal?: () => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
   const params = useParams();
   const expenseId = params.id as string;
+  const isUserSubscribed = useIsUserSubscribeStore(
+    (state) => state.is_subscribed
+  );
 
   // console.log("expenseId", expenseId);
 
@@ -115,6 +121,11 @@ export const useExpensesHook = ({
   const onSubmit = (values: AddExpenseFormValues) => {
     try {
       // Validate amount is a number
+
+      if (!isUserSubscribed?.is_subscribed) {
+        handleOpenNotSubscribeModal?.();
+        return;
+      }
       const amount = Number(values.amount);
       if (isNaN(amount)) {
         throw new Error("Amount must be a valid number");

@@ -1,6 +1,7 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
+import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import {
 import { useToast } from "@/hooks/toast/useToast";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
@@ -78,13 +80,27 @@ const ReceiptPage = ({
   const openAddBankModalFunc = () => setOpenAddBankModal(true);
   const closeAddBankModal = () => setOpenAddBankModal(false);
 
+  const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
+  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
+
   const [sureModal, setSureModal] = useState(false);
 
   const closeSureModal = () => setSureModal(false);
-  const openSureModal = () => setSureModal(true);
+  const openSureModal = () => {
+    if (!isUserSubscribed?.is_subscribed) {
+      handleOpenNotSubscribeModal?.();
+      return;
+    }
+    setSureModal(true);
+  };
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
   // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
+
+  const isUserSubscribed = useIsUserSubscribeStore(
+    (state) => state.is_subscribed
+  );
 
   const {
     BusinessData,
@@ -1036,6 +1052,17 @@ const ReceiptPage = ({
           </CustomModal>
         </div>
       )}
+
+      <CustomModal
+        isOpen={showNotSubscribeModal}
+        onClose={handleCloseNotSubscribeModal}
+        trigger={false}
+        title="Subscription Details"
+      >
+        <div className="w-full ">
+          <UserNotSubscribe />
+        </div>
+      </CustomModal>
     </>
   );
 };

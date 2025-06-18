@@ -13,6 +13,7 @@ import { DateRange } from "react-day-picker";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { formatToNaira } from "@/utils/formatMoney";
+import Link from "next/link";
 import { useCallback, useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
@@ -99,6 +100,15 @@ const Customers = () => {
                 <p className="text-sm">Add Customer</p>
               </Button>
             </div>
+
+            <Link href={"/customers/upload"}>
+              <Button
+                variant="outline"
+                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50"
+              >
+                <span className="hidden md:inline">Upload</span> CSV
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

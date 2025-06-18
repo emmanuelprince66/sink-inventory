@@ -5,6 +5,7 @@ import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useParams } from "next/navigation";
@@ -98,11 +99,20 @@ const createProductSchema = (isEditMode: boolean) => {
 
 export type ProductFormValues = z.infer<ReturnType<typeof createProductSchema>>;
 
-export const useProductHook = ({ id }: { id?: string }) => {
+export const useProductHook = ({
+  id,
+  handleOpenNotSubscribeModal,
+}: {
+  id?: string;
+  handleOpenNotSubscribeModal?: () => void;
+}) => {
   const params = useParams();
   const productId = id || params.id;
   const business_id = useBusinessStore((state) => state.business_id);
   const isEditMode = !!productId;
+  const isUserSubscribed = useIsUserSubscribeStore(
+    (state) => state.is_subscribed
+  );
 
   // Data fetching
   const { data: ProductData, isLoading: ProductDataLoading } =
@@ -227,6 +237,10 @@ export const useProductHook = ({ id }: { id?: string }) => {
 
   // Form submission
   const onSubmit = async (values: ProductFormValues) => {
+    if (!isUserSubscribed?.is_subscribed) {
+      handleOpenNotSubscribeModal?.();
+      return;
+    }
     if (!business_id) return;
 
     const formData = new FormData();

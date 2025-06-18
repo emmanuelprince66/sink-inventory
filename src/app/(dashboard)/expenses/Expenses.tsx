@@ -4,6 +4,7 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
@@ -37,6 +38,9 @@ interface CustomInventoryCardProps {
 const Expenses = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
+  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
@@ -51,6 +55,7 @@ const Expenses = () => {
     searchInput,
     selectedCategory,
     dateRange,
+    handleOpenNotSubscribeModal,
   });
 
   const handleSearchChange = (value: string) => {
@@ -225,7 +230,21 @@ const Expenses = () => {
         trigger={false}
         title="Add New Expense"
       >
-        <AddExpenses closeModal={closeAddExpensesModal} />
+        <AddExpenses
+          handleOpenNotSubscribeModal={handleOpenNotSubscribeModal}
+          closeModal={closeAddExpensesModal}
+        />
+      </CustomModal>
+
+      <CustomModal
+        isOpen={showNotSubscribeModal}
+        onClose={handleCloseNotSubscribeModal}
+        trigger={false}
+        title="Subscription Details"
+      >
+        <div className="w-full ">
+          <UserNotSubscribe />
+        </div>
       </CustomModal>
     </>
   );

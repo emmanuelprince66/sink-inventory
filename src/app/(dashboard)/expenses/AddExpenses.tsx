@@ -27,14 +27,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { CalendarIcon } from "lucide-react";
-const AddExpenses = ({ closeModal }: { closeModal: () => void }) => {
+const AddExpenses = ({
+  closeModal,
+  handleOpenNotSubscribeModal,
+}: {
+  closeModal: () => void;
+  handleOpenNotSubscribeModal?: () => void;
+}) => {
   const {
     form,
     onSubmit,
     createExpensesLoading,
     CategoriesData,
     CategoriesDataLoading,
-  } = useExpensesHook({ closeModal });
+  } = useExpensesHook({ closeModal, handleOpenNotSubscribeModal });
   return (
     <>
       <div className="flex h-full w-full items-center justify-center">

@@ -1,5 +1,7 @@
 "use client";
+import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
+import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -31,6 +33,9 @@ import { CalendarIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 const EditProduct = ({ id }: { id: string }) => {
+  const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
+  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
   const {
     ProductData,
     onSubmit,
@@ -45,7 +50,7 @@ const EditProduct = ({ id }: { id: string }) => {
     StatusTypeOptions,
     paymentMethodOptions,
     CategoriesDataLoading,
-  } = useProductHook({ id });
+  } = useProductHook({ id, handleOpenNotSubscribeModal });
   return (
     <>
       {!ProductData || loading ? (
@@ -643,6 +648,17 @@ const EditProduct = ({ id }: { id: string }) => {
               </Button>
             </form>
           </Form>
+
+          <CustomModal
+            isOpen={showNotSubscribeModal}
+            onClose={handleCloseNotSubscribeModal}
+            trigger={false}
+            title="Subscription Details"
+          >
+            <div className="w-full ">
+              <UserNotSubscribe />
+            </div>
+          </CustomModal>
         </div>
       )}
     </>

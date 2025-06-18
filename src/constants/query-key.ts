@@ -50,6 +50,7 @@ export const queryKey = {
     customerWalletTrx: "customer-wallet-trx",
     updateWalletBalance: "update-wallet-balance",
     deleteCustomer: "delete-customer",
+    uploadBulkCustomers: "upload-bulk-customers",
   },
   supplier: {
     getAllSuppliers: "get-all-suppliers",

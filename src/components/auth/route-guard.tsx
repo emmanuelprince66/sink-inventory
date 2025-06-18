@@ -1,7 +1,9 @@
 // components/auth/route-guard.tsx
 "use client";
 
+import { useCheckIsUserSubscribedQuery } from "@/api/premium/check-is-user-subscribed";
 import { UserRole } from "@/lib/store/types";
+import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole, useUserStore } from "@/lib/store/user-store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -23,12 +25,25 @@ export function RouteGuard({
   const { hasPermission, isVerified, isSubscribed } = useUserRole();
   const [isChecking, setIsChecking] = useState(true);
 
+  const { data: userSubData, isLoading: userSubDataLoading } =
+    useCheckIsUserSubscribedQuery();
+
+  console.log("userSubData----4", userSubData);
+  const setIsSubscribed = useIsUserSubscribeStore(
+    (state) => state.setIsSubscribed
+  );
+
+  useEffect(() => {
+    if (userSubData) {
+      setIsSubscribed(userSubData);
+    }
+    console.log("userSubData", userSubData);
+  }, [userSubData]);
+
   console.log("requiredRole", requiredRole);
 
   useEffect(() => {
     if (!isHydrated || isLoading) return;
-
-    console.log("requiredRole", requiredRole);
 
     setIsChecking(false);
 
@@ -66,15 +81,15 @@ export function RouteGuard({
     router,
   ]);
 
-  if (!isHydrated || isLoading || isChecking) {
+  if (!isHydrated || isLoading || isChecking || userSubDataLoading) {
     console.log("Loading state:", {
       isHydrated,
       isLoading,
       isChecking,
     });
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner />
+      <div className="flex w-full items-center justify-center h-screen">
+        <Spinner color="text-primary-green-300" size={"xxl"} />
       </div>
     );
   }
