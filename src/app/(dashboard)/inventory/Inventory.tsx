@@ -81,6 +81,7 @@ const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );

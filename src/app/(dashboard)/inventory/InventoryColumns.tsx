@@ -12,7 +12,9 @@ import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
+import DamagedProduct from "./DamagedProduct";
 import EditProductPrice from "./EditProductPrice";
+import ReturnProduct from "./ReturnProduct";
 import SetDiscountModal from "./SetDiscountModal";
 import TransferProduct from "./TransferProduct";
 import { InventoryItem } from "./type";
@@ -142,6 +144,18 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const [transferProductModal, setTransferProductModal] = useState(false);
       const closeTransferProductModal = () => setTransferProductModal(false);
 
+      const [openReturnedProductModal, setOpenReturnedProductModal] =
+        useState(false);
+      const closeReturnedProductModal = () =>
+        setOpenReturnedProductModal(false);
+      const openReturnedProductModalFunc = () =>
+        setOpenReturnedProductModal(true);
+      const [openDamagedProductModal, setOpenDamagedProductModal] =
+        useState(false);
+      const closeDamagedProductModal = () => setOpenDamagedProductModal(false);
+      const openDamagedProductModalFunc = () =>
+        setOpenDamagedProductModal(true);
+
       return (
         <>
           <DropdownMenu>
@@ -173,6 +187,22 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
                 >
                   Set Discount
+                </DropdownMenuItem>
+              )}
+              {isProduct && (
+                <DropdownMenuItem
+                  onClick={openReturnedProductModalFunc}
+                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                >
+                  Add Returned Product
+                </DropdownMenuItem>
+              )}
+              {isProduct && (
+                <DropdownMenuItem
+                  onClick={openDamagedProductModalFunc}
+                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                >
+                  Add Damaged Product
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -262,6 +292,29 @@ export const columns: ColumnDef<InventoryItem>[] = [
             <TransferProduct
               closeModal={closeTransferProductModal}
               inventory={inventory}
+            />
+          </CustomModal>
+
+          <CustomModal
+            isOpen={openReturnedProductModal}
+            onClose={closeReturnedProductModal}
+            trigger={false}
+            title="Add Returned Product"
+          >
+            <ReturnProduct
+              productId={inventory.id}
+              closeModal={closeReturnedProductModal}
+            />
+          </CustomModal>
+          <CustomModal
+            isOpen={openDamagedProductModal}
+            onClose={closeDamagedProductModal}
+            trigger={false}
+            title="Add Damaged Product"
+          >
+            <DamagedProduct
+              productId={inventory.id}
+              closeModal={closeDamagedProductModal}
             />
           </CustomModal>
 

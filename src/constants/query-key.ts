@@ -93,6 +93,8 @@ export const queryKey = {
     transferProduct: "transfer-product",
     bulkUpload: "bulk-upload",
     transferHistory: "transfer-history",
+    transactionsHistory: "transactions-history",
+    returnDamagedProduct: "return-damaged-product",
   },
   categories: {
     getAllCategories: "get-all-categories",

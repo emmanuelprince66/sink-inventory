@@ -4,9 +4,20 @@ import { useProductSoldHistoryColumns } from "./ProductSoldHistoryColumn";
 const ProductSoldHistoryTable = ({
   response,
   loading,
+  currentPage,
+  totalPages,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
 }: {
   response: any;
   loading: any;
+  currentPage: number;
+  totalPages: number;
+
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }) => {
   const columns = useProductSoldHistoryColumns();
 
@@ -16,7 +27,14 @@ const ProductSoldHistoryTable = ({
         loading={loading}
         noDataText="No Product Sold History found"
         columns={columns}
-        data={response}
+        data={response?.data?.results?.data || []}
+        pagination={{
+          currentPage,
+          totalPages,
+          pageSize,
+          onPageChange,
+          onPageSizeChange,
+        }}
       />
     </>
   );

@@ -11,7 +11,7 @@ export const useProductSoldHistoryColumns = () => {
         return (
           <div className="font-medium">
             <p className="text-sm text-gray-500">
-              {moment(new Date()).format("MMM D, YYYY h:mm A")}
+              {moment(transfer.created_at).format("MMM D, YYYY h:mm A")}
             </p>
           </div>
         );
@@ -25,7 +25,7 @@ export const useProductSoldHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{40}</p>
+            <p className="text-sm text-gray-500">{transfer.quantity_change}</p>
           </div>
         );
       },
@@ -37,7 +37,9 @@ export const useProductSoldHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{10}</p>
+            <p className="text-sm text-gray-500">
+              {transfer.new_quantity || 0}
+            </p>
           </div>
         );
       },
@@ -49,7 +51,7 @@ export const useProductSoldHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{"Emmanuel"}</p>
+            <p className="text-sm text-gray-500">{transfer.processor || "-"}</p>
           </div>
         );
       },

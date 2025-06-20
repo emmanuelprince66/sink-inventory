@@ -2,6 +2,7 @@ import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useAddProductMutation } from "@/api/products/add-product";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
+import { useFetchProductTransactionsQuery } from "@/api/products/get-transactions-history";
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -117,6 +118,8 @@ export const useProductHook = ({
   // Data fetching
   const { data: ProductData, isLoading: ProductDataLoading } =
     useFetchProductByIdQuery(productId, { enabled: isEditMode });
+  const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
+    useFetchProductTransactionsQuery(productId, { enabled: isEditMode });
   const { data: TransferHistoryData, isLoading: TransferHistoryLoading } =
     useFetchTransferHistoryQuery(productId, { enabled: !!productId });
 
@@ -380,6 +383,8 @@ export const useProductHook = ({
     form,
     editProductPending,
     TransferHistoryLoading,
+    ProductTransactionData,
+    ProductTransactionLoading,
     TransferHistoryData,
     addProductPending,
     CategoriesData,

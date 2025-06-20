@@ -1,4 +1,7 @@
+"use client";
+
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProductHook } from "@/hooks/useProductHook";
 import {
   ArrowDown,
   ArrowUp,
@@ -9,8 +12,17 @@ import {
   Trash2,
   Truck,
 } from "lucide-react";
+import { useState } from "react";
+import ProductSoldData from "./ProductSoldData";
 
 const ProductSoldHistory = ({ id }: { id: string }) => {
+  const { ProductTransactionData, ProductTransactionLoading } = useProductHook({
+    id,
+  });
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+
+  console.log("ProductTransactionData:", ProductTransactionData);
   // Sample data
   const dataArray = [
     {
@@ -91,121 +103,137 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
           Product Sold History
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Product Info */}
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">
-              Product Details
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-500 w-32">
-                  Product Name:
-                </span>
-                <span className="text-sm text-gray-800">
-                  Premium Coffee Beans
-                </span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-500 w-32">
-                  Category:
-                </span>
-                <span className="text-sm text-gray-800">Beverages</span>
-              </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-500 w-32">
-                  Current Stock:
-                </span>
-                <span className="text-sm font-medium text-blue-600">
-                  42 units
-                </span>
-              </div>
+        {!ProductTransactionData || ProductTransactionLoading ? (
+          <div className="w-full">
+            <div className="space-x-4 flex items-center mb-4 ">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-40 w-full bg-[#eef4ef] mt-2"
+                />
+              ))}
             </div>
           </div>
-
-          {/* Quantities Summary */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Quantities In */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <div className="flex items-center mb-3">
-                <ArrowUp className="h-4 w-4 text-blue-500 mr-2" />
-                <h3 className="text-sm font-medium text-blue-800">
-                  Quantities In
-                </h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <ShoppingCart className="h-3 w-3 mr-1" /> Purchase
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Product Info */}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">
+                Product Details
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-500 w-32">
+                    Product Name:
                   </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesIn.purchase}
+                  <span className="text-sm text-gray-800">
+                    {ProductTransactionData?.data?.results?.name || "N/A"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <RotateCcw className="h-3 w-3 mr-1" /> Sold Reversal
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-500 w-32">
+                    Category:
                   </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesIn.soldReversal}
+                  <span className="text-sm text-gray-800">
+                    {ProductTransactionData?.data?.results?.category || "N/A"}
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <Truck className="h-3 w-3 mr-1" /> Transfer In
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-500 w-32">
+                    Current Stock:
                   </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesIn.transferIn}
+                  <span className="text-sm font-medium text-blue-600">
+                    {ProductTransactionData?.data?.results?.quantity || 0}
+                    units
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quantities Out */}
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-              <div className="flex items-center mb-3">
-                <ArrowDown className="h-4 w-4 text-red-500 mr-2" />
-                <h3 className="text-sm font-medium text-red-800">
-                  Quantities Out
-                </h3>
+            {/* Quantities Summary */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Quantities In */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div className="flex items-center mb-3">
+                  <ArrowUp className="h-4 w-4 text-blue-500 mr-2" />
+                  <h3 className="text-sm font-medium text-blue-800">
+                    Quantities In
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <ShoppingCart className="h-3 w-3 mr-1" /> Purchase
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.purchase || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <RotateCcw className="h-3 w-3 mr-1" /> Sold Reversal
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.returned || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <Truck className="h-3 w-3 mr-1" /> Transfer In
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.transfer_in || 0}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <ArrowDown className="h-3 w-3 mr-1" /> Sold
-                  </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesOut.sold}
-                  </span>
+
+              {/* Quantities Out */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                <div className="flex items-center mb-3">
+                  <ArrowDown className="h-4 w-4 text-red-500 mr-2" />
+                  <h3 className="text-sm font-medium text-red-800">
+                    Quantities Out
+                  </h3>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <RefreshCw className="h-3 w-3 mr-1" /> Returned
-                  </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesOut.returned}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <Trash2 className="h-3 w-3 mr-1" /> Removed
-                  </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesOut.removed}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-600 flex items-center">
-                    <Truck className="h-3 w-3 mr-1" /> Transfer Out
-                  </span>
-                  <span className="text-sm font-medium">
-                    {summary.quantitiesOut.transferOut}
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <ArrowDown className="h-3 w-3 mr-1" /> Sold
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.sold || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <RefreshCw className="h-3 w-3 mr-1" /> Damaged
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.damaged || 0}
+                    </span>
+                  </div>
+                  {/* <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <Trash2 className="h-3 w-3 mr-1" /> Removed
+                    </span>
+                    <span className="text-sm font-medium">
+                      {summary.quantitiesOut.removed}
+                    </span>
+                  </div> */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-600 flex items-center">
+                      <Truck className="h-3 w-3 mr-1" /> Transfer Out
+                    </span>
+                    <span className="text-sm font-medium">
+                      {ProductTransactionData?.data?.results?.transfer_out || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Financial Summary */}
         <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
@@ -254,7 +282,7 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
             </h2>
           </div>
 
-          {false ? (
+          {ProductTransactionLoading || !ProductTransactionData ? (
             <div className="w-full">
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full bg-[#eef4ef]" />
@@ -268,61 +296,12 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date & Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      New Quantity
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Quantity Change
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Processed By
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {dataArray.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.created_at.toLocaleDateString()} at{" "}
-                        {item.created_at.toLocaleTimeString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          {/* {getTransactionIcon(item.type)} */}
-                          <span className="ml-2 capitalize">
-                            {item.type.replace("-", " ")}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.new_qty}
-                      </td>
-                      <td
-                        className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${
-                          item.qty_change >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {item.qty_change >= 0 ? "+" : ""}
-                        {item.qty_change}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.sold_by}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <ProductSoldData
+                setPage={setPage}
+                page={page}
+                productSoldLoading={ProductTransactionLoading}
+                productSoldData={ProductTransactionData}
+              />
             </div>
           )}
         </div>

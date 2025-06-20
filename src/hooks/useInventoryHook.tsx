@@ -10,6 +10,7 @@ import { z } from "zod";
 import { useDeleteServiceMutation } from "@/api/products/delete-service";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useEditServiceMutation } from "@/api/products/edit-service";
+import { useReturnDamagedProductMutation } from "@/api/products/product-return";
 import { useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 
@@ -17,6 +18,14 @@ import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
 
+const AddReturnProductSchema = z.object({
+  quantity: z.string().min(1, " Quantity is required"),
+  note: z.string().optional(),
+});
+const AddDamagedProductSchema = z.object({
+  quantity: z.string().min(1, " Quantity is required"),
+  note: z.string().optional(),
+});
 const AddServiceSchema = z.object({
   service_name: z.string().min(1, "Customer name is required"),
   description: z.string().min(1, "description number is required"),
@@ -30,6 +39,8 @@ const AddDiscountSchema = z.object({
 
 export type AddServiceFormValues = z.infer<typeof AddServiceSchema>;
 export type AddDiscountFormValues = z.infer<typeof AddDiscountSchema>;
+export type AddReturnedFormValues = z.infer<typeof AddReturnProductSchema>;
+export type AddDamagedFormValues = z.infer<typeof AddDamagedProductSchema>;
 
 const EditSellingPriceSchema = z.object({
   selling_price: z
@@ -80,6 +91,25 @@ export const useInventoryHook = ({
   const queryClient = useQueryClient();
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+
+  const {
+    mutate: addReturnedOrDamagedProduct,
+    isPending: addReturnedOrDamagedProductLoading,
+    isSuccess: addReturnedOrDamagedProductSuccess,
+  } = useReturnDamagedProductMutation({
+    productId: productId || "", // Convert null to undefined
+    onSuccess: (data) => {
+      console.log("data", data);
+      showToast(data.message, "success");
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
+      if (closeModal) closeModal();
+      // Optional: Invalidate queries or update cache
+    },
+
+    // You can add other callbacks here if needed
+  });
 
   const {
     mutate: editProduct,
@@ -212,6 +242,22 @@ export const useInventoryHook = ({
     return null;
   };
 
+  const addReturnedProductForm = useForm<AddReturnedFormValues>({
+    resolver: zodResolver(AddReturnProductSchema) as any, // Temporary workaround
+    defaultValues: {
+      quantity: "",
+      note: "",
+    },
+    mode: "onChange",
+  });
+  const addDamagedProductForm = useForm<AddDamagedFormValues>({
+    resolver: zodResolver(AddDamagedProductSchema) as any, // Temporary workaround
+    defaultValues: {
+      quantity: "",
+      note: "",
+    },
+    mode: "onChange",
+  });
   const editSellingPriceForm = useForm<EditSellingPriceFormValues>({
     resolver: zodResolver(EditSellingPriceSchema) as any, // Temporary workaround
     defaultValues: {
@@ -238,6 +284,48 @@ export const useInventoryHook = ({
     },
     mode: "onChange",
   });
+
+  const onSubmitAddReturnedProduct = (values: AddReturnedFormValues) => {
+    const payload: {
+      quantity: number;
+      type: string;
+      note?: string; // Optional field
+    } = {
+      quantity: Number(values.quantity),
+      type: "RETURN",
+    };
+
+    // Only add note if it exists and isn't empty
+    if (values.note && values.note.trim() !== "") {
+      payload.note = values.note;
+    }
+
+    addReturnedOrDamagedProduct({
+      payload,
+      productId: productId, // Convert null to undefined
+    });
+  };
+
+  const onSubmitAddDamagedProduct = (values: AddDamagedFormValues) => {
+    const payload: {
+      quantity: number;
+      type: string;
+      note?: string; // Optional field
+    } = {
+      quantity: Number(values.quantity),
+      type: "DAMAGE",
+    };
+
+    // Only add note if it exists and isn't empty
+    if (values.note && values.note.trim() !== "") {
+      payload.note = values.note;
+    }
+
+    addReturnedOrDamagedProduct({
+      payload,
+      productId: productId, // Convert null to undefined
+    });
+  };
 
   const addDiscountSubmit = (values: AddDiscountFormValues) => {
     const payload = {
@@ -290,6 +378,11 @@ export const useInventoryHook = ({
     // closeAddServiceModal();
   };
   return {
+    onSubmitAddReturnedProduct,
+    onSubmitAddDamagedProduct,
+    addReturnedProductForm,
+    addDamagedProductForm,
+    addReturnedOrDamagedProductLoading,
     InventoryData,
     CategoriesData,
     addDiscountSubmit,

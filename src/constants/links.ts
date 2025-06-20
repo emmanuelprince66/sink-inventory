@@ -1,6 +1,7 @@
 // constants/links.ts
 import {
   AirVent,
+  BookCopyIcon,
   ChartSpline,
   DollarSign,
   Home,
@@ -29,6 +30,12 @@ export const links = [
     title: "Customers",
     url: "/customers",
     icon: UsersRound,
+    roles: ["OWNER", "ADMIN-ATTENDANT"],
+  },
+  {
+    title: "Orders",
+    url: "/orders",
+    icon: BookCopyIcon,
     roles: ["OWNER", "ADMIN-ATTENDANT"],
   },
   {
