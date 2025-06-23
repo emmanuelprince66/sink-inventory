@@ -424,27 +424,28 @@ const PrintReceiptView = ({
         style: `
           @page { size: 100% auto; margin: 10mm; }
           body { padding: 0; margin: 0; font-family: Arial, sans-serif; }
-          .receipt-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 10px; }
-          table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+          .receipt-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 6px; }
+          table { width: 100%; border-collapse: collapse; margin: 5px 0; }
           th { padding: 4px 2px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
           td { padding: 2px 1px; font-size: 10px; border-bottom: 1px solid #f3f4f6; }
           .text-green-600 { color: #16a34a !important; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
           .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 7px; margin-bottom: 7px; }
-          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 13px; }
-          .transaction-details { background-color: #f9fafb; padding: 8px; border-radius: 6px; margin: 15px 0; }
+          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 4px; margin-top: 1px; }
+          .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 6px; margin: 1px 0; }
           .payment-method { background-color: #f0fdf4; padding: 9px; border-radius: 6px; margin: 8px 0; }
           .total-row { font-weight: bold; font-size: 12px; border-top: 2px solid #16a34a; padding-top: 7px; margin-top: 10px; }
           .item-name { font-weight: bold; }
-          .detail-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+          .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; }
           .detail-label { color: #6b7280; font-size: 10px; }
           .detail-value { font-weight: bold; font-size: 10px; }
           .contact-info { display: flex; flex-direction: column; align-items: center; gap: -6px; margin-top: 3px; }
           .price-cell { font-weight: bold !important; }
-          .receipt-title { font-size: 15px; font-weight: bold; color: #16a34a; }
+          .receipt-title { font-size: 13px; font-weight: bold; color: #16a34a; }
           .receipt-subtitle { font-size: 13px; font-weight: semibold; color: #16a34a; }
           .receipt-little { font-size: 12px; font-weight: semibold;  }
+          .receipt-little-one { font-size: 10px; font-weight: semibold;  }
         `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
@@ -499,13 +500,13 @@ const PrintReceiptView = ({
         className="receipt-container w-full max-w-md bg-white p-1 rounded-lg shadow-md border border-gray-200"
       >
         {/* Receipt header */}
-        <div className="receipt-header text-center mb-4 pb-3 border-b border-gray-200">
-          <h2 className="text-[15px] receipt-title font-bold mb-2 text-green-600">
+        <div className="receipt-header text-center mb-1 pb-3 border-b border-gray-200">
+          <h2 className="text-[15px] receipt-title font-bold mb-1 text-green-600">
             PAYMENT RECEIPT
           </h2>
-          <p className="text-green-600  receipt-subtitle text-[13px] font-semibold text-sm mb-3">
+          {/* <p className="text-green-600  receipt-subtitle text-[13px] font-semibold text-sm mb-3">
             TRANSACTION SUCCESSFUL
-          </p>
+          </p> */}
 
           <div className="w-full flex flex-col items-center gap-3">
             <div className="flex flex-col items-center w-full">
@@ -578,7 +579,7 @@ const PrintReceiptView = ({
         </div>
 
         {/* Transaction details */}
-        <div className="transaction-details bg-gray-50 rounded-md p-3 my-4">
+        <div className="transaction-details bg-gray-50 rounded-md p-3 my-1">
           <div className="space-y-1 text-sm">
             <div className="detail-row flex justify-between">
               <span className="detail-label text-gray-500">Date:</span>
@@ -613,11 +614,11 @@ const PrintReceiptView = ({
         </div>
 
         {/* Payment method */}
-        <div className="payment-method mt-4 bg-green-50 p-3 rounded-md">
-          <p className="text-xs receipt-little text-gray-500">
+        <div className="detail-row  flex justify-between mt-1 bg-green-50 p-3 rounded-md">
+          <p className="text-[13px] receipt-little text-gray-500">
             PAYMENT METHOD:
           </p>
-          <p className="capitalize receipt-little  font-semibold text-green-600">
+          <p className="capitalize receipt-little  text-[13px]  font-semibold text-green-600">
             {(createSaleResponse?.data?.method || "cash")
               .toUpperCase()
               .replace("_", " ")}
@@ -625,9 +626,9 @@ const PrintReceiptView = ({
         </div>
 
         {/* Footer */}
-        <div className="receipt-footer mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="font-bold text-base receipt-little">THANK YOU!</p>
-          <p className="mt-1 text-xs receipt-little text-gray-400">
+        <div className="receipt-footer flex flex-col items-center justify-center pt-1 border-t border-gray-200 text-center">
+          <p className="font-bold text-[10px] receipt-little-one">THANK YOU!</p>
+          <p className="mt-1 text-[8px] receipt-little-one text-gray-400">
             Powered by Sync360
           </p>
         </div>
