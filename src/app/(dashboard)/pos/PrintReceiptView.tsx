@@ -47,121 +47,125 @@ Font.register({
 // Updated PDF Styles to match the print receipt exactly
 const styles = StyleSheet.create({
   page: {
-    padding: 8,
-    fontSize: 12,
+    padding: 4, // Reduced from 8
+    fontSize: 10, // Reduced from 12
     fontFamily: "Roboto",
     backgroundColor: "#ffffff",
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 8, // Reduced from 16
     textAlign: "center",
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 4, // Reduced from 12
+    borderBottomWidth: 0.5, // Reduced from 1
     borderBottomColor: "#e5e7eb",
   },
   title: {
-    fontSize: 20,
+    fontSize: 14, // Reduced from 20
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 4, // Reduced from 8
     color: "#16a34a",
   },
   subtitle: {
     color: "#16a34a",
-    marginBottom: 12,
+    marginBottom: 6, // Reduced from 12
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: 10, // Reduced from 14
   },
   businessName: {
-    fontSize: 16,
+    fontSize: 12, // Reduced from 16
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
   },
   businessAddress: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
+    lineHeight: 1.2, // Added to make multiline text more compact
   },
   contactInfo: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 2, // Reduced from 4
   },
   contactText: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: "#6b7280",
   },
   separator: {
-    marginHorizontal: 8,
+    marginHorizontal: 4, // Reduced from 8
     color: "#6b7280",
   },
   table: {
     width: "100%",
-    marginVertical: 16,
+    marginVertical: 8, // Reduced from 16
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f0fdf4",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 4, // Reduced from 8
+    paddingHorizontal: 2, // Reduced from 4
   },
   tableHeaderText: {
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5, // Reduced from 1
     borderBottomColor: "#f3f4f6",
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    paddingVertical: 6, // Reduced from 12
+    paddingHorizontal: 2, // Reduced from 4
   },
   cellItem: {
     flex: 3,
-    paddingRight: 4,
+    paddingRight: 2, // Reduced from 4
   },
   itemName: {
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
   },
   cellQty: {
     flex: 1,
     textAlign: "center",
+    fontSize: 10, // Added for consistency
   },
   cellPrice: {
     flex: 2,
     textAlign: "right",
-    paddingRight: 4,
+    paddingRight: 2, // Reduced from 4
+    fontSize: 10, // Added for consistency
   },
   cellTotal: {
     flex: 2,
     textAlign: "right",
     fontWeight: "bold",
+    fontSize: 10, // Added for consistency
   },
   totalSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 2,
+    marginTop: 8, // Reduced from 16
+    paddingTop: 6, // Reduced from 12
+    borderTopWidth: 1, // Reduced from 2
     borderTopColor: "#16a34a",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     fontWeight: "bold",
   },
   totalLabel: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
   },
   totalAmount: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     color: "#16a34a",
   },
   transactionDetails: {
     backgroundColor: "#f9fafb",
-    borderRadius: 6,
-    padding: 2,
-    marginVertical: 5,
+    borderRadius: 4, // Reduced from 6
+    padding: 1, // Reduced from 2
+    marginVertical: 3, // Reduced from 5
   },
   detailRow: {
     flexDirection: "row",
@@ -169,50 +173,49 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 10, // Reduced from 14
     color: "#6b7280",
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: 10, // Reduced from 14
     fontWeight: "bold",
   },
   paymentMethodBox: {
-    marginTop: 2,
-    padding: 4,
+    marginTop: 1, // Reduced from 2
+    padding: 2, // Reduced from 4
     flexDirection: "row",
     justifyContent: "space-between",
     backgroundColor: "#f0fdf4",
-    borderRadius: 6,
+    borderRadius: 4, // Reduced from 6
   },
   paymentMethodTitle: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: "#6b7280",
-    marginBottom: 3,
+    marginBottom: 1, // Reduced from 3
   },
   paymentMethodValue: {
-    fontSize: 8,
+    fontSize: 8, // Kept same
     fontWeight: "bold",
     color: "#16a34a",
   },
   footer: {
-    marginTop: 5,
+    marginTop: 2, // Reduced from 5
     textAlign: "center",
-    paddingTop: 8,
-    borderTopWidth: 1,
+    paddingTop: 4, // Reduced from 8
+    borderTopWidth: 0.5, // Reduced from 1
     borderTopColor: "#e5e7eb",
   },
   thankyou: {
-    fontSize: 8,
+    fontSize: 8, // Kept same
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
   },
   poweredBy: {
-    marginTop: 4,
-    fontSize: 5,
+    marginTop: 2, // Reduced from 4
+    fontSize: 6, // Increased from 5 for better readability
     color: "#9ca3af",
   },
 });
-
 // Updated PDF Document Component
 const ReceiptPDFDocument = ({
   cart,
@@ -424,31 +427,32 @@ const PrintReceiptView = ({
         printable: printContent.innerHTML,
         type: "raw-html",
         style: `
-          @page { size: 100% auto; margin: 10mm; }
-          body { padding: 0; margin: 0; font-family: Arial, sans-serif; }
-          .receipt-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 6px; }
-          table { width: 100%; border-collapse: collapse; margin: 5px 0; }
-          th { padding: 4px 2px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
-          td { padding: 2px 1px; font-size: 10px; border-bottom: 1px solid #f3f4f6; }
-          .text-green-600 { color: #16a34a !important; }
-          .text-center { text-align: center; }
-          .text-right { text-align: right; }
-          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 7px; margin-bottom: 7px; }
-          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 4px; margin-top: 1px; }
-          .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 6px; margin: 1px 0; }
-          .payment-method { background-color: #f0fdf4; padding: 9px; border-radius: 6px; margin: 8px 0; }
-          .total-row { font-weight: bold; font-size: 12px; border-top: 2px solid #16a34a; padding-top: 7px; margin-top: 10px; }
-          .item-name { font-weight: bold; }
-          .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; }
-          .detail-label { color: #6b7280; font-size: 10px; }
-          .detail-value { font-weight: bold; font-size: 10px; }
-          .contact-info { display: flex; flex-direction: column; align-items: center; gap: -6px; margin-top: 3px; }
-          .price-cell { font-weight: bold !important; }
-          .receipt-title { font-size: 13px; font-weight: bold; color: #16a34a; }
-          .receipt-subtitle { font-size: 13px; font-weight: semibold; color: #16a34a; }
-          .receipt-little { font-size: 12px; font-weight: semibold;  }
-          .receipt-little-one { font-size: 10px; font-weight: semibold;  }
-        `,
+        @page { size: auto; margin: 2mm; }
+        body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
+        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
+        table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
+        th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
+        td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
+        .text-green-600 { color: #16a34a !important; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
+        .receipt-footer { border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
+        .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
+        .payment-method { background-color: #f0fdf4; padding: 2px; border-radius: 3px; margin: 2px 0; }
+        .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
+        .item-name { font-weight: bold; font-size: 10px; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
+        .detail-label { color: #6b7280; font-size: 10px; }
+        .detail-value { font-weight: bold; font-size: 10px; }
+        .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
+        .price-cell { font-weight: bold !important; font-size: 10px; }
+        .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
+        .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
+        .receipt-little { font-size: 10px; font-weight: semibold; margin: 1px 0; }
+        .receipt-little-one { font-size: 8px; font-weight: semibold; margin: 1px 0; }
+        .business-info { margin-bottom: 3px; }
+      `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
           setIsPrinting(false);
@@ -497,72 +501,51 @@ const PrintReceiptView = ({
       </div>
 
       {/* Receipt content - Updated to match desired format */}
-      <div
-        ref={receiptRef}
-        className="receipt-container w-full max-w-md bg-white p-1 rounded-lg shadow-md border border-gray-200"
-      >
+      <div ref={receiptRef} className="receipt-container bg-white rounded-lg">
         {/* Receipt header */}
-        <div className="receipt-header text-center mb-1 pb-3 border-b border-gray-200">
-          <h2 className="text-[15px] receipt-title font-bold mb-1 text-green-600">
-            PAYMENT RECEIPT
-          </h2>
-          {/* <p className="text-green-600  receipt-subtitle text-[13px] font-semibold text-sm mb-3">
-            TRANSACTION SUCCESSFUL
-          </p> */}
-
-          <div className="w-full flex flex-col items-center gap-3">
-            <div className="flex flex-col items-center w-full">
-              <p className="font-semibold receipt-little text-base">
-                {business?.name}
-              </p>
-              <p className="text-xs receipt-little text-gray-500">
-                {business?.street && `${business.street}, `}
-                {business?.city}, {business?.state}, {business?.country}
-              </p>
-              {business?.owner?.email && (
-                <p className="text-xs receipt-little text-gray-500">
-                  {business?.owner?.email}
-                </p>
-              )}
-              {business?.owner?.phone && (
-                <p className="text-xs receipt-little text-gray-500">
-                  {business?.owner?.phone}
-                </p>
-              )}
-            </div>
-          </div>
+        <div className="receipt-header text-center business-info">
+          <h2 className="receipt-title">PAYMENT RECEIPT</h2>
+          <p className="business-name receipt-little font-semibold">
+            {business?.name}
+          </p>
+          <p className="business-address receipt-little text-gray-500">
+            {business?.street && `${business.street}, `}
+            {business?.city}, {business?.state}, {business?.country}
+          </p>
+          {business?.owner?.email && (
+            <p className="business-email receipt-little text-gray-500">
+              {business?.owner?.email}
+            </p>
+          )}
+          {business?.owner?.phone && (
+            <p className="business-phone receipt-little text-gray-500">
+              {business?.owner?.phone}
+            </p>
+          )}
         </div>
 
         {/* Items table */}
-        <div className="my-4">
-          <table className="w-full text-sm">
+        <div className="items-table">
+          <table>
             <thead>
               <tr className="text-left bg-green-50">
-                <th className="py-1 px-1 rounded-tl-md">ITEM</th>
-                <th className="py-1 px-1 text-center">QTY</th>
-                <th className="py-1 px-1 text-right">PRICE</th>
-                <th className="py-1 px-1 text-right rounded-tr-md">TOTAL</th>
+                <th>ITEM</th>
+                <th className="text-center">QTY</th>
+                <th className="text-right">PRICE</th>
+                <th className="text-right">TOTAL</th>
               </tr>
             </thead>
             <tbody>
               {cart.map((item) => (
-                <tr key={item.id} className="border-b border-gray-100">
-                  <td className="py-1 px-1">
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="item-name font-medium">{item.name}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-center py-1 px-1">
-                    {item.cartQuantity || 1}
-                  </td>
-                  <td className="text-right py-1 px-1 price-cell font-bold">
+                <tr key={item.id}>
+                  <td className="item-name">{item.name}</td>
+                  <td className="text-center">{item.cartQuantity || 1}</td>
+                  <td className="text-right price-cell">
                     {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "₦0"}
                   </td>
-                  <td className="text-right py-1 px-1 font-bold price-cell">
+                  <td className="text-right price-cell">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
                         (item.cartQuantity || 1)
@@ -575,64 +558,54 @@ const PrintReceiptView = ({
         </div>
 
         {/* Payment summary */}
-        <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
+        <div className="total-row">
           <span>TOTAL:</span>
           <span className="text-green-600">{formatToNaira(total)}</span>
         </div>
 
         {/* Transaction details */}
-        <div className="transaction-details bg-gray-50 rounded-md p-3 my-1">
-          <div className="space-y-1 text-sm">
-            <div className="detail-row flex justify-between">
-              <span className="detail-label text-gray-500">Date:</span>
-              <span className="detail-value font-medium">
-                {format(
-                  new Date(createSaleResponse?.data?.created_at || Date.now()),
-                  "MMMM d, yyyy, h:mm a"
-                )}
-              </span>
-            </div>
-            <div className="detail-row flex justify-between">
-              <span className="detail-label text-gray-500">Receipt No:</span>
-              <span className="detail-value font-medium">{receiptNumber}</span>
-            </div>
-            {customer && (
-              <div className="detail-row flex justify-between">
-                <span className="detail-label text-gray-500">Customer:</span>
-                <span className="detail-value font-medium">
-                  {customer?.name}
-                </span>
-              </div>
-            )}
-            {attendant && (
-              <div className="detail-row flex justify-between">
-                <span className="detail-label text-gray-500">Attendant:</span>
-                <span className="detail-value font-medium">
-                  {attendant?.name}
-                </span>
-              </div>
-            )}
+        <div className="transaction-details">
+          <div className="detail-row">
+            <span className="detail-label">Date:</span>
+            <span className="detail-value">
+              {format(
+                new Date(createSaleResponse?.data?.created_at || Date.now()),
+                "MMMM d, yyyy, h:mm a"
+              )}
+            </span>
           </div>
+          <div className="detail-row">
+            <span className="detail-label">Receipt No:</span>
+            <span className="detail-value">{receiptNumber}</span>
+          </div>
+          {customer && (
+            <div className="detail-row">
+              <span className="detail-label">Customer:</span>
+              <span className="detail-value">{customer?.name}</span>
+            </div>
+          )}
+          {attendant && (
+            <div className="detail-row">
+              <span className="detail-label">Attendant:</span>
+              <span className="detail-value">{attendant?.name}</span>
+            </div>
+          )}
         </div>
 
         {/* Payment method */}
-        <div className="detail-row  flex justify-between mt-1 bg-green-50 p-3 rounded-md">
-          <p className="text-[13px] receipt-little text-gray-500">
-            PAYMENT METHOD:
-          </p>
-          <p className="capitalize receipt-little  text-[13px]  font-semibold text-green-600">
+        <div className="payment-method">
+          <span>PAYMENT METHOD:</span>
+          <span className="text-green-600">
             {(createSaleResponse?.data?.method || "cash")
               .toUpperCase()
               .replace("_", " ")}
-          </p>
+          </span>
         </div>
 
         {/* Footer */}
-        <div className="receipt-footer flex flex-col items-center justify-center pt-1 border-t border-gray-200 text-center">
-          <p className="font-bold text-[10px] receipt-little-one">THANK YOU!</p>
-          <p className="mt-1 text-[8px] receipt-little-one text-gray-400">
-            Powered by Sync360
-          </p>
+        <div className="receipt-footer">
+          <p className="thank-you">THANK YOU!</p>
+          <p className="powered-by">Powered by Sync360</p>
         </div>
       </div>
 

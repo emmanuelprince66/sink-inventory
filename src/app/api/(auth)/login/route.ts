@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { BaseUrl } from "@/constants/base-url";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const url = `${BaseUrl}auth/login/`;
@@ -33,14 +33,14 @@ export async function POST(request: Request) {
         "Set-Cookie": [
           `accessToken=${
             data.tokens.access
-          }; Path=/; HttpOnly; SameSite=Strict; Max-Age=3600${
+          }; Path=/; HttpOnly; SameSite=Strict; Max-Age=432000${
             process.env.NODE_ENV === "production" ? "; Secure" : ""
-          }`,
+          }`, // 5 days in seconds (5 * 24 * 60 * 60 = 432000)
           `refreshToken=${
             data.tokens.refresh
           }; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${
             process.env.NODE_ENV === "production" ? "; Secure" : ""
-          }`,
+          }`, // 7 days remains unchanged
           `user=${JSON.stringify(
             data
           )}; Path=/; SameSite=Strict; Max-Age=604800${
