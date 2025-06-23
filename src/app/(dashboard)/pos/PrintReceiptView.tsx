@@ -160,13 +160,13 @@ const styles = StyleSheet.create({
   transactionDetails: {
     backgroundColor: "#f9fafb",
     borderRadius: 6,
-    padding: 12,
-    marginVertical: 16,
+    padding: 2,
+    marginVertical: 5,
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 1,
   },
   detailLabel: {
     fontSize: 14,
@@ -177,8 +177,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   paymentMethodBox: {
-    marginTop: 16,
-    padding: 12,
+    marginTop: 2,
+    padding: 4,
+    flexDirection: "row",
+    justifyContent: "space-between",
     backgroundColor: "#f0fdf4",
     borderRadius: 6,
   },
@@ -188,25 +190,25 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   paymentMethodValue: {
-    fontSize: 12,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#16a34a",
   },
   footer: {
-    marginTop: 24,
+    marginTop: 5,
     textAlign: "center",
-    paddingTop: 16,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
   },
   thankyou: {
-    fontSize: 16,
+    fontSize: 8,
     fontWeight: "bold",
     marginBottom: 4,
   },
   poweredBy: {
     marginTop: 4,
-    fontSize: 10,
+    fontSize: 5,
     color: "#9ca3af",
   },
 });
