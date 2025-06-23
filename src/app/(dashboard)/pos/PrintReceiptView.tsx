@@ -437,14 +437,15 @@ const PrintReceiptView = ({
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
-        .receipt-footer { border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
+        .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
         .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
-        .payment-method { background-color: #f0fdf4; padding: 2px; border-radius: 3px; margin: 2px 0; }
+        .payment-method {display: flex; justify-content: space-between; align-items: center; background-color: #f0fdf4; padding: 2px; border-radius: 3px; margin: 2px 0; }
         .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .item-name { font-weight: bold; font-size: 10px; }
         .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #6b7280; font-size: 10px; }
         .detail-value { font-weight: bold; font-size: 10px; }
+        .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
         .price-cell { font-weight: bold !important; font-size: 10px; }
         .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
