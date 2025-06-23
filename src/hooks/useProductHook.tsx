@@ -18,20 +18,37 @@ import { z } from "zod";
 const createProductSchema = (isEditMode: boolean) => {
   const baseSchema = z.object({
     item_name: z.string().min(1, "Item name is required"),
-    image: z.union([
-      z
-        .instanceof(File, { message: "Product image is required" })
-        .refine(
-          (file) => file.size <= 5 * 1024 * 1024,
-          "File size must be less than 5MB"
-        )
-        .refine(
-          (file) =>
-            ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-          "Only .jpg, .png, and .webp formats are supported"
-        ),
-      z.string().min(1, "Product image is required"),
-    ]),
+    // Modified image validation to be optional in edit mode
+    image: isEditMode
+      ? z.union([
+          z
+            .instanceof(File)
+            .refine(
+              (file) => file.size <= 5 * 1024 * 1024,
+              "File size must be less than 5MB"
+            )
+            .refine(
+              (file) =>
+                ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+              "Only .jpg, .png, and .webp formats are supported"
+            )
+            .optional(),
+          z.string().optional(),
+        ])
+      : z.union([
+          z
+            .instanceof(File, { message: "Product image is required" })
+            .refine(
+              (file) => file.size <= 5 * 1024 * 1024,
+              "File size must be less than 5MB"
+            )
+            .refine(
+              (file) =>
+                ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+              "Only .jpg, .png, and .webp formats are supported"
+            ),
+          z.string().min(1, "Product image is required"),
+        ]),
     sku: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Sku is required"),
@@ -39,7 +56,7 @@ const createProductSchema = (isEditMode: boolean) => {
       ? z.string().optional()
       : z.string().min(1, "Category is required"),
     date: z.string().optional(),
-    supplier: isEditMode ? z.string().optional() : z.string().optional(),
+    supplier: z.string().optional(),
     stock_quantity: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Stock Quantity is required"),
@@ -97,7 +114,6 @@ const createProductSchema = (isEditMode: boolean) => {
     }
   });
 };
-
 export type ProductFormValues = z.infer<ReturnType<typeof createProductSchema>>;
 
 export const useProductHook = ({
