@@ -6,6 +6,7 @@ import { useFetchExpensesByIdQuery } from "@/api/expenses/fetch-expense-by-id";
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useParams } from "next/navigation";
@@ -56,6 +57,8 @@ export const useExpensesHook = ({
   const isUserSubscribed = useIsUserSubscribeStore(
     (state) => state.is_subscribed
   );
+
+  const { user } = useUserRole();
 
   // console.log("expenseId", expenseId);
 
@@ -122,7 +125,7 @@ export const useExpensesHook = ({
     try {
       // Validate amount is a number
 
-      if (!isUserSubscribed?.is_subscribed) {
+      if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
         handleOpenNotSubscribeModal?.();
         return;
       }

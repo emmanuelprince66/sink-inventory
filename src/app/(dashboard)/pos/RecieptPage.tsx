@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/toast/useToast";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
@@ -44,6 +45,7 @@ const ReceiptPage = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
+  const { user } = useUserRole();
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const business_id = useBusinessStore((state) => state.business_id);
   const [isChecked, setIsChecked] = useState(false);
@@ -88,7 +90,7 @@ const ReceiptPage = ({
 
   const closeSureModal = () => setSureModal(false);
   const openSureModal = () => {
-    if (!isUserSubscribed?.is_subscribed) {
+    if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
       handleOpenNotSubscribeModal?.();
       return;
     }

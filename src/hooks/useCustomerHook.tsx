@@ -14,6 +14,7 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
 import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
 
@@ -39,6 +40,7 @@ export const useCustomerHook = ({
     (state) => state.is_subscribed
   );
   const queryClient = useQueryClient();
+  const { user } = useUserRole();
 
   console.log("isUserSubscribed", isUserSubscribed);
   const router = useRouter();
@@ -154,7 +156,7 @@ export const useCustomerHook = ({
       email: values.email,
     };
 
-    if (!isUserSubscribed?.is_subscribed) {
+    if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
       handleOpenNotSubscribeModal?.();
       return;
     }

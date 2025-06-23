@@ -7,6 +7,7 @@ import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import moment from "moment";
 import { useParams } from "next/navigation";
@@ -124,6 +125,8 @@ export const useProductHook = ({
   handleOpenNotSubscribeModal?: () => void;
 }) => {
   const params = useParams();
+  const { user } = useUserRole();
+
   const productId = id || params.id;
   const business_id = useBusinessStore((state) => state.business_id);
   const isEditMode = !!productId;
@@ -256,7 +259,7 @@ export const useProductHook = ({
 
   // Form submission
   const onSubmit = async (values: ProductFormValues) => {
-    if (!isUserSubscribed?.is_subscribed) {
+    if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
       handleOpenNotSubscribeModal?.();
       return;
     }
