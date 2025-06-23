@@ -424,23 +424,27 @@ const PrintReceiptView = ({
         style: `
           @page { size: 100% auto; margin: 10mm; }
           body { padding: 0; margin: 0; font-family: Arial, sans-serif; }
-          .receipt-container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .receipt-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 10px; }
           table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-          th { padding: 8px 4px; font-size: 12px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
-          td { padding: 12px 4px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
+          th { padding: 4px 2px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
+          td { padding: 2px 1px; font-size: 10px; border-bottom: 1px solid #f3f4f6; }
           .text-green-600 { color: #16a34a !important; }
           .text-center { text-align: center; }
           .text-right { text-align: right; }
-          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
-          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 30px; }
-          .transaction-details { background-color: #f9fafb; padding: 12px; border-radius: 6px; margin: 15px 0; }
-          .payment-method { background-color: #f0fdf4; padding: 12px; border-radius: 6px; margin: 15px 0; }
-          .total-row { font-weight: bold; font-size: 14px; border-top: 2px solid #16a34a; padding-top: 12px; margin-top: 15px; }
+          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 7px; margin-bottom: 7px; }
+          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 8px; margin-top: 13px; }
+          .transaction-details { background-color: #f9fafb; padding: 8px; border-radius: 6px; margin: 15px 0; }
+          .payment-method { background-color: #f0fdf4; padding: 9px; border-radius: 6px; margin: 8px 0; }
+          .total-row { font-weight: bold; font-size: 12px; border-top: 2px solid #16a34a; padding-top: 7px; margin-top: 10px; }
           .item-name { font-weight: bold; }
           .detail-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
           .detail-label { color: #6b7280; font-size: 10px; }
           .detail-value { font-weight: bold; font-size: 10px; }
-          .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
+          .contact-info { display: flex; flex-direction: column; align-items: center; gap: -6px; margin-top: 3px; }
+          .price-cell { font-weight: bold !important; }
+          .receipt-title { font-size: 15px; font-weight: bold; color: #16a34a; }
+          .receipt-subtitle { font-size: 13px; font-weight: semibold; color: #16a34a; }
+          .receipt-little { font-size: 12px; font-weight: semibold;  }
         `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
@@ -496,36 +500,32 @@ const PrintReceiptView = ({
       >
         {/* Receipt header */}
         <div className="receipt-header text-center mb-4 pb-3 border-b border-gray-200">
-          <h2 className="text-xl font-bold mb-2 text-green-600">
+          <h2 className="text-[15px] receipt-title font-bold mb-2 text-green-600">
             PAYMENT RECEIPT
           </h2>
-          <p className="text-green-600 font-semibold text-sm mb-3">
+          <p className="text-green-600  receipt-subtitle text-[13px] font-semibold text-sm mb-3">
             TRANSACTION SUCCESSFUL
           </p>
 
           <div className="w-full flex flex-col items-center gap-3">
             <div className="flex flex-col items-center w-full">
-              <p className="font-semibold text-base">{business?.name}</p>
-              <p className="text-xs text-gray-500">
+              <p className="font-semibold receipt-little text-base">
+                {business?.name}
+              </p>
+              <p className="text-xs receipt-little text-gray-500">
                 {business?.street && `${business.street}, `}
                 {business?.city}, {business?.state}, {business?.country}
               </p>
-
-              <div className="contact-info flex items-center gap-2 mt-1">
-                {business?.owner?.email && (
-                  <p className="text-xs text-gray-500">
-                    {business?.owner?.email}
-                  </p>
-                )}
-                {business?.owner?.email && business?.owner?.phone && (
-                  <p className="text-gray-500">|</p>
-                )}
-                {business?.owner?.phone && (
-                  <p className="text-xs text-gray-500">
-                    {business?.owner?.phone}
-                  </p>
-                )}
-              </div>
+              {business?.owner?.email && (
+                <p className="text-xs receipt-little text-gray-500">
+                  {business?.owner?.email}
+                </p>
+              )}
+              {business?.owner?.phone && (
+                <p className="text-xs receipt-little text-gray-500">
+                  {business?.owner?.phone}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -535,35 +535,35 @@ const PrintReceiptView = ({
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left bg-green-50">
-                <th className="py-2 px-1 rounded-tl-md">ITEM</th>
-                <th className="py-2 px-1 text-center">QTY</th>
-                <th className="py-2 px-1 text-right">PRICE</th>
-                <th className="py-2 px-1 text-right rounded-tr-md">TOTAL</th>
+                <th className="py-1 px-1 rounded-tl-md">ITEM</th>
+                <th className="py-1 px-1 text-center">QTY</th>
+                <th className="py-1 px-1 text-right">PRICE</th>
+                <th className="py-1 px-1 text-right rounded-tr-md">TOTAL</th>
               </tr>
             </thead>
             <tbody>
               {cart.map((item) => (
                 <tr key={item.id} className="border-b border-gray-100">
-                  <td className="py-3 px-1">
+                  <td className="py-1 px-1">
                     <div className="flex items-center gap-2">
                       <div>
                         <p className="item-name font-medium">{item.name}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="text-center py-3 px-1">
+                  <td className="text-center py-1 px-1">
                     {item.cartQuantity || 1}
                   </td>
-                  <td className="text-right py-3 px-1">
+                  <td className="text-right py-1 px-1 price-cell font-bold">
                     {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "₦0"}
                   </td>
-                  <td className="text-right py-3 px-1 font-medium">
-                    {(
+                  <td className="text-right py-1 px-1 font-bold price-cell">
+                    {formatToNaira(
                       (item.selling_price || item.amount || 0) *
-                      (item.cartQuantity || 1)
-                    ).toLocaleString()}
+                        (item.cartQuantity || 1)
+                    )}
                   </td>
                 </tr>
               ))}
@@ -614,8 +614,10 @@ const PrintReceiptView = ({
 
         {/* Payment method */}
         <div className="payment-method mt-4 bg-green-50 p-3 rounded-md">
-          <p className="text-xs text-gray-500">PAYMENT METHOD:</p>
-          <p className="capitalize font-semibold text-green-600">
+          <p className="text-xs receipt-little text-gray-500">
+            PAYMENT METHOD:
+          </p>
+          <p className="capitalize receipt-little  font-semibold text-green-600">
             {(createSaleResponse?.data?.method || "cash")
               .toUpperCase()
               .replace("_", " ")}
@@ -624,8 +626,10 @@ const PrintReceiptView = ({
 
         {/* Footer */}
         <div className="receipt-footer mt-6 pt-4 border-t border-gray-200 text-center">
-          <p className="font-bold text-base">THANK YOU!</p>
-          <p className="mt-1 text-xs text-gray-400">Powered by Sync360</p>
+          <p className="font-bold text-base receipt-little">THANK YOU!</p>
+          <p className="mt-1 text-xs receipt-little text-gray-400">
+            Powered by Sync360
+          </p>
         </div>
       </div>
 

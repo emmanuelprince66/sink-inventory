@@ -167,10 +167,11 @@ const ReceiptPage = ({
   // For split payments, filter out methods already used
   const availableSplitPaymentMethods = paymentMethodOptions.filter(
     (option) =>
-      !splitPayments.some((payment) => payment.method === option.value) &&
-      option.value !== "PARTIAL" // Remove partial option for split payments
+      // Allow multiple BANK selections by removing the check for BANK method
+      (option.value !== "BANK"
+        ? !splitPayments.some((payment) => payment.method === option.value)
+        : true) && option.value !== "PARTIAL" // Still remove partial option for split payments
   );
-
   const handleAddSplitPayment = () => {
     setSplitPaymentError(""); // Reset error message
 
@@ -311,6 +312,7 @@ const ReceiptPage = ({
 
   const handleSubmitPayment = () => {
     const payload = createPayload();
+
     if (payload) {
       // Construct the final payload according to the API structure
       const apiPayload: any = {
@@ -338,7 +340,7 @@ const ReceiptPage = ({
         apiPayload.multiple_payments = splitPayments.map((payment) => ({
           name: payment.method,
           amount: payment.amount.toString(),
-          // ...(payment.bank && { bank: payment.bank }),
+          ...(payment.bank && { bank: payment.bank }),
           ...(payment.dueDate && {
             due_date: format(payment.dueDate, "yyyy-MM-dd"),
           }),
