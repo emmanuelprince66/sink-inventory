@@ -501,51 +501,56 @@ const PrintReceiptView = ({
       </div>
 
       {/* Receipt content - Updated to match desired format */}
-      <div ref={receiptRef} className="receipt-container bg-white rounded-lg">
+      <div
+        ref={receiptRef}
+        className="receipt-container bg-white rounded-lg w-full p-2"
+      >
         {/* Receipt header */}
-        <div className="receipt-header text-center business-info">
-          <h2 className="receipt-title">PAYMENT RECEIPT</h2>
+        <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
+          <h2 className="receipt-title text-[13px] ">PAYMENT RECEIPT</h2>
           <p className="business-name receipt-little font-semibold">
             {business?.name}
           </p>
-          <p className="business-address receipt-little text-gray-500">
+          <p className="business-address text-[11px] receipt-little text-gray-500">
             {business?.street && `${business.street}, `}
             {business?.city}, {business?.state}, {business?.country}
           </p>
           {business?.owner?.email && (
-            <p className="business-email receipt-little text-gray-500">
+            <p className="business-email text-[11px]  receipt-little text-gray-500">
               {business?.owner?.email}
             </p>
           )}
           {business?.owner?.phone && (
-            <p className="business-phone receipt-little text-gray-500">
+            <p className="business-phone text-[11px]  receipt-little text-gray-500">
               {business?.owner?.phone}
             </p>
           )}
         </div>
 
         {/* Items table */}
-        <div className="items-table">
-          <table>
-            <thead>
-              <tr className="text-left bg-green-50">
+        <div className="items-table w-full">
+          <table className="w-full table-auto ">
+            <thead className="w-full">
+              <tr className="text-left bg-green-50 w-full">
                 <th>ITEM</th>
-                <th className="text-center">QTY</th>
-                <th className="text-right">PRICE</th>
-                <th className="text-right">TOTAL</th>
+                <th className="text-center text-[11px] ">QTY</th>
+                <th className="text-right text-[11px] ">PRICE</th>
+                <th className="text-right text-[11px] ">TOTAL</th>
               </tr>
             </thead>
             <tbody>
               {cart.map((item) => (
                 <tr key={item.id}>
-                  <td className="item-name">{item.name}</td>
-                  <td className="text-center">{item.cartQuantity || 1}</td>
-                  <td className="text-right price-cell">
+                  <td className="item-name text-[11px] ">{item.name}</td>
+                  <td className="text-center text-[11px] ">
+                    {item.cartQuantity || 1}
+                  </td>
+                  <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "₦0"}
                   </td>
-                  <td className="text-right price-cell">
+                  <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
                         (item.cartQuantity || 1)
@@ -559,43 +564,49 @@ const PrintReceiptView = ({
 
         {/* Payment summary */}
         <div className="total-row">
-          <span>TOTAL:</span>
-          <span className="text-green-600">{formatToNaira(total)}</span>
+          <span className="text-[11px]">TOTAL:</span>
+          <span className="text-green-600 text-[11px]">
+            {formatToNaira(total)}
+          </span>
         </div>
 
         {/* Transaction details */}
         <div className="transaction-details">
-          <div className="detail-row">
-            <span className="detail-label">Date:</span>
-            <span className="detail-value">
+          <div className="detail-row flex justify-between items-center">
+            <span className="detail-label text-[11px] ">Date:</span>
+            <span className="detail-value text-[11px] ">
               {format(
                 new Date(createSaleResponse?.data?.created_at || Date.now()),
                 "MMMM d, yyyy, h:mm a"
               )}
             </span>
           </div>
-          <div className="detail-row">
-            <span className="detail-label">Receipt No:</span>
-            <span className="detail-value">{receiptNumber}</span>
+          <div className="detail-row flex justify-between items-center">
+            <span className="detail-label text-[11px] ">Receipt No:</span>
+            <span className="detail-value text-[11px] ">{receiptNumber}</span>
           </div>
           {customer && (
-            <div className="detail-row">
-              <span className="detail-label">Customer:</span>
-              <span className="detail-value">{customer?.name}</span>
+            <div className="detail-row flex justify-between items-center">
+              <span className="detail-label text-[11px] ">Customer:</span>
+              <span className="detail-value text-[11px] ">
+                {customer?.name}
+              </span>
             </div>
           )}
           {attendant && (
-            <div className="detail-row">
-              <span className="detail-label">Attendant:</span>
-              <span className="detail-value">{attendant?.name}</span>
+            <div className="detail-row flex justify-between items-center">
+              <span className="detail-label text-[11px] ">Attendant:</span>
+              <span className="detail-value text-[11px] ">
+                {attendant?.name}
+              </span>
             </div>
           )}
         </div>
 
         {/* Payment method */}
-        <div className="payment-method">
-          <span>PAYMENT METHOD:</span>
-          <span className="text-green-600">
+        <div className="payment-method flex justify-between items-center">
+          <span className="text-[11px] ">PAYMENT METHOD:</span>
+          <span className="text-green-600 text-[11px] ">
             {(createSaleResponse?.data?.method || "cash")
               .toUpperCase()
               .replace("_", " ")}
@@ -603,9 +614,9 @@ const PrintReceiptView = ({
         </div>
 
         {/* Footer */}
-        <div className="receipt-footer">
-          <p className="thank-you">THANK YOU!</p>
-          <p className="powered-by">Powered by Sync360</p>
+        <div className="receipt-footer flex justify-between flex-col items-center">
+          <p className="thank-you text-[13px] ">THANK YOU!</p>
+          <p className="powered-by text-[9px] ">Powered by Sync360</p>
         </div>
       </div>
 
