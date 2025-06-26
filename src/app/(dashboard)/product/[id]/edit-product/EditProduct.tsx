@@ -322,6 +322,22 @@ const EditProduct = ({ id }: { id: string }) => {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="stock_quantity"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Stock Quantity</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter Stock Quantity...."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               {/* Stock Quantity */}
               <FormField
