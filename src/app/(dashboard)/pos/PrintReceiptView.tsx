@@ -1,5 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   Document,
@@ -223,6 +225,8 @@ const ReceiptPDFDocument = ({
   receiptNumber,
   createSaleResponse,
   customer,
+  user,
+  businessData,
   attendant,
   total,
 }: {
@@ -232,6 +236,8 @@ const ReceiptPDFDocument = ({
   createSaleResponse: any;
   total: number;
   customer: any;
+  user: any;
+  businessData: any;
   attendant: any;
 }) => {
   try {
@@ -334,6 +340,15 @@ const ReceiptPDFDocument = ({
                 <Text style={styles.detailValue}>{attendant?.name}</Text>
               </View>
             )}
+            {user?.role === "ATTENDANT" && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Attendant:</Text>
+                <Text style={styles.detailValue}>
+                  {businessData?.owner?.firstname}{" "}
+                  {businessData?.owner?.lastname}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Payment Method */}
@@ -387,6 +402,8 @@ const PrintReceiptView = ({
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const { user } = useUserRole();
+  const { businessData } = useBusinessDataStore();
 
   console.log("customer", customer);
   console.log("attendant", attendant);
@@ -602,6 +619,14 @@ const PrintReceiptView = ({
               </span>
             </div>
           )}
+          {user?.role !== "ATTENDANT" && (
+            <div className="detail-row flex justify-between items-center">
+              <span className="detail-label text-[11px] ">Attendant:</span>
+              <span className="detail-value text-[11px] ">
+                {businessData?.owner?.firstname} {businessData?.owner?.lastname}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Payment method */}
@@ -649,6 +674,8 @@ const PrintReceiptView = ({
               total={total}
               customer={customer}
               attendant={attendant}
+              user={user}
+              businessData={businessData}
             />
           }
           fileName={`receipt-${receiptNumber}.pdf`}

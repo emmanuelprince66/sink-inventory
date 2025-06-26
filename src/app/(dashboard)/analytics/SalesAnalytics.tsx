@@ -1,5 +1,6 @@
 "use client";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -10,7 +11,9 @@ import {
   Legend,
   Tooltip,
 } from "chart.js";
+import { useState } from "react";
 import { Doughnut } from "react-chartjs-2";
+import PaymentDetails from "./PaymentDetails";
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -90,6 +93,11 @@ const SalesAnalytics = ({
   attendantsName: any;
 }) => {
   const { user } = useUserRole();
+  const [openPaymentDetailsModal, setOpenPaymentDetailsModal] = useState(false);
+
+  const handleOpenPaymentDetailsModal = () => setOpenPaymentDetailsModal(true);
+  const handleClosePaymentDetailsModal = () =>
+    setOpenPaymentDetailsModal(false);
 
   // Doughnut chart data
   const chartData = {
@@ -208,7 +216,8 @@ const SalesAnalytics = ({
                 (method: any, index: any) => (
                   <div
                     key={index}
-                    className="flex justify-between items-center w-full"
+                    onClick={handleOpenPaymentDetailsModal}
+                    className="flex cursor-pointer p-2 hover:bg-primary-green-500  justify-between items-center w-full"
                   >
                     <span className="font-medium">
                       {method?.payment_method}
@@ -222,6 +231,16 @@ const SalesAnalytics = ({
             </div>
           </div>
         </CustomCard>
+
+        <CustomModal
+          isOpen={openPaymentDetailsModal}
+          onClose={handleClosePaymentDetailsModal}
+          trigger={true}
+          title="Payment Details"
+          description=""
+        >
+          <PaymentDetails />
+        </CustomModal>
       </div>
     </div>
   );

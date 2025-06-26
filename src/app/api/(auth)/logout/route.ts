@@ -11,7 +11,9 @@ export async function POST() {
 
     // Clear all auth cookies
     response.cookies.delete("accessToken");
+    response.cookies.delete("authToken");
     response.cookies.delete("refreshToken");
+    response.cookies.delete("user_data");
     response.cookies.delete("user");
 
     return response;

@@ -119,7 +119,7 @@ export default function Overview() {
 
     return [
       {
-        title: "Total Revenue",
+        title: "Total Sales",
         value: `${data?.total_purchases?.toLocaleString()}`,
         change: "+0.0%",
         icon: CircleDollarSign,

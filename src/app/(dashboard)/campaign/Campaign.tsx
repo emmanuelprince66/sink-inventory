@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
-import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { PieChart } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddCampaign from "./AddCampaign";
@@ -21,12 +20,12 @@ import FundCampaign from "./FundCampaign";
 const Campaign = () => {
   const [searchInput, setSearchInput] = useState("");
 
-  const { businessData } = useBusinessDataStore();
-
   const {
     CampaignData,
     CampaignLoading,
+    BusinessDataLoading,
     CampaignGroupData,
+    businessData,
     CampaignGroupLoading,
   } = useCampaignHook({});
   console.log("CampaignGroupData", CampaignGroupData);
@@ -81,7 +80,7 @@ const Campaign = () => {
         </div>
       </div>
 
-      {!businessData ? (
+      {!businessData || BusinessDataLoading ? (
         <div className="flex gap-4 w-[500px] mt-5">
           {Array.from({ length: 1 }).map((_, index) => (
             <CustomCard key={index} className="w-full border-gray-200">

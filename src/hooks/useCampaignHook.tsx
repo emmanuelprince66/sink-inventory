@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useDebounce } from "./useDebounce";
 
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useCreateCampaignMutation } from "@/api/campaign/create-campaign";
 import { useCreateCampaignSettingsMutation } from "@/api/campaign/create-campaign-settings";
 import { useCreateGroupMutation } from "@/api/campaign/create-group";
@@ -68,6 +69,16 @@ export const useCampaignHook = ({
   editGroupData?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+
+  const {
+    data: BusinessData,
+    isLoading: BusinessDataLoading,
+    refetch: refetchBusiness,
+  } = useFetchBusinessById(business_id);
+  const businessData = BusinessData?.data?.[0] || {};
+
+  console.log("businessData", businessData);
+
   const { showToast } = useToast();
   const isEditMode = !!editData;
   const isEditModeGroup = !!editGroupData;
@@ -214,6 +225,7 @@ export const useCampaignHook = ({
         console.log("data", data);
         showToast(data.message, "success");
         refetchCampaign();
+        refetchBusiness();
 
         if (closeModal) closeModal();
 
@@ -259,6 +271,7 @@ export const useCampaignHook = ({
           const paymentUrl = new URL(data.data.payment_url);
 
           // Close modal if exists
+          refetchBusiness();
           if (closeModal) closeModal();
 
           // Show success message
@@ -289,6 +302,7 @@ export const useCampaignHook = ({
         console.log("Campaign created successfully", data);
         showToast(data.message, "success");
         refetchCampaign();
+        refetchBusiness();
         if (closeModal) closeModal();
       },
       onError: (error) => {
@@ -306,6 +320,7 @@ export const useCampaignHook = ({
 
       showToast(data.message, "success");
       refetchSettings();
+      refetchBusiness();
     },
     onError: (error) => {
       console.error("Campaign creation failed", error);
@@ -347,6 +362,11 @@ export const useCampaignHook = ({
       (!values.group_ids || values.group_ids.length === 0)
     ) {
       showToast("Please select at least one customer or group", "error");
+      return;
+    }
+
+    if (businessData?.message_credit <= 0) {
+      showToast("You don't have enough credit to send a campaign", "error");
       return;
     }
 
@@ -452,6 +472,7 @@ export const useCampaignHook = ({
     //   },
     // });
   };
+  console.log("campaign data", CampaignData);
 
   return {
     CampaignData,
@@ -467,8 +488,10 @@ export const useCampaignHook = ({
     CreateCampaignSettingLoading,
     onSubmitFundCampaign,
     CampaignSettingsData,
+    BusinessDataLoading,
     fundCampaignForm,
     fundCampaignLoading,
+    businessData,
     handleDeleteGroup,
     CampaignSettingsLoading,
     CreateCampaignSetting,
