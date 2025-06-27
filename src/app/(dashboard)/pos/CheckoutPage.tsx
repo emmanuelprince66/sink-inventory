@@ -282,50 +282,55 @@ const CheckoutPage = ({
                         </div>
 
                         {/* Decimal quantity controls (0.5 increments only) */}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[8px] text-gray-500">
-                            Decimal Qty:
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                            onClick={() => decrementDecimalQuantity(item.id)}
-                            disabled={(item.cartQuantity || 0.5) <= 0.5}
-                          >
-                            <MinusCircle size={2} className="text-[#52b661]" />
-                          </Button>
-                          <input
-                            type="number"
-                            min="0.5"
-                            step="0.5"
-                            value={item.cartQuantity || 0.5}
-                            onChange={(e) =>
-                              handleCustomQuantity(item.id, e.target.value)
-                            }
-                            className="w-12 text-center text-xs border border-gray-200 rounded-md py-1"
-                            onBlur={(e) => {
-                              if (
-                                e.target.value === "" ||
-                                parseFloat(e.target.value) < 0.5
-                              ) {
-                                handleCustomQuantity(item.id, "0.5");
+                        {item?.type?.toLocaleLowerCase() === "product" && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[8px] text-gray-500">
+                              Decimal Qty:
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-6 w-6 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              onClick={() => decrementDecimalQuantity(item.id)}
+                              disabled={(item.cartQuantity || 0.5) <= 0.5}
+                            >
+                              <MinusCircle
+                                size={2}
+                                className="text-[#52b661]"
+                              />
+                            </Button>
+                            <input
+                              type="number"
+                              min="0.5"
+                              step="0.5"
+                              value={item.cartQuantity || 0.5}
+                              onChange={(e) =>
+                                handleCustomQuantity(item.id, e.target.value)
                               }
-                            }}
-                          />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                            onClick={() => incrementDecimalQuantity(item.id)}
-                            disabled={
-                              (item.cartQuantity || 0.5) >=
-                              (item.quantity ?? Infinity)
-                            }
-                          >
-                            <PlusCircle size={2} className="text-[#52b661]" />
-                          </Button>
-                        </div>
+                              className="w-12 text-center text-xs border border-gray-200 rounded-md py-1"
+                              onBlur={(e) => {
+                                if (
+                                  e.target.value === "" ||
+                                  parseFloat(e.target.value) < 0.5
+                                ) {
+                                  handleCustomQuantity(item.id, "0.5");
+                                }
+                              }}
+                            />
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-6 w-6 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              onClick={() => incrementDecimalQuantity(item.id)}
+                              disabled={
+                                (item.cartQuantity || 0.5) >=
+                                (item.quantity ?? Infinity)
+                              }
+                            >
+                              <PlusCircle size={2} className="text-[#52b661]" />
+                            </Button>
+                          </div>
+                        )}
 
                         <div
                           className="text-red-500 p-1 rounded-full cursor-pointer hover:bg-red-50"
