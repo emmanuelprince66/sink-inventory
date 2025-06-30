@@ -2,6 +2,7 @@
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
+import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -86,18 +87,29 @@ const SalesAnalytics = ({
   openAttendantsModal,
   handleClearAttendant,
   attendantsName,
+  dateRange,
 }: {
   SalesAnalyticData: any;
   openAttendantsModal: any;
   handleClearAttendant: any;
   attendantsName: any;
+  dateRange: any;
 }) => {
   const { user } = useUserRole();
   const [openPaymentDetailsModal, setOpenPaymentDetailsModal] = useState(false);
+  const [name, setName] = useState("");
 
-  const handleOpenPaymentDetailsModal = () => setOpenPaymentDetailsModal(true);
+  const handleOpenPaymentDetailsModal = (name: string) => {
+    setName(name);
+    setOpenPaymentDetailsModal(true);
+  };
   const handleClosePaymentDetailsModal = () =>
     setOpenPaymentDetailsModal(false);
+
+  const { BankBreakDownAnalytics, BankBreakDownAnalyticsLoading } =
+    useAnalyticHook({ openPaymentDetailsModal, name, dateRange });
+
+  console.log("BankBreakDownAnalytics", BankBreakDownAnalytics);
 
   // Doughnut chart data
   const chartData = {
@@ -216,7 +228,9 @@ const SalesAnalytics = ({
                 (method: any, index: any) => (
                   <div
                     key={index}
-                    onClick={handleOpenPaymentDetailsModal}
+                    onClick={() =>
+                      handleOpenPaymentDetailsModal(method?.payment_method)
+                    }
                     className="flex cursor-pointer p-2 hover:bg-primary-green-500  justify-between items-center w-full"
                   >
                     <span className="font-medium">
@@ -239,7 +253,10 @@ const SalesAnalytics = ({
           title="Payment Details"
           description=""
         >
-          <PaymentDetails />
+          <PaymentDetails
+            BankBreakDownAnalyticsLoading={BankBreakDownAnalyticsLoading}
+            BankBreakDownAnalytics={BankBreakDownAnalytics}
+          />
         </CustomModal>
       </div>
     </div>

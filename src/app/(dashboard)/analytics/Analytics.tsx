@@ -25,6 +25,8 @@ const Analytics = () => {
     to: new Date(),
   });
 
+  console.log("dateRange--33", dateRange);
+
   const [attendantId, setAttendantId] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [ShowAttendants, setShowAttendants] = useState(false);
@@ -107,6 +109,7 @@ const Analytics = () => {
                   SalesAnalyticData={SalesAnalyticData}
                   attendantsName={attendantsName}
                   handleClearAttendant={handleClearAttendant}
+                  dateRange={dateRange}
                 />
               )}
             </TabsContent>

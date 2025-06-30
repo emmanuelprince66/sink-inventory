@@ -70,6 +70,7 @@ export const queryKey = {
     getSalesAnalytics: "get-sales-analytics",
     getProductAnalytics: "get-product-analytics",
     getCustomerAnalytics: "get-customer-analytics",
+    getBankAnalyticsBreakdown: "get-bank-analytics-breakdown",
   },
   expenses: {
     getAllExpenses: "get-all-expenses",

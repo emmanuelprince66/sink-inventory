@@ -1,3 +1,4 @@
+import { useFetchBankAnalyticBreakdownQuery } from "@/api/analytic/fetch-analytic-breakdown";
 import { useFetchCustomerAnalyticQuery } from "@/api/analytic/fetch-custoner-analytics";
 import { useFetchProductAnalyticQuery } from "@/api/analytic/fetch-product-analytics";
 import { useFetchSalesAnalyticQuery } from "@/api/analytic/fetch-sales-analytic";
@@ -9,10 +10,14 @@ export const useAnalyticHook = ({
   attendantId,
   dateRange,
   searchInput,
+  openPaymentDetailsModal,
+  name,
 }: {
   attendantId?: any;
   dateRange?: DateRange | undefined;
   searchInput?: any;
+  openPaymentDetailsModal?: boolean;
+  name?: string;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
@@ -32,6 +37,25 @@ export const useAnalyticHook = ({
       },
       enabled: !!business_id,
     });
+
+  console.log("start_date", moment(dateRange?.from).format("YYYY-MM-DD"));
+  console.log("end_date", moment(dateRange?.to).format("YYYY-MM-DD"));
+  const {
+    data: BankBreakDownAnalytics,
+    isLoading: BankBreakDownAnalyticsLoading,
+  } = useFetchBankAnalyticBreakdownQuery({
+    params: {
+      id: business_id,
+      start_date: dateRange?.from
+        ? moment(dateRange.from).format("YYYY-MM-DD")
+        : undefined,
+      end_date: dateRange?.to
+        ? moment(dateRange.to).format("YYYY-MM-DD")
+        : undefined,
+      name,
+    },
+    enabled: openPaymentDetailsModal,
+  });
   const { data: ProductAnalyticData, isLoading: ProductAnalyticLoading } =
     useFetchProductAnalyticQuery({
       params: {
@@ -65,6 +89,8 @@ export const useAnalyticHook = ({
     CustomerAnalyticData,
     CustomerAnalyticLoading,
     AttendantsLoading,
+    BankBreakDownAnalytics,
+    BankBreakDownAnalyticsLoading,
     ProductAnalyticData,
     ProductAnalyticLoading,
     SalesAnalyticLoading,
