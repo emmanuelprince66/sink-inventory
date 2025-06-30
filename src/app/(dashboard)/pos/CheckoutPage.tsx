@@ -175,6 +175,7 @@ const CheckoutPage = ({
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+
   const [discount, setDiscount] = useState<{
     type: "fixed" | "percentage";
     value: number;
@@ -558,15 +559,19 @@ const CheckoutPage = ({
                   </div>
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  className="w-full flex items-center justify-center gap-2 text-xs py-2 border-[#52b661]/30 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                  onClick={() => setIsDiscountModalOpen(true)}
-                  disabled={eligibleItems.length === 0}
-                >
-                  <Percent size={14} />
-                  Add Discount
-                </Button>
+                <>
+                  {user?.role === "OWNER" && (
+                    <Button
+                      variant="outline"
+                      className="w-full flex items-center justify-center gap-2 text-xs py-2 border-[#52b661]/30 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                      onClick={() => setIsDiscountModalOpen(true)}
+                      disabled={eligibleItems.length === 0}
+                    >
+                      <Percent size={14} />
+                      Add Discount
+                    </Button>
+                  )}
+                </>
               )}
 
               <Separator className="my-2 bg-[#52b661]/30" />
