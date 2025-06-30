@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   BarElement,
   CategoryScale,
@@ -23,12 +24,16 @@ interface Item {
 interface TopStockedItemsChartProps {
   title: string;
   items: Item[];
+  handleViewMore: any;
   color: string;
+  t: any;
 }
 
 export function TopStockedItemsChart({
   title,
   items,
+  handleViewMore,
+  t,
   color,
 }: TopStockedItemsChartProps) {
   const chartRef = useRef<Chart<"bar"> | null>(null);
@@ -125,7 +130,17 @@ export function TopStockedItemsChart({
 
   return (
     <div className="h-full w-full flex flex-col">
-      <h3 className="text-sm font-medium text-center mb-2">{title}</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-sm font-medium text-center mb-2">{title}</h3>
+        <Button
+          variant="outline"
+          className="border border-gray-200"
+          onClick={() => handleViewMore(t)}
+        >
+          See more
+        </Button>
+      </div>
+
       <div className="flex-1">
         <Bar data={data} options={options} ref={chartRef} />
       </div>

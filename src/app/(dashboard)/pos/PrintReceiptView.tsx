@@ -619,7 +619,7 @@ const PrintReceiptView = ({
               </span>
             </div>
           )}
-          {user?.role !== "ATTENDANT" && (
+          {user?.role === "ATTENDANT" && (
             <div className="detail-row flex justify-between items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
               <span className="detail-value text-[11px] ">

@@ -111,6 +111,7 @@ export default function Overview() {
   const [selectedType, setSelectedType] = useState("");
   const [openInfoModal, setOpenInfoModal] = useState(false);
   const closeInfoModal = () => setOpenInfoModal(false);
+
   // Calculate metrics from real data
   const getMetricsData = () => {
     if (!SalesDashboardData?.data) return [];
@@ -231,6 +232,7 @@ export default function Overview() {
   };
 
   const handleViewMore = (type: string) => {
+    console.log("type", type);
     switch (type) {
       case "top":
         setProductInfo(SalesDashboardData?.data?.top_selling_products);
@@ -244,6 +246,15 @@ export default function Overview() {
         break;
       case "soon":
         setProductInfo(SalesDashboardData?.data?.expiring_soon);
+        break;
+      case "l":
+        setProductInfo(SalesDashboardData?.data?.low_stock);
+        break;
+      case "o":
+        setProductInfo(SalesDashboardData?.data?.out_of_stock);
+        break;
+      case "e":
+        setProductInfo(SalesDashboardData?.data?.expired_product);
         break;
       default:
         break;
@@ -298,6 +309,8 @@ export default function Overview() {
               })) || []
             }
             color="#ef4444"
+            handleViewMore={handleViewMore}
+            t={"o"}
           />
         ),
       },
@@ -316,6 +329,8 @@ export default function Overview() {
               })) || []
             }
             color="#eab308"
+            handleViewMore={handleViewMore}
+            t={"l"}
           />
         ),
       },
@@ -334,6 +349,8 @@ export default function Overview() {
               })) || []
             }
             color="#ef4444"
+            handleViewMore={handleViewMore}
+            t={"e"}
           />
         ),
       },
@@ -518,6 +535,7 @@ export default function Overview() {
             />
 
             {/* Expired Products */}
+
             <ProductStatusCard
               title="Expired"
               type="expired"

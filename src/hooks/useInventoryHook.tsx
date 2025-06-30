@@ -328,11 +328,20 @@ export const useInventoryHook = ({
   };
 
   const addDiscountSubmit = (values: AddDiscountFormValues) => {
-    const payload = {
-      product_threshold: Number(values.product_threshold),
-      price_discount: Number(values.price_discount),
-    };
-    console.log("payload", payload);
+    const formData = new FormData();
+
+    formData.append("discount_threshold", String(values.product_threshold));
+    formData.append("discount", String(values.price_discount));
+
+    editProduct({
+      payload: formData,
+      productId: productId,
+    });
+    // const payload = {
+    //   product_threshold: Number(values.product_threshold),
+    //   price_discount: Number(values.price_discount),
+    // };
+    // console.log("payload", payload);
   };
 
   const onSubmit = (values: any) => {

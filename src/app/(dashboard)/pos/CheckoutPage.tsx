@@ -1,9 +1,25 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
-import { MinusCircle, PlusCircle, Trash2, UserPlus, Users } from "lucide-react";
+import {
+  MinusCircle,
+  Percent,
+  PlusCircle,
+  Trash2,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
@@ -23,6 +39,8 @@ interface CartItem {
   type: string;
   sold?: number;
   cartQuantity?: number;
+  discount_threshold?: number;
+  discount?: number;
 }
 
 interface CheckoutPageProps {
@@ -30,6 +48,121 @@ interface CheckoutPageProps {
   setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   clearCartFunc: () => void;
 }
+
+const DiscountModal = ({
+  open,
+  onOpenChange,
+  onApplyDiscount,
+  subtotal,
+  eligibleItems,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onApplyDiscount: (discount: {
+    type: "fixed" | "percentage";
+    value: number;
+  }) => void;
+  subtotal: number;
+  eligibleItems: CartItem[];
+}) => {
+  const [discountType, setDiscountType] = useState<"fixed" | "percentage">(
+    "fixed"
+  );
+  const [discountValue, setDiscountValue] = useState("");
+  const [error, setError] = useState("");
+
+  const handleApply = () => {
+    const value = parseFloat(discountValue);
+    if (isNaN(value) || value <= 0) {
+      setError("Please enter a valid discount value");
+      return;
+    }
+
+    if (discountType === "percentage" && value > 100) {
+      setError("Percentage discount cannot exceed 100%");
+      return;
+    }
+
+    if (discountType === "fixed" && value > subtotal) {
+      setError("Fixed discount cannot exceed subtotal");
+      return;
+    }
+
+    // Validate that at least one item meets the discount threshold
+    if (eligibleItems.length === 0) {
+      setError("No items in cart meet the discount threshold requirements");
+      return;
+    }
+
+    onApplyDiscount({ type: discountType, value });
+    onOpenChange(false);
+    setError("");
+    setDiscountValue("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px] bg-white border border-gray-200">
+        <DialogHeader>
+          <DialogTitle>Add Discount</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <RadioGroup
+            defaultValue="fixed"
+            className="flex gap-4 cursor-pointer"
+            onValueChange={(value: "fixed" | "percentage") =>
+              setDiscountType(value)
+            }
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="fixed" id="fixed" />
+              <Label htmlFor="fixed" className="flex items-center gap-2">
+                ₦ Fixed Amount
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="percentage" id="percentage" />
+              <Label htmlFor="percentage" className="flex items-center gap-2 ">
+                % Percentage
+              </Label>
+            </div>
+          </RadioGroup>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="discountValue" className="text-right">
+              Value
+            </Label>
+            <Input
+              id="discountValue"
+              type="number"
+              min="0"
+              step={discountType === "percentage" ? "1" : "0.01"}
+              value={discountValue}
+              onChange={(e) => setDiscountValue(e.target.value)}
+              className="col-span-3"
+              placeholder={discountType === "percentage" ? "0-100%" : "0.00"}
+            />
+          </div>
+
+          {eligibleItems.length > 0 && (
+            <div className="text-xs text-gray-500">
+              Eligible items for discount:{" "}
+              {eligibleItems.map((item) => item.name).join(", ")}
+            </div>
+          )}
+
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+        </div>
+        <div className="flex justify-end w-full gap-2">
+          <Button onClick={handleApply}>Apply Discount</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CheckoutPage = ({
   cartItems,
@@ -41,6 +174,11 @@ const CheckoutPage = ({
   const [showReceipt, setShowReceipt] = useState(false);
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [discount, setDiscount] = useState<{
+    type: "fixed" | "percentage";
+    value: number;
+  } | null>(null);
   const { user } = useUserRole();
 
   // Calculate the subtotal
@@ -50,8 +188,36 @@ const CheckoutPage = ({
     );
   }, 0);
 
+  // Get items eligible for discount
+  const eligibleItems = cartItems.filter(
+    (item) =>
+      item.type === "PRODUCT" &&
+      item.discount_threshold &&
+      (item.cartQuantity || 1) >= item.discount_threshold
+  );
+
+  // Calculate discount amount
+  const discountAmount = discount
+    ? discount.type === "fixed"
+      ? Math.min(discount.value, subtotal)
+      : (subtotal * discount.value) / 100
+    : 0;
+
   // Calculate total
-  const total = subtotal;
+  const total = subtotal - discountAmount;
+
+  // Apply discount
+  const handleApplyDiscount = (discount: {
+    type: "fixed" | "percentage";
+    value: number;
+  }) => {
+    setDiscount(discount);
+  };
+
+  // Remove discount
+  const handleRemoveDiscount = () => {
+    setDiscount(null);
+  };
 
   // Original increment function (whole numbers only)
   const incrementQuantity = (itemId: string) => {
@@ -83,10 +249,8 @@ const CheckoutPage = ({
 
   // Decimal quantity handler (strict 0.5 increments only)
   const handleCustomQuantity = (itemId: string, value: string) => {
-    // Only allow numbers and decimal point
     const sanitizedValue = value.replace(/[^0-9.]/g, "");
 
-    // If empty or invalid, set to 0.5
     if (!sanitizedValue || isNaN(parseFloat(sanitizedValue))) {
       setCartItems((prev) =>
         prev.map((item) =>
@@ -96,7 +260,6 @@ const CheckoutPage = ({
       return;
     }
 
-    // Force to nearest 0.5 increment
     const numValue = parseFloat(sanitizedValue);
     const roundedValue = Math.round(numValue * 2) / 2;
 
@@ -107,7 +270,7 @@ const CheckoutPage = ({
           return {
             ...item,
             cartQuantity: Math.min(
-              Math.max(roundedValue, 0.5), // Minimum 0.5
+              Math.max(roundedValue, 0.5),
               availableQuantity
             ),
           };
@@ -167,6 +330,10 @@ const CheckoutPage = ({
           attendant={attendant}
           customer={customer}
           clearCartFunc={clearCartFunc}
+          discount={discount}
+          discountAmount={discountAmount}
+          subtotal={subtotal}
+          total={total}
         />
       ) : (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
@@ -246,6 +413,11 @@ const CheckoutPage = ({
                         {item.quantity !== undefined && (
                           <p className="text-[8px] text-gray-500">
                             Available: {item.quantity}
+                          </p>
+                        )}
+                        {item.discount_threshold && (
+                          <p className="text-[8px] text-blue-500">
+                            Discount threshold: {item.discount_threshold}
                           </p>
                         )}
                       </div>
@@ -360,6 +532,43 @@ const CheckoutPage = ({
                   {formatToNaira(subtotal)}
                 </span>
               </div>
+
+              {/* Discount Section */}
+              {discount ? (
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-gray-600 text-xs">
+                      Discount (
+                      {discount.type === "fixed" ? "Fixed" : "Percentage"})
+                    </span>
+                    {discount.type === "percentage" && (
+                      <span className="text-xs ml-1">({discount.value}%)</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-xs text-red-500">
+                      -{formatToNaira(discountAmount)}
+                    </span>
+                    <button
+                      onClick={handleRemoveDiscount}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full flex items-center justify-center gap-2 text-xs py-2 border-[#52b661]/30 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                  onClick={() => setIsDiscountModalOpen(true)}
+                  disabled={eligibleItems.length === 0}
+                >
+                  <Percent size={14} />
+                  Add Discount
+                </Button>
+              )}
+
               <Separator className="my-2 bg-[#52b661]/30" />
               <div className="flex justify-between">
                 <span className="font-bold text-sm text-gray-800">Total</span>
@@ -376,6 +585,15 @@ const CheckoutPage = ({
               </Button>
             </div>
           </div>
+
+          {/* Discount Modal */}
+          <DiscountModal
+            open={isDiscountModalOpen}
+            onOpenChange={setIsDiscountModalOpen}
+            onApplyDiscount={handleApplyDiscount}
+            subtotal={subtotal}
+            eligibleItems={eligibleItems}
+          />
 
           {/* Drawers */}
           <CustomerDrawer

@@ -34,14 +34,27 @@ const ReceiptPage = ({
   attendant,
   clearCartFunc,
   customer,
+  discount,
+  discountAmount,
   setShowReceipt,
+  subtotal,
+  total,
 }: {
   cart: any;
   attendant: any;
   customer: any;
   clearCartFunc: any;
+  discount: any;
+  discountAmount: any;
   setShowReceipt: any;
+  subtotal: any;
+  total: any;
 }) => {
+  console.log("discountAmount", discountAmount);
+  console.log("totalDiscountAmount", total);
+  console.log("subtotal", subtotal);
+  console.log("discount", discount);
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
@@ -121,11 +134,11 @@ const ReceiptPage = ({
   const business = BusinessData?.data?.[0] || {};
 
   // Calculate total
-  const total = cart.reduce((sum: number, item: any) => {
-    return (
-      sum + (item.amount || item.selling_price || 0) * (item.cartQuantity || 1)
-    );
-  }, 0);
+  // const total = cart.reduce((sum: number, item: any) => {
+  //   return (
+  //     sum + (item.amount || item.selling_price || 0) * (item.cartQuantity || 1)
+  //   );
+  // }, 0);
 
   // Set initial remaining amount when the component loads or when total changes
   useEffect(() => {
@@ -551,6 +564,23 @@ const ReceiptPage = ({
                   ))}
                 </tbody>
                 <tfoot>
+                  {discount && (
+                    <tr className="bg-primary-green-200">
+                      <td
+                        colSpan={4}
+                        className="p-2 border text-[11px] border-primary-green-300 text-right"
+                      >
+                        Discount (
+                        {discount.type === "fixed"
+                          ? "Fixed"
+                          : `${discount.value}%`}
+                        ):
+                      </td>
+                      <td className="p-2 text-[11px] border border-primary-green-300 text-red-500">
+                        -{formatToNaira(discountAmount)}
+                      </td>
+                    </tr>
+                  )}
                   <tr className="bg-primary-green-200 font-bold">
                     <td
                       colSpan={4}
