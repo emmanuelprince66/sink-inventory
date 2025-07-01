@@ -190,7 +190,7 @@ const CheckoutPage = ({
     );
   }, 0);
 
-  // Calculate automatic discount for items that meet threshold
+  // Calculate automatic discount for items that meet threshold - NOW PER UNIT ABOVE THRESHOLD
   const automaticDiscountAmount = cartItems.reduce((totalDiscount, item) => {
     if (
       item.type === "PRODUCT" &&
@@ -198,7 +198,11 @@ const CheckoutPage = ({
       item.discount &&
       (item.cartQuantity || 1) >= item.discount_threshold
     ) {
-      return totalDiscount + item.discount;
+      // Calculate how many units are above the threshold
+      const unitsAboveThreshold =
+        (item.cartQuantity || 1) - item.discount_threshold + 1;
+      // Apply discount per unit above threshold
+      return totalDiscount + item.discount * unitsAboveThreshold;
     }
     return totalDiscount;
   }, 0);
@@ -329,6 +333,26 @@ const CheckoutPage = ({
     setCartItems((prev) => prev.filter((item) => item.id !== itemId));
   };
 
+  // Helper function to get individual item discount display
+  const getItemDiscountDisplay = (item: CartItem) => {
+    if (
+      item.type === "PRODUCT" &&
+      item.discount_threshold &&
+      item.discount &&
+      (item.cartQuantity || 1) >= item.discount_threshold
+    ) {
+      const unitsAboveThreshold =
+        (item.cartQuantity || 1) - item.discount_threshold + 1;
+      const totalItemDiscount = item.discount * unitsAboveThreshold;
+      return {
+        unitsAboveThreshold,
+        totalItemDiscount,
+        perUnitDiscount: item.discount,
+      };
+    }
+    return null;
+  };
+
   return (
     <>
       {showReceipt ? (
@@ -400,140 +424,158 @@ const CheckoutPage = ({
                 </div>
               ) : (
                 <div className="divide-y divide-[#52b661]/10">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="p-1 flex items-start">
-                      <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
-                        {item.image && (
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover"
-                          />
-                        )}
-                      </div>
-
-                      <div className="flex-grow">
-                        <h3 className="font-sm text-gray-800">{item.name}</h3>
-                        <p className="text-[10px] text-gray-500">
-                          SKU: {item.sku}
-                        </p>
-                        <p className="text-[10px] font-semibold text-[#52b661]">
-                          {formatToNaira(
-                            item.selling_price || item?.amount || 0
+                  {cartItems.map((item) => {
+                    const discountInfo = getItemDiscountDisplay(item);
+                    return (
+                      <div key={item.id} className="p-1 flex items-start">
+                        <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
                           )}
-                        </p>
-                        {item.quantity !== undefined && (
-                          <p className="text-[8px] text-gray-500">
-                            Available: {item.quantity}
-                          </p>
-                        )}
-                        {item.discount_threshold && (
-                          <p className="text-[8px] text-blue-500">
-                            Discount threshold: {item.discount_threshold}
-                          </p>
-                        )}
-                        {/* Show discount applied indicator */}
-                        {item.discount_threshold &&
-                          item.discount &&
-                          (item.cartQuantity || 1) >=
-                            item.discount_threshold && (
-                            <p className="text-[8px] text-green-600 font-semibold">
-                              Discount Applied: -{formatToNaira(item.discount)}
-                            </p>
-                          )}
-                      </div>
-
-                      <div className="flex flex-col items-end space-y-2 ml-2">
-                        {/* Original quantity controls (whole numbers) */}
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                            onClick={() => decrementQuantity(item.id)}
-                            disabled={(item.cartQuantity || 1) <= 1}
-                          >
-                            <MinusCircle size={3} className="text-[#52b661]" />
-                          </Button>
-
-                          <span className="w-8 text-center text-gray-700">
-                            {Math.floor(item.cartQuantity || 1)}
-                          </span>
-
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                            onClick={() => incrementQuantity(item.id)}
-                            disabled={
-                              (item.cartQuantity || 1) >=
-                              (item.quantity ?? Infinity)
-                            }
-                          >
-                            <PlusCircle size={3} className="text-[#52b661]" />
-                          </Button>
                         </div>
 
-                        {/* Decimal quantity controls (0.5 increments only) */}
-                        {item?.type?.toLocaleLowerCase() === "product" && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-[8px] text-gray-500">
-                              Decimal Qty:
-                            </span>
+                        <div className="flex-grow">
+                          <h3 className="font-sm text-gray-800">{item.name}</h3>
+                          <p className="text-[10px] text-gray-500">
+                            SKU: {item.sku}
+                          </p>
+                          <p className="text-[10px] font-semibold text-[#52b661]">
+                            {formatToNaira(
+                              item.selling_price || item?.amount || 0
+                            )}
+                          </p>
+                          {item.quantity !== undefined && (
+                            <p className="text-[8px] text-gray-500">
+                              Available: {item.quantity}
+                            </p>
+                          )}
+                          {item.discount_threshold && (
+                            <p className="text-[8px] text-blue-500">
+                              Discount threshold: {item.discount_threshold}
+                            </p>
+                          )}
+                          {/* Show enhanced discount applied indicator */}
+                          {discountInfo && (
+                            <div className="text-[8px] text-green-600 font-semibold">
+                              <p>
+                                Discount: {discountInfo.unitsAboveThreshold}{" "}
+                                units ×{" "}
+                                {formatToNaira(discountInfo.perUnitDiscount)}
+                              </p>
+                              <p>
+                                Total Discount: -
+                                {formatToNaira(discountInfo.totalItemDiscount)}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-end space-y-2 ml-2">
+                          {/* Original quantity controls (whole numbers) */}
+                          <div className="flex items-center space-x-2">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-6 w-6 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                              onClick={() => decrementDecimalQuantity(item.id)}
-                              disabled={(item.cartQuantity || 0.5) <= 0.5}
+                              className="h-8 w-8 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              onClick={() => decrementQuantity(item.id)}
+                              disabled={(item.cartQuantity || 1) <= 1}
                             >
                               <MinusCircle
-                                size={2}
+                                size={3}
                                 className="text-[#52b661]"
                               />
                             </Button>
-                            <input
-                              type="number"
-                              min="0.5"
-                              step="0.5"
-                              value={item.cartQuantity || 0.5}
-                              onChange={(e) =>
-                                handleCustomQuantity(item.id, e.target.value)
-                              }
-                              className="w-12 text-center text-xs border border-gray-200 rounded-md py-1"
-                              onBlur={(e) => {
-                                if (
-                                  e.target.value === "" ||
-                                  parseFloat(e.target.value) < 0.5
-                                ) {
-                                  handleCustomQuantity(item.id, "0.5");
-                                }
-                              }}
-                            />
+
+                            <span className="w-8 text-center text-gray-700">
+                              {Math.floor(item.cartQuantity || 1)}
+                            </span>
+
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-6 w-6 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
-                              onClick={() => incrementDecimalQuantity(item.id)}
+                              className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              onClick={() => incrementQuantity(item.id)}
                               disabled={
-                                (item.cartQuantity || 0.5) >=
+                                (item.cartQuantity || 1) >=
                                 (item.quantity ?? Infinity)
                               }
                             >
-                              <PlusCircle size={2} className="text-[#52b661]" />
+                              <PlusCircle size={3} className="text-[#52b661]" />
                             </Button>
                           </div>
-                        )}
 
-                        <div
-                          className="text-red-500 p-1 rounded-full cursor-pointer hover:bg-red-50"
-                          onClick={() => removeFromCart(item.id)}
-                        >
-                          <Trash2 size={1} className="w-3 h-3" />
+                          {/* Decimal quantity controls (0.5 increments only) */}
+                          {item?.type?.toLocaleLowerCase() === "product" && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-[8px] text-gray-500">
+                                Decimal Qty:
+                              </span>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-6 w-6 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                onClick={() =>
+                                  decrementDecimalQuantity(item.id)
+                                }
+                                disabled={(item.cartQuantity || 0.5) <= 0.5}
+                              >
+                                <MinusCircle
+                                  size={2}
+                                  className="text-[#52b661]"
+                                />
+                              </Button>
+                              <input
+                                type="number"
+                                min="0.5"
+                                step="0.5"
+                                value={item.cartQuantity || 0.5}
+                                onChange={(e) =>
+                                  handleCustomQuantity(item.id, e.target.value)
+                                }
+                                className="w-12 text-center text-xs border border-gray-200 rounded-md py-1"
+                                onBlur={(e) => {
+                                  if (
+                                    e.target.value === "" ||
+                                    parseFloat(e.target.value) < 0.5
+                                  ) {
+                                    handleCustomQuantity(item.id, "0.5");
+                                  }
+                                }}
+                              />
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-6 w-6 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                onClick={() =>
+                                  incrementDecimalQuantity(item.id)
+                                }
+                                disabled={
+                                  (item.cartQuantity || 0.5) >=
+                                  (item.quantity ?? Infinity)
+                                }
+                              >
+                                <PlusCircle
+                                  size={2}
+                                  className="text-[#52b661]"
+                                />
+                              </Button>
+                            </div>
+                          )}
+
+                          <div
+                            className="text-red-500 p-1 rounded-full cursor-pointer hover:bg-red-50"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <Trash2 size={1} className="w-3 h-3" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -554,17 +596,25 @@ const CheckoutPage = ({
                 </span>
               </div>
 
-              {/* Automatic Discount Section */}
+              {/* Enhanced Automatic Discount Section */}
               {automaticDiscountAmount > 0 && (
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="text-gray-600 text-xs">
-                      Discount Applied
+                      Discount Applied (Per Unit)
                     </span>
                     {eligibleItems.length > 0 && (
                       <div className="text-[10px] text-gray-500">
-                        Items:{" "}
-                        {eligibleItems.map((item) => item.name).join(", ")}
+                        {eligibleItems.map((item) => {
+                          const discountInfo = getItemDiscountDisplay(item);
+                          return discountInfo ? (
+                            <div key={item.id}>
+                              {item.name}: {discountInfo.unitsAboveThreshold}{" "}
+                              units ×{" "}
+                              {formatToNaira(discountInfo.perUnitDiscount)}
+                            </div>
+                          ) : null;
+                        })}
                       </div>
                     )}
                   </div>
