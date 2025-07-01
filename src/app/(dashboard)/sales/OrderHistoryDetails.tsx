@@ -212,9 +212,11 @@ const styles = StyleSheet.create({
 const OrderHistoryPDFDocument = ({
   orderDetails,
   business,
+  tt,
 }: {
   orderDetails: SalesOrder;
   business: any;
+  tt: any;
 }) => {
   const shortOrderId = orderDetails.id.substring(0, 6);
   const transactionId = orderDetails.id.substring(0, 6);
@@ -294,9 +296,7 @@ const OrderHistoryPDFDocument = ({
           {/* Total */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.totalAmount}>
-              {parseFloat(orderDetails.total_price)}
-            </Text>
+            <Text style={styles.totalAmount}>{tt}</Text>
           </View>
 
           {/* Payment Method */}
@@ -349,6 +349,16 @@ const OrderHistoryDetails = ({
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   console.log("business", business);
+
+  const tt =
+    orderDetails &&
+    orderDetails?.products
+      ?.reduce((total, product) => {
+        return total + parseFloat(product.price) * product.quantity;
+      }, 0)
+      .toLocaleString();
+
+  console.log("tt", tt);
 
   // Format the date using moment.js
   const formattedDate = moment(orderDetails.created_at).format(
@@ -519,9 +529,7 @@ const OrderHistoryDetails = ({
               {/* Payment summary */}
               <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
                 <span>TOTAL:</span>
-                <span className="text-green-600">
-                  {parseFloat(orderDetails.total_price)}
-                </span>
+                <span className="text-green-600">{tt}</span>
               </div>
 
               {/* Transaction details */}
@@ -619,6 +627,7 @@ const OrderHistoryDetails = ({
                   <OrderHistoryPDFDocument
                     orderDetails={orderDetails}
                     business={business}
+                    tt={tt}
                   />
                 }
                 fileName={`order-${shortOrderId}.pdf`}
