@@ -386,9 +386,9 @@ const OrderHistoryDetails = ({
         printable: printContent.innerHTML,
         type: "raw-html",
         style: `
-          @page { size: 100% auto; margin: 10mm; }
-          body { padding: 0; margin: 0; font-family: Arial, sans-serif; }
-          .receipt-container { width: 100%; max-width: 100%; margin: 0 auto; padding: 4px; }
+           @page { size: auto; margin: 2mm; }
+          body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
+           .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
           table { width: 100%; border-collapse: collapse; margin: 3px 0; }
           th { padding: 5px 3px; font-size: 12px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
           td { padding: 6px 3px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
