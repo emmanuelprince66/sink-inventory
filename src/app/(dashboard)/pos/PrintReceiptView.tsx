@@ -178,6 +178,41 @@ const styles = StyleSheet.create({
     fontSize: 10, // Reduced from 14
     color: "#6b7280",
   },
+  summarySection: {
+    marginTop: 2,
+    paddingTop: 2,
+    borderTopWidth: 0.5,
+    borderTopColor: "#e5e7eb",
+  },
+  summaryValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  discountRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+    fontSize: 10,
+  },
+  discountLabel: {
+    fontSize: 10,
+    color: "#dc2626",
+  },
+  discountValue: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#dc2626",
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 2,
+    fontSize: 10,
+  },
+  summaryLabel: {
+    fontSize: 10,
+    color: "#6b7280",
+  },
   detailValue: {
     fontSize: 10, // Reduced from 14
     fontWeight: "bold",
@@ -228,6 +263,9 @@ const ReceiptPDFDocument = ({
   user,
   businessData,
   attendant,
+  discount,
+  discountAmount,
+  subtotal,
   total,
 }: {
   cart: any[];
@@ -235,6 +273,9 @@ const ReceiptPDFDocument = ({
   receiptNumber: string;
   createSaleResponse: any;
   total: number;
+  discount: any;
+  subtotal: any;
+  discountAmount: any;
   customer: any;
   user: any;
   businessData: any;
@@ -307,10 +348,34 @@ const ReceiptPDFDocument = ({
             ))}
           </View>
 
+          {/* Summary Section */}
+          {discount && discountAmount > 0 && (
+            <View style={styles.summarySection}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Subtotal:</Text>
+                <Text style={styles.summaryValue}>
+                  {subtotal.toLocaleString()}
+                </Text>
+              </View>
+              <View style={styles.discountRow}>
+                <Text style={styles.discountLabel}>
+                  Discount (
+                  {discount.type === "fixed"
+                    ? `₦${discount.value}`
+                    : `${discount.value}%`}
+                  ):
+                </Text>
+                <Text style={styles.discountValue}>
+                  -{discountAmount.toLocaleString()}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Total */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.totalAmount}>{total}</Text>
+            <Text style={styles.totalAmount}>{total.toLocaleString()}</Text>
           </View>
 
           {/* Transaction Details */}
@@ -388,6 +453,10 @@ const PrintReceiptView = ({
   clearCartFunc,
   createSaleResponse,
   customer,
+  total,
+  subtotal,
+  discountAmount,
+  discount,
   attendant,
   business,
 }: {
@@ -395,9 +464,13 @@ const PrintReceiptView = ({
   setShowPrintReceiptView: (show: boolean) => void;
   clearCartFunc: any;
   createSaleResponse: any;
+  total: any;
+  subtotal: any;
   customer: any;
   attendant: any;
+  discount: any;
   cart: any[];
+  discountAmount: any;
   business: any;
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -410,9 +483,9 @@ const PrintReceiptView = ({
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
-  const total = cart.reduce((sum, item) => {
-    return sum + (item.selling_price || 0) * (item.cartQuantity || 1);
-  }, 0);
+  // const total = cart.reduce((sum, item) => {
+  //   return sum + (item.selling_price || 0) * (item.cartQuantity || 1);
+  // }, 0);
 
   // Generate receipt number
   const receiptNumber =
@@ -458,6 +531,8 @@ const PrintReceiptView = ({
         .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
         .payment-method {display: flex; justify-content: space-between; align-items: center; background-color: #f0fdf4; padding: 2px; border-radius: 3px; margin: 2px 0; }
         .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
+        .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
+        .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
         .item-name { font-weight: bold; font-size: 10px; }
         .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #6b7280; font-size: 10px; }
@@ -580,6 +655,29 @@ const PrintReceiptView = ({
           </table>
         </div>
 
+        {discount && discountAmount > 0 && (
+          <div className="summary-section">
+            <div className="summary-row flex justify-between items-center">
+              <span className="text-[11px] text-gray-500">Subtotal:</span>
+              <span className="text-[11px] font-bold">
+                {formatToNaira(subtotal)}
+              </span>
+            </div>
+            <div className="discount-row flex justify-between items-center">
+              <span className="text-[11px] text-red-600">
+                Discount (
+                {discount.type === "fixed"
+                  ? `₦${discount.value}`
+                  : `${discount.value}%`}
+                ):
+              </span>
+              <span className="text-[11px] font-bold text-red-600">
+                -{formatToNaira(discountAmount)}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Payment summary */}
         <div className="total-row">
           <span className="text-[11px]">TOTAL:</span>
@@ -675,6 +773,9 @@ const PrintReceiptView = ({
               customer={customer}
               attendant={attendant}
               user={user}
+              subtotal={subtotal}
+              discountAmount={discountAmount}
+              discount={discount}
               businessData={businessData}
             />
           }

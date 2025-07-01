@@ -285,6 +285,16 @@ export const useInventoryHook = ({
     mode: "onChange",
   });
 
+  useEffect(() => {
+    if (product) {
+      console.log("product", product);
+      addDiscountForm.reset({
+        product_threshold: product.discount_threshold || "",
+        price_discount: product.discount || "",
+      });
+    }
+  }, [product]);
+
   const onSubmitAddReturnedProduct = (values: AddReturnedFormValues) => {
     const payload: {
       quantity: number;

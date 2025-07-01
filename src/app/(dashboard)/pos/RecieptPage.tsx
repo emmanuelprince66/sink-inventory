@@ -50,10 +50,10 @@ const ReceiptPage = ({
   subtotal: any;
   total: any;
 }) => {
-  console.log("discountAmount", discountAmount);
-  console.log("totalDiscountAmount", total);
-  console.log("subtotal", subtotal);
-  console.log("discount", discount);
+  // console.log("discountAmount", discountAmount);
+  // console.log("totalDiscountAmount", total);
+  // console.log("subtotal", subtotal);
+  // console.log("discount", discount);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
@@ -425,8 +425,12 @@ const ReceiptPage = ({
           cart={cart}
           business={business}
           attendant={attendant}
+          discount={discount}
           customer={customer}
+          total={total}
+          subtotal={subtotal}
           clearCartFunc={clearCartFunc}
+          discountAmount={discountAmount}
         />
       ) : (
         <div className="w-full flex flex-col items-start gap-3">
