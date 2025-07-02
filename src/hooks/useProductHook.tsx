@@ -47,12 +47,11 @@ const createProductSchema = (isEditMode: boolean) => {
               (file) =>
                 ["image/jpeg", "image/png", "image/webp"].includes(file.type),
               "Only .jpg, .png, and .webp formats are supported"
-            ),
-          z.string().min(1, "Product image is required"),
+            )
+            .optional(),
+          z.string().optional(),
         ]),
-    sku: isEditMode
-      ? z.string().optional()
-      : z.string().min(1, "Sku is required"),
+    sku: isEditMode ? z.string().optional() : z.string().optional(),
     category: isEditMode
       ? z.string().optional()
       : z.string().min(1, "Category is required"),

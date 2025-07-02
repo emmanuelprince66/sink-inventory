@@ -43,6 +43,12 @@ const CheckoutPage = ({
   const [showReceipt, setShowReceipt] = useState(false);
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
+  const [bulkQuantityInputs, setBulkQuantityInputs] = useState<{
+    [key: string]: string;
+  }>({});
+  const [bulkQuantityErrors, setBulkQuantityErrors] = useState<{
+    [key: string]: string;
+  }>({});
   const { user } = useUserRole();
 
   // Calculate the subtotal
@@ -77,6 +83,64 @@ const CheckoutPage = ({
       item.discount &&
       (item.cartQuantity || 1) >= item.discount_threshold
   );
+
+  // Check if there are any bulk quantity errors
+  const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
+    (error) => error !== ""
+  );
+
+  // Handle bulk quantity input
+  const handleBulkQuantityChange = (itemId: string, value: string) => {
+    setBulkQuantityInputs((prev) => ({
+      ...prev,
+      [itemId]: value,
+    }));
+
+    // Validate input
+    const numValue = parseInt(value);
+    if (value === "" || isNaN(numValue) || numValue <= 0) {
+      setBulkQuantityErrors((prev) => ({
+        ...prev,
+        [itemId]: "Invalid input",
+      }));
+    } else {
+      setBulkQuantityErrors((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+    }
+  };
+
+  // Apply bulk quantity
+  const applyBulkQuantity = (itemId: string) => {
+    const inputValue = bulkQuantityInputs[itemId];
+    const numValue = parseInt(inputValue);
+
+    if (inputValue && !isNaN(numValue) && numValue > 0) {
+      setCartItems((prev) =>
+        prev.map((item) => {
+          if (item.id === itemId) {
+            const availableQuantity = item.quantity ?? 999;
+            return {
+              ...item,
+              cartQuantity: Math.min(numValue, availableQuantity),
+            };
+          }
+          return item;
+        })
+      );
+
+      // Clear the input after applying
+      setBulkQuantityInputs((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+      setBulkQuantityErrors((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+    }
+  };
 
   // Original increment function (whole numbers only)
   const incrementQuantity = (itemId: string) => {
@@ -270,6 +334,7 @@ const CheckoutPage = ({
                 <div className="divide-y divide-[#52b661]/10">
                   {cartItems.map((item) => {
                     const discountInfo = getItemDiscountDisplay(item);
+                    const bulkError = bulkQuantityErrors[item.id];
                     return (
                       <div key={item.id} className="p-1 flex items-start">
                         <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
@@ -351,6 +416,44 @@ const CheckoutPage = ({
                               <PlusCircle size={3} className="text-[#52b661]" />
                             </Button>
                           </div>
+
+                          {/* Bulk Quantity Input */}
+                          <div className="flex items-center gap-1">
+                            <span className="text-[8px] text-gray-500">
+                              Bulk Qty:
+                            </span>
+                            <input
+                              type="number"
+                              min="1"
+                              placeholder="e.g. 80"
+                              value={bulkQuantityInputs[item.id] || ""}
+                              onChange={(e) =>
+                                handleBulkQuantityChange(
+                                  item.id,
+                                  e.target.value
+                                )
+                              }
+                              className={`w-16 text-center text-xs border rounded-md py-1 ${
+                                bulkError ? "border-red-500" : "border-gray-200"
+                              }`}
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-[8px] border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              onClick={() => applyBulkQuantity(item.id)}
+                              disabled={
+                                !bulkQuantityInputs[item.id] || !!bulkError
+                              }
+                            >
+                              Set
+                            </Button>
+                          </div>
+                          {bulkError && (
+                            <p className="text-[8px] text-red-500">
+                              {bulkError}
+                            </p>
+                          )}
 
                           {/* Decimal quantity controls (0.5 increments only) */}
                           {item?.type?.toLocaleLowerCase() === "product" && (
@@ -478,7 +581,7 @@ const CheckoutPage = ({
               <Button
                 className="w-full mt-3 py-3 text-base font-semibold bg-[#52b661] hover:bg-[#52b661]/90"
                 onClick={() => setShowReceipt(true)}
-                disabled={cartItems.length === 0}
+                disabled={cartItems.length === 0 || hasBulkQuantityErrors}
               >
                 <p className="text-sm">Complete Order</p>
               </Button>

@@ -430,6 +430,7 @@ const ReceiptPDFDocument = ({
           <View style={styles.footer}>
             <Text style={styles.thankyou}>THANK YOU!</Text>
             <Text style={styles.poweredBy}>Powered by Sync360</Text>
+            <Text style={styles.poweredBy}>sync360business.vercel.app</Text>
           </View>
         </Page>
       </Document>
@@ -741,6 +742,7 @@ const PrintReceiptView = ({
         <div className="receipt-footer flex justify-between flex-col items-center">
           <p className="thank-you text-[13px] ">THANK YOU!</p>
           <p className="powered-by text-[9px] ">Powered by Sync360</p>
+          <p className="powered-by text-[9px] ">sync360business.vercel.app</p>
         </div>
       </div>
 
