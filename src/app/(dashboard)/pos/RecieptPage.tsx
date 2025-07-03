@@ -62,6 +62,9 @@ const ReceiptPage = ({
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const business_id = useBusinessStore((state) => state.business_id);
   const [isChecked, setIsChecked] = useState(false);
+
+  const [payloadData, setPayloadData] = useState({});
+  console.log("payloadData", payloadData);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [createSaleResponse, setCreateSaleResponse] = useState(null);
   const [selectedBank, setSelectedBank] = useState("");
@@ -382,7 +385,7 @@ const ReceiptPage = ({
           apiPayload.due_date = format(dueDate, "yyyy-MM-dd");
         }
       }
-
+      setPayloadData(apiPayload);
       console.log("apiPayload", apiPayload);
 
       createSale({
@@ -423,6 +426,7 @@ const ReceiptPage = ({
           setShowPrintReceiptView={setShowPrintReceiptView}
           createSaleResponse={createSaleResponse}
           cart={cart}
+          payloadData={payloadData}
           business={business}
           attendant={attendant}
           discount={discount}

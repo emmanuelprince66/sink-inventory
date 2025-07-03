@@ -221,13 +221,22 @@ const styles = StyleSheet.create({
   paymentMethodBox: {
     marginTop: 1, // Reduced from 2
     padding: 2, // Reduced from 4
-    flexDirection: "row",
+    flexDirection: "row", // Keep as row for single line or header
     justifyContent: "space-between",
     backgroundColor: "#f0fdf4",
     borderRadius: 4, // Reduced from 6
   },
+  // New style for individual payment lines in PDF
+  paymentMethodEntry: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 1,
+    paddingHorizontal: 2,
+    fontSize: 9, // Slightly smaller for multiple entries
+    color: "#16a34a",
+  },
   paymentMethodTitle: {
-    fontSize: 8, // Reduced from 10
+    fontSize: 10, // Reduced from 10
     color: "#6b7280",
     marginBottom: 1, // Reduced from 3
   },
@@ -263,6 +272,7 @@ const ReceiptPDFDocument = ({
   customer,
   user,
   businessData,
+  multiplePayments,
   attendant,
   discount,
   discountAmount,
@@ -273,6 +283,7 @@ const ReceiptPDFDocument = ({
   business: any;
   receiptNumber: string;
   createSaleResponse: any;
+  multiplePayments: any;
   total: number;
   discount: any;
   subtotal: any;
@@ -414,21 +425,33 @@ const ReceiptPDFDocument = ({
             )}
           </View>
 
-          {/* Payment Method */}
+          {/* Payment Method - Dynamically display single or multiple payments */}
           <View style={styles.paymentMethodBox}>
-            <Text style={styles.paymentMethodTitle}>PAYMENT METHOD:</Text>
-            <Text style={styles.paymentMethodValue}>
-              {(createSaleResponse?.data?.method || "cash")
-                .replace("_", " ")
-                .toUpperCase()}
-            </Text>
+            <Text style={styles.paymentMethodTitle}>PAYMENT METHOD(S):</Text>
+            {multiplePayments && multiplePayments.length > 0 ? (
+              <View>
+                {multiplePayments.map((payment: any, index: number) => (
+                  <View key={index} style={styles.paymentMethodEntry}>
+                    <Text>{payment.name.replace("_", " ").toUpperCase()}:</Text>
+                    <Text>{parseFloat(payment.amount).toLocaleString()}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text style={styles.paymentMethodValue}>
+                {(createSaleResponse?.data?.method || "cash")
+                  .replace("_", " ")
+                  .toUpperCase()}
+              </Text>
+            )}
           </View>
 
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.thankyou}>THANK YOU!</Text>
-            <Text style={styles.poweredBy}>Powered by Sync360</Text>
-            <Text style={styles.poweredBy}>sync360business.vercel.app</Text>
+            <Text style={styles.poweredBy}>
+              Powered by Sync360 | www.sync360.africa
+            </Text>
           </View>
         </Page>
       </Document>
@@ -451,6 +474,7 @@ const PrintReceiptView = ({
   cart,
   clearCartFunc,
   createSaleResponse,
+  payloadData,
   customer,
   total,
   subtotal,
@@ -464,6 +488,7 @@ const PrintReceiptView = ({
   clearCartFunc: any;
   createSaleResponse: any;
   total: any;
+  payloadData: any;
   subtotal: any;
   customer: any;
   attendant: any;
@@ -477,9 +502,12 @@ const PrintReceiptView = ({
   const { user } = useUserRole();
   const { businessData } = useBusinessDataStore();
 
+  const multiplePayments = payloadData?.multiple_payments;
+
   console.log("customer", customer);
   console.log("attendant", attendant);
   console.log("username", user?.name);
+  console.log("pa", user?.role);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -529,7 +557,39 @@ const PrintReceiptView = ({
         .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
         .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
         .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
-        .payment-method {display: flex; justify-content: space-between; align-items: center; background-color: #f0fdf4; padding: 2px; border-radius: 3px; margin: 2px 0; }
+
+         .payment-method {
+            display: flex;
+            flex-direction: column; /* Changed to column for multiple entries */
+            justify-content: flex-start; /* Align header to start */
+            align-items: flex-start; /* Align header to start */
+            background-color: #f0fdf4;
+            padding: 2px;
+            border-radius: 3px;
+            margin: 2px 0;
+            line-height: 1.2; /* Added for compact multiple lines */
+        }
+        .payment-method-entry { /* New class for individual payment lines */
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 8px;
+            color: #16a34a;
+            padding-bottom: 1px; /* Small padding between entries */
+        }
+        .payment-method-title {
+            font-size: 8px; /* Slightly larger title for the whole section */
+            color: #6b7280;
+            font-weight: bold;
+            margin-bottom: 2px; /* Space between title and entries */
+        }
+        .payment-method-value {
+            font-size: 8px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+
+
         .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
@@ -726,22 +786,42 @@ const PrintReceiptView = ({
             </div>
           )}
         </div>
-
-        {/* Payment method */}
-        <div className="payment-method flex justify-between items-center">
-          <span className="text-[11px] ">PAYMENT METHOD:</span>
-          <span className="text-green-600 text-[11px] ">
-            {(createSaleResponse?.data?.method || "cash")
-              .toUpperCase()
-              .replace("_", " ")}
+        {/* Payment method - Updated to handle multiple payments */}
+        <div className="payment-method">
+          <span className="payment-method-title text-[11px] ">
+            PAYMENT METHOD(S):
           </span>
+          {multiplePayments && multiplePayments.length > 0 ? (
+            // Display multiple payments
+            multiplePayments.map((payment: any, index: number) => (
+              <div
+                key={index}
+                className="payment-method-entry flex justify-between w-full"
+              >
+                <span className="text-[10px] capitalize">
+                  {payment.name.replace("_", " ")}:
+                </span>
+                <span className="text-green-600 text-[10px] ">
+                  {formatToNaira(parseFloat(payment.amount))}
+                </span>
+              </div>
+            ))
+          ) : (
+            // Fallback to single payment
+            <span className="payment-method-value">
+              {(createSaleResponse?.data?.method || "cash")
+                .toUpperCase()
+                .replace("_", " ")}
+            </span>
+          )}
         </div>
 
         {/* Footer */}
         <div className="receipt-footer flex justify-between flex-col items-center">
           <p className="thank-you text-[13px] ">THANK YOU!</p>
-          <p className="powered-by text-[9px] ">Powered by Sync360</p>
-          <p className="powered-by text-[9px] ">sync360business.vercel.app</p>
+          <p className="powered-by text-[9px] ">
+            Powered by Sync360 | www.sync360.africa
+          </p>
         </div>
       </div>
 
@@ -774,6 +854,7 @@ const PrintReceiptView = ({
               customer={customer}
               attendant={attendant}
               user={user}
+              multiplePayments={multiplePayments}
               subtotal={subtotal}
               discountAmount={discountAmount}
               discount={discount}
