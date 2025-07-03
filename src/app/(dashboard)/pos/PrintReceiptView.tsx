@@ -216,6 +216,7 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 10, // Reduced from 14
     fontWeight: "bold",
+    textTransform: "capitalize",
   },
   paymentMethodBox: {
     marginTop: 1, // Reduced from 2
@@ -408,10 +409,7 @@ const ReceiptPDFDocument = ({
             {user?.role === "ATTENDANT" && (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Attendant:</Text>
-                <Text style={styles.detailValue}>
-                  {businessData?.owner?.firstname}{" "}
-                  {businessData?.owner?.lastname}
-                </Text>
+                <Text style={styles.detailValue}>{user?.name} </Text>
               </View>
             )}
           </View>
@@ -481,6 +479,7 @@ const PrintReceiptView = ({
 
   console.log("customer", customer);
   console.log("attendant", attendant);
+  console.log("username", user?.name);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -537,7 +536,7 @@ const PrintReceiptView = ({
         .item-name { font-weight: bold; font-size: 10px; }
         .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #6b7280; font-size: 10px; }
-        .detail-value { font-weight: bold; font-size: 10px; }
+        .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
         .price-cell { font-weight: bold !important; font-size: 10px; }
@@ -721,8 +720,8 @@ const PrintReceiptView = ({
           {user?.role === "ATTENDANT" && (
             <div className="detail-row flex justify-between items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
-              <span className="detail-value text-[11px] ">
-                {businessData?.owner?.firstname} {businessData?.owner?.lastname}
+              <span className="detail-value text-[11px] capitalize ">
+                {user?.name}
               </span>
             </div>
           )}

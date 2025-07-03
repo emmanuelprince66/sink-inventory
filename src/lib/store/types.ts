@@ -16,6 +16,7 @@ export type Subscription = {
 export type User = {
   id: string;
   email: string;
+  name: string;
   role: UserRole;
   is_verified: boolean;
   is_subscribed: boolean;

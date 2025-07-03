@@ -65,6 +65,7 @@ export const useUserRole = () => {
   return {
     user,
     role: user?.role,
+    name: user?.name,
     isOwner: user?.role === "OWNER",
     isAdminAttendant: user?.role === "ADMIN-ATTENDANT",
     isAttendant: user?.role === "ATTENDANT",

@@ -41,6 +41,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       login({
         id: data.id,
         email: data.email,
+        name: data.name,
         role: data.role,
         is_verified: data.is_verified,
         is_subscribed: data.is_subscribed,
