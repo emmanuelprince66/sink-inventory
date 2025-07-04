@@ -110,8 +110,33 @@ const ReceiptPage = ({
       handleOpenNotSubscribeModal?.();
       return;
     }
+
+    // Construct the payload
+    const payload: { [key: string]: number } = {};
+
+    splitPayments.forEach((payment) => {
+      if (payment.method === "CASH") {
+        payload["cash"] = payment.amount;
+      } else if (payment.method === "BANK" && payment.bank) {
+        const bankInfo = BankData.data.find(
+          (bank: any) => bank.id === payment.bank
+        );
+        if (bankInfo) {
+          const bankKey = bankInfo.bank_name.toLowerCase();
+          payload[bankKey] = payment.amount;
+        }
+      }
+    });
+
+    setPayloadData(payload);
+
+    console.log("Constructed payload:", payload);
+
+    console.log("splitPayments", splitPayments);
     setSureModal(true);
   };
+
+  console.log("payload", payloadData);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
   // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
@@ -385,7 +410,7 @@ const ReceiptPage = ({
           apiPayload.due_date = format(dueDate, "yyyy-MM-dd");
         }
       }
-      setPayloadData(apiPayload);
+      // setPayloadData(apiPayload);
       console.log("apiPayload", apiPayload);
 
       createSale({

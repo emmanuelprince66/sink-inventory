@@ -83,14 +83,14 @@ const Sales = () => {
     AttendantsLoading,
     SalesOrderData,
     SalesOrderLoading,
-  } = useSalesHook(
-    activeProductFilter,
-    activeOrderFilter,
+  } = useSalesHook({
+    activeFilter: activeProductFilter,
+    activeFilterTwo: activeOrderFilter,
     dateRange,
     searchInput,
     attendantId,
-    page
-  );
+    page,
+  });
 
   const totalProfit = useMemo(() => {
     return SalesData?.data?.results?.data.reduce(

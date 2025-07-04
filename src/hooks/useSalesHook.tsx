@@ -2,10 +2,13 @@ import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
 import { useReverseSaleMutation } from "@/api/sales/reverse-sale";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
 // Define these outside the hook so they're not recreated on every render
@@ -23,18 +26,31 @@ const filterMappingTwo = {
   Cancelled: "CANCELLED",
 } as const;
 
-export const useSalesHook = (
-  activeFilter?: keyof typeof filterMapping | undefined,
-  activeFilterTwo?: keyof typeof filterMappingTwo | undefined,
-  dateRange?: DateRange | undefined,
-  searchInput?: any,
-  attendantId?: any,
-  page?: any
-) => {
+export const useSalesHook = ({
+  activeFilter,
+  activeFilterTwo,
+  dateRange,
+  searchInput,
+  attendantId,
+  page,
+  closeModal,
+}: {
+  activeFilter?: keyof typeof filterMapping;
+  activeFilterTwo?: keyof typeof filterMappingTwo;
+  dateRange?: DateRange;
+  searchInput?: string;
+  attendantId?: string;
+  page?: number;
+  closeModal?: () => void;
+} = {}) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const { showToast } = useToast();
 
-  console.log("business_id", business_id);
+  const queryClient = useQueryClient();
+
+  // console.log("business_id", business_id);
   const [productId, setProductId] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
@@ -42,19 +58,50 @@ export const useSalesHook = (
   const { mutate: reverseSale, isPending: ReverseSalePending } =
     useReverseSaleMutation({
       onSuccess: (data) => {
-        console.log("Sale reversed successfully", data);
+        showToast(data.message, "success");
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.sales.getAllOrdersHistory],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.sales.getAllSalesHistory],
+        });
+        // refetchOrders();
+        // refetchSales();
+
+        setLoading(false);
+
+        if (closeModal) closeModal();
+
+        // Optional: Invalidate queries or update cache
       },
-      onError: (error, variables, context) => {
+      onError: (error) => {
         console.error("Error reversing sale:", error);
+        setLoading(false);
       },
+
+      // You can add other callbacks here if needed
     });
 
+  // const { mutate: reverseSale, isPending: ReverseSalePending } =
+  //   useReverseSaleMutation({
+  //     onSuccess: (data) => {
+  //       setLoading(false);
+  //       console.log("Sale reversed successfully", data);
+  //     },
+  //     onError: (error, variables, context) => {
+  //       setLoading(false);
+
+  //       console.error("Error reversing sale:", error);
+  //     },
+  //   });
+
   const handleReverseSale = (productId: any) => {
-    console.log("productId", productId);
+    // console.log("productId", productId);
+    setLoading(true);
     reverseSale(productId);
   };
 
-  console.log("Attendanrs", AttendantsData);
+  // console.log("Attendanrs", AttendantsData);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
 
   const [orderDetails, setOrderDetails] = useState<any>({});
@@ -68,7 +115,7 @@ export const useSalesHook = (
   };
 
   const searchTerm =
-    debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
+    debouncedSearchTerm?.length || 0 >= 3 || debouncedSearchTerm?.length === 0
       ? debouncedSearchTerm
       : null;
 
@@ -114,7 +161,7 @@ export const useSalesHook = (
     enabled: !!business_id,
   });
 
-  console.log("SalesOrderData", SalesOrderData);
+  // console.log("SalesOrderData", SalesOrderData);
 
   // Refetch when any critical parameter changes
   useEffect(() => {
@@ -138,6 +185,7 @@ export const useSalesHook = (
     handleReverseSale,
     AttendantsData,
     ReverseSalePending,
+    loading,
     page,
     AttendantsLoading,
     openOrderHistoryModal,

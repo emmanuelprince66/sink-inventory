@@ -23,7 +23,6 @@ const OrderHistoryTable = ({
     handleOrderHistoryRowClick,
     closeOpenOrderHistoryModal,
     orderDetails,
-    handleReverseSale,
   } = useSalesHook();
 
   const businessData = useBusinessDataStore((state) => state.businessData);
@@ -78,9 +77,9 @@ const OrderHistoryTable = ({
       >
         <div className="w-full">
           <OrderHistoryDetails
-            handleReverseSale={handleReverseSale}
             orderDetails={orderDetails}
             business={businessData}
+            closeModal={closeOpenOrderHistoryModal}
           />
         </div>
       </CustomModal>

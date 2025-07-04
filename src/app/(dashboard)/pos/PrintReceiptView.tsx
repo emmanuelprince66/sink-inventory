@@ -428,16 +428,38 @@ const ReceiptPDFDocument = ({
           {/* Payment Method - Dynamically display single or multiple payments */}
           <View style={styles.paymentMethodBox}>
             <Text style={styles.paymentMethodTitle}>PAYMENT METHOD(S):</Text>
-            {multiplePayments && multiplePayments.length > 0 ? (
-              <View>
-                {multiplePayments.map((payment: any, index: number) => (
-                  <View key={index} style={styles.paymentMethodEntry}>
-                    <Text>{payment.name.replace("_", " ").toUpperCase()}:</Text>
-                    <Text>{parseFloat(payment.amount).toLocaleString()}</Text>
-                  </View>
-                ))}
-              </View>
+            {multiplePayments ? (
+              typeof multiplePayments === "object" &&
+              !Array.isArray(multiplePayments) ? (
+                // Handle object format {cash: 1000, moniepoint: 500}
+                <View>
+                  {Object.entries(multiplePayments).map(
+                    ([method, amount], index) => (
+                      <View key={index} style={styles.paymentMethodEntry}>
+                        <Text>{method.replace("_", " ").toUpperCase()}:</Text>
+                        <Text>
+                          {parseFloat(amount as string).toLocaleString()}
+                        </Text>
+                      </View>
+                    )
+                  )}
+                </View>
+              ) : Array.isArray(multiplePayments) &&
+                multiplePayments.length > 0 ? (
+                // Handle array format
+                <View>
+                  {multiplePayments.map((payment: any, index: number) => (
+                    <View key={index} style={styles.paymentMethodEntry}>
+                      <Text>
+                        {payment.name.replace("_", " ").toUpperCase()}:
+                      </Text>
+                      <Text>{parseFloat(payment.amount).toLocaleString()}</Text>
+                    </View>
+                  ))}
+                </View>
+              ) : null
             ) : (
+              // Fallback to single payment
               <Text style={styles.paymentMethodValue}>
                 {(createSaleResponse?.data?.method || "cash")
                   .replace("_", " ")
@@ -502,7 +524,7 @@ const PrintReceiptView = ({
   const { user } = useUserRole();
   const { businessData } = useBusinessDataStore();
 
-  const multiplePayments = payloadData?.multiple_payments;
+  const multiplePayments = payloadData;
 
   console.log("customer", customer);
   console.log("attendant", attendant);
@@ -788,27 +810,49 @@ const PrintReceiptView = ({
         </div>
         {/* Payment method - Updated to handle multiple payments */}
         <div className="payment-method">
-          <span className="payment-method-title text-[11px] ">
+          <span className="payment-method-title text-[11px]">
             PAYMENT METHOD(S):
           </span>
-          {multiplePayments && multiplePayments.length > 0 ? (
-            // Display multiple payments
-            multiplePayments.map((payment: any, index: number) => (
-              <div
-                key={index}
-                className="payment-method-entry flex justify-between w-full"
-              >
-                <span className="text-[10px] capitalize">
-                  {payment.name.replace("_", " ")}:
-                </span>
-                <span className="text-green-600 text-[10px] ">
-                  {formatToNaira(parseFloat(payment.amount))}
-                </span>
-              </div>
-            ))
+          {multiplePayments ? (
+            // Check if multiplePayments is an object
+            typeof multiplePayments === "object" &&
+            !Array.isArray(multiplePayments) ? (
+              // Handle object format {cash: 1000, moniepoint: 500}
+              Object.entries(multiplePayments).map(
+                ([method, amount], index) => (
+                  <div
+                    key={index}
+                    className="payment-method-entry flex justify-between w-full"
+                  >
+                    <span className="text-[10px] capitalize">
+                      {method.replace("_", " ")}:
+                    </span>
+                    <span className="text-green-600 text-[10px]">
+                      {formatToNaira(parseFloat(amount as string))}
+                    </span>
+                  </div>
+                )
+              )
+            ) : Array.isArray(multiplePayments) &&
+              multiplePayments.length > 0 ? (
+              // Handle array format (original implementation)
+              multiplePayments.map((payment: any, index: number) => (
+                <div
+                  key={index}
+                  className="payment-method-entry flex justify-between w-full"
+                >
+                  <span className="text-[10px] capitalize">
+                    {payment.name.replace("_", " ")}:
+                  </span>
+                  <span className="text-green-600 text-[10px]">
+                    {formatToNaira(parseFloat(payment.amount))}
+                  </span>
+                </div>
+              ))
+            ) : null
           ) : (
             // Fallback to single payment
-            <span className="payment-method-value">
+            <span className="payment-method-value text-[11px]">
               {(createSaleResponse?.data?.method || "cash")
                 .toUpperCase()
                 .replace("_", " ")}

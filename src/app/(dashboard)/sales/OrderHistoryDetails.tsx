@@ -337,15 +337,17 @@ const OrderHistoryPDFDocument = ({
 
 const OrderHistoryDetails = ({
   orderDetails,
-  handleReverseSale,
+  closeModal,
   business, // Add business prop
 }: {
   orderDetails: SalesOrder;
-  handleReverseSale: any;
   business?: any; // Make it optional
+  closeModal: () => void;
 }) => {
   console.log("orderDetails", orderDetails);
-  const { ReverseSalePending } = useSalesHook();
+  const { ReverseSalePending, handleReverseSale, loading } = useSalesHook({
+    closeModal,
+  });
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   console.log("business", business);
@@ -587,7 +589,7 @@ const OrderHistoryDetails = ({
                 onClick={() => handleReverseSale(orderDetails?.id)}
                 className="w-full bg-yellow-50 rounded-lg gap-2 p-3 flex items-center justify-center border border-yellow-100 cursor-pointer no-print mt-4"
               >
-                {ReverseSalePending ? (
+                {ReverseSalePending || loading ? (
                   <Spinner />
                 ) : (
                   <>

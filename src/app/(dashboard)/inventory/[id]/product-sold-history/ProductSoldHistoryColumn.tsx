@@ -17,7 +17,34 @@ export const useProductSoldHistoryColumns = () => {
         );
       },
     },
-
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{transfer.type || "-"}</p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "direction",
+      header: "Direction",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        const colorClass =
+          transfer.direction === "in" ? "text-green-500" : "text-red-500";
+        return (
+          <div className="font-medium">
+            <p className={`text-sm ${colorClass}`}>
+              {transfer.direction.toUpperCase()}
+            </p>
+          </div>
+        );
+      },
+    },
     {
       accessorKey: "qty_change",
       header: "Quantity Change",
