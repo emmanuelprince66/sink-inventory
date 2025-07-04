@@ -520,7 +520,7 @@ const OrderHistoryDetails = ({
                           {formatToNaira(parseFloat(product.price))}
                         </td>
                         <td className="text-right py-3 px-1 font-medium">
-                          {parseFloat(product.price) * product.quantity}
+                          {parseFloat(product.price)}
                         </td>
                       </tr>
                     ))}
@@ -531,7 +531,9 @@ const OrderHistoryDetails = ({
               {/* Payment summary */}
               <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
                 <span>TOTAL:</span>
-                <span className="text-green-600">{tt}</span>
+                <span className="text-green-600">
+                  {orderDetails?.total_price}
+                </span>
               </div>
 
               {/* Transaction details */}
