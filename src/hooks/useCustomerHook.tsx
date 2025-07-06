@@ -16,6 +16,7 @@ import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useQueryClient } from "@tanstack/react-query";
+import moment from "moment";
 import { useDebounce } from "./useDebounce";
 
 const CustomerSchema = z.object({
@@ -31,9 +32,11 @@ export type CustomerFormValues = z.infer<typeof CustomerSchema>;
 export const useCustomerHook = ({
   closeModal,
   handleOpenNotSubscribeModal,
+  dateRange,
 }: {
   closeModal?: () => void;
   handleOpenNotSubscribeModal?: () => void;
+  dateRange: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const isUserSubscribed = useIsUserSubscribeStore(
@@ -124,6 +127,12 @@ export const useCustomerHook = ({
       id: business_id,
       search: searchTerm,
       status: filterMapping[activeFilter],
+      start_date: dateRange?.from
+        ? moment(dateRange.from).format("YYYY-MM-DD")
+        : undefined,
+      end_date: dateRange?.to
+        ? moment(dateRange.to).format("YYYY-MM-DD")
+        : undefined,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes

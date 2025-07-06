@@ -1,25 +1,31 @@
 import { queryKey } from "@/constants/query-key";
 import {
+  ExtractFnReturnType,
   QueryConfigType,
   useQuery,
-  ExtractFnReturnType,
 } from "@/lib/react-query";
 
 type FetchCustomersProps = {
   id: string;
   status?: string;
   search?: string;
+  start_date?: string;
+  end_date?: string;
 };
 
 export const fetchCustomers = async ({
   id,
   search = "",
   status = "",
+  start_date = "",
+  end_date = "",
 }: FetchCustomersProps) => {
   // Safely construct URL with search params
   const url = new URL(`/api/customers/${id}`, window.location.origin);
   if (search) url.searchParams.append("search", search);
   if (status) url.searchParams.append("status", status);
+  if (start_date) url.searchParams.append("start_date", start_date);
+  if (end_date) url.searchParams.append("end_date", end_date);
 
   const response = await fetch(url.toString(), { method: "GET" });
 
@@ -54,6 +60,8 @@ export const useGetCustomerQuery = ({
       params.id,
       params.search,
       params.status,
+      params.start_date,
+      params.end_date,
     ],
     queryFn: () => fetchCustomers(params),
     ...config,

@@ -1,7 +1,7 @@
 // app/api/(customer)/customer/[id]/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { BaseUrl } from "@/constants/base-url";
+import { cookies } from "next/headers";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -22,11 +22,15 @@ export async function GET(
 
   const search = request.nextUrl.searchParams.get("search") || "";
   const status = request.nextUrl.searchParams.get("status") || "";
+  const end_date = request.nextUrl.searchParams.get("end_date") || "";
+  const start_date = request.nextUrl.searchParams.get("start_date") || "";
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}customer/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
+  if (start_date) apiUrl.searchParams.append("start_date", start_date);
+  if (end_date) apiUrl.searchParams.append("end_date", end_date);
 
   try {
     const response = await fetch(apiUrl.toString(), {

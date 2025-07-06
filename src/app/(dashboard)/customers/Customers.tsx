@@ -78,7 +78,7 @@ const Customers = () => {
     handleFilterChange,
     activeFilter,
     handleSearchChange,
-  } = useCustomerHook({ handleOpenNotSubscribeModal });
+  } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange });
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
