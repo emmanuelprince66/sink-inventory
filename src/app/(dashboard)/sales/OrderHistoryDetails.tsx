@@ -40,133 +40,134 @@ Font.register({
 // PDF Styles
 const styles = StyleSheet.create({
   page: {
-    padding: 8,
-    fontSize: 12,
+    padding: 4, // Reduced from 8
+    fontSize: 10, // Reduced from 12
     fontFamily: "Roboto",
     backgroundColor: "#ffffff",
-    width: "100%",
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 8, // Reduced from 16
     textAlign: "center",
-    paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingBottom: 4, // Reduced from 12
+    borderBottomWidth: 0.5, // Reduced from 1
     borderBottomColor: "#e5e7eb",
   },
   title: {
-    fontSize: 20,
+    fontSize: 14, // Reduced from 20
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 4, // Reduced from 8
     color: "#16a34a",
   },
   subtitle: {
     color: "#16a34a",
-    marginBottom: 12,
+    marginBottom: 6, // Reduced from 12
     fontWeight: "bold",
-    fontSize: 14,
+    fontSize: 10, // Reduced from 14
   },
   businessName: {
-    fontSize: 16,
+    fontSize: 12, // Reduced from 16
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
   },
   businessAddress: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
+    lineHeight: 1.2, // Added to make multiline text more compact
   },
   contactInfo: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: 2, // Reduced from 4
   },
   contactText: {
-    fontSize: 10,
+    fontSize: 8, // Reduced from 10
     color: "#6b7280",
   },
   separator: {
-    marginHorizontal: 8,
+    marginHorizontal: 4, // Reduced from 8
     color: "#6b7280",
   },
   table: {
     width: "100%",
-    marginVertical: 16,
+    marginVertical: 8, // Reduced from 16
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f0fdf4",
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 4, // Reduced from 8
+    paddingHorizontal: 2, // Reduced from 4
   },
   tableHeaderText: {
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
+    borderBottomWidth: 0.5, // Reduced from 1
     borderBottomColor: "#f3f4f6",
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    paddingVertical: 6, // Reduced from 12
+    paddingHorizontal: 2, // Reduced from 4
   },
   cellItem: {
     flex: 3,
-    paddingRight: 4,
+    paddingRight: 2, // Reduced from 4
   },
   itemName: {
     fontWeight: "bold",
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12
   },
   cellQty: {
     flex: 1,
     textAlign: "center",
+    fontSize: 10, // Added for consistency
   },
   cellPrice: {
     flex: 2,
     textAlign: "right",
-    paddingRight: 4,
+    paddingRight: 2, // Reduced from 4
+    fontSize: 10, // Added for consistency
   },
   cellTotal: {
     flex: 2,
     textAlign: "right",
     fontWeight: "bold",
+    fontSize: 10, // Added for consistency
   },
   totalSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 2,
+    marginTop: 8, // Reduced from 16
+    paddingTop: 6, // Reduced from 12
+    borderTopWidth: 1, // Reduced from 2
     borderTopColor: "#16a34a",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     fontWeight: "bold",
   },
   totalLabel: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
   },
   totalAmount: {
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 14, // Reduced from 16
     color: "#16a34a",
   },
   transactionDetails: {
     backgroundColor: "#f9fafb",
-    borderRadius: 6,
-    padding: 10, // Reduced from 12
-    marginVertical: 16,
-    width: "100%", // Ensure full width
+    borderRadius: 4, // Reduced from 6
+    padding: 1, // Reduced from 2
+    marginVertical: 3, // Reduced from 5
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 4,
+    marginBottom: 1,
   },
   detailLabel: {
-    fontSize: 12, // Reduced from 14
+    fontSize: 10, // Reduced from 14
     color: "#6b7280",
-    flexShrink: 1, // Allow text to wrap if needed
   },
   detailValue: {
     fontSize: 12, // Reduced from 14
@@ -174,36 +175,46 @@ const styles = StyleSheet.create({
     flexShrink: 1, // Allow text to wrap if needed
   },
   paymentMethodBox: {
-    marginTop: 16,
-    padding: 12,
+    marginTop: 1, // Reduced from 2
+    padding: 2, // Reduced from 4
+    flexDirection: "row", // Keep as row for single line or header
+    justifyContent: "space-between",
     backgroundColor: "#f0fdf4",
-    borderRadius: 6,
+    borderRadius: 4, // Reduced from 6
+  },
+  paymentMethodEntry: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 1,
+    paddingHorizontal: 2,
+    fontSize: 9, // Slightly smaller for multiple entries
+    color: "#16a34a",
   },
   paymentMethodTitle: {
-    fontSize: 10,
+    fontSize: 10, // Reduced from 10
     color: "#6b7280",
-    marginBottom: 3,
+    marginBottom: 1, // Reduced from 3
   },
   paymentMethodValue: {
-    fontSize: 12,
+    fontSize: 8, // Kept same
     fontWeight: "bold",
     color: "#16a34a",
   },
   footer: {
-    marginTop: 24,
+    marginTop: 2, // Reduced from 5
     textAlign: "center",
-    paddingTop: 16,
-    borderTopWidth: 1,
+    paddingTop: 4, // Reduced from 8
+    borderTopWidth: 0.5, // Reduced from 1
     borderTopColor: "#e5e7eb",
   },
   thankyou: {
-    fontSize: 16,
+    fontSize: 8, // Kept same
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 2, // Reduced from 4
   },
   poweredBy: {
-    marginTop: 4,
-    fontSize: 10,
+    marginTop: 2, // Reduced from 4
+    fontSize: 6, // Increased from 5 for better readability
     color: "#9ca3af",
   },
 });
@@ -218,8 +229,13 @@ const OrderHistoryPDFDocument = ({
   business: any;
   tt: any;
 }) => {
+  console.log("orderDetails", orderDetails);
   const shortOrderId = orderDetails.id.substring(0, 6);
   const transactionId = orderDetails.id.substring(0, 6);
+
+  const receiptNumber = `${business.name
+    .slice(0, 2)
+    .toUpperCase()}-${orderDetails?.id.slice(0, 8)}`;
 
   try {
     return (
@@ -310,8 +326,8 @@ const OrderHistoryPDFDocument = ({
           {/* Transaction ID */}
           <View style={styles.transactionDetails}>
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Transaction ID:</Text>
-              <Text style={styles.detailValue}>#{transactionId}</Text>
+              <Text style={styles.detailLabel}>Order ID:</Text>
+              <Text style={styles.detailValue}>{receiptNumber}</Text>
             </View>
           </View>
 
@@ -351,6 +367,10 @@ const OrderHistoryDetails = ({
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   console.log("business", business);
+
+  const receiptNumber = `${business.name
+    .slice(0, 2)
+    .toUpperCase()}-${orderDetails?.id.slice(0, 8)}`;
 
   const tt =
     orderDetails &&
@@ -550,7 +570,7 @@ const OrderHistoryDetails = ({
                       Order ID:
                     </span>
                     <span className="detail-value font-medium">
-                      #{shortOrderId}
+                      {receiptNumber}
                     </span>
                   </div>
                   <div className="detail-row flex justify-between">
@@ -567,14 +587,14 @@ const OrderHistoryDetails = ({
                       {orderDetails.attendant}
                     </span>
                   </div>
-                  <div className="detail-row flex justify-between">
+                  {/* <div className="detail-row flex justify-between">
                     <span className="detail-label text-gray-500">
                       Transaction ID:
                     </span>
                     <span className="detail-value font-medium">
                       #{transactionId}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 

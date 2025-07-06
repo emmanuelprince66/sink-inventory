@@ -526,10 +526,15 @@ const PrintReceiptView = ({
 
   const multiplePayments = payloadData;
 
-  console.log("customer", customer);
-  console.log("attendant", attendant);
-  console.log("username", user?.name);
-  console.log("pa", user?.role);
+  // console.log("customer", customer);
+  // console.log("attendant", attendant);
+  // console.log("username", user?.name);
+  // console.log("pa", user?.role);
+
+  console.log("business", business);
+  console.log("businessData", businessData);
+
+  console.log("multiplePayments", multiplePayments);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -538,9 +543,13 @@ const PrintReceiptView = ({
   // }, 0);
 
   // Generate receipt number
-  const receiptNumber =
-    createSaleResponse?.data?.receipt_number ||
-    `RC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+
+  const receiptNumber = `${business.name
+    .slice(0, 2)
+    .toUpperCase()}-${createSaleResponse?.data?.id.slice(0, 8)}`;
+  // const receiptNumber =
+  //   createSaleResponse?.data?.receipt_number ||
+  //   `RC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
   // Handle print functionality
   const handlePrint = () => {
@@ -813,11 +822,9 @@ const PrintReceiptView = ({
           <span className="payment-method-title text-[11px]">
             PAYMENT METHOD(S):
           </span>
-          {multiplePayments ? (
-            // Check if multiplePayments is an object
+          {multiplePayments && Object.keys(multiplePayments).length > 0 ? (
             typeof multiplePayments === "object" &&
             !Array.isArray(multiplePayments) ? (
-              // Handle object format {cash: 1000, moniepoint: 500}
               Object.entries(multiplePayments).map(
                 ([method, amount], index) => (
                   <div
@@ -835,7 +842,6 @@ const PrintReceiptView = ({
               )
             ) : Array.isArray(multiplePayments) &&
               multiplePayments.length > 0 ? (
-              // Handle array format (original implementation)
               multiplePayments.map((payment: any, index: number) => (
                 <div
                   key={index}
@@ -851,7 +857,6 @@ const PrintReceiptView = ({
               ))
             ) : null
           ) : (
-            // Fallback to single payment
             <span className="payment-method-value text-[11px]">
               {(createSaleResponse?.data?.method || "cash")
                 .toUpperCase()

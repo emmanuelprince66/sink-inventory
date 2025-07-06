@@ -26,8 +26,8 @@ export const useCheckoutHook = ({
   const { data: BankData, isLoading: BankDataLoading } =
     useFetchBankQuery(business_id);
 
-  console.log("businessData", BusinessData);
-  console.log("BankData", BankData);
+  // console.log("businessData", BusinessData);
+  // console.log("BankData", BankData);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500); // 500ms debounce
 
@@ -53,7 +53,7 @@ export const useCheckoutHook = ({
     useCreateSalesMutation({
       businessId: business_id, // Convert null to undefined
       onSuccess: (data: any) => {
-        console.log("data", data);
+        console.log("data----4", data);
         showToast("Sale created successfully", "success");
         setCreateSaleResponse(data);
         closeSureModal();

@@ -67,6 +67,8 @@ const ReceiptPage = ({
   console.log("payloadData", payloadData);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [createSaleResponse, setCreateSaleResponse] = useState(null);
+
+  console.log("");
   const [selectedBank, setSelectedBank] = useState("");
   const [selectedBankForSplitPayment, setSelectedBankForSplitPayment] =
     useState("");
@@ -130,13 +132,13 @@ const ReceiptPage = ({
 
     setPayloadData(payload);
 
-    console.log("Constructed payload:", payload);
+    // console.log("Constructed payload:", payload);
 
-    console.log("splitPayments", splitPayments);
+    // console.log("splitPayments", splitPayments);
     setSureModal(true);
   };
 
-  console.log("payload", payloadData);
+  // console.log("payload", payloadData);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
   // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
@@ -161,6 +163,7 @@ const ReceiptPage = ({
   // Get the first business from the array
   const business = BusinessData?.data?.[0] || {};
 
+  console.log("createSaleResponse", createSaleResponse);
   // Calculate total
   // const total = cart.reduce((sum: number, item: any) => {
   //   return (
