@@ -370,7 +370,7 @@ const OrderHistoryDetails = ({
 
   const receiptNumber = `${business.name
     .slice(0, 2)
-    .toUpperCase()}-${orderDetails?.id.slice(0, 8)}`;
+    .toUpperCase()}-${orderDetails?.id.slice(0, 4)}`;
 
   const tt =
     orderDetails &&

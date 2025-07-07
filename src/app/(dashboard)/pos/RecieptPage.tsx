@@ -116,19 +116,34 @@ const ReceiptPage = ({
     // Construct the payload
     const payload: { [key: string]: number } = {};
 
-    splitPayments.forEach((payment) => {
-      if (payment.method === "CASH") {
-        payload["cash"] = payment.amount;
-      } else if (payment.method === "BANK" && payment.bank) {
-        const bankInfo = BankData.data.find(
-          (bank: any) => bank.id === payment.bank
-        );
-        if (bankInfo) {
-          const bankKey = bankInfo.bank_name.toLowerCase();
-          payload[bankKey] = payment.amount;
-        }
+    console.log("splitPayments", splitPayments);
+    console.log("selectedBank", selectedBank);
+    console.log("temp", tempSplitPayment);
+    if (splitPayments.length === 0 && selectedBank) {
+      // Handle case when splitPayments is empty but selectedBank exists
+      const bankInfo = BankData.data.find(
+        (bank: any) => bank.id === selectedBank
+      );
+      if (bankInfo) {
+        const bankKey = bankInfo.bank_name.toLowerCase();
+        payload[bankKey] = total; // Assuming 'total' is the fixed amount you mentioned
       }
-    });
+    } else {
+      // Original logic for when splitPayments has items
+      splitPayments.forEach((payment) => {
+        if (payment.method === "CASH") {
+          payload["cash"] = payment.amount;
+        } else if (payment.method === "BANK" && payment.bank) {
+          const bankInfo = BankData.data.find(
+            (bank: any) => bank.id === payment.bank
+          );
+          if (bankInfo) {
+            const bankKey = bankInfo.bank_name.toLowerCase();
+            payload[bankKey] = payment.amount;
+          }
+        }
+      });
+    }
 
     setPayloadData(payload);
 
@@ -138,7 +153,7 @@ const ReceiptPage = ({
     setSureModal(true);
   };
 
-  // console.log("payload", payloadData);
+  console.log("payload", payloadData);
   const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
   // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);

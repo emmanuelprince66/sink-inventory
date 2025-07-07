@@ -546,7 +546,7 @@ const PrintReceiptView = ({
 
   const receiptNumber = `${business.name
     .slice(0, 2)
-    .toUpperCase()}-${createSaleResponse?.data?.id.slice(0, 8)}`;
+    .toUpperCase()}-${createSaleResponse?.data?.id.slice(0, 4)}`;
   // const receiptNumber =
   //   createSaleResponse?.data?.receipt_number ||
   //   `RC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
