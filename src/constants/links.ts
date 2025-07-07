@@ -50,6 +50,12 @@ export const links = [
     icon: DollarSign,
     roles: ["OWNER"], // Only OWNER can access
   },
+  // {
+  //   title: "Transactions",
+  //   url: "/transactions",
+  //   icon: FaMoneyBillWave,
+  //   roles: ["OWNER"], // Only OWNER can access
+  // },
   {
     title: "Campaign",
     url: "/campaign",

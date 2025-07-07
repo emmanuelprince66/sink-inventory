@@ -36,7 +36,7 @@ export const useCustomerHook = ({
 }: {
   closeModal?: () => void;
   handleOpenNotSubscribeModal?: () => void;
-  dateRange: any;
+  dateRange?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const isUserSubscribed = useIsUserSubscribeStore(
