@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { usePosHook } from "@/hooks/usePosHook";
+import { useCartStore } from "@/lib/store/cart-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -27,7 +28,17 @@ const Pos = () => {
   const { ProductData, ProductDataLoading, page, setPage } = usePosHook({
     searchInput,
   });
-  const [cartItems, setCartItems] = useState<Array<any>>([]);
+  const {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart: clearCartFunc,
+    getTotalItems,
+    getTotalPrice,
+  } = useCartStore();
+
+  console.log("cartItems", cartItems);
 
   // console.log("cartItems", cartItems);
   const { showToast } = useToast();
@@ -56,17 +67,11 @@ const Pos = () => {
       return;
     }
 
-    const itemExists = cartItems.some((item) => item.id === cart.id);
-    if (itemExists) {
-      showToast("Item already exists in cart", "error");
-      return;
-    }
-    setCartItems([...cartItems, { ...cart, cartQuantity: 1 }]);
+    addToCart(cart);
   };
-
-  const clearCartFunc = () => {
-    setCartItems([]);
-  };
+  // const clearCartFunc = () => {
+  //   setCartItems([]);
+  // };
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -226,11 +231,7 @@ const Pos = () => {
         {/* Cart Sidebar - now responsive */}
         <aside className="w-full md:w-[30%] h-full bg-gray-50 p-3 md:p-4 overflow-y-auto border-t md:border-t-0 border-gray-300">
           {cartItems.length > 0 ? (
-            <CheckoutPage
-              setCartItems={setCartItems}
-              cartItems={cartItems}
-              clearCartFunc={clearCartFunc}
-            />
+            <CheckoutPage clearCartFunc={clearCartFunc} />
           ) : (
             <NoCartItem />
           )}

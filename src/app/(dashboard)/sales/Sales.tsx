@@ -23,6 +23,18 @@ const productFilterOptions = [
   "Top Selling",
 ] as const;
 
+interface Category {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface CategoriesResponse {
+  success: boolean;
+  message: string;
+  data: Category[];
+}
+
 const orderFilterOptions = [
   "All",
   "Completed",
@@ -70,6 +82,12 @@ const Sales = () => {
   const [activeTab, setActiveTab] = useState<"products" | "history">(
     "products"
   );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const handleCategoryClick = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+  };
 
   const handleClickAttendants = (attendants: any) => {
     setAttendantId(attendants?.id);
@@ -81,11 +99,14 @@ const Sales = () => {
     SalesLoading,
     AttendantsData,
     AttendantsLoading,
+    CategoriesData,
+    CategoriesDataLoading,
     SalesOrderData,
     SalesOrderLoading,
   } = useSalesHook({
     activeFilter: activeProductFilter,
     activeFilterTwo: activeOrderFilter,
+    selectedCategoryId,
     dateRange,
     searchInput,
     attendantId,
@@ -98,6 +119,10 @@ const Sales = () => {
       0
     );
   }, [SalesData]);
+
+  const handleAllClick = () => {
+    setSelectedCategoryId(null);
+  };
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -202,6 +227,52 @@ const Sales = () => {
                 </Button>
               ))}
             </div>
+          )}
+
+          <div className="w-full h-[4px] bg-gray-200 my-5"></div>
+
+          {activeTab === "products" && (
+            <>
+              {CategoriesDataLoading || !CategoriesData ? (
+                <div className="flex gap-4 w-1/2">
+                  {Array.from({ length: 8 }).map((_, index) => (
+                    <CustomCard key={index} className="w-full border-gray-200">
+                      <div className="flex flex-col gap-6 items-start">
+                        <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
+                        <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                      </div>
+                    </CustomCard>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex gap-3 mb-4 flex-wrap">
+                  <Button
+                    className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                      selectedCategoryId === null
+                        ? "bg-primary-green-300 text-white"
+                        : "bg-primary-green-200 text-primary-black-100"
+                    }`}
+                    onClick={handleAllClick}
+                  >
+                    All
+                  </Button>
+
+                  {CategoriesData.data.map((category: Category) => (
+                    <Button
+                      key={category.id}
+                      className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                        selectedCategoryId === category.id
+                          ? "bg-primary-green-300 text-white"
+                          : "bg-primary-green-200 text-primary-black-100"
+                      }`}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      {category.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
 
           {SalesLoading || !SalesData ? (

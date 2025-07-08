@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useCartStore } from "@/lib/store/cart-store";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { MinusCircle, PlusCircle, Trash2, UserPlus, Users } from "lucide-react";
@@ -9,35 +10,11 @@ import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
 import RecieptPage from "./RecieptPage";
 
-interface CartItem {
-  id: string;
-  name: string;
-  image?: string;
-  sku: string;
-  selling_price: number;
-  cost_price: number;
-  category?: string;
-  amount?: number;
-  quantity?: number;
-  status: string;
-  type: string;
-  sold?: number;
-  cartQuantity?: number;
-  discount_threshold?: number;
-  discount?: number;
-}
-
 interface CheckoutPageProps {
-  cartItems: CartItem[];
-  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   clearCartFunc: () => void;
 }
 
-const CheckoutPage = ({
-  cartItems,
-  clearCartFunc,
-  setCartItems,
-}: CheckoutPageProps) => {
+const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
   const [customer, setCustomer] = useState<any | null>(null);
   const [attendant, setAttendant] = useState<any | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -51,38 +28,26 @@ const CheckoutPage = ({
   }>({});
   const { user } = useUserRole();
 
-  // Calculate the subtotal
-  const subtotal = cartItems.reduce((total, item) => {
-    return (
-      total + (item.amount || item.selling_price) * (item.cartQuantity || 1)
-    );
-  }, 0);
+  // Get cart items and actions from the store
+  const {
+    cartItems,
+    removeFromCart,
+    incrementQuantity,
+    decrementQuantity,
+    incrementDecimalQuantity,
+    decrementDecimalQuantity,
+    updateCartItemQuantity,
+    getItemDiscountDisplay,
+    getSubtotal,
+    getAutomaticDiscountAmount,
+    getTotalPrice,
+    getEligibleItems,
+  } = useCartStore();
 
-  // Calculate automatic discount for items that meet threshold (applied to all units)
-  const automaticDiscountAmount = cartItems.reduce((totalDiscount, item) => {
-    if (
-      item.type === "PRODUCT" &&
-      item.discount_threshold &&
-      item.discount &&
-      (item.cartQuantity || 1) >= item.discount_threshold
-    ) {
-      // Apply discount to all units when threshold is reached
-      return totalDiscount + item.discount * (item.cartQuantity || 1);
-    }
-    return totalDiscount;
-  }, 0);
-
-  // Calculate total (subtract discount from subtotal)
-  const total = subtotal - automaticDiscountAmount;
-
-  // Get items eligible for discount (for display purposes)
-  const eligibleItems = cartItems.filter(
-    (item) =>
-      item.type === "PRODUCT" &&
-      item.discount_threshold &&
-      item.discount &&
-      (item.cartQuantity || 1) >= item.discount_threshold
-  );
+  const subtotal = getSubtotal();
+  const automaticDiscountAmount = getAutomaticDiscountAmount();
+  const total = getTotalPrice();
+  const eligibleItems = getEligibleItems();
 
   // Check if there are any bulk quantity errors
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
@@ -117,18 +82,7 @@ const CheckoutPage = ({
     const numValue = parseInt(inputValue);
 
     if (inputValue && !isNaN(numValue) && numValue > 0) {
-      setCartItems((prev) =>
-        prev.map((item) => {
-          if (item.id === itemId) {
-            const availableQuantity = item.quantity ?? 999;
-            return {
-              ...item,
-              cartQuantity: Math.min(numValue, availableQuantity),
-            };
-          }
-          return item;
-        })
-      );
+      updateCartItemQuantity(itemId, numValue);
 
       // Clear the input after applying
       setBulkQuantityInputs((prev) => ({
@@ -142,123 +96,26 @@ const CheckoutPage = ({
     }
   };
 
-  // Original increment function (whole numbers only)
-  const incrementQuantity = (itemId: string) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const availableQuantity = item.quantity ?? 999;
-          const currentQuantity = item.cartQuantity || 1;
-
-          if (currentQuantity < availableQuantity) {
-            return { ...item, cartQuantity: currentQuantity + 1 };
-          }
-        }
-        return item;
-      })
-    );
-  };
-
-  // Original decrement function (whole numbers only)
-  const decrementQuantity = (itemId: string) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId && (item.cartQuantity || 1) > 1
-          ? { ...item, cartQuantity: (item.cartQuantity || 1) - 1 }
-          : item
-      )
-    );
-  };
-
   // Decimal quantity handler (strict 0.5 increments only)
   const handleCustomQuantity = (itemId: string, value: string) => {
     const sanitizedValue = value.replace(/[^0-9.]/g, "");
 
     if (!sanitizedValue || isNaN(parseFloat(sanitizedValue))) {
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === itemId ? { ...item, cartQuantity: 0.5 } : item
-        )
-      );
+      updateCartItemQuantity(itemId, 0.5);
       return;
     }
 
     const numValue = parseFloat(sanitizedValue);
     const roundedValue = Math.round(numValue * 2) / 2;
 
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const availableQuantity = item.quantity ?? 999;
-          return {
-            ...item,
-            cartQuantity: Math.min(
-              Math.max(roundedValue, 0.5),
-              availableQuantity
-            ),
-          };
-        }
-        return item;
-      })
+    const item = cartItems.find((item) => item.id === itemId);
+    if (!item) return;
+
+    const availableQuantity = item.quantity ?? 999;
+    updateCartItemQuantity(
+      itemId,
+      Math.min(Math.max(roundedValue, 0.5), availableQuantity)
     );
-  };
-
-  // Function to increment decimal quantity by 0.5
-  const incrementDecimalQuantity = (itemId: string) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const availableQuantity = item.quantity ?? 999;
-          const currentQuantity = item.cartQuantity || 0.5;
-          const newQuantity = parseFloat((currentQuantity + 0.5).toFixed(1));
-
-          if (newQuantity <= availableQuantity) {
-            return { ...item, cartQuantity: newQuantity };
-          }
-        }
-        return item;
-      })
-    );
-  };
-
-  // Function to decrement decimal quantity by 0.5
-  const decrementDecimalQuantity = (itemId: string) => {
-    setCartItems((prev) =>
-      prev.map((item) => {
-        if (item.id === itemId) {
-          const currentQuantity = item.cartQuantity || 0.5;
-          const newQuantity = parseFloat((currentQuantity - 0.5).toFixed(1));
-
-          return {
-            ...item,
-            cartQuantity: newQuantity >= 0.5 ? newQuantity : 0.5,
-          };
-        }
-        return item;
-      })
-    );
-  };
-
-  // Function to remove item from cart
-  const removeFromCart = (itemId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
-  };
-
-  // Helper function to get individual item discount display
-  const getItemDiscountDisplay = (item: CartItem) => {
-    if (
-      item.type === "PRODUCT" &&
-      item.discount_threshold &&
-      item.discount &&
-      (item.cartQuantity || 1) >= item.discount_threshold
-    ) {
-      const totalItemDiscount = item.discount * (item.cartQuantity || 1);
-      return {
-        totalItemDiscount,
-        perUnitDiscount: item.discount,
-      };
-    }
-    return null;
   };
 
   return (
@@ -276,7 +133,7 @@ const CheckoutPage = ({
               : null
           }
           discountAmount={automaticDiscountAmount}
-          subtotal={subtotal}
+          subtotal={getTotalPrice()}
           total={total}
         />
       ) : (
@@ -552,7 +409,7 @@ const CheckoutPage = ({
                     </span>
                     {eligibleItems.length > 0 && (
                       <div className="text-[10px] text-gray-500">
-                        {eligibleItems.map((item) => {
+                        {eligibleItems.map((item: any) => {
                           const discountInfo = getItemDiscountDisplay(item);
                           return discountInfo ? (
                             <div key={item.id}>

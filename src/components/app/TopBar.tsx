@@ -83,6 +83,9 @@ export function TopBar() {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
+                KYC
+              </DropdownMenuItem>
+              <DropdownMenuItem className="hover:bg-gray-100 cursor-pointer">
                 Support
               </DropdownMenuItem>
               <DropdownMenuItem className="text-red-600 focus:text-red-600">

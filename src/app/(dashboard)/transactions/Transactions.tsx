@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowDownLeft, ArrowUpRight, Landmark, Wallet } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
+import TransactionDetails from "./TransactionDetails";
 
 interface Transaction {
   id: string;
@@ -26,6 +27,7 @@ const Transactions = () => {
   });
   const [showPinModal, setShowPinModal] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
+  const [showTrxDetails, setShowTrxDetails] = useState(false);
   const [kycType, setKycType] = useState<"business" | "individual">(
     "individual"
   );
@@ -318,13 +320,12 @@ const Transactions = () => {
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-primary-green-600 hover:text-primary-green-700"
+                    <button
+                      onClick={() => setShowTrxDetails(true)}
+                      className="cursor-pointer"
                     >
                       View
-                    </Button>
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -518,6 +519,14 @@ const Transactions = () => {
             Verify Account
           </Button>
         </div>
+      </CustomModal>
+      {/* KYC Verification Modal */}
+      <CustomModal
+        isOpen={showTrxDetails}
+        onClose={() => setShowTrxDetails(false)}
+        title="Transaction Details"
+      >
+        <TransactionDetails />
       </CustomModal>
     </>
   );

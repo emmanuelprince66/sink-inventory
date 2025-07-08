@@ -1,4 +1,5 @@
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
+import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
 import { useReverseSaleMutation } from "@/api/sales/reverse-sale";
@@ -32,6 +33,7 @@ export const useSalesHook = ({
   dateRange,
   searchInput,
   attendantId,
+  selectedCategoryId,
   page,
   closeModal,
 }: {
@@ -40,6 +42,7 @@ export const useSalesHook = ({
   dateRange?: DateRange;
   searchInput?: string;
   attendantId?: string;
+  selectedCategoryId?: any;
   page?: number;
   closeModal?: () => void;
 } = {}) => {
@@ -51,6 +54,18 @@ export const useSalesHook = ({
   // console.log("business_id", business_id);
   const [productId, setProductId] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const { data: CategoriesData, isLoading: CategoriesDataLoading } =
+    useGetCategoriesQuery({
+      params: {
+        id: business_id,
+        type: "PRODUCT",
+      },
+      enabled: !!business_id,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+
+  console.log("CategoriesData", CategoriesData);
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
@@ -136,9 +151,12 @@ export const useSalesHook = ({
       end_date: dateRange?.to
         ? moment(dateRange.to).format("YYYY-MM-DD")
         : undefined,
+      category_id: selectedCategoryId,
     },
     enabled: !!business_id,
   });
+
+  console.log("selectedCategoryId", selectedCategoryId);
 
   const {
     data: SalesOrderData,
@@ -184,6 +202,8 @@ export const useSalesHook = ({
 
     handleReverseSale,
     AttendantsData,
+    CategoriesDataLoading,
+    CategoriesData,
     ReverseSalePending,
     loading,
     page,
