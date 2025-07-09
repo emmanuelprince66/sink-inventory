@@ -42,12 +42,16 @@ export const useExpensesHook = ({
   selectedCategory,
   closeModal,
   dateRange,
+  page,
+
   handleOpenNotSubscribeModal,
 }: {
   searchInput?: any;
   dateRange?: DateRange | undefined;
   selectedCategory?: string | null;
   closeModal?: () => void;
+  page?: number;
+
   handleOpenNotSubscribeModal?: () => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -239,6 +243,8 @@ export const useExpensesHook = ({
       id: business_id,
       category: selectedCategory,
       search: searchTerm,
+      limit: 30,
+      page,
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
         : undefined,

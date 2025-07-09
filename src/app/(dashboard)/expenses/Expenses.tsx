@@ -45,6 +45,7 @@ const Expenses = () => {
     from: new Date(),
     to: new Date(),
   });
+  const [page, setPage] = useState(1);
 
   const {
     ExpensesData,
@@ -55,6 +56,7 @@ const Expenses = () => {
     searchInput,
     selectedCategory,
     dateRange,
+    page,
     handleOpenNotSubscribeModal,
   });
 
@@ -220,6 +222,8 @@ const Expenses = () => {
           <AllExpenses
             expensesData={ExpensesData}
             expensesLoading={ExpensesLoading}
+            setPage={setPage}
+            page={page}
           />
         )}
       </div>

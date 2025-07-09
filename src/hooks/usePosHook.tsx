@@ -20,7 +20,7 @@ export const usePosHook = ({ searchInput }: { searchInput?: string }) => {
         id: business_id,
         search: searchTerm,
         page,
-        limit: 15,
+        limit: 20,
       },
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5, // 5 minutes

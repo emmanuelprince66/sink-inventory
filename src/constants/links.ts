@@ -47,7 +47,7 @@ export const links = [
     title: "Expenses",
     url: "/expenses",
     icon: DollarSign,
-    roles: ["OWNER"], // Only OWNER can access
+    roles: ["OWNER"],
   },
   // {
   //   title: "Transactions",

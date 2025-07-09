@@ -24,8 +24,13 @@ export async function GET(
   const start_date = request.nextUrl.searchParams.get("start_date") || "";
   const end_date = request.nextUrl.searchParams.get("end_date") || "";
   const category = request.nextUrl.searchParams.get("category") || "";
+  const page = request.nextUrl.searchParams.get("page") || "1"; // Get page
+  const limit = request.nextUrl.searchParams.get("limit") || "30"; // Get limit
 
-  console.log("category", category);
+  console.log("page", page);
+  console.log("limit", limit);
+
+  // console.log("category", category);
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}expenses/business/${id}/`);
@@ -33,6 +38,8 @@ export async function GET(
   if (start_date) apiUrl.searchParams.append("start_date", start_date);
   if (end_date) apiUrl.searchParams.append("end_date", end_date);
   if (category) apiUrl.searchParams.append("category", category);
+  if (page) apiUrl.searchParams.append("page", page); // Append page
+  if (limit) apiUrl.searchParams.append("limit", limit); // Append limit
 
   try {
     const response = await fetch(apiUrl.toString(), {

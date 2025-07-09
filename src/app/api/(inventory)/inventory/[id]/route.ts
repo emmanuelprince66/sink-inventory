@@ -43,7 +43,7 @@ export async function GET(
   const limitStr = searchParams.get("limit");
 
   const page = pageStr ? parseInt(pageStr) : 1;
-  const limit = limitStr ? parseInt(limitStr) : 15;
+  const limit = limitStr ? parseInt(limitStr) : 20;
 
   if (isNaN(page) || page < 1) {
     return NextResponse.json({ error: "Invalid page number" }, { status: 400 });

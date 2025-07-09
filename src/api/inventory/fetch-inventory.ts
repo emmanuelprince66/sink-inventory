@@ -20,7 +20,7 @@ export const fetchInventory = async ({
   type = "",
   category_id = "",
   page = 1,
-  limit = 15,
+  limit = 20,
 }: FetchInventoryProps) => {
   const url = new URL(`/api/inventory/${id}`, window.location.origin);
   if (search) url.searchParams.append("search", search);

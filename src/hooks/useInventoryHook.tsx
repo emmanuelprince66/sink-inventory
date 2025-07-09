@@ -208,7 +208,7 @@ export const useInventoryHook = ({
   } = useGetInventoryQuery({
     params: {
       page,
-      limit: 15,
+      limit: 20,
       id: business_id,
       search: searchTerm,
       category_id: selectedCategoryId,

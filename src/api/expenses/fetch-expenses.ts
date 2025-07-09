@@ -11,6 +11,8 @@ type fetchSalesExpensesProps = {
   category?: string;
   start_date?: string;
   end_date?: string;
+  page?: number;
+  limit?: number;
 };
 
 export const fetchExpenses = async ({
@@ -19,6 +21,8 @@ export const fetchExpenses = async ({
   start_date = "",
   end_date = "",
   category = "",
+  page = 1,
+  limit = 30,
 }: fetchSalesExpensesProps) => {
   const url = new URL(`/api/expenses/${id}`, window.location.origin);
 
@@ -27,6 +31,8 @@ export const fetchExpenses = async ({
   if (start_date) params.append("start_date", start_date);
   if (end_date) params.append("end_date", end_date);
   if (category) params.append("category", category);
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("limit", limit.toString());
 
   url.search = params.toString();
 
@@ -72,6 +78,8 @@ export const useFetchExpensesQuery = ({
       params.start_date,
       params.end_date,
       params.category,
+      params.limit,
+      params.page,
     ],
     queryFn: () => fetchExpenses(params),
     // staleTime: 1000 * 60 * 5, // 5 minutes
