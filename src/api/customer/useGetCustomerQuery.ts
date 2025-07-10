@@ -11,6 +11,8 @@ type FetchCustomersProps = {
   search?: string;
   start_date?: string;
   end_date?: string;
+  page?: number;
+  limit?: number;
 };
 
 export const fetchCustomers = async ({
@@ -19,6 +21,8 @@ export const fetchCustomers = async ({
   status = "",
   start_date = "",
   end_date = "",
+  page = 1,
+  limit = 30,
 }: FetchCustomersProps) => {
   // Safely construct URL with search params
   const url = new URL(`/api/customers/${id}`, window.location.origin);
@@ -26,6 +30,8 @@ export const fetchCustomers = async ({
   if (status) url.searchParams.append("status", status);
   if (start_date) url.searchParams.append("start_date", start_date);
   if (end_date) url.searchParams.append("end_date", end_date);
+  url.searchParams.append("page", page.toString());
+  url.searchParams.append("limit", limit.toString());
 
   const response = await fetch(url.toString(), { method: "GET" });
 
@@ -62,6 +68,8 @@ export const useGetCustomerQuery = ({
       params.status,
       params.start_date,
       params.end_date,
+      params.limit,
+      params.page,
     ],
     queryFn: () => fetchCustomers(params),
     ...config,

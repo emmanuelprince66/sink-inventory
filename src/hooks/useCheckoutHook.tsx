@@ -12,11 +12,13 @@ export const useCheckoutHook = ({
   setShowPrintReceiptView,
   closeSureModal,
   setCreateSaleResponse,
+  page,
 }: {
   searchInput?: string;
   setShowPrintReceiptView?: any;
   closeSureModal?: any;
   setCreateSaleResponse?: any;
+  page?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
@@ -41,6 +43,8 @@ export const useCheckoutHook = ({
       params: {
         id: business_id,
         search: searchTerm,
+        limit: 20,
+        page,
       },
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5, // 5 minutes

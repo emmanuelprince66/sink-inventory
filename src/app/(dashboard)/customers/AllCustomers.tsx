@@ -6,10 +6,14 @@ const AllCustomers = ({
   customersData,
   customerLoading,
   handleRowClick,
+  setPage,
+  page,
 }: {
   customersData: ApiResponse<CustomerResponse>;
   handleRowClick?: (row: any) => void; // Define the type of row if possible
   customerLoading?: boolean;
+  setPage: (page: number) => void;
+  page: number;
 }) => {
   if (!customersData && !customerLoading) {
     return (
@@ -24,6 +28,8 @@ const AllCustomers = ({
         <CustomerTable
           response={customersData}
           loading={false}
+          setPage={setPage}
+          page={page}
           handleRowClick={handleRowClick}
         />
       )}
