@@ -9,6 +9,7 @@ import { ArrowDownLeft, ArrowUpRight, Landmark, Wallet } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import TransactionDetails from "./TransactionDetails";
+import Transfer from "./Transfer";
 
 interface Transaction {
   id: string;
@@ -28,6 +29,8 @@ const Transactions = () => {
   const [showPinModal, setShowPinModal] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
   const [showTrxDetails, setShowTrxDetails] = useState(false);
+  const [showTransfer, setShowTransfer] = useState(false);
+
   const [kycType, setKycType] = useState<"business" | "individual">(
     "individual"
   );
@@ -201,6 +204,7 @@ const Transactions = () => {
               </Button>
               <Button
                 variant="outline"
+                onClick={() => setShowTransfer(true)}
                 className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
               >
                 Transfer
@@ -527,6 +531,14 @@ const Transactions = () => {
         title="Transaction Details"
       >
         <TransactionDetails />
+      </CustomModal>
+      {/* KYC Verification Modal */}
+      <CustomModal
+        isOpen={showTransfer}
+        onClose={() => setShowTransfer(false)}
+        title="Transfer Funds"
+      >
+        <Transfer />
       </CustomModal>
     </>
   );

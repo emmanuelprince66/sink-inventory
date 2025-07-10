@@ -5,16 +5,17 @@ import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchProductTransactionsQuery } from "@/api/products/get-transactions-history";
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 // Dynamic schema creation
 const createProductSchema = (isEditMode: boolean) => {
   const baseSchema = z.object({
@@ -125,6 +126,7 @@ export const useProductHook = ({
 }) => {
   const params = useParams();
   const { user } = useUserRole();
+  const router = useRouter();
 
   const productId = id || params.id;
   const business_id = useBusinessStore((state) => state.business_id);
@@ -132,6 +134,7 @@ export const useProductHook = ({
   const isUserSubscribed = useIsUserSubscribeStore(
     (state) => state.is_subscribed
   );
+  const queryClient = useQueryClient();
 
   // Data fetching
   const { data: ProductData, isLoading: ProductDataLoading } =
@@ -319,7 +322,17 @@ export const useProductHook = ({
     }
 
     if (isEditMode) {
-      editProduct({ payload: formData, productId: productId });
+      editProduct(
+        { payload: formData, productId: productId },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: [queryKey.inventory.getAllInventory],
+            });
+            router.back();
+          },
+        }
+      );
     } else {
       // For new products, ensure all required fields are present
       const requiredFields = {
@@ -371,7 +384,17 @@ export const useProductHook = ({
         }
       }
 
-      addProduct({ payload: newProductFormData, businessId: business_id });
+      addProduct(
+        { payload: newProductFormData, businessId: business_id },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: [queryKey.inventory.getAllInventory],
+            });
+            router.back();
+          },
+        }
+      );
     }
   };
 
