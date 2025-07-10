@@ -418,25 +418,25 @@ const OrderHistoryDetails = ({
         printable: printContent.innerHTML,
         type: "raw-html",
         style: `
-           @page { size: auto; margin: 2mm; }
-          body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
-           .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
-          table { width: 100%; border-collapse: collapse; margin: 3px 0; }
-          th { padding: 5px 3px; font-size: 12px; font-weight: bold; background-color: #f0fdf4; border-top-left-radius: 4px; border-top-right-radius: 4px; }
-          td { padding: 6px 3px; font-size: 12px; border-bottom: 1px solid #f3f4f6; }
-          .text-green-600 { color: #16a34a !important; }
-          .text-center { text-align: center; }
-          .text-right { text-align: right; }
-          .receipt-header { border-bottom: 1px solid #e5e7eb; padding-bottom: 15px; margin-bottom: 20px; }
-          .receipt-footer { border-top: 1px solid #e5e7eb; padding-top: 15px; margin-top: 30px; }
-          .transaction-details { background-color: #f9fafb; border-radius: 6px; margin: 5px 0;width: 98%; }
-          .payment-method {width: 98%; background-color: #f0fdf4; display: flex; justify-content: space-between; padding: 3px; border-radius: 6px; margin: 1px 0; }
-          .total-row { font-weight: bold; font-size: 10px; border-top: 2px solid #16a34a; padding-top: 4px; margin-top: 5px; }
-          .item-name { font-weight: bold; }
-          .detail-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+       @page { size: auto; margin: 2mm; }
+        body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
+        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
+        table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
+        th { padding:  1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
+        td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
+        .text-green-600 { color: #16a34a !important; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
+        .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
+        .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
+          .payment-method {width: 98%; background-color: #f0fdf4; display: flex; justify-content: space-between; padding: 1px; border-radius: 6px; margin: 1px 0; }
+          .total-row { font-weight: bold; font-size: 10px; border-top: 2px solid #16a34a; padding-top: 1px; margin-top: 1px; }
+           .item-name { font-weight: bold; font-size: 10px; }
+          .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; }
           .detail-label { color: #6b7280; font-size: 10px; }
           .detail-value { font-weight: bold; font-size: 10px; }
-          .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; }
+          .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 1px; }
           .receipt-title { font-size: 13px; font-weight: bold; color: #16a34a; }
         `,
         onPrintDialogClose: () => {
