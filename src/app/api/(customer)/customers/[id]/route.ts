@@ -25,12 +25,18 @@ export async function GET(
   const end_date = request.nextUrl.searchParams.get("end_date") || "";
   const start_date = request.nextUrl.searchParams.get("start_date") || "";
 
+  const page = request.nextUrl.searchParams.get("page") || "1"; // Get page
+  const limit = request.nextUrl.searchParams.get("limit") || "30"; // Get limit
+
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}customer/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
   if (start_date) apiUrl.searchParams.append("start_date", start_date);
   if (end_date) apiUrl.searchParams.append("end_date", end_date);
+
+  if (page) apiUrl.searchParams.append("page", page); // Append page
+  if (limit) apiUrl.searchParams.append("limit", limit); // Append limit
 
   try {
     const response = await fetch(apiUrl.toString(), {

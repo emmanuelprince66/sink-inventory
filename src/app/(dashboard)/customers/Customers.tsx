@@ -55,6 +55,7 @@ const Customers = () => {
     from: new Date(),
     to: new Date(),
   });
+  const [page, setPage] = useState(1);
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
@@ -78,7 +79,7 @@ const Customers = () => {
     handleFilterChange,
     activeFilter,
     handleSearchChange,
-  } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange });
+  } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -217,6 +218,8 @@ const Customers = () => {
             customersData={CustomerData}
             handleRowClick={handleRowClick}
             customerLoading={CustomerLoading}
+            setPage={setPage}
+            page={page}
           />
         </>
       )}

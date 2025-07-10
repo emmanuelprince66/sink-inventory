@@ -33,10 +33,12 @@ export const useCustomerHook = ({
   closeModal,
   handleOpenNotSubscribeModal,
   dateRange,
+  page,
 }: {
   closeModal?: () => void;
   handleOpenNotSubscribeModal?: () => void;
   dateRange?: any;
+  page?: number;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const isUserSubscribed = useIsUserSubscribeStore(
@@ -133,6 +135,8 @@ export const useCustomerHook = ({
       end_date: dateRange?.to
         ? moment(dateRange.to).format("YYYY-MM-DD")
         : undefined,
+      limit: 30,
+      page,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
