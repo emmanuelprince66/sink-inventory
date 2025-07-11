@@ -345,10 +345,13 @@ const ReceiptPDFDocument = ({
                 </View>
                 <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                 <Text style={styles.cellPrice}>
-                  {(
+                  {/* {(
                     (item.selling_price || item.amount || 0) *
                     (item.cartQuantity || 1)
-                  ).toLocaleString()}
+                  ).toLocaleString()} */}
+                  {item?.selling_price
+                    ? item.selling_price.toLocaleString()
+                    : item.amount.toLocaleString() ?? 0}
                 </Text>
                 <Text style={styles.cellTotal}>
                   {(
@@ -730,9 +733,13 @@ const PrintReceiptView = ({
                     {item.cartQuantity || 1}
                   </td>
                   <td className="text-right text-[11px]  price-cell">
-                    {formatToNaira(item.selling_price) ||
+                    {/* {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
-                      "₦0"}
+                      "₦0"} */}
+
+                    {item?.selling_price
+                      ? formatToNaira(item.selling_price)
+                      : formatToNaira(item.amount) ?? "₦0"}
                   </td>
                   <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(
