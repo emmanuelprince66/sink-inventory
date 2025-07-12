@@ -82,6 +82,18 @@ export const useSalesColumns = () => {
         );
       },
     },
+    {
+      accessorKey: "discount",
+      header: "Discount",
+      cell: ({ row }) => {
+        const product = row.original;
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">-</p>
+          </div>
+        );
+      },
+    },
   ];
 
   return columns;

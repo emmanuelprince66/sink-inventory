@@ -1,11 +1,13 @@
 "use client";
 import { CustomCard } from "@/components/app/CustomCard";
+import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatToNaira } from "@/utils/formatMoney";
 import Link from "next/link";
 import { useState } from "react";
+import CreateOrders from "./CreateOrders";
 
 // Dummy data
 const orderStats = {
@@ -75,6 +77,7 @@ const ordersData = [
 
 const Orders = () => {
   const [searchInput, setSearchInput] = useState("");
+  const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -89,7 +92,9 @@ const Orders = () => {
           </p>
 
           <div className="gap-2 flex items-center flex-wrap">
-            <Button>Create Order</Button>
+            <Button onClick={() => setOpenCreateOrderModal(true)}>
+              Create Order
+            </Button>
           </div>
         </div>
       </div>
@@ -300,6 +305,14 @@ const Orders = () => {
           </div>
         </>
       )}
+
+      <CustomModal
+        isOpen={openCreateOrderModal}
+        onClose={() => setOpenCreateOrderModal(false)}
+        title="Create Order"
+      >
+        <CreateOrders />
+      </CustomModal>
     </div>
   );
 };

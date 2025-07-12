@@ -1,6 +1,7 @@
 // constants/links.ts
 import {
   AirVent,
+  BookCopyIcon,
   ChartSpline,
   DollarSign,
   Home,
@@ -11,6 +12,7 @@ import {
   UsersRound,
   WorkflowIcon,
 } from "lucide-react";
+import { FaMoneyBillWave } from "react-icons/fa";
 
 export const links = [
   {
@@ -31,12 +33,12 @@ export const links = [
     icon: UsersRound,
     roles: ["OWNER", "ADMIN-ATTENDANT"],
   },
-  // {
-  //   title: "Orders",
-  //   url: "/orders",
-  //   icon: BookCopyIcon,
-  //   roles: ["OWNER", "ADMIN-ATTENDANT"],
-  // },
+  {
+    title: "Orders",
+    url: "/orders",
+    icon: BookCopyIcon,
+    roles: ["OWNER", "ADMIN-ATTENDANT"],
+  },
   {
     title: "Supplier",
     url: "/supply",
@@ -49,12 +51,12 @@ export const links = [
     icon: DollarSign,
     roles: ["OWNER"],
   },
-  // {
-  //   title: "Transactions",
-  //   url: "/transactions",
-  //   icon: FaMoneyBillWave,
-  //   roles: ["OWNER"], // Only OWNER can access
-  // },
+  {
+    title: "Transactions",
+    url: "/transactions",
+    icon: FaMoneyBillWave,
+    roles: ["OWNER"], // Only OWNER can access
+  },
   {
     title: "Campaign",
     url: "/campaign",

@@ -45,14 +45,22 @@ const orderFilterOptions = [
 const CustomSalesCard = ({
   title,
   amount,
+  type,
 }: {
   title: string;
   amount: number | string;
+  type?: string;
 }) => {
   return (
     <CustomCard className="bg-primary-green-200 border-primary-green-300 w-full">
       <div className="flex flex-col gap-6 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
+        <div className="flex justify-between items-center w-full">
+          <p className="font-[500] text-sm text-primary-black-100">{title}</p>
+
+          {type === "discount" && (
+            <p className="text-xs hover:underline cursor-pointer">View More</p>
+          )}
+        </div>
         <p className="font-[600] text-xl text-primary-black-100">{amount}</p>
       </div>
     </CustomCard>
@@ -153,7 +161,7 @@ const Sales = () => {
 
       {SalesLoading || !SalesData ? (
         <div className="flex gap-4 w-1/2">
-          {Array.from({ length: 4 }).map((_, index) => (
+          {Array.from({ length: 5 }).map((_, index) => (
             <CustomCard key={index} className="w-full border-gray-200">
               <div className="flex flex-col gap-6 items-start">
                 <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
@@ -163,7 +171,7 @@ const Sales = () => {
           ))}
         </div>
       ) : (
-        <div className="w-[80%] grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="w-[80%] grid grid-cols-2 md:grid-cols-5 gap-4">
           <CustomSalesCard
             title={"Revenue"}
             amount={formatToNaira(SalesData?.data?.results?.revenue)}
@@ -175,6 +183,11 @@ const Sales = () => {
           <CustomSalesCard
             title={"Items Sold"}
             amount={SalesData?.data?.results?.orders}
+          />
+          <CustomSalesCard
+            title={"Total Discount"}
+            amount={SalesData?.data?.results?.orders}
+            type="discount"
           />
 
           {user && user?.role === "OWNER" && (
