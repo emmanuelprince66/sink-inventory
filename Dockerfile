@@ -1,39 +1,23 @@
-# ---- Stage 1: Build ----
-# This stage installs dependencies, builds the Next.js app, and creates production artifacts.
-FROM node:18-alpine AS builder
-
-# Set the working directory
-WORKDIR /app
-
-# Copy package manifests and install all dependencies (including dev)
-COPY package*.json ./
-RUN npm install
-
-# Copy the rest of the source code
-COPY . .
-
-# Build the Next.js application
-RUN npm run build
-
-# ---- Stage 2: Production ----
-# This stage takes only the build artifacts from the 'builder' stage for a lean final image.
+# 1. Base Image: Use an official Node.js image
 FROM node:18-alpine
 
-# Set the working directory
+# 2. Set the working directory inside the container
 WORKDIR /app
 
-# Copy package manifests and install *only* production dependencies
+# 3. Copy package.json and package-lock.json
 COPY package*.json ./
-RUN npm ci --omit=dev
 
-# Copy the built application from the 'builder' stage
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-# The next.config.js file is often needed for the production server to run correctly
-COPY --from=builder /app/next.config.js ./
+# 4. Install dependencies
+RUN npm install --legacy-peer-deps
 
-# Expose the port the app runs on
+# 5. Copy the rest of your application code
+COPY . .
+
+# 6. Build your Next.js app for production
+RUN npm run build
+
+# 7. Expose the port the app will run on
 EXPOSE 3000
 
-# The command to run the production server
+# 8. Command to run the application
 CMD ["npm", "start"]
