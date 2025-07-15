@@ -1,23 +1,29 @@
-# 1. Base Image: Use an official Node.js image
-FROM node:18-alpine
+# ---- Stage 1: Build ----
+FROM node:18-alpine AS builder
 
-# 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json
 COPY package*.json ./
-
-# 4. Install dependencies
+# Add the flag here
 RUN npm install --legacy-peer-deps
 
-# 5. Copy the rest of your application code
 COPY . .
 
-# 6. Build your Next.js app for production
 RUN npm run build
 
-# 7. Expose the port the app will run on
+# ---- Stage 2: Production ----
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+# And add the flag here
+RUN npm ci --omit=dev --legacy-peer-deps
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.js ./
+
 EXPOSE 3000
 
-# 8. Command to run the application
 CMD ["npm", "start"]
