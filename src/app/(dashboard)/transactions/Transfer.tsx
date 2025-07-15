@@ -12,9 +12,17 @@ const Transfer = () => {
     { id: "wells", name: "Wells Fargo" },
     { id: "citi", name: "Citibank" },
   ];
+  const categories = [
+    { id: "select", name: "Select a category" },
+    { id: "chase", name: "Chase Bank" },
+    { id: "bankofamerica", name: "Bank of America" },
+    { id: "wells", name: "Wells Fargo" },
+    { id: "citi", name: "Citibank" },
+  ];
 
   // State for form fields
   const [recipientBank, setRecipientBank] = useState("");
+  const [category, setCategory] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [amount, setAmount] = useState("");
@@ -112,6 +120,31 @@ const Transfer = () => {
                     required
                   >
                     {banks.map((bank) => (
+                      <option
+                        key={bank.id}
+                        value={bank.id}
+                        disabled={bank.id === "select"}
+                      >
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="bank"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="bank"
+                    className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                  >
+                    {categories.map((bank) => (
                       <option
                         key={bank.id}
                         value={bank.id}

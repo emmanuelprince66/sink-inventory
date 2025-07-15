@@ -126,7 +126,7 @@ const Transactions = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
           {/* Wallet Balance */}
-          <CustomCard className="p-4 bg-primary-green-200 border border-primary-green-300 rounded-lg">
+          <CustomCard className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-primary-green-100 rounded-full">

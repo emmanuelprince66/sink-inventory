@@ -1,6 +1,5 @@
 "use client";
-
-import { Plus } from "lucide-react";
+import { AlertCircle, Plus, Users, Wallet } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -21,42 +20,85 @@ interface SupplierCardData {
 
 const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
   const isDebtCard = title === "Total Debt";
+  const isWalletCard = title === "Total Wallet Balance";
+  const isSupplierCard = title === "Total suppliers";
+
+  const getIcon = () => {
+    switch (title) {
+      case "Total suppliers":
+        return <Users className="w-5 h-5 text-indigo-600" />;
+      case "Total Debt":
+        return <AlertCircle className="w-5 h-5 text-red-600" />;
+      case "Total Wallet Balance":
+        return <Wallet className="w-5 h-5 text-emerald-600" />;
+      default:
+        return <Wallet className="w-5 h-5 text-emerald-600" />;
+    }
+  };
 
   return (
     <CustomCard
       className={cn(
-        "w-full",
+        "p-4 rounded-lg border transition-all hover:shadow-md",
         isDebtCard
-          ? "bg-red-100 border-red-300"
-          : "bg-primary-green-200 border-primary-green-300"
+          ? "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
+          : isWalletCard
+          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
+          : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200"
       )}
     >
-      <div className="flex flex-col gap-6 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p
-          className={`font-[600] text-xl ${
-            isDebtCard ? "text-red-600" : "text-primary-black-100"
-          }`}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2 rounded-full",
+              isDebtCard
+                ? "bg-red-100"
+                : isWalletCard
+                ? "bg-emerald-100"
+                : "bg-indigo-100"
+            )}
+          >
+            {getIcon()}
+          </div>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              isDebtCard
+                ? "text-red-800"
+                : isWalletCard
+                ? "text-emerald-800"
+                : "text-indigo-800"
+            )}
+          >
+            {title}
+          </span>
+        </div>
+      </div>
+      <div className="mt-4">
+        <span
+          className={cn(
+            "text-2xl font-bold",
+            isDebtCard
+              ? "text-red-600"
+              : isWalletCard
+              ? "text-emerald-600"
+              : "text-indigo-600"
+          )}
         >
           {amount}
-        </p>
+        </span>
       </div>
     </CustomCard>
   );
 };
 
 const Supply = () => {
-  const {
-    handleRowClick,
-
-    SupplierData,
-    SupplierLoading,
-  } = useSupplyHook({});
+  const { handleRowClick, SupplierData, SupplierLoading } = useSupplyHook({});
 
   const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
   const closeOpenSupplyModal = () => setOpenAddSupplyModal(false);
   const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
-  console.log("supplier data", SupplierData);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -81,7 +123,7 @@ const Supply = () => {
       {SupplierLoading ? (
         <>
           {/* Skeleton for cards */}
-          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, index) => (
               <CustomCard key={index} className="w-full border-gray-200">
                 <div className="flex flex-col gap-6 items-start">
@@ -108,7 +150,7 @@ const Supply = () => {
       ) : (
         <>
           {/* Cards container */}
-          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             <CustomSupplyCard
               title={"Total Wallet Balance"}
               amount={formatToNaira(

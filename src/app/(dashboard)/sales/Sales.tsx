@@ -9,7 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
 import { useUserRole } from "@/lib/store/user-store";
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import { AlertCircle, Users, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import OrderHistory from "./OrderHistory";
@@ -51,17 +53,93 @@ const CustomSalesCard = ({
   amount: number | string;
   type?: string;
 }) => {
-  return (
-    <CustomCard className="bg-primary-green-200 border-primary-green-300 w-full">
-      <div className="flex flex-col gap-6 items-start">
-        <div className="flex justify-between items-center w-full">
-          <p className="font-[500] text-sm text-primary-black-100">{title}</p>
+  const isRevenueCard = title === "Revenue";
+  const isCostCard = title === "Product Cost";
+  const isItemsCard = title === "Items Sold";
+  const isDiscountCard = title === "Total Discount";
+  const isProfitCard = title === "Profit";
 
+  const getCardStyle = () => {
+    if (isRevenueCard) {
+      return {
+        bg: "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200",
+        text: "text-blue-800",
+        amount: "text-blue-600",
+        badge: "bg-blue-100",
+        icon: <Wallet className="w-5 h-5 text-blue-600" />,
+      };
+    }
+    if (isCostCard) {
+      return {
+        bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
+        text: "text-amber-800",
+        amount: "text-amber-600",
+        badge: "bg-amber-100",
+        icon: <AlertCircle className="w-5 h-5 text-amber-600" />,
+      };
+    }
+    if (isItemsCard) {
+      return {
+        bg: "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200",
+        text: "text-indigo-800",
+        amount: "text-indigo-600",
+        badge: "bg-indigo-100",
+        icon: <Users className="w-5 h-5 text-indigo-600" />,
+      };
+    }
+    if (isDiscountCard) {
+      return {
+        bg: "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200",
+        text: "text-purple-800",
+        amount: "text-purple-600",
+        badge: "bg-purple-100",
+        icon: <AlertCircle className="w-5 h-5 text-purple-600" />,
+      };
+    }
+    if (isProfitCard) {
+      return {
+        bg: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
+        text: "text-emerald-800",
+        amount: "text-emerald-600",
+        badge: "bg-emerald-100",
+        icon: <Wallet className="w-5 h-5 text-emerald-600" />,
+      };
+    }
+    return {
+      bg: "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200",
+      text: "text-gray-800",
+      amount: "text-gray-600",
+      badge: "bg-gray-100",
+      icon: <Wallet className="w-5 h-5 text-gray-600" />,
+    };
+  };
+
+  const cardStyle = getCardStyle();
+
+  return (
+    <CustomCard
+      className={cn(
+        "p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
+        cardStyle.bg
+      )}
+    >
+      <div className="flex flex-col gap-2 h-full justify-between">
+        <div className="flex justify-between items-start w-full">
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-full", cardStyle.badge)}>
+              {cardStyle.icon}
+            </div>
+            <span className={cn("text-sm font-medium", cardStyle.text)}>
+              {title}
+            </span>
+          </div>
           {type === "discount" && (
-            <p className="text-xs hover:underline cursor-pointer">View More</p>
+            <p className="text-xs hover:underline cursor-pointer text-purple-600">
+              View More
+            </p>
           )}
         </div>
-        <p className="font-[600] text-xl text-primary-black-100">{amount}</p>
+        <p className={cn("text-2xl font-bold", cardStyle.amount)}>{amount}</p>
       </div>
     </CustomCard>
   );
@@ -146,10 +224,7 @@ const Sales = () => {
 
           <div className="flex items-center gap-2">
             {user && user?.role === "OWNER" && (
-              <Button
-                className=" border-primary-green-300"
-                onClick={openAttendantsModal}
-              >
+              <Button className="" onClick={openAttendantsModal}>
                 Attendants
               </Button>
             )}
@@ -160,10 +235,13 @@ const Sales = () => {
       </div>
 
       {SalesLoading || !SalesData ? (
-        <div className="flex gap-4 w-1/2">
+        <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, index) => (
-            <CustomCard key={index} className="w-full border-gray-200">
-              <div className="flex flex-col gap-6 items-start">
+            <CustomCard
+              key={index}
+              className="w-full border-gray-200 h-[120px]"
+            >
+              <div className="flex flex-col gap-6 items-start h-full justify-center">
                 <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
                 <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
               </div>
@@ -171,7 +249,7 @@ const Sales = () => {
           ))}
         </div>
       ) : (
-        <div className="w-[80%] grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
           <CustomSalesCard
             title={"Revenue"}
             amount={formatToNaira(SalesData?.data?.results?.revenue)}
@@ -186,7 +264,7 @@ const Sales = () => {
           />
           <CustomSalesCard
             title={"Total Discount"}
-            amount={SalesData?.data?.results?.orders}
+            amount={formatToNaira(SalesData?.data?.results?.discount || 0)}
             type="discount"
           />
 
@@ -204,9 +282,19 @@ const Sales = () => {
         onValueChange={(value) => setActiveTab(value as "products" | "history")}
         className="w-full mt-6"
       >
-        <TabsList className="w-[400px]">
-          <TabsTrigger value="products">Products Sold</TabsTrigger>
-          <TabsTrigger value="history">Order History</TabsTrigger>
+        <TabsList className="w-[400px] bg-primary-green-50">
+          <TabsTrigger
+            value="products"
+            className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white"
+          >
+            Products Sold
+          </TabsTrigger>
+          <TabsTrigger
+            value="history"
+            className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white"
+          >
+            Order History
+          </TabsTrigger>
         </TabsList>
         <div className="w-full h-[1px] bg-gray-200 mt-[-8px]" />
 
@@ -247,14 +335,12 @@ const Sales = () => {
           {activeTab === "products" && (
             <>
               {CategoriesDataLoading || !CategoriesData ? (
-                <div className="flex gap-4 w-1/2">
+                <div className="flex gap-3 mb-4 flex-wrap">
                   {Array.from({ length: 8 }).map((_, index) => (
-                    <CustomCard key={index} className="w-full border-gray-200">
-                      <div className="flex flex-col gap-6 items-start">
-                        <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                        <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
-                      </div>
-                    </CustomCard>
+                    <Skeleton
+                      key={index}
+                      className="h-14 w-[100px] rounded-md bg-[#eef4ef]"
+                    />
                   ))}
                 </div>
               ) : (
@@ -342,7 +428,7 @@ const Sales = () => {
 
       {/* attendants Modal */}
       <CustomModal
-        isOpen={ShowAttendants} // FIXED: Removed the negation
+        isOpen={ShowAttendants}
         onClose={closeAttendantsModal}
         trigger={false}
         title="Store Attendants"

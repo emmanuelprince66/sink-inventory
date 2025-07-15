@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +12,27 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useOrdersHook } from "@/hooks/useOrdersHook";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import CustomerDrawer from "../../pos/CustomersDrawer";
+import ProductDrawer from "./ProductDrawer";
 
 const CreateOrders = () => {
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
+  const [customer, setCustomer] = useState<any | null>(null);
+
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [isSelectProductDrawerOpen, setIsSelectProductDrawerOpen] =
+    useState(false);
+
+  const { InventoryData, InventoryDataLoading } = useOrdersHook({
+    page,
+    searchInput,
+  });
+
   // Dummy data
   const customers = [
     { id: "1", name: "John Doe" },
@@ -58,6 +78,7 @@ const CreateOrders = () => {
     // Handle form submission
     console.log({
       customer: selectedCustomer,
+      products: selectedProducts,
       currency: selectedCurrency,
       salesChannel: selectedSalesChannel,
       orderDate,
@@ -67,8 +88,19 @@ const CreateOrders = () => {
     });
   };
 
+  const removeProduct = (productId: string) => {
+    setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
+  };
+
+  const calculateTotal = () => {
+    return selectedProducts.reduce((sum, product) => {
+      return sum + product.selling_price * (product.quantity || 1);
+    }, 0);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-auto max-w-4xl">
+      <h2 className="text-xl font-semibold cursor-pointer">Back</h2>
       <h2 className="text-xl font-semibold">Order Details</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
@@ -147,6 +179,101 @@ const CreateOrders = () => {
               onChange={(e) => setOrderDate(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="space-y-4 w-full">
+          <div className="flex w-full justify-between items-center">
+            <Label>Customer</Label>
+
+            {customer?.name && (
+              <Button
+                className="border border-red-500 hover:bg-red-50"
+                variant="outline"
+                size="sm"
+                onClick={() => setCustomer("")}
+              >
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            )}
+          </div>
+          <div
+            className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-4"
+            onClick={() => setIsCustomerDrawerOpen(true)}
+          >
+            <div className="flex justify-between items-center w-full">
+              <span className="text-xs">
+                {customer ? customer.name : "Add Customer"}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-4 w-full">
+          <Label>Products</Label>
+          <div
+            className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-4"
+            onClick={() => setIsSelectProductDrawerOpen(true)}
+          >
+            <p className="text-sm text-gray-600">
+              {selectedProducts.length > 0
+                ? `${selectedProducts.length} product(s) selected`
+                : "Click to select products"}
+            </p>
+          </div>
+
+          {selectedProducts.length > 0 && (
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+              {selectedProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="p-1 flex justify-between items-center"
+                >
+                  <div className="flex items-center gap-3">
+                    {product.image && (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    )}
+                    <div>
+                      <h4 className="font-medium">{product.name}</h4>
+                      <p className="text-sm text-gray-500">
+                        ₦{product.selling_price}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Input
+                      type="number"
+                      min="1"
+                      defaultValue="1"
+                      className="w-20"
+                      onChange={(e) => {
+                        const updatedProducts = selectedProducts.map((p) =>
+                          p.id === product.id
+                            ? { ...p, quantity: parseInt(e.target.value) || 1 }
+                            : p
+                        );
+                        setSelectedProducts(updatedProducts);
+                      }}
+                    />
+                    <Button
+                      className="border border-red-500 hover:bg-red-50"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeProduct(product.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <div className="p-4 border-t font-medium text-right">
+                Total: ₦{calculateTotal().toLocaleString()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Payment Status Tabs */}
@@ -242,12 +369,34 @@ const CreateOrders = () => {
         </div>
 
         <div className="flex justify-end gap-4">
-          <Button variant="outline" type="button">
-            Cancel
+          <Button type="submit" className="w-[200px] h-12">
+            Create Order
           </Button>
-          <Button type="submit">Create Order</Button>
         </div>
       </form>
+
+      <ProductDrawer
+        open={isSelectProductDrawerOpen}
+        page={page}
+        setPage={setPage}
+        onOpenChange={setIsSelectProductDrawerOpen}
+        onProductSelect={(products) => {
+          setSelectedProducts(products);
+          setIsSelectProductDrawerOpen(false);
+        }}
+        products={InventoryData}
+        setSearchInput={setSearchInput}
+        isLoading={InventoryDataLoading}
+      />
+
+      {/* Drawers */}
+      <CustomerDrawer
+        open={isCustomerDrawerOpen}
+        onOpenChange={setIsCustomerDrawerOpen}
+        onCustomerSelect={(selectedCustomer: any) => {
+          setCustomer(selectedCustomer);
+        }}
+      />
     </div>
   );
 };

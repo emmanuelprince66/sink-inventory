@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import { DollarSign, Tag, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import AddService from "./AddService";
@@ -41,19 +42,28 @@ const CustomInventoryCard = ({
 }: CustomInventoryCardProps) => {
   const variants = {
     value: {
-      bg: "bg-primary-green-200 border border-gray-100",
-      text: "text-primary-black-100",
-      border: "border-primary-100",
+      bg: "bg-gradient-to-br from-indigo-50 to-indigo-100",
+      border: "border-indigo-200",
+      iconBg: "bg-indigo-100",
+      icon: <TrendingUp className="w-5 h-5 text-indigo-600" />,
+      text: "text-indigo-800",
+      amountText: "text-indigo-600",
     },
     profit: {
-      bg: "bg-[#1e1e1e]",
-      text: "text-white",
-      border: "border-[#1e1e1e]",
+      bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
+      border: "border-emerald-200",
+      iconBg: "bg-emerald-100",
+      icon: <DollarSign className="w-5 h-5 text-emerald-600" />,
+      text: "text-emerald-800",
+      amountText: "text-emerald-600",
     },
     other: {
-      bg: "bg-green-500",
-      text: "text-white",
-      border: "border-green-500",
+      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
+      border: "border-amber-200",
+      iconBg: "bg-amber-100",
+      icon: <Tag className="w-5 h-5 text-amber-600" />,
+      text: "text-amber-800",
+      amountText: "text-amber-600",
     },
   };
 
@@ -63,20 +73,29 @@ const CustomInventoryCard = ({
     <CustomCard
       className={cn(
         variant.bg,
-        variant.text,
         variant.border,
-        "w-full",
+        "p-4 rounded-lg border transition-all hover:shadow-md",
         className
       )}
     >
-      <div className="flex flex-col gap-6 items-start">
-        <p className="font-[500] text-sm">{title}</p>
-        <p className="font-[600] text-xl">{amount}</p>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className={cn("p-2 rounded-full", variant.iconBg)}>
+            {variant.icon}
+          </div>
+          <span className={cn("text-sm font-medium", variant.text)}>
+            {title}
+          </span>
+        </div>
+      </div>
+      <div className="mt-4">
+        <span className={cn("text-2xl font-bold", variant.amountText)}>
+          {amount}
+        </span>
       </div>
     </CustomCard>
   );
 };
-
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
