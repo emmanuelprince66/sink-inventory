@@ -54,6 +54,7 @@ interface Product {
   name: string;
   quantity: number;
   price: string;
+  unit_price: string;
   image: string;
   // ... any other product fields
 }
