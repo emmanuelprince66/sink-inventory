@@ -1,8 +1,12 @@
+import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { useState } from "react";
 import ConfirmTransfer from "./ConfirmTransfer";
-
 const Transfer = () => {
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
+  const { BankData, CategoriesData, BankDataLoading, CategoriesDataLoading } =
+    useTransactionsHook();
+
+  console.log("BankData", BankData);
   // Dummy data for wallet balance and bank options
   const walletBalance = 12_500.75;
   const banks = [
@@ -119,13 +123,13 @@ const Transfer = () => {
                     onChange={(e) => setRecipientBank(e.target.value)}
                     required
                   >
-                    {banks.map((bank) => (
+                    {BankData?.data?.map((bank: any) => (
                       <option
                         key={bank.id}
                         value={bank.id}
                         disabled={bank.id === "select"}
                       >
-                        {bank.name}
+                        {bank.bank_name}
                       </option>
                     ))}
                   </select>
@@ -144,13 +148,13 @@ const Transfer = () => {
                     onChange={(e) => setCategory(e.target.value)}
                     required
                   >
-                    {categories.map((bank) => (
+                    {CategoriesData?.data?.map((cat: any) => (
                       <option
-                        key={bank.id}
-                        value={bank.id}
-                        disabled={bank.id === "select"}
+                        key={cat.id}
+                        value={cat.id}
+                        disabled={cat.id === "select"}
                       >
-                        {bank.name}
+                        {cat.name}
                       </option>
                     ))}
                   </select>

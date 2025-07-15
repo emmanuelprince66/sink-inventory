@@ -7,6 +7,7 @@ interface CartStore {
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
   updateCartItemQuantity: (id: string, quantity: number) => void;
+  updateCartItemPrice: (id: string, price: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
@@ -66,6 +67,20 @@ export const useCartStore = create<CartStore>()(
           cartItems: state.cartItems.map((item) =>
             item.id === id ? { ...item, cartQuantity: quantity } : item
           ),
+        }));
+      },
+      updateCartItemPrice: (id, price) => {
+        set((state) => ({
+          cartItems: state.cartItems.map((item) => {
+            if (item.id === id) {
+              if (item.type === "SERVICE") {
+                return { ...item, amount: price };
+              } else {
+                return { ...item, selling_price: price };
+              }
+            }
+            return item;
+          }),
         }));
       },
       clearCart: () => {
