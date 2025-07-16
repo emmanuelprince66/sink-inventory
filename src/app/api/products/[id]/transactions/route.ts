@@ -19,7 +19,14 @@ export async function GET(
       { status: 401 }
     );
   }
+
+  const page = request.nextUrl.searchParams.get("page") || "1";
+  const limit = request.nextUrl.searchParams.get("limit") || "30";
+
   const apiUrl = new URL(`${BaseUrl}product/transaction/${id}/`);
+
+  apiUrl.searchParams.append("page", page);
+  apiUrl.searchParams.append("limit", limit);
 
   try {
     const response = await fetch(apiUrl.toString(), {

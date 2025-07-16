@@ -107,4 +107,7 @@ export const queryKey = {
     createBank: "create-bank",
     deleteBank: "delete-bank",
   },
+  transactions: {
+    getAllTransactions: "get-all-transactions",
+  },
 };
