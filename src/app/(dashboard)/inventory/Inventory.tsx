@@ -46,24 +46,24 @@ const CustomInventoryCard = ({
       border: "border-indigo-200",
       iconBg: "bg-indigo-100",
       icon: <TrendingUp className="w-5 h-5 text-indigo-600" />,
-      text: "text-indigo-800",
-      amountText: "text-indigo-600",
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
     },
     profit: {
       bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
       border: "border-emerald-200",
       iconBg: "bg-emerald-100",
       icon: <DollarSign className="w-5 h-5 text-emerald-600" />,
-      text: "text-emerald-800",
-      amountText: "text-emerald-600",
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
     },
     other: {
       bg: "bg-gradient-to-br from-amber-50 to-amber-100",
       border: "border-amber-200",
       iconBg: "bg-amber-100",
       icon: <Tag className="w-5 h-5 text-amber-600" />,
-      text: "text-amber-800",
-      amountText: "text-amber-600",
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
     },
   };
 
@@ -74,7 +74,7 @@ const CustomInventoryCard = ({
       className={cn(
         variant.bg,
         variant.border,
-        "p-4 rounded-lg border transition-all hover:shadow-md",
+        "p-4 w-full rounded-lg border transition-all hover:shadow-md",
         className
       )}
     >
@@ -165,7 +165,7 @@ const Inventory = () => {
       <p className="text-primary-black-100">Overview</p>
 
       {InventoryDataLoading || !InventoryData ? (
-        <div className="flex gap-4 w-[80%]">
+        <div className="flex gap-4 w-full">
           {Array.from({ length: 4 }).map((_, index) => (
             <CustomCard key={index} className="w-full border-gray-200">
               <div className="flex flex-col gap-6 items-start">
@@ -176,7 +176,7 @@ const Inventory = () => {
           ))}
         </div>
       ) : (
-        <div className="w-[80%] grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
           <CustomInventoryCard
             title={"Inventory Value"}
             amount={formatToNaira(

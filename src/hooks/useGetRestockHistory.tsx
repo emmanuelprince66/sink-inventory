@@ -5,6 +5,7 @@ import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+import moment from "moment";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -100,7 +101,7 @@ export const useGetRestockHistory = ({
     resolver: zodResolver(RestockSchema),
     defaultValues: {
       name: data?.name || "",
-      qty: data?.quantity || undefined,
+      qty: undefined,
       supplier: "",
       cost_price: data?.cost_price || undefined,
       selling_price: data?.selling_price || undefined,
@@ -130,7 +131,7 @@ export const useGetRestockHistory = ({
       ...(values.payment_method === "CREDIT" && { due_date: values.due_date }),
       ...(values.payment_method === "PART" && {
         amount_paid: Number(values.amount_paid),
-        due_date: values.due_date,
+        due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),
       }),
     };
     console.log("payload----5", payload);

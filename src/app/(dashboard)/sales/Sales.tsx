@@ -63,8 +63,8 @@ const CustomSalesCard = ({
     if (isRevenueCard) {
       return {
         bg: "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200",
-        text: "text-blue-800",
-        amount: "text-blue-600",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
         badge: "bg-blue-100",
         icon: <Wallet className="w-5 h-5 text-blue-600" />,
       };
@@ -72,8 +72,8 @@ const CustomSalesCard = ({
     if (isCostCard) {
       return {
         bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
-        text: "text-amber-800",
-        amount: "text-amber-600",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
         badge: "bg-amber-100",
         icon: <AlertCircle className="w-5 h-5 text-amber-600" />,
       };
@@ -81,8 +81,8 @@ const CustomSalesCard = ({
     if (isItemsCard) {
       return {
         bg: "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200",
-        text: "text-indigo-800",
-        amount: "text-indigo-600",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
         badge: "bg-indigo-100",
         icon: <Users className="w-5 h-5 text-indigo-600" />,
       };
@@ -90,8 +90,8 @@ const CustomSalesCard = ({
     if (isDiscountCard) {
       return {
         bg: "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200",
-        text: "text-purple-800",
-        amount: "text-purple-600",
+        text: "text-primary-black-1000",
+        amount: "text-primary-black-100",
         badge: "bg-purple-100",
         icon: <AlertCircle className="w-5 h-5 text-purple-600" />,
       };
@@ -99,16 +99,16 @@ const CustomSalesCard = ({
     if (isProfitCard) {
       return {
         bg: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
-        text: "text-emerald-800",
-        amount: "text-emerald-600",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
         badge: "bg-emerald-100",
         icon: <Wallet className="w-5 h-5 text-emerald-600" />,
       };
     }
     return {
       bg: "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200",
-      text: "text-gray-800",
-      amount: "text-gray-600",
+      text: "text-primary-black-100",
+      amount: "text-primary-black-100",
       badge: "bg-gray-100",
       icon: <Wallet className="w-5 h-5 text-gray-600" />,
     };
