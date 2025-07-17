@@ -69,10 +69,10 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
             className={cn(
               "text-sm font-medium",
               isDebtCard
-                ? "text-red-800"
+                ? "text-primary-black-100"
                 : isWalletCard
-                ? "text-emerald-800"
-                : "text-indigo-800"
+                ? "text-primary-black-100"
+                : "text-primary-black-100"
             )}
           >
             {title}
@@ -84,10 +84,10 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
           className={cn(
             "text-2xl font-bold",
             isDebtCard
-              ? "text-red-600"
+              ? "text-primary-black-100"
               : isWalletCard
-              ? "text-emerald-600"
-              : "text-indigo-600"
+              ? "text-primary-black-100"
+              : "text-primary-black-100"
           )}
         >
           {amount}
