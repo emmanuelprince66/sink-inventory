@@ -22,6 +22,7 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
   });
   const [searchInput, setSearchInput] = useState("");
 
+  console.log("page", page);
   console.log("ProductTransactionData:", ProductTransactionData);
   // Sample data
 

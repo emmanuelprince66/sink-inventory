@@ -4,7 +4,7 @@ import ConfirmTransfer from "./ConfirmTransfer";
 const Transfer = () => {
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
   const { BankData, CategoriesData, BankDataLoading, CategoriesDataLoading } =
-    useTransactionsHook();
+    useTransactionsHook({});
 
   console.log("BankData", BankData);
   // Dummy data for wallet balance and bank options
