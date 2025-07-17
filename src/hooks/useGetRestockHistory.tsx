@@ -128,7 +128,9 @@ export const useGetRestockHistory = ({
       selling_price: values.selling_price,
       payment_method: values.payment_method,
       ...(values.supplier && { supplier_id: values.supplier }), // Only add if supplier exists
-      ...(values.payment_method === "CREDIT" && { due_date: values.due_date }),
+      ...(values.payment_method === "CREDIT" && {
+        due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),
+      }),
       ...(values.payment_method === "PART" && {
         amount_paid: Number(values.amount_paid),
         due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),
