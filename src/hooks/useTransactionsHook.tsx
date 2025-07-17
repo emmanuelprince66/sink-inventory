@@ -11,6 +11,7 @@ export const useTransactionsHook = ({
   type,
   dateRange,
 }: any) => {
+  console.log("type", type);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
   const searchTerm =
     debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0

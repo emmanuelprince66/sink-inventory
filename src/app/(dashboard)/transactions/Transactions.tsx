@@ -38,16 +38,27 @@ const Transactions = () => {
   const [showTrxDetails, setShowTrxDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"All" | "Credit" | "Debit">("All");
-
+  const filterOptions = ["All", "Credit", "Debit"] as const;
+  const filterMapping = {
+    All: "",
+    Credit: "Credit",
+    Debit: "Debit",
+  } as const;
+  const [activeFilter, setActiveFilter] = useState<
+    (typeof filterOptions)[number]
+  >(filterOptions[0]);
   const [kycType, setKycType] = useState<"business" | "individual">(
     "individual"
   );
+  const handleFilterChange = (filter: (typeof filterOptions)[number]) => {
+    setActiveFilter(filter);
+  };
 
   const { TrxData, TrxDataLoading } = useTransactionsHook({
     searchInput,
     dateRange,
     page,
+    type: filterMapping[activeFilter],
   });
   console.log("TrxData", TrxData);
 
@@ -238,24 +249,19 @@ const Transactions = () => {
             )}
           </div>
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
-            <Button
-              variant="outline"
-              className="border-gray-300 flex-1 md:flex-none"
-            >
-              All
-            </Button>
-            <Button
-              variant="outline"
-              className="border-green-300 text-green-600 flex-1 md:flex-none"
-            >
-              Credit
-            </Button>
-            <Button
-              variant="outline"
-              className="border-red-300 text-red-600 flex-1 md:flex-none"
-            >
-              Debit
-            </Button>
+            {filterOptions.map((filter) => (
+              <Button
+                key={filter}
+                className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                  activeFilter === filter
+                    ? "bg-primary-green-300 text-white"
+                    : "bg-primary-green-200 text-primary-black-100"
+                }`}
+                onClick={() => handleFilterChange(filter)}
+              >
+                {filter}
+              </Button>
+            ))}
           </div>
         </div>
 

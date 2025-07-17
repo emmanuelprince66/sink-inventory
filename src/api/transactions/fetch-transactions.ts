@@ -73,6 +73,7 @@ export const useFetchTransactionQuery = ({
       params.id,
       params.search,
       params.start_date,
+      params.type,
       params.end_date,
       params.limit,
       params.page,

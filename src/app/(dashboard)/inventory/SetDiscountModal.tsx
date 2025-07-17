@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
-const EditProductPrice = ({
+import { AlertTriangle } from "lucide-react";
+
+const SetDiscountModal = ({
   productId,
   product,
   closeModal,
@@ -25,6 +27,23 @@ const EditProductPrice = ({
     closeModal,
   });
 
+  // Watch form values to calculate profit warning
+  const watchedValues = addDiscountForm.watch();
+  const priceDiscount = parseFloat(watchedValues.price_discount) || 0;
+  const productThreshold = parseFloat(watchedValues.product_threshold) || 0;
+
+  // Calculate if profit would be negative
+  const costPrice = product?.cost_price || 0;
+  const sellingPrice = product?.selling_price || 0;
+  const currentProfit = sellingPrice - costPrice;
+  const profitAfterDiscount = currentProfit - priceDiscount;
+
+  // Show warning if discount makes profit negative
+  const showWarning = priceDiscount > 0 && profitAfterDiscount < 0;
+
+  // Calculate break-even discount (maximum discount before going negative)
+  const maxDiscount = Math.max(0, currentProfit);
+
   return (
     <div className="w-full">
       <Form {...addDiscountForm}>
@@ -32,7 +51,7 @@ const EditProductPrice = ({
           onSubmit={addDiscountForm.handleSubmit(addDiscountSubmit)}
           className="space-y-5"
         >
-          {/* First Name and Last Name in same row */}
+          {/* Product Threshold Field */}
           <FormField
             control={addDiscountForm.control}
             name="product_threshold"
@@ -49,6 +68,8 @@ const EditProductPrice = ({
               </FormItem>
             )}
           />
+
+          {/* Price Discount Field */}
           <FormField
             control={addDiscountForm.control}
             name="price_discount"
@@ -63,7 +84,36 @@ const EditProductPrice = ({
             )}
           />
 
-          <Button type="submit" className="w-full h-[48px] " disabled={loading}>
+          {/* Profit Warning */}
+          {showWarning && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="text-sm font-medium text-red-800 mb-1">
+                  Warning: Negative Profit
+                </h4>
+                <p className="text-sm text-red-700 mb-2">
+                  This discount will result in a negative profit for this item.
+                </p>
+                <div className="text-xs text-red-600 space-y-1">
+                  <div>Cost Price: ₦{costPrice.toLocaleString()}</div>
+                  <div>Selling Price: ₦{sellingPrice.toLocaleString()}</div>
+                  <div>Current Profit: ₦{currentProfit.toLocaleString()}</div>
+                  <div>Discount: ₦{priceDiscount.toLocaleString()}</div>
+                  <div className="font-medium">
+                    Profit After Discount: ₦
+                    {profitAfterDiscount.toLocaleString()}
+                  </div>
+                  <div className="pt-1 border-t border-red-200">
+                    Maximum recommended discount: ₦
+                    {maxDiscount.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Button type="submit" className="w-full h-[48px]" disabled={loading}>
             {loading ? <Spinner /> : "Save"}
           </Button>
         </form>
@@ -72,4 +122,4 @@ const EditProductPrice = ({
   );
 };
 
-export default EditProductPrice;
+export default SetDiscountModal;
