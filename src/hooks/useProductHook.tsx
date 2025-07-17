@@ -124,7 +124,7 @@ export const useProductHook = ({
 }: {
   id?: string;
   handleOpenNotSubscribeModal?: () => void;
-  page: any;
+  page?: any;
 }) => {
   const params = useParams();
   const { user } = useUserRole();
