@@ -174,7 +174,7 @@ const EditProduct = ({ id }: { id: string }) => {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="stock_quantity"
                 render={({ field }) => (
@@ -189,7 +189,7 @@ const EditProduct = ({ id }: { id: string }) => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
 
               {/* SKU */}
               <FormField
@@ -330,6 +330,7 @@ const EditProduct = ({ id }: { id: string }) => {
                     <FormLabel>Stock Quantity</FormLabel>
                     <FormControl>
                       <Input
+                        disabled
                         placeholder="Enter Stock Quantity...."
                         {...field}
                       />
