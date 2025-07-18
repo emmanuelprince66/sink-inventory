@@ -74,6 +74,7 @@ const RestockItem = ({
                 <FormLabel>Stock Quantity</FormLabel>
                 <FormControl>
                   <Input
+                    disabled
                     type="number"
                     placeholder="Enter Stock Quantity...."
                     {...field}
