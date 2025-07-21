@@ -12,7 +12,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { links } from "@/constants/links";
-import { UserRole } from "@/lib/store/types";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { deleteCookie } from "cookies-next";
@@ -38,7 +37,7 @@ export function AppSidebar() {
     <Sidebar className="z-10 bg-white border-gray-200">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="py-6 mb-8">
+          <SidebarGroupLabel className="py-6 mb-4">
             <div className="w-100 h-100">
               <Image
                 src="/asset/h-1.png"
@@ -50,56 +49,66 @@ export function AppSidebar() {
               />
             </div>
           </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {links.map((item: any) => {
-                // Check if user has permission for this link
-                const hasAccess = item.roles.some((role: UserRole) =>
-                  hasPermission(role)
-                );
-                if (!hasAccess) return null;
 
-                const isActive =
-                  pathname === item.url ||
-                  (item.url !== "/" && pathname.startsWith(item.url));
+          {links.map((group) => (
+            <SidebarGroup key={group.title}>
+              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                {group.title}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const hasAccess = item.roles.some((role: any) =>
+                      hasPermission(role)
+                    );
+                    if (!hasAccess) return null;
 
-                return (
-                  <SidebarMenuItem
-                    key={item.title}
-                    className={cn(
-                      "transition-colors duration-200 my-2 py-1 rounded",
-                      isActive
-                        ? "bg-primary-green-300 text-white"
-                        : "hover:bg-primary-green-300 hover:text-white"
-                    )}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href={item.url}
-                        className="flex items-center font-[600]"
+                    const isActive =
+                      pathname === item.url ||
+                      (item.url !== "/" && pathname.startsWith(item.url));
+
+                    return (
+                      <SidebarMenuItem
+                        key={item.title}
+                        className={cn(
+                          "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                          isActive
+                            ? "bg-primary-green-300 text-white"
+                            : "hover:bg-gray-100 text-gray-700"
+                        )}
                       >
-                        <item.icon className="mr-2" />
-                        <p className="text-[18px] font-normal">{item.title}</p>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
+                        <SidebarMenuButton asChild>
+                          <Link
+                            href={item.url}
+                            className="flex items-center font-medium"
+                          >
+                            <item.icon className="mr-3 h-5 w-5" />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+
+      <SidebarFooter className="px-4 py-3 border-t border-gray-200">
         <SidebarMenuButton
           onClick={handleLogOut}
           disabled={isPending}
           className={cn(
-            "text-primary-red-100 cursor-pointer py-1 flex items-center font-[600]",
-            "hover:bg-red-50 transition-colors duration-200 rounded"
+            "text-red-600 cursor-pointer py-2 px-3 flex items-center font-medium rounded",
+            "hover:bg-red-50 transition-colors duration-200"
           )}
         >
-          <LogOut className="mr-2" />
-          {isPending ? "Logging out..." : "Logout"}
+          <LogOut className="mr-3 h-5 w-5" />
+          <span className="text-sm">
+            {isPending ? "Logging out..." : "Logout"}
+          </span>
         </SidebarMenuButton>
       </SidebarFooter>
     </Sidebar>

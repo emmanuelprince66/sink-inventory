@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
-
 import ResetPassword from "@/app/reset-password/ResetPassword";
-import WelcomeScreen from "@/components/app/WelcomeScreen";
+import WelcomeMessage from "@/components/app/WelcomeScreen";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -16,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useLoginForm } from "@/hooks/auth/useLoginForm";
+import Image from "next/image";
+import Link from "next/link";
 
 const Login = () => {
   const { form, onSubmit, showLogin, setShowLogin, isSubmitting } =
@@ -23,16 +24,33 @@ const Login = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
-      {/* Welcome Screen (Left Side) */}
-      <WelcomeScreen />
-      {/* Login Form (Right Side) */}
+      {/* Welcome Message Component (Left Side) */}
+      <WelcomeMessage />
 
+      {/* Login Form (Right Side) */}
       {showLogin ? (
-        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-          <div className="w-full max-w-md">
-            <h1 className="text-2xl font-bold mb-8 text-center">
-              Welcome Back
-            </h1>
+        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-6 lg:p-12 bg-gray-50">
+          <Card className="w-full md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
+            {/* Logo */}
+            <div className="flex items-center mb-8 bg-black p-4 rounded-full w-[100px] justify-center">
+              {/* <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white font-bold text-sm">✓</span>
+              </div>
+              <span className="text-xl font-semibold text-gray-900">
+                SYNC360
+              </span> */}
+
+              <Image src="/asset/sink.png" alt="Logo" width={50} height={50} />
+            </div>
+
+            {/* Welcome Message */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-light text-gray-600 mb-2">
+                Welcome to Sync360 Admin,
+              </h1>
+            </div>
+
+            {/* Login Form */}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -43,10 +61,13 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Email
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter email"
+                          placeholder="Enter your email"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e); // Ensure onChange is properly handled
@@ -57,18 +78,20 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Password
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="password"
                           showPasswordToggle
-                          placeholder="Enter password"
+                          placeholder="Enter your password"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e); // Ensure onChange is properly handled
@@ -79,27 +102,35 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-
                 <Button
                   type="submit"
-                  className="w-full h-[48px]"
+                  className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? <Spinner /> : "Login"}
+                  {isSubmitting ? <Spinner /> : "Continue"}
                 </Button>
               </form>
             </Form>
-          </div>
 
-          <div className="w-full md:w-[60%] mx-auto  justify-center mt-3 flex gap-4 items-center">
-            <p className="text-[14px]">Don't have an account yet?</p>
-            <Link href="/signup">
-              <p className="text-[14px] text-blue-500">Sign Up</p>
-            </Link>
-          </div>
-          <Link href="/forget-password">
-            <p className="text-[14px] text-red-700 mt-2">Forget Password</p>
-          </Link>
+            {/* Additional Links */}
+            <div className="mt-6 space-y-4 text-center">
+              <div className="flex justify-center items-center gap-2">
+                <p className="text-sm text-gray-600">
+                  Don't have an account yet?
+                </p>
+                <Link href="/signup">
+                  <p className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors">
+                    Sign Up
+                  </p>
+                </Link>
+              </div>
+              <Link href="/forget-password">
+                <p className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  Forget Password
+                </p>
+              </Link>
+            </div>
+          </Card>
         </div>
       ) : (
         <ResetPassword setShowLogin={setShowLogin} />

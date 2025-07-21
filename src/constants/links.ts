@@ -1,90 +1,125 @@
 // constants/links.ts
 import {
-  AirVent,
-  BookCopyIcon,
-  ChartSpline,
+  Activity,
+  ClipboardList,
+  CreditCard,
   DollarSign,
-  Home,
-  PcCase,
+  LayoutDashboard,
+  Megaphone,
+  Package,
+  Percent,
   Settings,
-  ShoppingBag,
-  SquarePercent,
-  UsersRound,
-  WorkflowIcon,
+  ShoppingCart,
+  Truck,
+  Users,
 } from "lucide-react";
-import { FaMoneyBillWave } from "react-icons/fa";
 
 export const links = [
   {
-    title: "Point Of Sales",
-    url: "/pos",
-    icon: PcCase,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"], // All roles can access
+    title: "Point of Sale",
+    items: [
+      {
+        title: "POS Terminal",
+        url: "/pos",
+        icon: ShoppingCart,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Overview",
-    url: "/overview",
-    icon: Home,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Main Menu",
+    items: [
+      {
+        title: "Overview",
+        url: "/overview",
+        icon: LayoutDashboard,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+      {
+        title: "Inventory",
+        url: "/inventory",
+        icon: Package,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Sales",
+        url: "/sales",
+        icon: Percent,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+      {
+        title: "Expenses",
+        url: "/expenses",
+        icon: DollarSign,
+        roles: ["OWNER"],
+      },
+      {
+        title: "Orders",
+        url: "/orders",
+        icon: ClipboardList,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Supplier",
+        url: "/supply",
+        icon: Truck,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
     title: "Customers",
-    url: "/customers",
-    icon: UsersRound,
-    roles: ["OWNER", "ADMIN-ATTENDANT"],
+    items: [
+      {
+        title: "Customers",
+        url: "/customers",
+        icon: Users,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Orders",
-    url: "/orders",
-    icon: BookCopyIcon,
-    roles: ["OWNER", "ADMIN-ATTENDANT"],
+    title: "Payment",
+    items: [
+      {
+        title: "Transactions",
+        url: "/transactions",
+        icon: CreditCard,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
-    title: "Supplier",
-    url: "/supply",
-    icon: AirVent,
-    roles: ["OWNER"],
+    title: "Marketing",
+    items: [
+      {
+        title: "Campaign",
+        url: "/campaign",
+        icon: Megaphone,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
-    title: "Expenses",
-    url: "/expenses",
-    icon: DollarSign,
-    roles: ["OWNER"],
+    title: "Reports",
+    items: [
+      {
+        title: "Analytics",
+        url: "/analytics",
+        icon: Activity,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Transactions",
-    url: "/transactions",
-    icon: FaMoneyBillWave,
-    roles: ["OWNER"], // Only OWNER can access
-  },
-  {
-    title: "Campaign",
-    url: "/campaign",
-    icon: WorkflowIcon,
-    roles: ["OWNER"], // Only OWNER can access
-  },
-  {
-    title: "Sales",
-    url: "/sales",
-    icon: SquarePercent,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
-  },
-  {
-    title: "Inventory",
-    url: "/inventory",
-    icon: ShoppingBag,
-    roles: ["OWNER", "ADMIN-ATTENDANT"],
-  },
-  {
-    title: "Analytics",
-    url: "/analytics",
-    icon: ChartSpline,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Administrator",
+    items: [
+      {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
 ];
