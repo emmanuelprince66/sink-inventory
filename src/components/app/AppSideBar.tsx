@@ -40,7 +40,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="py-6 mb-4">
             <div className="w-100 h-100">
               <Image
-                src="/asset/h-1.png"
+                src="/asset/sink2.png"
                 alt="sink-logo"
                 className="w-full h-full object-contain"
                 priority

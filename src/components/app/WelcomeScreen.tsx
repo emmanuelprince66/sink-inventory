@@ -91,7 +91,7 @@ export default function WelcomeMessage() {
     <div className="flex-1 bg-black text-white relative overflow-hidden min-h-[400px] lg:min-h-screen">
       {/* Logo in top left corner */}
       <div className="absolute top-6 left-6 z-20">
-        <Image src="/asset/sink.png" alt="Logo" width={50} height={50} />
+        <Image src="/asset/sink1.png" alt="Logo" width={130} height={130} />
       </div>
       {/* Beautiful Faint Background Patterns */}
       <div className="absolute inset-0 opacity-3">

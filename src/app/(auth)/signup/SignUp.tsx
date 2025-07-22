@@ -44,16 +44,8 @@ const SignUp = () => {
       {/* SignUp Form (Right Side) */}
       <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
         <div className="w-full  md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
-          <div className="flex items-center mb-8 bg-black p-4 rounded-full w-[100px] justify-center">
-            {/* <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white font-bold text-sm">✓</span>
-                        </div>
-                        <span className="text-xl font-semibold text-gray-900">
-                          SYNC360
-                        </span> */}
+          <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
 
-            <Image src="/asset/sink.png" alt="Logo" width={50} height={50} />
-          </div>
           <div className="mb-8">
             <h1 className="text-2xl font-light text-gray-600 mb-2">
               Create Account
