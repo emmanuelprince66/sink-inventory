@@ -21,6 +21,9 @@ export const queryKey = {
     subscribeUser: "subscribe-user",
     checkIsUserSubscribed: "check-is-user-subscribed",
   },
+  kyc: {
+    createKycAcct: "create-kyc-acct",
+  },
   campaign: {
     getAllCampaigns: "get-all-campaigns",
     getGroups: "get-groups",

@@ -27,7 +27,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { SidebarTrigger } from "../ui/sidebar";
 import { CustomModal } from "./CustomModal";
-import KycConfirm from "./KycConfirm";
+import KycConfirm from "./kyc/KycConfirm";
 
 export function TopBar() {
   const business_id = useBusinessStore((state) => state.business_id);
