@@ -200,12 +200,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   Add Damaged Product
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={openViewDetailsFunc}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 <span className="">View more details</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleOpenRestockModal}
                 className={cn(
