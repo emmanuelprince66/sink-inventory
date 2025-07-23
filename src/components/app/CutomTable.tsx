@@ -39,6 +39,7 @@ interface CustomTableProps<TData> {
     onPageChange: (page: number) => void;
     onPageSizeChange: (size: number) => void;
   };
+  showSerialNumber?: boolean; // Add this prop
 }
 
 export function CustomTable<TData>({
@@ -50,12 +51,35 @@ export function CustomTable<TData>({
   onRowClick,
   rowClassName,
   pagination,
+  showSerialNumber = true, // Default to true
 }: CustomTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // Add serial number column if enabled
+  const tableColumns = [
+    ...(showSerialNumber
+      ? [
+          {
+            id: "serialNumber",
+            header: "S/N",
+            cell: ({ row }) => {
+              // Calculate the serial number based on pagination if available
+              const baseNumber = pagination
+                ? (pagination.currentPage - 1) * pagination.pageSize +
+                  row.index +
+                  1
+                : row.index + 1;
+              return baseNumber;
+            },
+          } as ColumnDef<TData>,
+        ]
+      : []),
+    ...columns,
+  ];
+
   const table = useReactTable({
     data,
-    columns,
+    columns: tableColumns,
     state: {
       sorting,
     },
@@ -67,7 +91,6 @@ export function CustomTable<TData>({
   const handleRowClick = (row: Row<TData>) => {
     if (onRowClick) {
       onRowClick(row);
-      // You can perform additional actions here if needed
     }
   };
 
@@ -82,7 +105,7 @@ export function CustomTable<TData>({
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm mb-9">
+    <div className="bg-white shadow-sm mb-9">
       {tableHeader}
 
       <Table>
@@ -122,7 +145,10 @@ export function CustomTable<TData>({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell
+                colSpan={tableColumns.length}
+                className="h-24 text-center"
+              >
                 <div className="flex items-center justify-center h-[300px]">
                   <div className="flex flex-col items-center gap-4">
                     <div className="flex space-x-2">
@@ -152,7 +178,10 @@ export function CustomTable<TData>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell
+                colSpan={tableColumns.length}
+                className="h-24 text-center"
+              >
                 <div className="flex items-center justify-center h-[300px]">
                   {typeof noDataText === "string" ? (
                     <span className="text-gray-500">{noDataText}</span>

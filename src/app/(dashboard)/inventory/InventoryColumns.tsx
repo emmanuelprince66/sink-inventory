@@ -29,28 +29,23 @@ const statusColors = {
 
 export const columns: ColumnDef<InventoryItem>[] = [
   {
-    accessorKey: "logo",
-    header: "",
+    accessorKey: "name",
+    header: "Product",
     cell: ({ row }) => {
       const inventory = row.original;
       return (
-        <div className="relative h-10 w-10 rounded-md overflow-hidden">
-          <Image
-            src={inventory.image}
-            alt={`${inventory.name} logo`}
-            fill
-            className="object-cover"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative h-10 w-10 rounded-md overflow-hidden">
+            <Image
+              src={inventory.image}
+              alt={`${inventory.name} logo`}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="font-medium">{inventory.name}</div>
         </div>
       );
-    },
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const inventory = row.original;
-      return <div className="font-medium">{inventory.name}</div>;
     },
   },
   {

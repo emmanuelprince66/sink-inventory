@@ -8,9 +8,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { DollarSign, Tag, TrendingUp } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Cloud,
+  DollarSign,
+  Tag,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
@@ -96,6 +103,7 @@ const CustomInventoryCard = ({
     </CustomCard>
   );
 };
+
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
@@ -106,6 +114,10 @@ const Inventory = () => {
   );
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -121,7 +133,6 @@ const Inventory = () => {
     searchInput,
     page,
   });
-  console.log("InventoryData", InventoryData);
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
@@ -131,174 +142,292 @@ const Inventory = () => {
     setSelectedCategoryId(null);
   };
 
-  // Handlers for new buttons
+  const totalItems = InventoryData?.data?.total || 0;
+
+  // Check scroll availability
+  const checkScrollAvailability = () => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth
+      );
+    }
+  };
+
+  // Category navigation functions
+  const scrollCategories = (direction: "left" | "right") => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      const scrollAmount = 200;
+      const currentScroll = container.scrollLeft;
+      const newScroll =
+        direction === "left"
+          ? currentScroll - scrollAmount
+          : currentScroll + scrollAmount;
+
+      container.scrollTo({
+        left: newScroll,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Check scroll availability when categories load or container size changes
+  useEffect(() => {
+    checkScrollAvailability();
+    const container = categoriesContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollAvailability);
+      return () =>
+        container.removeEventListener("scroll", checkScrollAvailability);
+    }
+  }, [CategoriesData]);
+
+  // Check on window resize
+  useEffect(() => {
+    const handleResize = () => checkScrollAvailability();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex justify-between items-center w-full">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
-            Inventory
-          </p>
+    <div className="w-full h-full flex flex-col justify-start gap-6 items-start ">
+      {/* Header Section */}
+      <div className="w-full bg-white">
+        <div className="flex items-center justify-between w-full mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl text-primary-black-100 font-[600]">
+              Inventory
+            </h1>
+          </div>
 
-          <div className="gap-2 flex items-center flex-wrap">
+          <div className="gap-3 flex items-center flex-wrap">
             {/* Primary Buttons */}
-            <Button onClick={openddServiceModal}>Add Service</Button>
+            <Button
+              onClick={openddServiceModal}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+            >
+              + Add Service
+            </Button>
             <Link href={"/product/add-product"}>
-              <Button>Add Product</Button>
+              <Button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2">
+                + Add Product
+              </Button>
             </Link>
 
             {/* Secondary Buttons */}
-
             <Link href={"/product/upload-product"}>
               <Button
                 variant="outline"
-                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2"
               >
-                <span className="hidden md:inline">Upload</span> CSV
+                <Cloud className="w-4 h-4 mr-2" />
+                Upload Product
               </Button>
             </Link>
           </div>
         </div>
+
+        {/* Overview Cards */}
+        <div className="mb-6">
+          <h2 className="text-lg font-medium text-primary-black-100 mb-4">
+            Overview
+          </h2>
+
+          {InventoryDataLoading || !InventoryData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <CustomCard key={index} className="w-full border-gray-200">
+                  <div className="flex flex-col gap-6 items-start">
+                    <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
+                    <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                  </div>
+                </CustomCard>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <CustomInventoryCard
+                title={"Inventory Value"}
+                amount={formatToNaira(
+                  InventoryData?.data?.results?.inventory_value
+                )}
+                type="value"
+              />
+              <CustomInventoryCard
+                title={"Profit"}
+                amount={formatToNaira(InventoryData?.data?.results?.profit)}
+                type="profit"
+              />
+              <CustomInventoryCard
+                title={"Selling Price"}
+                amount={formatToNaira(
+                  InventoryData?.data?.results?.selling_price
+                )}
+                type="other"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      <p className="text-primary-black-100">Overview</p>
+      {/* Main Content Section */}
+      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+        {/* Categories and Search Header */}
+        <div className="p-6 border-b bg-white rounded-t-lg w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-primary-black-100">
+              Manage Inventory
+              <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full  text-green-500 font-medium text-lg">
+                {totalItems.toLocaleString()}
+              </span>
+            </h2>
 
-      {InventoryDataLoading || !InventoryData ? (
-        <div className="flex gap-4 w-full">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <CustomCard key={index} className="w-full border-gray-200">
-              <div className="flex flex-col gap-6 items-start">
-                <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+            <div className="flex items-center gap-4">
+              <div className="w-80">
+                <SearchInput
+                  placeholder="Search Item, EAN..."
+                  value={searchInput}
+                  onValueChange={handleSearchChange}
+                />
               </div>
-            </CustomCard>
-          ))}
-        </div>
-      ) : (
-        <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-          <CustomInventoryCard
-            title={"Inventory Value"}
-            amount={formatToNaira(
-              InventoryData?.data?.results?.inventory_value
-            )}
-            type="value"
-          />
-          <CustomInventoryCard
-            title={"Profit"}
-            amount={formatToNaira(InventoryData?.data?.results?.profit)}
-            type="profit"
-          />
-          <CustomInventoryCard
-            title={"Selling"}
-            amount={formatToNaira(InventoryData?.data?.results?.selling_price)}
-            type="other"
-          />
-        </div>
-      )}
 
-      <div className="w-[100%] items-center flex justify-between my-2">
-        <p className="text-primary-black-100 mr-2">Categories</p>
-        <Link href={"/categories"}>
-          <div className="flex gap-2 items-center">
-            <Button className="px-3 py-1 rounded-md text-xs border border-gray-300 hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
-              View More
-            </Button>
+              <Link href={"/categories"}>
+                <Button
+                  variant="outline"
+                  className="text-green-500 border-green-200 hover:bg-green-50"
+                >
+                  View More
+                </Button>
+              </Link>
+            </div>
           </div>
-        </Link>
-      </div>
 
-      {CategoriesDataLoading || !CategoriesData ? (
-        <div className="flex gap-4 w-1/2">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <CustomCard key={index} className="w-full border-gray-200">
-              <div className="flex flex-col gap-6 items-start">
-                <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+          {/* Categories Tabs */}
+          {CategoriesDataLoading || !CategoriesData ? (
+            <div className="flex gap-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full">
+              <div className="flex items-center w-full">
+                {/* Left Navigation Button */}
+                <button
+                  onClick={() => scrollCategories("left")}
+                  disabled={!canScrollLeft}
+                  className={cn(
+                    "p-2 rounded-md transition-all mr-2 flex-shrink-0",
+                    canScrollLeft
+                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      : "text-gray-300 cursor-not-allowed"
+                  )}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {/* Categories Container */}
+                <div
+                  ref={categoriesContainerRef}
+                  className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
+                  style={{
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  }}
+                >
+                  {/* All Tab */}
+                  <button
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                      selectedCategoryId === null
+                        ? "bg-green-500 text-white shadow-sm"
+                        : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                    )}
+                    onClick={handleAllClick}
+                  >
+                    All
+                  </button>
+
+                  {/* Category Tabs */}
+                  {CategoriesData.data.map((category: Category) => (
+                    <button
+                      key={category.id}
+                      className={cn(
+                        "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                        selectedCategoryId === category.id
+                          ? "bg-green-500 text-white shadow-sm"
+                          : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      )}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right Navigation Button */}
+                <button
+                  onClick={() => scrollCategories("right")}
+                  disabled={!canScrollRight}
+                  className={cn(
+                    "p-2 rounded-md transition-all ml-2 flex-shrink-0",
+                    canScrollRight
+                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      : "text-gray-300 cursor-not-allowed"
+                  )}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
               </div>
-            </CustomCard>
-          ))}
-        </div>
-      ) : (
-        <div className="flex gap-3 mb-4 flex-wrap">
-          <Button
-            className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-              selectedCategoryId === null
-                ? "bg-primary-green-300 text-white"
-                : "bg-primary-green-200 text-primary-black-100"
-            }`}
-            onClick={handleAllClick}
-          >
-            All
-          </Button>
+            </div>
+          )}
 
-          {CategoriesData.data.map((category: Category) => (
-            <Button
-              key={category.id}
-              className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-                selectedCategoryId === category.id
-                  ? "bg-primary-green-300 text-white"
-                  : "bg-primary-green-200 text-primary-black-100"
-              }`}
-              onClick={() => handleCategoryClick(category.id)}
-            >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-      )}
-
-      <div className="w-full mt-3">
-        <div className="w-full md:w-1/2 mb-4 mt-4">
-          <SearchInput
-            placeholder="Search ..."
-            value={searchInput}
-            onValueChange={handleSearchChange}
-          />
           {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-1 text-sm text-muted-foreground">
+            <div className="mt-2 text-sm text-gray-500">
               Type at least 3 characters to search
             </div>
           )}
         </div>
-        {InventoryDataLoading || !InventoryData ? (
-          <div className="w-full">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-16 w-full bg-[#eef4ef] mt-2"
-                />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {InventoryData?.data?.results?.data?.length > 0 ? (
-              <InventoryTable
-                setPage={setPage}
-                page={page}
-                response={InventoryData}
-                loading={false}
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col justify-center items-center mt-8">
-                <NoInventory />
+
+        {/* Table Content */}
+        <div className="p-6">
+          {InventoryDataLoading || !InventoryData ? (
+            <div className="w-full">
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full bg-gray-200" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="h-16 w-full bg-gray-200 mt-2"
+                  />
+                ))}
               </div>
-            )}
-          </>
-        )}
+            </div>
+          ) : (
+            <>
+              {InventoryData?.data?.results?.data?.length > 0 ? (
+                <InventoryTable
+                  setPage={setPage}
+                  page={page}
+                  response={InventoryData}
+                  loading={false}
+                />
+              ) : (
+                <div className="w-full h-64 flex flex-col justify-center items-center">
+                  <NoInventory />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* <AllInventory
-        setPage={setPage}
-        page={page}
-        loading={InventoryDataLoading}
-      /> */}
-
-      {/*  */}
-
+      {/* Add Service Modal */}
       <CustomModal
         isOpen={addServiceModal}
         onClose={closeAddServiceModal}
