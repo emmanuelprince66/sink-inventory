@@ -275,7 +275,7 @@ const Inventory = () => {
       {/* Main Content Section */}
       <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
         {/* Categories and Search Header */}
-        <div className="p-6 border-b bg-white rounded-t-lg w-full">
+        <div className="p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-primary-black-100">
               Manage Inventory
@@ -345,7 +345,7 @@ const Inventory = () => {
                     className={cn(
                       "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
                       selectedCategoryId === null
-                        ? "bg-green-500 text-white shadow-sm"
+                        ? "bg-[#52b661] text-white shadow-sm"
                         : "text-gray-600 hover:text-green-500 hover:bg-green-50"
                     )}
                     onClick={handleAllClick}
@@ -360,7 +360,7 @@ const Inventory = () => {
                       className={cn(
                         "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
                         selectedCategoryId === category.id
-                          ? "bg-green-500 text-white shadow-sm"
+                          ? "bg-[#52b661] text-white shadow-sm"
                           : "text-gray-600 hover:text-green-500 hover:bg-green-50"
                       )}
                       onClick={() => handleCategoryClick(category.id)}
