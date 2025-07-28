@@ -1,45 +1,36 @@
-import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-
-import Image from "next/image";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { BusinessType } from "./types/types";
+
 export const columns: ColumnDef<BusinessType>[] = [
   {
-    accessorKey: "logo",
-    header: "",
+    id: "businessInfo",
+    header: "Business",
     cell: ({ row }) => {
       const business = row.original;
       return (
-        <div className="relative h-10 w-10 rounded-md overflow-hidden">
-          <Image
-            src={business.logo}
-            alt={`${business.name} logo`}
-            fill
-            className="object-cover"
-          />
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const business = row.original;
-      return (
-        <div className="font-medium">
-          {business.name}
-          <p className="text-sm text-gray-500">
-            {business.city}, {business.country}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="relative h-10 w-10 rounded-md overflow-hidden">
+            <Image
+              src={business.logo}
+              alt={`${business.name} logo`}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div>
+            <div className="font-medium">{business.name}</div>
+            <div className="text-sm text-gray-500">
+              {business.city}, {business.country}
+            </div>
+          </div>
         </div>
       );
     },

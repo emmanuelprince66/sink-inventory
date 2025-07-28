@@ -1,7 +1,8 @@
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import { useState } from "react";
 import ConfirmTransfer from "./ConfirmTransfer";
-const Transfer = () => {
+const Transfer = ({ trxData }: { trxData: any }) => {
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
   const { BankData, CategoriesData, BankDataLoading, CategoriesDataLoading } =
     useTransactionsHook({});
@@ -86,11 +87,9 @@ const Transfer = () => {
             <div className="bg-gradient-to-br from-green-600 to-green-800 text-white p-6 rounded-t-xl shadow-md">
               <p className="text-sm opacity-80 mb-1">Available Balance</p>
               <h2 className="text-4xl font-extrabold tracking-tight">
-                $
-                {walletBalance.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+                {formatToNaira(
+                  trxData?.data?.results?.wallet_details?.balance || 0
+                )}
               </h2>
               <p className="text-xs opacity-70 mt-2">
                 Your funds are ready to be transferred.

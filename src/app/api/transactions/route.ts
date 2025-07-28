@@ -21,19 +21,21 @@ export async function GET(request: NextRequest) {
   const end_date = request.nextUrl.searchParams.get("end_date") || "";
   const page = request.nextUrl.searchParams.get("page") || "1"; // Get page
   const limit = request.nextUrl.searchParams.get("limit") || "30"; // Get limit
+  const type = request.nextUrl.searchParams.get("type") || "";
 
   console.log("page", page);
-  console.log("limit", limit);
+  console.log("type", type);
 
   // console.log("category", category);
 
   // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}bank/`);
+  const apiUrl = new URL(`${BaseUrl}wallet/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (start_date) apiUrl.searchParams.append("start_date", start_date);
   if (end_date) apiUrl.searchParams.append("end_date", end_date);
   if (page) apiUrl.searchParams.append("page", page); // Append page
   if (limit) apiUrl.searchParams.append("limit", limit); // Append limit
+  if (type) apiUrl.searchParams.append("type", type);
 
   try {
     const response = await fetch(apiUrl.toString(), {

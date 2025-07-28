@@ -7,6 +7,7 @@ const ProductsSold = ({
   SalesLoading,
   activeFilter,
   setActiveFilter,
+  handleProductsRowClick,
   filterOptions,
   searchInput,
   handleSearchChange,
@@ -16,6 +17,7 @@ const ProductsSold = ({
   activeFilter: any;
   setActiveFilter: any;
   filterOptions: any;
+  handleProductsRowClick: any;
   searchInput: any;
   handleSearchChange: any;
 }) => {
@@ -25,7 +27,11 @@ const ProductsSold = ({
 
       <div className="w-full mt-3">
         {SalesData?.data?.results?.data?.length > 0 && !SalesLoading ? (
-          <ProductSoldTable response={SalesData} loading={false} />
+          <ProductSoldTable
+            handleProductsRowClick={handleProductsRowClick}
+            response={SalesData}
+            loading={false}
+          />
         ) : (
           <div className="w-full h-full flex flex-col justify-center items-center mt-8">
             <NoOrders />

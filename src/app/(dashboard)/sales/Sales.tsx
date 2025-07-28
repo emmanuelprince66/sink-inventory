@@ -199,6 +199,8 @@ const Sales = () => {
     CategoriesData,
     CategoriesDataLoading,
     SalesOrderData,
+    handleProductsRowClick,
+
     SalesOrderLoading,
   } = useSalesHook({
     activeFilter: activeProductFilter,
@@ -578,6 +580,7 @@ const Sales = () => {
                   setActiveFilter={setActiveProductFilter}
                   filterOptions={productFilterOptions}
                   searchInput={searchInput}
+                  handleProductsRowClick={handleProductsRowClick}
                   handleSearchChange={handleSearchChange}
                 />
               )}

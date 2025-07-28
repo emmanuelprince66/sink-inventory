@@ -12,6 +12,7 @@ type fetchTransactionsProps = {
   end_date?: string;
   page?: number;
   limit?: number;
+  type: string;
 };
 
 export const FetchTransaction = async ({
@@ -20,12 +21,14 @@ export const FetchTransaction = async ({
   start_date = "",
   end_date = "",
   page = 1,
+  type = "",
   limit = 30,
 }: fetchTransactionsProps) => {
   const url = new URL(`/api/transactions`, window.location.origin);
 
   const params = new URLSearchParams();
   if (search) params.append("search", search);
+  if (type) params.append("type", type);
   if (start_date) params.append("start_date", start_date);
   if (end_date) params.append("end_date", end_date);
   url.searchParams.append("page", page.toString());

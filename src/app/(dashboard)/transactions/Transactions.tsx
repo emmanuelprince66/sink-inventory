@@ -3,19 +3,20 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import KycConfirm from "@/components/app/kyc/KycConfirm";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowDownLeft, ArrowUpRight, Landmark, Wallet } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import ChangePin from "./ChangePin";
 import NoTransactions from "./NoTransactions";
-import TransactionDetails from "./TransactionDetails";
+import Pin from "./Pin";
 import TransactionTable from "./TransactionTable";
 import Transfer from "./Transfer";
-
 interface Transaction {
   id: string;
   customerName: string;
@@ -35,8 +36,8 @@ const Transactions = () => {
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [showKycModal, setShowKycModal] = useState(false);
-  const [showTrxDetails, setShowTrxDetails] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showChangePin, setShowChangePin] = useState(false);
 
   const filterOptions = ["All", "Credit", "Debit"] as const;
   const filterMapping = {
@@ -54,11 +55,18 @@ const Transactions = () => {
     setActiveFilter(filter);
   };
 
-  const { TrxData, TrxDataLoading } = useTransactionsHook({
+  const handleCloseModal = () => {
+    setShowPinModal(false);
+    setShowChangePin(false);
+  };
+
+  const { TrxData, TrxDataLoading, user } = useTransactionsHook({
     searchInput,
     dateRange,
     page,
     type: filterMapping[activeFilter],
+    handleCloseModal,
+    setShowPinModal,
   });
   console.log("TrxData", TrxData);
 
@@ -75,6 +83,12 @@ const Transactions = () => {
     setSearchInput(value);
   };
 
+  useEffect(() => {
+    if (user) {
+      user?.kyc ? setShowKycModal(false) : setShowKycModal(true);
+    }
+  }, [user]);
+
   return (
     <>
       <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-4 sm:px-6">
@@ -85,12 +99,22 @@ const Transactions = () => {
           </h1>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
-            <Button
-              className="border-primary-green-300 w-full sm:w-auto"
-              onClick={() => setShowPinModal(true)}
-            >
-              Setup Transaction Pin
-            </Button>
+            {TrxData && TrxData?.data?.results?.pin ? (
+              <Button
+                className="border-primary-green-300 w-full sm:w-auto"
+                onClick={() => setShowChangePin(true)}
+              >
+                Change Pin
+              </Button>
+            ) : (
+              <Button
+                className="border-primary-green-300 w-full sm:w-auto"
+                onClick={() => setShowPinModal(true)}
+              >
+                Setup Transaction Pin
+              </Button>
+            )}
+
             <DatePickerWithRange
               date={dateRange}
               onDateChange={setDateRange}
@@ -196,8 +220,14 @@ const Transactions = () => {
                 <div>
                   <p className="text-sm font-medium">Main Account</p>
                   <p className="text-xs opacity-90">
-                    {`${TrxData?.data?.results?.wallet_details?.bank_name}`} •{" "}
-                    {`${TrxData?.data?.results?.wallet_details?.account_number}`}
+                    {`${
+                      TrxData?.data?.results?.wallet_details?.bank_name || "Nil"
+                    }`}{" "}
+                    •{" "}
+                    {`${
+                      TrxData?.data?.results?.wallet_details?.account_number ||
+                      "Nil"
+                    }`}
                   </p>
                 </div>
               </div>
@@ -209,6 +239,7 @@ const Transactions = () => {
                   View Details
                 </Button>
                 <Button
+                  disabled={user && user?.kyc ? false : true}
                   variant="outline"
                   onClick={() => setShowTransfer(true)}
                   className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
@@ -315,145 +346,40 @@ const Transactions = () => {
         onClose={() => setShowPinModal(false)}
         title="Setup Transaction Pin"
       >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              New 4-digit Pin
-            </label>
-            <input
-              type="password"
-              maxLength={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-              placeholder="Enter pin"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm Pin
-            </label>
-            <input
-              type="password"
-              maxLength={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-              placeholder="Confirm pin"
-            />
-          </div>
-          <Button className="w-full mt-4 bg-primary-green-600 hover:bg-primary-green-700">
-            Save Pin
-          </Button>
-        </div>
+        <Pin closeModal={handleCloseModal} />
+      </CustomModal>
+      {/* Transaction Pin Modal */}
+      <CustomModal
+        isOpen={showChangePin}
+        onClose={() => setShowChangePin(false)}
+        title="Change Transaction Pin"
+      >
+        <ChangePin closeModal={handleCloseModal} />
       </CustomModal>
 
       {/* KYC Verification Modal */}
       <CustomModal
         isOpen={showKycModal}
         onClose={() => setShowKycModal(false)}
-        title="Complete KYC Verification"
+        title=""
       >
-        <div className="space-y-6">
-          <div className="flex gap-4">
-            <Button
-              variant={kycType === "individual" ? "default" : "outline"}
-              onClick={() => setKycType("individual")}
-              className="w-full"
-            >
-              Individual
-            </Button>
-            <Button
-              variant={kycType === "business" ? "default" : "outline"}
-              onClick={() => setKycType("business")}
-              className="w-full"
-            >
-              Business
-            </Button>
-          </div>
-
-          {kycType === "individual" ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  BVN
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                  placeholder="Enter your BVN"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth
-                </label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                />
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Business Name
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                  placeholder="Enter business name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  BVN
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                  placeholder="Enter business BVN"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  CAC Number
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                  placeholder="Enter CAC number"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Incorporation Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300"
-                />
-              </div>
-            </div>
-          )}
-
-          <Button className="w-full bg-primary-green-600 hover:bg-primary-green-700">
-            Verify Account
-          </Button>
-        </div>
+        <KycConfirm />
       </CustomModal>
       {/* KYC Verification Modal */}
-      <CustomModal
+      {/* <CustomModal
         isOpen={showTrxDetails}
         onClose={() => setShowTrxDetails(false)}
         title="Transaction Details"
       >
         <TransactionDetails />
-      </CustomModal>
+      </CustomModal> */}
       {/* KYC Verification Modal */}
       <CustomModal
         isOpen={showTransfer}
         onClose={() => setShowTransfer(false)}
         title="Transfer Funds"
       >
-        <Transfer />
+        <Transfer trxData={TrxData} />
       </CustomModal>
     </>
   );

@@ -1,36 +1,102 @@
-import { Briefcase, Check, User } from "lucide-react";
+import {
+  Briefcase,
+  Building,
+  Check,
+  CreditCard,
+  FileText,
+  User,
+} from "lucide-react";
 import { useState } from "react";
+
+// Import your existing components
 import CorporateAcct from "./CorporateAcct";
 import IndividualAcct from "./IndividualAcct";
 
 const KycConfirm = () => {
-  const [selectedTier, setSelectedTier] = useState<any>();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    dateOfBirth: "",
-    bvn: "",
-    businessName: "",
-    cacNumber: "",
-    incorporationDate: "",
-  });
+  const [showIntro, setShowIntro] = useState(true);
+  const [selectedTier, setSelectedTier] = useState<"tier1" | "tier2" | null>(
+    null
+  );
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const handleContinue = () => {
+    setShowIntro(false);
   };
 
-  const handleSubmit = (e: any) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
-  };
+  // Introduction/Welcome Screen
+  if (showIntro) {
+    return (
+      <div className=" flex items-center justify-center p-4 ">
+        <div className="bg-white rounded-l w-full ">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">
+              Let's verify your identity
+            </h2>
+            <p className="text-sm text-gray-600">
+              Due to recent regulatory requirements from the Central Bank of
+              Nigeria, all Sync users are required to verify their identity
+              before receiving settlement.
+            </p>
+          </div>
 
+          <div className="flex items-start space-x-6 mb-6">
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 mb-4">
+                You'll need the following to get verified:
+              </p>
+
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <FileText className="text-green-600" size={16} />
+                  </div>
+                  <span className="text-sm text-gray-700">
+                    National Identification Number (NIN)
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <CreditCard className="text-green-600" size={16} />
+                  </div>
+                  <span className="text-sm text-gray-700">
+                    Bank Verification Number (BVN)
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <Building className="text-green-600" size={16} />
+                  </div>
+                  <span className="text-sm text-gray-700">
+                    CAC Document Verification
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-shrink-0">
+              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
+                  <User className="text-white" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleContinue}
+            className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main KYC Selection Screen
   return (
-    <div className=" mx-auto p-6 bg-white rounded-lg shadow-sm">
+    <div className="mx-auto p-6 bg-white rounded-lg shadow-sm max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-800 mb-2">
         Choose a tier to get started
       </h1>
@@ -142,16 +208,8 @@ const KycConfirm = () => {
           </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {selectedTier === "tier1" ? (
-            <>
-              <IndividualAcct />
-            </>
-          ) : (
-            <>
-              <CorporateAcct />
-            </>
-          )}
+        <div className="space-y-4">
+          {selectedTier === "tier1" ? <IndividualAcct /> : <CorporateAcct />}
 
           <div className="flex justify-between pt-4">
             <button
@@ -162,7 +220,7 @@ const KycConfirm = () => {
               Back
             </button>
           </div>
-        </form>
+        </div>
       )}
 
       <div className="mt-6 text-center text-xs text-gray-500">

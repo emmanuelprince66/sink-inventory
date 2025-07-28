@@ -46,6 +46,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         is_verified: data.is_verified,
         is_subscribed: data.is_subscribed,
         subscription: data.subscription,
+        kyc: data?.kyc,
         tokens: {
           access: data.tokens.access,
           refresh: data.tokens.refresh,

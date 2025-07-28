@@ -66,6 +66,7 @@ export const useUserRole = () => {
     user,
     role: user?.role,
     name: user?.name,
+    kyc: user?.kyc,
     isOwner: user?.role === "OWNER",
     isAdminAttendant: user?.role === "ADMIN-ATTENDANT",
     isAttendant: user?.role === "ATTENDANT",

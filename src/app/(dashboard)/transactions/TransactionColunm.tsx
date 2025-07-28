@@ -1,3 +1,4 @@
+import { CustomModal } from "@/components/app/CustomModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,6 +8,8 @@ import {
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import moment from "moment";
+import { useState } from "react";
+import TransactionDetails from "./TransactionDetails";
 
 export const columns: ColumnDef<any>[] = [
   //   {
@@ -141,6 +144,7 @@ export const columns: ColumnDef<any>[] = [
     header: "Action",
     cell: ({ row }) => {
       const trx = row.original;
+      const [showTrxDetails, setShowTrxDetails] = useState(false);
 
       return (
         <>
@@ -155,7 +159,10 @@ export const columns: ColumnDef<any>[] = [
               align="end"
               className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
             >
-              <DropdownMenuItem className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors">
+              <DropdownMenuItem
+                onClick={() => setShowTrxDetails(true)}
+                className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors"
+              >
                 View More
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -163,6 +170,13 @@ export const columns: ColumnDef<any>[] = [
 
           {/*  */}
 
+          <CustomModal
+            isOpen={showTrxDetails}
+            onClose={() => setShowTrxDetails(false)}
+            title="Transaction Details"
+          >
+            <TransactionDetails transaction={trx} />
+          </CustomModal>
           {/* transfer product */}
         </>
       );

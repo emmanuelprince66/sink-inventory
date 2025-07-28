@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       "Content-Type": "application/json",
     });
 
-    const apiUrl = `${BaseUrl}wallet/create_bank_account/`;
+    const apiUrl = `${BaseUrl}wallet/change_pin/`;
     const response = await fetch(apiUrl, {
       method: "POST",
       headers,
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       const errorData = await response.json();
       return NextResponse.json(
         {
-          error: errorData.message || "Failed to create account",
+          error: errorData.message || "Failed to create pin",
           details: errorData,
         },
         { status: response.status }

@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useToast } from "./toast/useToast";
 
 import { useCreateKycAcctMutation } from "@/api/kyc/create-acct";
+import moment from "moment";
 
 const individualAccountSchema = z.object({
   bvn: z.string().min(1, " Bvn is required"),
@@ -25,7 +25,6 @@ export type AddCorporateAcctFormValues = z.infer<typeof corporateAccountSchema>;
 
 export const useKycHook = () => {
   const { mutate: CreateAcct, isPending } = useCreateKycAcctMutation();
-  const { showToast } = useToast();
 
   const createIndividualAcctForm = useForm<AddIndividualAcctFormValues>({
     resolver: zodResolver(individualAccountSchema) as any, // Temporary workaround
@@ -49,10 +48,61 @@ export const useKycHook = () => {
   });
 
   const onSubmitIndividualAcct = (data: AddIndividualAcctFormValues) => {
-    console.log("Individual Account Data:", data);
+    const insert = {
+      ...data,
+      type: "INDIVIDUAL",
+      dob: data.dob ? moment(data.dob).format("DD-MMM-YYYY") : undefined,
+    };
+
+    console.log("Individual insert Data:", insert);
+    CreateAcct(insert, {
+      onSuccess: (data) => {
+        console.log("data---success", data);
+        try {
+          // Validate the wallet URL
+          if (!data?.data?.url) {
+            throw new Error("No Wallet URL received");
+          }
+
+          setTimeout(() => {
+            // Open in new tab with noopener for security
+            window.open(data.data.url, "_blank", "noopener,noreferrer");
+          }, 1000);
+        } catch (error) {
+          console.error("Error handling success response:", error);
+          // You might want to show an error toast here
+        }
+      },
+    });
   };
   const onSubmitCorporateAcct = (data: AddCorporateAcctFormValues) => {
-    console.log("corporate Account Data:", data);
+    const insert = {
+      ...data,
+      type: "CORPORATE",
+      reg_date: data.reg_date
+        ? moment(data.reg_date).format("DD-MMM-YYYY")
+        : undefined,
+    };
+
+    CreateAcct(insert, {
+      onSuccess: (data) => {
+        console.log("data---success", data);
+        try {
+          // Validate the wallet URL
+          if (!data?.data?.url) {
+            throw new Error("No Wallet URL received");
+          }
+
+          setTimeout(() => {
+            // Open in new tab with noopener for security
+            window.open(data.data.url, "_blank", "noopener,noreferrer");
+          }, 1000);
+        } catch (error) {
+          console.error("Error handling success response:", error);
+          // You might want to show an error toast here
+        }
+      },
+    });
   };
 
   return {

@@ -7,6 +7,7 @@ import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useToast } from "./toast/useToast";
@@ -50,6 +51,7 @@ export const useSalesHook = ({
   const { showToast } = useToast();
 
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // console.log("business_id", business_id);
   const [productId, setProductId] = useState("");
@@ -127,6 +129,13 @@ export const useSalesHook = ({
   const handleOrderHistoryRowClick = (row: any) => {
     setOrderDetails(row?.original);
     openOrderHistoryModalFunc();
+  };
+  const handleProductsRowClick = (row: any) => {
+    if (row?.original?.type?.toLowerCase() === "product") {
+      console.log("row", row.original);
+
+      router.push(`/inventory/${row?.original?.id}/product-sold-history`);
+    }
   };
 
   const searchTerm =
@@ -211,6 +220,7 @@ export const useSalesHook = ({
     openOrderHistoryModal,
     orderDetails,
     handleOrderHistoryRowClick,
+    handleProductsRowClick,
     closeOpenOrderHistoryModal,
     SalesOrderLoading,
     SalesOrderData,

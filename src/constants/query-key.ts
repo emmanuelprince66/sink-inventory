@@ -112,5 +112,8 @@ export const queryKey = {
   },
   transactions: {
     getAllTransactions: "get-all-transactions",
+    setPin: "set-pin",
+    changePin: "change-pin",
+    fetchTrxBank: "fetch-trx-bank",
   },
 };
