@@ -1,63 +1,127 @@
-const ConfirmTransfer = () => {
+import { OtpInput } from "@/components/app/OtpInput";
+import { Spinner } from "@/components/ui/spinner";
+import { useTransactionsHook } from "@/hooks/useTransactionsHook";
+import { formatToNaira } from "@/utils/formatMoney";
+import { ArrowBigLeftDash } from "lucide-react";
+import { useState } from "react";
+
+const ConfirmTransfer = ({ transferDetails, onCancel }: any) => {
+  const { handleSubmitTransferFunds, TransferFundsLoading } =
+    useTransactionsHook({});
+  const [pin, setPin] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleTransfer = async () => {
+    if (pin.length !== 4) {
+      setError("Please enter a valid 4-digit PIN");
+      return;
+    }
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await handleSubmitTransferFunds({
+        ...transferDetails,
+        pin: pin,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="w-full mx-auto p-6 bg-white rounded-lg shadow-md">
-      <p className="text-[12px] font-bold text-gray-800 mb-6">
-        Confirm Transfer
-      </p>
-
-      <p className="text-gray-600 mb-6">
-        Transfer the amount you wish to fund to the virtual account provided
-        below.
-      </p>
-
-      <div className="border border-gray-200 rounded-lg p-4 mb-6">
-        <table className="w-full">
-          <tbody>
-            <tr className="border-b border-gray-200">
-              <td className="py-3 font-medium text-gray-700">Bank Name:</td>
-              <td className="py-3 text-gray-600">VFD MICROFINANCE BANK</td>
-            </tr>
-            <tr className="border-b border-gray-200">
-              <td className="py-3 font-medium text-gray-700">
-                Account Number:
-              </td>
-              <td className="py-3 text-gray-600">1036840540</td>
-            </tr>
-            <tr>
-              <td className="py-3 font-medium text-gray-700">Account Name:</td>
-              <td className="py-3 text-gray-600">
-                MYCLIQ-OLUWATOBILOBA OLOSUNDE
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <div className="flex flex-col items-start gap-3">
+      <div onClick={onCancel}>
+        <ArrowBigLeftDash className="text-primary-black-100 cursor-pointer w-6 h-6" />
       </div>
-
-      <p className="text-gray-600 text-sm mb-6">
-        This virtual account is unique and tied to your MyCliq account.
-        <br />
-        Any amount transferred to this account will reflect in your wallet
-        immediately.
-      </p>
-
-      <div className="border-t border-gray-200 pt-6 mb-6">
-        <h2 className="font-bold text-gray-800 mb-3">
-          Do more with your virtual account?
-        </h2>
-        <p className="text-gray-600 mb-4">
-          You can download and even print your account details as a poster and
-          receive payments seamlessly!
+      <div className="md:w-[60%] w-full p-6 mx-auto border border-gray-200 rounded-lg shadow">
+        <p className="text-2xl font-semibold text-gray-800 mb-2">
+          Confirm Transfer
         </p>
-      </div>
+        <p className="text-gray-600 mb-6">
+          Please verify the transaction details and enter your PIN to complete
+          the transfer.
+        </p>
 
-      <div className="flex flex-col space-y-4 mb-4">
-        <button className="w-full py-3 border border-green-600 text-green-600 font-medium rounded-lg hover:bg-green-50 transition-colors">
-          View Virtual Account Poster
-        </button>
+        {/* Transfer Details Card */}
+        <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-700">Bank Name:</span>
+              <span className="text-gray-600">
+                {transferDetails?.bank?.name}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-700">Account Number:</span>
+              <span className="text-gray-600">
+                {transferDetails?.accountNumber}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-700">Account Name:</span>
+              <span className="text-gray-600">
+                {transferDetails?.accountName || "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-700">Amount:</span>
+              <span className="text-green-600 font-medium">
+                {formatToNaira(transferDetails?.amount)}
+              </span>
+            </div>
+            {transferDetails?.narration && (
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-700">Narration:</span>
+                <span className="text-gray-600">
+                  {transferDetails.narration}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* PIN Input Section */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Enter 4-digit PIN
+          </label>
+          <div className="flex justify-center">
+            <OtpInput value={pin} onChange={setPin} length={4} />
+          </div>
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-3 space-y-3">
+          <button
+            onClick={handleTransfer}
+            disabled={TransferFundsLoading || pin.length !== 4}
+            className={`w-full py-3 cursor-pointer rounded-lg font-medium flex items-center justify-center ${
+              TransferFundsLoading || pin.length !== 4
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700 text-white"
+            }`}
+          >
+            {TransferFundsLoading ? (
+              <>
+                <Spinner className="mr-2" size="sm" />
+                Processing...
+              </>
+            ) : (
+              "Complete Transfer"
+            )}
+          </button>
+          <button
+            onClick={onCancel}
+            className="w-full py-3 cursor-pointer border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
-      <button className="w-full py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors">
-        Transfer
-      </button>
     </div>
   );
 };

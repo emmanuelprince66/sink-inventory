@@ -9,10 +9,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useTransactionsHook } from "@/hooks/useTransactionsHook";
-const ChangePin = ({ closeModal }: any) => {
+import { usePinHook } from "@/hooks/usePinHook";
+const ChangePin = () => {
   const { changePinForm, onSubmitChangePinForm, ChangePinLoading } =
-    useTransactionsHook({ closeModal });
+    usePinHook();
   return (
     <div className="w-full">
       <Form {...changePinForm}>
@@ -20,6 +20,7 @@ const ChangePin = ({ closeModal }: any) => {
           onSubmit={changePinForm.handleSubmit(onSubmitChangePinForm)}
           className="space-y-4 flex flex-col items-center justify-center"
         >
+          <p className="text-2xl font-bold">Change Pin</p>
           <FormField
             control={changePinForm.control}
             name="old_pin"

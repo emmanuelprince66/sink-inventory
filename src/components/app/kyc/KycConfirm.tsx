@@ -32,9 +32,9 @@ const KycConfirm = () => {
               Let's verify your identity
             </h2>
             <p className="text-sm text-gray-600">
-              Due to recent regulatory requirements from the Central Bank of
-              Nigeria, all Sync users are required to verify their identity
-              before receiving settlement.
+              In line with recent CBN regulations, all SYNC360 users must
+              complete identity verification before receiving settlements. To
+              get verified, you’ll need:
             </p>
           </div>
 
@@ -50,7 +50,7 @@ const KycConfirm = () => {
                     <FileText className="text-green-600" size={16} />
                   </div>
                   <span className="text-sm text-gray-700">
-                    National Identification Number (NIN)
+                    Your Bank Verification Number (BVN)
                   </span>
                 </div>
 
@@ -59,7 +59,8 @@ const KycConfirm = () => {
                     <CreditCard className="text-green-600" size={16} />
                   </div>
                   <span className="text-sm text-gray-700">
-                    Bank Verification Number (BVN)
+                    A valid government-issued ID (NIN, Voter’s Card, or Driver’s
+                    License)
                   </span>
                 </div>
 
@@ -68,7 +69,7 @@ const KycConfirm = () => {
                     <Building className="text-green-600" size={16} />
                   </div>
                   <span className="text-sm text-gray-700">
-                    CAC Document Verification
+                    CAC Document verification 
                   </span>
                 </div>
               </div>
@@ -102,9 +103,8 @@ const KycConfirm = () => {
       </h1>
 
       <p className="text-gray-600 mb-6">
-        Due to recent regulatory requirements from the Central Bank of Nigeria,
-        all Sync Users are required to verify their identity before receiving
-        settlement.
+        In line with recent CBN regulations, all SYNC360 users must complete
+        identity verification before receiving settlements.
       </p>
 
       {!selectedTier ? (
@@ -133,9 +133,9 @@ const KycConfirm = () => {
                   <h3 className="font-semibold text-gray-800">
                     Individual Account
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  {/* <p className="text-sm text-gray-500">
                     Account can be opened with just BVN
-                  </p>
+                  </p> */}
                 </div>
               </div>
               {selectedTier === "tier1" && (
@@ -144,16 +144,17 @@ const KycConfirm = () => {
             </div>
             <div className="mt-4 pl-11">
               <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Daily settlement limit:</span>
-                <span className="ml-1">Unlimited</span>
+                <span className="font-medium">Account Limit 5,000,000</span>
               </div>
               <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Receive settlement in:</span>
-                <span className="ml-1">Personal Account</span>
+                <span className="font-medium">Get a personal account</span>
+                {/* <span className="ml-1">Personal Account</span> */}
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <span className="font-medium">Documents required:</span>
-                <span className="ml-1">BVN</span>
+                <span className="font-medium">
+                  Your Bank Verification Number (BVN)
+                </span>
+                {/* <span className="ml-1">BVN</span> */}
               </div>
             </div>
           </div>
@@ -193,16 +194,21 @@ const KycConfirm = () => {
             </div>
             <div className="mt-4 pl-11">
               <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Daily settlement limit:</span>
-                <span className="ml-1">Unlimited</span>
+                <span className="font-medium">
+                  Get a Corporate account number
+                </span>
+                {/* <span className="ml-1">Unlimited</span> */}
               </div>
               <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Receive settlement in:</span>
-                <span className="ml-1">Personal/Business Account</span>
+                <span className="font-medium">Account limit 10,000,000</span>
+                {/* <span className="ml-1">Personal/Business Account</span> */}
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <span className="font-medium">Documents required:</span>
-                <span className="ml-1">BVN, CAC Verification</span>
+                <span className="font-medium">
+                  A valid government-issued ID (BVN, NIN, Voter’s Card,
+                  CAC verification.
+                </span>
+                {/* <span className="ml-1">BVN, CAC Verification</span> */}
               </div>
             </div>
           </div>

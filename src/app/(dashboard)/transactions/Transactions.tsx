@@ -10,13 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowDownLeft, ArrowUpRight, Landmark, Wallet } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
-import ChangePin from "./ChangePin";
 import NoTransactions from "./NoTransactions";
-import Pin from "./Pin";
 import TransactionTable from "./TransactionTable";
-import Transfer from "./Transfer";
 interface Transaction {
   id: string;
   customerName: string;
@@ -55,17 +53,11 @@ const Transactions = () => {
     setActiveFilter(filter);
   };
 
-  const handleCloseModal = () => {
-    setShowPinModal(false);
-    setShowChangePin(false);
-  };
-
   const { TrxData, TrxDataLoading, user } = useTransactionsHook({
     searchInput,
     dateRange,
     page,
     type: filterMapping[activeFilter],
-    handleCloseModal,
     setShowPinModal,
   });
   console.log("TrxData", TrxData);
@@ -99,22 +91,6 @@ const Transactions = () => {
           </h1>
 
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
-            {TrxData && TrxData?.data?.results?.pin ? (
-              <Button
-                className="border-primary-green-300 w-full sm:w-auto"
-                onClick={() => setShowChangePin(true)}
-              >
-                Change Pin
-              </Button>
-            ) : (
-              <Button
-                className="border-primary-green-300 w-full sm:w-auto"
-                onClick={() => setShowPinModal(true)}
-              >
-                Setup Transaction Pin
-              </Button>
-            )}
-
             <DatePickerWithRange
               date={dateRange}
               onDateChange={setDateRange}
@@ -232,26 +208,28 @@ const Transactions = () => {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <Button
+                {/* <Button
                   variant="outline"
                   className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
                 >
                   View Details
-                </Button>
-                <Button
-                  disabled={user && user?.kyc ? false : true}
-                  variant="outline"
-                  onClick={() => setShowTransfer(true)}
-                  className="bg-white/10 text-white hover:bg-white/20 w-full sm:w-auto"
-                >
-                  Transfer
-                </Button>
+                </Button> */}
+
+                <Link href="transactions/transfer">
+                  <Button
+                    // disabled={user && user?.kyc ? false : true}
+                    variant="outline"
+                    className="bg-white/10 min-w-[150px] min-h-[50px] text-white hover:bg-white/20 w-full sm:w-auto"
+                  >
+                    Transfer
+                  </Button>
+                </Link>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
               <p className="text-sm">
                 Account Name:{" "}
-                <span className="font-medium">{`${TrxData?.data?.results?.wallet_details?.account_name}`}</span>
+                <span className=" font-medium">{`${TrxData?.data?.results?.wallet_details?.account_name}`}</span>
               </p>
               <p className="text-sm">
                 Available Balance:{" "}
@@ -341,21 +319,6 @@ const Transactions = () => {
       </div>
 
       {/* Transaction Pin Modal */}
-      <CustomModal
-        isOpen={showPinModal}
-        onClose={() => setShowPinModal(false)}
-        title="Setup Transaction Pin"
-      >
-        <Pin closeModal={handleCloseModal} />
-      </CustomModal>
-      {/* Transaction Pin Modal */}
-      <CustomModal
-        isOpen={showChangePin}
-        onClose={() => setShowChangePin(false)}
-        title="Change Transaction Pin"
-      >
-        <ChangePin closeModal={handleCloseModal} />
-      </CustomModal>
 
       {/* KYC Verification Modal */}
       <CustomModal
@@ -374,13 +337,13 @@ const Transactions = () => {
         <TransactionDetails />
       </CustomModal> */}
       {/* KYC Verification Modal */}
-      <CustomModal
+      {/* <CustomModal
         isOpen={showTransfer}
         onClose={() => setShowTransfer(false)}
         title="Transfer Funds"
       >
         <Transfer trxData={TrxData} />
-      </CustomModal>
+      </CustomModal> */}
     </>
   );
 };

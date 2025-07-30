@@ -1,59 +1,37 @@
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
-import { useChangePinMutation } from "@/api/transactions/change-pin";
 import { useFetchTrxBank } from "@/api/transactions/fetch-bank";
 import { useFetchTransactionQuery } from "@/api/transactions/fetch-transactions";
-import { useCreatePinMutation } from "@/api/transactions/set-pin";
+import { useTransferFundsMutation } from "@/api/transactions/transfer";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
-
-// Define the schema for pin validation
-const pinSchema = z
-  .object({
-    pin: z.string().length(4, "Pin must be 4 digits"),
-    confirmPin: z.string().length(4, "Confirm Pin must be 4 digits"),
-  })
-  .refine((data) => data.pin === data.confirmPin, {
-    message: "Pins don't match",
-    path: ["confirmPin"],
-  });
-export type pinSetUpFormValues = z.infer<typeof pinSchema>;
-
-const changePinSchema = z.object({
-  old_pin: z.string().length(4, "Pin must be 4 digits"),
-  new_pin: z.string().length(4, " Pin must be 4 digits"),
-});
-
-export type changePinFormValues = z.infer<typeof changePinSchema>;
 
 export const useTransactionsHook = ({
   page,
   searchInput,
   type,
   dateRange,
-  closeModal,
-  setShowPinModal,
+  recipientBank,
+  accountNumber,
 }: any) => {
-  // console.log("type", type);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
+  const [enquiryLoading, setEnquiryLoading] = useState(false);
   const searchTerm =
     debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
       ? debouncedSearchTerm
       : null;
   const { user } = useUserRole();
   const { showToast } = useToast();
-  const { mutate: CreatePin, isPending: CreatePinLoading } =
-    useCreatePinMutation();
-  const { mutate: ChangePin, isPending: ChangePinLoading } =
-    useChangePinMutation();
+  const [beneficiaryInfo, setBeneficiaryInfo] = useState<any>(null);
+  const { mutate: TransferFund, isPending: TransferFundsLoading } =
+    useTransferFundsMutation();
 
-  console.log("user", user);
+  // console.log("user", user);
   const business_id = useBusinessStore((state) => state.business_id);
   const {
     data: BankData,
@@ -66,13 +44,79 @@ export const useTransactionsHook = ({
     refetch: refetchTrxBank,
   } = useFetchTrxBank(business_id);
 
-  console.log("BankTrxData", BankTrxData);
+  // Mutation for beneficiary enquiry using fetch
+  const beneficiaryEnquiryMutation = useMutation({
+    mutationFn: async (data: { bank_code: string; account_number: string }) => {
+      const response = await fetch("/api/transactions/check-beneficiary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        cache: "no-store",
+      });
+
+      console.log("response", response);
+
+      if (!response.ok) {
+        setEnquiryLoading(false);
+
+        throw new Error("Failed to fetch beneficiary information");
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setBeneficiaryInfo(data);
+      console.log("Beneficiary enquiry response:", data);
+      setEnquiryLoading(false);
+    },
+    onError: (error) => {
+      console.error("Beneficiary enquiry error:", error);
+      // showToast({
+      //   title: "Error",
+      //   description: error.message || "Failed to fetch beneficiary information",
+      //   variant: "destructive",
+      // });
+    },
+  });
+
+  const handleSubmitTransferFunds = (data: any) => {
+    console.log("data----4", data);
+    const masterPayload = {
+      pin: data.pin,
+      ref: data.ref || "",
+      amount: data?.amount,
+      narration: data?.narration,
+      category: data?.category?.id,
+    };
+
+    TransferFund(masterPayload);
+    // console.log("payload", payload);
+  };
+
+  useEffect(() => {
+    if (accountNumber && recipientBank) {
+      console.log("recipientBank", recipientBank);
+      console.log("accountNumber", accountNumber);
+
+      if (accountNumber?.length === 10) {
+        setEnquiryLoading(true);
+
+        beneficiaryEnquiryMutation.mutate({
+          bank_code: recipientBank.code,
+          account_number: accountNumber,
+        });
+      }
+    }
+  }, [recipientBank, accountNumber]);
+
+  console.log("enquiryLoading", enquiryLoading);
 
   const {
     data: TrxData,
     isLoading: TrxDataLoading,
     refetch: TrxDataRefetch,
-    // isRefetching: isRefetchingInventory,
   } = useFetchTransactionQuery({
     params: {
       page,
@@ -91,48 +135,6 @@ export const useTransactionsHook = ({
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const pinForm = useForm<pinSetUpFormValues>({
-    resolver: zodResolver(pinSchema),
-    defaultValues: {
-      pin: "",
-      confirmPin: "",
-    },
-  });
-
-  const changePinForm = useForm<changePinFormValues>({
-    resolver: zodResolver(changePinSchema),
-    defaultValues: {
-      old_pin: "",
-      new_pin: "",
-    },
-  });
-  const onSubmitPinForm = (values: pinSetUpFormValues) => {
-    // By this point, Zod has already validated that pins match
-    console.log("Submitting pin:", values.pin);
-
-    const insert = {
-      pin: values.pin,
-    };
-    setShowPinModal(false);
-
-    CreatePin(insert, {
-      onSuccess: (data) => {
-        closeModal();
-
-        TrxDataRefetch();
-      },
-    });
-  };
-  const onSubmitChangePinForm = (values: changePinFormValues) => {
-    // By this point, Zod has already validated that pins match
-    ChangePin(values, {
-      onSuccess: (data) => {
-        closeModal();
-        TrxDataRefetch();
-      },
-    });
-  };
-
   const { data: CategoriesData, isLoading: CategoriesDataLoading } =
     useGetCategoriesQuery({
       params: {
@@ -149,13 +151,12 @@ export const useTransactionsHook = ({
     TrxDataLoading,
     user,
     BankDataLoading,
-    pinForm,
-    onSubmitPinForm,
+    BankTrxData,
     CategoriesData,
-    CreatePinLoading,
-    ChangePinLoading,
-    changePinForm,
-    onSubmitChangePinForm,
+    TransferFundsLoading,
+    handleSubmitTransferFunds,
     CategoriesDataLoading,
+    beneficiaryInfo,
+    enquiryLoading,
   };
 };

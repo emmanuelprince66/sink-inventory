@@ -9,11 +9,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useTransactionsHook } from "@/hooks/useTransactionsHook";
-const Pin = ({ closeModal }: any) => {
-  const { pinForm, onSubmitPinForm, CreatePinLoading } = useTransactionsHook({
-    closeModal,
-  });
+import { usePinHook } from "@/hooks/usePinHook";
+const Pin = () => {
+  const { pinForm, onSubmitPinForm, CreatePinLoading } = usePinHook();
   return (
     <div className="w-full">
       <Form {...pinForm}>
@@ -21,6 +19,8 @@ const Pin = ({ closeModal }: any) => {
           onSubmit={pinForm.handleSubmit(onSubmitPinForm)}
           className="space-y-4 flex flex-col items-center justify-center"
         >
+          <p className="text-2xl font-bold">Create Pin</p>
+
           <FormField
             control={pinForm.control}
             name="pin"

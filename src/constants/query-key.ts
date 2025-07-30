@@ -115,5 +115,6 @@ export const queryKey = {
     setPin: "set-pin",
     changePin: "change-pin",
     fetchTrxBank: "fetch-trx-bank",
+    transferFunds: "transfer-funds",
   },
 };
