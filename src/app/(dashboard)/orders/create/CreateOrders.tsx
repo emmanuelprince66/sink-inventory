@@ -13,7 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
-import { Trash2 } from "lucide-react";
+import { ArrowBigLeft, Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import CustomerDrawer from "../../pos/CustomersDrawer";
 import ProductDrawer from "./ProductDrawer";
@@ -27,6 +27,13 @@ const CreateOrders = () => {
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [isSelectProductDrawerOpen, setIsSelectProductDrawerOpen] =
     useState(false);
+
+  // Discount and Shipping States
+  const [discountType, setDiscountType] = useState("percentage"); // "percentage" or "fixed"
+  const [discountValue, setDiscountValue] = useState(0);
+  const [shippingCost, setShippingCost] = useState(0);
+  const [showDiscountForm, setShowDiscountForm] = useState(false);
+  const [showShippingForm, setShowShippingForm] = useState(false);
 
   const { InventoryData, InventoryDataLoading } = useOrdersHook({
     page,
@@ -84,6 +91,8 @@ const CreateOrders = () => {
       orderDate,
       paymentStatus,
       paymentMethod: selectedPaymentMethod,
+      discount: { type: discountType, value: discountValue },
+      shippingCost,
       notes,
     });
   };
@@ -92,41 +101,72 @@ const CreateOrders = () => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
   };
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return selectedProducts.reduce((sum, product) => {
       return sum + product.selling_price * (product.quantity || 1);
     }, 0);
   };
 
+  const calculateDiscount = () => {
+    const subtotal = calculateSubtotal();
+    if (discountType === "percentage") {
+      return (subtotal * discountValue) / 100;
+    }
+    return discountValue;
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const discount = calculateDiscount();
+    return subtotal - discount + shippingCost;
+  };
+
+  const resetDiscount = () => {
+    setDiscountValue(0);
+    setShowDiscountForm(false);
+  };
+
+  const resetShipping = () => {
+    setShippingCost(0);
+    setShowShippingForm(false);
+  };
+
   return (
     <div className="space-y-6 mx-auto max-w-4xl">
-      <h2 className="text-xl font-semibold cursor-pointer">Back</h2>
+      <ArrowBigLeft
+        className="cursor-pointer"
+        onClick={() => window.history.back()}
+      />
       <h2 className="text-xl font-semibold">Order Details</h2>
 
       <form onSubmit={handleSubmit} className="space-y-6 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
           {/* Customer Dropdown */}
           <div className="space-y-2 w-full">
-            <Label htmlFor="customer">Customer</Label>
-            <Select
-              value={selectedCustomer}
-              onValueChange={setSelectedCustomer}
+            <div className="flex w-full justify-between items-center">
+              <Label>Customer</Label>
+
+              {customer?.name && (
+                <Button
+                  className="border border-red-500 hover:bg-red-50"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCustomer("")}
+                >
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </Button>
+              )}
+            </div>
+            <div
+              className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-4"
+              onClick={() => setIsCustomerDrawerOpen(true)}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a customer" />
-              </SelectTrigger>
-              <SelectContent className="w-full">
-                {customers.map((customer) => (
-                  <SelectItem
-                    className="w-full"
-                    key={customer.id}
-                    value={customer.id}
-                  >
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <div className="flex justify-between items-center w-full">
+                <span className="text-xs">
+                  {customer ? customer.name : "Add Customer"}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Currency Dropdown */}
@@ -182,32 +222,7 @@ const CreateOrders = () => {
         </div>
 
         {/* Products Section */}
-        <div className="space-y-4 w-full">
-          <div className="flex w-full justify-between items-center">
-            <Label>Customer</Label>
 
-            {customer?.name && (
-              <Button
-                className="border border-red-500 hover:bg-red-50"
-                variant="outline"
-                size="sm"
-                onClick={() => setCustomer("")}
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
-            )}
-          </div>
-          <div
-            className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-4"
-            onClick={() => setIsCustomerDrawerOpen(true)}
-          >
-            <div className="flex justify-between items-center w-full">
-              <span className="text-xs">
-                {customer ? customer.name : "Add Customer"}
-              </span>
-            </div>
-          </div>
-        </div>
         <div className="space-y-4 w-full">
           <Label>Products</Label>
           <div
@@ -226,7 +241,7 @@ const CreateOrders = () => {
               {selectedProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="p-1 flex justify-between items-center"
+                  className="p-4 flex justify-between items-center"
                 >
                   <div className="flex items-center gap-3">
                     {product.image && (
@@ -269,8 +284,184 @@ const CreateOrders = () => {
                   </div>
                 </div>
               ))}
-              <div className="p-4 border-t font-medium text-right">
-                Total: ₦{calculateTotal().toLocaleString()}
+
+              {/* Order Summary Section */}
+              <div className="p-4 bg-gray-50 space-y-3">
+                {/* Subtotal */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Subtotal:</span>
+                  <span className="text-sm">
+                    ₦{calculateSubtotal().toLocaleString()}
+                  </span>
+                </div>
+
+                {/* Discount Section */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Discount:</span>
+                    <div className="flex items-center gap-2">
+                      {discountValue > 0 ? (
+                        <>
+                          <span className="text-sm text-green-600">
+                            -₦{calculateDiscount().toLocaleString()}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={resetDiscount}
+                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowDiscountForm(true)}
+                          className="border-green-500 text-green-500 hover:bg-green-50 h-6 w-6 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {showDiscountForm && (
+                    <div className="bg-white p-3 rounded border border-gray-200 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select
+                          value={discountType}
+                          onValueChange={setDiscountType}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">
+                              Percentage (%)
+                            </SelectItem>
+                            <SelectItem value="fixed">
+                              Fixed Amount (₦)
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder={
+                            discountType === "percentage" ? "%" : "₦"
+                          }
+                          value={discountValue}
+                          onChange={(e) =>
+                            setDiscountValue(parseFloat(e.target.value) || 0)
+                          }
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setShowDiscountForm(false)}
+                        >
+                          Apply
+                        </Button>
+                        <Button
+                          className="border border-gray-200"
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDiscountValue(0);
+                            setShowDiscountForm(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Shipping Section */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Shipping:</span>
+                    <div className="flex items-center gap-2">
+                      {shippingCost > 0 ? (
+                        <>
+                          <span className="text-sm">
+                            ₦{shippingCost.toLocaleString()}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={resetShipping}
+                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowShippingForm(true)}
+                          className="border-green-500 text-green-500 hover:bg-green-50 h-6 w-6 p-0"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {showShippingForm && (
+                    <div className="bg-white p-3 rounded border border-gray-200 space-y-3">
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="Enter shipping cost"
+                        value={shippingCost}
+                        onChange={(e) =>
+                          setShippingCost(parseFloat(e.target.value) || 0)
+                        }
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setShowShippingForm(false)}
+                        >
+                          Apply
+                        </Button>
+                        <Button
+                          className="border border-gray-200"
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setShippingCost(0);
+                            setShowShippingForm(false);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Total */}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="font-bold">Total:</span>
+                  <span className="font-bold text-lg">
+                    ₦{calculateTotal().toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           )}

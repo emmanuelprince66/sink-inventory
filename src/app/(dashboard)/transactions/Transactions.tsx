@@ -70,7 +70,7 @@ const Transactions = () => {
   //     currency: "NGN",
   //   }).format(amount);
   // };
-
+  console.log("user", user);
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
@@ -113,26 +113,29 @@ const Transactions = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
             {/* Wallet Balance */}
-            <CustomCard className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary-green-100 rounded-full">
-                    <Wallet className="w-5 h-5 text-primary-green-600" />
+
+            {user?.role === "OWNER" && (
+              <CustomCard className="p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary-green-100 rounded-full">
+                      <Wallet className="w-5 h-5 text-primary-green-600" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Wallet Balance
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Wallet Balance
+                </div>
+                <div className="mt-4">
+                  <span className="text-2xl font-bold text-gray-900">
+                    {/* {formatToNaira(walletBalance)} */}
+                    {formatToNaira(
+                      TrxData?.data?.results?.wallet_details?.balance || 0
+                    )}
                   </span>
                 </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {/* {formatToNaira(walletBalance)} */}
-                  {formatToNaira(
-                    TrxData?.data?.results?.wallet_details?.balance || 0
-                  )}
-                </span>
-              </div>
-            </CustomCard>
+              </CustomCard>
+            )}
 
             {/* Inflow */}
             <CustomCard className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
@@ -154,23 +157,26 @@ const Transactions = () => {
             </CustomCard>
 
             {/* Outflow */}
-            <CustomCard className="p-4 bg-purple-50 border border-purple-100 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-full">
-                    <ArrowUpRight className="w-5 h-5 text-purple-600" />
+
+            {user?.role === "OWNER" && (
+              <CustomCard className="p-4 bg-purple-50 border border-purple-100 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-full">
+                      <ArrowUpRight className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-600">
+                      Total Outflow
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Total Outflow
+                </div>
+                <div className="mt-4">
+                  <span className="text-2xl font-bold text-gray-900">
+                    {formatToNaira(TrxData?.data?.results?.outflow || 0)}
                   </span>
                 </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {formatToNaira(TrxData?.data?.results?.outflow || 0)}
-                </span>
-              </div>
-            </CustomCard>
+              </CustomCard>
+            )}
           </div>
         )}
 
@@ -215,15 +221,17 @@ const Transactions = () => {
                   View Details
                 </Button> */}
 
-                <Link href="transactions/transfer">
-                  <Button
-                    // disabled={user && user?.kyc ? false : true}
-                    variant="outline"
-                    className="bg-white/10 min-w-[150px] min-h-[50px] text-white hover:bg-white/20 w-full sm:w-auto"
-                  >
-                    Transfer
-                  </Button>
-                </Link>
+                {user?.role === "OWNER" && (
+                  <Link href="transactions/transfer">
+                    <Button
+                      // disabled={user && user?.kyc ? false : true}
+                      variant="outline"
+                      className="bg-white/10 min-w-[150px] min-h-[50px] text-white hover:bg-white/20 w-full sm:w-auto"
+                    >
+                      Transfer
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">

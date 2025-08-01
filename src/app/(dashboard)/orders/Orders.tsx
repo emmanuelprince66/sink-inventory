@@ -337,7 +337,7 @@ const Orders = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link
-                          href="#"
+                          href="/orders/1"
                           className="text-blue-600 hover:text-blue-900"
                         >
                           View

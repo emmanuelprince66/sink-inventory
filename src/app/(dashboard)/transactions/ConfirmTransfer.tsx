@@ -5,9 +5,13 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowBigLeftDash } from "lucide-react";
 import { useState } from "react";
 
-const ConfirmTransfer = ({ transferDetails, onCancel }: any) => {
+const ConfirmTransfer = ({
+  transferDetails,
+  beneficiaryInfo,
+  onCancel,
+}: any) => {
   const { handleSubmitTransferFunds, TransferFundsLoading } =
-    useTransactionsHook({});
+    useTransactionsHook({ beneficiaryInfo }); // Pass beneficiaryInfo to preserve it
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -25,6 +29,7 @@ const ConfirmTransfer = ({ transferDetails, onCancel }: any) => {
       await handleSubmitTransferFunds({
         ...transferDetails,
         pin: pin,
+        beneficiaryRef: beneficiaryInfo?.data?.ref, // Pass the ref directly
       });
     } finally {
       setIsSubmitting(false);

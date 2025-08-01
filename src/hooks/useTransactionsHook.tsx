@@ -7,7 +7,8 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
@@ -19,6 +20,7 @@ export const useTransactionsHook = ({
   recipientBank,
   accountNumber,
 }: any) => {
+  console.log("recipientBank", recipientBank, accountNumber);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const searchTerm =
@@ -30,6 +32,7 @@ export const useTransactionsHook = ({
   const [beneficiaryInfo, setBeneficiaryInfo] = useState<any>(null);
   const { mutate: TransferFund, isPending: TransferFundsLoading } =
     useTransferFundsMutation();
+  const router = useRouter();
 
   // console.log("user", user);
   const business_id = useBusinessStore((state) => state.business_id);
@@ -60,7 +63,6 @@ export const useTransactionsHook = ({
 
       if (!response.ok) {
         setEnquiryLoading(false);
-
         throw new Error("Failed to fetch beneficiary information");
       }
 
@@ -73,27 +75,49 @@ export const useTransactionsHook = ({
     },
     onError: (error) => {
       console.error("Beneficiary enquiry error:", error);
-      // showToast({
-      //   title: "Error",
-      //   description: error.message || "Failed to fetch beneficiary information",
-      //   variant: "destructive",
-      // });
+      setBeneficiaryInfo(null); // Clear beneficiary info on error
+      setEnquiryLoading(false);
     },
   });
+
+  console.log("beneficairy_info", beneficiaryInfo);
 
   const handleSubmitTransferFunds = (data: any) => {
     console.log("data----4", data);
     const masterPayload = {
-      pin: data.pin,
-      ref: data.ref || "",
+      pin: data?.pin,
+      ref: data?.beneficiaryRef || beneficiaryInfo?.data?.ref || "",
       amount: data?.amount,
       narration: data?.narration,
       category: data?.category?.id,
     };
 
-    TransferFund(masterPayload);
-    // console.log("payload", payload);
+    TransferFund(masterPayload, {
+      onSuccess: () => {
+        TrxDataRefetch();
+        // Clear beneficiary info after successful transfer
+        setBeneficiaryInfo(null);
+        router.back();
+      },
+      onError: (error) => {},
+    });
   };
+
+  // Function to manually trigger beneficiary enquiry
+  const triggerBeneficiaryEnquiry = useCallback(
+    (bankCode: string, accountNum: string) => {
+      if (accountNum?.length === 10 && bankCode) {
+        setEnquiryLoading(true);
+        setBeneficiaryInfo(null); // Clear previous data
+
+        beneficiaryEnquiryMutation.mutate({
+          bank_code: bankCode,
+          account_number: accountNum,
+        });
+      }
+    },
+    [beneficiaryEnquiryMutation]
+  );
 
   useEffect(() => {
     if (accountNumber && recipientBank) {
@@ -102,12 +126,16 @@ export const useTransactionsHook = ({
 
       if (accountNumber?.length === 10) {
         setEnquiryLoading(true);
+        setBeneficiaryInfo(null); // Clear previous beneficiary info
 
         beneficiaryEnquiryMutation.mutate({
-          bank_code: recipientBank.code,
+          bank_code: recipientBank?.bank_code,
           account_number: accountNumber,
         });
       }
+    } else {
+      // Clear beneficiary info when account number or bank is cleared
+      setBeneficiaryInfo(null);
     }
   }, [recipientBank, accountNumber]);
 
@@ -158,5 +186,6 @@ export const useTransactionsHook = ({
     CategoriesDataLoading,
     beneficiaryInfo,
     enquiryLoading,
+    triggerBeneficiaryEnquiry,
   };
 };

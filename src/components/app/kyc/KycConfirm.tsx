@@ -86,7 +86,7 @@ const KycConfirm = () => {
 
           <button
             onClick={handleContinue}
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+            className="w-full cursor-pointer bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
           >
             Continue
           </button>

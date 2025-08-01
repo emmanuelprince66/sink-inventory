@@ -30,19 +30,20 @@ const Transfer = () => {
     CategoriesData,
     TrxData: trxData,
     BankDataLoading,
+    beneficiaryInfo,
     CategoriesDataLoading,
     enquiryLoading,
   } = useTransactionsHook({ recipientBank, accountNumber });
 
+  console.log("beneficiaryInfo", beneficiaryInfo);
+
   // Transform bank data to select options
   useEffect(() => {
     if (BankTrxData) {
-      // console.log("BankData", BankTrxData);
-
       setBankOptions(
         BankTrxData.map((bank: any) => ({
           value: bank.bankCode,
-          label: bank.name, // or bank.bank_name if that's the correct property
+          label: bank.name,
           ...bank,
         }))
       );
@@ -62,6 +63,15 @@ const Transfer = () => {
     }
   }, [CategoriesData]);
 
+  // Update account name when beneficiary info changes
+  useEffect(() => {
+    if (beneficiaryInfo?.data?.name) {
+      setAccountName(beneficiaryInfo.data.name);
+    } else {
+      setAccountName("");
+    }
+  }, [beneficiaryInfo]);
+
   // Handle form submission
   const handleSubmit = (e: any) => {
     e.preventDefault();
@@ -72,25 +82,24 @@ const Transfer = () => {
       return;
     }
 
+    if (!accountName) {
+      setMessage("Please wait for account name verification.");
+      return;
+    }
+
     if (accountNumber.length < 10) {
       setMessage("Please enter a valid account number.");
       return;
     }
 
-    // if (
-    //   parseFloat(amount) <= 0 ||
-    //   parseFloat(amount) >
-    //     (trxData?.data?.results?.wallet_details?.balance || 0)
-    // ) {
-    //   setMessage(
-    //     "Invalid amount. Please enter a positive amount within your balance."
-    //   );
-    //   return;
-    // }
+    if (!beneficiaryInfo?.data?.name) {
+      setMessage("Please wait for account name verification.");
+      return;
+    }
 
     setShowConfirmTransfer(true);
   };
-  // console.log("beneficiaryEnquiryMutation", enquiryLoading);
+
   return (
     <>
       {showConfirmTransfer ? (
@@ -99,10 +108,11 @@ const Transfer = () => {
             bank: recipientBank,
             category,
             accountNumber,
-            accountName,
+            accountName: beneficiaryInfo?.data?.name || accountName,
             amount,
             narration,
           }}
+          beneficiaryInfo={beneficiaryInfo} // Pass beneficiaryInfo to preserve it
           onCancel={() => setShowConfirmTransfer(false)}
         />
       ) : (
@@ -202,7 +212,6 @@ const Transfer = () => {
                     className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Recipient Full Name"
                     value={accountName}
-                    onChange={(e) => setAccountName(e.target.value)}
                     required
                   />
                 </div>

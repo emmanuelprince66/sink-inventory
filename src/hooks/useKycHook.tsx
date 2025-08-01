@@ -59,18 +59,20 @@ export const useKycHook = () => {
       onSuccess: (data) => {
         console.log("data---success", data);
         try {
-          // Validate the wallet URL
           if (!data?.data?.url) {
             throw new Error("No Wallet URL received");
           }
 
-          setTimeout(() => {
-            // Open in new tab with noopener for security
-            window.open(data.data.url, "_blank", "noopener,noreferrer");
-          }, 1000);
+          // Create temporary anchor element
+          const link = document.createElement("a");
+          link.href = data.data.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         } catch (error) {
           console.error("Error handling success response:", error);
-          // You might want to show an error toast here
         }
       },
     });
@@ -93,10 +95,14 @@ export const useKycHook = () => {
             throw new Error("No Wallet URL received");
           }
 
-          setTimeout(() => {
-            // Open in new tab with noopener for security
-            window.open(data.data.url, "_blank", "noopener,noreferrer");
-          }, 1000);
+          // Create temporary anchor element
+          const link = document.createElement("a");
+          link.href = data.data.url;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         } catch (error) {
           console.error("Error handling success response:", error);
           // You might want to show an error toast here

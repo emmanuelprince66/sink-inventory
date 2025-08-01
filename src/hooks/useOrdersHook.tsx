@@ -3,10 +3,12 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 
 export const useOrdersHook = ({
   page,
+  id,
   searchInput,
 }: {
-  page: number;
-  searchInput: string;
+  page?: number;
+  searchInput?: string;
+  id?: string;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 

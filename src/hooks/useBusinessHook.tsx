@@ -99,8 +99,11 @@ export const useBusinessHook = ({
     { value: "GHS", label: "Ghanaian Cedi" },
   ];
 
-  const { data: AllBusinessData, isLoading: AllBusinessLoading } =
-    useGetAllBusinessQuery();
+  const {
+    data: AllBusinessData,
+    isLoading: AllBusinessLoading,
+    refetch: businessRefetch,
+  } = useGetAllBusinessQuery();
 
   const form = useForm<BusinessFormValues>({
     resolver: zodResolver(businessSchema),
@@ -134,6 +137,7 @@ export const useBusinessHook = ({
     CreateBusiness(formData, {
       onSuccess: () => {
         setLoading(false);
+        businessRefetch();
         if (closeCreateBusinessModal) closeCreateBusinessModal();
       },
       onError: (error) => {
