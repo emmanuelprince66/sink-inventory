@@ -135,9 +135,9 @@ export const useTransactionsHook = ({
         setEnquiryLoading(true);
         setBeneficiaryInfo(null); // Clear previous beneficiary info
         console.log("recipientBank", recipientBank);
-
+        // bank code to test 000002
         beneficiaryEnquiryMutation.mutate({
-          bank_code: "000002",
+          bank_code: recipientBank?.bankCode,
           account_number: accountNumber,
         });
       }
