@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useCreateKycAcctMutation } from "@/api/kyc/create-acct";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import moment from "moment";
 
 const individualAccountSchema = z.object({
@@ -24,6 +25,8 @@ export type AddIndividualAcctFormValues = z.infer<
 export type AddCorporateAcctFormValues = z.infer<typeof corporateAccountSchema>;
 
 export const useKycHook = () => {
+  const business_id = useBusinessStore((state) => state.business_id);
+
   const { mutate: CreateAcct, isPending } = useCreateKycAcctMutation();
 
   const createIndividualAcctForm = useForm<AddIndividualAcctFormValues>({
@@ -55,27 +58,30 @@ export const useKycHook = () => {
     };
 
     console.log("Individual insert Data:", insert);
-    CreateAcct(insert, {
-      onSuccess: (data) => {
-        console.log("data---success", data);
-        try {
-          if (!data?.data?.url) {
-            throw new Error("No Wallet URL received");
-          }
+    CreateAcct(
+      { body: insert, businessId: business_id },
+      {
+        onSuccess: (data: any) => {
+          console.log("data---success", data);
+          try {
+            if (!data?.data?.url) {
+              throw new Error("No Wallet URL received");
+            }
 
-          // Create temporary anchor element
-          const link = document.createElement("a");
-          link.href = data.data.url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (error) {
-          console.error("Error handling success response:", error);
-        }
-      },
-    });
+            // Create temporary anchor element
+            const link = document.createElement("a");
+            link.href = data.data.url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (error) {
+            console.error("Error handling success response:", error);
+          }
+        },
+      }
+    );
   };
   const onSubmitCorporateAcct = (data: AddCorporateAcctFormValues) => {
     const insert = {
@@ -86,29 +92,32 @@ export const useKycHook = () => {
         : undefined,
     };
 
-    CreateAcct(insert, {
-      onSuccess: (data) => {
-        console.log("data---success", data);
-        try {
-          // Validate the wallet URL
-          if (!data?.data?.url) {
-            throw new Error("No Wallet URL received");
-          }
+    CreateAcct(
+      { body: insert, businessId: business_id },
+      {
+        onSuccess: (data: any) => {
+          console.log("data---success", data);
+          try {
+            // Validate the wallet URL
+            if (!data?.data?.url) {
+              throw new Error("No Wallet URL received");
+            }
 
-          // Create temporary anchor element
-          const link = document.createElement("a");
-          link.href = data.data.url;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } catch (error) {
-          console.error("Error handling success response:", error);
-          // You might want to show an error toast here
-        }
-      },
-    });
+            // Create temporary anchor element
+            const link = document.createElement("a");
+            link.href = data.data.url;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } catch (error) {
+            console.error("Error handling success response:", error);
+            // You might want to show an error toast here
+          }
+        },
+      }
+    );
   };
 
   return {

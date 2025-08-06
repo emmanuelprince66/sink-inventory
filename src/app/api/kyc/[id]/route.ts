@@ -2,7 +2,11 @@ import { BaseUrl } from "@/constants/base-url";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -41,7 +45,7 @@ export async function POST(request: NextRequest) {
       "Content-Type": "application/json",
     });
 
-    const apiUrl = `${BaseUrl}wallet/set_pin/`;
+    const apiUrl = `${BaseUrl}wallet/create_bank_account/${id}/`;
     const response = await fetch(apiUrl, {
       method: "POST",
       headers,
@@ -52,7 +56,7 @@ export async function POST(request: NextRequest) {
       const errorData = await response.json();
       return NextResponse.json(
         {
-          error: errorData.message || "Failed to create pin",
+          error: errorData.message || "Failed to create account",
           details: errorData,
         },
         { status: response.status }

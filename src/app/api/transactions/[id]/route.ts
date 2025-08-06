@@ -3,8 +3,14 @@ import { BaseUrl } from "@/constants/base-url";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   // Await the params promise
+  const { id } = await params;
+
+  console.log("id--4", id);
 
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
@@ -28,8 +34,9 @@ export async function GET(request: NextRequest) {
 
   // console.log("category", category);
 
+  console.log("id--4", id);
   // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}wallet/`);
+  const apiUrl = new URL(`${BaseUrl}wallet/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (start_date) apiUrl.searchParams.append("start_date", start_date);
   if (end_date) apiUrl.searchParams.append("end_date", end_date);

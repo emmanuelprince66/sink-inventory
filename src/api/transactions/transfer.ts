@@ -2,13 +2,19 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-const transferFunds = async (body: any) => {
-  const response = await fetch(`/api/transactions/transfer`, {
+const TransferFunds = async ({
+  body,
+  businessId,
+}: {
+  body: any;
+  businessId: any;
+}) => {
+  const response = await fetch(`/api/transactions/${businessId}/transfer`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body), // Ensure proper JSON stringification
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -18,7 +24,7 @@ const transferFunds = async (body: any) => {
   return response.json();
 };
 
-type QueryFnType = typeof transferFunds;
+type QueryFnType = typeof TransferFunds;
 
 export const useTransferFundsMutation = (
   config?: MutationConfig<QueryFnType>
@@ -27,23 +33,20 @@ export const useTransferFundsMutation = (
 
   return useMutation({
     mutationKey: [queryKey.transactions.transferFunds],
-    mutationFn: transferFunds,
+    mutationFn: TransferFunds,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
-      console.log("Error in transfer :", error);
-
-      // Extract the most specific error message available
+      console.log("Error updating pin:", error);
       const errorMessage =
         error?.details?.message ||
         error?.error ||
         error?.message ||
-        "Error transfer in";
-
+        "Error Transferring funds";
       showToast(errorMessage, "error");
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Transfer Sucessfully", "success");
+      showToast("Funds Transferred Successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

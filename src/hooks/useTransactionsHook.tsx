@@ -36,6 +36,7 @@ export const useTransactionsHook = ({
 
   // console.log("user", user);
   const business_id = useBusinessStore((state) => state.business_id);
+  console.log("business_id", business_id);
   const {
     data: BankData,
     isLoading: BankDataLoading,
@@ -92,15 +93,18 @@ export const useTransactionsHook = ({
       category: data?.category?.id,
     };
 
-    TransferFund(masterPayload, {
-      onSuccess: () => {
-        TrxDataRefetch();
-        // Clear beneficiary info after successful transfer
-        setBeneficiaryInfo(null);
-        router.back();
-      },
-      onError: (error) => {},
-    });
+    TransferFund(
+      { body: masterPayload, businessId: business_id },
+      {
+        onSuccess: () => {
+          TrxDataRefetch();
+          // Clear beneficiary info after successful transfer
+          setBeneficiaryInfo(null);
+          router.back();
+        },
+        onError: (error) => {},
+      }
+    );
   };
 
   // Function to manually trigger beneficiary enquiry
@@ -110,6 +114,7 @@ export const useTransactionsHook = ({
         setEnquiryLoading(true);
         setBeneficiaryInfo(null); // Clear previous data
 
+        console.log("bankCode", bankCode);
         beneficiaryEnquiryMutation.mutate({
           bank_code: bankCode,
           account_number: accountNum,
@@ -121,15 +126,16 @@ export const useTransactionsHook = ({
 
   useEffect(() => {
     if (accountNumber && recipientBank) {
-      console.log("recipientBank", recipientBank);
+      // console.log("recipientBank", recipientBank);
       console.log("accountNumber", accountNumber);
 
       if (accountNumber?.length === 10) {
         setEnquiryLoading(true);
         setBeneficiaryInfo(null); // Clear previous beneficiary info
+        console.log("recipientBank", recipientBank);
 
         beneficiaryEnquiryMutation.mutate({
-          bank_code: recipientBank?.bank_code,
+          bank_code: "000002",
           account_number: accountNumber,
         });
       }

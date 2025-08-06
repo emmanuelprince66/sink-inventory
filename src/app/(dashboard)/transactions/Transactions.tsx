@@ -237,7 +237,9 @@ const Transactions = () => {
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
               <p className="text-sm">
                 Account Name:{" "}
-                <span className=" font-medium">{`${TrxData?.data?.results?.wallet_details?.account_name}`}</span>
+                <span className=" font-medium">{`${
+                  TrxData?.data?.results?.wallet_details?.account_name || "Nil"
+                }`}</span>
               </p>
               <p className="text-sm">
                 Available Balance:{" "}

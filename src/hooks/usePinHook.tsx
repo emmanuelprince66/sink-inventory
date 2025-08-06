@@ -1,5 +1,6 @@
 import { useChangePinMutation } from "@/api/transactions/change-pin";
 import { useCreatePinMutation } from "@/api/transactions/set-pin";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,10 +28,10 @@ export const usePinHook = () => {
     useCreatePinMutation();
   const { mutate: ChangePin, isPending: ChangePinLoading } =
     useChangePinMutation();
-
+  const business_id = useBusinessStore((state) => state.business_id);
   const { TrxData } = useTransactionsHook({});
 
-  console.log("TrxData", TrxData);
+  // console.log("TrxData", TrxData);
 
   const pinForm = useForm<pinSetUpFormValues>({
     resolver: zodResolver(pinSchema),
@@ -55,15 +56,21 @@ export const usePinHook = () => {
       pin: values.pin,
     };
 
-    CreatePin(insert, {
-      onSuccess: (data) => {},
-    });
+    CreatePin(
+      { body: insert, businessId: business_id },
+      {
+        onSuccess: (data) => {},
+      }
+    );
   };
   const onSubmitChangePinForm = (values: changePinFormValues) => {
     // By this point, Zod has already validated that pins match
-    ChangePin(values, {
-      onSuccess: (data) => {},
-    });
+    ChangePin(
+      { body: values, businessId: business_id },
+      {
+        onSuccess: (data) => {},
+      }
+    );
   };
 
   return {

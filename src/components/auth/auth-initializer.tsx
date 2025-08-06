@@ -21,6 +21,7 @@ export function AuthInitializer() {
           // Optionally validate token with backend
         } else {
           setLoading(false);
+          console.log("No access token found. Redirecting to login...");
         }
       } catch (error) {
         console.error("Auth initialization error:", error);

@@ -4,6 +4,7 @@ import {
   QueryConfigType,
   useQuery,
 } from "@/lib/react-query";
+import { useLogoutMutation } from "../auth/logout-user";
 
 type fetchTransactionsProps = {
   id: string;
@@ -24,7 +25,7 @@ export const FetchTransaction = async ({
   type = "",
   limit = 30,
 }: fetchTransactionsProps) => {
-  const url = new URL(`/api/transactions`, window.location.origin);
+  const url = new URL(`/api/transactions/${id}`, window.location.origin);
 
   const params = new URLSearchParams();
   if (search) params.append("search", search);
@@ -66,8 +67,19 @@ export const useFetchTransactionQuery = ({
   params,
   ...config
 }: useFetchTransactionHistoryOptions) => {
+  const { mutate: logout, isPending } = useLogoutMutation({
+    successMessage: "You are authorized, please login again.",
+    redirectPath: "/login?fromLogout=true",
+  });
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
+      if (error.status === 401) {
+        logout();
+        // if (!isPending) {
+        //   window.location.href = "/login?fromLogout=true";
+        // }
+        // Force full page reload to reset all state
+      }
       if ([404, 401].includes(error.type)) return false;
       return failureCount < 2;
     },

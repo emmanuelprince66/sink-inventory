@@ -2,13 +2,19 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-const createPin = async (body: any) => {
-  const response = await fetch(`/api/transactions/change-pin`, {
+const ChangePin = async ({
+  body,
+  businessId,
+}: {
+  body: any;
+  businessId: any;
+}) => {
+  const response = await fetch(`/api/transactions/${businessId}/change-pin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body), // Ensure proper JSON stringification
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -18,30 +24,27 @@ const createPin = async (body: any) => {
   return response.json();
 };
 
-type QueryFnType = typeof createPin;
+type QueryFnType = typeof ChangePin;
 
 export const useChangePinMutation = (config?: MutationConfig<QueryFnType>) => {
   const { showToast } = useToast();
 
   return useMutation({
     mutationKey: [queryKey.transactions.changePin],
-    mutationFn: createPin,
+    mutationFn: ChangePin,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
-      console.log("Error creating pin:", error);
-
-      // Extract the most specific error message available
+      console.log("Error updating pin:", error);
       const errorMessage =
         error?.details?.message ||
         error?.error ||
         error?.message ||
-        "Error logging in";
-
+        "Error updating pin";
       showToast(errorMessage, "error");
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Pin Updated Sucessfully", "success");
+      showToast("Pin Updated Successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,
