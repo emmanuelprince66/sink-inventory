@@ -3,7 +3,7 @@ import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useFetchTrxBank } from "@/api/transactions/fetch-bank";
 import { useFetchTransactionQuery } from "@/api/transactions/fetch-transactions";
 import { useTransferFundsMutation } from "@/api/transactions/transfer";
-import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
@@ -35,18 +35,20 @@ export const useTransactionsHook = ({
   const router = useRouter();
 
   // console.log("user", user);
-  const business_id = useBusinessStore((state) => state.business_id);
-  console.log("business_id", business_id);
+  const businessData = useBusinessDataStore((state) => state.businessData);
+
+  console.log("businessData", businessData);
+  console.log("business_id", businessData?.id);
   const {
     data: BankData,
     isLoading: BankDataLoading,
     refetch: refetchBank,
-  } = useFetchBankQuery(business_id);
+  } = useFetchBankQuery(businessData?.id);
   const {
     data: BankTrxData,
     isLoading: BankTrxDataLoading,
     refetch: refetchTrxBank,
-  } = useFetchTrxBank(business_id);
+  } = useFetchTrxBank(businessData?.id);
 
   // Mutation for beneficiary enquiry using fetch
   const beneficiaryEnquiryMutation = useMutation({
@@ -94,7 +96,7 @@ export const useTransactionsHook = ({
     };
 
     TransferFund(
-      { body: masterPayload, businessId: business_id },
+      { body: masterPayload, businessId: businessData?.id },
       {
         onSuccess: () => {
           TrxDataRefetch();
@@ -161,21 +163,21 @@ export const useTransactionsHook = ({
         ? moment(dateRange.to).format("YYYY-MM-DD")
         : undefined,
       limit: 20,
-      id: business_id,
+      id: businessData?.id,
       search: searchTerm,
       type: type,
     },
-    enabled: !!business_id,
+    enabled: !!businessData?.id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const { data: CategoriesData, isLoading: CategoriesDataLoading } =
     useGetCategoriesQuery({
       params: {
-        id: business_id,
+        id: businessData?.id,
         type: "EXPENSES",
       },
-      enabled: !!business_id,
+      enabled: !!businessData?.id,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
@@ -186,6 +188,7 @@ export const useTransactionsHook = ({
     user,
     BankDataLoading,
     BankTrxData,
+    businessData,
     CategoriesData,
     TransferFundsLoading,
     handleSubmitTransferFunds,

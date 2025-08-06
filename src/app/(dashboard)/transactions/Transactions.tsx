@@ -53,9 +53,10 @@ const Transactions = () => {
     setActiveFilter(filter);
   };
 
-  const { TrxData, TrxDataLoading, user } = useTransactionsHook({
+  const { TrxData, TrxDataLoading, user, businessData } = useTransactionsHook({
     searchInput,
     dateRange,
+
     page,
     type: filterMapping[activeFilter],
     setShowPinModal,
@@ -70,16 +71,16 @@ const Transactions = () => {
   //     currency: "NGN",
   //   }).format(amount);
   // };
-  console.log("user", user);
+  // console.log("user", user);
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
 
   useEffect(() => {
-    if (user) {
-      user?.kyc ? setShowKycModal(false) : setShowKycModal(true);
+    if (businessData) {
+      businessData?.kyc ? setShowKycModal(false) : setShowKycModal(true);
     }
-  }, [user]);
+  }, [businessData]);
 
   return (
     <>
