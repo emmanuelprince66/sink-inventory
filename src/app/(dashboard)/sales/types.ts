@@ -3,6 +3,7 @@ export interface SalesDataItem {
   unit_sold: number;
   revenue: number;
   profit: number;
+  discount: number;
 }
 
 interface SalesResults {

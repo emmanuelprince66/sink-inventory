@@ -89,7 +89,7 @@ export const useSalesColumns = () => {
         const product = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">-</p>
+            <p className="text-sm text-gray-500">{product.discount}</p>
           </div>
         );
       },

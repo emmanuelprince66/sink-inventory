@@ -29,6 +29,7 @@ export const useCheckIsUserSubscribedQuery = (config?: options) => {
   });
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
+      console.log("error---------5", error);
       if (error.status === 401) {
         logout();
         console.log("isPending", isPending);
