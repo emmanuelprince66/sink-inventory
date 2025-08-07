@@ -19,6 +19,7 @@ const filterMapping = {
   "Fast Moving": "FAST-MOVING",
   "Most Profitable": "MOST-PROFITABLE",
   "Top Selling": "TOP-SELLING",
+  Discounted: "DISCOUNTED",
 } as const;
 
 const filterMappingTwo = {

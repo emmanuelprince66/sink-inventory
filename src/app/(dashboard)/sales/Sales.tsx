@@ -29,6 +29,7 @@ const productFilterOptions = [
   "Fast Moving",
   "Most Profitable",
   "Top Selling",
+  "Discounted",
 ] as const;
 
 interface Category {

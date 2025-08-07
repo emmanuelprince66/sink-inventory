@@ -35,7 +35,7 @@ const Transfer = () => {
     enquiryLoading,
   } = useTransactionsHook({ recipientBank, accountNumber });
 
-  console.log("beneficiaryInfo", beneficiaryInfo);
+  console.log("TrxData", trxData);
 
   // Transform bank data to select options
   useEffect(() => {
@@ -77,7 +77,7 @@ const Transfer = () => {
     e.preventDefault();
     setMessage("");
 
-    if (!recipientBank || !category || !accountNumber || !amount) {
+    if (!recipientBank || !accountNumber || !amount) {
       setMessage("Please fill in all required fields.");
       return;
     }

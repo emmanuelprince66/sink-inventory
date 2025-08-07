@@ -5,16 +5,25 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowBigLeftDash } from "lucide-react";
 import { useState } from "react";
 
+const calculateCharges = (amount: number) => {
+  if (amount <= 5000) return 10;
+  if (amount <= 50000) return 25;
+  return 50;
+};
+
 const ConfirmTransfer = ({
   transferDetails,
   beneficiaryInfo,
   onCancel,
 }: any) => {
   const { handleSubmitTransferFunds, TransferFundsLoading } =
-    useTransactionsHook({ beneficiaryInfo }); // Pass beneficiaryInfo to preserve it
+    useTransactionsHook({ beneficiaryInfo });
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const charges = calculateCharges(transferDetails?.amount || 0);
+  const totalAmount = (parseInt(transferDetails?.amount) || 0) + charges;
 
   const handleTransfer = async () => {
     if (pin.length !== 4) {
@@ -29,7 +38,7 @@ const ConfirmTransfer = ({
       await handleSubmitTransferFunds({
         ...transferDetails,
         pin: pin,
-        beneficiaryRef: beneficiaryInfo?.data?.ref, // Pass the ref directly
+        beneficiaryRef: beneficiaryInfo?.data?.ref,
       });
     } finally {
       setIsSubmitting(false);
@@ -77,8 +86,20 @@ const ConfirmTransfer = ({
                 {formatToNaira(transferDetails?.amount)}
               </span>
             </div>
+            <div className="flex justify-between">
+              <span className="font-medium text-gray-700">Charges:</span>
+              <span className="text-gray-700 font-medium">
+                {formatToNaira(charges)}
+              </span>
+            </div>
+            <div className="flex justify-between border-t pt-2 border-gray-200">
+              <span className="font-bold text-gray-800">Total:</span>
+              <span className="text-green-600 font-bold">
+                {formatToNaira(totalAmount)}
+              </span>
+            </div>
             {transferDetails?.narration && (
-              <div className="flex justify-between">
+              <div className="flex justify-between pt-2 border-t border-gray-200">
                 <span className="font-medium text-gray-700">Narration:</span>
                 <span className="text-gray-600">
                   {transferDetails.narration}
