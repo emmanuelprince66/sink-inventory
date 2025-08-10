@@ -206,7 +206,6 @@ const EditProduct = ({ id }: { id: string }) => {
                 )}
               />
 
-              {/* Expiry Date */}
               <FormField
                 control={form.control}
                 name="date"
@@ -226,15 +225,17 @@ const EditProduct = ({ id }: { id: string }) => {
                             {field.value ? (
                               format(new Date(field.value), "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>Pick your expiry date</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        className="w-auto p-0 border border-gray-200"
+                        align="start"
+                      >
                         <Calendar
-                          className="bg-white"
                           mode="single"
                           selected={
                             field.value ? new Date(field.value) : undefined
@@ -242,8 +243,19 @@ const EditProduct = ({ id }: { id: string }) => {
                           onSelect={(date) =>
                             field.onChange(date ? date.toISOString() : "")
                           }
-                          disabled={(date) => date < new Date()}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
                           initialFocus
+                          captionLayout="dropdown-buttons"
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                          defaultMonth={
+                            field.value
+                              ? new Date(field.value)
+                              : new Date(1990, 0)
+                          }
+                          className="rounded-md border border-gray-200 bg-white "
                         />
                       </PopoverContent>
                     </Popover>
@@ -251,7 +263,6 @@ const EditProduct = ({ id }: { id: string }) => {
                   </FormItem>
                 )}
               />
-
               {/* Category */}
               <FormField
                 control={form.control}
