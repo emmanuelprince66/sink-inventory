@@ -33,6 +33,13 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { hasPermission } = useUserRole();
 
+  // Filter links to only include groups that have at least one accessible item
+  const filteredLinks = links.filter((group) => {
+    return group.items.some((item) =>
+      item.roles.some((role: any) => hasPermission(role))
+    );
+  });
+
   return (
     <Sidebar className="z-10 bg-white border-gray-200">
       <SidebarContent>
@@ -50,7 +57,7 @@ export function AppSidebar() {
             </div>
           </SidebarGroupLabel>
 
-          {links.map((group) => (
+          {filteredLinks.map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
                 {group.title}
