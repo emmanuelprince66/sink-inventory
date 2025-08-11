@@ -15,13 +15,17 @@ import { links } from "@/constants/links";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { deleteCookie } from "cookies-next";
-import { LogOut } from "lucide-react";
+import { ChevronDown, LogOut, Store, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
+  const pathname = usePathname();
+  const { hasPermission } = useUserRole();
+  const [isStoreOpen, setIsStoreOpen] = useState(false);
 
   const handleLogOut = () => {
     deleteCookie("accessToken");
@@ -30,8 +34,6 @@ export function AppSidebar() {
     localStorage.clear();
     logout();
   };
-  const pathname = usePathname();
-  const { hasPermission } = useUserRole();
 
   // Filter links to only include groups that have at least one accessible item
   const filteredLinks = links.filter((group) => {
@@ -57,6 +59,70 @@ export function AppSidebar() {
             </div>
           </SidebarGroupLabel>
 
+          {/* Store Dropdown Section */}
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setIsStoreOpen(!isStoreOpen)}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center">
+                    <Store className="mr-3 h-5 w-5" />
+                    <span className="text-sm">Store</span>
+                  </div>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      isStoreOpen ? "rotate-180" : ""
+                    )}
+                  />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {isStoreOpen && (
+                <>
+                  <SidebarMenuItem
+                    className={cn(
+                      "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                      pathname === "/store-info"
+                        ? "bg-primary-green-300 text-white"
+                        : "hover:bg-gray-100 text-gray-700"
+                    )}
+                  >
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="/store-info"
+                        className="flex items-center font-medium pl-8"
+                      >
+                        <span className="text-sm">Store Information</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem
+                    className={cn(
+                      "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                      pathname === "/shipping"
+                        ? "bg-primary-green-300 text-white"
+                        : "hover:bg-gray-100 text-gray-700"
+                    )}
+                  >
+                    <SidebarMenuButton asChild>
+                      <Link
+                        href="/shipping"
+                        className="flex items-center font-medium pl-8"
+                      >
+                        <Truck className="mr-3 h-5 w-5" />
+                        <span className="text-sm">Shipping</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          {/* Existing Links */}
           {filteredLinks.map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">

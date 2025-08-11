@@ -10,6 +10,7 @@ import {
   Percent,
   Settings,
   ShoppingCart,
+  Store,
   Truck,
   Users,
 } from "lucide-react";
@@ -26,6 +27,7 @@ export const links = [
       },
     ],
   },
+
   {
     title: "Main Menu",
     items: [
@@ -108,6 +110,23 @@ export const links = [
         url: "/analytics",
         icon: Activity,
         roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
+  },
+  {
+    title: "Store Management",
+    items: [
+      {
+        title: "Store Information",
+        url: "/store-info",
+        icon: Store,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Shipping",
+        url: "/shipping",
+        icon: Truck,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
       },
     ],
   },
