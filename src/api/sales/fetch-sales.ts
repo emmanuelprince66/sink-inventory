@@ -73,7 +73,7 @@ export const useFetchSalesHistoryQuery = ({
   ...config
 }: useFectchSalesHistoryOptions) => {
   const { mutate: logout, isPending } = useLogoutMutation({
-    successMessage: "You are authorized, please login again.",
+    successMessage: "You are not authorized, please login again.",
     redirectPath: "/login?fromLogout=true",
   });
   return useQuery<ExtractFnReturnType<QueryFnType>>({
