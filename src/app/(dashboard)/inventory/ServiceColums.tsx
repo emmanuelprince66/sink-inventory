@@ -5,20 +5,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import RestockItem from "./[id]/restock/RestockItem";
-import DamagedProduct from "./DamagedProduct";
 import EditProductPrice from "./EditProductPrice";
-import ReturnProduct from "./ReturnProduct";
-import SetDiscountModal from "./SetDiscountModal";
-import TransferProduct from "./TransferProduct";
 import { InventoryItem } from "./type";
-import ViewDetails from "./ViewDetails";
 
 const statusColors = {
   "IN-STOCK": "bg-green-100 text-green-800",
@@ -30,7 +23,7 @@ const statusColors = {
 export const columns: ColumnDef<InventoryItem>[] = [
   {
     accessorKey: "name",
-    header: "Product",
+    header: "Service Name",
     cell: ({ row }) => {
       const inventory = row.original;
       return (
@@ -49,27 +42,18 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
-    accessorKey: "quantity",
-    header: "Quantity",
+    accessorKey: "category",
+    header: "Category",
     cell: ({ row }) => {
       const inventory = row.original;
-      const isOutOfStock =
-        inventory.quantity === 0 || inventory.quantity === null;
 
-      return (
-        <div
-          className={cn("font-medium", {
-            "text-red-500": isOutOfStock,
-          })}
-        >
-          {isOutOfStock ? "0 (Out of stock)" : inventory.quantity}
-        </div>
-      );
+      return <div>{inventory?.category}</div>;
     },
   },
   {
     accessorKey: "sku",
     header: "Sku",
+
     cell: ({ row }) => {
       const inventory = row.original;
       // const isOutOfStock =
@@ -79,36 +63,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "description",
+    header: "Description",
     cell: ({ row }) => {
       const inventory = row.original;
-      const statusClass =
-        statusColors[inventory.status as keyof typeof statusColors] ||
-        statusColors.DEFAULT;
 
-      return (
-        <span
-          className={cn(
-            "px-2 py-1 rounded-full text-xs font-medium",
-            statusClass
-          )}
-        >
-          {inventory.status}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "selling_price",
-    header: "Selling Price",
-    cell: ({ row }) => {
-      const inventory = row.original;
-      return (
-        <div className="font-medium">
-          {formatToNaira(inventory.selling_price || inventory.amount || 0)}
-        </div>
-      );
+      return <span>{inventory.description}</span>;
     },
   },
 
@@ -120,6 +80,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const isProduct = inventory.type === "PRODUCT";
       const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
       const [addDiscountModal, setAddDiscountModal] = useState(false);
+      const router = useRouter();
 
       const handleOpenSetDiscountModal = () => setAddDiscountModal(true);
       const closeSetDiscountModal = () => setAddDiscountModal(false);
@@ -171,13 +132,16 @@ export const columns: ColumnDef<InventoryItem>[] = [
               >
                 Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
               </DropdownMenuItem>
+
               <DropdownMenuItem
-                onClick={openViewDetailsFunc}
+                onClick={() => {
+                  router.push(`/product/${inventory?.id}/edit-product`);
+                }}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
-                <span className="">View more details</span>
+                Edit Service
               </DropdownMenuItem>
-              {isProduct && (
+              {/* {isProduct && (
                 <DropdownMenuItem
                   onClick={handleOpenSetDiscountModal}
                   className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
@@ -200,14 +164,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
                 >
                   Add Damaged Product
                 </DropdownMenuItem>
-              )}
+              )} */}
               {/* <DropdownMenuItem
                 onClick={openViewDetailsFunc}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 <span className="">View more details</span>
               </DropdownMenuItem> */}
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={handleOpenRestockModal}
                 className={cn(
                   "cursor-pointer px-4 py-2 transition-colors",
@@ -218,13 +182,13 @@ export const columns: ColumnDef<InventoryItem>[] = [
                 disabled={!isProduct}
               >
                 {isProduct ? "Quick restock" : "Cannot restock"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
+              </DropdownMenuItem> */}
+              {/* <DropdownMenuItem
                 onClick={() => setTransferProductModal(true)}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 Transfer Product
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
           <CustomModal
@@ -242,7 +206,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
           </CustomModal>
           {/*  */}
 
-          <CustomModal
+          {/* <CustomModal
             isOpen={openViewDetails}
             onClose={() => setOpenViewDetails(false)}
             trigger={false}
@@ -252,8 +216,8 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={() => setOpenViewDetails(false)}
               data={inventory}
             />
-          </CustomModal>
-          <CustomModal
+          </CustomModal> */}
+          {/* <CustomModal
             isOpen={addDiscountModal}
             onClose={closeSetDiscountModal}
             trigger={false}
@@ -264,10 +228,10 @@ export const columns: ColumnDef<InventoryItem>[] = [
               product={inventory}
               closeModal={closeSetDiscountModal}
             />
-          </CustomModal>
+          </CustomModal> */}
 
           {/* restock */}
-          <CustomModal
+          {/* <CustomModal
             isOpen={openRestockModal}
             onClose={() => setOpenRestockModal(false)}
             trigger={false}
@@ -277,9 +241,9 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={() => setOpenRestockModal(false)}
               data={inventory}
             />
-          </CustomModal>
+          </CustomModal> */}
 
-          <CustomModal
+          {/* <CustomModal
             isOpen={transferProductModal}
             onClose={closeTransferProductModal}
             trigger={false}
@@ -289,9 +253,9 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={closeTransferProductModal}
               inventory={inventory}
             />
-          </CustomModal>
+          </CustomModal> */}
 
-          <CustomModal
+          {/* <CustomModal
             isOpen={openReturnedProductModal}
             onClose={closeReturnedProductModal}
             trigger={false}
@@ -301,8 +265,8 @@ export const columns: ColumnDef<InventoryItem>[] = [
               productId={inventory.id}
               closeModal={closeReturnedProductModal}
             />
-          </CustomModal>
-          <CustomModal
+          </CustomModal> */}
+          {/* <CustomModal
             isOpen={openDamagedProductModal}
             onClose={closeDamagedProductModal}
             trigger={false}
@@ -312,7 +276,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               productId={inventory.id}
               closeModal={closeDamagedProductModal}
             />
-          </CustomModal>
+          </CustomModal> */}
 
           {/* transfer product */}
         </>

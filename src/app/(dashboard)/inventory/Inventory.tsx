@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
+import ServiceTable from "./ServiceTable";
 
 interface Category {
   id: string;
@@ -104,6 +105,8 @@ const CustomInventoryCard = ({
   );
 };
 
+// Dummy Services Table Component
+
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
@@ -112,9 +115,7 @@ const Inventory = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
-  const [selectedType, setSelectedType] = useState<
-    "PRODUCT" | "SERVICE" | null
-  >(null);
+  const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE">("PRODUCT");
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -133,7 +134,7 @@ const Inventory = () => {
     CategoriesDataLoading,
   } = useInventoryHook({
     selectedCategoryId,
-    selectedType,
+    selectedType: activeTab === "PRODUCT" ? "PRODUCT" : "SERVICE",
     searchInput,
     page,
   });
@@ -146,8 +147,10 @@ const Inventory = () => {
     setSelectedCategoryId(null);
   };
 
-  const handleTypeFilter = (type: "PRODUCT" | "SERVICE" | null) => {
-    setSelectedType(type);
+  const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
+    setActiveTab(tab);
+    setSelectedCategoryId(null); // Reset category when switching tabs
+    setPage(1); // Reset page when switching tabs
   };
 
   const totalItems = InventoryData?.data?.total || 0;
@@ -282,20 +285,59 @@ const Inventory = () => {
 
       {/* Main Content Section */}
       <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+        {/* Tabs Header */}
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => handleTabChange("PRODUCT")}
+              className={cn(
+                "px-6 py-4 text-sm cursor-pointer font-medium border-b-2 transition-all",
+                activeTab === "PRODUCT"
+                  ? "border-green-500 text-green-600 bg-green-50"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+              )}
+            >
+              Products
+              {activeTab === "PRODUCT" && (
+                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                  {totalItems.toLocaleString()}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => handleTabChange("SERVICE")}
+              className={cn(
+                "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
+                activeTab === "SERVICE"
+                  ? "border-green-500 text-green-600 bg-green-50"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+              )}
+            >
+              Services
+              {activeTab === "SERVICE" && (
+                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                  5
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Categories and Search Header */}
-        <div className="p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
+        <div className="p-6 border-b border-gray-200 bg-white w-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-primary-black-100">
-              Manage Inventory
-              <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full  text-green-500 font-medium text-lg">
-                {totalItems.toLocaleString()}
-              </span>
+              {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
             </h2>
 
             <div className="flex items-center gap-4">
               <div className="w-80">
                 <SearchInput
-                  placeholder="Search Item, EAN..."
+                  placeholder={
+                    activeTab === "PRODUCT"
+                      ? "Search Item, EAN..."
+                      : "Search Services..."
+                  }
                   value={searchInput}
                   onValueChange={handleSearchChange}
                 />
@@ -312,128 +354,91 @@ const Inventory = () => {
             </div>
           </div>
 
-          {/* Type Filter Section */}
-          <div className="mb-4">
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                <Button
-                  onClick={() => handleTypeFilter(null)}
-                  className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-md  transition-all",
-                    selectedType === null
-                      ? "bg-[#52b661] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  )}
-                >
-                  All
-                </Button>
-                <Button
-                  onClick={() => handleTypeFilter("PRODUCT")}
-                  className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-md transition-all",
-                    selectedType === "PRODUCT"
-                      ? "bg-[#52b661] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  )}
-                >
-                  Products
-                </Button>
-                <Button
-                  onClick={() => handleTypeFilter("SERVICE")}
-                  className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-md transition-all",
-                    selectedType === "SERVICE"
-                      ? "bg-[#52b661] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  )}
-                >
-                  Services
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Categories Tabs */}
-          {CategoriesDataLoading || !CategoriesData ? (
-            <div className="flex gap-2">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="w-full">
-              <div className="flex items-center w-full">
-                {/* Left Navigation Button */}
-                <button
-                  onClick={() => scrollCategories("left")}
-                  disabled={!canScrollLeft}
-                  className={cn(
-                    "p-2 rounded-md transition-all mr-2 flex-shrink-0",
-                    canScrollLeft
-                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                      : "text-gray-300 cursor-not-allowed"
-                  )}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-
-                {/* Categories Container */}
-                <div
-                  ref={categoriesContainerRef}
-                  className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
-                  style={{
-                    scrollbarWidth: "none",
-                    msOverflowStyle: "none",
-                  }}
-                >
-                  {/* All Tab */}
-                  <button
-                    className={cn(
-                      "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                      selectedCategoryId === null
-                        ? "bg-[#52b661] text-white shadow-sm"
-                        : "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                    )}
-                    onClick={handleAllClick}
-                  >
-                    All
-                  </button>
-
-                  {/* Category Tabs */}
-                  {CategoriesData.data.map((category: Category) => (
-                    <button
-                      key={category.id}
-                      className={cn(
-                        "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                        selectedCategoryId === category.id
-                          ? "bg-[#52b661] text-white shadow-sm"
-                          : "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                      )}
-                      onClick={() => handleCategoryClick(category.id)}
-                    >
-                      {category.name}
-                    </button>
+          {/* Categories Tabs - Only show for Products */}
+          {activeTab && (
+            <>
+              {CategoriesDataLoading || !CategoriesData ? (
+                <div className="flex gap-2">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
+                    />
                   ))}
                 </div>
+              ) : (
+                <div className="w-full">
+                  <div className="flex items-center w-full">
+                    {/* Left Navigation Button */}
+                    <button
+                      onClick={() => scrollCategories("left")}
+                      disabled={!canScrollLeft}
+                      className={cn(
+                        "p-2 rounded-md transition-all mr-2 flex-shrink-0",
+                        canScrollLeft
+                          ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                          : "text-gray-300 cursor-not-allowed"
+                      )}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
 
-                {/* Right Navigation Button */}
-                <button
-                  onClick={() => scrollCategories("right")}
-                  disabled={!canScrollRight}
-                  className={cn(
-                    "p-2 rounded-md transition-all ml-2 flex-shrink-0",
-                    canScrollRight
-                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                      : "text-gray-300 cursor-not-allowed"
-                  )}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
+                    {/* Categories Container */}
+                    <div
+                      ref={categoriesContainerRef}
+                      className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      {/* All Tab */}
+                      <button
+                        className={cn(
+                          "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                          selectedCategoryId === null
+                            ? "bg-[#52b661] text-white shadow-sm"
+                            : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                        )}
+                        onClick={handleAllClick}
+                      >
+                        All
+                      </button>
+
+                      {/* Category Tabs */}
+                      {CategoriesData.data.map((category: Category) => (
+                        <button
+                          key={category.id}
+                          className={cn(
+                            "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            selectedCategoryId === category.id
+                              ? "bg-[#52b661] text-white shadow-sm"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                          )}
+                          onClick={() => handleCategoryClick(category.id)}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Right Navigation Button */}
+                    <button
+                      onClick={() => scrollCategories("right")}
+                      disabled={!canScrollRight}
+                      className={cn(
+                        "p-2 rounded-md transition-all ml-2 flex-shrink-0",
+                        canScrollRight
+                          ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                          : "text-gray-300 cursor-not-allowed"
+                      )}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {searchInput.length > 0 && searchInput.length < 3 && (
@@ -445,7 +450,38 @@ const Inventory = () => {
 
         {/* Table Content */}
         <div className="p-6">
-          {InventoryDataLoading || !InventoryData ? (
+          {activeTab === "PRODUCT" ? (
+            // Products Content
+            InventoryDataLoading || !InventoryData ? (
+              <div className="w-full">
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full bg-gray-200" />
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="h-16 w-full bg-gray-200 mt-2"
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <>
+                {InventoryData?.data?.results?.data?.length > 0 ? (
+                  <InventoryTable
+                    setPage={setPage}
+                    page={page}
+                    response={InventoryData}
+                    loading={false}
+                  />
+                ) : (
+                  <div className="w-full h-64 flex flex-col justify-center items-center">
+                    <NoInventory />
+                  </div>
+                )}
+              </>
+            )
+          ) : // Products Content
+          InventoryDataLoading || !InventoryData ? (
             <div className="w-full">
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full bg-gray-200" />
@@ -460,7 +496,7 @@ const Inventory = () => {
           ) : (
             <>
               {InventoryData?.data?.results?.data?.length > 0 ? (
-                <InventoryTable
+                <ServiceTable
                   setPage={setPage}
                   page={page}
                   response={InventoryData}
