@@ -35,6 +35,14 @@ jobs:
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_PRIVATE_KEY }}
         script: |
+          echo "=== Debug info ==="
+          whoami
+          hostname -I
+          pwd
+          ls -la /home/ubuntu
+          ls -la ~
+          echo "=== Deploy ==="
+          cd /home/ubuntu/sync_inventory || { echo "❌ Directory not found"; exit 1; }
           cd ~/sync_inventory
           sudo docker image prune -f
           sudo docker compose pull
