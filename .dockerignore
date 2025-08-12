@@ -1,0 +1,15 @@
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules
+
+# Next.js build output
+.next
+
+# Local environment variables
+.env.local
+
+# Logs
+*.log
