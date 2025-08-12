@@ -411,10 +411,11 @@ const CampaignSettings = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="font-bold text-lg">
-                    Auto-send to Active customers
+                    Auto-send to Inactive customers
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Send message to customers active within the last three weeks
+                    Send message to customers Inactive within the last three
+                    weeks
                   </p>
                 </div>
                 <Switch
