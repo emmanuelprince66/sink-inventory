@@ -27,8 +27,8 @@ const AddDamagedProductSchema = z.object({
   note: z.string().optional(),
 });
 const AddServiceSchema = z.object({
-  service_name: z.string().min(1, "Customer name is required"),
-  description: z.string().min(1, "description number is required"),
+  service_name: z.string().min(1, "Service name is required"),
+  description: z.string().optional(),
   category: z.string().min(1, "Category name is required"),
   amount: z.string().min(1, "Amount is required"),
 });
@@ -75,11 +75,13 @@ export const useInventoryHook = ({
   selectedCategoryId,
   closeModal,
   type,
+  selectedType,
   page,
   product,
 }: {
   searchInput?: string;
   type?: string;
+  selectedType?: string | null;
   page?: number;
   selectedCategoryId?: string | null;
   closeModal?: any;
@@ -91,6 +93,8 @@ export const useInventoryHook = ({
   const queryClient = useQueryClient();
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+
+  console.log("selectedtype", selectedType);
 
   const {
     mutate: addReturnedOrDamagedProduct,
@@ -212,6 +216,7 @@ export const useInventoryHook = ({
       id: business_id,
       search: searchTerm,
       category_id: selectedCategoryId,
+      ...(selectedType && { type: selectedType }),
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes

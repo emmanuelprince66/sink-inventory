@@ -112,6 +112,24 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "type",
+    header: "Product Type",
+    cell: ({ row }) => {
+      const inventory = row.original;
+      return (
+        <div
+          className={`font-medium text-xs px-2 py-1 w-fit rounded-full ${
+            inventory.type === "SERVICE"
+              ? "bg-purple-100 text-purple-800"
+              : "bg-green-100 text-green-800"
+          }`}
+        >
+          {inventory.type === "SERVICE" ? "Service" : "Product"}
+        </div>
+      );
+    },
+  },
+  {
     id: "actions",
     header: "Action",
     cell: ({ row }) => {

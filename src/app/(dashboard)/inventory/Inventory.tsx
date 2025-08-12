@@ -112,6 +112,9 @@ const Inventory = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
+  const [selectedType, setSelectedType] = useState<
+    "PRODUCT" | "SERVICE" | null
+  >(null);
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -130,6 +133,7 @@ const Inventory = () => {
     CategoriesDataLoading,
   } = useInventoryHook({
     selectedCategoryId,
+    selectedType,
     searchInput,
     page,
   });
@@ -140,6 +144,10 @@ const Inventory = () => {
 
   const handleAllClick = () => {
     setSelectedCategoryId(null);
+  };
+
+  const handleTypeFilter = (type: "PRODUCT" | "SERVICE" | null) => {
+    setSelectedType(type);
   };
 
   const totalItems = InventoryData?.data?.total || 0;
@@ -301,6 +309,47 @@ const Inventory = () => {
                   View More
                 </Button>
               </Link>
+            </div>
+          </div>
+
+          {/* Type Filter Section */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <Button
+                  onClick={() => handleTypeFilter(null)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md  transition-all",
+                    selectedType === null
+                      ? "bg-[#52b661] text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  )}
+                >
+                  All
+                </Button>
+                <Button
+                  onClick={() => handleTypeFilter("PRODUCT")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                    selectedType === "PRODUCT"
+                      ? "bg-[#52b661] text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  )}
+                >
+                  Products
+                </Button>
+                <Button
+                  onClick={() => handleTypeFilter("SERVICE")}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                    selectedType === "SERVICE"
+                      ? "bg-[#52b661] text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  )}
+                >
+                  Services
+                </Button>
+              </div>
             </div>
           </div>
 
