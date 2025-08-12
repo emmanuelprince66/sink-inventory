@@ -119,6 +119,7 @@ export const useCampaignHook = ({
       id: business_id,
       search: searchTerm,
       status: "",
+      limit: 1000,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes

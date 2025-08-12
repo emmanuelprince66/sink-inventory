@@ -21,6 +21,9 @@ export const queryKey = {
     subscribeUser: "subscribe-user",
     checkIsUserSubscribed: "check-is-user-subscribed",
   },
+  kyc: {
+    createKycAcct: "create-kyc-acct",
+  },
   campaign: {
     getAllCampaigns: "get-all-campaigns",
     getGroups: "get-groups",
@@ -106,5 +109,12 @@ export const queryKey = {
     getAllBanks: "get-all-banks",
     createBank: "create-bank",
     deleteBank: "delete-bank",
+  },
+  transactions: {
+    getAllTransactions: "get-all-transactions",
+    setPin: "set-pin",
+    changePin: "change-pin",
+    fetchTrxBank: "fetch-trx-bank",
+    transferFunds: "transfer-funds",
   },
 };

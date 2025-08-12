@@ -1,11 +1,19 @@
 "use client";
 import { CustomCard } from "@/components/app/CustomCard";
+import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatToNaira } from "@/utils/formatMoney";
+import {
+  ArrowDownLeft,
+  CheckCircle,
+  ShoppingCart,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import CreateOrders from "./create/CreateOrders";
 
 // Dummy data
 const orderStats = {
@@ -75,6 +83,7 @@ const ordersData = [
 
 const Orders = () => {
   const [searchInput, setSearchInput] = useState("");
+  const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -89,7 +98,9 @@ const Orders = () => {
           </p>
 
           <div className="gap-2 flex items-center flex-wrap">
-            <Button>Create Order</Button>
+            <Link href="/orders/create">
+              <Button>Create Order</Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -108,44 +119,96 @@ const Orders = () => {
       ) : (
         <>
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CustomCard className="border border-gray-200 p-4 rounded-lg">
-              <h3 className="text-sm text-gray-500">Total Orders</h3>
-              <p className="text-2xl font-bold mt-2">
-                {orderStats.totalOrders}
-              </p>
-              <p className="text-xs text-green-500 mt-1">
-                +12% from last month
-              </p>
+            {/* Total Orders */}
+            <CustomCard className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <ShoppingCart className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Total Orders
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="text-2xl font-bold text-gray-900">
+                  {orderStats.totalOrders}
+                </span>
+                <p className="text-xs text-blue-500 mt-1">
+                  +12% from last month
+                </p>
+              </div>
             </CustomCard>
 
-            <CustomCard className="border border-gray-200 p-4 rounded-lg">
-              <h3 className="text-sm text-gray-500">Order Completed</h3>
-              <p className="text-2xl font-bold mt-2">
-                {orderStats.completedOrders}
-              </p>
-              <p className="text-xs text-green-500 mt-1">
-                {Math.round(
-                  (orderStats.completedOrders / orderStats.totalOrders) * 100
-                )}
-                % success rate
-              </p>
+            {/* Completed Orders */}
+            <CustomCard className="p-4 bg-green-50 border border-green-100 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Completed Orders
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="text-2xl font-bold text-gray-900">
+                  {orderStats.completedOrders}
+                </span>
+                <p className="text-xs text-green-500 mt-1">
+                  {Math.round(
+                    (orderStats.completedOrders / orderStats.totalOrders) * 100
+                  )}
+                  % success rate
+                </p>
+              </div>
             </CustomCard>
 
-            <CustomCard className="border border-gray-200 p-4 rounded-lg">
-              <h3 className="text-sm text-gray-500">Total Revenue</h3>
-              <p className="text-2xl font-bold mt-2">
-                {formatToNaira(orderStats.totalRevenue)}
-              </p>
-              <p className="text-xs text-green-500 mt-1">+8% from last month</p>
+            {/* Total Revenue */}
+            <CustomCard className="p-4 bg-purple-50 border border-purple-100 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <TrendingUp className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Total Revenue
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="text-2xl font-bold text-gray-900">
+                  {formatToNaira(orderStats.totalRevenue)}
+                </span>
+                <p className="text-xs text-purple-500 mt-1">
+                  +8% from last month
+                </p>
+              </div>
             </CustomCard>
 
-            {/* <CustomCard className="border border-gray-200 p-4 rounded-lg">
-              <h3 className="text-sm text-gray-500">Total Link Visit</h3>
-              <p className="text-2xl font-bold mt-2">
-                {orderStats.totalLinkVisits}
-              </p>
-              <p className="text-xs text-green-500 mt-1">+5% from last month</p>
-            </CustomCard> */}
+            {/* Total Link Visits */}
+            <CustomCard className="p-4 bg-orange-50 border border-orange-100 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 rounded-full">
+                    <ArrowDownLeft className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-600">
+                    Total Link Visits
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <span className="text-2xl font-bold text-gray-900">
+                  {orderStats.totalLinkVisits}
+                </span>
+                <p className="text-xs text-orange-500 mt-1">
+                  +5% from last month
+                </p>
+              </div>
+            </CustomCard>
           </div>
 
           <div className="w-full mt-6">
@@ -274,7 +337,7 @@ const Orders = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <Link
-                          href="#"
+                          href="/orders/1"
                           className="text-blue-600 hover:text-blue-900"
                         >
                           View
@@ -300,6 +363,14 @@ const Orders = () => {
           </div>
         </>
       )}
+
+      <CustomModal
+        isOpen={openCreateOrderModal}
+        onClose={() => setOpenCreateOrderModal(false)}
+        title="Create Order"
+      >
+        <CreateOrders />
+      </CustomModal>
     </div>
   );
 };

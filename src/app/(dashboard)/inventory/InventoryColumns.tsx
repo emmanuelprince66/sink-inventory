@@ -29,28 +29,23 @@ const statusColors = {
 
 export const columns: ColumnDef<InventoryItem>[] = [
   {
-    accessorKey: "logo",
-    header: "",
+    accessorKey: "name",
+    header: "Product",
     cell: ({ row }) => {
       const inventory = row.original;
       return (
-        <div className="relative h-10 w-10 rounded-md overflow-hidden">
-          <Image
-            src={inventory.image}
-            alt={`${inventory.name} logo`}
-            fill
-            className="object-cover"
-          />
+        <div className="flex items-center gap-3">
+          <div className="relative h-10 w-10 rounded-md overflow-hidden">
+            <Image
+              src={inventory.image}
+              alt={`${inventory.name} logo`}
+              fill
+              className="object-cover"
+            />
+          </div>
+          <div className="font-medium">{inventory.name}</div>
         </div>
       );
-    },
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const inventory = row.original;
-      return <div className="font-medium">{inventory.name}</div>;
     },
   },
   {
@@ -112,6 +107,24 @@ export const columns: ColumnDef<InventoryItem>[] = [
       return (
         <div className="font-medium">
           {formatToNaira(inventory.selling_price || inventory.amount || 0)}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "type",
+    header: "Product Type",
+    cell: ({ row }) => {
+      const inventory = row.original;
+      return (
+        <div
+          className={`font-medium text-xs px-2 py-1 w-fit rounded-full ${
+            inventory.type === "SERVICE"
+              ? "bg-purple-100 text-purple-800"
+              : "bg-green-100 text-green-800"
+          }`}
+        >
+          {inventory.type === "SERVICE" ? "Service" : "Product"}
         </div>
       );
     },
@@ -205,12 +218,12 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   Add Damaged Product
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={openViewDetailsFunc}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 <span className="">View more details</span>
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleOpenRestockModal}
                 className={cn(

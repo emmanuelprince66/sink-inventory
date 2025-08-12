@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useSignUpForm } from "@/hooks/auth/useSignUpForm";
+import Image from "next/image";
 import "react-phone-number-input/style.css";
 
 const SignUp = () => {
@@ -42,12 +43,17 @@ const SignUp = () => {
 
       {/* SignUp Form (Right Side) */}
       <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-        <div className="w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-8 text-center">
-            Create Account
-          </h1>
+        <div className="w-full  md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
+          <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
+
+          <div className="mb-8">
+            <h1 className="text-2xl font-light text-gray-600 mb-2">
+              Create Account
+            </h1>
+          </div>
+          {/* Signup Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* First Name and Last Name in same row */}
               <div className="flex gap-4">
                 <FormField
@@ -55,9 +61,15 @@ const SignUp = () => {
                   name="firstname"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        First Name
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          placeholder="John"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -68,9 +80,15 @@ const SignUp = () => {
                   name="lastname"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>Last Name</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Last Name
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          placeholder="Doe"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -84,7 +102,9 @@ const SignUp = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      Phone Number
+                    </FormLabel>
                     <FormControl>
                       <PhoneInput
                         international
@@ -93,6 +113,7 @@ const SignUp = () => {
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="Enter phone number"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                       />
                     </FormControl>
                     <FormMessage />
@@ -106,28 +127,14 @@ const SignUp = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="example@email.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      Email
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        type="password"
-                        placeholder="At least 8 characters"
-                        showPasswordToggle
+                        placeholder="example@email.com"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                         {...field}
-                        value={field.value ?? ""} // Ensure value is never undefined
                       />
                     </FormControl>
                     <FormMessage />
@@ -135,19 +142,47 @@ const SignUp = () => {
                 )}
               />
 
+              {/* Password Field */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="At least 8 characters"
+                        showPasswordToggle
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Confirm Password Field */}
               <FormField
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      Confirm Password
+                    </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="Confirm your password"
                         showPasswordToggle
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                         {...field}
-                        value={field.value ?? ""} // Ensure value is never undefined
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -157,20 +192,20 @@ const SignUp = () => {
 
               <Button
                 type="submit"
-                className="w-full h-[48px]"
+                className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? <Spinner /> : "Sign Up"}
+                {isSubmitting ? <Spinner /> : "Create Account"}
               </Button>
             </form>
           </Form>
-        </div>
 
-        <div className="w-full max-w-md mt-4 flex justify-center items-center gap-2">
-          <p className="text-[14px]">Already have an account?</p>
-          <Link href="/login">
-            <p className="text-[14px] text-blue-500">Login</p>
-          </Link>
+          <div className="w-full mt-4 flex justify-center items-center gap-2">
+            <p className="text-[14px]">Already have an account?</p>
+            <Link href="/login">
+              <p className="text-[14px] text-blue-500">Login</p>
+            </Link>
+          </div>
         </div>
       </div>
 

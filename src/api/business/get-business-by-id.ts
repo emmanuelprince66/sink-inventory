@@ -4,6 +4,7 @@ import {
   QueryConfigType,
   useQuery,
 } from "@/lib/react-query";
+import { useLogoutMutation } from "../auth/logout-user";
 
 export const fetchBusinessById = async (id: string) => {
   // console.log("useQuery:", useQuery); //
@@ -17,8 +18,20 @@ type QueryFnType = typeof fetchBusinessById;
 type options = QueryConfigType<QueryFnType>;
 
 export const useFetchBusinessById = (id: any, config?: options) => {
+  const { mutate: logout, isPending } = useLogoutMutation({
+    successMessage: "You are not authorized, please login again.",
+    redirectPath: "/login?fromLogout=true",
+  });
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
+      if (error.status === 401) {
+        logout();
+        console.log("isPending", isPending);
+        // if (!isPending) {
+        //   window.location.href = "/login?fromLogout=true";
+        // }
+        // Force full page reload to reset all state
+      }
       if ([404, 401].includes(error.status)) return false;
       else if (failureCount < 1) return true;
       else return false;

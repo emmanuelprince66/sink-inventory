@@ -1,5 +1,5 @@
 "use client";
-import { Plus } from "lucide-react";
+import { AlertCircle, Plus, Users, Wallet } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -24,27 +24,74 @@ interface CustomerCardData {
 }
 
 const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
-  // Determine if this is the debt card
   const isDebtCard = title === "Total Debt";
+  const isWalletCard = title === "Total Wallet";
+
+  const getIcon = () => {
+    switch (title) {
+      case "Total Customers":
+        return <Users className="w-5 h-5 text-indigo-600" />;
+      case "Total Debt":
+        return <AlertCircle className="w-5 h-5 text-red-600" />;
+      case "Total Wallet":
+        return <Wallet className="w-5 h-5 text-emerald-600" />;
+      default:
+        return <Wallet className="w-5 h-5 text-emerald-600" />;
+    }
+  };
 
   return (
     <CustomCard
       className={cn(
-        "w-full",
+        "p-4 rounded-lg border transition-all hover:shadow-md",
         isDebtCard
-          ? "bg-red-100 border-red-300"
-          : "bg-primary-green-200 border-primary-green-300"
+          ? "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
+          : isWalletCard
+          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
+          : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200"
       )}
     >
-      <div className="flex flex-col gap-6 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p
-          className={`font-[600] text-xl ${
-            isDebtCard ? "text-red-600" : "text-primary-black-10"
-          } `}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2 rounded-full",
+              isDebtCard
+                ? "bg-red-100"
+                : isWalletCard
+                ? "bg-emerald-100"
+                : "bg-indigo-100"
+            )}
+          >
+            {getIcon()}
+          </div>
+          <span
+            className={cn(
+              "text-sm font-medium",
+              isDebtCard
+                ? "text-primary-black-100"
+                : isWalletCard
+                ? "text-primary-black-100"
+                : "text-primary-black-100"
+            )}
+          >
+            {title}
+          </span>
+        </div>
+      </div>
+      <div className="mt-4">
+        <span
+          className={cn(
+            "text-2xl font-bold",
+            isDebtCard
+              ? "text-primary-black-100"
+              : isWalletCard
+              ? "text-primary-black-100"
+              : "text-primary-black-100"
+          )}
         >
           {amount}
-        </p>
+        </span>
       </div>
     </CustomCard>
   );
@@ -117,7 +164,7 @@ const Customers = () => {
       {CustomerLoading || !CustomerData ? (
         <>
           {/* Skeleton for cards */}
-          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, index) => (
               <CustomCard key={index} className="w-full border-gray-200">
                 <div className="flex flex-col gap-6 items-start">
@@ -139,7 +186,7 @@ const Customers = () => {
           </div>
 
           {/* Skeleton for search */}
-          <div className="w-1/2">
+          <div className="w-full md:w-1/2">
             <Skeleton className="h-10 w-full bg-[#eef4ef]" />
           </div>
 
@@ -159,7 +206,7 @@ const Customers = () => {
       ) : (
         <>
           {/* cards container */}
-          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
             <CustomCustomerCard
               title={"Total Customers"}
               amount={CustomerData?.data?.results?.customer_count}
@@ -194,8 +241,9 @@ const Customers = () => {
             ))}
           </div>
           {/* Second filter end */}
+
           {/* search input */}
-          <div className="w-1/2">
+          <div className="w-full md:w-1/2">
             <SearchInput
               placeholder="Search customers..."
               value={searchInput}
@@ -224,7 +272,7 @@ const Customers = () => {
         </>
       )}
 
-      {/* modal to add supply */}
+      {/* modal to add customer */}
       <CustomModal
         isOpen={openAddCustomerModal}
         onClose={closeOpenCustomerModal}
@@ -238,7 +286,8 @@ const Customers = () => {
           />
         </div>
       </CustomModal>
-      {/* modal to add supply */}
+
+      {/* modal for subscription notice */}
       <CustomModal
         isOpen={showNotSubscribeModal}
         onClose={handleCloseNotSubscribeModal}

@@ -298,12 +298,10 @@ const OrderHistoryPDFDocument = ({
                 </View>
                 <Text style={styles.cellQty}>{product.quantity}</Text>
                 <Text style={styles.cellPrice}>
-                  {parseFloat(product.price).toLocaleString()}
+                  {parseFloat(product?.unit_price).toLocaleString()}
                 </Text>
                 <Text style={styles.cellTotal}>
-                  {(
-                    parseFloat(product.price) * product.quantity
-                  ).toLocaleString()}
+                  {parseFloat(product.price).toLocaleString()}
                 </Text>
               </View>
             ))}
@@ -537,7 +535,7 @@ const OrderHistoryDetails = ({
                           {product.quantity}
                         </td>
                         <td className="text-right py-3 px-1">
-                          {formatToNaira(parseFloat(product.price))}
+                          {formatToNaira(parseFloat(product.unit_price))}
                         </td>
                         <td className="text-right py-3 px-1 font-medium">
                           {parseFloat(product.price)}

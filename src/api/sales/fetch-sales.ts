@@ -4,6 +4,7 @@ import {
   QueryConfigType,
   useQuery,
 } from "@/lib/react-query";
+import { useLogoutMutation } from "../auth/logout-user";
 
 type fetchSalesHistoryProps = {
   id: string;
@@ -46,6 +47,8 @@ export const fetchSalesHistory = async ({
     },
   });
 
+  console.log("response----4455775", response);
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const error = new Error(
@@ -69,8 +72,23 @@ export const useFetchSalesHistoryQuery = ({
   params,
   ...config
 }: useFectchSalesHistoryOptions) => {
+  const { mutate: logout, isPending } = useLogoutMutation({
+    successMessage: "You are not authorized, please login again.",
+    redirectPath: "/login?fromLogout=true",
+  });
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
+      console.log("error---------5", error);
+      console.log("error---------599999", error.status);
+
+      if (error.status === 401) {
+        logout();
+        console.log("isPending", isPending);
+        // if (!isPending) {
+        //   window.location.href = "/login?fromLogout=true";
+        // }
+        // Force full page reload to reset all state
+      }
       if ([404, 401].includes(error.type)) return false;
       return failureCount < 2;
     },

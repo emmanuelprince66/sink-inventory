@@ -8,10 +8,18 @@ import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowRight, PieChart } from "lucide-react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Forward,
+  TrendingDown,
+} from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
 import AllExpenses from "./AllExpenses";
@@ -28,24 +36,98 @@ interface CategoriesResponse {
   data: Category[];
 }
 
-interface CustomInventoryCardProps {
+interface CustomExpenseCardProps {
   title: string;
   amount: number | string;
-  type: "value" | "profit" | "other";
+  type: "total" | "monthly" | "daily";
   className?: string;
 }
+
+const CustomExpenseCard = ({
+  title,
+  amount,
+  type,
+  className,
+}: CustomExpenseCardProps) => {
+  const variants = {
+    total: {
+      bg: "bg-gradient-to-br from-red-50 to-red-100",
+      border: "border-red-200",
+      iconBg: "bg-red-100",
+      icon: <TrendingDown className="w-5 h-5 text-red-600" />,
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
+    },
+    monthly: {
+      bg: "bg-gradient-to-br from-orange-50 to-orange-100",
+      border: "border-orange-200",
+      iconBg: "bg-orange-100",
+      icon: <Calendar className="w-5 h-5 text-orange-600" />,
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
+    },
+    daily: {
+      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
+      border: "border-amber-200",
+      iconBg: "bg-amber-100",
+      icon: <DollarSign className="w-5 h-5 text-amber-600" />,
+      text: "text-primary-black-100",
+      amountText: "text-primary-black-100",
+    },
+  };
+
+  const variant = variants[type] || variants.total;
+
+  return (
+    <CustomCard
+      className={cn(
+        variant.bg,
+        variant.border,
+        "p-4 w-full rounded-lg border transition-all hover:shadow-md",
+        className
+      )}
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className={cn("p-2 rounded-full", variant.iconBg)}>
+            {variant.icon}
+          </div>
+          <span className={cn("text-sm font-medium", variant.text)}>
+            {title}
+          </span>
+        </div>
+        <span className="text-sm flex gap-2 items-center font-medium hover:cursor-pointer text-primary-black-100 ">
+          View analytics <Forward className="text-red-500 text-sm" />
+        </span>
+      </div>
+      <div className="mt-4">
+        <span className={cn("text-2xl font-bold", variant.amountText)}>
+          {amount}
+        </span>
+      </div>
+    </CustomCard>
+  );
+};
 
 const Expenses = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
-  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
-  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [addExpensesModal, setAddExpensesModal] = useState(false);
+  const [page, setPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
   });
-  const [page, setPage] = useState(1);
+
+  const categoriesContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
+  const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
+  const closeAddExpensesModal = () => setAddExpensesModal(false);
+  const openAddExpensesModal = () => setAddExpensesModal(true);
 
   const {
     ExpensesData,
@@ -72,162 +154,271 @@ const Expenses = () => {
     setSelectedCategory(null);
   };
 
-  const [addExpensesModal, setAddExpensesModal] = useState(false);
-  const closeAddExpensesModal = () => setAddExpensesModal(false);
-  const openAddExpensesModal = () => setAddExpensesModal(true);
+  // Check scroll availability
+  const checkScrollAvailability = () => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth
+      );
+    }
+  };
+
+  // Category navigation functions
+  const scrollCategories = (direction: "left" | "right") => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      const scrollAmount = 200;
+      const currentScroll = container.scrollLeft;
+      const newScroll =
+        direction === "left"
+          ? currentScroll - scrollAmount
+          : currentScroll + scrollAmount;
+
+      container.scrollTo({
+        left: newScroll,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Check scroll availability when categories load or container size changes
+  useEffect(() => {
+    checkScrollAvailability();
+    const container = categoriesContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollAvailability);
+      return () =>
+        container.removeEventListener("scroll", checkScrollAvailability);
+    }
+  }, [CategoriesData]);
+
+  // Check on window resize
+  useEffect(() => {
+    const handleResize = () => checkScrollAvailability();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const totalExpenses = ExpensesData?.data?.results?.total_expenses || 0;
 
   return (
-    <>
-      <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex justify-between items-center w-full">
-            <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
+      {/* Header Section */}
+      <div className="w-full bg-white">
+        <div className="flex items-center justify-between w-full mb-6">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl text-primary-black-100 font-[600]">
               Expenses
-            </p>
-
-            <div className="flex items-center gap-2">
-              <Button
-                className=" border-primary-green-300"
-                onClick={openAddExpensesModal}
-              >
-                Add Expenses
-              </Button>
-
-              <DatePickerWithRange
-                date={dateRange}
-                onDateChange={setDateRange}
-              />
-            </div>
+            </h1>
           </div>
-        </div>
 
-        {ExpensesLoading || !ExpensesData ? (
-          <div className="flex gap-4 w-[500px] mt-5">
-            {Array.from({ length: 1 }).map((_, index) => (
-              <CustomCard key={index} className="w-full border-gray-200">
-                <div className="flex flex-col gap-6 items-start">
-                  <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                  <Skeleton className="h-6 w-[300px] bg-[#eef4ef]" />
-                  <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
-                </div>
-              </CustomCard>
-            ))}
-          </div>
-        ) : (
-          <CustomCard className="w-[500px] h-[150px] mt-5 flex flex-col gap-4 justify-between p-4 bg-primary-green-200 border border-primary-green-300 rounded-lg shadow-sm">
-            {/* Top Section - Full width */}
-            <div className="flex justify-between items-center w-full">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-full">
-                  <PieChart className="w-5 h-5 text-primary-green-300" />
-                </div>
-                <span className="text-sm font-medium text-gray-600">
-                  Total Expenses
-                </span>
-              </div>
-
-              <button className="flex items-center gap-1 group cursor-pointer">
-                <span className="text-sm font-medium text-gray-900 group-hover:text-primary-green-700 transition-colors">
-                  See Analytics
-                </span>
-                <ArrowRight className="w-4 h-4 text-primary-green-300 group-hover:text-primary-green-700 group-hover:translate-x-1 transition-all" />
-              </button>
-            </div>
-
-            {/* Bottom Section - Full width */}
-            <div className="flex flex-col w-full gap-1 mt-4">
-              <span className="text-2xl font-bold text-gray-900">
-                {formatToNaira(ExpensesData?.data?.results?.total_expenses)}
-              </span>
-            </div>
-          </CustomCard>
-        )}
-
-        <div className="w-[100%] items-center flex justify-between my-2">
-          <p className="text-primary-black-100 mr-2">Categories</p>
-          <div className="flex gap-2 items-center">
-            <Link href={"/categories/expenses"}>
-              <Button className="px-3 py-1 rounded-md text-xs border border-gray-300 hover:text-primary-black-100 hover:bg-gray-50 text-primary-green-600">
-                View More
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {CategoriesDataLoading || !CategoriesData ? (
-          <div className="flex gap-4 w-1/2">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <CustomCard key={index} className="w-[100px] border-gray-200">
-                <div className="flex flex-col  items-start w-full">
-                  <Skeleton className="h-5 w-[40px] bg-[#eef4ef]" />
-                </div>
-              </CustomCard>
-            ))}
-          </div>
-        ) : (
-          <div className="flex gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-3">
             <Button
-              className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-                selectedCategory === null
-                  ? "bg-primary-green-300 text-white"
-                  : "bg-primary-green-200 text-primary-black-100"
-              }`}
-              onClick={handleAllClick}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+              onClick={openAddExpensesModal}
             >
-              All
+              + Add Expenses
             </Button>
 
-            {CategoriesData.data.map((category: Category) => (
-              <Button
-                key={category.id}
-                className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-                  selectedCategory === category.name
-                    ? "bg-primary-green-300 text-white"
-                    : "bg-primary-green-200 text-primary-black-100"
-                }`}
-                onClick={() => handleCategoryClick(category.id)}
-              >
-                {category.name}
-              </Button>
-            ))}
+            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
           </div>
-        )}
+        </div>
 
-        <div className="w-full md:w-1/2 mb-4 mt-4">
-          <SearchInput
-            placeholder="Search by expense name ..."
-            value={searchInput}
-            onValueChange={handleSearchChange}
-          />
+        {/* Overview Cards */}
+        <div className="mb-6">
+          <h2 className="text-lg font-medium text-primary-black-100 mb-4">
+            Overview
+          </h2>
+
+          {ExpensesLoading || !ExpensesData ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <CustomCard key={index} className="w-full border-gray-200">
+                  <div className="flex flex-col gap-6 items-start">
+                    <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
+                    <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                  </div>
+                </CustomCard>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CustomExpenseCard
+                title="Total Expenses"
+                amount={formatToNaira(
+                  ExpensesData?.data?.results?.total_expenses
+                )}
+                type="total"
+              />
+              {/* <CustomExpenseCard
+                title="Monthly Average"
+                amount={formatToNaira(
+                  ExpensesData?.data?.results?.monthly_average || 0
+                )}
+                type="monthly"
+              />
+              <CustomExpenseCard
+                title="Daily Average"
+                amount={formatToNaira(
+                  ExpensesData?.data?.results?.daily_average || 0
+                )}
+                type="daily"
+              /> */}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Section */}
+      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+        {/* Categories and Search Header */}
+        <div className="p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-primary-black-100">
+              Manage Expenses
+              <span className="ml-2 text-xs bg-red-100 px-2 py-1 rounded-full text-red-600 font-medium">
+                {ExpensesData?.data?.total?.toLocaleString() || "0"}
+              </span>
+            </h2>
+
+            <div className="flex items-center gap-4">
+              <div className="w-80">
+                <SearchInput
+                  placeholder="Search by expense name..."
+                  value={searchInput}
+                  onValueChange={handleSearchChange}
+                />
+              </div>
+
+              <Link href="/categories/expenses">
+                <Button
+                  variant="outline"
+                  className="text-green-500 border-green-200 hover:bg-green-50"
+                >
+                  View More
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Categories Tabs */}
+          {CategoriesDataLoading || !CategoriesData ? (
+            <div className="flex gap-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full">
+              <div className="flex items-center w-full">
+                {/* Left Navigation Button */}
+                <button
+                  onClick={() => scrollCategories("left")}
+                  disabled={!canScrollLeft}
+                  className={cn(
+                    "p-2 rounded-md transition-all mr-2 flex-shrink-0",
+                    canScrollLeft
+                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      : "text-gray-300 cursor-not-allowed"
+                  )}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                {/* Categories Container */}
+                <div
+                  ref={categoriesContainerRef}
+                  className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
+                  style={{
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  }}
+                >
+                  {/* All Tab */}
+                  <button
+                    className={cn(
+                      "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                      selectedCategory === null
+                        ? "bg-[#52b661] text-white shadow-sm"
+                        : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                    )}
+                    onClick={handleAllClick}
+                  >
+                    All
+                  </button>
+
+                  {/* Category Tabs */}
+                  {CategoriesData?.data?.map((category: Category) => (
+                    <button
+                      key={category.id}
+                      className={cn(
+                        "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                        selectedCategory === category.id
+                          ? "bg-[#52b661] text-white shadow-sm"
+                          : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      )}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right Navigation Button */}
+                <button
+                  onClick={() => scrollCategories("right")}
+                  disabled={!canScrollRight}
+                  className={cn(
+                    "p-2 rounded-md transition-all ml-2 flex-shrink-0",
+                    canScrollRight
+                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                      : "text-gray-300 cursor-not-allowed"
+                  )}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
           {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-1 text-sm text-muted-foreground">
+            <div className="mt-2 text-sm text-gray-500">
               Type at least 3 characters to search
             </div>
           )}
         </div>
 
-        {ExpensesLoading || !ExpensesData ? (
-          <div className="w-full">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-16 w-full bg-[#eef4ef] mt-2"
-                />
-              ))}
+        {/* Table Content */}
+        <div className="p-6">
+          {ExpensesLoading || !ExpensesData ? (
+            <div className="w-full">
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full bg-gray-200" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="h-16 w-full bg-gray-200 mt-2"
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <AllExpenses
-            expensesData={ExpensesData}
-            expensesLoading={ExpensesLoading}
-            setPage={setPage}
-            page={page}
-          />
-        )}
+          ) : (
+            <AllExpenses
+              expensesData={ExpensesData}
+              expensesLoading={ExpensesLoading}
+              setPage={setPage}
+              page={page}
+            />
+          )}
+        </div>
       </div>
 
+      {/* Add Expenses Modal */}
       <CustomModal
         isOpen={addExpensesModal}
         onClose={closeAddExpensesModal}
@@ -240,17 +431,18 @@ const Expenses = () => {
         />
       </CustomModal>
 
+      {/* Subscription Modal */}
       <CustomModal
         isOpen={showNotSubscribeModal}
         onClose={handleCloseNotSubscribeModal}
         trigger={false}
         title="Subscription Details"
       >
-        <div className="w-full ">
+        <div className="w-full">
           <UserNotSubscribe />
         </div>
       </CustomModal>
-    </>
+    </div>
   );
 };
 

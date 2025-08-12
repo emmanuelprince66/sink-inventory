@@ -4,6 +4,7 @@ import {
   QueryConfigType,
   useQuery,
 } from "@/lib/react-query";
+import { useLogoutMutation } from "../auth/logout-user";
 
 type FetchInventoryProps = {
   id: string;
@@ -32,7 +33,7 @@ export const fetchInventory = async ({
   const response = await fetch(url.toString(), { method: "GET" });
 
   if (!response.ok) {
-    const error = new Error("Error fetching answers data");
+    const error = new Error("Error fetching inventory data");
     (error as any).status = response.status;
     throw error;
   }
@@ -50,8 +51,17 @@ export const useGetInventoryQuery = ({
   params,
   ...config
 }: UseGetInventoryProps) => {
+  const { mutate: logout, isPending } = useLogoutMutation({
+    successMessage: "You are not authorized, please login again.",
+    redirectPath: "/login?fromLogout=true",
+  });
+
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
+      if (error.status === 401) {
+        logout();
+        console.log("isPending", isPending);
+      }
       if ([404, 401].includes(error.status)) return false;
       return failureCount < 2;
     },
@@ -61,10 +71,9 @@ export const useGetInventoryQuery = ({
       params.id,
       params.search,
       params.type,
-      params.page,
       params.category_id,
-      params.limit,
       params.page,
+      params.limit,
     ],
     queryFn: () => fetchInventory(params),
     ...config,

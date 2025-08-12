@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import NoOrders from "./NoOrders";
 import OrderHistoryTable from "./OrderHistoryTable";
@@ -25,22 +24,6 @@ const OrderHistory = ({
 }: OrderHistoryProps) => {
   return (
     <div className="w-full">
-      <div className="flex gap-3 mb-4 flex-wrap">
-        {filterOptions.map((filter) => (
-          <Button
-            key={filter}
-            className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-              activeFilter === filter
-                ? "bg-primary-green-300 text-white"
-                : "bg-primary-green-200 text-primary-black-100"
-            }`}
-            onClick={() => setActiveFilter(filter)}
-          >
-            {filter}
-          </Button>
-        ))}
-      </div>
-
       <div className="w-full mt-3">
         {loading ? (
           <div className="space-y-4">

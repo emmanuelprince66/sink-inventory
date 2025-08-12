@@ -1,88 +1,144 @@
 // constants/links.ts
 import {
-  AirVent,
-  ChartSpline,
+  Activity,
+  ClipboardList,
+  CreditCard,
   DollarSign,
-  Home,
-  PcCase,
+  LayoutDashboard,
+  Megaphone,
+  Package,
+  Percent,
   Settings,
-  ShoppingBag,
-  SquarePercent,
-  UsersRound,
-  WorkflowIcon,
+  ShoppingCart,
+  Store,
+  Truck,
+  Users,
 } from "lucide-react";
 
 export const links = [
   {
-    title: "Point Of Sales",
-    url: "/pos",
-    icon: PcCase,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"], // All roles can access
+    title: "Point of Sale",
+    items: [
+      {
+        title: "POS Terminal",
+        url: "/pos",
+        icon: ShoppingCart,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
+
   {
-    title: "Overview",
-    url: "/overview",
-    icon: Home,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Main Menu",
+    items: [
+      {
+        title: "Overview",
+        url: "/overview",
+        icon: LayoutDashboard,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+      {
+        title: "Inventory",
+        url: "/inventory",
+        icon: Package,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Sales",
+        url: "/sales",
+        icon: Percent,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+      {
+        title: "Expenses",
+        url: "/expenses",
+        icon: DollarSign,
+        roles: ["OWNER"],
+      },
+      {
+        title: "Orders",
+        url: "/orders",
+        icon: ClipboardList,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Supplier",
+        url: "/supply",
+        icon: Truck,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
     title: "Customers",
-    url: "/customers",
-    icon: UsersRound,
-    roles: ["OWNER", "ADMIN-ATTENDANT"],
-  },
-  // {
-  //   title: "Orders",
-  //   url: "/orders",
-  //   icon: BookCopyIcon,
-  //   roles: ["OWNER", "ADMIN-ATTENDANT"],
-  // },
-  {
-    title: "Supplier",
-    url: "/supply",
-    icon: AirVent,
-    roles: ["OWNER"],
+    items: [
+      {
+        title: "Customers",
+        url: "/customers",
+        icon: Users,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Expenses",
-    url: "/expenses",
-    icon: DollarSign,
-    roles: ["OWNER"],
-  },
-  // {
-  //   title: "Transactions",
-  //   url: "/transactions",
-  //   icon: FaMoneyBillWave,
-  //   roles: ["OWNER"], // Only OWNER can access
-  // },
-  {
-    title: "Campaign",
-    url: "/campaign",
-    icon: WorkflowIcon,
-    roles: ["OWNER"], // Only OWNER can access
+    title: "Payment",
+    items: [
+      {
+        title: "Transactions",
+        url: "/transactions",
+        icon: CreditCard,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
-    title: "Sales",
-    url: "/sales",
-    icon: SquarePercent,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Marketing",
+    items: [
+      {
+        title: "Campaign",
+        url: "/campaign",
+        icon: Megaphone,
+        roles: ["OWNER"],
+      },
+    ],
   },
   {
-    title: "Inventory",
-    url: "/inventory",
-    icon: ShoppingBag,
-    roles: ["OWNER", "ADMIN-ATTENDANT"],
+    title: "Reports",
+    items: [
+      {
+        title: "Analytics",
+        url: "/analytics",
+        icon: Activity,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Analytics",
-    url: "/analytics",
-    icon: ChartSpline,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Store Management",
+    items: [
+      {
+        title: "Store Information",
+        url: "/store-info",
+        icon: Store,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Shipping",
+        url: "/shipping",
+        icon: Truck,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+    ],
   },
   {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-    roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+    title: "Administrator",
+    items: [
+      {
+        title: "Settings",
+        url: "/settings",
+        icon: Settings,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
   },
 ];

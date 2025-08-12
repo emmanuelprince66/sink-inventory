@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable unused-imports/no-unused-vars */
 import {
-  QueryClient,
   DefaultOptions,
+  QueryClient,
   // UseQueryOptions,
   UseMutationOptions,
 } from "@tanstack/react-query";
@@ -45,4 +45,4 @@ export type MutationConfig<MutationFnType extends (...args: any) => any> =
     Parameters<MutationFnType>[0]
   >;
 
-export { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+export { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

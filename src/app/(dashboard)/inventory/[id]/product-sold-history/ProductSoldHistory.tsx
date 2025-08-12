@@ -14,12 +14,15 @@ import { useState } from "react";
 import ProductSoldData from "./ProductSoldData";
 
 const ProductSoldHistory = ({ id }: { id: string }) => {
+  const [page, setPage] = useState(1);
+
   const { ProductTransactionData, ProductTransactionLoading } = useProductHook({
     id,
+    page,
   });
-  const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
 
+  console.log("page", page);
   console.log("ProductTransactionData:", ProductTransactionData);
   // Sample data
 

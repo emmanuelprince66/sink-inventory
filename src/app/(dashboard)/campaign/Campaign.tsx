@@ -93,7 +93,7 @@ const Campaign = () => {
           ))}
         </div>
       ) : (
-        <CustomCard className="w-[500px] h-[150px] mt-5 flex flex-col gap-4 justify-between p-4 bg-primary-green-200 border border-primary-green-300 rounded-lg shadow-sm">
+        <CustomCard className="w-[500px] h-[150px] mt-5 flex flex-col gap-4 justify-between p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg shadow-sm">
           {/* Top Section - Full width */}
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center gap-3">

@@ -1,116 +1,110 @@
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowDown, ArrowUp, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import moment from "moment";
 
 interface Transaction {
   id: string;
-  customerName: string;
-  type: "credit" | "debit";
-  amount: number;
-  date: string;
-  status: "completed" | "pending" | "failed";
+  account_name: string;
+  type: "CREDIT" | "DEBIT";
+  amount: string;
+  created_at: string;
+  status: "SUCCESS" | "PENDING" | "FAILED";
   description?: string;
-  accountNumber?: string;
-  reference?: string;
+  account_number?: string;
+  charges?: string;
 }
 
-export default function TransactionDetails() {
-  const router = useRouter();
-
-  const transaction: Transaction = {
-    id: "TRX-001",
-    customerName: "John Doe",
-    type: "credit",
-    amount: 50000,
-    date: "2023-10-15",
-    status: "completed",
-    description: "Payment for invoice #INV-2023-1015",
-    accountNumber: "**** 3456",
-  };
-
+export default function TransactionDetails({
+  transaction,
+}: {
+  transaction: Transaction;
+}) {
   const getStatusBadge = () => {
     const statusConfig = {
-      completed: {
-        icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
-        variant: "success" as const,
+      SUCCESS: {
+        icon: <CheckCircle2 className="w-4 h-4 mr-1" />,
+        className: "bg-green-100 text-green-800",
       },
-      pending: {
-        icon: <Clock className="w-3 h-3 mr-1" />,
-        variant: "warning" as const,
+      PENDING: {
+        icon: <Clock className="w-4 h-4 mr-1" />,
+        className: "bg-yellow-100 text-yellow-800",
       },
-      failed: {
-        icon: <XCircle className="w-3 h-3 mr-1" />,
-        variant: "destructive" as const,
+      FAILED: {
+        icon: <XCircle className="w-4 h-4 mr-1" />,
+        className: "bg-red-100 text-red-800",
       },
     };
 
     const config = statusConfig[transaction.status];
     return (
-      <Button className="gap-1">
+      <span
+        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.className}`}
+      >
         {config.icon}
-        {transaction.status.charAt(0).toUpperCase() +
-          transaction.status.slice(1)}
-      </Button>
+        {transaction.status}
+      </span>
     );
   };
 
   const getAmountDisplay = () => {
-    const isCredit = transaction.type === "credit";
+    const isCredit = transaction.type === "CREDIT";
     const Icon = isCredit ? ArrowDown : ArrowUp;
-    const colorClass = isCredit ? "text-green-500" : "text-red-500";
+    const colorClass = isCredit ? "text-green-600" : "text-red-600";
 
     return (
       <div className="flex items-center gap-2">
         <Icon className={`w-5 h-5 ${colorClass}`} />
         <h3 className={`text-2xl font-semibold ${colorClass}`}>
-          {isCredit ? "+" : "-"}${transaction.amount.toLocaleString()}
+          {isCredit ? "+" : "-"}₦
+          {parseFloat(transaction.amount).toLocaleString()}
         </h3>
       </div>
     );
   };
 
   return (
-    <div className="w-full mx-auto p-1">
-      <div>
-        <div>
-          <Separator className="my-2" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <DetailItem label="Transaction ID" value={transaction.id} />
-            <DetailItem
-              label="Date"
-              value={new Date(transaction.date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            />
-            <DetailItem
-              label="Customer Name"
-              value={transaction.customerName}
-            />
-            <DetailItem
-              label="Type"
-              value={
-                <>
-                  {transaction.type.charAt(0).toUpperCase() +
-                    transaction.type.slice(1)}
-                </>
-              }
-            />
-            <DetailItem
-              label="Account Number"
-              value={transaction.accountNumber}
-            />
+    <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+      <div className="space-y-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-lg font-medium text-gray-500">Transaction</h2>
+            <div className="mt-1">{getAmountDisplay()}</div>
           </div>
-
-          <DetailItem
-            label="Description"
-            value={transaction.description}
-            className="mb-6"
-          />
+          <div>{getStatusBadge()}</div>
         </div>
+
+        <Separator className="my-2" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <DetailItem label="Transaction ID" value={transaction.id} />
+          <DetailItem
+            label="Date & Time"
+            value={moment(transaction.created_at).format("MMM D, YYYY h:mm A")}
+          />
+          <DetailItem label="Account Name" value={transaction.account_name} />
+          <DetailItem
+            label="Account Number"
+            value={transaction.account_number}
+          />
+          <DetailItem label="Transaction Type" value={transaction.type} />
+          {transaction.charges && (
+            <DetailItem
+              label="Charges"
+              value={`₦${parseFloat(transaction.charges).toLocaleString()}`}
+            />
+          )}
+        </div>
+
+        {transaction.description && (
+          <>
+            <Separator className="my-2" />
+            <DetailItem
+              label="Description"
+              value={transaction.description}
+              className="mt-4"
+            />
+          </>
+        )}
       </div>
     </div>
   );
@@ -127,8 +121,8 @@ function DetailItem({
 }) {
   return (
     <div className={className}>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <div className="mt-1 font-medium">{value}</div>
+      <p className="text-sm font-medium text-gray-500 mb-1">{label}</p>
+      <div className="text-base font-normal text-gray-900">{value || "-"}</div>
     </div>
   );
 }

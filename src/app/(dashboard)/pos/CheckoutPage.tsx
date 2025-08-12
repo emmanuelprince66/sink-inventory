@@ -4,7 +4,14 @@ import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
-import { MinusCircle, PlusCircle, Trash2, UserPlus, Users } from "lucide-react";
+import {
+  Edit3,
+  MinusCircle,
+  PlusCircle,
+  Trash2,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
@@ -26,6 +33,13 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
   const [bulkQuantityErrors, setBulkQuantityErrors] = useState<{
     [key: string]: string;
   }>({});
+  const [priceEditInputs, setPriceEditInputs] = useState<{
+    [key: string]: string;
+  }>({});
+  const [priceEditErrors, setPriceEditErrors] = useState<{
+    [key: string]: string;
+  }>({});
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
   const { user } = useUserRole();
 
   // Get cart items and actions from the store
@@ -37,6 +51,7 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
     incrementDecimalQuantity,
     decrementDecimalQuantity,
     updateCartItemQuantity,
+    updateCartItemPrice,
     getItemDiscountDisplay,
     getSubtotal,
     getAutomaticDiscountAmount,
@@ -51,6 +66,11 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
 
   // Check if there are any bulk quantity errors
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
+    (error) => error !== ""
+  );
+
+  // Check if there are any price edit errors
+  const hasPriceEditErrors = Object.values(priceEditErrors).some(
     (error) => error !== ""
   );
 
@@ -94,6 +114,75 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
         [itemId]: "",
       }));
     }
+  };
+
+  // Handle price edit input
+  const handlePriceEditChange = (itemId: string, value: string) => {
+    setPriceEditInputs((prev) => ({
+      ...prev,
+      [itemId]: value,
+    }));
+
+    // Validate input
+    const numValue = parseFloat(value);
+    if (value === "" || isNaN(numValue) || numValue <= 0) {
+      setPriceEditErrors((prev) => ({
+        ...prev,
+        [itemId]: "Invalid price",
+      }));
+    } else {
+      setPriceEditErrors((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+    }
+  };
+
+  // Apply price edit
+  const applyPriceEdit = (itemId: string) => {
+    const inputValue = priceEditInputs[itemId];
+    const numValue = parseFloat(inputValue);
+
+    if (inputValue && !isNaN(numValue) && numValue > 0) {
+      updateCartItemPrice(itemId, numValue);
+
+      // Clear the input after applying
+      setPriceEditInputs((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+      setPriceEditErrors((prev) => ({
+        ...prev,
+        [itemId]: "",
+      }));
+      setEditingPriceId(null);
+    }
+  };
+
+  // Cancel price edit
+  const cancelPriceEdit = (itemId: string) => {
+    setPriceEditInputs((prev) => ({
+      ...prev,
+      [itemId]: "",
+    }));
+    setPriceEditErrors((prev) => ({
+      ...prev,
+      [itemId]: "",
+    }));
+    setEditingPriceId(null);
+  };
+
+  // Start price edit
+  const startPriceEdit = (itemId: string, currentPrice: number) => {
+    setEditingPriceId(itemId);
+    setPriceEditInputs((prev) => ({
+      ...prev,
+      [itemId]: currentPrice.toString(),
+    }));
+    setPriceEditErrors((prev) => ({
+      ...prev,
+      [itemId]: "",
+    }));
   };
 
   // Decimal quantity handler (strict 0.5 increments only)
@@ -192,6 +281,10 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                   {cartItems.map((item) => {
                     const discountInfo = getItemDiscountDisplay(item);
                     const bulkError = bulkQuantityErrors[item.id];
+                    const priceError = priceEditErrors[item.id];
+                    const isEditingPrice = editingPriceId === item.id;
+                    const currentPrice = item.selling_price || item.amount || 0;
+
                     return (
                       <div key={item.id} className="p-1 flex items-start">
                         <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
@@ -209,11 +302,75 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                           <p className="text-[10px] text-gray-500">
                             SKU: {item.sku}
                           </p>
-                          <p className="text-[10px] font-semibold text-[#52b661]">
-                            {formatToNaira(
-                              item.selling_price || item?.amount || 0
+
+                          {/* Price Display with Edit functionality */}
+                          <div className="flex items-center gap-2">
+                            {isEditingPrice ? (
+                              <div className="flex items-start flex-col  gap-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  value={priceEditInputs[item.id] || ""}
+                                  onChange={(e) =>
+                                    handlePriceEditChange(
+                                      item.id,
+                                      e.target.value
+                                    )
+                                  }
+                                  className={`w-20 text-center text-xs border rounded-md py-1 ${
+                                    priceError
+                                      ? "border-red-500"
+                                      : "border-gray-200"
+                                  }`}
+                                  autoFocus
+                                />
+                                <div className="flex gap-1 mb-[4px]">
+                                  <Button
+                                    variant="outline"
+                                    className="h-4 px-1 text-[8px] border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                    onClick={() => applyPriceEdit(item.id)}
+                                    disabled={
+                                      !priceEditInputs[item.id] || !!priceError
+                                    }
+                                  >
+                                    <p className="text-[9px]">Save</p>
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-4 px-1 text-[8px] border-gray-200 hover:border-red-500 hover:bg-red-50"
+                                    onClick={() => cancelPriceEdit(item.id)}
+                                  >
+                                    <p className="text-[9px]">Cancel</p>
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <p className="text-[10px] font-semibold text-[#52b661]">
+                                  {formatToNaira(currentPrice)}
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 hover:bg-gray-100"
+                                  onClick={() =>
+                                    startPriceEdit(item.id, currentPrice)
+                                  }
+                                >
+                                  <Edit3 size={10} className="text-gray-400" />
+                                </Button>
+                              </div>
                             )}
-                          </p>
+                          </div>
+
+                          {priceError && (
+                            <p className="text-[8px] text-red-500">
+                              {priceError}
+                            </p>
+                          )}
+
                           {item.quantity !== undefined && (
                             <p className="text-[8px] text-gray-500">
                               Available: {item.quantity}
@@ -438,7 +595,11 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
               <Button
                 className="w-full mt-3 py-3 text-base font-semibold bg-[#52b661] hover:bg-[#52b661]/90"
                 onClick={() => setShowReceipt(true)}
-                disabled={cartItems.length === 0 || hasBulkQuantityErrors}
+                disabled={
+                  cartItems.length === 0 ||
+                  hasBulkQuantityErrors ||
+                  hasPriceEditErrors
+                }
               >
                 <p className="text-sm">Complete Order</p>
               </Button>

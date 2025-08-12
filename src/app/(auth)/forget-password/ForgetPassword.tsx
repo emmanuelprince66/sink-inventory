@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useForgetPasswordHook } from "@/hooks/useForgetPasswordHook";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import ChangePass from "./ChangePass";
@@ -45,10 +46,15 @@ const ForgetPassword = () => {
       {/* Login Form (Right Side) */}
       {!showChangePassword ? (
         <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-          <div className="w-full max-w-md">
-            <h1 className="text-2xl font-bold mb-8 text-center">
-              Enter your email
-            </h1>
+          <div className="w-full md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
+            <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
+
+            {/* Welcome Message */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-light text-gray-600 mb-2">
+                Enter your email to reset your password
+              </h1>
+            </div>
             <Form {...sendform}>
               <form
                 onSubmit={sendform.handleSubmit(onSubmitEmail)}
@@ -59,10 +65,13 @@ const ForgetPassword = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                        Email
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter email"
+                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -76,18 +85,19 @@ const ForgetPassword = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-[48px]"
+                  className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? <Spinner /> : "Send"}
                 </Button>
               </form>
             </Form>
+            <div className="w-full flex items-center justify-center">
+              <Link href="/login">
+                <p className="text-[14px] text-blue-500 mt-2">Login</p>
+              </Link>
+            </div>
           </div>
-
-          <Link href="/login">
-            <p className="text-[14px] text-blue-500 mt-2">Login</p>
-          </Link>
         </div>
       ) : (
         <ChangePass />

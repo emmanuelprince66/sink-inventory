@@ -119,10 +119,12 @@ export type ProductFormValues = z.infer<ReturnType<typeof createProductSchema>>;
 
 export const useProductHook = ({
   id,
+  page,
   handleOpenNotSubscribeModal,
 }: {
   id?: string;
   handleOpenNotSubscribeModal?: () => void;
+  page?: any;
 }) => {
   const params = useParams();
   const { user } = useUserRole();
@@ -139,12 +141,28 @@ export const useProductHook = ({
   // Data fetching
   const { data: ProductData, isLoading: ProductDataLoading } =
     useFetchProductByIdQuery(productId, { enabled: isEditMode });
-  const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
-    useFetchProductTransactionsQuery(productId, { enabled: isEditMode });
+
+  const {
+    data: ProductTransactionData,
+    isLoading: ProductTransactionLoading,
+    // refetch: refetchInventory,
+    // isRefetching: isRefetchingInventory,
+  } = useFetchProductTransactionsQuery({
+    params: {
+      page,
+      limit: 30,
+      id: productId,
+    },
+    enabled: isEditMode,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
+  //   useFetchProductTransactionsQuery(productId, { enabled: isEditMode });
   const { data: TransferHistoryData, isLoading: TransferHistoryLoading } =
     useFetchTransferHistoryQuery(productId, { enabled: !!productId });
 
-  console.log("TransferHistoryData", TransferHistoryData);
+  // console.log("TransferHistoryData", TransferHistoryData);
 
   const { data: CategoriesData, isLoading: CategoriesDataLoading } =
     useGetCategoriesQuery({
@@ -156,7 +174,7 @@ export const useProductHook = ({
   const { data: SupplierData, isLoading: SupplierLoading } =
     useFetchSupplierDataQuery(business_id);
 
-  console.log("SupplierData", SupplierData);
+  // console.log("SupplierData", SupplierData);
 
   // Mutations
   const { mutate: addProduct, isPending: addProductPending } =
@@ -170,7 +188,7 @@ export const useProductHook = ({
       (category: any) => category.name === name
     );
 
-    console.log("category", category);
+    // console.log("category", category);
     return category?.id;
   };
 
@@ -182,7 +200,7 @@ export const useProductHook = ({
     return supplier?.id;
   };
 
-  console.log("CategoriesData", CategoriesData);
+  // console.log("CategoriesData", CategoriesData);
   // Form setup
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(createProductSchema(isEditMode)),
@@ -222,7 +240,7 @@ export const useProductHook = ({
 
       console.log("itemsData", itemsData);
 
-      console.log("iddddd", getCategoryByName(itemsData.category));
+      // console.log("iddddd", getCategoryByName(itemsData.category));
       form.reset({
         item_name: itemsData.name || "",
         sku: itemsData.sku || "",

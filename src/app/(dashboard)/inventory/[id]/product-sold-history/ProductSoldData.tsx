@@ -13,8 +13,9 @@ const ProductSoldData = ({
   setPage: any;
   page: any;
 }) => {
+  console.log("ProductSoldData:", productSoldData);
   const [pageSize, setPageSize] = useState<any>(
-    productSoldData?.data?.limit || 15
+    productSoldData?.data?.limit || 30
   );
   const [currentPage, setCurrentPage] = useState<number>(page || 1); // Local page state
 
