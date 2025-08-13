@@ -14,6 +14,7 @@ import {
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, Download, PlusCircle, Printer } from "lucide-react";
+import moment from "moment";
 import printJS from "print-js";
 import { useRef, useState } from "react";
 
@@ -328,7 +329,7 @@ const ReceiptPDFDocument = ({
               <Text style={[styles.cellItem, styles.tableHeaderText]}>
                 ITEM
               </Text>
-              <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text>
+              {/* <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text> */}
               <Text style={[styles.cellPrice, styles.tableHeaderText]}>
                 PRICE
               </Text>
@@ -343,12 +344,13 @@ const ReceiptPDFDocument = ({
                 <View style={styles.cellItem}>
                   <Text style={styles.itemName}>{item.name}</Text>
                 </View>
-                <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
+                {/* <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text> */}
                 <Text style={styles.cellPrice}>
                   {/* {(
                     (item.selling_price || item.amount || 0) *
                     (item.cartQuantity || 1)
                   ).toLocaleString()} */}
+                  {item.cartQuantity || 1}* {""}
                   {item?.selling_price
                     ? item.selling_price.toLocaleString()
                     : item.amount.toLocaleString() ?? 0}
@@ -716,11 +718,11 @@ const PrintReceiptView = ({
 
         {/* Items table */}
         <div className="items-table w-full">
-          <table className="w-full table-auto ">
+          <table className="w-full table-fit ">
             <thead className="w-full">
               <tr className="text-left bg-green-50 w-full">
                 <th>ITEM</th>
-                <th className="text-center text-[11px] ">QTY</th>
+                {/* <th className="text-center text-[11px] ">QTY</th> */}
                 <th className="text-right text-[11px] ">PRICE</th>
                 <th className="text-right text-[11px] ">TOTAL</th>
               </tr>
@@ -729,14 +731,14 @@ const PrintReceiptView = ({
               {cart.map((item) => (
                 <tr key={item.id}>
                   <td className="item-name text-[11px] ">{item.name}</td>
-                  <td className="text-center text-[11px] ">
+                  {/* <td className="text-center text-[11px] ">
                     {item.cartQuantity || 1}
-                  </td>
+                  </td> */}
                   <td className="text-right text-[11px]  price-cell">
                     {/* {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "₦0"} */}
-
+                    {item.cartQuantity || 1} *{" "}
                     {item?.selling_price
                       ? formatToNaira(item.selling_price)
                       : formatToNaira(item.amount) ?? "₦0"}
@@ -789,10 +791,13 @@ const PrintReceiptView = ({
           <div className="detail-row flex justify-between items-center">
             <span className="detail-label text-[11px] ">Date:</span>
             <span className="detail-value text-[11px] ">
-              {format(
+              {moment(createSaleResponse?.data?.created_at).format(
+                "DD/MM/YYYY"
+              ) || Date.now()}
+              {/* {format(
                 new Date(createSaleResponse?.data?.created_at || Date.now()),
                 "MMMM d, yyyy, h:mm a"
-              )}
+              )} */}
             </span>
           </div>
           <div className="detail-row flex justify-between items-center">

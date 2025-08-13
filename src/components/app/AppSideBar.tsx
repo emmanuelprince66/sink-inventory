@@ -15,7 +15,7 @@ import { links } from "@/constants/links";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { deleteCookie } from "cookies-next";
-import { ChevronDown, LogOut, Store, Truck } from "lucide-react";
+import { ChevronDown, LogOut, Store } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -59,113 +59,121 @@ export function AppSidebar() {
             </div>
           </SidebarGroupLabel>
 
-          {/* Store Dropdown Section */}
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => setIsStoreOpen(!isStoreOpen)}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center">
-                    <Store className="mr-3 h-5 w-5" />
-                    <span className="text-sm">Store</span>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform duration-200",
-                      isStoreOpen ? "rotate-180" : ""
-                    )}
-                  />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+          {filteredLinks.map((group) => {
+            // Special case for Store Management
+            if (group.title === "Store Management") {
+              const storeItems = group.items.filter((item) =>
+                item.roles.some((role: any) => hasPermission(role))
+              );
 
-              {isStoreOpen && (
-                <>
-                  <SidebarMenuItem
-                    className={cn(
-                      "transition-colors duration-200 my-1 py-1 rounded mx-2",
-                      pathname === "/store-info"
-                        ? "bg-primary-green-300 text-white"
-                        : "hover:bg-gray-100 text-gray-700"
-                    )}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href="/store-info"
-                        className="flex items-center font-medium pl-8"
+              return (
+                <SidebarGroup key={group.title}>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => setIsStoreOpen(!isStoreOpen)}
+                        className="flex items-center justify-between cursor-pointer px-4 py-2 hover:bg-gray-50 rounded transition-colors duration-200"
                       >
-                        <span className="text-sm">Store Information</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem
-                    className={cn(
-                      "transition-colors duration-200 my-1 py-1 rounded mx-2",
-                      pathname === "/shipping"
-                        ? "bg-primary-green-300 text-white"
-                        : "hover:bg-gray-100 text-gray-700"
-                    )}
-                  >
-                    <SidebarMenuButton asChild>
-                      <Link
-                        href="/shipping"
-                        className="flex items-center font-medium pl-8"
-                      >
-                        <Truck className="mr-3 h-5 w-5" />
-                        <span className="text-sm">Shipping</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </>
-              )}
-            </SidebarMenu>
-          </SidebarGroup>
+                        <div className="flex items-center">
+                          <Store className="mr-3 h-4 w-4" />
+                          <span className="text-xs font-medium">Store</span>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transform transition-transform duration-300 ease-in-out",
+                            isStoreOpen ? "rotate-180" : ""
+                          )}
+                        />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
 
-          {/* Existing Links */}
-          {filteredLinks.map((group) => (
-            <SidebarGroup key={group.title}>
-              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
-                {group.title}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => {
-                    const hasAccess = item.roles.some((role: any) =>
-                      hasPermission(role)
-                    );
-                    if (!hasAccess) return null;
+                    <div
+                      className={cn(
+                        "transition-all duration-300 ease-in-out overflow-hidden",
+                        isStoreOpen ? "max-h-96" : "max-h-0"
+                      )}
+                    >
+                      {storeItems.map((item) => {
+                        const isActive =
+                          pathname === item.url ||
+                          (item.url !== "/" && pathname.startsWith(item.url));
 
-                    const isActive =
-                      pathname === item.url ||
-                      (item.url !== "/" && pathname.startsWith(item.url));
-
-                    return (
-                      <SidebarMenuItem
-                        key={item.title}
-                        className={cn(
-                          "transition-colors duration-200 my-1 py-1 rounded mx-2",
-                          isActive
-                            ? "bg-primary-green-300 text-white"
-                            : "hover:bg-gray-100 text-gray-700"
-                        )}
-                      >
-                        <SidebarMenuButton asChild>
-                          <Link
-                            href={item.url}
-                            className="flex items-center font-medium"
+                        return (
+                          <SidebarMenuItem
+                            key={item.title}
+                            className={cn(
+                              "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                              isActive
+                                ? "bg-primary-green-300 text-white"
+                                : "hover:bg-gray-100 text-gray-700"
+                            )}
                           >
-                            <item.icon className="mr-3 h-5 w-5" />
-                            <span className="text-sm">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+                            <SidebarMenuButton asChild>
+                              <Link
+                                href={item.url}
+                                className="flex items-center font-medium pl-8 text-xs"
+                              >
+                                {item.icon && (
+                                  <item.icon className="mr-3 h-4 w-4" />
+                                )}
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </div>
+                  </SidebarMenu>
+                </SidebarGroup>
+              );
+            }
+
+            // Normal groups
+            const groupItems = group.items.filter((item) =>
+              item.roles.some((role: any) => hasPermission(role))
+            );
+
+            if (groupItems.length === 0) return null;
+
+            return (
+              <SidebarGroup key={group.title}>
+                <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                  {group.title}
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {groupItems.map((item) => {
+                      const isActive =
+                        pathname === item.url ||
+                        (item.url !== "/" && pathname.startsWith(item.url));
+
+                      return (
+                        <SidebarMenuItem
+                          key={item.title}
+                          className={cn(
+                            "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                            isActive
+                              ? "bg-primary-green-300 text-white"
+                              : "hover:bg-gray-100 text-gray-700"
+                          )}
+                        >
+                          <SidebarMenuButton asChild>
+                            <Link
+                              href={item.url}
+                              className="flex items-center font-medium text-xs px-4"
+                            >
+                              <item.icon className="mr-3 h-4 w-4" />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
         </SidebarGroup>
       </SidebarContent>
 
@@ -174,14 +182,12 @@ export function AppSidebar() {
           onClick={handleLogOut}
           disabled={isPending}
           className={cn(
-            "text-red-600 cursor-pointer py-2 px-3 flex items-center font-medium rounded",
+            "text-red-600 cursor-pointer py-2 px-3 flex items-center font-medium rounded text-xs",
             "hover:bg-red-50 transition-colors duration-200"
           )}
         >
-          <LogOut className="mr-3 h-5 w-5" />
-          <span className="text-sm">
-            {isPending ? "Logging out..." : "Logout"}
-          </span>
+          <LogOut className="mr-3 h-4 w-4" />
+          <span>{isPending ? "Logging out..." : "Logout"}</span>
         </SidebarMenuButton>
       </SidebarFooter>
     </Sidebar>

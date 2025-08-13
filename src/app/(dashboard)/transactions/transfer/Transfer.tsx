@@ -160,18 +160,6 @@ const Transfer = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <CustomSelect
-                    label="Category"
-                    options={categoryOptions}
-                    value={category}
-                    onChange={setCategory}
-                    isLoading={CategoriesDataLoading}
-                    placeholder="Select a category..."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <label
                     htmlFor="accountNumber"
                     className="block text-sm font-medium text-gray-700"
@@ -185,6 +173,18 @@ const Transfer = () => {
                     placeholder="1234567890"
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <CustomSelect
+                    label="Category"
+                    options={categoryOptions}
+                    value={category}
+                    onChange={setCategory}
+                    isLoading={CategoriesDataLoading}
+                    placeholder="Select a category..."
                     required
                   />
                 </div>
