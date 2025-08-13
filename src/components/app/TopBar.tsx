@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
+
 import {
   Bell,
   Building2,
@@ -32,6 +33,8 @@ import KycConfirm from "./kyc/KycConfirm";
 export function TopBar() {
   const business_id = useBusinessStore((state) => state.business_id);
   const { user } = useUserRole();
+
+  console.log("user", user);
   const [showConfirmKycModal, setShowConfirmKycModal] = useState(false);
 
   const { data: BusinessData, isLoading: BusinessDataLoading } =
@@ -39,16 +42,24 @@ export function TopBar() {
 
   const business = BusinessData?.data?.[0] || {};
 
+  // Extract user info from the user object
+  const userName = user?.name || "";
+  const userEmail = user?.email || "";
+
+  // Split full name into first and last name for initials
+  const nameParts = userName.split(" ");
+  const firstName = nameParts[0] || "";
+
   // Get user initials for avatar fallback
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ""}${
-      lastName?.charAt(0) || ""
+  const getInitials = (fullName: string) => {
+    const parts = fullName.trim().split(" ");
+    if (parts.length === 1) {
+      return parts[0].substring(0, 2).toUpperCase();
+    }
+    return `${parts[0]?.charAt(0) || ""}${
+      parts[parts.length - 1]?.charAt(0) || ""
     }`.toUpperCase();
   };
-
-  const firstName = business?.owner?.firstname || "";
-  const lastName = business?.owner?.lastname || "";
-  const fullName = `${firstName} ${lastName}`.trim();
 
   return (
     <>
@@ -63,7 +74,7 @@ export function TopBar() {
                     Welcome back,
                     {BusinessDataLoading ? (
                       <span className="ml-2 inline-block h-4 w-24 animate-pulse rounded bg-gray-200" />
-                    ) : fullName ? (
+                    ) : userName ? (
                       <span className="ml-1 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
                         {firstName}
                       </span>
@@ -134,17 +145,15 @@ export function TopBar() {
                   <Avatar className="h-7 w-7">
                     <AvatarImage
                       src={business?.owner?.avatar || "/placeholder.svg"}
-                      alt={fullName}
+                      alt={userName}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xs font-medium">
-                      {BusinessDataLoading
-                        ? "..."
-                        : getInitials(firstName, lastName)}
+                      {BusinessDataLoading ? "..." : getInitials(userName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">
-                      {BusinessDataLoading ? "Loading..." : fullName || "User"}
+                      {BusinessDataLoading ? "Loading..." : firstName || "User"}
                     </span>
                     <span className="text-xs text-gray-500 capitalize">
                       {user?.role?.toLowerCase() || "Member"}
@@ -165,18 +174,20 @@ export function TopBar() {
                     <Avatar className="h-10 w-10">
                       <AvatarImage
                         src={business?.owner?.avatar || "/placeholder.svg"}
-                        alt={fullName}
+                        alt={userName}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-medium">
-                        {getInitials(firstName, lastName)}
+                        {getInitials(userName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
-                        {fullName || "User"}
+                        {userName || "User"}
                       </p>
                       <p className="text-xs text-gray-500 truncate">
-                        {business?.owner?.email || "user@example.com"}
+                        {userEmail ||
+                          business?.owner?.email ||
+                          "user@example.com"}
                       </p>
                       <Badge
                         variant="secondary"

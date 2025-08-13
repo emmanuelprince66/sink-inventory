@@ -583,7 +583,15 @@ const PrintReceiptView = ({
         style: `
         @page { size: auto; margin: 2mm; }
         body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
-        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
+    .receipt-container { 
+      width: 100%; 
+      max-width: 50mm; 
+      margin: 0 auto; 
+      padding: 1mm; 
+      background: white;
+      border-radius: 2px;
+      box-sizing: border-box;
+    }
         table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
         th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
         td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
@@ -630,7 +638,7 @@ const PrintReceiptView = ({
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
         .item-name { font-weight: bold; font-size: 10px; }
-        .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
+        .detail-row { display: flex; justify-content: start; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #6b7280; font-size: 10px; }
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
@@ -692,7 +700,7 @@ const PrintReceiptView = ({
       {/* Receipt content - Updated to match desired format */}
       <div
         ref={receiptRef}
-        className="receipt-container bg-white rounded-lg w-full p-2"
+        className="receipt-container max-w-[65%] mx-auto bg-white rounded-lg w-full p-2"
       >
         {/* Receipt header */}
         <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
@@ -717,7 +725,7 @@ const PrintReceiptView = ({
         </div>
 
         {/* Items table */}
-        <div className="items-table w-full">
+        <div className="items-table  ">
           <table className="w-full table-fit ">
             <thead className="w-full">
               <tr className="text-left bg-green-50 w-full">
@@ -788,7 +796,7 @@ const PrintReceiptView = ({
 
         {/* Transaction details */}
         <div className="transaction-details">
-          <div className="detail-row flex justify-between items-center">
+          <div className="detail-row flex justify-start items-center">
             <span className="detail-label text-[11px] ">Date:</span>
             <span className="detail-value text-[11px] ">
               {moment(createSaleResponse?.data?.created_at).format(
@@ -800,12 +808,12 @@ const PrintReceiptView = ({
               )} */}
             </span>
           </div>
-          <div className="detail-row flex justify-between items-center">
+          <div className="detail-row flex justify-start items-center">
             <span className="detail-label text-[11px] ">Receipt No:</span>
             <span className="detail-value text-[11px] ">{receiptNumber}</span>
           </div>
           {customer && (
-            <div className="detail-row flex justify-between items-center">
+            <div className="detail-row flex justify-start items-center">
               <span className="detail-label text-[11px] ">Customer:</span>
               <span className="detail-value text-[11px] ">
                 {customer?.name}
@@ -813,7 +821,7 @@ const PrintReceiptView = ({
             </div>
           )}
           {attendant && (
-            <div className="detail-row flex justify-between items-center">
+            <div className="detail-row flex justify-start items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
               <span className="detail-value text-[11px] ">
                 {attendant?.name}
@@ -821,7 +829,7 @@ const PrintReceiptView = ({
             </div>
           )}
           {user?.role === "ATTENDANT" && (
-            <div className="detail-row flex justify-between items-center">
+            <div className="detail-row flex justify-start items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
               <span className="detail-value text-[11px] capitalize ">
                 {user?.name}

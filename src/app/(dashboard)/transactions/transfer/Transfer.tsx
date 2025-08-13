@@ -179,14 +179,16 @@ const Transfer = () => {
 
                 <div className="space-y-2">
                   <CustomSelect
-                    label="Category"
+                    label="Category (Optional)"
                     options={categoryOptions}
                     value={category}
                     onChange={setCategory}
                     isLoading={CategoriesDataLoading}
                     placeholder="Select a category..."
-                    required
                   />
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Attach an expense category (except for stock purchases)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
