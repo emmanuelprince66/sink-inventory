@@ -3,11 +3,11 @@ import ChangePin from "../../transactions/ChangePin";
 import Pin from "../../transactions/Pin";
 
 const PinComp = () => {
-  const { TrxData } = usePinHook();
-  console.log("TrxData--", TrxData);
+  const { businessData } = usePinHook();
+  console.log("businessData--", businessData);
   return (
     <div className="w-full">
-      {TrxData && TrxData?.data?.results?.pin ? <ChangePin /> : <Pin />}
+      {businessData && businessData?.pin ? <Pin /> : <ChangePin />}
     </div>
   );
 };

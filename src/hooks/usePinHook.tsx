@@ -1,5 +1,6 @@
 import { useChangePinMutation } from "@/api/transactions/change-pin";
 import { useCreatePinMutation } from "@/api/transactions/set-pin";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,8 @@ const changePinSchema = z.object({
 
 export type changePinFormValues = z.infer<typeof changePinSchema>;
 export const usePinHook = () => {
+  const { businessData } = useBusinessDataStore();
+
   const { mutate: CreatePin, isPending: CreatePinLoading } =
     useCreatePinMutation();
   const { mutate: ChangePin, isPending: ChangePinLoading } =
@@ -78,7 +81,7 @@ export const usePinHook = () => {
     onSubmitPinForm,
     CreatePinLoading,
     ChangePinLoading,
-    TrxData,
+    businessData,
     changePinForm,
     onSubmitChangePinForm,
   };

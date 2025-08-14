@@ -6,11 +6,13 @@ import { useFetchProductTransactionsQuery } from "@/api/products/get-transaction
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { queryKey } from "@/constants/query-key";
+import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
+
 import moment from "moment";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -129,6 +131,7 @@ export const useProductHook = ({
   const params = useParams();
   const { user } = useUserRole();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const productId = id || params.id;
   const business_id = useBusinessStore((state) => state.business_id);
@@ -349,6 +352,10 @@ export const useProductHook = ({
             });
             router.back();
           },
+          onError: (error) => {
+            console.log("error", error);
+            showToast(error?.error, "error");
+          },
         }
       );
     } else {
@@ -410,6 +417,10 @@ export const useProductHook = ({
               queryKey: [queryKey.inventory.getAllInventory],
             });
             router.back();
+          },
+          onError: (error) => {
+            console.log("error", error);
+            showToast(error?.error, "error");
           },
         }
       );

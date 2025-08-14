@@ -243,19 +243,13 @@ const EditProduct = ({ id }: { id: string }) => {
                           onSelect={(date) =>
                             field.onChange(date ? date.toISOString() : "")
                           }
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
+                          disabled={(date) => date < new Date()} // Disable past dates (before today)
                           initialFocus
                           captionLayout="dropdown-buttons"
-                          fromYear={1900}
-                          toYear={new Date().getFullYear()}
-                          defaultMonth={
-                            field.value
-                              ? new Date(field.value)
-                              : new Date(1990, 0)
-                          }
-                          className="rounded-md border border-gray-200 bg-white "
+                          fromYear={new Date().getFullYear()} // Start from current year
+                          toYear={new Date().getFullYear() + 10} // Show 10 years into the future
+                          defaultMonth={new Date()} // Default to current month
+                          className="rounded-md border border-gray-200 bg-white"
                         />
                       </PopoverContent>
                     </Popover>
