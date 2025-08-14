@@ -136,6 +136,8 @@ const styles = StyleSheet.create({
   cellPrice: {
     flex: 2,
     textAlign: "right",
+    display: "flex",
+    alignItems: "center",
     paddingRight: 2, // Reduced from 4
     fontSize: 10, // Added for consistency
   },
@@ -331,7 +333,7 @@ const ReceiptPDFDocument = ({
               </Text>
               {/* <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text> */}
               <Text style={[styles.cellPrice, styles.tableHeaderText]}>
-                PRICE
+                UNIT/PRICE
               </Text>
               <Text style={[styles.cellTotal, styles.tableHeaderText]}>
                 TOTAL
@@ -585,7 +587,7 @@ const PrintReceiptView = ({
         body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
     .receipt-container { 
       width: 100%; 
-      max-width: 50mm; 
+      max-width: 60mm; 
       margin: 0 auto; 
       padding: 1mm; 
       background: white;
@@ -643,7 +645,8 @@ const PrintReceiptView = ({
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
-        .price-cell { font-weight: bold !important; font-size: 10px; }
+        .price-cell { font-weight: bold !important; font-size: 10px; display: flex; align-items: center; }
+        .price-celll { font-weight: bold !important; font-size: 10px; }
         .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
         .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
         .receipt-little { font-size: 10px; font-weight: semibold; margin: 1px 0; }
@@ -700,7 +703,7 @@ const PrintReceiptView = ({
       {/* Receipt content - Updated to match desired format */}
       <div
         ref={receiptRef}
-        className="receipt-container max-w-[65%] mx-auto bg-white rounded-lg w-full p-2"
+        className="receipt-container max-w-[90%] mx-auto bg-white rounded-lg w-full p-2"
       >
         {/* Receipt header */}
         <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
@@ -725,13 +728,13 @@ const PrintReceiptView = ({
         </div>
 
         {/* Items table */}
-        <div className="items-table  ">
+        <div className="items-table">
           <table className="w-full table-fit ">
             <thead className="w-full">
               <tr className="text-left bg-green-50 w-full">
                 <th>ITEM</th>
                 {/* <th className="text-center text-[11px] ">QTY</th> */}
-                <th className="text-right text-[11px] ">PRICE</th>
+                <th className="text-right text-[11px] ">Unit/Price</th>
                 <th className="text-right text-[11px] ">TOTAL</th>
               </tr>
             </thead>
@@ -751,7 +754,7 @@ const PrintReceiptView = ({
                       ? formatToNaira(item.selling_price)
                       : formatToNaira(item.amount) ?? "₦0"}
                   </td>
-                  <td className="text-right text-[11px]  price-cell">
+                  <td className="text-right text-[11px] price-celll">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
                         (item.cartQuantity || 1)

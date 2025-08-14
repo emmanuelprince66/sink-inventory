@@ -47,13 +47,13 @@ const ProductsInfo = ({ data }: { data: Product[] }) => {
   };
 
   return (
-    <div className="p-1">
+    <div className="p-1 md:p-4">
       {/* Search Bar */}
       <Input
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search products..."
-        className="mb-4"
+        className="mb-4 w-full"
       />
 
       {/* Tabs */}
@@ -63,70 +63,87 @@ const ProductsInfo = ({ data }: { data: Product[] }) => {
         onValueChange={(value) => setActiveTab(value)}
       >
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="in-stock">In Stock</TabsTrigger>
-          <TabsTrigger value="low">Low Stock</TabsTrigger>
-          <TabsTrigger value="out-of-stock">Out of Stock</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs sm:text-sm">
+            All
+          </TabsTrigger>
+          <TabsTrigger value="in-stock" className="text-xs sm:text-sm">
+            In Stock
+          </TabsTrigger>
+          <TabsTrigger value="low" className="text-xs sm:text-sm">
+            Low
+          </TabsTrigger>
+          <TabsTrigger value="out-of-stock" className="text-xs sm:text-sm">
+            Out
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow w-full mt-3">
-        <table className="divide-y divide-gray-200 w-full">
+      <div className="bg-white rounded-lg shadow w-full mt-3 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Product
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Price
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
                 Sold
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 w-full">
+          <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-1 py-4 whitespace-nowrap">
-                    <div className="flex items-center ">
-                      <div className="ml-4 overflow-hidden">
-                        <div className="text-sm font-medium text-gray-900 truncate">
+                  <td className="px-3 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="ml-0 sm:ml-4 overflow-hidden">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-[100px] sm:max-w-none">
                           {product.product__name}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                     ₦{product.product__selling_price?.toLocaleString() ?? "0"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColor(
                         product.product__status
                       )}`}
                     >
-                      {product.product__status.replace(/-/g, " ")}
+                      <span className="hidden sm:inline">
+                        {product.product__status.replace(/-/g, " ")}
+                      </span>
+                      <span className="sm:hidden">
+                        {product.product__status === "IN-STOCK"
+                          ? "In"
+                          : product.product__status === "OUT-OF-STOCK"
+                          ? "Out"
+                          : "Low"}
+                      </span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                  <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
                     {product.quantity_sold}
                   </td>
                 </tr>

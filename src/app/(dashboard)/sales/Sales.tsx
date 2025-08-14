@@ -73,7 +73,7 @@ const CustomSalesCard = ({
         text: "text-primary-black-100",
         amount: "text-primary-black-100",
         badge: "bg-blue-100",
-        icon: <Wallet className="w-5 h-5 text-blue-600" />,
+        icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />,
       };
     }
     if (isCostCard) {
@@ -82,7 +82,7 @@ const CustomSalesCard = ({
         text: "text-primary-black-100",
         amount: "text-primary-black-100",
         badge: "bg-amber-100",
-        icon: <AlertCircle className="w-5 h-5 text-amber-600" />,
+        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
       };
     }
     if (isItemsCard) {
@@ -91,7 +91,7 @@ const CustomSalesCard = ({
         text: "text-primary-black-100",
         amount: "text-primary-black-100",
         badge: "bg-indigo-100",
-        icon: <Users className="w-5 h-5 text-indigo-600" />,
+        icon: <Users className="w-4 sm:w-5 h-4 sm:h-5 text-indigo-600" />,
       };
     }
     if (isDiscountCard) {
@@ -100,7 +100,7 @@ const CustomSalesCard = ({
         text: "text-primary-black-1000",
         amount: "text-primary-black-100",
         badge: "bg-purple-100",
-        icon: <AlertCircle className="w-5 h-5 text-purple-600" />,
+        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />,
       };
     }
     if (isProfitCard) {
@@ -109,7 +109,7 @@ const CustomSalesCard = ({
         text: "text-primary-black-100",
         amount: "text-primary-black-100",
         badge: "bg-emerald-100",
-        icon: <Wallet className="w-5 h-5 text-emerald-600" />,
+        icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-600" />,
       };
     }
     return {
@@ -117,7 +117,7 @@ const CustomSalesCard = ({
       text: "text-primary-black-100",
       amount: "text-primary-black-100",
       badge: "bg-gray-100",
-      icon: <Wallet className="w-5 h-5 text-gray-600" />,
+      icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-gray-600" />,
     };
   };
 
@@ -126,17 +126,19 @@ const CustomSalesCard = ({
   return (
     <CustomCard
       className={cn(
-        "p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
+        "p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
         cardStyle.bg
       )}
     >
-      <div className="flex flex-col gap-2 h-full justify-between">
+      <div className="flex flex-col gap-1 sm:gap-2 h-full justify-between">
         <div className="flex justify-between items-start w-full">
-          <div className="flex items-center gap-3">
-            <div className={cn("p-2 rounded-full", cardStyle.badge)}>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className={cn("p-1 sm:p-2 rounded-full", cardStyle.badge)}>
               {cardStyle.icon}
             </div>
-            <span className={cn("text-sm font-medium", cardStyle.text)}>
+            <span
+              className={cn("text-xs sm:text-sm font-medium", cardStyle.text)}
+            >
               {title}
             </span>
           </div>
@@ -146,7 +148,9 @@ const CustomSalesCard = ({
             </p>
           )}
         </div>
-        <p className={cn("text-2xl font-bold", cardStyle.amount)}>{amount}</p>
+        <p className={cn("text-lg sm:text-2xl font-bold", cardStyle.amount)}>
+          {amount}
+        </p>
       </div>
     </CustomCard>
   );
@@ -201,7 +205,6 @@ const Sales = () => {
     CategoriesDataLoading,
     SalesOrderData,
     handleProductsRowClick,
-
     SalesOrderLoading,
   } = useSalesHook({
     activeFilter: activeProductFilter,
@@ -212,8 +215,6 @@ const Sales = () => {
     attendantId,
     page,
   });
-
-  console.log("salesData", SalesData);
 
   const totalProfit = useMemo(() => {
     return SalesData?.data?.results?.data.reduce(
@@ -230,7 +231,6 @@ const Sales = () => {
     setSearchInput(value);
   };
 
-  // Check scroll availability
   const checkScrollAvailability = () => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -241,7 +241,6 @@ const Sales = () => {
     }
   };
 
-  // Category navigation functions
   const scrollCategories = (direction: "left" | "right") => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -259,7 +258,6 @@ const Sales = () => {
     }
   };
 
-  // Check scroll availability when categories load or container size changes
   useEffect(() => {
     checkScrollAvailability();
     const container = categoriesContainerRef.current;
@@ -270,7 +268,6 @@ const Sales = () => {
     }
   }, [CategoriesData]);
 
-  // Check on window resize
   useEffect(() => {
     const handleResize = () => checkScrollAvailability();
     window.addEventListener("resize", handleResize);
@@ -281,52 +278,58 @@ const Sales = () => {
   const totalOrderItems = SalesOrderData?.data?.total || 0;
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
+    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
       {/* Header Section */}
-      <div className="w-full bg-white">
-        <div className="flex items-center justify-between w-full mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl text-primary-black-100 font-[600]">
+      <div className="w-full bg-white px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h1 className="text-xl sm:text-2xl md:text-3xl text-primary-black-100 font-[600]">
               Sales
             </h1>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col justify-center sm:flex-row items-center sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
             {user && user?.role === "OWNER" && (
               <Button
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+                className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
                 onClick={openAttendantsModal}
               >
                 Attendants
               </Button>
             )}
 
-            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+            <div className="">
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={setDateRange}
+                className="w-full sm:w-auto mx-auto sm:mx-auto"
+              />
+            </div>
           </div>
         </div>
 
         {/* Overview Cards */}
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-primary-black-100 mb-4">
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
 
           {SalesLoading || !SalesData ? (
-            <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
               {Array.from({ length: 5 }).map((_, index) => (
                 <CustomCard
                   key={index}
-                  className="w-full border-gray-200 h-[120px]"
+                  className="w-full border-gray-200 h-[100px] sm:h-[120px]"
                 >
-                  <div className="flex flex-col gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                    <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                  <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
+                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
+                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-[#eef4ef]" />
                   </div>
                 </CustomCard>
               ))}
             </div>
           ) : (
-            <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
               <CustomSalesCard
                 title={"Revenue"}
                 amount={formatToNaira(SalesData?.data?.results?.revenue)}
@@ -359,9 +362,9 @@ const Sales = () => {
       {/* Main Content Section */}
       <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
         {/* Tabs Header */}
-        <div className="p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-primary-black-100 flex items-center gap-2">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100 flex items-center gap-2">
               {activeTab === "products" ? (
                 <>
                   Sales Analytics
@@ -379,19 +382,17 @@ const Sales = () => {
               )}
             </h2>
 
-            <div className="flex items-center gap-4">
-              <div className="w-80">
-                <SearchInput
-                  placeholder="Search ..."
-                  value={searchInput}
-                  onValueChange={handleSearchChange}
-                />
-              </div>
+            <div className="w-full sm:w-80">
+              <SearchInput
+                placeholder="Search ..."
+                value={searchInput}
+                onValueChange={handleSearchChange}
+              />
             </div>
           </div>
 
           {/* Tabs Navigation */}
-          <div className="w-full ">
+          <div className="w-full">
             <Tabs
               value={activeTab}
               onValueChange={(value) =>
@@ -399,35 +400,35 @@ const Sales = () => {
               }
               className="w-full"
             >
-              <TabsList className="w-[400px] bg-primary-green-50 border-b border-gray-200">
+              <TabsList className="w-full sm:w-[400px] bg-primary-green-50 border-b border-gray-200">
                 <TabsTrigger
                   value="products"
-                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white"
+                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white text-xs sm:text-sm"
                 >
                   Products Sold
                 </TabsTrigger>
                 <TabsTrigger
                   value="history"
-                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white"
+                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white text-xs sm:text-sm"
                 >
                   Order History
                 </TabsTrigger>
               </TabsList>
 
               {searchInput.length > 0 && searchInput.length < 3 && (
-                <div className="mt-2 text-sm text-gray-500">
+                <div className="mt-2 text-xs sm:text-sm text-gray-500">
                   Type at least 3 characters to search
                 </div>
               )}
 
               {/* Products Tab Content */}
-              <TabsContent value="products" className="mt-6">
+              <TabsContent value="products" className="mt-4 sm:mt-6">
                 {/* Product Filter Options */}
-                <div className="flex gap-3 mb-4 flex-wrap">
+                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-2">
                   {productFilterOptions.map((filter) => (
                     <Button
                       key={filter}
-                      className={`px-4 py-2 rounded-md h-10 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-white font-medium transition-colors whitespace-nowrap ${
                         activeProductFilter === filter
                           ? "bg-primary-green-300 text-white shadow-sm"
                           : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-250"
@@ -440,39 +441,41 @@ const Sales = () => {
                 </div>
 
                 {/* Subtle demarcation line */}
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4 sm:my-6"></div>
 
                 {/* Categories Tabs */}
                 {CategoriesDataLoading || !CategoriesData ? (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 overflow-x-auto pb-2">
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
+                        className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
                       />
                     ))}
                   </div>
                 ) : (
-                  <div className="w-full mb-4">
+                  <div className="w-full mb-3 sm:mb-4">
                     <div className="flex items-center w-full">
                       {/* Left Navigation Button */}
-                      <button
-                        onClick={() => scrollCategories("left")}
-                        disabled={!canScrollLeft}
-                        className={cn(
-                          "p-2 rounded-md transition-all mr-2 flex-shrink-0",
-                          canScrollLeft
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
+                      {canScrollLeft && (
+                        <button
+                          onClick={() => scrollCategories("left")}
+                          disabled={!canScrollLeft}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
+                            canScrollLeft
+                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-300 cursor-not-allowed"
+                          )}
+                        >
+                          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
 
                       {/* Categories Container */}
                       <div
                         ref={categoriesContainerRef}
-                        className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
+                        className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
                         style={{
                           scrollbarWidth: "none",
                           msOverflowStyle: "none",
@@ -481,7 +484,7 @@ const Sales = () => {
                         {/* All Tab */}
                         <button
                           className={cn(
-                            "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
                               ? "bg-[#52b661] text-white shadow-sm"
                               : "text-gray-600 hover:text-green-500 hover:bg-green-50"
@@ -496,7 +499,7 @@ const Sales = () => {
                           <button
                             key={category.id}
                             className={cn(
-                              "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
                               selectedCategoryId === category.id
                                 ? "bg-[#52b661] text-white shadow-sm"
                                 : "text-gray-600 hover:text-green-500 hover:bg-green-50"
@@ -509,30 +512,32 @@ const Sales = () => {
                       </div>
 
                       {/* Right Navigation Button */}
-                      <button
-                        onClick={() => scrollCategories("right")}
-                        disabled={!canScrollRight}
-                        className={cn(
-                          "p-2 rounded-md transition-all ml-2 flex-shrink-0",
-                          canScrollRight
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
+                      {canScrollRight && (
+                        <button
+                          onClick={() => scrollCategories("right")}
+                          disabled={!canScrollRight}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
+                            canScrollRight
+                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-300 cursor-not-allowed"
+                          )}
+                        >
+                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </TabsContent>
 
               {/* Order History Tab Content */}
-              <TabsContent value="history" className="mt-6">
-                <div className="flex gap-3 mb-4 flex-wrap">
+              <TabsContent value="history" className="mt-4 sm:mt-6">
+                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-2">
                   {orderFilterOptions.map((filter) => (
                     <Button
                       key={filter}
-                      className={`px-4 py-2 rounded-md h-10 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-white font-medium transition-colors whitespace-nowrap ${
                         activeOrderFilter === filter
                           ? "bg-primary-green-300 text-white shadow-sm"
                           : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-250"
@@ -545,14 +550,14 @@ const Sales = () => {
                 </div>
 
                 {/* Subtle demarcation line for order history too */}
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-6"></div>
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4 sm:my-6"></div>
               </TabsContent>
             </Tabs>
           </div>
         </div>
 
         {/* Table Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <Tabs
             value={activeTab}
             onValueChange={(value) =>
@@ -563,12 +568,12 @@ const Sales = () => {
             <TabsContent value="products">
               {SalesLoading || !SalesData ? (
                 <div className="w-full">
-                  <div className="space-y-4">
-                    <Skeleton className="h-10 w-full bg-gray-200" />
+                  <div className="space-y-3 sm:space-y-4">
+                    <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-16 w-full bg-gray-200 mt-2"
+                        className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
                       />
                     ))}
                   </div>
@@ -590,12 +595,12 @@ const Sales = () => {
             <TabsContent value="history">
               {SalesOrderLoading || !SalesOrderData ? (
                 <div className="w-full">
-                  <div className="space-y-4">
-                    <Skeleton className="h-10 w-full bg-gray-200" />
+                  <div className="space-y-3 sm:space-y-4">
+                    <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-16 w-full bg-gray-200 mt-2"
+                        className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
                       />
                     ))}
                   </div>

@@ -53,6 +53,7 @@ export const useTransactionsHook = ({
   // Mutation for beneficiary enquiry using fetch
   const beneficiaryEnquiryMutation = useMutation({
     mutationFn: async (data: { bank_code: string; account_number: string }) => {
+      console.log("data-------5", data);
       const response = await fetch("/api/transactions/check-beneficiary", {
         method: "POST",
         headers: {
@@ -137,7 +138,7 @@ export const useTransactionsHook = ({
         console.log("recipientBank", recipientBank);
         // bank code to test 000002
         beneficiaryEnquiryMutation.mutate({
-          bank_code: recipientBank?.bankCode,
+          bank_code: recipientBank?.bank_code,
           account_number: accountNumber,
         });
       }
