@@ -223,7 +223,7 @@ const Transfer = () => {
                     htmlFor="amount"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Amount (USD)
+                    Amount (NGN)
                   </label>
                   <input
                     type="number"
