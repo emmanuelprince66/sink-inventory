@@ -15,7 +15,7 @@ const ChangePassword = () => {
   const { form, changePasswordLoading, onSubmit } = useChangePasswordHook();
   return (
     <>
-      <div className="w-full  flex items-center flex-col justify-center p-8 bg-primary-green-600">
+      <div className="w-full  flex items-center flex-col justify-center  bg-primary-green-600">
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold mb-8 text-center">
             Change Password

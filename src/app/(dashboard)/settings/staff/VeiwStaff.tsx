@@ -52,7 +52,7 @@ const VeiwStaff = () => {
 
   return (
     <>
-      <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center p-4">
+      <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center ">
         <div className="w-full flex justify-end">
           {user && user?.role === "OWNER" && (
             <Button onClick={openAddStaffModalFunc}>Add Staff</Button>

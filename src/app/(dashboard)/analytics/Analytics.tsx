@@ -65,90 +65,108 @@ const Analytics = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className=" mx-auto w-full">
-        {/* Date Range Picker */}
-        <div className=" w-full flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">
-            Analytics Dashboard
-          </h1>
-          <div className="flex justify-end items-center gap-2">
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-2 sm:px-2 lg:px-0">
+      <div className="w-full">
+        {/* Header Section */}
+        <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+            Analytics
+          </p>
+          <div className="w-full sm:w-auto">
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="w-full ">
+        <div className="w-full">
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as typeof activeTab)}
-            className="w-full mt-6 "
+            className="w-full mt-4 sm:mt-6"
           >
-            <TabsList className="w-[500px]">
-              {AnalyticsOptionsTab.map((tab) => (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  className={`px-4 py-2  rounded-md h-14 min-w-[70px] text-sm hover:text-black font-medium transition-colors ${
-                    activeTab === tab
-                      ? "bg-primary-green-300 text-white"
-                      : "bg-primary-green-200 text-primary-black-100"
-                  }`}
-                >
-                  {tab}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            {/* Responsive Tabs List */}
+            <div className="mb-4 overflow-x-auto">
+              <TabsList className="w-full min-w-[300px] sm:w-auto inline-flex">
+                {AnalyticsOptionsTab.map((tab) => (
+                  <TabsTrigger
+                    key={tab}
+                    value={tab}
+                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md h-10 sm:h-14 min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm hover:text-black font-medium transition-colors ${
+                      activeTab === tab
+                        ? "bg-primary-green-300 text-white"
+                        : "bg-primary-green-200 text-primary-black-100"
+                    }`}
+                  >
+                    {tab}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-            <TabsContent value="Sales" className="">
-              {SalesAnalyticLoading ? (
-                <SkeletonComp />
-              ) : (
-                <SalesAnalytics
-                  openAttendantsModal={openAttendantsModal}
-                  SalesAnalyticData={SalesAnalyticData}
-                  attendantsName={attendantsName}
-                  handleClearAttendant={handleClearAttendant}
-                  dateRange={dateRange}
-                />
+            {/* Tab Content */}
+            <div className="w-full">
+              <TabsContent value="Sales" className="mt-0">
+                {SalesAnalyticLoading ? (
+                  <SkeletonComp />
+                ) : (
+                  <div className="w-full overflow-hidden">
+                    <SalesAnalytics
+                      openAttendantsModal={openAttendantsModal}
+                      SalesAnalyticData={SalesAnalyticData}
+                      attendantsName={attendantsName}
+                      handleClearAttendant={handleClearAttendant}
+                      dateRange={dateRange}
+                    />
+                  </div>
+                )}
+              </TabsContent>
+
+              {user && user?.role === "OWNER" && (
+                <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
+                  {ProductAnalyticLoading ? (
+                    <SkeletonComp />
+                  ) : (
+                    <div className="w-full overflow-hidden">
+                      <ProductAnalytics
+                        ProductAnalyticData={ProductAnalyticData}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
               )}
-            </TabsContent>
 
-            {user && user?.role === "OWNER" && (
-              <TabsContent value="Products" className="p-6">
-                {ProductAnalyticLoading ? (
-                  <SkeletonComp />
-                ) : (
-                  <ProductAnalytics ProductAnalyticData={ProductAnalyticData} />
-                )}
-              </TabsContent>
-            )}
-            {user && user?.role === "OWNER" && (
-              <TabsContent value="Customers" className="p-6">
-                {CustomerAnalyticLoading ? (
-                  <SkeletonComp />
-                ) : (
-                  <CustomerAnalytics
-                    CustomerAnalyticData={CustomerAnalyticData}
-                  />
-                )}
-              </TabsContent>
-            )}
+              {user && user?.role === "OWNER" && (
+                <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
+                  {CustomerAnalyticLoading ? (
+                    <SkeletonComp />
+                  ) : (
+                    <div className="w-full overflow-hidden">
+                      <CustomerAnalytics
+                        CustomerAnalyticData={CustomerAnalyticData}
+                      />
+                    </div>
+                  )}
+                </TabsContent>
+              )}
+            </div>
           </Tabs>
         </div>
       </div>
 
+      {/* Modal */}
       <CustomModal
-        isOpen={ShowAttendants} // FIXED: Removed the negation
+        isOpen={ShowAttendants}
         onClose={closeAttendantsModal}
         trigger={false}
         title="Store Attendants"
       >
-        <ShowAllAttendants
-          AttendantsData={AttendantsData}
-          AttendantsLoading={AttendantsLoading}
-          handleClickAttendants={handleClickAttendants}
-        />
+        <div className="w-full max-h-[70vh] overflow-y-auto">
+          <ShowAllAttendants
+            AttendantsData={AttendantsData}
+            AttendantsLoading={AttendantsLoading}
+            handleClickAttendants={handleClickAttendants}
+          />
+        </div>
       </CustomModal>
     </div>
   );
