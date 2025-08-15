@@ -253,7 +253,7 @@ const CampaignSettings = () => {
     );
   }
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="container mx-auto py-8">
       <p className="text-gray-600 text-sm leading-relaxed tracking-normal font-normal mb-4">
         Unlock 80% Customer Retention with Our Marketing Automation Tools! Boost
         your business growth and retain more customers with our powerful

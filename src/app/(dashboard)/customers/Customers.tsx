@@ -129,7 +129,7 @@ const Customers = () => {
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
+    <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-2 ">
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full gap-4">
         <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
           Customers

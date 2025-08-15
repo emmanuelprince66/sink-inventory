@@ -51,9 +51,8 @@ const Campaign = () => {
   >("campaigns");
 
   const [openSenderModal, setOpenSenderModal] = useState(false);
-  const senderIdPresent = Boolean(businessData?.sender_id); // More explicit conversion to boolean
+  const senderIdPresent = Boolean(businessData?.sender_id);
 
-  // Open modal when sender ID is not present
   useEffect(() => {
     if (!senderIdPresent) {
       setOpenSenderModal(true);
@@ -61,143 +60,172 @@ const Campaign = () => {
   }, [senderIdPresent]);
 
   const closeSenderModal = () => setOpenSenderModal(false);
-  return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex justify-between items-center w-full">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
-            Campaign
-          </p>
 
-          <div className="flex items-center gap-2">
-            <Button
-              className=" border-primary-green-300"
-              onClick={openCampaignModalFunc}
-            >
-              Send a Campaign
-            </Button>
-          </div>
-        </div>
+  return (
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-0">
+        <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+          Campaign
+        </p>
+
+        <Button
+          className="border-primary-green-300 w-full sm:w-auto px-4 py-2 text-sm font-medium min-h-[44px]"
+          onClick={openCampaignModalFunc}
+        >
+          Send a Campaign
+        </Button>
       </div>
 
+      {/* Message Credit Card */}
       {!businessData || BusinessDataLoading ? (
-        <div className="flex gap-4 w-[500px] mt-5">
-          {Array.from({ length: 1 }).map((_, index) => (
-            <CustomCard key={index} className="w-full border-gray-200">
-              <div className="flex flex-col gap-6 items-start">
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-6 w-[300px] bg-[#eef4ef]" />
-                <Skeleton className="h-6 w-[100px] bg-[#eef4ef]" />
-              </div>
-            </CustomCard>
-          ))}
+        <div className="flex w-full mt-3 sm:mt-5">
+          <CustomCard className="w-full max-w-full sm:max-w-[500px] border-gray-200">
+            <div className="flex flex-col gap-4 sm:gap-6 items-start p-3 sm:p-4">
+              <Skeleton className="h-3 sm:h-4 w-full bg-[#eef4ef]" />
+              <Skeleton className="h-5 sm:h-6 w-3/4 bg-[#eef4ef]" />
+              <Skeleton className="h-5 sm:h-6 w-1/2 bg-[#eef4ef]" />
+            </div>
+          </CustomCard>
         </div>
       ) : (
-        <CustomCard className="w-[500px] h-[150px] mt-5 flex flex-col gap-4 justify-between p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg shadow-sm">
-          {/* Top Section - Full width */}
+        <CustomCard className="w-full max-w-full sm:max-w-[500px] min-h-[180px] sm:min-h-[150px] mt-3 sm:mt-5 flex flex-col gap-3 sm:gap-4 justify-between p-3 sm:p-4 bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 rounded-lg shadow-sm">
+          {/* Top Section */}
           <div className="flex justify-between items-center w-full">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-full">
-                <PieChart className="w-5 h-5 text-primary-green-300" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 bg-white rounded-full">
+                <PieChart className="w-4 h-4 sm:w-5 sm:h-5 text-primary-green-300" />
               </div>
-              <span className="text-sm font-medium text-gray-600">
+              <span className="text-xs sm:text-sm font-medium text-gray-600">
                 Message Credit
               </span>
             </div>
 
             <button className="flex items-center gap-1 group cursor-pointer">
-              <span className="text-sm bg-white rounded-full p-2 font-medium text-primary-green-300 group-hover:text-primary-green-700 transition-colors">
+              <span className="text-xs sm:text-sm bg-white rounded-full px-2 py-1 sm:p-2 font-medium text-primary-green-300 group-hover:text-primary-green-700 transition-colors">
                 Active
               </span>
             </button>
           </div>
 
-          {/* Bottom Section - Full width */}
-          <div className="w-full flex justify-even items-center">
-            <div className="flex flex-col w-full gap-1 mt-4">
-              <span className="text-sm  text-gray-900">Available</span>
-              <span className="text-1xl font-bold text-gray-900">
-                {businessData?.message_credit} Credits
-              </span>
+          {/* Bottom Section - Responsive Layout */}
+          <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between items-start sm:items-center mt-2 sm:mt-4">
+            <div className="flex gap-6 sm:gap-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs sm:text-sm text-gray-900">
+                  Available
+                </span>
+                <span className="text-lg sm:text-xl font-bold text-gray-900">
+                  {businessData?.message_credit} Credits
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-xs sm:text-sm text-gray-900">Used</span>
+                <span className="text-lg sm:text-xl font-bold text-gray-900">
+                  {businessData?.message_credit_used} Credits
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col w-full gap-1 mt-4">
-              <span className="text-sm  text-gray-900">Used</span>
-              <span className="text-1xl font-bold text-gray-900">
-                {businessData?.message_credit_used} Credits
-              </span>
-            </div>
-            <div className="flex flex-col w-full gap-1 mt-4">
-              <Button onClick={openFundCampaignModalFunc}>Get Credits</Button>
+            <div className="w-full sm:w-auto">
+              <Button
+                onClick={openFundCampaignModalFunc}
+                className="w-full sm:w-auto text-sm px-4 py-2"
+              >
+                Get Credits
+              </Button>
             </div>
           </div>
         </CustomCard>
       )}
 
-      {/* search */}
-
-      <div className="flex w-full justify-between items-center">
-        <div className="w-full md:w-1/2 mb-4 mt-4">
+      {/* Search and Create Group Section */}
+      <div className="flex flex-col sm:flex-row w-full justify-between items-start sm:items-center gap-3 sm:gap-4 mt-2 sm:mt-4">
+        <div className="w-full sm:w-1/2">
           <SearchInput
-            placeholder="Search campaigns ..."
+            placeholder="Search campaigns..."
             value={searchInput}
             onValueChange={() => {}}
           />
           {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-1 text-sm text-muted-foreground">
+            <div className="mt-1 text-xs sm:text-sm text-muted-foreground">
               Type at least 3 characters to search
             </div>
           )}
         </div>
 
-        <Button onClick={openAddGroupModalFunc}>Create Group</Button>
+        <Button
+          onClick={openAddGroupModalFunc}
+          className="w-full sm:w-auto text-sm px-4 py-2 min-h-[44px]"
+        >
+          Create Group
+        </Button>
       </div>
 
+      {/* Tabs Section */}
       <Tabs
         value={activeTab}
         onValueChange={(value) =>
           setActiveTab(value as "campaigns" | "groups" | "settings")
         }
-        className="w-full mt-6"
+        className="w-full mt-4 sm:mt-6"
       >
-        <TabsList className="w-[400px]">
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
-          <TabsTrigger value="settings">Marketing Automation</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+          <TabsList className="w-full min-w-[400px] sm:w-[400px]">
+            <TabsTrigger
+              value="campaigns"
+              className="flex-1 text-xs sm:text-sm"
+            >
+              Campaigns
+            </TabsTrigger>
+            <TabsTrigger value="groups" className="flex-1 text-xs sm:text-sm">
+              Groups
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1 text-xs sm:text-sm">
+              <span className="hidden sm:inline">Marketing Automation</span>
+              <span className="sm:hidden">Automation</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
         <div className="w-full h-[1px] bg-gray-200 mt-[-8px]" />
 
-        <TabsContent value="campaigns">
+        <TabsContent value="campaigns" className="mt-4">
           {CampaignLoading || !CampaignData ? (
             <div className="w-full">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+              <div className="space-y-3 sm:space-y-4">
+                <Skeleton className="h-8 sm:h-10 w-full bg-[#eef4ef]" />
                 {Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="h-16 w-full bg-[#eef4ef] mt-2"
+                    className="h-12 sm:h-16 w-full bg-[#eef4ef]"
                   />
                 ))}
               </div>
             </div>
           ) : (
-            <AllCampaigns
-              campaignsData={CampaignData}
-              campaignsLoading={CampaignLoading}
-            />
+            <div className="overflow-x-auto">
+              <AllCampaigns
+                campaignsData={CampaignData}
+                campaignsLoading={CampaignLoading}
+              />
+            </div>
           )}
         </TabsContent>
 
-        <TabsContent value="groups">
-          <AllGroups
-            groupData={CampaignGroupData}
-            groupLoading={CampaignGroupLoading}
-          />
+        <TabsContent value="groups" className="mt-4">
+          <div className="overflow-x-auto">
+            <AllGroups
+              groupData={CampaignGroupData}
+              groupLoading={CampaignGroupLoading}
+            />
+          </div>
         </TabsContent>
-        <TabsContent value="settings">
+
+        <TabsContent value="settings" className="mt-4">
           <CampaignSettings />
         </TabsContent>
       </Tabs>
 
+      {/* Modals */}
       <CustomModal
         isOpen={openAddCampaignModal}
         onClose={closeOpenCampaignModal}
@@ -215,6 +243,7 @@ const Campaign = () => {
       >
         <AddSenderId closeModal={closeSenderIdModal} />
       </CustomModal>
+
       <CustomModal
         isOpen={openAddGroupModal}
         onClose={closeAddGroupModal}
@@ -223,6 +252,7 @@ const Campaign = () => {
       >
         <AddGroup closeModal={closeAddGroupModal} />
       </CustomModal>
+
       <CustomModal
         isOpen={openFundCampaignModal}
         onClose={closeFundCampaignModal}
@@ -238,7 +268,7 @@ const Campaign = () => {
         trigger={false}
         title="Sender ID Required"
       >
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex-shrink-0 text-yellow-500">
               <svg
@@ -256,10 +286,10 @@ const Campaign = () => {
               </svg>
             </div>
             <div>
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-base sm:text-lg font-medium text-gray-900">
                 No Sender ID Configured
               </h3>
-              <p className="text-gray-600 mt-1">
+              <p className="text-sm sm:text-base text-gray-600 mt-1">
                 Your business needs a Sender ID to send messages. This is what
                 appears on your customers' phones when they receive your
                 messages.
@@ -267,8 +297,8 @@ const Campaign = () => {
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-            <p className="text-blue-800">
+          <div className="bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100">
+            <p className="text-blue-800 text-sm sm:text-base">
               <span className="font-semibold">
                 Approval takes up to 5 business days.
               </span>{" "}
@@ -276,10 +306,10 @@ const Campaign = () => {
             </p>
           </div>
 
-          <div className="pt-2 flex justify-end space-x-3">
+          <div className="pt-2 flex justify-end">
             <Button
               onClick={openSenderIdModalFunc}
-              className="px-4 py-2 bg-primary-green-300 text-white rounded-md hover:bg-primary-green-100 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 bg-primary-green-300 text-white rounded-md hover:bg-primary-green-100 transition-colors text-sm font-medium"
             >
               Set Up Sender ID
             </Button>
