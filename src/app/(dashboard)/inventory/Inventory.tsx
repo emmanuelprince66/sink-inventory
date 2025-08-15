@@ -207,11 +207,9 @@ const Inventory = () => {
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl text-primary-black-100 font-[600]">
-              Inventory
-            </h1>
-          </div>
+          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+            Inventory
+          </p>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             {/* Primary Buttons - Equal width in their container */}

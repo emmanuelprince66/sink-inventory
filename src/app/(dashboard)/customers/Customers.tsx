@@ -130,31 +130,33 @@ const Customers = () => {
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex justify-between items-center w-full">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
-            Customers
-          </p>
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full gap-4">
+        <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+          Customers
+        </p>
 
-          <div className="flex gap-2 items-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
+          {/* Date Picker */}
+          <div className="w-full sm:w-auto min-w-[280px]">
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+          </div>
 
-            <div
-              className="text-[14px] md:text-[20px]"
+          {/* Buttons Container */}
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button
+              className="flex items-center justify-center px-4 py-2 text-sm font-medium flex-1 sm:flex-none min-h-[44px] min-w-[140px]"
               onClick={openCustomerModalFunc}
             >
-              <Button className="flex items-center py-0  ">
-                <Plus />
-                <p className="text-sm">Add Customer</p>
-              </Button>
-            </div>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Customer
+            </Button>
 
-            <Link href={"/customers/upload"}>
+            <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
               <Button
                 variant="outline"
-                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50"
+                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50 w-full px-4 py-2 text-sm font-medium min-h-[44px] min-w-[120px]"
               >
-                <span className="hidden md:inline">Upload</span> CSV
+                Upload CSV
               </Button>
             </Link>
           </div>
@@ -225,20 +227,22 @@ const Customers = () => {
           {/* cards container content */}
 
           {/* Second filter */}
-          <div className="flex gap-3 mt-4 mb-3">
-            {filterOptions.map((filter) => (
-              <Button
-                key={filter}
-                className={`px-4 py-2 rounded-md h-14 min-w-[70px] text-sm hover:text-white font-medium transition-colors ${
-                  activeFilter === filter
-                    ? "bg-primary-green-300 text-white"
-                    : "bg-primary-green-200 text-primary-black-100"
-                }`}
-                onClick={() => handleFilterChange(filter)}
-              >
-                {filter}
-              </Button>
-            ))}
+          <div className="mt-4 mb-3 w-full">
+            <div className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 w-full">
+              {filterOptions.map((filter) => (
+                <Button
+                  key={filter}
+                  className={`px-4 py-2 rounded-md h-12 md:h-14 min-w-fit whitespace-nowrap text-sm font-medium transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow-md ${
+                    activeFilter === filter
+                      ? "bg-primary-green-300 text-white hover:bg-primary-green-400"
+                      : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-300 hover:text-white"
+                  }`}
+                  onClick={() => handleFilterChange(filter)}
+                >
+                  {filter}
+                </Button>
+              ))}
+            </div>
           </div>
           {/* Second filter end */}
 

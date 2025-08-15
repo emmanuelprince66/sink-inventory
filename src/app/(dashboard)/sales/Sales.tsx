@@ -298,7 +298,7 @@ const Sales = () => {
               </Button>
             )}
 
-            <div className="">
+            <div className="w-full">
               <DatePickerWithRange
                 date={dateRange}
                 onDateChange={setDateRange}

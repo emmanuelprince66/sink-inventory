@@ -206,11 +206,9 @@ const Expenses = () => {
       {/* Header Section */}
       <div className="w-full bg-white">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl text-primary-black-100 font-[600]">
-              Expenses
-            </h1>
-          </div>
+          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+            Expenses
+          </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
@@ -219,7 +217,7 @@ const Expenses = () => {
             >
               + Add Expenses
             </Button>
-            <div className="">
+            <div className="w-full">
               <DatePickerWithRange
                 date={dateRange}
                 onDateChange={setDateRange}
