@@ -11,6 +11,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import EditProductPrice from "./EditProductPrice";
+import EditService from "./EditService";
 import { InventoryItem } from "./type";
 
 const statusColors = {
@@ -85,14 +86,10 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const handleOpenSetDiscountModal = () => setAddDiscountModal(true);
       const closeSetDiscountModal = () => setAddDiscountModal(false);
 
-      const [openViewDetails, setOpenViewDetails] = useState(false);
+      const [openEditServiceModal, setOpenEditServiceModal] = useState(false);
       const [openRestockModal, setOpenRestockModal] = useState(false);
 
       const handleOpenRestockModal = () => setOpenRestockModal(true);
-
-      const openViewDetailsFunc = (e: React.MouseEvent) => {
-        setOpenViewDetails(true);
-      };
 
       const openEditPriceModalFunc = (e: React.MouseEvent) => {
         setOpenEditPriceModal(true);
@@ -134,9 +131,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               </DropdownMenuItem>
 
               <DropdownMenuItem
-                onClick={() => {
-                  router.push(`/product/${inventory?.id}/edit-product`);
-                }}
+                onClick={() => setOpenEditServiceModal(true)}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 Edit Service
@@ -202,6 +197,19 @@ export const columns: ColumnDef<InventoryItem>[] = [
               product={inventory}
               type={inventory.type}
               closeModal={() => setOpenEditPriceModal(false)}
+            />
+          </CustomModal>
+          <CustomModal
+            isOpen={openEditServiceModal}
+            onClose={() => setOpenEditServiceModal(false)}
+            trigger={false}
+            title={`Edit ${inventory.type.toLocaleLowerCase()} `}
+          >
+            <EditService
+              serviceId={inventory.id}
+              service={inventory}
+              type={inventory.type}
+              closeModal={() => setOpenEditServiceModal(false)}
             />
           </CustomModal>
           {/*  */}

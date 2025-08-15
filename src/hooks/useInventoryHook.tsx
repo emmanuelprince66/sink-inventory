@@ -27,6 +27,20 @@ const AddDamagedProductSchema = z.object({
   note: z.string().optional(),
 });
 const AddServiceSchema = z.object({
+  image: z.union([
+    z
+      .instanceof(File, { message: "Service image is required" })
+      .refine(
+        (file) => file.size <= 5 * 1024 * 1024,
+        "File size must be less than 5MB"
+      )
+      .refine(
+        (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+        "Only .jpg, .png, and .webp formats are supported"
+      )
+      .optional(),
+    z.string().optional(),
+  ]),
   service_name: z.string().min(1, "Service name is required"),
   description: z.string().optional(),
   category: z.string().min(1, "Category name is required"),
@@ -76,11 +90,15 @@ export const useInventoryHook = ({
   closeModal,
   type,
   selectedType,
+  service,
+  serviceId,
   page,
   product,
 }: {
   searchInput?: string;
   type?: string;
+  service?: any;
+  serviceId?: string | null;
   selectedType?: string | null;
   page?: number;
   selectedCategoryId?: string | null;
@@ -189,7 +207,7 @@ export const useInventoryHook = ({
     isPending: isCreatingService,
     isSuccess: isCreatingServiceSuccess,
   } = useAddServiceMutation({
-    businessId: business_id, // Convert null to undefined
+    businessId: business_id || "", // Convert null to undefined
   });
 
   useEffect(() => {
@@ -231,6 +249,15 @@ export const useInventoryHook = ({
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
+
+  const getCategoryByName = (name: string) => {
+    const category = CategoriesData?.data.find(
+      (category: any) => category.name === name
+    );
+
+    // console.log("category", category);
+    return category?.id;
+  };
 
   console.log("InventoryData", InventoryData);
   console.log("CategoriesData", CategoriesData);
@@ -360,19 +387,61 @@ export const useInventoryHook = ({
   };
 
   const onSubmit = (values: any) => {
-    const payload = {
-      name: values.service_name,
-      description: values.description,
-      category_id: values.category,
-      amount: Number(values.amount),
-    };
-    console.log("payload", payload);
+    console.log("values", values);
+    const formData = new FormData();
 
-    createService({
-      payload,
-      businessId: business_id,
+    // Only include image if it's a File (newly selected)
+    if (values.image instanceof File) {
+      formData.append("image", values.image);
+    }
+
+    const appendIfNotEmpty = (fieldName: string, value: string | undefined) => {
+      if (value !== undefined && value !== null && value !== "") {
+        formData.append(fieldName, value);
+      }
+    };
+    appendIfNotEmpty("name", values.service_name);
+    appendIfNotEmpty("description", values.description);
+    appendIfNotEmpty("category_id", values.category);
+    appendIfNotEmpty("amount", values.amount);
+
+    // In your onSubmit function
+    // Convert FormData to array first for safe iteration
+    const formDataEntries = Array.from(formData.entries());
+    console.log("FormData entries:");
+    formDataEntries.forEach(([key, value]) => {
+      console.log(key, value instanceof File ? `File: ${value.name}` : value);
     });
+
+    createService(
+      { payload: formData, businessId: business_id },
+      {
+        onSuccess: () => {
+          showToast(
+            `Service ${serviceId ? "Updated" : "Created"} successfully`,
+            "success"
+          );
+
+          queryClient.invalidateQueries({
+            queryKey: [queryKey.inventory.getAllInventory],
+          });
+        },
+      }
+    );
   };
+
+  useEffect(() => {
+    if (serviceId && service) {
+      console.log("service-cat", getCategoryByName(service.category));
+      form.reset({
+        image: service.image,
+        service_name: service.name,
+        description: service.description,
+        category: getCategoryByName(service.category) || "",
+        amount: service.amount.toString(),
+      });
+    }
+  }, [serviceId, service]);
   const onSubmitEditSellingPrice = (values: EditSellingPriceFormValues) => {
     const formData = new FormData();
 
@@ -401,6 +470,7 @@ export const useInventoryHook = ({
     // });
     // closeAddServiceModal();
   };
+
   return {
     onSubmitAddReturnedProduct,
     onSubmitAddDamagedProduct,

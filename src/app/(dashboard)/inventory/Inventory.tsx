@@ -319,7 +319,7 @@ const Inventory = () => {
               Services
               {activeTab === "SERVICE" && (
                 <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
-                  5
+                  {totalItems.toLocaleString()}
                 </span>
               )}
             </button>
