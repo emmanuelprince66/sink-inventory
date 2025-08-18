@@ -12,7 +12,9 @@ export interface NotificationPayload {
 }
 
 class NotificationService {
-  private vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+  // private vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
+  private vapidKey =
+    "BJOcpFybqQIEbA0-MGGHcsOsg1-2ODsiTlJ6rDvFdXqqC_3-JCaSE7Wtx9et8TpfeDqpj8gaXv8As_3ry8a9de0";
 
   async requestPermission(): Promise<boolean> {
     if (!("Notification" in window)) {
