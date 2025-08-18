@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: false,
-  },
   images: {
     remotePatterns: [
       {
@@ -12,7 +9,6 @@ const nextConfig = {
       },
     ],
   },
-  // Add headers for service worker (App Router)
   async headers() {
     return [
       {
@@ -28,7 +24,7 @@ const nextConfig = {
           },
           {
             key: "Content-Type",
-            value: "application/javascript",
+            value: "text/javascript", // ✅ fix
           },
         ],
       },
