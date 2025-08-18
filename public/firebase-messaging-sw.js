@@ -20,7 +20,7 @@ const firebaseConfig = {
 // Initialize Firebase
 try {
   firebase.initializeApp(firebaseConfig);
-  console.log("✅ Firebase initialized in service worker");
+  // console.log("✅ Firebase initialized in service worker");
 } catch (error) {
   console.error("❌ Firebase initialization failed:", error);
 }
@@ -173,13 +173,13 @@ self.addEventListener("message", (event) => {
 
 // Add install and activate listeners for better service worker lifecycle management
 self.addEventListener("install", (event) => {
-  console.log("🔧 Service worker installing...");
+  // console.log("🔧 Service worker installing...");
   self.skipWaiting(); // Force the waiting service worker to become the active service worker
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("🔧 Service worker activating...");
+  // console.log("🔧 Service worker activating...");
   event.waitUntil(clients.claim()); // Claim all clients immediately
 });
 
-console.log("🔧 Firebase messaging service worker loaded successfully");
+// console.log("🔧 Firebase messaging service worker loaded successfully");

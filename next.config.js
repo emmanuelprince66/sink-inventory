@@ -12,15 +12,9 @@ const nextConfig = {
       },
     ],
   },
-  // Ensure service worker is accessible at root
-  async rewrites() {
-    return [
-      {
-        source: "/firebase-messaging-sw.js",
-        destination: "/firebase-messaging-sw.js",
-      },
-    ];
-  },
+  // Remove the rewrites - they're causing the redirect issue
+  // The service worker should be served directly from public folder
+
   // Add headers for service worker
   async headers() {
     return [
@@ -34,6 +28,10 @@ const nextConfig = {
           {
             key: "Cache-Control",
             value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
           },
         ],
       },

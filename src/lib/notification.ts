@@ -129,23 +129,23 @@ class NotificationService {
 
     navigator.serviceWorker.ready
       .then((registration) => {
-        const options: any = {
+        const options: NotificationOptions = {
           body: payload.body,
           icon: payload.icon || "/icons/notification-icon.png",
           badge: payload.badge || "/icons/badge-icon.png",
           tag: payload.tag || "sync360-notification",
           data: payload.data,
           requireInteraction: false,
-          actions: [
-            {
-              action: "view",
-              title: "View",
-            },
-            {
-              action: "dismiss",
-              title: "Dismiss",
-            },
-          ],
+          // actions: [
+          //   {
+          //     action: "view",
+          //     title: "View",
+          //   },
+          //   {
+          //     action: "dismiss",
+          //     title: "Dismiss",
+          //   },
+          // ],
         };
 
         return registration.showNotification(payload.title, options);

@@ -211,9 +211,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       if (permission !== "granted") {
         const granted = await requestPermission();
         if (!granted) return null;
+        console.log("🔑 Permission granted---noyi, getting token...");
       }
+      console.log("🔑 FCM Token retrieved:-----noiyyyt");
 
       const newToken = await notificationService.getToken();
+
+      console.log("🔑 FCM Token retrieved:-----noi", newToken);
       setToken(newToken);
       return newToken;
     } catch (error) {

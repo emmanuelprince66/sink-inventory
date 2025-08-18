@@ -1,7 +1,6 @@
 import { useLoginMutation } from "@/api/auth/login-user";
 import { useNotification } from "@/components/providers/notification-provider";
 import { useToast } from "@/hooks/toast/useToast";
-import { notificationService } from "@/lib/notification";
 import { useUserStore } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -40,11 +39,11 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   const { isSupported, permission, token, requestPermission, getToken } =
     useNotification();
 
-  console.log("token", token);
-
   const handleGetToken = async () => {
     setIsLoading(true);
     try {
+      console.log("token", token);
+
       const newToken = await getToken();
       if (newToken) {
         setFcmToken(newToken);
@@ -125,43 +124,38 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   });
 
   const onSubmit = async (values: LoginFormValues) => {
+    console.log("Form submitted with values:", values);
     try {
-      // Prepare the payload
-      const payload: LoginPayload = {
-        ...values,
-      };
-
+      const payload: LoginPayload = { ...values };
       console.log("🔔 Getting FCM token before login...");
 
-      // Always try to get FCM token first - wait for it
       let currentFcmToken = fcmToken;
-
       console.log("🔑 Current FCM token:", currentFcmToken);
 
       if (!currentFcmToken) {
         try {
           console.log("🔑 Requesting notification permission...");
-
-          // Wait for permission request
-          const granted = await notificationService.requestPermission();
-
+          const granted = await requestPermission();
           console.log("🔑 Permission granted:", granted);
           if (granted) {
             console.log("✅ Permission granted, getting token...");
-            // Wait for token generation
-            currentFcmToken = await notificationService.getToken();
-
-            console.log("🔑 FCM token obtained:", currentFcmToken);
+            try {
+              currentFcmToken = await getToken();
+              console.log("🔑 FCM token obtained:", currentFcmToken || "null");
+            } catch (tokenError) {
+              console.error("❌ Failed to get FCM token:", tokenError);
+            }
           } else {
             console.log("❌ Permission denied by user");
           }
         } catch (error) {
-          console.log("❌ Error getting FCM token:", error);
-          // Error occurred - continue with login without token
+          console.error(
+            "❌ Error during permission or token retrieval:",
+            error
+          );
         }
       }
 
-      // Add FCM token to payload if we got one
       if (currentFcmToken) {
         payload.fcm_token = currentFcmToken;
         console.log("🔑 FCM token included in login payload");
@@ -169,12 +163,10 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         console.log("⚠️ Proceeding with login without FCM token");
       }
 
-      console.log("📤 Submitting login payload");
-
-      // Now submit login with or without token
+      console.log("📤 Submitting login payload:", payload);
       loginUser(payload, {
         onError: (error) => {
-          // Handle specific API errors
+          console.log("Login API error:", error);
           if (error.statusCode === 401) {
             form.setError("password", {
               type: "manual",
@@ -188,7 +180,6 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       showToast("An error occurred during login", "error");
     }
   };
-
   return {
     form,
     onSubmit,
