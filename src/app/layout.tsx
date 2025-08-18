@@ -1,11 +1,11 @@
 // app/layout.tsx
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { NotificationProvider } from "@/components/providers/notification-provider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProviders";
 import { ToastProvider } from "@/providers/ToastProvider";
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
-
 const nunito = Nunito({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -26,8 +26,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${nunito.className} antialiased`}>
         <ReactQueryProvider>
-          <ToastProvider />
-          <AuthProvider>{children}</AuthProvider>
+          <NotificationProvider>
+            <ToastProvider />
+            <AuthProvider>{children}</AuthProvider>
+          </NotificationProvider>
         </ReactQueryProvider>
       </body>
     </html>

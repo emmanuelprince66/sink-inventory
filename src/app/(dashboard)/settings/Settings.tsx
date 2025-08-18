@@ -22,14 +22,15 @@ const Settings = () => {
           "Currency & Localization",
         ]
       : ([
-          "Bank",
           "Security & Privacy",
           "Notifications",
           "Currency & Localization",
         ] as const);
 
+  const initialTab = user?.role === "OWNER" ? "Bank" : "Security & Privacy";
+
   const [activeTab, setActiveTab] =
-    useState<(typeof SettingsOptionsTab)[number]>("Bank");
+    useState<(typeof SettingsOptionsTab)[number]>(initialTab);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
@@ -65,11 +66,13 @@ const Settings = () => {
 
           {/* Tab Content */}
           <div className="w-full">
-            <TabsContent value="Bank" className="mt-0">
-              <div className="w-full overflow-hidden">
-                <Bank />
-              </div>
-            </TabsContent>
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Bank" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <Bank />
+                </div>
+              </TabsContent>
+            )}
 
             {user && user?.role === "OWNER" && (
               <TabsContent value="Staff" className="mt-0">

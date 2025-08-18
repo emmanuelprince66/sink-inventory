@@ -7,7 +7,7 @@ import { useEffect } from "react";
 export function AuthInitializer() {
   const { user, setLoading } = useUserStore();
 
-  console.log("AuthInitializer: Initializing authentication...", user);
+  // console.log("AuthInitializer: Initializing authentication...", user);
 
   useEffect(() => {
     const initializeAuth = async () => {

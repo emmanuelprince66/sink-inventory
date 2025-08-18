@@ -35,7 +35,8 @@ const Transfer = () => {
     enquiryLoading,
   } = useTransactionsHook({ recipientBank, accountNumber });
 
-  console.log("TrxData", trxData);
+  console.log("TrxData", trxData?.data?.results?.wallet_details?.balance);
+  const trxBalance = trxData?.data?.results?.wallet_details?.balance || 0;
 
   // Transform bank data to select options
   useEffect(() => {
@@ -94,6 +95,16 @@ const Transfer = () => {
 
     if (!beneficiaryInfo?.data?.name) {
       setMessage("Please wait for account name verification.");
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      setMessage("Please enter a valid amount greater than zero.");
+      return;
+    }
+
+    if (parseFloat(amount) > trxBalance) {
+      setMessage("Insufficient balance for this transfer.");
       return;
     }
 

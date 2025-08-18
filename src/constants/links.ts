@@ -87,7 +87,7 @@ export const links = [
         title: "Transactions",
         url: "/transactions",
         icon: CreditCard,
-        roles: ["OWNER"],
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
       },
     ],
   },
