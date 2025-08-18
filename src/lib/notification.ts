@@ -1,3 +1,4 @@
+// src/lib/notifications.ts
 import { getToken, onMessage } from "firebase/messaging";
 import { messaging } from "./firebase";
 
@@ -18,10 +19,13 @@ class NotificationService {
     if (this.isInitialized || typeof window === "undefined") return;
 
     try {
+      // Register service worker
       if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.register(
           "/firebase-messaging-sw.js",
-          { scope: "/" }
+          {
+            scope: "/",
+          }
         );
         console.log("✅ Service Worker registered:", registration);
         this.isInitialized = true;
@@ -33,36 +37,43 @@ class NotificationService {
 
   async requestPermission(): Promise<boolean> {
     if (!("Notification" in window)) {
-      console.log("❌ Notifications not supported");
+      console.log("❌ This browser does not support notifications");
       return false;
     }
 
-    if (Notification.permission === "granted") return true;
-    if (Notification.permission === "denied") return false;
+    if (Notification.permission === "granted") {
+      return true;
+    }
+
+    if (Notification.permission === "denied") {
+      console.log("❌ Notification permission denied");
+      return false;
+    }
 
     const permission = await Notification.requestPermission();
-    console.log(`🔔 Permission: ${permission}`);
+    console.log(`🔔 Notification permission: ${permission}`);
     return permission === "granted";
   }
 
   async getToken(): Promise<string | null> {
     if (!messaging || !this.vapidKey) {
-      console.error("❌ Messaging not initialized or VAPID key missing");
+      console.error(
+        "❌ Firebase messaging not initialized or VAPID key missing"
+      );
+      console.log("VAPID key present:", !!this.vapidKey);
       return null;
     }
 
     try {
+      // Ensure service worker is registered first
       await this.init();
-
-      const registration = await navigator.serviceWorker.ready;
 
       const token = await getToken(messaging, {
         vapidKey: this.vapidKey,
-        serviceWorkerRegistration: registration, // ✅ important for Vercel
       });
 
       if (token) {
-        console.log("✅ FCM Token:", token.substring(0, 20) + "...");
+        console.log("✅ FCM Token obtained:", token.substring(0, 20) + "...");
         await this.saveTokenToBackend(token);
         return token;
       } else {
@@ -79,53 +90,78 @@ class NotificationService {
     try {
       const response = await fetch("/api/notifications/token", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ token }),
       });
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       console.log("✅ Token saved to backend");
     } catch (error) {
-      console.error("❌ Error saving token:", error);
+      console.error("❌ Error saving token to backend:", error);
     }
   }
 
   onMessageListener(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!messaging) {
-        reject(new Error("Messaging not initialized"));
+        console.error("❌ Firebase messaging not initialized");
+        reject(new Error("Firebase messaging not initialized"));
         return;
       }
+
       onMessage(messaging, (payload) => {
-        console.log("📨 Foreground message:", payload);
+        console.log("📨 Foreground message received:", payload);
         resolve(payload);
       });
     });
   }
 
   showNotification(payload: NotificationPayload): void {
-    if (!("serviceWorker" in navigator)) return;
+    if (!("serviceWorker" in navigator)) {
+      console.log("❌ Service Worker not supported");
+      return;
+    }
 
-    navigator.serviceWorker.ready.then((registration) => {
-      registration.showNotification(payload.title, {
-        body: payload.body,
-        icon: payload.icon || "/icons/notification-icon.png",
-        badge: payload.badge || "/icons/badge-icon.png",
-        tag: payload.tag || "sync360-notification",
-        data: payload.data,
-        requireInteraction: false,
-        // actions: [
-        //   { action: "view", title: "View" },
-        //   { action: "dismiss", title: "Dismiss" },
-        // ],
+    navigator.serviceWorker.ready
+      .then((registration) => {
+        const options: any = {
+          body: payload.body,
+          icon: payload.icon || "/icons/notification-icon.png",
+          badge: payload.badge || "/icons/badge-icon.png",
+          tag: payload.tag || "sync360-notification",
+          data: payload.data,
+          requireInteraction: false,
+          actions: [
+            {
+              action: "view",
+              title: "View",
+            },
+            {
+              action: "dismiss",
+              title: "Dismiss",
+            },
+          ],
+        };
+
+        return registration.showNotification(payload.title, options);
+      })
+      .catch((error) => {
+        console.error("❌ Error showing notification:", error);
       });
-    });
   }
 
+  // Setup foreground message listener
   setupForegroundListener(): void {
     this.onMessageListener()
       .then((payload) => {
+        console.log("📨 Received foreground message:", payload);
+
+        // Show notification even when app is in foreground
         this.showNotification({
           title:
             payload.notification?.title || payload.data?.title || "New Message",
@@ -137,7 +173,9 @@ class NotificationService {
           data: payload.data,
         });
       })
-      .catch(console.error);
+      .catch((error) => {
+        console.error("❌ Error setting up foreground listener:", error);
+      });
   }
 }
 
