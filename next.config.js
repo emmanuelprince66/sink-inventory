@@ -12,16 +12,7 @@ const nextConfig = {
       },
     ],
   },
-  // Ensure service worker is accessible at root
-  async rewrites() {
-    return [
-      {
-        source: "/firebase-messaging-sw.js",
-        destination: "/firebase-messaging-sw.js",
-      },
-    ];
-  },
-  // Add headers for service worker
+  // Add headers for service worker (App Router)
   async headers() {
     return [
       {
@@ -34,6 +25,10 @@ const nextConfig = {
           {
             key: "Cache-Control",
             value: "no-cache, no-store, must-revalidate",
+          },
+          {
+            key: "Content-Type",
+            value: "application/javascript",
           },
         ],
       },
