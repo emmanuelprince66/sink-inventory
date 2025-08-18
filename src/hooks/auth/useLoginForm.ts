@@ -134,21 +134,26 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
 
       if (!currentFcmToken) {
         try {
+          setIsLoading(true);
           console.log("🔑 Requesting notification permission...");
           const granted = await requestPermission();
           console.log("🔑 Permission granted:", granted);
           if (granted) {
             console.log("✅ Permission granted, getting token...");
             try {
+              setIsLoading(true);
               currentFcmToken = await getToken();
               console.log("🔑 FCM token obtained:", currentFcmToken || "null");
             } catch (tokenError) {
+              setIsLoading(false);
               console.error("❌ Failed to get FCM token:", tokenError);
             }
           } else {
+            setIsLoading(false);
             console.log("❌ Permission denied by user");
           }
         } catch (error) {
+          setIsLoading(false);
           console.error(
             "❌ Error during permission or token retrieval:",
             error
@@ -184,9 +189,10 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     form,
     onSubmit,
     showLogin,
-    isSubmitting: isPending,
+    isSubmitting: isPending || isLoading,
     isError,
     setShowLogin,
+
     error,
   };
 };
