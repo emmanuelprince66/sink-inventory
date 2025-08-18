@@ -65,6 +65,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       setFcmToken(token);
       console.log("🔑 FCM Token from context:", token);
     } else {
+      console.log("🔑 No token found, trying to get a new token...");
       handleGetToken();
     }
   }, [token, permission]);
