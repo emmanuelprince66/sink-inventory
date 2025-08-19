@@ -743,7 +743,6 @@ const PrintReceiptView = ({
                 <tr key={item.id}>
                   <td className="item-name text-[11px] ">{item.name}</td>
                   {/* <td className="text-center text-[11px] ">
-                    {item.cartQuantity || 1}
                   </td> */}
                   <td className="text-right text-[11px]  price-cell">
                     {/* {formatToNaira(item.selling_price) ||
