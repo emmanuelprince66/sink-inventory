@@ -14,6 +14,8 @@ export interface NotificationPayload {
 class NotificationService {
   private vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
   private isInitialized = false;
+  private showModalCallback: ((payload: NotificationPayload) => void) | null =
+    null;
 
   async init(): Promise<void> {
     if (this.isInitialized || typeof window === "undefined") return;
@@ -74,7 +76,7 @@ class NotificationService {
 
       if (token) {
         console.log("✅ FCM Token obtained:", token.substring(0, 20) + "...");
-        await this.saveTokenToBackend(token);
+        // await this.saveTokenToBackend(token);
         return token;
       } else {
         console.log("❌ No registration token available");
@@ -83,26 +85,6 @@ class NotificationService {
     } catch (error) {
       console.error("❌ Error retrieving FCM token:", error);
       return null;
-    }
-  }
-
-  async saveTokenToBackend(token: string): Promise<void> {
-    try {
-      const response = await fetch("/api/notifications/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      console.log("✅ Token saved to backend");
-    } catch (error) {
-      console.error("❌ Error saving token to backend:", error);
     }
   }
 
@@ -121,48 +103,34 @@ class NotificationService {
     });
   }
 
-  showNotification(payload: NotificationPayload): void {
-    if (!("serviceWorker" in navigator)) {
-      console.log("❌ Service Worker not supported");
-      return;
-    }
-
-    navigator.serviceWorker.ready
-      .then((registration) => {
-        const options: NotificationOptions = {
-          body: payload.body,
-          icon: payload.icon || "/icons/notification-icon.png",
-          badge: payload.badge || "/icons/badge-icon.png",
-          tag: payload.tag || "sync360-notification",
-          data: payload.data,
-          requireInteraction: false,
-          // actions: [
-          //   {
-          //     action: "view",
-          //     title: "View",
-          //   },
-          //   {
-          //     action: "dismiss",
-          //     title: "Dismiss",
-          //   },
-          // ],
-        };
-
-        return registration.showNotification(payload.title, options);
-      })
-      .catch((error) => {
-        console.error("❌ Error showing notification:", error);
-      });
+  // Register modal show callback
+  setModalCallback(callback: (payload: NotificationPayload) => void): void {
+    this.showModalCallback = callback;
   }
 
-  // Setup foreground message listener
+  // Show custom modal directly
+  showCustomNotification(payload: NotificationPayload): void {
+    console.log("📨 Showing custom notification modal:", payload);
+
+    if (this.showModalCallback) {
+      // check for the ttype of notifcation and revalidate a query
+
+      this.showModalCallback(payload);
+    } else {
+      console.warn(
+        "❌ Modal callback not registered. Make sure to call setModalCallback() first."
+      );
+    }
+  }
+
+  // Setup foreground message listener with custom modal
   setupForegroundListener(): void {
     this.onMessageListener()
       .then((payload) => {
         console.log("📨 Received foreground message:", payload);
 
-        // Show notification even when app is in foreground
-        this.showNotification({
+        // Show custom modal instead of native notification
+        this.showCustomNotification({
           title:
             payload.notification?.title || payload.data?.title || "New Message",
           body:

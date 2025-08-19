@@ -213,7 +213,6 @@ const ReceiptPage = ({
   const paymentMethodOptions = customer
     ? [
         { label: "Cash", value: "CASH" },
-        { label: "Mycliq", value: "MYCLIQ" },
         { label: "Credit", value: "CREDIT" },
         { label: "Partial", value: "PARTIAL" },
         { label: "Bank Transfer", value: "BANK" },
@@ -221,7 +220,6 @@ const ReceiptPage = ({
       ]
     : [
         { label: "Cash", value: "CASH" },
-        { label: "Mycliq", value: "MYCLIQ" },
         { label: "Bank Transfer", value: "BANK" },
       ];
 

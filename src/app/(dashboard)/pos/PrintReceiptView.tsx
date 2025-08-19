@@ -645,7 +645,7 @@ const PrintReceiptView = ({
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
-        .price-cell { font-weight: bold !important; font-size: 10px; display: flex; align-items: center; }
+        .price-cell { font-weight: bold !important; font-size: 10px; gap: -4px; display: flex; align-items: center;flex-direction: column; justify-content: flex-start; }
         .price-celll { font-weight: bold !important; font-size: 10px; }
         .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
         .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
@@ -753,6 +753,14 @@ const PrintReceiptView = ({
                     {item?.selling_price
                       ? formatToNaira(item.selling_price)
                       : formatToNaira(item.amount) ?? "₦0"}
+                    {discount && discountAmount > 0 && (
+                      <p className="text-italic text-green-600 text-[8px]">
+                        Discount -{" "}
+                        {discount.type === "fixed"
+                          ? `₦${discount.value}`
+                          : `${discount.value}%`}
+                      </p>
+                    )}
                   </td>
                   <td className="text-right text-[11px] price-celll">
                     {formatToNaira(

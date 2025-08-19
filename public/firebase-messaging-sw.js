@@ -1,4 +1,3 @@
-// public/firebase-messaging-sw.js
 importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"
 );
@@ -6,8 +5,7 @@ importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"
 );
 
-// Note: In service worker, we can't access process.env directly
-// The config will be passed from the main thread or hardcoded
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCGLjB-VYTsjcCHAOZxg7a57caGK0nfUWE",
   authDomain: "sync360-78f4d.firebaseapp.com",
@@ -20,33 +18,32 @@ const firebaseConfig = {
 // Initialize Firebase
 try {
   firebase.initializeApp(firebaseConfig);
-  // console.log("✅ Firebase initialized in service worker");
 } catch (error) {
   console.error("❌ Firebase initialization failed:", error);
 }
 
 const messaging = firebase.messaging();
 
-// Enhanced background message handler with better error handling
+// Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log("🔔 Received background message:", payload);
 
   try {
-    const notificationTitle =
-      payload.notification?.title || payload.data?.title || "New Notification";
-    const notificationBody =
-      payload.notification?.body ||
-      payload.data?.body ||
-      "You have a new message";
-
-    const notificationOptions = {
-      body: notificationBody,
+    // Prepare the payload to match NotificationPayload interface
+    const notificationPayload = {
+      title:
+        payload.notification?.title ||
+        payload.data?.title ||
+        "New Notification",
+      body:
+        payload.notification?.body ||
+        payload.data?.body ||
+        "You have a new message",
       icon:
         payload.notification?.icon ||
         payload.data?.icon ||
         "/icons/notification-icon.png",
       badge: payload.data?.badge || "/icons/badge-icon.png",
-      image: payload.notification?.image || payload.data?.image,
       tag: payload.data?.tag || "sync360-notification",
       data: {
         ...payload.data,
@@ -55,35 +52,38 @@ messaging.onBackgroundMessage((payload) => {
         click_action:
           payload.data?.click_action || payload.fcmOptions?.link || "/",
       },
-      requireInteraction: false, // Changed to false for better UX
-      actions: [
-        {
-          action: "view",
-          title: "View",
-        },
-        {
-          action: "dismiss",
-          title: "Dismiss",
-        },
-      ],
     };
 
-    console.log(
-      "📱 Showing notification:",
-      notificationTitle,
-      notificationOptions
-    );
+    // Send the payload to all open clients
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clients) => {
+        if (clients.length === 0) {
+          console.log("❌ No open clients to send notification");
+          // Fallback to native notification if no clients are open
+          return self.registration.showNotification(notificationPayload.title, {
+            body: notificationPayload.body,
+            icon: notificationPayload.icon,
+            badge: notificationPayload.badge,
+            tag: notificationPayload.tag,
+            data: notificationPayload.data,
+            requireInteraction: false,
+          });
+        }
 
-    return self.registration.showNotification(
-      notificationTitle,
-      notificationOptions
-    );
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "BACKGROUND_NOTIFICATION",
+            payload: notificationPayload,
+          });
+        });
+      });
   } catch (error) {
-    console.error("❌ Error showing notification:", error);
+    console.error("❌ Error handling background message:", error);
   }
 });
 
-// Enhanced notification click handler
+// Handle notification clicks
 self.addEventListener("notificationclick", (event) => {
   console.log("🖱️ Notification click received:", event);
 
@@ -98,20 +98,18 @@ self.addEventListener("notificationclick", (event) => {
         return;
       }
 
-      // Handle view action or default click
       console.log(
         event.action === "view"
           ? "👀 View action clicked"
           : "📱 Default notification click"
       );
 
-      // Try to focus existing window first
+      // Try to focus existing window
       const windowClients = await clients.matchAll({
         type: "window",
         includeUncontrolled: true,
       });
 
-      // Check if there's already a window open
       for (const client of windowClients) {
         if (
           client.url.includes(
@@ -132,10 +130,9 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
 
-      // If no matching window, open new one
+      // Open new window if no matching window exists
       const newWindow = await clients.openWindow(clickAction);
       if (newWindow) {
-        // Send message after a brief delay to ensure window is ready
         setTimeout(() => {
           newWindow.postMessage({
             type: "notification_click",
@@ -156,30 +153,11 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(handleClick());
 });
 
-// Enhanced message listener
-self.addEventListener("message", (event) => {
-  console.log("📨 Service worker received message:", event.data);
-
-  if (event.data && event.data.type === "FCM_MESSAGE") {
-    const clients = event.ports[0];
-    if (clients) {
-      clients.postMessage({
-        type: "notification",
-        ...event.data.payload,
-      });
-    }
-  }
-});
-
-// Add install and activate listeners for better service worker lifecycle management
+// Service worker lifecycle management
 self.addEventListener("install", (event) => {
-  // console.log("🔧 Service worker installing...");
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  // console.log("🔧 Service worker activating...");
-  event.waitUntil(clients.claim()); // Claim all clients immediately
+  event.waitUntil(clients.claim());
 });
-
-// console.log("🔧 Firebase messaging service worker loaded successfully");
