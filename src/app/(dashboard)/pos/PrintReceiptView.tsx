@@ -14,7 +14,6 @@ import {
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, Download, PlusCircle, Printer } from "lucide-react";
-import moment from "moment";
 import printJS from "print-js";
 import { useRef, useState } from "react";
 
@@ -134,11 +133,12 @@ const styles = StyleSheet.create({
     fontSize: 10, // Added for consistency
   },
   cellPrice: {
-    flex: 2,
-    textAlign: "right",
+    // flex: 2,
     display: "flex",
-    alignItems: "center",
-    paddingRight: 2, // Reduced from 4
+    flexDirection: "column",
+    alignItems: "flex-start",
+    textAlign: "right",
+    // paddingRight: 2, // Reduced from 4
     fontSize: 10, // Added for consistency
   },
   cellTotal: {
@@ -331,9 +331,9 @@ const ReceiptPDFDocument = ({
               <Text style={[styles.cellItem, styles.tableHeaderText]}>
                 ITEM
               </Text>
-              {/* <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text> */}
+              <Text style={[styles.cellQty, styles.tableHeaderText]}>QTY</Text>
               <Text style={[styles.cellPrice, styles.tableHeaderText]}>
-                UNIT/PRICE
+                PRICE
               </Text>
               <Text style={[styles.cellTotal, styles.tableHeaderText]}>
                 TOTAL
@@ -346,17 +346,34 @@ const ReceiptPDFDocument = ({
                 <View style={styles.cellItem}>
                   <Text style={styles.itemName}>{item.name}</Text>
                 </View>
-                {/* <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text> */}
-                <Text style={styles.cellPrice}>
+                <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
+                <View style={styles.cellPrice}>
                   {/* {(
                     (item.selling_price || item.amount || 0) *
                     (item.cartQuantity || 1)
                   ).toLocaleString()} */}
-                  {item.cartQuantity || 1}* {""}
-                  {item?.selling_price
-                    ? item.selling_price.toLocaleString()
-                    : item.amount.toLocaleString() ?? 0}
-                </Text>
+
+                  <Text>
+                    {item?.selling_price
+                      ? item.selling_price.toLocaleString()
+                      : item.amount.toLocaleString() ?? 0}
+                  </Text>
+
+                  {discount && discountAmount > 0 && (
+                    <Text
+                      style={{
+                        fontSize: 6,
+                        fontStyle: "italic",
+                        color: "green",
+                      }}
+                    >
+                      Discount -{" "}
+                      {discount.type === "fixed"
+                        ? `₦${discount.value}`
+                        : `${discount.value}%`}
+                    </Text>
+                  )}
+                </View>
                 <Text style={styles.cellTotal}>
                   {(
                     (item.selling_price || item.amount || 0) *
@@ -585,15 +602,7 @@ const PrintReceiptView = ({
         style: `
         @page { size: auto; margin: 2mm; }
         body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
-    .receipt-container { 
-      width: 100%; 
-      max-width: 60mm; 
-      margin: 0 auto; 
-      padding: 1mm; 
-      background: white;
-      border-radius: 2px;
-      box-sizing: border-box;
-    }
+        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
         table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
         th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
         td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
@@ -640,13 +649,12 @@ const PrintReceiptView = ({
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
         .item-name { font-weight: bold; font-size: 10px; }
-        .detail-row { display: flex; justify-content: start; margin-bottom: 1px; font-size: 10px; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #6b7280; font-size: 10px; }
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
-        .price-cell { font-weight: bold !important; font-size: 10px; gap: -4px; display: flex; align-items: center;flex-direction: column; justify-content: flex-start; }
-        .price-celll { font-weight: bold !important; font-size: 10px; }
+        .price-cell { font-weight: bold !important; font-size: 10px; }
         .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
         .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
         .receipt-little { font-size: 10px; font-weight: semibold; margin: 1px 0; }
@@ -703,7 +711,7 @@ const PrintReceiptView = ({
       {/* Receipt content - Updated to match desired format */}
       <div
         ref={receiptRef}
-        className="receipt-container max-w-[90%] mx-auto bg-white rounded-lg w-full p-2"
+        className="receipt-container bg-white rounded-lg w-full p-2"
       >
         {/* Receipt header */}
         <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
@@ -728,13 +736,13 @@ const PrintReceiptView = ({
         </div>
 
         {/* Items table */}
-        <div className="items-table">
-          <table className="w-full table-fit ">
+        <div className="items-table w-full">
+          <table className="w-full table-auto ">
             <thead className="w-full">
               <tr className="text-left bg-green-50 w-full">
                 <th>ITEM</th>
-                {/* <th className="text-center text-[11px] ">QTY</th> */}
-                <th className="text-right text-[11px] ">Unit/Price</th>
+                <th className="text-center text-[11px] ">QTY</th>
+                <th className="text-right text-[11px] ">PRICE</th>
                 <th className="text-right text-[11px] ">TOTAL</th>
               </tr>
             </thead>
@@ -742,16 +750,18 @@ const PrintReceiptView = ({
               {cart.map((item) => (
                 <tr key={item.id}>
                   <td className="item-name text-[11px] ">{item.name}</td>
-                  {/* <td className="text-center text-[11px] ">
-                  </td> */}
+                  <td className="text-center text-[11px] ">
+                    {item.cartQuantity || 1}
+                  </td>
                   <td className="text-right text-[11px]  price-cell">
                     {/* {formatToNaira(item.selling_price) ||
                       formatToNaira(item.amount) ||
                       "₦0"} */}
-                    {item.cartQuantity || 1} *{" "}
+
                     {item?.selling_price
                       ? formatToNaira(item.selling_price)
                       : formatToNaira(item.amount) ?? "₦0"}
+
                     {discount && discountAmount > 0 && (
                       <p className="text-italic text-green-600 text-[8px]">
                         Discount -{" "}
@@ -761,7 +771,7 @@ const PrintReceiptView = ({
                       </p>
                     )}
                   </td>
-                  <td className="text-right text-[11px] price-celll">
+                  <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
                         (item.cartQuantity || 1)
@@ -806,24 +816,21 @@ const PrintReceiptView = ({
 
         {/* Transaction details */}
         <div className="transaction-details">
-          <div className="detail-row flex justify-start items-center">
+          <div className="detail-row flex justify-between items-center">
             <span className="detail-label text-[11px] ">Date:</span>
             <span className="detail-value text-[11px] ">
-              {moment(createSaleResponse?.data?.created_at).format(
-                "DD/MM/YYYY"
-              ) || Date.now()}
-              {/* {format(
+              {format(
                 new Date(createSaleResponse?.data?.created_at || Date.now()),
                 "MMMM d, yyyy, h:mm a"
-              )} */}
+              )}
             </span>
           </div>
-          <div className="detail-row flex justify-start items-center">
+          <div className="detail-row flex justify-between items-center">
             <span className="detail-label text-[11px] ">Receipt No:</span>
             <span className="detail-value text-[11px] ">{receiptNumber}</span>
           </div>
           {customer && (
-            <div className="detail-row flex justify-start items-center">
+            <div className="detail-row flex justify-between items-center">
               <span className="detail-label text-[11px] ">Customer:</span>
               <span className="detail-value text-[11px] ">
                 {customer?.name}
@@ -831,7 +838,7 @@ const PrintReceiptView = ({
             </div>
           )}
           {attendant && (
-            <div className="detail-row flex justify-start items-center">
+            <div className="detail-row flex justify-between items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
               <span className="detail-value text-[11px] ">
                 {attendant?.name}
@@ -839,7 +846,7 @@ const PrintReceiptView = ({
             </div>
           )}
           {user?.role === "ATTENDANT" && (
-            <div className="detail-row flex justify-start items-center">
+            <div className="detail-row flex justify-between items-center">
               <span className="detail-label text-[11px] ">Attendant:</span>
               <span className="detail-value text-[11px] capitalize ">
                 {user?.name}
