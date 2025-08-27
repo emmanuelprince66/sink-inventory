@@ -605,7 +605,7 @@ const PrintReceiptView = ({
         .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
         table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
         th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4;  }
-        td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
+       
         .text-green-600 { color: #16a34a !important; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -647,14 +647,18 @@ const PrintReceiptView = ({
         }
 
 .price-cell-container {
-  display: inline-block;
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  min-height: 20px; /* Set a consistent minimum height */
 }
 
 .price-main {
   font-size: 10px;
   font-weight: bold;
   color: #000;
+  line-height: 1.2;
 }
 
 .discount-text {
@@ -662,7 +666,16 @@ const PrintReceiptView = ({
   font-style: italic;
   color: #16a34a !important;
   font-weight: normal;
-  margin-left: 4px;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+/* Ensure all table rows have consistent alignment */
+td {
+  padding: 1px; 
+  font-size: 10px; 
+  border-bottom: 0.5px solid #f3f4f6;
+  vertical-align: top; /* This ensures all cells align to the top */
 }
 
 
@@ -776,23 +789,21 @@ const PrintReceiptView = ({
                   </td>
                   <td className="text-right text-[11px] price-cell">
                     <div className="price-cell-container">
-                      <span className="price-main">
+                      <div className="price-main">
                         {item?.selling_price
                           ? formatToNaira(item.selling_price)
                           : formatToNaira(item.amount) ?? "₦0"}
-                      </span>
+                      </div>
                       {discount && discountAmount > 0 && (
-                        <span className="discount-text">
-                          {" "}
+                        <div className="discount-text">
                           Discount -{" "}
                           {discount.type === "fixed"
                             ? `₦${discount.value}`
                             : `${discount.value}%`}
-                        </span>
+                        </div>
                       )}
                     </div>
                   </td>
-
                   <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
