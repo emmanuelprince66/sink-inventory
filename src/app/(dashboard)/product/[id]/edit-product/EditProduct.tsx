@@ -206,7 +206,7 @@ const EditProduct = ({ id }: { id: string }) => {
                 )}
               />
 
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="date"
                 render={({ field }) => (
@@ -256,7 +256,7 @@ const EditProduct = ({ id }: { id: string }) => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               {/* Category */}
               <FormField
                 control={form.control}
