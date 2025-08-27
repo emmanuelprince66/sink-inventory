@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { usePinHook } from "@/hooks/usePinHook";
-const Pin = () => {
+const Pin = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { pinForm, onSubmitPinForm, CreatePinLoading } = usePinHook();
   return (
     <div className="w-full">

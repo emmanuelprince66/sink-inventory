@@ -10,7 +10,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { usePinHook } from "@/hooks/usePinHook";
-const ChangePin = () => {
+const ChangePin = ({
+  onForgetPin,
+  onSuccess,
+}: {
+  onForgetPin?: any;
+  onSuccess?: any;
+}) => {
   const { changePinForm, onSubmitChangePinForm, ChangePinLoading } =
     usePinHook();
   return (
@@ -64,6 +70,16 @@ const ChangePin = () => {
           >
             {ChangePinLoading ? <Spinner /> : "Update Pin"}
           </Button>
+
+          <div className="w-full flex items-center justify-center">
+            <Button
+              variant="link"
+              className="text-sm text-red-600 hover:underline"
+              onClick={onForgetPin}
+            >
+              Forgot Pin?
+            </Button>
+          </div>
         </form>
       </Form>
     </div>

@@ -604,7 +604,7 @@ const PrintReceiptView = ({
         body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
         .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
         table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
-        th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
+        th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4;  }
         td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
         .text-green-600 { color: #16a34a !important; }
         .text-center { text-align: center; }
@@ -643,6 +643,27 @@ const PrintReceiptView = ({
             font-weight: bold;
             color: #16a34a;
         }
+    
+        }
+
+.price-cell-container {
+  display: inline-block;
+  text-align: right;
+}
+
+.price-main {
+  font-size: 10px;
+  font-weight: bold;
+  color: #000;
+}
+
+.discount-text {
+  font-size: 7px;
+  font-style: italic;
+  color: #16a34a !important;
+  font-weight: normal;
+  margin-left: 4px;
+}
 
 
         .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
@@ -753,24 +774,25 @@ const PrintReceiptView = ({
                   <td className="text-center text-[11px] ">
                     {item.cartQuantity || 1}
                   </td>
-                  <td className="text-right text-[11px]  price-cell">
-                    {/* {formatToNaira(item.selling_price) ||
-                      formatToNaira(item.amount) ||
-                      "₦0"} */}
-
-                    {item?.selling_price
-                      ? formatToNaira(item.selling_price)
-                      : formatToNaira(item.amount) ?? "₦0"}
-
-                    {discount && discountAmount > 0 && (
-                      <p className="text-italic text-green-600 text-[8px]">
-                        Discount -{" "}
-                        {discount.type === "fixed"
-                          ? `₦${discount.value}`
-                          : `${discount.value}%`}
-                      </p>
-                    )}
+                  <td className="text-right text-[11px] price-cell">
+                    <div className="price-cell-container">
+                      <span className="price-main">
+                        {item?.selling_price
+                          ? formatToNaira(item.selling_price)
+                          : formatToNaira(item.amount) ?? "₦0"}
+                      </span>
+                      {discount && discountAmount > 0 && (
+                        <span className="discount-text">
+                          {" "}
+                          Discount -{" "}
+                          {discount.type === "fixed"
+                            ? `₦${discount.value}`
+                            : `${discount.value}%`}
+                        </span>
+                      )}
+                    </div>
                   </td>
+
                   <td className="text-right text-[11px]  price-cell">
                     {formatToNaira(
                       (item.selling_price || item.amount || 0) *
