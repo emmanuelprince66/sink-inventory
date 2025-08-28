@@ -241,14 +241,17 @@ const Transactions = () => {
                   TrxData?.data?.results?.wallet_details?.account_name || "Nil"
                 }`}</span>
               </p>
-              <p className="text-sm">
-                Available Balance:{" "}
-                <span className="font-medium">
-                  {formatToNaira(
-                    TrxData?.data?.results?.wallet_details?.balance || 0
-                  )}
-                </span>
-              </p>
+
+              {user?.role === "OWNER" && (
+                <p className="text-sm">
+                  Available Balance:{" "}
+                  <span className="font-medium">
+                    {formatToNaira(
+                      TrxData?.data?.results?.wallet_details?.balance || 0
+                    )}
+                  </span>
+                </p>
+              )}
             </div>
           </CustomCard>
         )}
