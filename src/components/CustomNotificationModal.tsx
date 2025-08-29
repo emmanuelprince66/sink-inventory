@@ -56,7 +56,7 @@ export const CustomNotificationModal: React.FC<
 
         {/* Notification Body */}
         <div className="px-1">
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-gray-700 text-sm font-bold leading-relaxed">
             {notification.body}
           </p>
         </div>
