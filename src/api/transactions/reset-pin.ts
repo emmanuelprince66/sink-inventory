@@ -10,7 +10,7 @@ const ResetPin = async ({
   businessId: any;
 }) => {
   const response = await fetch(`/api/transactions/${businessId}/reset-pin`, {
-    method: "POST",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },
