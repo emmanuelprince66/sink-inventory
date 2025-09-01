@@ -183,7 +183,7 @@ const AddProduct = () => {
 
           {/* Expiry Date */}
 
-          {/* <FormField
+          <FormField
             control={form.control}
             name="date"
             render={({ field }) => (
@@ -231,7 +231,7 @@ const AddProduct = () => {
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
+          />
 
           {/* Category */}
           <FormField

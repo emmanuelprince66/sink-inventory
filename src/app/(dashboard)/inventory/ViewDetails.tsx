@@ -96,7 +96,7 @@ const ViewDetails = ({
         {/* Action Buttons - Stack on mobile */}
         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-3 sm:pt-4 border-t">
           <Link
-            href={`/new-add-product/${data?.id}/edit-product`}
+            href={`/product/${data?.id}/edit-product`}
             className="w-full sm:w-auto"
           >
             <Button className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
