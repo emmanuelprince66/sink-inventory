@@ -1825,7 +1825,7 @@
 
 // export default NewAddProduct;
 
-const NewAddProduct = ({ id }: { id: any }) => {
+const NewAddProduct = ({ id }: { id?: any }) => {
   return <div>NewAddProduct</div>;
 };
 
