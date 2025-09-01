@@ -3,12 +3,14 @@
 
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RouteGuard } from "../auth/route-guard";
+import { NotificationModalProvider } from "../providers/notification-modal-provider";
 import { AppSidebar } from "./AppSideBar";
 import { TopBar } from "./TopBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
+      <NotificationModalProvider />
       <RouteGuard requiredRole="OWNER">
         <AppSidebar />
         <main className="w-full bg-primary-green-600">

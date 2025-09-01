@@ -10,7 +10,7 @@ import { AutoLogout } from "./auto-logout";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isLoading, isHydrated } = useUserStore();
 
-  console.log("AuthProvider: isHydrated:", isHydrated);
+  // console.log("AuthProvider: isHydrated:", isHydrated);
 
   return (
     <>

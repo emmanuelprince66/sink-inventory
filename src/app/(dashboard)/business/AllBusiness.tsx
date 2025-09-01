@@ -19,6 +19,8 @@ const AllBusiness = ({ section }: { section?: string }) => {
   const { AllBusinessData, AllBusinessLoading, handleRowClick } =
     useBusinessHook({ closeCreateBusinessModal });
 
+  // console.log("AllBusinessData", AllBusinessData);
+
   // Loading state
   if (AllBusinessLoading) {
     return (

@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "./lib/store/types";
 
@@ -16,8 +15,13 @@ export function middleware(request: NextRequest) {
   const isLogoutRedirect =
     request.nextUrl.searchParams.get("fromLogout") === "true";
 
-  // Skip middleware for API routes and static files
-  if (path.startsWith("/api") || path.startsWith("/_next")) {
+  // Skip middleware for API routes, static files, and service worker
+  if (
+    path.startsWith("/api") ||
+    path.startsWith("/_next") ||
+    path === "/firebase-messaging-sw.js" ||
+    path.startsWith("/icons")
+  ) {
     return NextResponse.next();
   }
 
@@ -55,5 +59,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|firebase-messaging-sw.js|icons).*)",
+  ],
 };

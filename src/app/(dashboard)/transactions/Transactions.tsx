@@ -84,13 +84,12 @@ const Transactions = () => {
 
   return (
     <>
-      <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-4 sm:px-6">
+      <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-2 sm:px-1">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-4">
-          <h1 className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+          <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
             Transactions
-          </h1>
-
+          </p>
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 w-full sm:w-auto">
             <DatePickerWithRange
               date={dateRange}
@@ -242,14 +241,17 @@ const Transactions = () => {
                   TrxData?.data?.results?.wallet_details?.account_name || "Nil"
                 }`}</span>
               </p>
-              <p className="text-sm">
-                Available Balance:{" "}
-                <span className="font-medium">
-                  {formatToNaira(
-                    TrxData?.data?.results?.wallet_details?.balance || 0
-                  )}
-                </span>
-              </p>
+
+              {user?.role === "OWNER" && (
+                <p className="text-sm">
+                  Available Balance:{" "}
+                  <span className="font-medium">
+                    {formatToNaira(
+                      TrxData?.data?.results?.wallet_details?.balance || 0
+                    )}
+                  </span>
+                </p>
+              )}
             </div>
           </CustomCard>
         )}

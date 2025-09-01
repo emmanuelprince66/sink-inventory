@@ -35,7 +35,8 @@ const Transfer = () => {
     enquiryLoading,
   } = useTransactionsHook({ recipientBank, accountNumber });
 
-  console.log("TrxData", trxData);
+  console.log("TrxData", trxData?.data?.results?.wallet_details?.balance);
+  const trxBalance = trxData?.data?.results?.wallet_details?.balance || 0;
 
   // Transform bank data to select options
   useEffect(() => {
@@ -94,6 +95,16 @@ const Transfer = () => {
 
     if (!beneficiaryInfo?.data?.name) {
       setMessage("Please wait for account name verification.");
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      setMessage("Please enter a valid amount greater than zero.");
+      return;
+    }
+
+    if (parseFloat(amount) > trxBalance) {
+      setMessage("Insufficient balance for this transfer.");
       return;
     }
 
@@ -160,18 +171,6 @@ const Transfer = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <CustomSelect
-                    label="Category"
-                    options={categoryOptions}
-                    value={category}
-                    onChange={setCategory}
-                    isLoading={CategoriesDataLoading}
-                    placeholder="Select a category..."
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <label
                     htmlFor="accountNumber"
                     className="block text-sm font-medium text-gray-700"
@@ -187,6 +186,20 @@ const Transfer = () => {
                     onChange={(e) => setAccountNumber(e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <CustomSelect
+                    label="Category (Optional)"
+                    options={categoryOptions}
+                    value={category}
+                    onChange={setCategory}
+                    isLoading={CategoriesDataLoading}
+                    placeholder="Select a category..."
+                  />
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Attach an expense category (except for stock purchases)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -221,7 +234,7 @@ const Transfer = () => {
                     htmlFor="amount"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Amount (USD)
+                    Amount (NGN)
                   </label>
                   <input
                     type="number"

@@ -2,24 +2,14 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-interface CreateServicePayload {
-  // Define your customer creation payload type here
-  [key: string]: any;
-}
-
-const addService = async ({
-  businessId,
-  payload,
-}: {
+interface AddProductVariables {
   businessId: any;
-  payload: CreateServicePayload;
-}) => {
+  payload: FormData;
+}
+const addProduct = async ({ businessId, payload }: AddProductVariables) => {
   const response = await fetch(`/api/inventory/${businessId}/create-service`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    body: payload,
   });
 
   if (!response.ok) {
@@ -29,37 +19,30 @@ const addService = async ({
   return response.json();
 };
 
-type QueryFnType = typeof addService;
+type QueryFnType = typeof addProduct;
 
-interface UseAddServiceMutationOptions extends MutationConfig<QueryFnType> {
-  businessId: string | null;
+interface UseAddProductMutationOptions {
+  businessId: any; // Remove null from type
+  config?: MutationConfig<QueryFnType>;
 }
 
 export const useAddServiceMutation = ({
   businessId,
-  ...config
-}: UseAddServiceMutationOptions) => {
+  config,
+}: UseAddProductMutationOptions) => {
   const { showToast } = useToast();
 
   return useMutation({
     mutationKey: [queryKey.inventory.addService, businessId],
-    mutationFn: (payload: CreateServicePayload) =>
-      addService({ businessId, payload }),
+    mutationFn: addProduct,
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error creating service:", error);
-
       const errorMessage =
-        error?.message ||
-        error?.error ||
-        error?.message ||
-        "Error creating service";
-
-      showToast(errorMessage, "error");
+        error?.message || error?.error || "Error creating service";
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Service created successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

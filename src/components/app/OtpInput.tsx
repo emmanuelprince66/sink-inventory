@@ -54,7 +54,7 @@ export function OtpInput({ value = "", onChange, length = 6 }: OtpInputProps) {
           ref={(el) => {
             if (el) inputs.current[index] = el;
           }}
-          type="text"
+          type="password" // Changed from "text" to "password" to mask input
           inputMode="numeric"
           maxLength={1}
           value={value[index] || ""}

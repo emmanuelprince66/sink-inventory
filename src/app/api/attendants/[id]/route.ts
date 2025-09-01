@@ -10,6 +10,8 @@ export async function GET(
   // Await the params promise
   const { id } = await params;
 
+  console.log("id", id);
+
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 

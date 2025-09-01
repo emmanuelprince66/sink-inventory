@@ -54,7 +54,7 @@ const CustomExpenseCard = ({
       bg: "bg-gradient-to-br from-red-50 to-red-100",
       border: "border-red-200",
       iconBg: "bg-red-100",
-      icon: <TrendingDown className="w-5 h-5 text-red-600" />,
+      icon: <TrendingDown className="w-4 sm:w-5 h-4 sm:h-5 text-red-600" />,
       text: "text-primary-black-100",
       amountText: "text-primary-black-100",
     },
@@ -62,7 +62,7 @@ const CustomExpenseCard = ({
       bg: "bg-gradient-to-br from-orange-50 to-orange-100",
       border: "border-orange-200",
       iconBg: "bg-orange-100",
-      icon: <Calendar className="w-5 h-5 text-orange-600" />,
+      icon: <Calendar className="w-4 sm:w-5 h-4 sm:h-5 text-orange-600" />,
       text: "text-primary-black-100",
       amountText: "text-primary-black-100",
     },
@@ -70,7 +70,7 @@ const CustomExpenseCard = ({
       bg: "bg-gradient-to-br from-amber-50 to-amber-100",
       border: "border-amber-200",
       iconBg: "bg-amber-100",
-      icon: <DollarSign className="w-5 h-5 text-amber-600" />,
+      icon: <DollarSign className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
       text: "text-primary-black-100",
       amountText: "text-primary-black-100",
     },
@@ -83,25 +83,27 @@ const CustomExpenseCard = ({
       className={cn(
         variant.bg,
         variant.border,
-        "p-4 w-full rounded-lg border transition-all hover:shadow-md",
+        "p-3 sm:p-4 w-full rounded-lg border transition-all hover:shadow-md",
         className
       )}
     >
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-full", variant.iconBg)}>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={cn("p-1 sm:p-2 rounded-full", variant.iconBg)}>
             {variant.icon}
           </div>
-          <span className={cn("text-sm font-medium", variant.text)}>
+          <span className={cn("text-xs sm:text-sm font-medium", variant.text)}>
             {title}
           </span>
         </div>
-        <span className="text-sm flex gap-2 items-center font-medium hover:cursor-pointer text-primary-black-100 ">
-          View analytics <Forward className="text-red-500 text-sm" />
+        <span className="text-xs sm:text-sm flex gap-1 sm:gap-2 items-center font-medium hover:cursor-pointer text-primary-black-100">
+          View analytics <Forward className="text-red-500 text-xs sm:text-sm" />
         </span>
       </div>
-      <div className="mt-4">
-        <span className={cn("text-2xl font-bold", variant.amountText)}>
+      <div className="mt-2 sm:mt-4">
+        <span
+          className={cn("text-lg sm:text-2xl font-bold", variant.amountText)}
+        >
           {amount}
         </span>
       </div>
@@ -154,7 +156,6 @@ const Expenses = () => {
     setSelectedCategory(null);
   };
 
-  // Check scroll availability
   const checkScrollAvailability = () => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -165,7 +166,6 @@ const Expenses = () => {
     }
   };
 
-  // Category navigation functions
   const scrollCategories = (direction: "left" | "right") => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -183,7 +183,6 @@ const Expenses = () => {
     }
   };
 
-  // Check scroll availability when categories load or container size changes
   useEffect(() => {
     checkScrollAvailability();
     const container = categoriesContainerRef.current;
@@ -194,7 +193,6 @@ const Expenses = () => {
     }
   }, [CategoriesData]);
 
-  // Check on window resize
   useEffect(() => {
     const handleResize = () => checkScrollAvailability();
     window.addEventListener("resize", handleResize);
@@ -204,47 +202,49 @@ const Expenses = () => {
   const totalExpenses = ExpensesData?.data?.results?.total_expenses || 0;
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
+    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start px-2 sm:px-4">
       {/* Header Section */}
       <div className="w-full bg-white">
-        <div className="flex items-center justify-between w-full mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl md:text-3xl text-primary-black-100 font-[600]">
-              Expenses
-            </h1>
-          </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+            Expenses
+          </p>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+              className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
               onClick={openAddExpensesModal}
             >
               + Add Expenses
             </Button>
-
-            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+            <div className="w-full">
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={setDateRange}
+                className="w-full"
+              />
+            </div>
           </div>
         </div>
-
         {/* Overview Cards */}
-        <div className="mb-6">
-          <h2 className="text-lg font-medium text-primary-black-100 mb-4">
+        <div className="mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
 
           {ExpensesLoading || !ExpensesData ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {Array.from({ length: 3 }).map((_, index) => (
                 <CustomCard key={index} className="w-full border-gray-200">
-                  <div className="flex flex-col gap-6 items-start">
-                    <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                    <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
+                  <div className="flex flex-col gap-4 sm:gap-6 items-start">
+                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
+                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-[#eef4ef]" />
                   </div>
                 </CustomCard>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <CustomExpenseCard
                 title="Total Expenses"
                 amount={formatToNaira(
@@ -252,20 +252,6 @@ const Expenses = () => {
                 )}
                 type="total"
               />
-              {/* <CustomExpenseCard
-                title="Monthly Average"
-                amount={formatToNaira(
-                  ExpensesData?.data?.results?.monthly_average || 0
-                )}
-                type="monthly"
-              />
-              <CustomExpenseCard
-                title="Daily Average"
-                amount={formatToNaira(
-                  ExpensesData?.data?.results?.daily_average || 0
-                )}
-                type="daily"
-              /> */}
             </div>
           )}
         </div>
@@ -274,17 +260,17 @@ const Expenses = () => {
       {/* Main Content Section */}
       <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
         {/* Categories and Search Header */}
-        <div className="p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-primary-black-100">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100 flex items-center gap-2">
               Manage Expenses
-              <span className="ml-2 text-xs bg-red-100 px-2 py-1 rounded-full text-red-600 font-medium">
+              <span className="text-xs bg-red-100 px-2 py-1 rounded-full text-red-600 font-medium">
                 {ExpensesData?.data?.total?.toLocaleString() || "0"}
               </span>
             </h2>
 
-            <div className="flex items-center gap-4">
-              <div className="w-80">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <div className="w-full sm:w-60 md:w-80">
                 <SearchInput
                   placeholder="Search by expense name..."
                   value={searchInput}
@@ -292,10 +278,10 @@ const Expenses = () => {
                 />
               </div>
 
-              <Link href="/categories/expenses">
+              <Link href="/categories/expenses" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
-                  className="text-green-500 border-green-200 hover:bg-green-50"
+                  className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
                 >
                   View More
                 </Button>
@@ -305,44 +291,43 @@ const Expenses = () => {
 
           {/* Categories Tabs */}
           {CategoriesDataLoading || !CategoriesData ? (
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton
                   key={index}
-                  className="h-10 w-20 bg-gray-200 rounded-md flex-shrink-0"
+                  className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
                 />
               ))}
             </div>
           ) : (
             <div className="w-full">
               <div className="flex items-center w-full">
-                {/* Left Navigation Button */}
-                <button
-                  onClick={() => scrollCategories("left")}
-                  disabled={!canScrollLeft}
-                  className={cn(
-                    "p-2 rounded-md transition-all mr-2 flex-shrink-0",
-                    canScrollLeft
-                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                      : "text-gray-300 cursor-not-allowed"
-                  )}
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
+                {canScrollLeft && (
+                  <button
+                    onClick={() => scrollCategories("left")}
+                    disabled={!canScrollLeft}
+                    className={cn(
+                      "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
+                      canScrollLeft
+                        ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                        : "text-gray-300 cursor-not-allowed"
+                    )}
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
 
-                {/* Categories Container */}
                 <div
                   ref={categoriesContainerRef}
-                  className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide"
+                  className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
                   style={{
                     scrollbarWidth: "none",
                     msOverflowStyle: "none",
                   }}
                 >
-                  {/* All Tab */}
                   <button
                     className={cn(
-                      "px-4 py-2 text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                      "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
                       selectedCategory === null
                         ? "bg-[#52b661] text-white shadow-sm"
                         : "text-gray-600 hover:text-green-500 hover:bg-green-50"
@@ -352,12 +337,11 @@ const Expenses = () => {
                     All
                   </button>
 
-                  {/* Category Tabs */}
                   {CategoriesData?.data?.map((category: Category) => (
                     <button
                       key={category.id}
                       className={cn(
-                        "px-4 py-2 text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
                         selectedCategory === category.id
                           ? "bg-[#52b661] text-white shadow-sm"
                           : "text-gray-600 hover:text-green-500 hover:bg-green-50"
@@ -369,40 +353,41 @@ const Expenses = () => {
                   ))}
                 </div>
 
-                {/* Right Navigation Button */}
-                <button
-                  onClick={() => scrollCategories("right")}
-                  disabled={!canScrollRight}
-                  className={cn(
-                    "p-2 rounded-md transition-all ml-2 flex-shrink-0",
-                    canScrollRight
-                      ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                      : "text-gray-300 cursor-not-allowed"
-                  )}
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
+                {canScrollRight && (
+                  <button
+                    onClick={() => scrollCategories("right")}
+                    disabled={!canScrollRight}
+                    className={cn(
+                      "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
+                      canScrollRight
+                        ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                        : "text-gray-300 cursor-not-allowed"
+                    )}
+                  >
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
               </div>
             </div>
           )}
 
           {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-2 text-sm text-gray-500">
+            <div className="mt-2 text-xs sm:text-sm text-gray-500">
               Type at least 3 characters to search
             </div>
           )}
         </div>
 
         {/* Table Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {ExpensesLoading || !ExpensesData ? (
             <div className="w-full">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-gray-200" />
+              <div className="space-y-3 sm:space-y-4">
+                <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
                 {Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="h-16 w-full bg-gray-200 mt-2"
+                    className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
                   />
                 ))}
               </div>

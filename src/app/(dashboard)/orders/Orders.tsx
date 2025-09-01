@@ -30,7 +30,7 @@ const ordersData = [
     name: "John Doe",
     product: "Wireless Headphones",
     amount: 45000,
-    type: "Online",
+    type: "Out-store", // Changed from "Online" to "Out-store"
     status: "Processing",
     paymentStatus: "Paid",
     shipping: "Pending",
@@ -52,7 +52,7 @@ const ordersData = [
     name: "Michael Johnson",
     product: "Bluetooth Speaker",
     amount: 32000,
-    type: "Online",
+    type: "Out-store", // Changed from "Online" to "Out-store"
     status: "Shipped",
     paymentStatus: "Paid",
     shipping: "In Transit",
@@ -63,7 +63,7 @@ const ordersData = [
     name: "Sarah Williams",
     product: "Fitness Tracker",
     amount: 28000,
-    type: "Online",
+    type: "Out-store", // Changed from "Online" to "Out-store"
     status: "Completed",
     paymentStatus: "Paid",
     shipping: "Delivered",
@@ -84,9 +84,25 @@ const ordersData = [
 const Orders = () => {
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<"In-store" | "Out-store">(
+    "In-store"
+  );
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
+  };
+
+  // Filter orders based on active tab
+  const filteredOrders = ordersData.filter((order) => order.type === activeTab);
+
+  // Calculate stats for current tab
+  const tabStats = {
+    totalOrders: filteredOrders.length,
+    completedOrders: filteredOrders.filter(
+      (order) => order.status === "Completed"
+    ).length,
+    totalRevenue: filteredOrders.reduce((sum, order) => sum + order.amount, 0),
+    totalLinkVisits: Math.floor(filteredOrders.length * 2.6), // Dummy calculation
   };
 
   return (
@@ -118,6 +134,36 @@ const Orders = () => {
         </div>
       ) : (
         <>
+          {/* Tabs */}
+          <div className="w-full">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab("In-store")}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "In-store"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  In-store Orders (
+                  {ordersData.filter((o) => o.type === "In-store").length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("Out-store")}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === "Out-store"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  Out-store Orders (
+                  {ordersData.filter((o) => o.type === "Out-store").length})
+                </button>
+              </nav>
+            </div>
+          </div>
+
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Orders */}
             <CustomCard className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
@@ -127,13 +173,13 @@ const Orders = () => {
                     <ShoppingCart className="w-5 h-5 text-blue-600" />
                   </div>
                   <span className="text-sm font-medium text-gray-600">
-                    Total Orders
+                    Total {activeTab} Orders
                   </span>
                 </div>
               </div>
               <div className="mt-4">
                 <span className="text-2xl font-bold text-gray-900">
-                  {orderStats.totalOrders}
+                  {tabStats.totalOrders}
                 </span>
                 <p className="text-xs text-blue-500 mt-1">
                   +12% from last month
@@ -155,12 +201,14 @@ const Orders = () => {
               </div>
               <div className="mt-4">
                 <span className="text-2xl font-bold text-gray-900">
-                  {orderStats.completedOrders}
+                  {tabStats.completedOrders}
                 </span>
                 <p className="text-xs text-green-500 mt-1">
-                  {Math.round(
-                    (orderStats.completedOrders / orderStats.totalOrders) * 100
-                  )}
+                  {tabStats.totalOrders > 0
+                    ? Math.round(
+                        (tabStats.completedOrders / tabStats.totalOrders) * 100
+                      )
+                    : 0}
                   % success rate
                 </p>
               </div>
@@ -180,7 +228,7 @@ const Orders = () => {
               </div>
               <div className="mt-4">
                 <span className="text-2xl font-bold text-gray-900">
-                  {formatToNaira(orderStats.totalRevenue)}
+                  {formatToNaira(tabStats.totalRevenue)}
                 </span>
                 <p className="text-xs text-purple-500 mt-1">
                   +8% from last month
@@ -202,7 +250,7 @@ const Orders = () => {
               </div>
               <div className="mt-4">
                 <span className="text-2xl font-bold text-gray-900">
-                  {orderStats.totalLinkVisits}
+                  {tabStats.totalLinkVisits}
                 </span>
                 <p className="text-xs text-orange-500 mt-1">
                   +5% from last month
@@ -262,7 +310,7 @@ const Orders = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {ordersData.map((order) => (
+                  {filteredOrders.map((order) => (
                     <tr key={order.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-gray-900">
@@ -284,7 +332,7 @@ const Orders = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            order.type === "Online"
+                            order.type === "Out-store"
                               ? "bg-blue-100 text-blue-800"
                               : "bg-green-100 text-green-800"
                           }`}
@@ -351,7 +399,8 @@ const Orders = () => {
 
             <div className="flex justify-between items-center mt-4">
               <div className="text-sm text-gray-500">
-                Showing 1 to 5 of {ordersData.length} entries
+                Showing 1 to {filteredOrders.length} of {filteredOrders.length}{" "}
+                entries
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" disabled>

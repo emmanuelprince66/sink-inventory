@@ -150,7 +150,7 @@ export const useBusinessHook = ({
       },
     });
   };
-  console.log("data---3", AllBusinessData);
+  // console.log("data---3", AllBusinessData);
 
   return {
     AllBusinessData,

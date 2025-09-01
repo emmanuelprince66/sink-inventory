@@ -10,111 +10,60 @@ export async function POST(
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
-  // Authentication check
   if (!accessToken) {
     return NextResponse.json(
-      {
-        success: false,
-        error: "Unauthorized - No access token provided",
-        message: "Please authenticate first",
-      },
+      { error: "Unauthorized - No access token provided" },
       { status: 401 }
     );
   }
 
-  // Validate businessId
   if (!businessId) {
     return NextResponse.json(
-      {
-        success: false,
-        error: "Business ID is required",
-        message: "No business identifier provided",
-      },
+      { error: "Business ID is required" },
       { status: 400 }
     );
   }
 
   try {
-    const requestData = await request.json();
-    console.log("Received data:", requestData);
+    const formData = await request.formData();
 
-    // Extract payload from the request data
-    const payload = requestData.payload;
-
-    // Validate payload structure
-    if (!payload || typeof payload !== "object") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request format",
-          message: "Payload must be an object",
-          details: { received: payload },
-        },
-        { status: 400 }
-      );
+    // Convert FormData to array first for safe iteration
+    const formDataEntries: Record<string, any> = {};
+    const entriesArray = Array.from(formData.entries());
+    for (const [key, value] of entriesArray) {
+      formDataEntries[key] = value instanceof File ? value.name : value;
     }
+    console.log("Form data received:", formDataEntries);
 
-    // Validate required fields
-    if (!payload.name) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation error",
-          message: "Service name is required",
-          details: { missing_fields: ["name"] },
-        },
-        { status: 422 }
-      );
-    }
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${accessToken}`);
+
+    console.log("formData---33", formData);
 
     const apiUrl = `${BaseUrl}service/business/${businessId}/`;
-    console.log("Forwarding to:", apiUrl);
-
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
+      headers,
+      body: formData,
     });
 
-    const responseData = await response.json();
-
     if (!response.ok) {
-      console.error("Backend API error:", responseData);
+      const errorData = await response.json();
       return NextResponse.json(
-        {
-          success: false,
-          message: responseData.message || "Failed to create service",
-          error: responseData.error || "Service creation failed",
-          details: responseData.details || null,
-        },
+        { error: errorData.message || "Failed to create product" },
         { status: response.status }
       );
     }
 
-    // Successful response
+    const responseData = await response.json();
     return NextResponse.json(
-      {
-        success: true,
-        data: responseData,
-        message: "Service created successfully",
-      },
+      { success: true, data: responseData },
       { status: 201 }
     );
   } catch (error) {
     console.error("Server error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error: "Internal server error",
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

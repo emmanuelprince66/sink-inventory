@@ -22,125 +22,175 @@ const Settings = () => {
           "Currency & Localization",
         ]
       : ([
-          "Bank",
           "Security & Privacy",
           "Notifications",
           "Currency & Localization",
         ] as const);
 
+  const initialTab = user?.role === "OWNER" ? "Bank" : "Security & Privacy";
+
   const [activeTab, setActiveTab] =
-    useState<(typeof SettingsOptionsTab)[number]>("Bank");
+    useState<(typeof SettingsOptionsTab)[number]>(initialTab);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-center">
-      {" "}
-      {/* Added items-center here */}
-      <div className="mx-auto w-full">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">Settings</h1>
-
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
+      <div className="w-full">
+        {/* Header */}
+        <p className="text-xl mb-3 sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+          Settings
+        </p>
         <Tabs
           value={activeTab}
           onValueChange={(value) => setActiveTab(value as typeof activeTab)}
           className="w-full"
         >
-          <TabsList className="w-full flex-wrap h-auto">
-            {SettingsOptionsTab.map((tab) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className={`px-4 py-2 rounded-md h-14 text-xs hover:text-black font-medium transition-colors ${
-                  activeTab === tab
-                    ? "bg-primary-green-300 text-white"
-                    : "bg-primary-green-200 text-primary-black-100"
-                }`}
-              >
-                {tab}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          {/* Mobile Tabs - Horizontally Scrollable */}
+          <div className="w-full overflow-x-auto pb-2">
+            <TabsList className="w-full min-w-max inline-flex gap-1 sm:gap-2 h-auto p-1 bg-transparent">
+              {SettingsOptionsTab.map((tab) => (
+                <TabsTrigger
+                  key={tab}
+                  value={tab}
+                  className={`flex-shrink-0 px-2 sm:px-4 py-2 rounded-md h-10 sm:h-12 text-xs sm:text-sm hover:text-black font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
+                    activeTab === tab
+                      ? "bg-primary-green-300 text-white shadow-md"
+                      : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-300 hover:text-white"
+                  }`}
+                >
+                  <span className="hidden sm:inline">{tab}</span>
+                  <span className="sm:hidden">{getShortTabName(tab)}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <TabsContent value="Bank">
-            <Bank />
-          </TabsContent>
+          {/* Tab Content */}
+          <div className="w-full">
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Bank" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <Bank />
+                </div>
+              </TabsContent>
+            )}
 
-          {user && user?.role === "OWNER" && (
-            <TabsContent value="Staff">
-              <VeiwStaff />
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Staff" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <VeiwStaff />
+                </div>
+              </TabsContent>
+            )}
+
+            <TabsContent value="Security & Privacy" className="mt-0">
+              <div className="w-full overflow-hidden">
+                <SecurityPrivacyTabs />
+              </div>
             </TabsContent>
-          )}
 
-          <TabsContent value="Security & Privacy">
-            <SecurityPrivacyTabs />
-          </TabsContent>
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Subscription" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <Subscription />
+                </div>
+              </TabsContent>
+            )}
 
-          {user && user?.role === "OWNER" && (
-            <TabsContent value="Subscription">
-              <Subscription />
+            <TabsContent value="Notifications" className="mt-0">
+              <div className="p-3 sm:p-4">
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+                  Notification Settings
+                </h2>
+                <p className="text-sm sm:text-base text-gray-600">
+                  Customize your notification preferences.
+                </p>
+                {/* Add notification settings components here */}
+              </div>
             </TabsContent>
-          )}
 
-          <TabsContent value="Notifications">
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">
-                Notification Settings
-              </h2>
-              <p>Customize your notification preferences.</p>
-              {/* Add notification settings components here */}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="Currency & Localization">
-            <div className="p-4">
-              <h2 className="text-xl font-semibold mb-4">
-                Currency & Localization
-              </h2>
-              <p>Set your preferred currency and language settings.</p>
-              {/* Add currency and localization components here */}
-            </div>
-          </TabsContent>
+            <TabsContent value="Currency & Localization" className="mt-0">
+              <div className="p-3 sm:p-4">
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+                  Currency & Localization
+                </h2>
+                <p className="text-sm sm:text-base text-gray-600">
+                  Set your preferred currency and language settings.
+                </p>
+                {/* Add currency and localization components here */}
+              </div>
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>
   );
 };
 
-export default Settings;
+// Helper function to get shortened tab names for mobile
+const getShortTabName = (tabName: string): string => {
+  const shortNames: { [key: string]: string } = {
+    Bank: "Bank",
+    Staff: "Staff",
+    "Security & Privacy": "Security",
+    Subscription: "Plans",
+    Notifications: "Alerts",
+    "Currency & Localization": "Currency",
+  };
+  return shortNames[tabName] || tabName;
+};
 
 const SecurityPrivacyTabs = () => {
   const [activeSubTab, setActiveSubTab] = useState("Password");
 
   return (
-    <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="mt-4">
-      <TabsList className="grid w-fit grid-cols-2 h-9 items-center justify-center rounded-lg bg-green-100 p-1 text-green-700">
-        <TabsTrigger
-          value="Password"
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-            activeSubTab === "Password"
-              ? "bg-green-500 text-white shadow"
-              : "bg-transparent text-green-700 hover:bg-green-200"
-          }`}
-        >
-          Password
-        </TabsTrigger>
-        <TabsTrigger
-          value="Transaction Pin"
-          className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-            activeSubTab === "Transaction Pin"
-              ? "bg-green-500 text-white shadow"
-              : "bg-transparent text-green-700 hover:bg-green-200"
-          }`}
-        >
-          Transaction Pin
-        </TabsTrigger>
-      </TabsList>
+    <div className="w-full">
+      <Tabs
+        value={activeSubTab}
+        onValueChange={setActiveSubTab}
+        className="mt-3 sm:mt-4"
+      >
+        <div className="w-full overflow-x-auto pb-2">
+          <TabsList className="w-full sm:w-fit grid grid-cols-2 h-auto sm:h-9 items-center justify-center rounded-lg bg-green-100  text-green-700">
+            <TabsTrigger
+              value="Password"
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                activeSubTab === "Password"
+                  ? "bg-green-500 text-white shadow"
+                  : "bg-transparent text-green-700 hover:bg-green-200"
+              }`}
+            >
+              Password
+            </TabsTrigger>
+            <TabsTrigger
+              value="Transaction Pin"
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+                activeSubTab === "Transaction Pin"
+                  ? "bg-green-500 text-white shadow"
+                  : "bg-transparent text-green-700 hover:bg-green-200"
+              }`}
+            >
+              <span className="hidden sm:inline">Transaction Pin</span>
+              <span className="sm:hidden">Pin</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      <TabsContent value="Password" className="mt-4">
-        <ChangePassword />
-      </TabsContent>
+        <div className="w-full ">
+          <TabsContent value="Password" className="mt-0">
+            <div className="w-full overflow-hidden">
+              <ChangePassword />
+            </div>
+          </TabsContent>
 
-      <TabsContent value="Transaction Pin" className="mt-4">
-        <PinComp />
-      </TabsContent>
-    </Tabs>
+          <TabsContent value="Transaction Pin" className="mt-0">
+            <div className="w-full overflow-hidden">
+              <PinComp />
+            </div>
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
   );
 };
+
+export default Settings;
