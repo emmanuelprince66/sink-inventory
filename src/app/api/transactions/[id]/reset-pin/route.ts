@@ -2,7 +2,7 @@ import { BaseUrl } from "@/constants/base-url";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -47,7 +47,7 @@ export async function POST(
 
     const apiUrl = `${BaseUrl}wallet/reset_pin/${id}/`;
     const response = await fetch(apiUrl, {
-      method: "POST",
+      method: "PATCH",
       headers,
       body: JSON.stringify(requestData), // Send the parsed data directly
     });

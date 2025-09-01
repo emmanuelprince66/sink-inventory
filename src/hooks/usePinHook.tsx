@@ -135,18 +135,25 @@ export const usePinHook = () => {
       return { success: false, uid64: "" };
     }
     try {
-      const response = await new Promise<{ uid64: string }>(
-        (resolve, reject) => {
-          verifyPinResetCode(
-            { businessId: businessData.id, body: { token } },
-            {
-              onSuccess: (data) => resolve(data),
-              onError: (error) => reject(error),
-            }
-          );
-        }
-      );
-      return { success: true, uid64: response.uid64 };
+      const response = await new Promise<{
+        success: boolean;
+        data: { uid64: string };
+      }>((resolve, reject) => {
+        verifyPinResetCode(
+          { businessId: businessData.id, body: { token } },
+          {
+            onSuccess: (data) => resolve(data),
+            onError: (error) => reject(error),
+          }
+        );
+      });
+
+      console.log("Verify Pin Reset Response:", response);
+
+      // Extract uid64 from the nested data structure
+      const uid64 = response.data?.uid64 || "";
+
+      return { success: true, uid64 };
     } catch (error) {
       console.error("Error verifying pin reset code:", error);
       return { success: false, uid64: "", error };
@@ -154,6 +161,7 @@ export const usePinHook = () => {
   };
 
   const onResetPin = async (uid64: string, new_pin: string) => {
+    console.log("Resetting pin with uid64:", uid64, "and new_pin:", new_pin);
     if (!businessData?.id) {
       console.error("No business ID available");
       return { success: false };
@@ -161,7 +169,7 @@ export const usePinHook = () => {
     try {
       await new Promise<void>((resolve, reject) => {
         resetPin(
-          { businessId: businessData.id, body: { uid64, new_pin } },
+          { businessId: businessData.id, body: { uid64, pin: new_pin } },
           {
             onSuccess: () => resolve(),
             onError: (error) => reject(error),

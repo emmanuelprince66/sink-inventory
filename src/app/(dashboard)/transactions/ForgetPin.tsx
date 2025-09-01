@@ -30,6 +30,8 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
   const [resetToken, setResetToken] = useState<string>("");
   const [uid64, setUid64] = useState<string>("");
 
+  console.log("uid64 state:", uid64);
+
   // Form for verifying reset code
   const verifyForm = (
     <Form {...verifyPinResetForm}>
@@ -37,6 +39,7 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         onSubmit={verifyPinResetForm.handleSubmit(async (data) => {
           const result = await onVerifyPinResetCode(data.token);
           if (result.success) {
+            console.log("response", result);
             setUid64(result.uid64);
             setStep("reset");
           }
