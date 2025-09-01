@@ -24,7 +24,7 @@ import { useState } from "react";
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
-  const { hasPermission } = useUserRole();
+  const { hasPermission, user } = useUserRole();
   const [isStoreOpen, setIsStoreOpen] = useState(false);
 
   const handleLogOut = () => {
@@ -41,6 +41,9 @@ export function AppSidebar() {
       item.roles.some((role: any) => hasPermission(role))
     );
   });
+  console.log("User Role:", user);
+
+  console.log("Filtered Links:", filteredLinks);
 
   return (
     <Sidebar className="z-10 bg-white border-gray-200">
