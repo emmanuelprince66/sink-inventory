@@ -44,8 +44,6 @@ const Login = () => {
     isVerifying,
   } = useSignUpForm({ verifyOtpPhone, closeOtpPhoneModal });
 
-  // console.log("verifyOtpPhone", verifyOtpPhone);
-
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Welcome Message Component (Left Side) */}
