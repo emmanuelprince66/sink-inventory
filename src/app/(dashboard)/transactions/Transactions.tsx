@@ -27,7 +27,7 @@ interface Transaction {
 const Transactions = () => {
   const [searchInput, setSearchInput] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(new Date().setDate(new Date().getDate() - 30)),
+    from: new Date(),
     to: new Date(),
   });
   const [page, setPage] = useState(1);

@@ -69,13 +69,34 @@ const Pos = () => {
 
     addToCart(cart);
   };
-  // const clearCartFunc = () => {
-  //   setCartItems([]);
-  // };
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     setPage(1);
+  };
+
+  // Handle barcode scan result
+  const handleScanResult = (scannedCode: string) => {
+    console.log("Scanned barcode:", scannedCode);
+
+    // First, try to find the product by barcode in current results
+    const scannedProduct = ProductData?.data?.results?.data?.find(
+      (product: any) =>
+        product.barcode === scannedCode ||
+        product.sku === scannedCode ||
+        product.id.toString() === scannedCode
+    );
+
+    if (scannedProduct) {
+      // Product found in current results, add to cart
+      handleAddToCart(scannedProduct);
+      showToast(`${scannedProduct.name} added to cart`, "success");
+    } else {
+      // Product not found in current results, search for it
+      setSearchInput(scannedCode);
+      setPage(1);
+      showToast("Searching for scanned product...", "info");
+    }
   };
 
   const totalPages = ProductData?.data?.pages || 1;
@@ -101,6 +122,12 @@ const Pos = () => {
                   onValueChange={handleSearchChange}
                 />
               </div>
+              {/* Scanner Button */}
+              {/* <ScannerButton
+                onScanResult={handleScanResult}
+                variant="outline"
+                size="default"
+              /> */}
             </div>
           </div>
 

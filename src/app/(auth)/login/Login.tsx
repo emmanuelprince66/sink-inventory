@@ -1,6 +1,9 @@
 "use client";
 
 import ResetPassword from "@/app/reset-password/ResetPassword";
+import { CustomModal } from "@/components/app/CustomModal";
+import { OtpInput } from "@/components/app/OtpInput";
+import { PhoneInput } from "@/components/app/PhoneInput";
 import WelcomeMessage from "@/components/app/WelcomeScreen";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,12 +18,33 @@ import {
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useLoginForm } from "@/hooks/auth/useLoginForm";
+import { useSignUpForm } from "@/hooks/auth/useSignUpForm";
 import Image from "next/image";
 import Link from "next/link";
 
 const Login = () => {
-  const { form, onSubmit, showLogin, setShowLogin, isSubmitting } =
-    useLoginForm();
+  const {
+    form,
+    onSubmit,
+    showOtpModal,
+    closeOtpPhoneModal,
+    showLogin,
+    setShowLogin,
+    verifyOtpPhone,
+    setVerifyOtpPhone,
+    isSubmitting,
+  } = useLoginForm();
+
+  const {
+    otp,
+    setOtp,
+
+    handleVerifyOtp,
+    handleResendOtp,
+    isVerifying,
+  } = useSignUpForm({ verifyOtpPhone, closeOtpPhoneModal });
+
+  // console.log("verifyOtpPhone", verifyOtpPhone);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -123,6 +147,57 @@ const Login = () => {
               </Link>
             </div>
           </Card>
+          {/* verify otp modal */}
+          <CustomModal
+            isOpen={showOtpModal} // FIXED: Removed the negation
+            onClose={closeOtpPhoneModal}
+            trigger={true}
+            title="Verify OTP"
+            description="Enter the 6-digit code sent to your email"
+          >
+            <div className="grid gap-4 py-4">
+              <OtpInput
+                value={otp}
+                onChange={(value) => setOtp(value)}
+                length={6}
+              />
+
+              <div className="flex w-full flex-col items-start mt-4">
+                <p className="text-sm text-gray-600 mb-2">Enter Phone Number</p>
+                <PhoneInput
+                  international
+                  defaultCountry="NG"
+                  value={verifyOtpPhone}
+                  onChange={(value) => setVerifyOtpPhone(value)}
+                  placeholder="Enter phone number"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                />
+                <p className="text-[10px] text-yellow-600 mt-1 mb-2 ">
+                  Please enter the phone number you used in signing up.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2 mt-4">
+                <Button
+                  className="w-full h-[48px]"
+                  onClick={handleVerifyOtp}
+                  disabled={isVerifying || otp.length !== 6 || !verifyOtpPhone}
+                >
+                  {isVerifying ? <Spinner /> : "Verify OTP"}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full h-[48px]"
+                  onClick={handleResendOtp}
+                  disabled={isVerifying || !verifyOtpPhone}
+                >
+                  Resend OTP
+                </Button>
+              </div>
+            </div>
+          </CustomModal>
+          {/* verify otp modal end */}
         </div>
       ) : (
         <ResetPassword setShowLogin={setShowLogin} />

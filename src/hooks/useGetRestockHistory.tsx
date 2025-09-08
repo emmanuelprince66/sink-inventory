@@ -115,6 +115,8 @@ export const useGetRestockHistory = ({
   const { data: SupplierData, isLoading: SupplierLoading } =
     useFetchSupplierDataQuery(business_id);
 
+  console.log("SupplierData", SupplierData);
+
   const paymentMethodOptions = [
     { label: "Full Payment", value: "FULL" },
     { label: "Credit", value: "CREDIT" },

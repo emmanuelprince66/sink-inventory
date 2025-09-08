@@ -46,7 +46,13 @@ const formSchema = z
 
 export type SignUpFormValues = z.infer<typeof formSchema>;
 
-export const useSignUpForm = () => {
+export const useSignUpForm = ({
+  verifyOtpPhone,
+  closeOtpPhoneModal,
+}: {
+  verifyOtpPhone?: any;
+  closeOtpPhoneModal?: any;
+}) => {
   const { showToast } = useToast();
 
   const router = useRouter();
@@ -82,12 +88,17 @@ export const useSignUpForm = () => {
     }
 
     verifyOtp(
-      { token: otp, phone: userPhone },
+      { token: otp, phone: userPhone || verifyOtpPhone || "" },
       {
         onSuccess: (response) => {
           console.log("response", response);
           showToast("Account verified successfully!", "success");
           closeOtpModal();
+
+          if (verifyOtpPhone) {
+            closeOtpPhoneModal();
+          }
+
           // You might want to redirect or perform other actions here
           // For example:
           router.push("/login");

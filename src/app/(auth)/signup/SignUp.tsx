@@ -34,7 +34,7 @@ const SignUp = () => {
     handleVerifyOtp,
     handleResendOtp,
     isVerifying,
-  } = useSignUpForm();
+  } = useSignUpForm({});
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -108,7 +108,7 @@ const SignUp = () => {
                     <FormControl>
                       <PhoneInput
                         international
-                        defaultCountry="US"
+                        defaultCountry="NG"
                         value={field.value}
                         onChange={field.onChange}
                         onBlur={field.onBlur}

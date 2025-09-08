@@ -207,7 +207,7 @@ const EditProduct = ({ id }: { id: string }) => {
               />
 
               <FormField
-                control={form.control}
+                control={form.control}  
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
@@ -243,19 +243,21 @@ const EditProduct = ({ id }: { id: string }) => {
                           onSelect={(date) =>
                             field.onChange(date ? date.toISOString() : "")
                           }
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
+                          disabled={(date) => {
+                            const today = new Date();
+                            // Set time to start of day for accurate comparison
+                            today.setHours(0, 0, 0, 0);
+                            const compareDate = new Date(date);
+                            compareDate.setHours(0, 0, 0, 0);
+                            // Disable today and all past dates
+                            return compareDate <= today;
+                          }}
                           initialFocus
                           captionLayout="dropdown-buttons"
-                          fromYear={1900}
-                          toYear={new Date().getFullYear()}
-                          defaultMonth={
-                            field.value
-                              ? new Date(field.value)
-                              : new Date(1990, 0)
-                          }
-                          className="rounded-md border border-gray-200 bg-white "
+                          fromYear={new Date().getFullYear()}
+                          toYear={new Date().getFullYear() + 10}
+                          defaultMonth={new Date()}
+                          className="rounded-md border border-gray-200 bg-white"
                         />
                       </PopoverContent>
                     </Popover>
