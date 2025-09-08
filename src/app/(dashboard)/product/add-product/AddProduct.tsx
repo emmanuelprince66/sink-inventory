@@ -218,12 +218,20 @@ const AddProduct = () => {
                       onSelect={(date) =>
                         field.onChange(date ? date.toISOString() : "")
                       }
-                      disabled={(date) => date < new Date()} // Disable past dates (before today)
+                      disabled={(date) => {
+                        const today = new Date();
+                        // Set time to start of day for accurate comparison
+                        today.setHours(0, 0, 0, 0);
+                        const compareDate = new Date(date);
+                        compareDate.setHours(0, 0, 0, 0);
+                        // Disable today and all past dates
+                        return compareDate <= today;
+                      }}
                       initialFocus
                       captionLayout="dropdown-buttons"
-                      fromYear={new Date().getFullYear()} // Start from current year
-                      toYear={new Date().getFullYear() + 10} // Show 10 years into the future
-                      defaultMonth={new Date()} // Default to current month
+                      fromYear={new Date().getFullYear()}
+                      toYear={new Date().getFullYear() + 10}
+                      defaultMonth={new Date()}
                       className="rounded-md border border-gray-200 bg-white"
                     />
                   </PopoverContent>
@@ -232,7 +240,6 @@ const AddProduct = () => {
               </FormItem>
             )}
           />
-
           {/* Category */}
           <FormField
             control={form.control}

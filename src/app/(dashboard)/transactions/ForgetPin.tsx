@@ -30,7 +30,7 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
   const [resetToken, setResetToken] = useState<string>("");
   const [uid64, setUid64] = useState<string>("");
 
-  console.log("uid64 state:", uid64);
+  // console.log("uid64 state:", uid64);
 
   // Form for verifying reset code
   const verifyForm = (

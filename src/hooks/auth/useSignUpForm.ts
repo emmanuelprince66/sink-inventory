@@ -46,7 +46,7 @@ const formSchema = z
 
 export type SignUpFormValues = z.infer<typeof formSchema>;
 
-export const useSignUpForm = () => {
+export const useSignUpForm = ({ verifyOtpPhone }: { verifyOtpPhone?: any }) => {
   const { showToast } = useToast();
 
   const router = useRouter();
@@ -82,7 +82,7 @@ export const useSignUpForm = () => {
     }
 
     verifyOtp(
-      { token: otp, phone: userPhone },
+      { token: otp, phone: userPhone || verifyOtpPhone || "" },
       {
         onSuccess: (response) => {
           console.log("response", response);

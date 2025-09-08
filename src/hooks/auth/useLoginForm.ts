@@ -36,6 +36,9 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { showToast } = useToast();
   const { login } = useUserStore();
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const closeOtpModal = () => setShowOtpModal(false);
+  const [verifyOtpPhone, setVerifyOtpPhone] = useState<any>("");
   const { isSupported, permission, token, requestPermission, getToken } =
     useNotification();
 
@@ -107,6 +110,8 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       if (error?.status_code === 403) {
         showToast(error?.message || "An error occurred during login", "error");
         setShowLogin(false);
+      } else if (error?.status_code === 405) {
+        setShowOtpModal(true);
       } else {
         showToast(error?.message || "An error occurred during login", "error");
       }
@@ -189,6 +194,10 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     form,
     onSubmit,
     showLogin,
+    verifyOtpPhone,
+    setVerifyOtpPhone,
+    showOtpModal,
+    closeOtpModal,
     isSubmitting: isPending || isLoading,
     isError,
     setShowLogin,
