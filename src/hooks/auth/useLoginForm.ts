@@ -37,7 +37,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   const { showToast } = useToast();
   const { login } = useUserStore();
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const closeOtpModal = () => setShowOtpModal(false);
+  const closeOtpPhoneModal = () => setShowOtpModal(false);
   const [verifyOtpPhone, setVerifyOtpPhone] = useState<any>("");
   const { isSupported, permission, token, requestPermission, getToken } =
     useNotification();
@@ -197,7 +197,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
     verifyOtpPhone,
     setVerifyOtpPhone,
     showOtpModal,
-    closeOtpModal,
+    closeOtpPhoneModal,
     isSubmitting: isPending || isLoading,
     isError,
     setShowLogin,

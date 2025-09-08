@@ -27,7 +27,7 @@ const Login = () => {
     form,
     onSubmit,
     showOtpModal,
-    closeOtpModal,
+    closeOtpPhoneModal,
     showLogin,
     setShowLogin,
     verifyOtpPhone,
@@ -42,7 +42,7 @@ const Login = () => {
     handleVerifyOtp,
     handleResendOtp,
     isVerifying,
-  } = useSignUpForm({ verifyOtpPhone });
+  } = useSignUpForm({ verifyOtpPhone, closeOtpPhoneModal });
 
   // console.log("verifyOtpPhone", verifyOtpPhone);
 
@@ -150,7 +150,7 @@ const Login = () => {
           {/* verify otp modal */}
           <CustomModal
             isOpen={showOtpModal} // FIXED: Removed the negation
-            onClose={closeOtpModal}
+            onClose={closeOtpPhoneModal}
             trigger={true}
             title="Verify OTP"
             description="Enter the 6-digit code sent to your email"
