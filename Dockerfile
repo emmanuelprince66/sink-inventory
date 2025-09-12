@@ -1,21 +1,21 @@
 # ---------- BUILD STAGE ----------
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install all deps (needed for build)
+# Install deps for building
 COPY package*.json ./
 RUN npm ci --legacy-peer-deps
 
-# Copy source
+# Copy source code
 COPY . .
 
-# Build NestJS
+# Build NestJS (dist folder)
 RUN npm run build
 
 
 # ---------- RUNTIME STAGE ----------
-FROM node:18-alpine AS runtime
+FROM node:20-alpine AS runtime
 
 WORKDIR /app
 
@@ -23,9 +23,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production deps
-RUN npm install --only=production --legacy-peer-deps
+RUN npm ci --only=production --legacy-peer-deps
 
-# Copy build output from builder
+# Copy build output from builder stage
 COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
