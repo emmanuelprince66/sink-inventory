@@ -1,23 +1,34 @@
-# 1. Base Image: Use an official Node.js image
-FROM node:18-alpine
+# ---------- BUILD STAGE ----------
+FROM node:18-alpine AS builder
 
-# 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copy package.json and package-lock.json
+# Install only prod deps first (for caching)
 COPY package*.json ./
+RUN npm ci --only=production --legacy-peer-deps && mv node_modules prod_node_modules
 
-# 4. Install dependencies
-RUN npm install --legacy-peer-deps
+# Install all deps to build (includes devDeps)
+RUN npm ci --legacy-peer-deps
 
-# 5. Copy the rest of your application code
+# Copy rest of source
 COPY . .
 
-# 6. Build your Next.js app for production
+# Build NestJS project
 RUN npm run build
 
-# 7. Expose the port the app will run on
+
+# ---------- RUN STAGE ----------
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy production node_modules only
+COPY --from=builder /app/prod_node_modules ./node_modules
+
+# Copy build output + package files
+COPY --from=builder /app/dist ./dist
+COPY package*.json ./
+
 EXPOSE 3000
 
-# 8. Command to run the application
-CMD ["npm", "start"]
+CMD ["node", "dist/main"]
