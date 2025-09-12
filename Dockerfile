@@ -3,31 +3,30 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Install only prod deps first (for caching)
+# Install all deps (needed for build)
 COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps && mv node_modules prod_node_modules
-
-# Install all deps to build (includes devDeps)
 RUN npm ci --legacy-peer-deps
 
-# Copy rest of source
+# Copy source
 COPY . .
 
-# Build NestJS project
+# Build NestJS
 RUN npm run build
 
 
-# ---------- RUN STAGE ----------
-FROM node:18-alpine
+# ---------- RUNTIME STAGE ----------
+FROM node:18-alpine AS runtime
 
 WORKDIR /app
 
-# Copy production node_modules only
-COPY --from=builder /app/prod_node_modules ./node_modules
-
-# Copy build output + package files
-COPY --from=builder /app/dist ./dist
+# Copy only package.json files
 COPY package*.json ./
+
+# Install only production deps
+RUN npm ci --only=production --legacy-peer-deps
+
+# Copy build output from builder
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 3000
 
