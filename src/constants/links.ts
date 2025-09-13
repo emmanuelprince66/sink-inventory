@@ -91,6 +91,17 @@ export const links = [
       },
     ],
   },
+  // {
+  //   title: "Notifications",
+  //   items: [
+  //     {
+  //       title: "Notifications",
+  //       url: "/notification",
+  //       icon: BellDotIcon,
+  //       roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+  //     },
+  //   ],
+  // },
   {
     title: "Marketing",
     items: [
