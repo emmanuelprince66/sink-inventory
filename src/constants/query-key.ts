@@ -105,6 +105,9 @@ export const queryKey = {
     updateCategory: "update-category",
     createCategory: "create-category",
   },
+  notification: {
+    getNotification: "get-notification",
+  },
   bank: {
     getAllBanks: "get-all-banks",
     createBank: "create-bank",
