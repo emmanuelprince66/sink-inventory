@@ -50,7 +50,7 @@ const AddProduct = () => {
   } = useProductHook({ handleOpenNotSubscribeModal });
 
   return (
-    <div className="w-1/2 mx-auto my-4 pb-6">
+    <div className=" w-full md:w-1/2 mx-auto my-4 pb-6">
       <p className="text-2xl font-bold mb-4">Add Product</p>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -377,7 +377,7 @@ const AddProduct = () => {
           />
 
           {/* Product Unit */}
-          <FormField
+          {/* <FormField
             control={form.control}
             name="product_unit"
             render={({ field }) => (
@@ -386,6 +386,38 @@ const AddProduct = () => {
                 <FormControl>
                   <Input placeholder="Enter Product Unit...." {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+
+          <FormField
+            control={form.control}
+            name="product_unit"
+            render={({ field }) => (
+              <FormItem className="flex-1 w-full bg-white">
+                <FormLabel>Product Unit</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full border border-green-300">
+                      <SelectValue placeholder="Select a payment method" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    {unitTypeOptions.map((option) => (
+                      <SelectItem
+                        key={option.value}
+                        value={option.value}
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
