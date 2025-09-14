@@ -131,10 +131,10 @@ export const useProductHook = ({
   const router = useRouter();
 
   const productId = id || params.id;
-  const business_id = useBusinessStore((state) => state.business_id);
+  const business_id = useBusinessStore((state: any) => state.business_id);
   const isEditMode = !!productId;
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state) => state.is_subscribed
+    (state: any) => state.is_subscribed
   );
   const queryClient = useQueryClient();
 
