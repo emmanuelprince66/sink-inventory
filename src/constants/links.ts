@@ -1,6 +1,7 @@
 // constants/links.ts
 import {
   Activity,
+  BellIcon,
   ClipboardList,
   CreditCard,
   DollarSign,
@@ -91,17 +92,17 @@ export const links = [
       },
     ],
   },
-  // {
-  //   title: "Notifications",
-  //   items: [
-  //     {
-  //       title: "Notifications",
-  //       url: "/notification",
-  //       icon: BellDotIcon,
-  //       roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
-  //     },
-  //   ],
-  // },
+  {
+    title: "Notifications",
+    items: [
+      {
+        title: "Notifications",
+        url: "/notification",
+        icon: BellIcon,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      },
+    ],
+  },
   {
     title: "Marketing",
     items: [

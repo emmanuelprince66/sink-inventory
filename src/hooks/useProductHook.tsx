@@ -131,10 +131,10 @@ export const useProductHook = ({
   const router = useRouter();
 
   const productId = id || params.id;
-  const business_id = useBusinessStore((state) => state.business_id);
+  const business_id = useBusinessStore((state: any) => state.business_id);
   const isEditMode = !!productId;
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state) => state.is_subscribed
+    (state: any) => state.is_subscribed
   );
   const queryClient = useQueryClient();
 
@@ -418,11 +418,25 @@ export const useProductHook = ({
 
   // Options for select inputs
   const unitTypeOptions = [
-    { label: "Tons", value: "Tons" },
-    { label: "Bags", value: "Bags" },
-    { label: "Pieces", value: "Pieces" },
-    { label: "Rolls", value: "Rolls" },
-    { label: "Pairs", value: "Pairs" },
+    { label: "Pieces", value: "Pcs" },
+    { label: "Kilograms", value: "Kg" },
+    { label: "Bags", value: "Bag" },
+    { label: "Boxes", value: "Box" },
+    { label: "Cartons", value: "Ctn" },
+    { label: "Limited", value: "Ltd" },
+    { label: "Pairs", value: "Pair" },
+    { label: "Grams", value: "Gram" },
+    { label: "Feet", value: "Feet" },
+    { label: "Rolls", value: "Roll" },
+    { label: "Meters", value: "Meter" },
+    { label: "Milliliters", value: "Mil" },
+    { label: "Bottles", value: "Bottle" },
+    { label: "Bundles", value: "Bundle" },
+    { label: "Milliliters", value: "Ml" },
+    { label: "Tons", value: "Ton" },
+    { label: "Dozens", value: "Dozen" },
+    { label: "Milligrams", value: "Mg" },
+    { label: "Grains", value: "Gr" },
   ];
   const StatusTypeOptions = [
     { label: "IN-STOCK", value: "IN-STOCK" },

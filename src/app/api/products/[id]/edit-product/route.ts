@@ -41,7 +41,6 @@ export async function PATCH(
     const response = await fetch(apiUrl, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
       body: formData,

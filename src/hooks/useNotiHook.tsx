@@ -8,5 +8,5 @@ export const useNotiHook = () => {
     useGetNotificationQuery(business_id, { enabled: !!business_id });
 
   console.log("NotificationData", NotificationData);
-  return { NotificationData };
+  return { NotificationData, NotificationDataLoading };
 };
