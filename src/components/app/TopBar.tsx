@@ -70,7 +70,11 @@ export function TopBar() {
   // Notification Button Component
   const NotificationButton = ({ className = "" }) => (
     <Button
-      onClick={() => setShowNotiSocketModal(true)}
+      onClick={
+        notificationCount > 0
+          ? () => setShowNotiSocketModal(true)
+          : () => setShowNotiSocketModal(false)
+      }
       variant="ghost"
       size="sm"
       className={`relative h-9 w-9 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 ${className}`}
