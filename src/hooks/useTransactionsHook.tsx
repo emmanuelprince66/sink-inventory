@@ -35,7 +35,7 @@ export const useTransactionsHook = ({
   const router = useRouter();
 
   // console.log("user", user);
-  const businessData = useBusinessDataStore((state) => state.businessData);
+  const businessData = useBusinessDataStore((state: any) => state.businessData);
 
   console.log("businessData", businessData);
   console.log("business_id", businessData?.id);

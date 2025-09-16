@@ -1,5 +1,6 @@
 "use client";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
+import { NotificationSocketDisplay } from "@/app/(dashboard)/notification/NotificationSocketDisplay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
-
 import {
   Bell,
   Building2,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useNotificationContext } from "../providers/NotificationProvider";
 import { SidebarTrigger } from "../ui/sidebar";
 import { CustomModal } from "./CustomModal";
 import KycConfirm from "./kyc/KycConfirm";
@@ -33,22 +34,27 @@ import KycConfirm from "./kyc/KycConfirm";
 export function TopBar() {
   const business_id = useBusinessStore((state) => state.business_id);
   const { user } = useUserRole();
+  const { notifications, isConnected } = useNotificationContext();
 
+  console.log("notifications", notifications);
+  console.log("isConnected", isConnected);
   console.log("user", user);
-  const [showConfirmKycModal, setShowConfirmKycModal] = useState(false);
 
+  const [showConfirmKycModal, setShowConfirmKycModal] = useState(false);
+  const [showNotiSocketModal, setShowNotiSocketModal] = useState(false);
   const { data: BusinessData, isLoading: BusinessDataLoading } =
     useFetchBusinessById(business_id);
-
   const business = BusinessData?.data?.[0] || {};
 
   // Extract user info from the user object
   const userName = user?.name || "";
   const userEmail = user?.email || "";
-
   // Split full name into first and last name for initials
   const nameParts = userName.split(" ");
   const firstName = nameParts[0] || "";
+
+  // Get notification count
+  const notificationCount = notifications?.length || 0;
 
   // Get user initials for avatar fallback
   const getInitials = (fullName: string) => {
@@ -60,6 +66,26 @@ export function TopBar() {
       parts[parts.length - 1]?.charAt(0) || ""
     }`.toUpperCase();
   };
+
+  // Notification Button Component
+  const NotificationButton = ({ className = "" }) => (
+    <Button
+      onClick={() => setShowNotiSocketModal(true)}
+      variant="ghost"
+      size="sm"
+      className={`relative h-9 w-9 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 ${className}`}
+    >
+      <Bell className="h-4 w-4" />
+      {notificationCount > 0 && (
+        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center shadow-sm border-2 border-white">
+          {notificationCount > 99 ? "99+" : notificationCount}
+        </span>
+      )}
+      <span className="sr-only">
+        Notifications {notificationCount > 0 && `(${notificationCount})`}
+      </span>
+    </Button>
+  );
 
   return (
     <>
@@ -105,9 +131,11 @@ export function TopBar() {
                     : "Dashboard Overview"}
                 </p>
               </div>
-
-              {/* Mobile Sidebar Trigger */}
-              <div className="md:hidden">
+              {/* Mobile Actions & Sidebar Trigger */}
+              <div className="flex items-center gap-2 md:hidden">
+                {/* Mobile Notifications */}
+                <NotificationButton />
+                {/* Mobile Sidebar Trigger */}
                 <SidebarTrigger />
               </div>
             </div>
@@ -115,15 +143,8 @@ export function TopBar() {
 
           {/* Right Section - Actions & Profile */}
           <div className="flex items-center gap-3">
-            {/* Notifications - Hidden on mobile */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden md:flex h-9 w-9 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-            >
-              <Bell className="h-4 w-4" />
-              <span className="sr-only">Notifications</span>
-            </Button>
+            {/* Desktop Notifications */}
+            <NotificationButton className="hidden md:flex" />
 
             {/* Search - Hidden on mobile */}
             <Button
@@ -162,7 +183,6 @@ export function TopBar() {
                   <ChevronDown className="h-4 w-4 text-gray-400 hidden md:block" />
                 </Button>
               </DropdownMenuTrigger>
-
               <DropdownMenuContent
                 align="end"
                 className="w-64 bg-white border border-gray-200 shadow-lg rounded-lg p-1"
@@ -198,14 +218,12 @@ export function TopBar() {
                     </div>
                   </div>
                 </div>
-
                 {/* Menu Items */}
                 <div className="py-1">
                   <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
                     <UserCircle className="h-4 w-4 text-gray-500" />
                     <span>View Profile</span>
                   </DropdownMenuItem>
-
                   {user && user?.role === "OWNER" && (
                     <Link href="/business">
                       <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
@@ -214,12 +232,10 @@ export function TopBar() {
                       </DropdownMenuItem>
                     </Link>
                   )}
-
                   <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
                     <Settings className="h-4 w-4 text-gray-500" />
                     <span>Account Settings</span>
                   </DropdownMenuItem>
-
                   <DropdownMenuItem
                     onClick={() => setShowConfirmKycModal(true)}
                     className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md"
@@ -246,15 +262,12 @@ export function TopBar() {
                     </div>
                   </DropdownMenuItem>
                 </div>
-
                 <DropdownMenuSeparator className="my-1 bg-gray-100" />
-
                 <div className="py-1">
                   <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
                     <HelpCircle className="h-4 w-4 text-gray-500" />
                     <span>Help & Support</span>
                   </DropdownMenuItem>
-
                   <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer rounded-md">
                     <LogOut className="h-4 w-4 text-red-500" />
                     <span>Sign Out</span>
@@ -265,8 +278,14 @@ export function TopBar() {
           </div>
         </div>
       </header>
-
       {/* KYC Verification Modal */}
+      <CustomModal
+        isOpen={showNotiSocketModal}
+        onClose={() => setShowNotiSocketModal(false)}
+        title=""
+      >
+        <NotificationSocketDisplay />
+      </CustomModal>
       <CustomModal
         isOpen={showConfirmKycModal}
         onClose={() => setShowConfirmKycModal(false)}

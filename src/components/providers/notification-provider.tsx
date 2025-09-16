@@ -50,7 +50,7 @@ interface NotificationProviderProps {
   children: React.ReactNode;
 }
 
-export const NotificationProvider: React.FC<NotificationProviderProps> = ({
+export const FcmNotificationProvider: React.FC<NotificationProviderProps> = ({
   children,
 }) => {
   const [isSupported, setIsSupported] = useState<boolean>(false);

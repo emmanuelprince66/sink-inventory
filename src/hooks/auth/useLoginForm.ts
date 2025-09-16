@@ -1,5 +1,6 @@
 import { useLoginMutation } from "@/api/auth/login-user";
 import { useNotification } from "@/components/providers/notification-provider";
+import { useNotificationContext } from "@/components/providers/NotificationProvider";
 import { useToast } from "@/hooks/toast/useToast";
 import { useUserStore } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +42,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   const [verifyOtpPhone, setVerifyOtpPhone] = useState<any>("");
   const { isSupported, permission, token, requestPermission, getToken } =
     useNotification();
+  const { connectWithToken } = useNotificationContext();
 
   const handleGetToken = async () => {
     setIsLoading(true);
@@ -97,6 +99,12 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         },
       });
       showToast("Login successful", "success");
+
+      console.log("trying to connect to socket");
+
+      connectWithToken(data.tokens.access);
+
+      // connect(data.tokens.access);
 
       if (data?.role === "OWNER") {
         router.push(options?.redirectTo || "/create-business");
