@@ -63,8 +63,6 @@ const Transactions = () => {
   });
   console.log("TrxData", TrxData);
 
-  // Dummy data
-
   // const formatToNaira = (amount: number) => {
   //   return new Intl.NumberFormat("en-NG", {
   //     style: "currency",
