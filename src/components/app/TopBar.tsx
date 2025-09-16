@@ -67,7 +67,6 @@ export function TopBar() {
     }`.toUpperCase();
   };
 
-  // Notification Button Component
   const NotificationButton = ({ className = "" }) => (
     <Button
       onClick={
