@@ -2,7 +2,6 @@
 import {
   Activity,
   BellIcon,
-  ClipboardList,
   CreditCard,
   DollarSign,
   LayoutDashboard,
@@ -56,12 +55,12 @@ export const links = [
         icon: DollarSign,
         roles: ["OWNER"],
       },
-      {
-        title: "Orders",
-        url: "/orders",
-        icon: ClipboardList,
-        roles: ["OWNER", "ADMIN-ATTENDANT"],
-      },
+      // {
+      //   title: "Orders",
+      //   url: "/orders",
+      //   icon: ClipboardList,
+      //   roles: ["OWNER", "ADMIN-ATTENDANT"],
+      // },
       {
         title: "Supplier",
         url: "/supply",
