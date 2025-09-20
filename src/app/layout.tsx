@@ -2,7 +2,6 @@
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { FcmNotificationProvider } from "@/components/providers/notification-provider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
-import { SocketProvider } from "@/components/providers/SocketProvider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProviders";
 import { ToastProvider } from "@/providers/ToastProvider";
 import type { Metadata } from "next";
@@ -31,10 +30,8 @@ export default function RootLayout({
         <ReactQueryProvider>
           <FcmNotificationProvider>
             <NotificationProvider>
-              <SocketProvider>
-                <ToastProvider />
-                <AuthProvider>{children}</AuthProvider>
-              </SocketProvider>
+              <ToastProvider />
+              <AuthProvider>{children}</AuthProvider>
             </NotificationProvider>
           </FcmNotificationProvider>
         </ReactQueryProvider>

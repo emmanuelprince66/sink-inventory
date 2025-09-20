@@ -84,6 +84,19 @@ const CampaignSettings = () => {
       email: false,
     });
 
+  // New Month Message States
+  const [isReturnedMessageEnabled, setIsReturnedMessageEnabled] =
+    useState(false);
+  const [newReturnedMessage, setNewReturnedMessage] = useState(
+    "Welcome back! 🎉 We're thrilled to see you again. Explore our latest offerings and enjoy exclusive deals just for returning customers."
+  );
+  const [returnedSendingMethods, setReturnedSendingMethods] =
+    useState<SendingMethods>({
+      sms: true,
+      whatsapp: false,
+      email: false,
+    });
+
   const handleSendingMethodChange = (method: keyof SendingMethods) => {
     setSendingMethods((prev) => {
       const newMethods = {
@@ -412,6 +425,21 @@ const CampaignSettings = () => {
           sendingMethods={newMonthSendingMethods}
           onSendingMethodChange={handleNewMonthSendingMethodChange}
           placeholder="Enter your new month greeting message..."
+        />
+
+        {/* Happy New Month Message Card */}
+        <CampaignAutomationCard
+          title="Returning customers message"
+          description="A message wishing returning customers well with promotions"
+          imageSrc="/asset/c-5.jpg"
+          imageAlt="Returning customers"
+          isEnabled={isReturnedMessageEnabled}
+          onToggle={setIsReturnedMessageEnabled}
+          message={newReturnedMessage}
+          onMessageChange={setNewMonthMessage}
+          sendingMethods={newMonthSendingMethods}
+          onSendingMethodChange={handleNewMonthSendingMethodChange}
+          placeholder="Enter your returning customers greeting message..."
         />
       </div>
 

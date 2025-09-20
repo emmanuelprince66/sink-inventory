@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
+import DiscountProduct from "./DiscountProduct";
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
 import ShowAllAttendants from "./ShowAllAttendants";
@@ -55,10 +56,12 @@ const CustomSalesCard = ({
   title,
   amount,
   type,
+  func,
 }: {
   title: string;
   amount: number | string;
   type?: string;
+  func?: any;
 }) => {
   const isRevenueCard = title === "Revenue";
   const isCostCard = title === "Product Cost";
@@ -143,7 +146,10 @@ const CustomSalesCard = ({
             </span>
           </div>
           {type === "discount" && (
-            <p className="text-xs hover:underline cursor-pointer text-purple-600">
+            <p
+              onClick={func}
+              className="text-xs hover:underline cursor-pointer text-purple-600"
+            >
               View More
             </p>
           )}
@@ -196,6 +202,14 @@ const Sales = () => {
     closeAttendantsModal();
   };
 
+  const [showDiscountSalesModal, setShowDiscountSalesModal] = useState(false);
+
+  const closeDiscountSalesModal = () => setShowDiscountSalesModal(false);
+
+  const handleOpenDiscountSalesModal = () => {
+    setActiveProductFilter("Discounted");
+    setShowDiscountSalesModal(true);
+  };
   const {
     SalesData,
     SalesLoading,
@@ -346,6 +360,7 @@ const Sales = () => {
                 title={"Total Discount"}
                 amount={formatToNaira(SalesData?.data?.results?.discount || 0)}
                 type="discount"
+                func={handleOpenDiscountSalesModal}
               />
 
               {user && user?.role === "OWNER" && (
@@ -632,6 +647,18 @@ const Sales = () => {
           AttendantsData={AttendantsData}
           AttendantsLoading={AttendantsLoading}
           handleClickAttendants={handleClickAttendants}
+        />
+      </CustomModal>
+      <CustomModal
+        isOpen={showDiscountSalesModal}
+        onClose={closeDiscountSalesModal}
+        trigger={false}
+        title="Discounted Sales"
+      >
+        <DiscountProduct
+          SalesData={SalesData}
+          SalesLoading={SalesLoading}
+          closeDiscountSalesModal={closeDiscountSalesModal}
         />
       </CustomModal>
     </div>
