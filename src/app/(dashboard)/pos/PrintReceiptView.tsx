@@ -499,11 +499,14 @@ const ReceiptPDFDocument = ({
               Powered by Sync360 | www.sync360.africa
             </Text>
           </View>
-          <View style={styles.footer}>
-            <Text style={styles.poweredBy}>
-              Goods bought in good condition are not returnable.
-            </Text>
-          </View>
+
+          {cart.some((item) => item.type === "PRODUCT") && (
+            <View style={styles.footer}>
+              <Text style={styles.poweredBy}>
+                Goods bought in good condition are not returnable.
+              </Text>
+            </View>
+          )}
         </Page>
       </Document>
     );
@@ -564,6 +567,8 @@ const PrintReceiptView = ({
   console.log("businessData", businessData);
 
   console.log("multiplePayments", multiplePayments);
+
+  console.log("cart", cart);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -941,11 +946,14 @@ td {
         </div>
 
         {/* Footer */}
-        <div className="receipt-footer flex justify-between flex-col items-center">
-          <p className="powered-by text-[9px] py-4 ">
-            Goods bought in good condition are not returnable.
-          </p>
-        </div>
+        {cart.some((item) => item.type === "PRODUCT") && (
+          <div className="receipt-footer flex justify-between flex-col items-center">
+            <p className="powered-by text-[9px] py-4 ">
+              Goods bought in good condition are not returnable.
+            </p>
+          </div>
+        )}
+
         <div className="receipt-footer flex justify-between flex-col items-center">
           <p className="thank-you text-[13px] ">THANK YOU!</p>
           <p className="powered-by text-[9px] ">
