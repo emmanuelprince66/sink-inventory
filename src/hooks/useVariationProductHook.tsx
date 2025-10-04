@@ -4,8 +4,9 @@ import { useFieldArray, UseFormReturn } from "react-hook-form";
 // Types
 interface Variation {
   id: string;
-  name: string;
+  name?: string;
   values: string[];
+  [key: string]: any;
 }
 
 interface ProductVariation {
@@ -17,29 +18,14 @@ interface ProductVariation {
   status?: string;
   discount?: string;
   low_stock_threshold?: string;
+  [key: string]: any;
 }
 
 interface FormData {
-  image?: string | File;
-  item_name: string;
-  sku: string;
-  product_unit: string;
-  category: string;
-  variation_type: "single" | "multiple";
+  variation_type?: string;
   variations: Variation[];
   product_variations: ProductVariation[];
-  cost_price?: string;
-  selling_price?: string;
-  stock_quantity?: string;
-  stock_status?: string;
-  discount_value?: string;
-  low_stock_tresh?: string;
-  supplier?: string;
-  payment_method?: string;
-  due_date?: string;
-  amount_paid?: string;
-  type?: string;
-  percentage_discount?: string;
+  [key: string]: any;
 }
 
 type VariationField =
@@ -102,7 +88,7 @@ export const useVariationProductHook = ({
   });
 
   // Watch variation type
-  const variationType = form.watch("variation_type");
+  const variationType = form.watch("variation_type") || "single";
 
   // Field arrays
   const {
@@ -124,7 +110,7 @@ export const useVariationProductHook = ({
   // Memoize product variations to prevent unnecessary recalculations
   const memoizedProductVariations = useMemo(() => {
     if (variationType === "multiple" && variations.length > 0) {
-      return generateProductVariations(variations);
+      return generateProductVariations(variations as Variation[]);
     }
     return [];
   }, [variations, variationType, generateProductVariations]);
@@ -133,7 +119,9 @@ export const useVariationProductHook = ({
   useEffect(() => {
     if (variationType === "multiple" && variations.length > 0) {
       const currentVariations = form.getValues("product_variations") || [];
-      const newCombinations = generateProductVariations(variations);
+      const newCombinations = generateProductVariations(
+        variations as Variation[]
+      );
 
       // Merge existing data with new combinations
       const mergedVariations = newCombinations.map((newVar) => {
@@ -218,7 +206,7 @@ export const useVariationProductHook = ({
   const handleEditVariation = useCallback(
     (index: number) => {
       const variation = variations[index];
-      setSelectedVariationType(variation.name);
+      setSelectedVariationType(variation.name || "");
       setNewVariationValues([...variation.values, ""]);
       setEditingVariationIndex(index);
       setIsSheetOpen(true);
@@ -246,7 +234,7 @@ export const useVariationProductHook = ({
   const handleSelectAllVariations = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setSelectedVariations(productVariations.map((v) => v.id));
+        setSelectedVariations(productVariations.map((v: any) => v.id));
       } else {
         setSelectedVariations([]);
       }
@@ -273,11 +261,11 @@ export const useVariationProductHook = ({
       setBulkEditError(null);
 
       // Pre-populate with first selected variation's value
-      const firstSelectedVariation = productVariations.find((v) =>
+      const firstSelectedVariation = productVariations.find((v: any) =>
         selectedVariations.includes(v.id)
       );
       if (firstSelectedVariation) {
-        setBulkEditValue(String(firstSelectedVariation[field] || ""));
+        setBulkEditValue(String((firstSelectedVariation as any)[field] || ""));
       } else {
         setBulkEditValue("");
       }
@@ -332,7 +320,7 @@ export const useVariationProductHook = ({
     }
 
     // Apply the bulk edit
-    productVariations.forEach((variation, index) => {
+    productVariations.forEach((variation: any, index: number) => {
       if (selectedVariations.includes(variation.id)) {
         form.setValue(
           `product_variations.${index}.${bulkEditField}` as any,
@@ -354,18 +342,19 @@ export const useVariationProductHook = ({
   // Edit All Modal Functions
   const handleEditAll = useCallback(() => {
     // Pre-populate with first selected variation's data or defaults
-    const firstSelectedVariation = productVariations.find((v) =>
+    const firstSelectedVariation = productVariations.find((v: any) =>
       selectedVariations.includes(v.id)
     );
 
     if (firstSelectedVariation) {
+      const variation = firstSelectedVariation as any;
       setEditAllData({
-        cost_price: firstSelectedVariation.cost_price || "",
-        selling_price: firstSelectedVariation.selling_price || "",
-        quantity: firstSelectedVariation.quantity || "",
-        status: firstSelectedVariation.status || "IN-STOCK",
-        discount: firstSelectedVariation.discount || "",
-        low_stock_threshold: firstSelectedVariation.low_stock_threshold || "",
+        cost_price: variation.cost_price || "",
+        selling_price: variation.selling_price || "",
+        quantity: variation.quantity || "",
+        status: variation.status || "IN-STOCK",
+        discount: variation.discount || "",
+        low_stock_threshold: variation.low_stock_threshold || "",
       });
     } else {
       // Reset to defaults if no selection
@@ -414,7 +403,7 @@ export const useVariationProductHook = ({
     }
 
     // Apply to selected variations only
-    productVariations.forEach((variation, index) => {
+    productVariations.forEach((variation: any, index: number) => {
       if (selectedVariations.includes(variation.id)) {
         Object.entries(editAllData).forEach(([field, value]) => {
           if (value !== "") {
