@@ -14,6 +14,13 @@ interface SendingMethods {
   email: boolean;
 }
 
+interface AutomationSetting {
+  type: string;
+  message: string;
+  channel: string;
+  is_active: boolean;
+}
+
 const CampaignSettings = () => {
   const { showToast } = useToast();
 
@@ -24,12 +31,12 @@ const CampaignSettings = () => {
     CampaignSettingsLoading,
   } = useCampaignHook({});
 
-  console.log("campaign----4", CampaignSettingsData);
-
   // Purchase Message States
   const [isPurchaseMessageEnabled, setIsPurchaseMessageEnabled] =
     useState(false);
-  const [purchaseMessage, setPurchaseMessage] = useState("");
+  const [purchaseMessage, setPurchaseMessage] = useState(
+    "We appreciate your patronage! Looking forward to serving you better. Management St Michael"
+  );
   const [sendingMethods, setSendingMethods] = useState<SendingMethods>({
     sms: true,
     whatsapp: false,
@@ -84,7 +91,7 @@ const CampaignSettings = () => {
       email: false,
     });
 
-  // New Month Message States
+  // Returning Customer Message States
   const [isReturnedMessageEnabled, setIsReturnedMessageEnabled] =
     useState(false);
   const [newReturnedMessage, setNewReturnedMessage] = useState(
@@ -104,10 +111,9 @@ const CampaignSettings = () => {
         [method]: !prev[method],
       };
 
-      // Ensure at least one method is always selected
       const hasAnySelected = Object.values(newMethods).some(Boolean);
       if (!hasAnySelected) {
-        return prev; // Don't change if it would result in no selection
+        return prev;
       }
 
       return newMethods;
@@ -123,10 +129,9 @@ const CampaignSettings = () => {
         [method]: !prev[method],
       };
 
-      // Ensure at least one method is always selected
       const hasAnySelected = Object.values(newMethods).some(Boolean);
       if (!hasAnySelected) {
-        return prev; // Don't change if it would result in no selection
+        return prev;
       }
 
       return newMethods;
@@ -181,23 +186,79 @@ const CampaignSettings = () => {
     });
   };
 
+  const handleReturnedSendingMethodChange = (method: keyof SendingMethods) => {
+    setReturnedSendingMethods((prev) => {
+      const newMethods = {
+        ...prev,
+        [method]: !prev[method],
+      };
+
+      const hasAnySelected = Object.values(newMethods).some(Boolean);
+      if (!hasAnySelected) {
+        return prev;
+      }
+
+      return newMethods;
+    });
+  };
+
+  // Helper function to convert SendingMethods to channel string
+  const getChannelFromSendingMethods = (methods: SendingMethods): string => {
+    if (methods.sms) return "SMS";
+    if (methods.whatsapp) return "WHATSAPP";
+    if (methods.email) return "EMAIL";
+    return "SMS"; // default
+  };
+
+  // Helper function to convert channel string to SendingMethods
+  const getSendingMethodsFromChannel = (channel: string): SendingMethods => {
+    return {
+      sms: channel === "SMS",
+      whatsapp: channel === "WHATSAPP",
+      email: channel === "EMAIL",
+    };
+  };
+
   useEffect(() => {
     if (CampaignSettingsData && !CampaignSettingsLoading) {
-      const settings = CampaignSettingsData?.data;
-      console.log("settings", settings);
-      setIsPurchaseMessageEnabled(settings.message_subscription);
-      setIsActiveCustomersEnabled(settings.inactive_message_subscription);
-      setActiveCustomersMessage(settings.inactive_message);
-      setPurchaseMessage(settings.purchase_message);
-      setSendingMethods({
-        sms: settings.purchase_message_channel === "SMS" || true,
-        whatsapp: settings.purchase_message_channel === "WHATSAPP" || false,
-        email: settings.purchase_message_channel === "EMAIL" || false,
-      });
-      setActiveCustomersSendingMethods({
-        sms: settings.inactive_message_channel === "SMS" || true,
-        whatsapp: settings.inactive_message_channel === "WHATSAPP" || false,
-        email: settings.inactive_message_channel === "EMAIL" || false,
+      const settings = CampaignSettingsData?.data || [];
+
+      // Process each automation setting
+      settings.forEach((setting: AutomationSetting) => {
+        const sendingMethods = getSendingMethodsFromChannel(setting.channel);
+
+        switch (setting.type) {
+          case "POINT-OF-PURCHASE":
+            setIsPurchaseMessageEnabled(setting.is_active);
+            setPurchaseMessage(setting.message);
+            setSendingMethods(sendingMethods);
+            break;
+          case "INACTIVE":
+            setIsActiveCustomersEnabled(setting.is_active);
+            setActiveCustomersMessage(setting.message);
+            setActiveCustomersSendingMethods(sendingMethods);
+            break;
+          case "FRIDAY":
+            setIsFridayMessageEnabled(setting.is_active);
+            setFridayMessage(setting.message);
+            setFridaySendingMethods(sendingMethods);
+            break;
+          case "MONDAY":
+            setIsMondayMessageEnabled(setting.is_active);
+            setMondayMessage(setting.message);
+            setMondaySendingMethods(sendingMethods);
+            break;
+          case "NEW-MONTH":
+            setIsNewMonthMessageEnabled(setting.is_active);
+            setNewMonthMessage(setting.message);
+            setNewMonthSendingMethods(sendingMethods);
+            break;
+          case "RETURNING-CUSTOMER":
+            setIsReturnedMessageEnabled(setting.is_active);
+            setNewReturnedMessage(setting.message);
+            setReturnedSendingMethods(sendingMethods);
+            break;
+        }
       });
     }
   }, [CampaignSettingsData, CampaignSettingsLoading]);
@@ -226,74 +287,75 @@ const CampaignSettings = () => {
       errors.push("Please enter a new month message");
     }
 
+    if (isReturnedMessageEnabled && !newReturnedMessage.trim()) {
+      errors.push("Please enter a returning customer message");
+    }
+
     if (errors.length > 0) {
       showToast(errors.join("\n"), "error");
       return;
     }
 
-    // Construct payload based on enabled toggles and non-empty messages
-    const payload: any = {};
+    // Build the payload as an array of automation objects
+    const payload: AutomationSetting[] = [];
 
+    // Point of Purchase
     if (isPurchaseMessageEnabled && purchaseMessage.trim()) {
-      payload.message_subscription = true;
-      payload.purchase_message = purchaseMessage.trim();
-
-      // Determine channel based on selected sending methods
-      const purchaseChannels = [];
-      if (sendingMethods.sms) purchaseChannels.push("SMS");
-      if (sendingMethods.whatsapp) purchaseChannels.push("WHATSAPP");
-      if (sendingMethods.email) purchaseChannels.push("EMAIL");
-
-      payload.purchase_message_channel = purchaseChannels[0] || "SMS";
+      payload.push({
+        type: "POINT-OF-PURCHASE",
+        message: purchaseMessage.trim(),
+        channel: getChannelFromSendingMethods(sendingMethods),
+        is_active: true,
+      });
     }
 
+    // Inactive Customers
     if (isActiveCustomersEnabled && activeCustomersMessage.trim()) {
-      payload.inactive_message_subscription = true;
-      payload.inactive_message = activeCustomersMessage.trim();
-
-      const inactiveChannels = [];
-      if (activeCustomersSendingMethods.sms) inactiveChannels.push("SMS");
-      if (activeCustomersSendingMethods.whatsapp)
-        inactiveChannels.push("WHATSAPP");
-      if (activeCustomersSendingMethods.email) inactiveChannels.push("EMAIL");
-
-      payload.inactive_message_channel = inactiveChannels[0] || "SMS";
+      payload.push({
+        type: "INACTIVE",
+        message: activeCustomersMessage.trim(),
+        channel: getChannelFromSendingMethods(activeCustomersSendingMethods),
+        is_active: true,
+      });
     }
 
-    // Add new automation payloads (for now, just log them as they're dummy data)
+    // Friday Message
     if (isFridayMessageEnabled && fridayMessage.trim()) {
-      console.log("Friday Message:", {
-        enabled: true,
+      payload.push({
+        type: "FRIDAY",
         message: fridayMessage.trim(),
-        channel: fridaySendingMethods.sms
-          ? "SMS"
-          : fridaySendingMethods.whatsapp
-          ? "WHATSAPP"
-          : "EMAIL",
+        channel: getChannelFromSendingMethods(fridaySendingMethods),
+        is_active: true,
       });
     }
 
+    // Monday Message
     if (isMondayMessageEnabled && mondayMessage.trim()) {
-      console.log("Monday Message:", {
-        enabled: true,
+      payload.push({
+        type: "MONDAY",
         message: mondayMessage.trim(),
-        channel: mondaySendingMethods.sms
-          ? "SMS"
-          : mondaySendingMethods.whatsapp
-          ? "WHATSAPP"
-          : "EMAIL",
+        channel: getChannelFromSendingMethods(mondaySendingMethods),
+        is_active: true,
       });
     }
 
+    // New Month Message
     if (isNewMonthMessageEnabled && newMonthMessage.trim()) {
-      console.log("New Month Message:", {
-        enabled: true,
+      payload.push({
+        type: "NEW-MONTH",
         message: newMonthMessage.trim(),
-        channel: newMonthSendingMethods.sms
-          ? "SMS"
-          : newMonthSendingMethods.whatsapp
-          ? "WHATSAPP"
-          : "EMAIL",
+        channel: getChannelFromSendingMethods(newMonthSendingMethods),
+        is_active: true,
+      });
+    }
+
+    // Returning Customer Message
+    if (isReturnedMessageEnabled && newReturnedMessage.trim()) {
+      payload.push({
+        type: "RETURNING-CUSTOMER",
+        message: newReturnedMessage.trim(),
+        channel: getChannelFromSendingMethods(returnedSendingMethods),
+        is_active: true,
       });
     }
 
@@ -305,7 +367,7 @@ const CampaignSettings = () => {
     return (
       <div className="w-full h-full flex justify-center items-center mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(6)].map((_, i) => (
             <div
               key={i}
               className="bg-white w-full rounded-lg shadow-sm h-[300px] overflow-hidden"
@@ -427,18 +489,18 @@ const CampaignSettings = () => {
           placeholder="Enter your new month greeting message..."
         />
 
-        {/* Happy New Month Message Card */}
+        {/* Returning Customers Message Card */}
         <CampaignAutomationCard
-          title="Returning customers message"
+          title="Returning customers message"
           description="A message wishing returning customers well with promotions"
           imageSrc="/asset/c-5.jpg"
           imageAlt="Returning customers"
           isEnabled={isReturnedMessageEnabled}
           onToggle={setIsReturnedMessageEnabled}
           message={newReturnedMessage}
-          onMessageChange={setNewMonthMessage}
-          sendingMethods={newMonthSendingMethods}
-          onSendingMethodChange={handleNewMonthSendingMethodChange}
+          onMessageChange={setNewReturnedMessage}
+          sendingMethods={returnedSendingMethods}
+          onSendingMethodChange={handleReturnedSendingMethodChange}
           placeholder="Enter your returning customers greeting message..."
         />
       </div>

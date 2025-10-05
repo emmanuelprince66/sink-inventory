@@ -2,7 +2,6 @@ import { useCreateSenderIdMutation } from "@/api/campaign/add-sender-id";
 import { useFetchAllCampaignQuery } from "@/api/campaign/fetch-all-campaign";
 import { useFetchCampaignGroupQuery } from "@/api/campaign/fetch-campaign-group";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
-// import { useUpdateCampaignMutation } from "@/api/campaign/update-campaign"; // Add this import
 
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -77,8 +76,6 @@ export const useCampaignHook = ({
   } = useFetchBusinessById(business_id);
   const businessData = BusinessData?.data?.[0] || {};
 
-  console.log("businessData", businessData);
-
   const { showToast } = useToast();
   const isEditMode = !!editData;
   const isEditModeGroup = !!editGroupData;
@@ -99,8 +96,6 @@ export const useCampaignHook = ({
     isLoading: CampaignSettingsLoading,
     refetch: refetchSettings,
   } = useFetchAllCampaignSettingsQuery(business_id);
-
-  console.log("CampaignSettingsData", CampaignSettingsData);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
 
@@ -131,7 +126,6 @@ export const useCampaignHook = ({
   const handleDeleteGroup = (id: string) => {
     deleteGroup(id);
   };
-  // console.log("CampaignData", CampaignData);
 
   const form = useForm<AddCampaignFormValues>({
     resolver: zodResolver(addCampaignSchema),
@@ -183,23 +177,16 @@ export const useCampaignHook = ({
     },
   ];
 
-  // EDIT FUNCTIONALITY - Enhanced to handle the proper editData structure
+  // EDIT FUNCTIONALITY
   useEffect(() => {
     if (editData) {
-      // Extract customer IDs from customers array
       const customerIds =
         editData.customers?.map((customer: any) => customer.id) || [];
-
-      // Extract group IDs from groups array
       const groupIds = editData.groups?.map((group: any) => group.id) || [];
-      // const chan = editData?.channel;
 
-      // console.log("Raw channel value:", editData.channel); // Check raw value
-      // console.log("Type of channel:", typeof editData.channel); // Check type
-      // console.log("chan", chan);
       form.reset({
         name: editData?.name || "",
-        channel: editData.channel, // Using nullish coalescing instead
+        channel: editData.channel,
         title: editData?.title || "",
         message: editData?.message || "",
         customer_ids: customerIds,
@@ -223,38 +210,27 @@ export const useCampaignHook = ({
   const { mutate: deleteCampaign, isPending: deleteCampaignLoading } =
     useDeleteCampaignMutation({
       onSuccess: (data) => {
-        console.log("data", data);
         showToast(data.message, "success");
         refetchCampaign();
         refetchBusiness();
 
         if (closeModal) closeModal();
-
-        // if (closeModal) closeModal();
-        // Optional: Invalidate queries or update cache
       },
-      // You can add other callbacks here if needed
     });
   const { mutate: deleteGroup, isPending: deleteGroupLoading } =
     useDeleteGroupMutation({
       onSuccess: (data) => {
-        console.log("data", data);
         showToast(data.message, "success");
         refetchGroup();
 
         if (closeModal) closeModal();
-
-        // if (closeModal) closeModal();
-        // Optional: Invalidate queries or update cache
       },
-      // You can add other callbacks here if needed
     });
 
   const { mutate: CreateSenderId, isPending: CreateSenderIdLoading } =
     useCreateSenderIdMutation({
       businessId: business_id,
       onSuccess: (data) => {
-        console.log("data---4", data);
         showToast(data.message, "success");
         if (closeModal) closeModal();
       },
@@ -264,21 +240,17 @@ export const useCampaignHook = ({
       businessId: business_id,
       onSuccess: (data) => {
         try {
-          // Validate the payment URL
           if (!data?.data?.payment_url) {
             throw new Error("No payment URL received");
           }
 
           const paymentUrl = new URL(data.data.payment_url);
 
-          // Close modal if exists
           refetchBusiness();
           if (closeModal) closeModal();
 
-          // Show success message
           showToast(data.message, "success");
 
-          // Redirect after short delay for UX
           setTimeout(() => {
             if (paymentUrl.hostname === window.location.hostname) {
               router.push(data.data.payment_url);
@@ -300,7 +272,6 @@ export const useCampaignHook = ({
     useCreateCampaignMutation({
       businessId: business_id,
       onSuccess: (data) => {
-        console.log("Campaign created successfully", data);
         showToast(data.message, "success");
         refetchCampaign();
         refetchBusiness();
@@ -317,15 +288,13 @@ export const useCampaignHook = ({
   } = useCreateCampaignSettingsMutation({
     businessId: business_id,
     onSuccess: (data) => {
-      console.log("data", data);
-
       showToast(data.message, "success");
       refetchSettings();
       refetchBusiness();
     },
     onError: (error) => {
-      console.error("Campaign creation failed", error);
-      showToast("Failed to create campaign", "error");
+      console.error("Campaign settings creation failed", error);
+      showToast("Failed to save campaign settings", "error");
     },
   });
 
@@ -337,27 +306,22 @@ export const useCampaignHook = ({
     useCreateGroupMutation({
       businessId: business_id,
       onSuccess: (data) => {
-        console.log("Campaign created successfully", data);
         showToast(data.message, "success");
         refetchGroup();
         if (closeModal) closeModal();
       },
       onError: (error) => {
-        console.error("Campaign creation failed", error);
-        showToast("Failed to create campaign", "error");
+        console.error("Group creation failed", error);
+        showToast("Failed to create group", "error");
       },
     });
 
-  // Add Update Campaign Mutation
   const { mutate: editCampaign, isPending: editCampaignLoading } =
     useEditCampaignMutation();
   const { mutate: editGroup, isPending: editGroupLoading } =
     useEditGroupMutation();
 
   const onSubmit = (values: AddCampaignFormValues) => {
-    console.log("Campaign values", values);
-
-    // Validate that at least one target (customer or group) is selected
     if (
       (!values.customer_ids || values.customer_ids.length === 0) &&
       (!values.group_ids || values.group_ids.length === 0)
@@ -381,9 +345,6 @@ export const useCampaignHook = ({
     };
 
     if (isEditMode) {
-      // Update existing campaign
-
-      console.log("hello---3");
       editCampaign(
         {
           campaignId: editData.id,
@@ -399,17 +360,14 @@ export const useCampaignHook = ({
         }
       );
     } else {
-      // Create new campaign
       CreateCampaign({
         businessId: business_id,
         payload,
       });
     }
   };
-  // console.log("form", form.getValues());
 
   const onSubmitFundCampaign = (values: FundCampaignValues) => {
-    console.log("values", values);
     fundCampaign({
       businessId: business_id,
       payload: {
@@ -418,7 +376,6 @@ export const useCampaignHook = ({
     });
   };
   const onSubmitSenderIdForm = (values: AddSenderIdValues) => {
-    console.log("values", values);
     CreateSenderId({
       businessId: business_id,
       payload: {
@@ -427,14 +384,10 @@ export const useCampaignHook = ({
     });
   };
   const onSubmitAddGroupForm = (values: AddGroupValues) => {
-    console.log("values", values);
-
     if (!values.customer_ids || values.customer_ids.length === 0) {
       showToast("Please select at least one customer ", "error");
       return;
     }
-
-    console.log("values", values.customer_ids);
 
     if (isEditModeGroup) {
       editGroup(
@@ -465,15 +418,7 @@ export const useCampaignHook = ({
         payload,
       });
     }
-
-    // CreateSenderId({
-    //   businessId: business_id,
-    //   payload: {
-    //     sender_id: values.sender_id,
-    //   },
-    // });
   };
-  console.log("campaign data", CampaignData);
 
   return {
     CampaignData,

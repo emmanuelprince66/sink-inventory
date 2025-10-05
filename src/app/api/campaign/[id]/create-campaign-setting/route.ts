@@ -56,7 +56,7 @@ export async function POST(
 
     // Validate required fields
 
-    const apiUrl = `${BaseUrl}campaign/settings/${businessId}/`;
+    const apiUrl = `${BaseUrl}campaign/automation/${businessId}/`;
     console.log("Forwarding to:", apiUrl);
 
     console.log("Payload:", payload);

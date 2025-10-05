@@ -483,7 +483,6 @@ const ReceiptPDFDocument = ({
                 </View>
               ) : null
             ) : (
-              // Fallback to single payment
               <Text style={styles.paymentMethodValue}>
                 {(createSaleResponse?.data?.method || "cash")
                   .replace("_", " ")

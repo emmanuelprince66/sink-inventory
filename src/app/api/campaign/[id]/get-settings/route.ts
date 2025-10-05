@@ -19,7 +19,7 @@ export async function GET(
       { status: 401 }
     );
   }
-  const apiUrl = new URL(`${BaseUrl}campaign/settings/${id}/`);
+  const apiUrl = new URL(`${BaseUrl}campaign/automation/${id}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
