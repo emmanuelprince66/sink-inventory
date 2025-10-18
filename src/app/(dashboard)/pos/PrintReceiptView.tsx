@@ -562,12 +562,12 @@ const PrintReceiptView = ({
   // console.log("username", user?.name);
   // console.log("pa", user?.role);
 
-  console.log("business", business);
-  console.log("businessData", businessData);
+  // console.log("business", business);
+  // console.log("businessData", businessData);
 
-  console.log("multiplePayments", multiplePayments);
+  // console.log("multiplePayments", multiplePayments);
 
-  console.log("cart", cart);
+  // console.log("createSaleResponse", createSaleResponse);
 
   const [pdfError, setPdfError] = useState<string | null>(null);
   // Calculate total amount
@@ -577,9 +577,7 @@ const PrintReceiptView = ({
 
   // Generate receipt number
 
-  const receiptNumber = `${business.name
-    .slice(0, 2)
-    .toUpperCase()}-${createSaleResponse?.data?.id.slice(0, 4)}`;
+  const receiptNumber = `RC-${createSaleResponse?.data?.id?.slice(0, 4)}`;
   // const receiptNumber =
   //   createSaleResponse?.data?.receipt_number ||
   //   `RC-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
