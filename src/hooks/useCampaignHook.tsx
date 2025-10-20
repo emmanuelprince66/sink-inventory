@@ -76,7 +76,7 @@ export const useCampaignHook = ({
   } = useFetchBusinessById(business_id);
   const businessData = BusinessData?.data || {};
 
-  console.log("businessData in hook", BusinessData);
+  // console.log("businessData in hook", BusinessData);
 
   const { showToast } = useToast();
   const isEditMode = !!editData;
