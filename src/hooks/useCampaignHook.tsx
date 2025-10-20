@@ -74,7 +74,9 @@ export const useCampaignHook = ({
     isLoading: BusinessDataLoading,
     refetch: refetchBusiness,
   } = useFetchBusinessById(business_id);
-  const businessData = BusinessData?.data?.[0] || {};
+  const businessData = BusinessData?.data || {};
+
+  console.log("businessData in hook", BusinessData);
 
   const { showToast } = useToast();
   const isEditMode = !!editData;
