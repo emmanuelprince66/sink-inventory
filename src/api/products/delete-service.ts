@@ -18,6 +18,8 @@ type QueryFnType = typeof deleteService;
 
 interface UseDeleteServiceOptions extends MutationConfig<QueryFnType> {
   // Additional options can be added here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useDeleteServiceMutation = (config?: UseDeleteServiceOptions) => {

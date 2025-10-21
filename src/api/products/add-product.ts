@@ -29,7 +29,7 @@ interface UseAddProductMutationOptions extends MutationConfig<QueryFnType> {
 
 export const useAddProductMutation = (
   businessId: any,
-  config: UseAddProductMutationOptions
+  config?: UseAddProductMutationOptions
 ) => {
   const { showToast } = useToast();
 
