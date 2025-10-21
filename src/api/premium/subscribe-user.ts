@@ -21,8 +21,14 @@ const SubscribeUser = async (body: any) => {
 
 type QueryFnType = typeof SubscribeUser;
 
+interface SubscribeUserMutationOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
 export const useSubscribeUserMutation = (
-  config?: MutationConfig<QueryFnType>
+  config?: SubscribeUserMutationOptions
 ) => {
   const { showToast } = useToast();
 

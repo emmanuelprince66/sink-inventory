@@ -15,6 +15,14 @@ export const queryKey = {
     verifyReset: "verify-reset",
     resetPassword: "reset-password",
   },
+  shipping: {
+    createShipping: "create-shipping",
+    getAllShippings: "get-all-shippings",
+    createShippingMethod: "create-shipping-method",
+    getShippingById: "get-shipping-by-id",
+    editShipping: "edit-shipping",
+    deleteShipping: "delete-shipping",
+  },
   premium: {
     getAllSubscriptions: "get-all-subscriptions",
     getPremiumDetails: "get-premium-details",
@@ -68,6 +76,12 @@ export const queryKey = {
     createSale: "create-sale",
     reverseSale: "reverse-sale",
     salesDashboard: "sales-dashboard",
+  },
+  orders: {
+    getAllOrders: "get-all-orders",
+    createOrder: "create-order",
+    getOrderById: "get-order-by-id",
+    updateOrderStatus: "update-order-status",
   },
   analytics: {
     getSalesAnalytics: "get-sales-analytics",

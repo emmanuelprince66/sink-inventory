@@ -61,6 +61,8 @@ const Campaign = () => {
 
   const closeSenderModal = () => setOpenSenderModal(false);
 
+  console.log("businessData", businessData);
+
   return (
     <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
       {/* Header Section */}

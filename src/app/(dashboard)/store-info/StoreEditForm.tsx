@@ -103,7 +103,7 @@ interface StoreData {
 }
 
 interface StoreEditFormProps {
-  storeData: StoreData;
+  storeData: any;
   onSave: (data: StoreData) => void;
   onCancel: () => void;
 }

@@ -1,6 +1,6 @@
-import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
+import { MutationConfig, useMutation } from "@/lib/react-query";
 
 const loginUser = async (body: any) => {
   const response = await fetch(`/api/login`, {
@@ -20,8 +20,12 @@ const loginUser = async (body: any) => {
 };
 
 type QueryFnType = typeof loginUser;
+interface LoginMutationProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
 
-export const useLoginMutation = (config?: MutationConfig<QueryFnType>) => {
+export const useLoginMutation = (config?: LoginMutationProps) => {
   const { showToast } = useToast();
 
   return useMutation({

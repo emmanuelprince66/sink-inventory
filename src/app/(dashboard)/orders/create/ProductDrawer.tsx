@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 const ProductDrawer = ({
   open,
   onOpenChange,
+  filteredInventoryData,
   onProductSelect,
   products,
   setSearchInput,
@@ -24,6 +25,7 @@ const ProductDrawer = ({
   page,
 }: {
   open: boolean;
+  filteredInventoryData: any;
   onOpenChange: (open: boolean) => void;
   onProductSelect: (products: any[]) => void;
   products: any;
@@ -101,9 +103,9 @@ const ProductDrawer = ({
                 <Skeleton className="bg-[#eef4ef] h-4 w-1/2" />
               </div>
             ))
-          ) : products?.data?.results?.data?.length > 0 ? (
+          ) : filteredInventoryData?.length > 0 ? (
             // Show actual product data when loaded
-            products.data.results.data.map((product: any) => (
+            filteredInventoryData.map((product: any) => (
               <div
                 key={product.id}
                 className="m-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 border-gray-200 hover:border-[#52b661] transition-colors flex items-center justify-between"

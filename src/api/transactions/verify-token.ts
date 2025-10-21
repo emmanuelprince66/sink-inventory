@@ -25,10 +25,12 @@ const CreatePin = async ({
 };
 
 type QueryFnType = typeof CreatePin;
-
-export const useVerifyPinTokenMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+interface UseVerifyTokenOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+export const useVerifyPinTokenMutation = (config?: UseVerifyTokenOptions) => {
   const { showToast } = useToast();
 
   return useMutation({

@@ -1,6 +1,6 @@
-import { MutationConfig, useMutation } from "@/lib/react-query";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
+import { MutationConfig, useMutation } from "@/lib/react-query";
 
 interface CreateCustomerPayload {
   // Define your customer creation payload type here
@@ -33,6 +33,8 @@ type QueryFnType = typeof createCustomer;
 
 interface UseCreateCustomerMutationOptions extends MutationConfig<QueryFnType> {
   businessId: string | null;
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useCreateCustomerMutation = ({

@@ -21,8 +21,13 @@ const changePassword = async (body: any) => {
 
 type QueryFnType = typeof changePassword;
 
+interface ChangePasswordMutationProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
 export const useChangePasswordMutation = (
-  config?: MutationConfig<QueryFnType>
+  config?: ChangePasswordMutationProps
 ) => {
   const { showToast } = useToast();
 

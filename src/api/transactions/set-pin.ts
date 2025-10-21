@@ -25,8 +25,13 @@ const CreatePin = async ({
 };
 
 type QueryFnType = typeof CreatePin;
+interface UseCreatePinOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
 
-export const useCreatePinMutation = (config?: MutationConfig<QueryFnType>) => {
+export const useCreatePinMutation = (config?: UseCreatePinOptions) => {
   const { showToast } = useToast();
 
   return useMutation({

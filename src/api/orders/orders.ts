@@ -1,0 +1,221 @@
+import { queryKey } from "@/constants/query-key";
+import { useToast } from "@/hooks/toast/useToast";
+import {
+  ExtractFnReturnType,
+  MutationConfig,
+  QueryConfigType,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@/lib/react-query";
+
+interface CreateOrderPayload {
+  sales_channel: string;
+  products: string[];
+  quantities: number[];
+  customer: string;
+  payment_status: "UNPAID" | "PARTIAL" | "PAID";
+  payment_method?: string;
+  delivery_location?: string;
+  description?: string;
+  created_at?: string;
+  discount_type?: "percentage" | "fixed";
+  discount_value?: number;
+  shipping_cost?: number;
+}
+
+interface FetchOrdersParams {
+  page?: number;
+  limit?: number;
+  id: string;
+  search?: string;
+}
+
+const createOrder = async ({
+  businessId,
+  payload,
+}: {
+  businessId: string;
+  payload: CreateOrderPayload;
+}) => {
+  const response = await fetch(`/api/orders/${businessId}/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw errorData;
+  }
+  return response.json();
+};
+
+export const fetchAllOrders = async ({
+  page = 1,
+  limit = 20,
+  id,
+  search = "",
+}: FetchOrdersParams) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(search && { search }),
+  });
+
+  const response = await fetch(`/api/orders/${id}/all?${queryParams}`);
+  if (!response.ok) throw new Error("Error fetching orders");
+  return response.json();
+};
+
+type CreateOrderQueryFnType = typeof createOrder;
+type FetchOrdersQueryFnType = typeof fetchAllOrders;
+
+interface UseCreateOrderMutationOptions
+  extends MutationConfig<CreateOrderQueryFnType> {
+  businessId: string | null;
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
+interface UseFetchAllOrdersOptions
+  extends QueryConfigType<FetchOrdersQueryFnType> {
+  params: FetchOrdersParams;
+  enabled?: boolean;
+  staleTime?: number;
+}
+
+export const UseCreateOrderMutation = ({
+  businessId,
+  ...config
+}: UseCreateOrderMutationOptions) => {
+  const { showToast } = useToast();
+
+  return useMutation({
+    mutationKey: [queryKey.orders.createOrder, businessId],
+    mutationFn: (payload: any) =>
+      createOrder({ businessId: businessId!, payload }),
+    retry: false,
+    onError: (error: any, variables: any, context: any) => {
+      console.log("Error creating Order:", error);
+
+      const errorMessage =
+        error?.message || error?.error || "Error creating order";
+
+      showToast(errorMessage, "error");
+      config?.onError?.(error, variables, context);
+    },
+    onSuccess: (data: any, variables: any, context: any) => {
+      showToast("Order created successfully", "success");
+      config?.onSuccess?.(data, variables, context);
+    },
+    ...config,
+  });
+};
+
+export const useFetchAllOrdersQuery = ({
+  params,
+  enabled = true,
+  staleTime = 1000 * 60 * 5,
+  ...config
+}: UseFetchAllOrdersOptions) => {
+  return useQuery<ExtractFnReturnType<FetchOrdersQueryFnType>>({
+    retry(failureCount, error: any) {
+      if ([404, 401].includes(error?.status)) return false;
+      else if (failureCount < 1) return true;
+      else return false;
+    },
+    queryKey: [queryKey.orders.getAllOrders, params],
+    queryFn: () => fetchAllOrders(params),
+    enabled: enabled && !!params.id,
+    staleTime,
+    ...config,
+  });
+};
+
+export const FetchOrderById = async (id: string) => {
+  // console.log("useQuery:", useQuery); //
+  const response = await fetch(`/api/orders/${id}/view`);
+  if (!response.ok) throw new Error("Error fetching order data");
+  return response.json();
+};
+
+type QueryFnType = typeof FetchOrderById;
+
+type options = QueryConfigType<QueryFnType>;
+export const useFetchOrderByIdQuery = (id: any, config?: options) => {
+  return useQuery<ExtractFnReturnType<QueryFnType>>({
+    retry(failureCount, error: any) {
+      if ([404, 401].includes(error.status)) return false;
+      else if (failureCount < 1) return true;
+      else return false;
+    },
+    queryKey: [queryKey.orders.getOrderById, id],
+    queryFn: () => FetchOrderById(id),
+    staleTime: 1000 * 60 * 5,
+    ...config,
+  });
+};
+
+interface EditOrderShippingStatusProps {
+  orderId: any;
+  payload: any;
+}
+const editOrderStatus = async ({
+  orderId,
+  payload,
+}: EditOrderShippingStatusProps) => {
+  console.log("payload----4", payload);
+
+  const response = await fetch(`/api/orders/${orderId}/update-status`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw errorData;
+  }
+  return response.json();
+};
+
+interface UseUpdateOrderShippingStatusMutationOptions {
+  orderId: any; // Remove null from type
+  config?: MutationConfig<QueryFnTypeUpdateStatus>;
+}
+
+type QueryFnTypeUpdateStatus = typeof editOrderStatus;
+
+export const useUpdateOrderShippingStatusMutation = ({
+  orderId,
+  config,
+}: UseUpdateOrderShippingStatusMutationOptions) => {
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [queryKey.orders.updateOrderStatus, orderId],
+    mutationFn: editOrderStatus,
+    retry: false,
+    onError: (error: any, variables: any, context: any) => {
+      console.log("Error updating order  shipping status:", error);
+      const errorMessage =
+        error?.message ||
+        error?.error ||
+        "Error updating order shipping status";
+      showToast(errorMessage, "error");
+
+      // config?.onError?.(error, variables, context);
+    },
+    onSuccess: (data: any, variables: any, context: any) => {
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.orders.getOrderById, orderId],
+      });
+      showToast("Shipping status updated successfully", "success");
+      // config?.onSuccess?.(data, variables, context);
+    },
+    ...config,
+  });
+};

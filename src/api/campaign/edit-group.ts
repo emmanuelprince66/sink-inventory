@@ -33,6 +33,8 @@ type QueryFnType = typeof editGroup;
 // Simplified interface - no need for groupId in config
 interface editGroupOptions extends MutationConfig<QueryFnType> {
   // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useEditGroupMutation = (config?: editGroupOptions) => {

@@ -20,9 +20,13 @@ const ResetInvitePassword = async (body: any) => {
 };
 
 type QueryFnType = typeof ResetInvitePassword;
+interface ResetPasswordMutationProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
 
 export const useResetInvitePasswordMutation = (
-  config?: MutationConfig<QueryFnType>
+  config?: ResetPasswordMutationProps
 ) => {
   const { showToast } = useToast();
 

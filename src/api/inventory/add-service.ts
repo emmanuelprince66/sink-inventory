@@ -21,9 +21,15 @@ const addProduct = async ({ businessId, payload }: AddProductVariables) => {
 
 type QueryFnType = typeof addProduct;
 
+interface AddProductOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
 interface UseAddProductMutationOptions {
   businessId: any; // Remove null from type
-  config?: MutationConfig<QueryFnType>;
+  config?: AddProductOptions;
 }
 
 export const useAddServiceMutation = ({

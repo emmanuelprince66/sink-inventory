@@ -20,9 +20,12 @@ const resetPassword = async (body: any) => {
 
 type QueryFnType = typeof resetPassword;
 
-export const useResetPasswordMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+interface ResetPasswordProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
+export const useResetPasswordMutation = (config?: ResetPasswordProps) => {
   return useMutation({
     mutationKey: [queryKey.auth.resetPassword],
     mutationFn: resetPassword,
