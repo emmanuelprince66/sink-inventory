@@ -22,11 +22,17 @@ export const useOrdersHook = ({
   searchInput,
   handleOpenNotSubscribeModal,
   id,
+  order_type,
+  shipping_status,
+  payment_status,
 }: {
   page?: number;
   searchInput?: string;
   id?: string;
   handleOpenNotSubscribeModal?: () => void;
+  order_type?: string;
+  shipping_status?: string;
+  payment_status?: string;
 }) => {
   const { user } = useUserRole();
   const router = useRouter();
@@ -87,7 +93,6 @@ export const useOrdersHook = ({
   );
 
   // update shipping status
-
   const {
     mutate: editOrderShippingStatus,
     isPending: editOrderShippingStatusLoading,
@@ -103,15 +108,15 @@ export const useOrdersHook = ({
     console.log("payload", payload);
     editOrderShippingStatus({ orderId, payload });
   };
-  // fetch order by id
 
+  // fetch order by id
   const {
     data: OrderIdData,
     isLoading: OrderIdDataLoading,
     refetch: OrderIdDataRefetch,
   } = useFetchOrderByIdQuery(orderId, { enabled: !!orderId });
 
-  // Data fetching for orders
+  // Data fetching for orders with filters
   const {
     data: OrderData,
     isLoading: OrderDataLoading,
@@ -123,6 +128,9 @@ export const useOrdersHook = ({
       limit: 20,
       id: business_id,
       search: searchInput,
+      order_type: order_type || undefined,
+      shipping_status: shipping_status || undefined,
+      payment_status: payment_status || undefined,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5,
@@ -401,8 +409,6 @@ export const useOrdersHook = ({
     if (notes && notes.trim() !== "") {
       payload.note = notes;
     }
-
-    // console.log("bank", selectedBank);
 
     console.log("payload", payload);
 

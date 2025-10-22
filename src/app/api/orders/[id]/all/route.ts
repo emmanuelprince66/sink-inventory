@@ -9,7 +9,6 @@ export async function GET(
 ) {
   // Await the params promise
   const { id } = await params;
-
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -20,21 +19,37 @@ export async function GET(
     );
   }
 
+  // Extract query parameters
   const search = request.nextUrl.searchParams.get("search") || "";
-  const page = request.nextUrl.searchParams.get("page") || "1"; // Get page
-  const limit = request.nextUrl.searchParams.get("limit") || "30"; // Get limit
+  const page = request.nextUrl.searchParams.get("page") || "1";
+  const limit = request.nextUrl.searchParams.get("limit") || "30";
+  const order_type = request.nextUrl.searchParams.get("order_type") || "";
+  const shipping_status =
+    request.nextUrl.searchParams.get("shipping_status") || "";
+  const payment_status =
+    request.nextUrl.searchParams.get("payment_status") || "";
+
+  console.log("Query Params:", {
+    search,
+    page,
+    limit,
+    order_type,
+    shipping_status,
+    payment_status,
+  });
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}order/outstore/${id}/`);
-  if (search) apiUrl.searchParams.append("search", search);
-  //   if (type) apiUrl.searchParams.append("type", type);
-  //   if (start_date) apiUrl.searchParams.append("start_date", start_date);
-  //   if (end_date) apiUrl.searchParams.append("end_date", end_date);
-  //   if (attendance_id) apiUrl.searchParams.append("attendance_id", attendance_id);
-  //   if (category_id) apiUrl.searchParams.append("category_id", category_id);
 
-  if (page) apiUrl.searchParams.append("page", page); // Append page
-  if (limit) apiUrl.searchParams.append("limit", limit); // Append limit
+  // Append parameters only if they have values
+  if (search) apiUrl.searchParams.append("search", search);
+  if (page) apiUrl.searchParams.append("page", page);
+  if (limit) apiUrl.searchParams.append("limit", limit);
+  if (order_type) apiUrl.searchParams.append("order_type", order_type);
+  if (shipping_status)
+    apiUrl.searchParams.append("shipping_status", shipping_status);
+  if (payment_status)
+    apiUrl.searchParams.append("payment_status", payment_status);
 
   try {
     const response = await fetch(apiUrl.toString(), {
@@ -49,7 +64,7 @@ export async function GET(
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
-        { error: errorData.message || "Failed to fetch sales history data" },
+        { error: errorData.message || "Failed to fetch orders data" },
         { status: response.status }
       );
     }

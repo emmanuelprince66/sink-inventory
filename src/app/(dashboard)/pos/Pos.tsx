@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
+import { ScannerButton } from "./ScannerButton";
 
 const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ssr: false,
@@ -25,9 +26,7 @@ const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
 
 const Pos = () => {
   const [searchInput, setSearchInput] = useState("");
-  const { ProductData, ProductDataLoading, page, setPage } = usePosHook({
-    searchInput,
-  });
+
   const {
     cartItems,
     addToCart,
@@ -37,10 +36,24 @@ const Pos = () => {
     getTotalItems,
     getTotalPrice,
   } = useCartStore();
+  const {
+    ProductData,
+    handleScanResult,
+    handleAddToCart,
+    ProductDataLoading,
+    page,
+    scannedProductLoading,
+    setPage,
+  } = usePosHook({
+    searchInput,
+    setSearchInput,
+    addToCart,
+    cartItems,
+  });
 
+  console.log("product data", ProductData);
   console.log("cartItems", cartItems);
 
-  // console.log("cartItems", cartItems);
   const { showToast } = useToast();
 
   const statusColors = {
@@ -58,45 +71,9 @@ const Pos = () => {
     return statusColors.DEFAULT;
   };
 
-  const handleAddToCart = (cart: any) => {
-    if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
-      console.error(
-        "Cannot add item to cart: Item is out of stock or has 0 quantity"
-      );
-      showToast("This item is out of stock", "error");
-      return;
-    }
-
-    addToCart(cart);
-  };
-
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
     setPage(1);
-  };
-
-  // Handle barcode scan result
-  const handleScanResult = (scannedCode: string) => {
-    console.log("Scanned barcode:", scannedCode);
-
-    // First, try to find the product by barcode in current results
-    const scannedProduct = ProductData?.data?.results?.data?.find(
-      (product: any) =>
-        product.barcode === scannedCode ||
-        product.sku === scannedCode ||
-        product.id.toString() === scannedCode
-    );
-
-    if (scannedProduct) {
-      // Product found in current results, add to cart
-      handleAddToCart(scannedProduct);
-      showToast(`${scannedProduct.name} added to cart`, "success");
-    } else {
-      // Product not found in current results, search for it
-      setSearchInput(scannedCode);
-      setPage(1);
-      showToast("Searching for scanned product...", "info");
-    }
   };
 
   const totalPages = ProductData?.data?.pages || 1;
@@ -107,6 +84,16 @@ const Pos = () => {
       <header className="w-full h-16 min-h-[4rem] bg-gray-100 border-b border-gray-300 flex items-center px-4">
         <p className="text-xl md:text-2xl font-bold">POS System</p>
       </header>
+
+      {/* Loading overlay for scanned product */}
+      {scannedProductLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg flex items-center gap-3">
+            <Spinner className="text-primary-green-300" />
+            <span>Loading scanned product...</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
@@ -123,11 +110,11 @@ const Pos = () => {
                 />
               </div>
               {/* Scanner Button */}
-              {/* <ScannerButton
+              <ScannerButton
                 onScanResult={handleScanResult}
                 variant="outline"
                 size="default"
-              /> */}
+              />
             </div>
           </div>
 

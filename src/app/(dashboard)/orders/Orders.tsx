@@ -10,8 +10,10 @@ import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowDownLeft,
   CheckCircle,
+  Filter as FilterIcon,
   ShoppingCart,
   TrendingUp,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -26,6 +28,12 @@ interface CustomOrderCardProps {
   className?: string;
   subtitle?: string;
   loading?: boolean;
+}
+
+interface FilterState {
+  order_type: string;
+  shipping_status: string;
+  payment_status: string;
 }
 
 const CustomOrderCard = ({
@@ -113,11 +121,6 @@ const CustomOrderCard = ({
         >
           {amount}
         </span>
-        {/* {subtitle && (
-          <p className={cn("text-xs mt-1", variant.subtitleColor)}>
-            {subtitle}
-          </p>
-        )} */}
       </div>
     </CustomCard>
   );
@@ -126,58 +129,89 @@ const CustomOrderCard = ({
 const Orders = () => {
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
+  const [openFilterModal, setOpenFilterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">(
     "OUTSTORE"
   );
   const [page, setPage] = useState(1);
 
+  // Filter states
+  const [filters, setFilters] = useState<FilterState>({
+    order_type: "",
+    shipping_status: "",
+    payment_status: "",
+  });
+
+  const [tempFilters, setTempFilters] = useState<FilterState>({
+    order_type: "",
+    shipping_status: "",
+    payment_status: "",
+  });
+
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
-    setPage(1); // Reset to first page when searching
+    setPage(1);
   };
 
   const handleTabChange = (tab: "INSTORE" | "OUTSTORE") => {
     setActiveTab(tab);
-    setPage(1); // Reset page when switching tabs
-    setSearchInput(""); // Clear search when switching tabs
+    setPage(1);
+    setSearchInput("");
+    // Update order_type filter when tab changes
+    setFilters((prev) => ({ ...prev, order_type: tab }));
   };
 
-  // Fetch orders data - pass page, searchInput, and type (for future backend support)
+  const handleApplyFilters = () => {
+    setFilters(tempFilters);
+    setPage(1);
+    setOpenFilterModal(false);
+  };
+
+  const handleResetFilters = () => {
+    const resetFilters = {
+      order_type: activeTab, // Keep the current tab selection
+      shipping_status: "",
+      payment_status: "",
+    };
+    setTempFilters(resetFilters);
+    setFilters(resetFilters);
+    setPage(1);
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.shipping_status) count++;
+    if (filters.payment_status) count++;
+    return count;
+  };
+
+  // Fetch orders data with filters
   const { OrderData, OrderDataLoading } = useOrdersHook({
     page,
     searchInput: searchInput.length >= 3 ? searchInput : "",
-    // Uncomment this line when backend adds type filter support
-    // type: activeTab,
+    order_type: activeTab, // Use active tab for order_type
+    shipping_status: filters.shipping_status,
+    payment_status: filters.payment_status,
   });
 
   // Extract data safely from API response
   const ordersResults = OrderData?.data?.results || {};
   const ordersData = ordersResults.data || [];
 
-  // For now, all data is OUTSTORE. When backend adds filtering, this will work automatically
-  // Client-side filtering by type (will be replaced by backend filtering later)
-  const filteredOrders = ordersData.filter(
-    (order: any) => order.type === activeTab
-  );
-
   // Use backend-provided stats
   const totalOrders = ordersResults.order_count || 0;
   const completedOrders = ordersResults.completed_orders || 0;
   const totalRevenue = ordersResults.revenue || 0;
 
-  // Calculate counts for each tab (client-side for now)
-  const instoreCount = ordersData.filter(
-    (order: any) => order.type === "INSTORE"
-  ).length;
-  const outstoreCount = ordersData.filter(
-    (order: any) => order.type === "OUTSTORE"
-  ).length;
+  // Calculate counts for each tab
+  const instoreCount = ordersResults.instore_count || 0;
+  const outstoreCount = ordersResults.outstore_count || 0;
 
   // Calculate success rate
   const successRate =
     totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
-  // Calculate total link visits (dummy calculation based on orders)
+  // Calculate total link visits
   const totalLinkVisits = Math.floor(totalOrders * 2.6);
 
   return (
@@ -309,9 +343,16 @@ const Orders = () => {
             <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
-                className="flex-1 sm:flex-none text-xs sm:text-sm"
+                className="flex-1 sm:flex-none text-xs sm:text-sm relative"
+                onClick={() => setOpenFilterModal(true)}
               >
+                <FilterIcon className="w-4 h-4 mr-2" />
                 Filter
+                {getActiveFilterCount() > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
               </Button>
               <Button
                 variant="outline"
@@ -321,6 +362,44 @@ const Orders = () => {
               </Button>
             </div>
           </div>
+
+          {/* Active Filters Display */}
+          {(filters.shipping_status || filters.payment_status) && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {filters.shipping_status && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Shipping: {filters.shipping_status}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, shipping_status: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {filters.payment_status && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Payment: {filters.payment_status}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, payment_status: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Table Content */}
@@ -339,15 +418,12 @@ const Orders = () => {
             </div>
           ) : (
             <>
-              {filteredOrders.length > 0 ? (
+              {ordersData.length > 0 ? (
                 <AllOrdersTable
                   setPage={setPage}
                   page={page}
                   response={OrderData}
-                  // totalPages={OrderData?.data?.pages || 1}
-                  // totalItems={filteredOrders.length}
                   loading={false}
-                  // activeTab={activeTab}
                 />
               ) : (
                 <div className="w-full h-64 flex flex-col justify-center items-center">
@@ -358,6 +434,83 @@ const Orders = () => {
           )}
         </div>
       </div>
+
+      {/* Filter Modal */}
+      <CustomModal
+        isOpen={openFilterModal}
+        onClose={() => {
+          setOpenFilterModal(false);
+          setTempFilters(filters); // Reset temp filters to current filters
+        }}
+        title="Filter Orders"
+      >
+        <div className="space-y-6">
+          {/* Shipping Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Shipping Status
+            </label>
+            <select
+              value={tempFilters.shipping_status}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  shipping_status: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Shipping Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="RETURNED">Returned</option>
+            </select>
+          </div>
+
+          {/* Payment Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Status
+            </label>
+            <select
+              value={tempFilters.payment_status}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  payment_status: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Payment Status</option>
+              <option value="UNPAID">Unpaid</option>
+              <option value="PAID">Paid</option>
+              <option value="PARTIAL">Partial</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setTempFilters({
+                  order_type: activeTab,
+                  shipping_status: "",
+                  payment_status: "",
+                });
+              }}
+            >
+              Reset
+            </Button>
+            <Button className="flex-1" onClick={handleApplyFilters}>
+              Apply Filters
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
 
       {/* Create Order Modal */}
       <CustomModal
