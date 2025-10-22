@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ScanLine } from "lucide-react";
 import React, { useState } from "react";
-import { BarCodeScanner } from "./BarCodeScanner";
+import { BarCodeScanner } from "./BarCodeScanner"; // ← Import from wrapper, not Core
 interface ScannerButtonProps {
   onScanResult: (result: string) => void;
   className?: string;
