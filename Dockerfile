@@ -6,12 +6,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install dependencies (all: prod + dev)
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 
 # Copy source and build Next.js
 COPY . .
-RUN yarn build
+RUN npm run build
 
 # ----------------------------
 # 2. Runner stage (tiny final image)
@@ -24,16 +24,15 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Copy only the essentials
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/server.mjs ./server.mjs
 COPY --from=builder /app/next.config.js ./
 
-# Install only production dependencies (no devDependencies)
-RUN yarn install --frozen-lockfile --production --ignore-scripts --prefer-offline \
-  && yarn cache clean
+# Install only production dependencies
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 EXPOSE 3000
 
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
