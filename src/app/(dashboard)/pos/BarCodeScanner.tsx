@@ -57,6 +57,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         formatsToSupport: [
           0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
         ],
+        rememberLastUsedCamera: true,
+        showTorchButtonIfSupported: true,
       };
 
       const onScanSuccess = (decodedText: string) => {
@@ -243,7 +245,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       </div>
 
       {/* Custom styles for html5-qrcode */}
-      {/* Custom styles for html5-qrcode */}
       <style jsx global>{`
         #${qrcodeRegionId} {
           border: none !important;
@@ -269,62 +270,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         }
         #${qrcodeRegionId}__camera_selection {
           margin: 10px 0;
-        }
-
-        /* Style the Start Scanning / Request Permission button */
-        #${qrcodeRegionId}__dashboard_section_csr > button,
-        #${qrcodeRegionId}__dashboard_section button {
-          background: linear-gradient(to right, #10b981, #3b82f6) !important;
-          color: white !important;
-          border: none !important;
-          padding: 12px 24px !important;
-          border-radius: 8px !important;
-          font-weight: 600 !important;
-          font-size: 14px !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
-        }
-
-        #${qrcodeRegionId}__dashboard_section_csr > button:hover,
-        #${qrcodeRegionId}__dashboard_section button:hover {
-          background: linear-gradient(to right, #059669, #2563eb) !important;
-          box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4) !important;
-          transform: translateY(-1px) !important;
-        }
-
-        /* Style the camera selection dropdown */
-        #${qrcodeRegionId}__camera_selection > select {
-          background: white !important;
-          border: 2px solid #e5e7eb !important;
-          padding: 10px 16px !important;
-          border-radius: 8px !important;
-          font-size: 14px !important;
-          color: #374151 !important;
-          cursor: pointer !important;
-          transition: all 0.3s ease !important;
-          width: 100% !important;
-          max-width: 300px !important;
-        }
-
-        #${qrcodeRegionId}__camera_selection > select:hover {
-          border-color: #10b981 !important;
-        }
-
-        #${qrcodeRegionId}__camera_selection > select:focus {
-          outline: none !important;
-          border-color: #10b981 !important;
-          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
-        }
-
-        /* Style camera selection label */
-        #${qrcodeRegionId}__camera_selection > span,
-        #${qrcodeRegionId}__camera_selection label {
-          color: #374151 !important;
-          font-weight: 500 !important;
-          font-size: 14px !important;
-          margin-bottom: 8px !important;
-          display: block !important;
         }
       `}</style>
     </div>
