@@ -26,6 +26,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   const hasInitialized = useRef(false);
   const isCleaningUp = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const isMounted = useRef(true);
 
   // Comprehensive cleanup function
   const cleanupCamera = async () => {
@@ -63,7 +64,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           });
           video.srcObject = null;
         }
-        // Pause and reset video element
         video.pause();
         video.removeAttribute("src");
         video.load();
@@ -81,31 +81,50 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       console.error("Cleanup error:", err);
     } finally {
       isCleaningUp.current = false;
+      // CRITICAL FIX: Reset initialization flag
+      hasInitialized.current = false;
     }
   };
 
   useEffect(() => {
+    isMounted.current = true;
+
     // Prevent double initialization
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
     const initScanner = async () => {
+      if (!isMounted.current) return;
+
       setIsLoading(true);
+      setError("");
+      setPermissionDenied(false);
 
       // Clean up any existing resources first
       await cleanupCamera();
+
+      // IMPORTANT: Re-set hasInitialized after cleanup
+      hasInitialized.current = true;
 
       // Check camera permission and store the stream
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
         });
+
+        if (!isMounted.current) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
         streamRef.current = stream;
         // Stop the test stream - scanner will create its own
         stream.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
       } catch (err: any) {
         console.error("Camera permission error:", err);
+        if (!isMounted.current) return;
+
         setPermissionDenied(true);
         setError(
           err.name === "NotAllowedError"
@@ -126,7 +145,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         ],
         rememberLastUsedCamera: true,
         showTorchButtonIfSupported: true,
-        // Important: These help with cleanup
         disableFlip: false,
         experimentalFeatures: {
           useBarCodeDetectorIfSupported: true,
@@ -141,13 +159,19 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           try {
             await scannerRef.current.pause(true);
             await cleanupCamera();
-            onScanResult(decodedText);
+            if (isMounted.current) {
+              onScanResult(decodedText);
+            }
           } catch (err) {
             console.error("Failed to pause/cleanup scanner", err);
-            onScanResult(decodedText);
+            if (isMounted.current) {
+              onScanResult(decodedText);
+            }
           }
         } else {
-          onScanResult(decodedText);
+          if (isMounted.current) {
+            onScanResult(decodedText);
+          }
         }
       };
 
@@ -162,6 +186,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       };
 
       try {
+        if (!isMounted.current) return;
+
         const html5QrcodeScanner = new Html5QrcodeScanner(
           qrcodeRegionId,
           config,
@@ -169,9 +195,14 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         );
         scannerRef.current = html5QrcodeScanner;
         html5QrcodeScanner.render(onScanSuccess, onScanError);
-        setIsLoading(false);
+
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
       } catch (err: any) {
         console.error("Scanner initialization error:", err);
+        if (!isMounted.current) return;
+
         setError(err?.message || "Failed to initialize scanner");
         setPermissionDenied(true);
         setIsLoading(false);
@@ -182,26 +213,30 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
 
     // Cleanup on unmount
     return () => {
+      isMounted.current = false;
       cleanupCamera();
     };
-  }, [onScanResult]);
+  }, []); // Remove onScanResult from dependencies to prevent reinit
 
   const handleClose = async () => {
     await cleanupCamera();
-    onClose();
+    // Small delay before calling onClose to ensure cleanup completes
+    setTimeout(() => {
+      onClose();
+    }, 150);
   };
 
   const handleRetry = async () => {
     setError("");
     setPermissionDenied(false);
     setIsLoading(true);
-    hasInitialized.current = false;
 
     // Clean up before retry
     await cleanupCamera();
 
     // Force a small delay before reinitializing
     setTimeout(() => {
+      hasInitialized.current = false;
       window.location.reload();
     }, 100);
   };
