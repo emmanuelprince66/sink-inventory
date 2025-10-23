@@ -13,11 +13,20 @@ const nextConfig = {
       },
     ],
   },
-  // Remove the rewrites - they're causing the redirect issue
-  // The service worker should be served directly from public folder
-  // Add headers for service worker
+  // Add camera permissions policy for all routes
   async headers() {
     return [
+      // Camera permissions for all pages
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=*",
+          },
+        ],
+      },
+      // Service worker headers
       {
         source: "/firebase-messaging-sw.js",
         headers: [
@@ -38,4 +47,5 @@ const nextConfig = {
     ];
   },
 };
+
 export default nextConfig;
