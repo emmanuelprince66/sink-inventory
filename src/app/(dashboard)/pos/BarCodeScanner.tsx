@@ -3,14 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { Camera, ScanLine, X } from "lucide-react";
+import { Camera, Keyboard, ScanLine, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 interface BarcodeScannerProps {
   onScanResult: (result: string) => void;
   onClose: () => void;
   className?: string;
-  enableHardwareScanner?: boolean; // Enable hardware scanner input
+  enableHardwareScanner?: boolean;
+  autoCloseOnScan?: boolean; // Auto close after successful scan
 }
 
 const qrcodeRegionId = "html5qr-code-full-region";
@@ -19,16 +20,20 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   onScanResult,
   onClose,
   className,
-  enableHardwareScanner = true, // Default to enabled
+  enableHardwareScanner = true,
+  autoCloseOnScan = true, // Default to auto-close
 }) => {
   const [error, setError] = useState<string>("");
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [hardwareScannerActive, setHardwareScannerActive] = useState(false);
+  const [useCameraMode, setUseCameraMode] = useState(false);
+  const [hardwareScannerDetected, setHardwareScannerDetected] = useState(false);
+  const [scannedCode, setScannedCode] = useState<string>("");
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const hasInitialized = useRef(false);
   const barcodeBuffer = useRef<string>("");
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hardwareScanCountRef = useRef<number>(0);
 
   // Hardware scanner listener - USB/Bluetooth scanners act as keyboard input
   useEffect(() => {
@@ -43,19 +48,32 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         // Enter key indicates end of barcode scan
         if (event.key === "Enter") {
           if (barcodeBuffer.current.trim()) {
-            const scannedCode = barcodeBuffer.current.trim();
-            console.log("Hardware scanner detected:", scannedCode);
-            setHardwareScannerActive(true);
+            const code = barcodeBuffer.current.trim();
+            console.log("Hardware scanner detected:", code);
 
-            // Clear buffer and stop camera scanner
+            // Mark hardware scanner as detected
+            setHardwareScannerDetected(true);
+            hardwareScanCountRef.current += 1;
+            setScannedCode(code);
+
+            // Clear buffer
             barcodeBuffer.current = "";
+
+            // Stop camera scanner if running
             if (scannerRef.current) {
               scannerRef.current.clear().catch(console.error);
               scannerRef.current = null;
             }
 
             // Call the result callback
-            onScanResult(scannedCode);
+            onScanResult(code);
+
+            // Auto-close after scan if enabled
+            if (autoCloseOnScan) {
+              setTimeout(() => {
+                onClose();
+              }, 500); // Small delay to show the scanned code
+            }
           }
           return;
         }
@@ -65,7 +83,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           barcodeBuffer.current += event.key;
 
           // Clear buffer after 100ms of inactivity
-          // Hardware scanners send all data within ~50ms
           if (scanTimeoutRef.current) {
             clearTimeout(scanTimeoutRef.current);
           }
@@ -78,6 +95,9 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       // Listen for keyboard events globally
       document.addEventListener("keypress", handleKeyPress);
 
+      // Set initial loading state
+      setIsLoading(false);
+
       return () => {
         document.removeEventListener("keypress", handleKeyPress);
         if (scanTimeoutRef.current) {
@@ -85,15 +105,16 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         }
       };
     }
-  }, [enableHardwareScanner, onScanResult]);
+  }, [enableHardwareScanner, onScanResult, autoCloseOnScan, onClose]);
 
-  // Camera scanner initialization
+  // Camera scanner initialization - only if user chooses camera mode
   useEffect(() => {
-    // Prevent double initialization
-    if (hasInitialized.current) return;
+    if (!useCameraMode || hasInitialized.current) return;
     hasInitialized.current = true;
 
     const initScanner = async () => {
+      setIsLoading(true);
+
       // Check camera permission first
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -126,6 +147,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
 
       const onScanSuccess = (decodedText: string) => {
         console.log("Camera scanned:", decodedText);
+        setScannedCode(decodedText);
+
         // Stop scanner and call callback
         if (scannerRef.current) {
           scannerRef.current
@@ -133,13 +156,32 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             .then(() => {
               scannerRef.current = null;
               onScanResult(decodedText);
+
+              // Auto-close after scan if enabled
+              if (autoCloseOnScan) {
+                setTimeout(() => {
+                  onClose();
+                }, 500);
+              }
             })
             .catch((err) => {
               console.error("Failed to clear scanner", err);
               onScanResult(decodedText);
+
+              if (autoCloseOnScan) {
+                setTimeout(() => {
+                  onClose();
+                }, 500);
+              }
             });
         } else {
           onScanResult(decodedText);
+
+          if (autoCloseOnScan) {
+            setTimeout(() => {
+              onClose();
+            }, 500);
+          }
         }
       };
 
@@ -180,7 +222,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         });
       }
     };
-  }, [onScanResult]);
+  }, [useCameraMode, onScanResult, autoCloseOnScan, onClose]);
 
   const handleClose = async () => {
     // Properly stop the scanner and camera
@@ -209,16 +251,12 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
     onClose();
   };
 
-  const handleRetry = () => {
-    setError("");
-    setPermissionDenied(false);
-    setIsLoading(true);
-    hasInitialized.current = false;
-    window.location.reload();
+  const handleUseCameraMode = () => {
+    setUseCameraMode(true);
   };
 
-  // Permission denied state
-  if (permissionDenied) {
+  // Permission denied state (only for camera mode)
+  if (permissionDenied && useCameraMode) {
     return (
       <div
         className={cn(
@@ -234,20 +272,15 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             <h3 className="text-xl font-bold mb-2 text-gray-900">
               Camera Access Required
             </h3>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 mb-6">
               {error || "Please allow camera access to scan barcodes"}
             </p>
-            {enableHardwareScanner && (
-              <p className="text-sm text-green-600 font-semibold mb-6">
-                Note: Hardware USB/Bluetooth scanners will still work!
-              </p>
-            )}
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={handleClose} className="px-6">
                 Cancel
               </Button>
               <Button
-                onClick={handleRetry}
+                onClick={() => window.location.reload()}
                 className="px-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
               >
                 Try Again
@@ -259,6 +292,90 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
     );
   }
 
+  // Hardware scanner mode (no camera UI)
+  if (!useCameraMode && enableHardwareScanner) {
+    return (
+      <div
+        className={cn(
+          "fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4",
+          className
+        )}
+      >
+        <div className="relative w-full max-w-2xl">
+          {/* Close button */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleClose}
+            className="absolute -top-12 right-0 z-50 rounded-full shadow-lg"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+
+          {/* Hardware scanner ready UI */}
+          <div className="w-full bg-white rounded-lg overflow-hidden shadow-2xl">
+            <div className="p-8 text-center">
+              <div className="bg-gradient-to-br from-green-100 to-blue-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <Keyboard className="h-12 w-12 text-green-600" />
+              </div>
+
+              <h2 className="text-2xl font-bold mb-3 text-gray-900">
+                {scannedCode ? "Barcode Scanned!" : "Ready to Scan"}
+              </h2>
+
+              {scannedCode ? (
+                <div className="mb-6">
+                  <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-600 mb-1">Scanned Code:</p>
+                    <p className="text-xl font-mono font-bold text-green-700">
+                      {scannedCode}
+                    </p>
+                  </div>
+                  <p className="text-green-600 font-semibold">
+                    ✓ Processing...
+                  </p>
+                </div>
+              ) : (
+                <p className="text-gray-600 mb-6">
+                  Use your hardware barcode scanner to scan items.
+                  <br />
+                  <span className="text-sm">
+                    The scanner will capture codes automatically.
+                  </span>
+                </p>
+              )}
+
+              {hardwareScannerDetected && !scannedCode && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-green-700">
+                    ✓ Hardware scanner detected ({hardwareScanCountRef.current}{" "}
+                    scans)
+                  </p>
+                </div>
+              )}
+
+              {/* Option to switch to camera mode */}
+              <div className="pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-3">
+                  Don't have a hardware scanner?
+                </p>
+                <Button
+                  onClick={handleUseCameraMode}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  Use Camera Instead
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Camera mode UI
   return (
     <div
       className={cn(
@@ -267,7 +384,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       )}
     >
       <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col">
-        {/* Close button - Always visible */}
+        {/* Close button */}
         <Button
           variant="secondary"
           size="sm"
@@ -283,13 +400,11 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             <div className="flex items-center justify-center gap-2">
               <ScanLine className="h-5 w-5 animate-pulse" />
               <h2 className="text-lg font-semibold">
-                {isLoading ? "Initializing..." : "Scanning..."}
+                {isLoading ? "Initializing..." : "Camera Scanning..."}
               </h2>
             </div>
             <p className="text-sm mt-1 text-white/90">
-              {enableHardwareScanner
-                ? "Use camera or external USB/Bluetooth scanner"
-                : "Position barcode within the camera view"}
+              Position barcode within the camera view
             </p>
           </div>
 
@@ -307,11 +422,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           {/* Instructions */}
           <div className="p-4 bg-gray-50 text-center text-sm text-gray-600 flex-shrink-0">
             <p>✓ Supports QR codes, barcodes (UPC, EAN, Code128, etc.)</p>
-            {enableHardwareScanner && (
-              <p className="mt-1 font-semibold text-green-600">
-                ✓ USB/Bluetooth hardware scanners supported - just scan!
-              </p>
-            )}
             <p className="mt-1">
               Make sure the code is well lit and clearly visible
             </p>
@@ -347,7 +457,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           margin: 10px 0;
         }
 
-        /* Style the Start Scanning / Request Permission button */
         #${qrcodeRegionId}__dashboard_section_csr > button,
         #${qrcodeRegionId}__dashboard_section button {
           background: linear-gradient(to right, #10b981, #3b82f6) !important;
@@ -369,7 +478,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           transform: translateY(-1px) !important;
         }
 
-        /* Style the camera selection dropdown */
         #${qrcodeRegionId}__camera_selection > select {
           background: white !important;
           border: 2px solid #e5e7eb !important;
@@ -393,7 +501,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
         }
 
-        /* Style camera selection label */
         #${qrcodeRegionId}__camera_selection > span,
         #${qrcodeRegionId}__camera_selection label {
           color: #374151 !important;
