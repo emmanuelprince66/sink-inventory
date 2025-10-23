@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false, // Add this to prevent double-mounting issues with camera
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -14,7 +15,6 @@ const nextConfig = {
   },
   // Remove the rewrites - they're causing the redirect issue
   // The service worker should be served directly from public folder
-
   // Add headers for service worker
   async headers() {
     return [
@@ -38,5 +38,4 @@ const nextConfig = {
     ];
   },
 };
-
 export default nextConfig;
