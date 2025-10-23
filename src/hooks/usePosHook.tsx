@@ -112,8 +112,8 @@ export const usePosHook = ({
       handleAddToCart(scannedProduct);
     } else {
       // Product not found in current results, use SKU query to fetch it
-      setScannedSku(scannedCode);
-      showToast("Searching for scanned product...", "info");
+      // setScannedSku(scannedCode);
+      showToast("Product not found! ", "error");
     }
   };
 

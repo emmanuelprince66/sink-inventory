@@ -22,6 +22,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   const [error, setError] = useState<string>("");
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClosing, setIsClosing] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const hasInitialized = useRef(false);
 
@@ -31,23 +32,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
     hasInitialized.current = true;
 
     const initScanner = async () => {
-      // Check camera permission first
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-        });
-        stream.getTracks().forEach((track) => track.stop());
-      } catch (err: any) {
-        console.error("Camera permission error:", err);
-        setPermissionDenied(true);
-        setError(
-          err.name === "NotAllowedError"
-            ? "Camera permission denied"
-            : "Camera not available"
-        );
-        setIsLoading(false);
-        return;
-      }
+      // Add a small delay for mobile browsers to properly release camera
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Initialize scanner
       const config = {
@@ -115,35 +101,68 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         scannerRef.current.clear().catch((error) => {
           console.error("Failed to clear scanner", error);
         });
+        scannerRef.current = null;
       }
+
+      // Clean up video elements on unmount
+      const videoElements = document.querySelectorAll("video");
+      videoElements.forEach((video) => {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((track) => track.stop());
+          video.srcObject = null;
+        }
+      });
     };
   }, [onScanResult]);
 
   const handleClose = async () => {
-    // Properly stop the scanner and camera
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.clear();
-        scannerRef.current = null;
-      } catch (error) {
-        console.error("Failed to clear scanner on close", error);
-      }
-    }
-
-    // Force stop all video tracks
-    const videoElements = document.querySelectorAll("video");
-    videoElements.forEach((video) => {
-      if (video.srcObject) {
-        const stream = video.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => {
-          track.stop();
-          console.log("Stopped track:", track.kind);
-        });
-        video.srcObject = null;
-      }
-    });
-
+    // Hide UI immediately
+    setIsClosing(true);
     onClose();
+
+    // Then do cleanup in background
+    setTimeout(async () => {
+      // Properly stop the scanner and camera
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.clear();
+          scannerRef.current = null;
+        } catch (error) {
+          console.error("Failed to clear scanner on close", error);
+        }
+      }
+
+      // Force stop all video tracks - more aggressive cleanup for mobile
+      const videoElements = document.querySelectorAll("video");
+      videoElements.forEach((video) => {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((track) => {
+            track.stop();
+            console.log("Stopped track:", track.kind);
+          });
+          video.srcObject = null;
+        }
+        // Remove the video element
+        video.remove();
+      });
+
+      // Clean up any remaining media streams
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          stream.getTracks().forEach((track) => track.stop());
+        } catch (e) {
+          // Ignore errors
+        }
+      }
+
+      // Reset initialization flag to allow fresh start
+      hasInitialized.current = false;
+    }, 0);
   };
 
   const handleRetry = () => {
@@ -195,8 +214,10 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
     <div
       className={cn(
         "fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4",
+        isClosing && "opacity-0 pointer-events-none",
         className
       )}
+      style={{ transition: "opacity 0.2s ease-out" }}
     >
       <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col">
         {/* Close button - Always visible */}
@@ -270,6 +291,62 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         }
         #${qrcodeRegionId}__camera_selection {
           margin: 10px 0;
+        }
+
+        /* Style the Start Scanning / Request Permission button */
+        #${qrcodeRegionId}__dashboard_section_csr > button,
+        #${qrcodeRegionId}__dashboard_section button {
+          background: linear-gradient(to right, #10b981, #3b82f6) !important;
+          color: white !important;
+          border: none !important;
+          padding: 12px 24px !important;
+          border-radius: 8px !important;
+          font-weight: 600 !important;
+          font-size: 14px !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        #${qrcodeRegionId}__dashboard_section_csr > button:hover,
+        #${qrcodeRegionId}__dashboard_section button:hover {
+          background: linear-gradient(to right, #059669, #2563eb) !important;
+          box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4) !important;
+          transform: translateY(-1px) !important;
+        }
+
+        /* Style the camera selection dropdown */
+        #${qrcodeRegionId}__camera_selection > select {
+          background: white !important;
+          border: 2px solid #e5e7eb !important;
+          padding: 10px 16px !important;
+          border-radius: 8px !important;
+          font-size: 14px !important;
+          color: #374151 !important;
+          cursor: pointer !important;
+          transition: all 0.3s ease !important;
+          width: 100% !important;
+          max-width: 300px !important;
+        }
+
+        #${qrcodeRegionId}__camera_selection > select:hover {
+          border-color: #10b981 !important;
+        }
+
+        #${qrcodeRegionId}__camera_selection > select:focus {
+          outline: none !important;
+          border-color: #10b981 !important;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+        }
+
+        /* Style camera selection label */
+        #${qrcodeRegionId}__camera_selection > span,
+        #${qrcodeRegionId}__camera_selection label {
+          color: #374151 !important;
+          font-weight: 500 !important;
+          font-size: 14px !important;
+          margin-bottom: 8px !important;
+          display: block !important;
         }
       `}</style>
     </div>
