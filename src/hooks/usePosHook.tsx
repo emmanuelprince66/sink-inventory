@@ -1,7 +1,7 @@
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 import { useSSENotifications } from "./useWebSocketNotification";
@@ -24,7 +24,16 @@ export const usePosHook = ({
   const { user } = useUserRole();
   const { showToast } = useToast();
 
-  console.log("scannedSku in POS Hook:", scannedSku);
+  // Use ref to prevent duplicate processing
+  const processingRef = useRef(false);
+  const lastProcessedSkuRef = useRef<string | null>(null);
+
+  // Memoize the normalized search term to prevent unnecessary re-renders
+  const searchTerm = useMemo(() => {
+    return debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
+      ? debouncedSearchTerm
+      : null;
+  }, [debouncedSearchTerm]);
 
   const { notifications, isConnected, clearNotifications, connectionAttempts } =
     useSSENotifications(
@@ -32,11 +41,6 @@ export const usePosHook = ({
     );
 
   // Main product search query for regular search input
-  const searchTerm =
-    debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
-      ? debouncedSearchTerm
-      : null;
-
   const {
     data: ProductData,
     isLoading: ProductDataLoading,
@@ -60,85 +64,153 @@ export const usePosHook = ({
     refetch: refetchScannedProduct,
   } = useGetInventoryQuery({
     params: {
-      page: 1, // Always use page 1 for scanned products
-      limit: 10, // Smaller limit since we're looking for a specific product
+      page: 1,
+      limit: 10,
       id: business_id,
       search: scannedSku,
     },
     enabled: !!scannedSku && !!business_id,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  console.log("scannedInventoryData:", scannedInventoryData);
+  // Utility function to normalize SKU/Barcode values
+  const normalizeCode = useCallback(
+    (code: string | number | null | undefined): string => {
+      if (!code) return "";
+      return String(code).replace(/\.0+$/, "").trim().toLowerCase();
+    },
+    []
+  );
+
+  // Memoized function to find matching product
+  const findMatchingProduct = useCallback(
+    (products: any[], scannedCode: string) => {
+      const normalizedScanned = normalizeCode(scannedCode);
+
+      return products.find((product: any) => {
+        const normalizedBarcode = normalizeCode(product.barcode);
+        const normalizedSku = normalizeCode(product.sku);
+        const normalizedId = normalizeCode(product.id);
+
+        return (
+          normalizedBarcode === normalizedScanned ||
+          normalizedSku === normalizedScanned ||
+          normalizedId === normalizedScanned
+        );
+      });
+    },
+    [normalizeCode]
+  );
+
+  // Memoized add to cart handler
+  const handleAddToCart = useCallback(
+    (cart: any) => {
+      if (!cart) {
+        showToast("Invalid product", "error");
+        return;
+      }
+
+      // Check stock status
+      if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
+        showToast("This item is out of stock", "error");
+        return;
+      }
+
+      // Check if product already exists in cart
+      const productExist = cartItems?.find((item: any) => item.id === cart.id);
+
+      if (productExist) {
+        showToast("Item already in cart", "info");
+        return;
+      }
+
+      addToCart(cart);
+      showToast(`${cart.name} added to cart`, "success");
+    },
+    [cartItems, addToCart, showToast]
+  );
 
   // Effect to handle when scanned product data is fetched
   useEffect(() => {
-    if (scannedInventoryData && scannedSku) {
-      const products = scannedInventoryData.data?.results?.data || [];
+    // Prevent duplicate processing
+    if (processingRef.current || !scannedSku) return;
 
-      // Find the exact product match
-      const scannedProduct = products.find(
-        (product: any) =>
-          product.barcode === scannedSku ||
-          product.sku === scannedSku ||
-          product.id.toString() === scannedSku
-      );
-
-      if (scannedProduct) {
-        // Add the scanned product to cart - handleAddToCart will handle all toast messages
-        handleAddToCart(scannedProduct);
-      } else {
-        showToast("Product not found with scanned code", "error");
+    if (scannedInventoryData) {
+      // Prevent reprocessing the same SKU
+      if (lastProcessedSkuRef.current === scannedSku) {
+        setScannedSku(null);
+        return;
       }
 
-      // Clear the scanned SKU after processing
+      processingRef.current = true;
+      lastProcessedSkuRef.current = scannedSku;
+
+      const products = scannedInventoryData.data?.results?.data || [];
+
+      if (products.length === 0) {
+        showToast("Product not found with scanned code", "error");
+      } else {
+        const scannedProduct = findMatchingProduct(products, scannedSku);
+
+        if (scannedProduct) {
+          handleAddToCart(scannedProduct);
+        } else {
+          showToast("Product not found with scanned code", "error");
+        }
+      }
+
+      // Reset state
       setScannedSku(null);
+      processingRef.current = false;
     }
 
-    if (scannedProductError && scannedSku) {
+    if (scannedProductError) {
       showToast("Error searching for product", "error");
       setScannedSku(null);
+      processingRef.current = false;
+      lastProcessedSkuRef.current = null;
     }
-  }, [scannedInventoryData, scannedProductError, scannedSku, showToast]);
+  }, [
+    scannedInventoryData,
+    scannedProductError,
+    scannedSku,
+    showToast,
+    findMatchingProduct,
+    handleAddToCart,
+  ]);
 
-  const handleAddToCart = (cart: any) => {
-    if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
-      console.error(
-        "Cannot add item to cart: Item is out of stock or has 0 quantity"
-      );
-      showToast("This item is out of stock", "error");
-      return;
-    }
+  // Optimized scan result handler
+  const handleScanResult = useCallback(
+    (scannedCode: string) => {
+      // Validate scanned code
+      const trimmedCode = scannedCode?.trim();
 
-    const productExist = cartItems?.find((item: any) => item.id === cart.id);
+      if (!trimmedCode) {
+        showToast("Scanned code is empty", "error");
+        return;
+      }
 
-    if (productExist) {
-      showToast("Item already in cart", "info");
-      return;
-    }
+      // Prevent scanning the same code multiple times
+      if (
+        processingRef.current ||
+        lastProcessedSkuRef.current === trimmedCode
+      ) {
+        console.log("Duplicate scan detected, ignoring");
+        return;
+      }
 
-    addToCart(cart);
-    showToast(`${cart.name} added to cart`, "success");
-  };
-
-  const handleScanResult = (scannedCode: string) => {
-    console.log("Scanned barcode:", scannedCode);
-
-    if (!scannedCode || scannedCode.trim() === "") {
-      showToast("Scanned code is empty", "error");
-      return;
-    }
-
-    // Set the scanned SKU which will trigger the useGetInventoryQuery
-    setScannedSku(scannedCode);
-  };
+      console.log("Processing scanned barcode:", trimmedCode);
+      setScannedSku(trimmedCode);
+    },
+    [showToast]
+  );
 
   // Function to manually refetch scanned product (if needed)
-  const refetchScannedProductData = () => {
+  const refetchScannedProductData = useCallback(() => {
     if (scannedSku) {
       refetchScannedProduct();
     }
-  };
+  }, [scannedSku, refetchScannedProduct]);
 
   return {
     ProductData,
