@@ -1,5 +1,4 @@
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
-import { useFetchProductBySkuQuery } from "@/api/products/fetch-by-sku";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useEffect, useState } from "react";
@@ -25,51 +24,82 @@ export const usePosHook = ({
   const { user } = useUserRole();
   const { showToast } = useToast();
 
+  console.log("scannedSku in POS Hook:", scannedSku);
+
   const { notifications, isConnected, clearNotifications, connectionAttempts } =
     useSSENotifications(
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MzU0ODcxLCJpYXQiOjE3NTc5MjI4NzEsImp0aSI6Ijg1YmNiNzAyZmFmNzQ1MmRhNmIwOTcwMWFkNGE4NGY1IiwidXNlcl9pZCI6IjY4OGU1OWEzLTFiNTAtNDM3My1hZTEyLWI1MzRkYzNjZWUwYyIsImxvZ2luX3RzIjoiMTc1NzkyMjg3MS4yNDI5NjQifQ.2fHk7xqbCH97SENymevnNBrcfNI_Eesyk3vL47lG8ZU"
     );
 
-  // Fetch product by scanned SKU
+  // Main product search query for regular search input
+  const searchTerm =
+    debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
+      ? debouncedSearchTerm
+      : null;
+
   const {
-    data: scannedProductData,
+    data: ProductData,
+    isLoading: ProductDataLoading,
+    refetch: refetchProducts,
+  } = useGetInventoryQuery({
+    params: {
+      id: business_id,
+      search: searchTerm,
+      page,
+      limit: 20,
+    },
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Separate query for scanned SKU search
+  const {
+    data: scannedInventoryData,
     isLoading: scannedProductLoading,
     error: scannedProductError,
-  } = useFetchProductBySkuQuery(scannedSku, {
-    enabled: !!scannedSku,
+    refetch: refetchScannedProduct,
+  } = useGetInventoryQuery({
+    params: {
+      page: 1, // Always use page 1 for scanned products
+      limit: 10, // Smaller limit since we're looking for a specific product
+      id: business_id,
+      search: scannedSku,
+    },
+    enabled: !!scannedSku && !!business_id,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  console.log("scannedInventoryData:", scannedInventoryData);
 
   // Effect to handle when scanned product data is fetched
   useEffect(() => {
-    if (scannedProductData && scannedSku) {
-      const product = scannedProductData.data;
+    if (scannedInventoryData && scannedSku) {
+      const products = scannedInventoryData.data?.results?.data || [];
 
-      if (product) {
-        // Check if product is in stock
-        if (product.quantity === 0 || product.status === "OUT-OF-STOCK") {
-          showToast(`${product.name} is out of stock`, "error");
-        } else {
-          // Add the scanned product to cart
-          addToCart(product);
-          showToast(`${product.name} added to cart`, "success");
-        }
+      // Find the exact product match
+      const scannedProduct = products.find(
+        (product: any) =>
+          product.barcode === scannedSku ||
+          product.sku === scannedSku ||
+          product.id.toString() === scannedSku
+      );
 
-        // Clear the scanned SKU after processing
-        setScannedSku(null);
+      if (scannedProduct) {
+        // Add the scanned product to cart - handleAddToCart will handle all toast messages
+        handleAddToCart(scannedProduct);
+      } else {
+        showToast("Product not found with scanned code", "error");
       }
+
+      // Clear the scanned SKU after processing
+      setScannedSku(null);
     }
 
     if (scannedProductError && scannedSku) {
-      showToast("Product not found with scanned code", "error");
+      showToast("Error searching for product", "error");
       setScannedSku(null);
     }
-  }, [
-    scannedProductData,
-    scannedProductError,
-    scannedSku,
-    addToCart,
-    showToast,
-  ]);
+  }, [scannedInventoryData, scannedProductError, scannedSku, showToast]);
 
   const handleAddToCart = (cart: any) => {
     if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
@@ -99,40 +129,16 @@ export const usePosHook = ({
       return;
     }
 
-    // First, try to find the product by barcode in current results
-    const scannedProduct = ProductData?.data?.results?.data?.find(
-      (product: any) =>
-        product.barcode === scannedCode ||
-        product.sku === scannedCode ||
-        product.id.toString() === scannedCode
-    );
-
-    if (scannedProduct) {
-      // Product found in current results, add to cart
-      handleAddToCart(scannedProduct);
-    } else {
-      // Product not found in current results, use SKU query to fetch it
-      // setScannedSku(scannedCode);
-      showToast("Product not found! ", "error");
-    }
+    // Set the scanned SKU which will trigger the useGetInventoryQuery
+    setScannedSku(scannedCode);
   };
 
-  const searchTerm =
-    debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
-      ? debouncedSearchTerm
-      : null;
-
-  const { data: ProductData, isLoading: ProductDataLoading } =
-    useGetInventoryQuery({
-      params: {
-        id: business_id,
-        search: searchTerm,
-        page,
-        limit: 20,
-      },
-      enabled: !!business_id,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    });
+  // Function to manually refetch scanned product (if needed)
+  const refetchScannedProductData = () => {
+    if (scannedSku) {
+      refetchScannedProduct();
+    }
+  };
 
   return {
     ProductData,
@@ -143,5 +149,7 @@ export const usePosHook = ({
     page,
     setPage,
     scannedSku,
+    refetchScannedProduct: refetchScannedProductData,
+    refetchProducts,
   };
 };
