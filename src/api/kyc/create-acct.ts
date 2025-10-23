@@ -26,9 +26,12 @@ const createKycAcct = async ({
 
 type QueryFnType = typeof createKycAcct;
 
-export const useCreateKycAcctMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+interface UseKycMutationProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
+export const useCreateKycAcctMutation = (config?: UseKycMutationProps) => {
   const { showToast } = useToast();
 
   return useMutation({

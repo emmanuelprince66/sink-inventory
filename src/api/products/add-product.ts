@@ -21,15 +21,16 @@ const addProduct = async ({ businessId, payload }: AddProductVariables) => {
 
 type QueryFnType = typeof addProduct;
 
-interface UseAddProductMutationOptions {
-  businessId: string; // Remove null from type
-  config?: MutationConfig<QueryFnType>;
+interface UseAddProductMutationOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
-export const useAddProductMutation = ({
-  businessId,
-  config,
-}: UseAddProductMutationOptions) => {
+export const useAddProductMutation = (
+  businessId: any,
+  config?: UseAddProductMutationOptions
+) => {
   const { showToast } = useToast();
 
   return useMutation({

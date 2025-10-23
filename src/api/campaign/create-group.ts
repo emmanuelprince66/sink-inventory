@@ -33,6 +33,8 @@ type QueryFnType = typeof CreateGroup;
 
 interface UseCreateGroupMutationOptions extends MutationConfig<QueryFnType> {
   businessId: string | null;
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useCreateGroupMutation = ({

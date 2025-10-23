@@ -228,7 +228,6 @@ const AddProduct = () => {
                         return compareDate <= today;
                       }}
                       initialFocus
-                      captionLayout="dropdown-buttons"
                       fromYear={new Date().getFullYear()}
                       toYear={new Date().getFullYear() + 10}
                       defaultMonth={new Date()}

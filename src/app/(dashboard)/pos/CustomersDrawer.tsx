@@ -15,7 +15,12 @@ import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddCustomer from "../customers/AddCustomer";
 
-const CustomerDrawer = ({ open, onOpenChange, onCustomerSelect }: any) => {
+const CustomerDrawer = ({
+  open,
+  onOpenChange,
+  onCustomerSelect,
+  onShippingSelect,
+}: any) => {
   const [searchInput, setSearchInput] = useState("");
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);

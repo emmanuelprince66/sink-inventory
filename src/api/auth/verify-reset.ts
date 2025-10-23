@@ -19,10 +19,11 @@ const verifyUserOTP = async (body: any) => {
 };
 
 type QueryFnType = typeof verifyUserOTP;
-
-export const useVerifyResetMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+interface VerifyResetProps extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+export const useVerifyResetMutation = (config?: VerifyResetProps) => {
   return useMutation({
     mutationKey: [queryKey.auth.verifyReset],
     mutationFn: verifyUserOTP,

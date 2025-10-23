@@ -4,415 +4,515 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOrdersHook } from "@/hooks/useOrdersHook";
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowDownLeft,
   CheckCircle,
+  Filter as FilterIcon,
   ShoppingCart,
   TrendingUp,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import AllOrdersTable from "./AllOrdersTable";
+import NoOrders from "./NoOrders";
 import CreateOrders from "./create/CreateOrders";
 
-// Dummy data
-const orderStats = {
-  totalOrders: 1245,
-  completedOrders: 892,
-  totalRevenue: 12560000,
-  totalLinkVisits: 3245,
-};
+interface CustomOrderCardProps {
+  title: string;
+  amount: number | string;
+  type: "total" | "completed" | "revenue" | "visits";
+  className?: string;
+  subtitle?: string;
+  loading?: boolean;
+}
 
-const ordersData = [
-  {
-    id: "#ORD-001",
-    date: "2023-10-15",
-    name: "John Doe",
-    product: "Wireless Headphones",
-    amount: 45000,
-    type: "Out-store", // Changed from "Online" to "Out-store"
-    status: "Processing",
-    paymentStatus: "Paid",
-    shipping: "Pending",
-  },
-  {
-    id: "#ORD-002",
-    date: "2023-10-14",
-    name: "Jane Smith",
-    product: "Smart Watch",
-    amount: 65000,
-    type: "In-store",
-    status: "Completed",
-    paymentStatus: "Paid",
-    shipping: "Delivered",
-  },
-  {
-    id: "#ORD-003",
-    date: "2023-10-13",
-    name: "Michael Johnson",
-    product: "Bluetooth Speaker",
-    amount: 32000,
-    type: "Out-store", // Changed from "Online" to "Out-store"
-    status: "Shipped",
-    paymentStatus: "Paid",
-    shipping: "In Transit",
-  },
-  {
-    id: "#ORD-004",
-    date: "2023-10-12",
-    name: "Sarah Williams",
-    product: "Fitness Tracker",
-    amount: 28000,
-    type: "Out-store", // Changed from "Online" to "Out-store"
-    status: "Completed",
-    paymentStatus: "Paid",
-    shipping: "Delivered",
-  },
-  {
-    id: "#ORD-005",
-    date: "2023-10-11",
-    name: "David Brown",
-    product: "Phone Case",
-    amount: 8000,
-    type: "In-store",
-    status: "Cancelled",
-    paymentStatus: "Refunded",
-    shipping: "N/A",
-  },
-];
+interface FilterState {
+  order_type: string;
+  shipping_status: string;
+  payment_status: string;
+}
+
+const CustomOrderCard = ({
+  title,
+  amount,
+  type,
+  className,
+  subtitle,
+  loading = false,
+}: CustomOrderCardProps) => {
+  const variants = {
+    total: {
+      bg: "bg-gradient-to-br from-blue-50 to-blue-100",
+      border: "border-blue-200",
+      iconBg: "bg-blue-100",
+      icon: <ShoppingCart className="w-5 h-5 text-blue-600" />,
+      text: "text-gray-600",
+      amountText: "text-gray-900",
+      subtitleColor: "text-blue-500",
+    },
+    completed: {
+      bg: "bg-gradient-to-br from-green-50 to-green-100",
+      border: "border-green-200",
+      iconBg: "bg-green-100",
+      icon: <CheckCircle className="w-5 h-5 text-green-600" />,
+      text: "text-gray-600",
+      amountText: "text-gray-900",
+      subtitleColor: "text-green-500",
+    },
+    revenue: {
+      bg: "bg-gradient-to-br from-purple-50 to-purple-100",
+      border: "border-purple-200",
+      iconBg: "bg-purple-100",
+      icon: <TrendingUp className="w-5 h-5 text-purple-600" />,
+      text: "text-gray-600",
+      amountText: "text-gray-900",
+      subtitleColor: "text-purple-500",
+    },
+    visits: {
+      bg: "bg-gradient-to-br from-orange-50 to-orange-100",
+      border: "border-orange-200",
+      iconBg: "bg-orange-100",
+      icon: <ArrowDownLeft className="w-5 h-5 text-orange-600" />,
+      text: "text-gray-600",
+      amountText: "text-gray-900",
+      subtitleColor: "text-orange-500",
+    },
+  };
+
+  const variant = variants[type];
+
+  if (loading) {
+    return (
+      <CustomCard className={cn("p-4 w-full border-gray-200", className)}>
+        <div className="flex flex-col gap-4 sm:gap-6 items-start">
+          <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-gray-200" />
+          <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-gray-200" />
+        </div>
+      </CustomCard>
+    );
+  }
+
+  return (
+    <CustomCard
+      className={cn(
+        variant.bg,
+        variant.border,
+        "p-3 sm:p-4 w-full rounded-lg border transition-all hover:shadow-md",
+        className
+      )}
+    >
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={cn("p-1.5 sm:p-2 rounded-full", variant.iconBg)}>
+            {variant.icon}
+          </div>
+          <span className={cn("text-xs sm:text-sm font-medium", variant.text)}>
+            {title}
+          </span>
+        </div>
+      </div>
+      <div className="mt-3 sm:mt-4">
+        <span
+          className={cn("text-xl sm:text-2xl font-bold", variant.amountText)}
+        >
+          {amount}
+        </span>
+      </div>
+    </CustomCard>
+  );
+};
 
 const Orders = () => {
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"In-store" | "Out-store">(
-    "In-store"
+  const [openFilterModal, setOpenFilterModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">(
+    "OUTSTORE"
   );
+  const [page, setPage] = useState(1);
+
+  // Filter states
+  const [filters, setFilters] = useState<FilterState>({
+    order_type: "",
+    shipping_status: "",
+    payment_status: "",
+  });
+
+  const [tempFilters, setTempFilters] = useState<FilterState>({
+    order_type: "",
+    shipping_status: "",
+    payment_status: "",
+  });
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
+    setPage(1);
   };
 
-  // Filter orders based on active tab
-  const filteredOrders = ordersData.filter((order) => order.type === activeTab);
-
-  // Calculate stats for current tab
-  const tabStats = {
-    totalOrders: filteredOrders.length,
-    completedOrders: filteredOrders.filter(
-      (order) => order.status === "Completed"
-    ).length,
-    totalRevenue: filteredOrders.reduce((sum, order) => sum + order.amount, 0),
-    totalLinkVisits: Math.floor(filteredOrders.length * 2.6), // Dummy calculation
+  const handleTabChange = (tab: "INSTORE" | "OUTSTORE") => {
+    setActiveTab(tab);
+    setPage(1);
+    setSearchInput("");
+    // Update order_type filter when tab changes
+    setFilters((prev) => ({ ...prev, order_type: tab }));
   };
+
+  const handleApplyFilters = () => {
+    setFilters(tempFilters);
+    setPage(1);
+    setOpenFilterModal(false);
+  };
+
+  const handleResetFilters = () => {
+    const resetFilters = {
+      order_type: activeTab, // Keep the current tab selection
+      shipping_status: "",
+      payment_status: "",
+    };
+    setTempFilters(resetFilters);
+    setFilters(resetFilters);
+    setPage(1);
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (filters.shipping_status) count++;
+    if (filters.payment_status) count++;
+    return count;
+  };
+
+  // Fetch orders data with filters
+  const { OrderData, OrderDataLoading } = useOrdersHook({
+    page,
+    searchInput: searchInput.length >= 3 ? searchInput : "",
+    order_type: activeTab, // Use active tab for order_type
+    shipping_status: filters.shipping_status,
+    payment_status: filters.payment_status,
+  });
+
+  // Extract data safely from API response
+  const ordersResults = OrderData?.data?.results || {};
+  const ordersData = ordersResults.data || [];
+
+  // Use backend-provided stats
+  const totalOrders = ordersResults.order_count || 0;
+  const completedOrders = ordersResults.completed_orders || 0;
+  const totalRevenue = ordersResults.revenue || 0;
+
+  // Calculate counts for each tab
+  const instoreCount = ordersResults.instore_count || 0;
+  const outstoreCount = ordersResults.outstore_count || 0;
+
+  // Calculate success rate
+  const successRate =
+    totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
+
+  // Calculate total link visits
+  const totalLinkVisits = Math.floor(totalOrders * 2.6);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex justify-between items-center w-full">
+      {/* Header Section */}
+      <div className="w-full bg-white px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
             Orders
           </p>
 
-          <div className="gap-2 flex items-center flex-wrap">
-            <Link href="/orders/create">
-              <Button>Create Order</Button>
+          <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">
+            <Link href="/orders/create" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto">Create Order</Button>
             </Link>
           </div>
         </div>
+
+        {/* Stats Cards */}
+        <div className="mb-4 sm:mb-6">
+          {OrderDataLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <CustomOrderCard
+                  key={index}
+                  title=""
+                  amount=""
+                  type="total"
+                  loading={true}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <CustomOrderCard
+                title={`Total Orders`}
+                amount={totalOrders}
+                type="total"
+                subtitle="+12% from last month"
+              />
+              <CustomOrderCard
+                title="Completed Orders"
+                amount={completedOrders}
+                type="completed"
+                subtitle={`${successRate}% success rate`}
+              />
+              <CustomOrderCard
+                title="Total Revenue"
+                amount={formatToNaira(totalRevenue)}
+                type="revenue"
+                subtitle="+8% from last month"
+              />
+              <CustomOrderCard
+                title="Total Link Visits"
+                amount={totalLinkVisits}
+                type="visits"
+                subtitle="+5% from last month"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {false ? (
-        <div className="flex gap-4 w-[80%]">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <CustomCard key={index} className="w-full border-gray-200">
-              <div className="flex flex-col gap-6 items-start">
-                <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
-              </div>
-            </CustomCard>
-          ))}
-        </div>
-      ) : (
-        <>
-          {/* Tabs */}
-          <div className="w-full">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab("In-store")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "In-store"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  In-store Orders (
-                  {ordersData.filter((o) => o.type === "In-store").length})
-                </button>
-                <button
-                  onClick={() => setActiveTab("Out-store")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === "Out-store"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  Out-store Orders (
-                  {ordersData.filter((o) => o.type === "Out-store").length})
-                </button>
-              </nav>
-            </div>
-          </div>
-
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Total Orders */}
-            <CustomCard className="p-4 bg-blue-50 border border-blue-100 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-full">
-                    <ShoppingCart className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Total {activeTab} Orders
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {tabStats.totalOrders}
-                </span>
-                <p className="text-xs text-blue-500 mt-1">
-                  +12% from last month
-                </p>
-              </div>
-            </CustomCard>
-
-            {/* Completed Orders */}
-            <CustomCard className="p-4 bg-green-50 border border-green-100 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Completed Orders
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {tabStats.completedOrders}
-                </span>
-                <p className="text-xs text-green-500 mt-1">
-                  {tabStats.totalOrders > 0
-                    ? Math.round(
-                        (tabStats.completedOrders / tabStats.totalOrders) * 100
-                      )
-                    : 0}
-                  % success rate
-                </p>
-              </div>
-            </CustomCard>
-
-            {/* Total Revenue */}
-            <CustomCard className="p-4 bg-purple-50 border border-purple-100 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-full">
-                    <TrendingUp className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Total Revenue
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {formatToNaira(tabStats.totalRevenue)}
-                </span>
-                <p className="text-xs text-purple-500 mt-1">
-                  +8% from last month
-                </p>
-              </div>
-            </CustomCard>
-
-            {/* Total Link Visits */}
-            <CustomCard className="p-4 bg-orange-50 border border-orange-100 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-full">
-                    <ArrowDownLeft className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <span className="text-sm font-medium text-gray-600">
-                    Total Link Visits
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <span className="text-2xl font-bold text-gray-900">
-                  {tabStats.totalLinkVisits}
-                </span>
-                <p className="text-xs text-orange-500 mt-1">
-                  +5% from last month
-                </p>
-              </div>
-            </CustomCard>
-          </div>
-
-          <div className="w-full mt-6">
-            <div className="flex justify-between items-center mb-4">
-              <div className="w-full md:w-1/2 mb-4 mt-4">
-                <SearchInput
-                  placeholder="Search ..."
-                  value={searchInput}
-                  onValueChange={handleSearchChange}
-                />
-                {searchInput.length > 0 && searchInput.length < 3 && (
-                  <div className="mt-1 text-sm text-muted-foreground">
-                    Type at least 3 characters to search
-                  </div>
+      {/* Main Content Section */}
+      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+        {/* Tabs Header */}
+        <div className="border-b border-gray-200">
+          <div className="flex">
+            <button
+              onClick={() => handleTabChange("INSTORE")}
+              className={cn(
+                "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm cursor-pointer font-medium border-b-2 transition-all",
+                activeTab === "INSTORE"
+                  ? "border-blue-500 text-blue-600 bg-blue-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              )}
+            >
+              In-store Orders
+              <span
+                className={cn(
+                  "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                  activeTab === "INSTORE"
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600"
                 )}
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline">Filter</Button>
-                <Button variant="outline">Export</Button>
-              </div>
-            </div>
+              >
+                {instoreCount}
+              </span>
+            </button>
+            <button
+              onClick={() => handleTabChange("OUTSTORE")}
+              className={cn(
+                "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all",
+                activeTab === "OUTSTORE"
+                  ? "border-blue-500 text-blue-600 bg-blue-50"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              )}
+            >
+              Out-store Orders
+              <span
+                className={cn(
+                  "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                  activeTab === "OUTSTORE"
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600"
+                )}
+              >
+                {outstoreCount}
+              </span>
+            </button>
+          </div>
+        </div>
 
-            <div className="overflow-x-auto ">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID/Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name/Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Payment
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Shipping
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredOrders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">
-                          {order.id}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {order.date}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium">{order.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {order.product}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
-                        {formatToNaira(order.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            order.type === "Out-store"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {order.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            order.status === "Completed"
-                              ? "bg-green-100 text-green-800"
-                              : order.status === "Processing"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : order.status === "Cancelled"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {order.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            order.paymentStatus === "Paid"
-                              ? "bg-green-100 text-green-800"
-                              : order.paymentStatus === "Refunded"
-                              ? "bg-purple-100 text-purple-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {order.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            order.shipping === "Delivered"
-                              ? "bg-green-100 text-green-800"
-                              : order.shipping === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : order.shipping === "In Transit"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {order.shipping}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Link
-                          href="/orders/1"
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Search and Actions Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+            <div className="w-full sm:w-1/2">
+              <SearchInput
+                placeholder="Search by customer name, order ID..."
+                value={searchInput}
+                onValueChange={handleSearchChange}
+              />
+              {searchInput.length > 0 && searchInput.length < 3 && (
+                <div className="mt-1 text-xs sm:text-sm text-gray-500">
+                  Type at least 3 characters to search
+                </div>
+              )}
             </div>
-
-            <div className="flex justify-between items-center mt-4">
-              <div className="text-sm text-gray-500">
-                Showing 1 to {filteredOrders.length} of {filteredOrders.length}{" "}
-                entries
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" disabled>
-                  Previous
-                </Button>
-                <Button variant="outline">Next</Button>
-              </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-none text-xs sm:text-sm relative"
+                onClick={() => setOpenFilterModal(true)}
+              >
+                <FilterIcon className="w-4 h-4 mr-2" />
+                Filter
+                {getActiveFilterCount() > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                    {getActiveFilterCount()}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-none text-xs sm:text-sm"
+              >
+                Export
+              </Button>
             </div>
           </div>
-        </>
-      )}
 
+          {/* Active Filters Display */}
+          {(filters.shipping_status || filters.payment_status) && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {filters.shipping_status && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Shipping: {filters.shipping_status}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, shipping_status: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {filters.payment_status && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Payment: {filters.payment_status}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, payment_status: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={handleResetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Table Content */}
+        <div className="p-4 sm:p-6">
+          {OrderDataLoading ? (
+            <div className="w-full">
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-full bg-gray-200" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="h-16 w-full bg-gray-200 mt-2"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {ordersData.length > 0 ? (
+                <AllOrdersTable
+                  setPage={setPage}
+                  page={page}
+                  response={OrderData}
+                  loading={false}
+                />
+              ) : (
+                <div className="w-full h-64 flex flex-col justify-center items-center">
+                  <NoOrders />
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Modal */}
+      <CustomModal
+        isOpen={openFilterModal}
+        onClose={() => {
+          setOpenFilterModal(false);
+          setTempFilters(filters); // Reset temp filters to current filters
+        }}
+        title="Filter Orders"
+      >
+        <div className="space-y-6">
+          {/* Shipping Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Shipping Status
+            </label>
+            <select
+              value={tempFilters.shipping_status}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  shipping_status: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Shipping Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="RETURNED">Returned</option>
+            </select>
+          </div>
+
+          {/* Payment Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Payment Status
+            </label>
+            <select
+              value={tempFilters.payment_status}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  payment_status: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Payment Status</option>
+              <option value="UNPAID">Unpaid</option>
+              <option value="PAID">Paid</option>
+              <option value="PARTIAL">Partial</option>
+            </select>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setTempFilters({
+                  order_type: activeTab,
+                  shipping_status: "",
+                  payment_status: "",
+                });
+              }}
+            >
+              Reset
+            </Button>
+            <Button className="flex-1" onClick={handleApplyFilters}>
+              Apply Filters
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
+
+      {/* Create Order Modal */}
       <CustomModal
         isOpen={openCreateOrderModal}
         onClose={() => setOpenCreateOrderModal(false)}

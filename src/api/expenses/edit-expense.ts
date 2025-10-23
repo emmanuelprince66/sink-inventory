@@ -33,6 +33,8 @@ type QueryFnType = typeof editExpense;
 // Simplified interface - no need for expenseId in config
 interface editExpenseOptions extends MutationConfig<QueryFnType> {
   // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useEditExpenseMutation = (config?: editExpenseOptions) => {

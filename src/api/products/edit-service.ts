@@ -23,15 +23,14 @@ const editService = async ({ productId, payload }: EditServiceProps) => {
 
 type QueryFnType = typeof editService;
 
-interface UseEditServiceMutationOptions {
-  productId: any; // Remove null from type
-  config?: MutationConfig<QueryFnType>;
+interface UseEditProductMutationOptions extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
-
-export const useEditServiceMutation = ({
-  productId,
-  config,
-}: UseEditServiceMutationOptions) => {
+export const useEditServiceMutation = (
+  productId: any,
+  config?: UseEditProductMutationOptions
+) => {
   const { showToast } = useToast();
 
   return useMutation({

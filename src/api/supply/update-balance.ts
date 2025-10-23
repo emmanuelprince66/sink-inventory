@@ -33,6 +33,8 @@ type QueryFnType = typeof updateWalletBalance;
 // Simplified interface - no need for walletId in config
 interface UseUpdateWalletBalanceOptions extends MutationConfig<QueryFnType> {
   // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useUpdateSupplyWalletMutation = (

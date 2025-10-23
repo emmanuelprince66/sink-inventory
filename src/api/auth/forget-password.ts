@@ -21,9 +21,12 @@ const forgetPassword = async (body: any) => {
 
 type QueryFnType = typeof forgetPassword;
 
-export const useForgetPasswordMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+interface ForgotPasswordOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+export const useForgetPasswordMutation = (config?: ForgotPasswordOptions) => {
   const { showToast } = useToast();
 
   return useMutation({

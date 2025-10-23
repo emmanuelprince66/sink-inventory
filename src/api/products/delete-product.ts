@@ -18,6 +18,8 @@ type QueryFnType = typeof deleteProductById;
 
 interface UseDeleteProductOptions extends MutationConfig<QueryFnType> {
   // Additional options can be added here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useDeleteProductMutation = (config?: UseDeleteProductOptions) => {

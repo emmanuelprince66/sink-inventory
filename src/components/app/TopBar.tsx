@@ -44,7 +44,7 @@ export function TopBar() {
   const [showNotiSocketModal, setShowNotiSocketModal] = useState(false);
   const { data: BusinessData, isLoading: BusinessDataLoading } =
     useFetchBusinessById(business_id);
-  const business = BusinessData?.data?.[0] || {};
+  const business = BusinessData?.data || {};
 
   // Extract user info from the user object
   const userName = user?.name || "";

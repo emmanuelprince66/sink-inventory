@@ -29,6 +29,8 @@ type QueryFnType = typeof uploadProductsCsv;
 
 interface UseUploadProductsMutationOptions extends MutationConfig<QueryFnType> {
   businessId: string | null;
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useUploadProductsMutation = ({

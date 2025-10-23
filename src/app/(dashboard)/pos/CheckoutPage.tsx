@@ -263,7 +263,7 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                 Cart Items ({cartItems.length})
               </h2>
               <Button
-                variant="destructive"
+                variant="outline"
                 className="flex items-center justify-start border border-red-600 gap-2"
                 onClick={clearCartFunc}
               >

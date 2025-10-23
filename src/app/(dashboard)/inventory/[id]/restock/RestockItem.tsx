@@ -49,7 +49,10 @@ const RestockItem = ({
   return (
     <div className="w-full">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-4 flex flex-col gap-2"
+        >
           {/* Item Name */}
           <FormField
             control={form.control}
@@ -84,7 +87,95 @@ const RestockItem = ({
             )}
           />
 
+          <FormField
+            control={form.control}
+            name="expiry_date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Expiry Date</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal border border-primary-green-300",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP")
+                        ) : (
+                          <span>Pick your expiry date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 border border-gray-200"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={field.value ? new Date(field.value) : undefined}
+                      onSelect={(date) =>
+                        field.onChange(date ? date.toISOString() : "")
+                      }
+                      disabled={(date) => {
+                        const today = new Date();
+                        // Set time to start of day for accurate comparison
+                        today.setHours(0, 0, 0, 0);
+                        const compareDate = new Date(date);
+                        compareDate.setHours(0, 0, 0, 0);
+                        // Disable today and all past dates
+                        return compareDate <= today;
+                      }}
+                      initialFocus
+                      fromYear={new Date().getFullYear()}
+                      toYear={new Date().getFullYear() + 10}
+                      defaultMonth={new Date()}
+                      className="rounded-md border border-gray-200 bg-white"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Low Stock Threshold */}
+          <FormField
+            control={form.control}
+            name="cost_price"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Cost Price</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter Cost Price...." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Supplier */}
+
+          {/* Stock Status */}
+          <FormField
+            control={form.control}
+            name="selling_price"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Selling Price</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter Selling Price...." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="supplier"
@@ -114,36 +205,6 @@ const RestockItem = ({
                       : "Loading..."}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Low Stock Threshold */}
-          <FormField
-            control={form.control}
-            name="cost_price"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Cost Price</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter Cost Price...." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {/* Stock Status */}
-          <FormField
-            control={form.control}
-            name="selling_price"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Selling Price</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter Selling Price...." {...field} />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

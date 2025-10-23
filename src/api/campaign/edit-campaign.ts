@@ -33,6 +33,8 @@ type QueryFnType = typeof editCampaign;
 // Simplified interface - no need for campaignId in config
 interface editCampaignOptions extends MutationConfig<QueryFnType> {
   // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
 export const useEditCampaignMutation = (config?: editCampaignOptions) => {

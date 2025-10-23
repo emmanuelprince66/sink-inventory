@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { useOrdersHook } from "@/hooks/useOrdersHook";
 import {
   ArrowLeft,
   ChevronDown,
@@ -9,164 +11,90 @@ import {
   Phone,
   Share2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-// Define types
-type OrderStatus = "Completed" | "Pending" | "Cancelled";
-type PaymentStatus = "Paid" | "Pending" | "Failed";
-type ShippingStatus =
-  | "Shipped"
-  | "Delivered"
-  | "Awaiting Shipping"
-  | "Returned";
-type StatusType = "order" | "payment" | "shipping";
-
-interface Product {
-  id: number;
-  name: string;
-  quantity: number;
-  price: number;
-  total: number;
-  image: string;
-}
-
-interface Customer {
-  name: string;
-  phone: string;
-  email: string;
-}
-
-interface Payment {
-  subtotal: number;
-  shippingFee: number;
-  shippingLocation: string;
-  taxes: number;
-  total: number;
-}
-
-interface Transaction {
-  method: string;
-  amount: number;
-  date: string;
-}
-
-interface Shipping {
-  deliveryTo: string;
-  phone: string;
-  address: string | null;
-}
-
-interface OrderData {
-  orderNumber: string;
-  date: string;
-  status: {
-    order: OrderStatus;
-    payment: PaymentStatus;
-    shipping: ShippingStatus;
-  };
-  channel: string;
-  customer: Customer;
-  billing: {
-    address: string | null;
-  };
-  creator: string;
-  lastEditor: string;
-  products: Product[];
-  payment: Payment;
-  transaction: Transaction;
-  shipping: Shipping;
-}
+type PaymentStatus = "PAID" | "PARTIAL" | "UNPAID";
+type ShippingStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
 
 interface ViewOrderProps {
-  id?: string;
+  id: string;
 }
 
-interface StatusBadgeProps {
-  status: OrderStatus | PaymentStatus | ShippingStatus;
-  type: StatusType;
-}
-
-interface ShippingStatusButtonProps {
-  status: ShippingStatus;
-  active: boolean;
-  onClick: (status: ShippingStatus) => void;
-}
-
-const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
+const ViewOrder = ({ id }: ViewOrderProps) => {
+  const {
+    OrderIdData,
+    OrderIdDataLoading,
+    handleUpdateOrderStatus,
+    editOrderShippingStatusLoading,
+  } = useOrdersHook({ id });
   const [selectedShippingStatus, setSelectedShippingStatus] =
-    useState<ShippingStatus>("Shipped");
+    useState<ShippingStatus>("PENDING");
 
-  // Dummy data with proper typing
-  const orderData: OrderData = {
-    orderNumber: "00008",
-    date: "Jun 16, 2025",
-    status: {
-      order: "Completed",
-      payment: "Paid",
-      shipping: "Shipped",
-    },
-    channel: "WhatsApp",
-    customer: {
-      name: "Omotosho Olanrewaju",
-      phone: "08142699290",
-      email: "omotoshoolanrewaju@gmail.com",
-    },
-    billing: {
-      address: null,
-    },
-    creator: "Oluwatobiloba Olosunde",
-    lastEditor: "Oluwatobiloba Olosunde",
-    products: [
-      {
-        id: 1,
-        name: "Cupping",
-        quantity: 1,
-        price: 2000,
-        total: 2000,
-        image: "🥤",
+  const orderData = OrderIdData?.data;
+
+  // Update selectedShippingStatus when orderData loads
+  useEffect(() => {
+    if (orderData?.shipping_status) {
+      setSelectedShippingStatus(orderData.shipping_status);
+    }
+  }, [orderData?.shipping_status]);
+
+  // Skeleton Loader Component
+  const SkeletonLoader = () => (
+    <div className="animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+    </div>
+  );
+
+  const CardSkeleton = () => (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+      <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+      <div className="space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-full"></div>
+        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+      </div>
+    </div>
+  );
+
+  const getPaymentStatusBadge = (status: PaymentStatus) => {
+    const statusMap = {
+      PAID: { bg: "bg-green-100", text: "text-green-800", label: "Paid" },
+      PARTIAL: {
+        bg: "bg-yellow-100",
+        text: "text-yellow-800",
+        label: "Partial",
       },
-    ],
-    payment: {
-      subtotal: 2000,
-      shippingFee: 1500,
-      shippingLocation: "Oluyole",
-      taxes: 0,
-      total: 3500,
-    },
-    transaction: {
-      method: "BANK",
-      amount: 3500,
-      date: "June 16, 2025 5:20 AM",
-    },
-    shipping: {
-      deliveryTo: "Omotosho Olanrewaju",
-      phone: "08142699290",
-      address: null,
-    },
-  };
-
-  const StatusBadge = ({ status, type }: StatusBadgeProps) => {
-    const getStatusColor = (
-      status: OrderStatus | PaymentStatus | ShippingStatus,
-      type: StatusType
-    ): string => {
-      if (type === "payment" && status === "Paid")
-        return "bg-green-100   text-green-800";
-      if (type === "shipping" && status === "Shipped")
-        return "bg-blue-100 text-blue-800";
-      if (type === "order" && status === "Completed")
-        return "bg-green-100 text-green-800";
-      return "bg-gray-100 text-gray-800";
+      UNPAID: { bg: "bg-red-100", text: "text-red-800", label: "Unpaid" },
     };
-
+    const style = statusMap[status] || statusMap.UNPAID;
     return (
       <span
-        className={`px-2 py-1 cursor-pointer rounded-md text-xs font-medium ${getStatusColor(
-          status,
-          type
-        )}`}
+        className={`px-2 py-1 rounded-md text-xs font-medium ${style.bg} ${style.text}`}
       >
-        {status}
+        {style.label}
+      </span>
+    );
+  };
+
+  const getShippingStatusBadge = (status: ShippingStatus) => {
+    const statusMap = {
+      PENDING: { bg: "bg-gray-100", text: "text-gray-800", label: "Pending" },
+      SHIPPED: { bg: "bg-blue-100", text: "text-blue-800", label: "Shipped" },
+      DELIVERED: {
+        bg: "bg-green-100",
+        text: "text-green-800",
+        label: "Delivered",
+      },
+      RETURNED: { bg: "bg-red-100", text: "text-red-800", label: "Returned" },
+    };
+    const style = statusMap[status] || statusMap.PENDING;
+    return (
+      <span
+        className={`px-2 py-1 rounded-md text-xs font-medium ${style.bg} ${style.text}`}
+      >
+        {style.label}
       </span>
     );
   };
@@ -175,20 +103,110 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
     status,
     active,
     onClick,
-  }: ShippingStatusButtonProps) => {
+  }: {
+    status: ShippingStatus;
+    active: boolean;
+    onClick: (status: ShippingStatus) => void;
+  }) => {
+    const labels = {
+      PENDING: "Pending",
+      SHIPPED: "Shipped",
+      DELIVERED: "Delivered",
+      RETURNED: "Returned",
+    };
+
+    const getStatusColors = (status: ShippingStatus, active: boolean) => {
+      if (!active) {
+        return "bg-white text-gray-600 hover:bg-gray-50 border border-gray-200";
+      }
+
+      switch (status) {
+        case "PENDING":
+          return "bg-gray-200 text-gray-900 border border-gray-400 font-semibold";
+        case "SHIPPED":
+          return "bg-blue-200 text-blue-900 border border-blue-500 font-semibold";
+        case "DELIVERED":
+          return "bg-green-200 text-green-900 border border-green-500 font-semibold";
+        case "RETURNED":
+          return "bg-red-200 text-red-900 border border-red-500 font-semibold";
+        default:
+          return "bg-gray-200 text-gray-900 border-gray-400 font-semibold";
+      }
+    };
+
     return (
       <button
         onClick={() => onClick(status)}
-        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        className={`px-3 py-2 cursor-pointer rounded-md text-sm transition-colors ${getStatusColors(
+          status,
           active
-            ? "bg-blue-100 text-blue-800 border border-blue-200"
-            : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-        }`}
+        )}`}
       >
-        {status}
+        {labels[status]}
       </button>
     );
   };
+
+  // No calculations - just use backend data
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  if (OrderIdDataLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-6">
+          <div className="flex items-center space-x-3">
+            <div className="h-5 w-5 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        <div className="max-w-full mx-auto px-4 py-6 md:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+            <div className="space-y-6">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!orderData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Order not found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,7 +214,10 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
       <div className="bg-white border-b border-gray-200 px-4 py-4 md:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <button className="p-1 hover:bg-gray-100 rounded-md">
+            <button
+              onClick={() => window.history.back()}
+              className="p-1 hover:bg-gray-100 rounded-md"
+            >
               <ArrowLeft className="h-5 w-5 text-gray-600" />
             </button>
             <h1 className="text-xl font-semibold text-gray-900">
@@ -219,28 +240,22 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 mb-1">
-                    Order #{orderData.orderNumber}
+                    Order #{orderData.id?.slice(0, 8)}
                   </h2>
-                  <p className="text-sm text-gray-500">{orderData.date}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatDate(orderData.created_at)}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
-                  <span className="text-sm text-gray-600">Order:</span>
-                  <StatusBadge status={orderData.status.order} type="order" />
                   <span className="text-sm text-gray-600">Payment:</span>
-                  <StatusBadge
-                    status={orderData.status.payment}
-                    type="payment"
-                  />
+                  {getPaymentStatusBadge(orderData.payment_status)}
                   <span className="text-sm text-gray-600">Shipping:</span>
-                  <StatusBadge
-                    status={orderData.status.shipping}
-                    type="shipping"
-                  />
+                  {getShippingStatusBadge(orderData.shipping_status)}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Channel & Customer */}
+                {/* Channel & Billing */}
                 <div>
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
@@ -256,21 +271,22 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
 
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
-                      Billing Address
+                      Order Type
                     </h3>
-                    <button className="px-3 py-2 text-sm font-medium text-green-600 border border-green-600 rounded-md hover:bg-green-50">
-                      Add Billing Address
-                    </button>
+                    <span className="text-sm text-gray-900">
+                      {orderData.type}
+                    </span>
                   </div>
                 </div>
 
+                {/* Customer Info */}
                 <div>
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Customer
                     </h3>
                     <p className="text-sm font-medium text-gray-900 mb-1">
-                      {orderData.customer.name}
+                      {orderData.customer_info?.name || "N/A"}
                     </p>
                   </div>
 
@@ -279,22 +295,22 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
                       Contact Details
                     </h3>
                     <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <Phone className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">
-                          {orderData.customer.phone}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">
-                          {orderData.customer.email}
-                        </span>
-                      </div>
-                      <button className="flex items-center space-x-2 text-sm text-green-600 hover:text-green-700">
-                        <MessageCircle className="h-4 w-4" />
-                        <span>Send message</span>
-                      </button>
+                      {orderData.customer_info?.phone && (
+                        <div className="flex items-center space-x-2">
+                          <Phone className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-900">
+                            {orderData.customer_info.phone}
+                          </span>
+                        </div>
+                      )}
+                      {orderData.customer_info?.email && (
+                        <div className="flex items-center space-x-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-900">
+                            {orderData.customer_info.email}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -305,70 +321,132 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
                   <h3 className="text-sm font-medium text-gray-700 mb-1">
                     Created by
                   </h3>
-                  <p className="text-sm text-gray-900">{orderData.creator}</p>
+                  <p className="text-sm text-gray-900">
+                    {orderData.created_by || "N/A"}
+                  </p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-1">
                     Last Edited by
                   </h3>
                   <p className="text-sm text-gray-900">
-                    {orderData.lastEditor}
+                    {orderData.last_updated_by || "Not updated"}
                   </p>
                 </div>
               </div>
+
+              {orderData.note && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    Notes
+                  </h3>
+                  <p className="text-sm text-gray-600">{orderData.note}</p>
+                </div>
+              )}
             </div>
 
             {/* Products */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Products (1)
+                Products ({orderData.products?.length || 0})
               </h3>
 
-              {orderData.products.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg"
-                >
-                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-2xl">
-                    {product.image}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">
-                      {product.name}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      {product.quantity} x ₦ {product.price.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">
-                      ₦ {product.total.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        #
+                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">
+                        Name
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
+                        Unit Price
+                      </th>
+                      <th className="text-center py-3 px-4 text-sm font-medium text-gray-700">
+                        Quantity
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
+                        Discount
+                      </th>
+                      <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderData.products?.map((product: any, index: number) => {
+                      const unitPrice = parseFloat(product.unit_price);
+                      const quantity = parseFloat(product.quantity);
+                      const discount = parseFloat(product.discount);
+                      const total = unitPrice * quantity - discount;
+
+                      return (
+                        <tr
+                          key={product.id}
+                          className="border-b border-gray-100"
+                        >
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {index + 1}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            Nil
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 text-right">
+                            ₦ {unitPrice.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 text-center">
+                            {quantity}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-green-600 text-right">
+                            ₦ {discount.toLocaleString()}
+                          </td>
+                          <td className="py-3 px-4 text-sm font-medium text-gray-900 text-right">
+                            ₦ {total.toLocaleString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Transactions */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Transactions
+                Payment Information
               </h3>
 
-              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">
-                    {orderData.transaction.method}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {orderData.transaction.date}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">
-                    ₦ {orderData.transaction.amount.toLocaleString()}
-                  </p>
-                </div>
+              <div className="space-y-3">
+                {orderData.payment_history?.map(
+                  (payment: any, index: number) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {payment.method}
+                        </p>
+                        {payment.bank && (
+                          <p className="text-sm text-gray-600">
+                            Bank: {payment.bank}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-500">
+                          {formatDateTime(payment.created_at)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">
+                          ₦ {parseFloat(payment.amount).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             </div>
           </div>
@@ -383,42 +461,42 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
                 </h3>
                 <button className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
                   <Download className="h-4 w-4" />
-                  <span>Download Receipt</span>
+                  <span>Download</span>
                 </button>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Sub Total</span>
+                  <span className="text-gray-600">Amount</span>
                   <span className="text-gray-900">
-                    ₦ {orderData.payment.subtotal.toLocaleString()}
+                    ₦ {parseFloat(orderData.amount).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
-                  <div>
-                    <span className="text-gray-600">Shipping Fee</span>
-                    <p className="text-xs text-gray-500">
-                      {orderData.payment.shippingLocation}
-                    </p>
-                  </div>
+                  <span className="text-gray-600">Total Discount</span>
+                  <span className="text-green-600">N/A</span>
+                </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Shipping Fee</span>
                   <span className="text-gray-900">
-                    ₦ {orderData.payment.shippingFee.toLocaleString()}
+                    ₦ {parseFloat(orderData.shipping_fee).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Taxes</span>
                   <span className="text-gray-900">
-                    ₦ {orderData.payment.taxes}
+                    ₦ {parseFloat(orderData.tax).toLocaleString()}
                   </span>
                 </div>
 
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-base font-semibold">
-                    <span className="text-gray-900">Total Amount</span>
+                    <span className="text-gray-900">Total Amount Paid</span>
                     <span className="text-gray-900">
-                      ₦ {orderData.payment.total.toLocaleString()}
+                      ₦ {parseFloat(orderData.amount_paid).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -431,7 +509,7 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
                 <h3 className="text-lg font-semibold text-gray-900">
                   Payment Status
                 </h3>
-                <StatusBadge status="Paid" type="payment" />
+                {getPaymentStatusBadge(orderData.payment_status)}
               </div>
             </div>
 
@@ -442,7 +520,7 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
                   Shipping
                 </h3>
                 <div className="flex items-center space-x-2">
-                  <StatusBadge status="Shipped" type="shipping" />
+                  {getShippingStatusBadge(orderData.shipping_status)}
                   <button className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800">
                     <span>Action</span>
                     <ChevronDown className="h-4 w-4" />
@@ -453,51 +531,64 @@ const ViewOrder = ({ id = "00008" }: ViewOrderProps) => {
               <div className="space-y-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Delivery To
+                    Shipping Date
                   </h4>
-                  <p className="text-sm text-gray-900 mb-1">
-                    {orderData.shipping.deliveryTo}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {orderData.shipping.phone}
+                  <p className="text-sm text-gray-900">
+                    {formatDate(orderData.shipping_date)}
                   </p>
                 </div>
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    Address
+                    Delivery To
                   </h4>
-                  <button className="px-3 py-2 text-sm font-medium text-green-600 border border-green-600 rounded-md hover:bg-green-50">
-                    Add Shipping Address
-                  </button>
+                  <p className="text-sm text-gray-900 mb-1">
+                    {orderData.customer_info?.name || "N/A"}
+                  </p>
+                  {orderData.customer_info?.phone && (
+                    <p className="text-sm text-gray-500">
+                      {orderData.customer_info.phone}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-3">
-                    Select shipping status:
+                    Update shipping status:
                   </h4>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2 mb-5">
                     <ShippingStatusButton
-                      status="Shipped"
-                      active={selectedShippingStatus === "Shipped"}
+                      status="PENDING"
+                      active={selectedShippingStatus === "PENDING"}
                       onClick={setSelectedShippingStatus}
                     />
                     <ShippingStatusButton
-                      status="Delivered"
-                      active={selectedShippingStatus === "Delivered"}
+                      status="SHIPPED"
+                      active={selectedShippingStatus === "SHIPPED"}
                       onClick={setSelectedShippingStatus}
                     />
                     <ShippingStatusButton
-                      status="Awaiting Shipping"
-                      active={selectedShippingStatus === "Awaiting Shipping"}
+                      status="DELIVERED"
+                      active={selectedShippingStatus === "DELIVERED"}
                       onClick={setSelectedShippingStatus}
                     />
                     <ShippingStatusButton
-                      status="Returned"
-                      active={selectedShippingStatus === "Returned"}
+                      status="RETURNED"
+                      active={selectedShippingStatus === "RETURNED"}
                       onClick={setSelectedShippingStatus}
                     />
                   </div>
+                  <Button
+                    disabled={editOrderShippingStatusLoading}
+                    onClick={() =>
+                      handleUpdateOrderStatus(selectedShippingStatus)
+                    }
+                    className="w-full  cursor-pointer mt-3 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                  >
+                    {editOrderShippingStatusLoading
+                      ? "Updating..."
+                      : " Update Status"}
+                  </Button>
                 </div>
               </div>
             </div>

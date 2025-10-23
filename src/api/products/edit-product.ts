@@ -21,15 +21,15 @@ const addProduct = async ({ productId, payload }: EditProductProps) => {
 
 type QueryFnType = typeof addProduct;
 
-interface UseEditProductMutationOptions {
-  productId: any; // Remove null from type
-  config?: MutationConfig<QueryFnType>;
+interface UseEditProductMutationOptions extends MutationConfig<QueryFnType> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
 }
 
-export const useEditProductMutation = ({
-  productId,
-  config,
-}: UseEditProductMutationOptions) => {
+export const useEditProductMutation = (
+  productId: any,
+  config?: UseEditProductMutationOptions
+) => {
   const { showToast } = useToast();
 
   return useMutation({

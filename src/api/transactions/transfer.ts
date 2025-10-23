@@ -25,10 +25,13 @@ const TransferFunds = async ({
 };
 
 type QueryFnType = typeof TransferFunds;
+interface UseTransferFundOptions extends MutationConfig<QueryFnType> {
+  // Add any additional options here if needed
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
 
-export const useTransferFundsMutation = (
-  config?: MutationConfig<QueryFnType>
-) => {
+export const useTransferFundsMutation = (config?: UseTransferFundOptions) => {
   const { showToast } = useToast();
 
   return useMutation({
