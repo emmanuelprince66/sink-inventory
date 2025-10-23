@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { Camera, ScanLine, X } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 interface BarcodeScannerProps {
   onScanResult: (result: string) => void;
@@ -12,144 +12,144 @@ interface BarcodeScannerProps {
   className?: string;
 }
 
+const qrcodeRegionId = "html5qr-code-full-region";
+
 export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   onScanResult,
   onClose,
   className,
 }) => {
   const [error, setError] = useState<string>("");
-  const [isInitialized, setIsInitialized] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
-  const qrcodeRegionId = useRef(`html5qr-code-${Date.now()}`).current;
+  const hasInitialized = useRef(false);
 
-  const initScanner = useCallback(async () => {
-    // First check if we have camera permission
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  useEffect(() => {
+    // Prevent double initialization
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
+    const initScanner = async () => {
+      // Check camera permission first
+      try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
         });
-        // Stop the stream immediately - we just needed to check permission
         stream.getTracks().forEach((track) => track.stop());
-      } else {
-        throw new Error("Camera not supported on this device");
+      } catch (err: any) {
+        console.error("Camera permission error:", err);
+        setPermissionDenied(true);
+        setError(
+          err.name === "NotAllowedError"
+            ? "Camera permission denied"
+            : "Camera not available"
+        );
+        setIsLoading(false);
+        return;
       }
-    } catch (err: any) {
-      console.error("Camera permission error:", err);
-      setPermissionDenied(true);
-      setError(
-        err.name === "NotAllowedError"
-          ? "Camera permission denied"
-          : "Camera not available"
-      );
-      return;
-    }
 
-    // Now initialize the scanner
-    const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0,
-      formatsToSupport: [
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-      ],
+      // Initialize scanner
+      const config = {
+        fps: 10,
+        qrbox: 250,
+        aspectRatio: 1.0,
+        formatsToSupport: [
+          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+        ],
+      };
+
+      const onScanSuccess = (decodedText: string) => {
+        console.log("Scanned:", decodedText);
+        // Stop scanner and call callback
+        if (scannerRef.current) {
+          scannerRef.current
+            .clear()
+            .then(() => {
+              scannerRef.current = null;
+              onScanResult(decodedText);
+            })
+            .catch((err) => {
+              console.error("Failed to clear scanner", err);
+              onScanResult(decodedText);
+            });
+        } else {
+          onScanResult(decodedText);
+        }
+      };
+
+      const onScanError = (errorMessage: string) => {
+        // Ignore normal scanning errors
+        if (
+          !errorMessage.includes("NotFoundException") &&
+          !errorMessage.includes("No MultiFormat Readers")
+        ) {
+          console.warn("Scan error:", errorMessage);
+        }
+      };
+
+      try {
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+          qrcodeRegionId,
+          config,
+          false
+        );
+        scannerRef.current = html5QrcodeScanner;
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error("Scanner initialization error:", err);
+        setError(err?.message || "Failed to initialize scanner");
+        setPermissionDenied(true);
+        setIsLoading(false);
+      }
     };
 
-    const onScanSuccess = (decodedText: string, decodedResult: any) => {
-      console.log("Scanned:", decodedText);
-      if (scannerRef.current) {
-        scannerRef.current
-          .clear()
-          .then(() => {
-            scannerRef.current = null;
-            onScanResult(decodedText);
-          })
-          .catch((err) => {
-            console.error("Failed to clear scanner", err);
-            onScanResult(decodedText);
-          });
-      } else {
-        onScanResult(decodedText);
-      }
-    };
+    initScanner();
 
-    const onScanError = (errorMessage: string) => {
-      // Ignore not found errors - they're normal during scanning
-      if (
-        !errorMessage.includes("NotFoundException") &&
-        !errorMessage.includes("No MultiFormat Readers")
-      ) {
-        console.warn("Scan error:", errorMessage);
-      }
-    };
-
-    try {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        qrcodeRegionId,
-        config,
-        false
-      );
-
-      scannerRef.current = html5QrcodeScanner;
-      html5QrcodeScanner.render(onScanSuccess, onScanError);
-      setIsInitialized(true);
-    } catch (err: any) {
-      console.error("Scanner initialization error:", err);
-      setError(err?.message || "Failed to initialize scanner");
-      setPermissionDenied(true);
-    }
-  }, [qrcodeRegionId, onScanResult]);
-
-  // Callback ref to initialize scanner when element is mounted
-  const scannerElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (node !== null && !scannerRef.current) {
-        // Element is now in the DOM, initialize scanner
-        setShowScanner(true);
-        setTimeout(() => {
-          initScanner();
-        }, 100);
-      }
-    },
-    [initScanner]
-  );
-
-  useEffect(() => {
+    // Cleanup on unmount
     return () => {
       if (scannerRef.current) {
         scannerRef.current.clear().catch((error) => {
-          console.error("Failed to clear html5QrcodeScanner. ", error);
+          console.error("Failed to clear scanner", error);
         });
       }
     };
-  }, []);
+  }, [onScanResult]);
 
-  const handleClose = () => {
+  const handleClose = async () => {
+    // Properly stop the scanner and camera
     if (scannerRef.current) {
-      scannerRef.current
-        .clear()
-        .catch((error) => {
-          console.error("Failed to clear scanner on close", error);
-        })
-        .finally(() => {
-          onClose();
-        });
-    } else {
-      onClose();
+      try {
+        await scannerRef.current.clear();
+        scannerRef.current = null;
+      } catch (error) {
+        console.error("Failed to clear scanner on close", error);
+      }
     }
+
+    // Force stop all video tracks
+    const videoElements = document.querySelectorAll("video");
+    videoElements.forEach((video) => {
+      if (video.srcObject) {
+        const stream = video.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => {
+          track.stop();
+          console.log("Stopped track:", track.kind);
+        });
+        video.srcObject = null;
+      }
+    });
+
+    onClose();
   };
 
   const handleRetry = () => {
     setError("");
     setPermissionDenied(false);
-    setIsInitialized(false);
-    setShowScanner(false);
-    // Try initializing again
-    setTimeout(() => {
-      initScanner();
-    }, 100);
+    setIsLoading(true);
+    hasInitialized.current = false;
+    window.location.reload();
   };
 
   // Permission denied state
@@ -161,20 +161,27 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
           className
         )}
       >
-        <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
+        <div className="bg-white p-8 rounded-xl max-w-sm w-full mx-4 shadow-2xl">
           <div className="text-center">
-            <Camera className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
+            <div className="bg-gradient-to-br from-green-100 to-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Camera className="h-10 w-10 text-green-600" />
+            </div>
+            <h3 className="text-xl font-bold mb-2 text-gray-900">
               Camera Access Required
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-6">
               {error || "Please allow camera access to scan barcodes"}
             </p>
-            <div className="flex gap-2 justify-center">
-              <Button variant="outline" onClick={handleClose}>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={handleClose} className="px-6">
                 Cancel
               </Button>
-              <Button onClick={handleRetry}>Try Again</Button>
+              <Button
+                onClick={handleRetry}
+                className="px-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+              >
+                Try Again
+              </Button>
             </div>
           </div>
         </div>
@@ -185,28 +192,28 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   return (
     <div
       className={cn(
-        "fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50",
+        "fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4",
         className
       )}
     >
-      <div className="relative w-full h-full max-w-2xl mx-4 flex flex-col items-center justify-center">
-        {/* Close button */}
+      <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col">
+        {/* Close button - Always visible */}
         <Button
           variant="secondary"
           size="sm"
           onClick={handleClose}
-          className="absolute top-4 right-4 z-10 rounded-full"
+          className="absolute -top-12 right-0 z-50 rounded-full shadow-lg"
         >
           <X className="h-4 w-4" />
         </Button>
 
         {/* Scanner container */}
-        <div className="w-full bg-white rounded-lg overflow-hidden shadow-2xl">
-          <div className="p-4 bg-gradient-to-r from-green-500 to-blue-500 text-white text-center">
+        <div className="w-full bg-white rounded-lg overflow-hidden shadow-2xl flex flex-col">
+          <div className="p-4 bg-gradient-to-r from-green-500 to-blue-500 text-white text-center flex-shrink-0">
             <div className="flex items-center justify-center gap-2">
               <ScanLine className="h-5 w-5 animate-pulse" />
               <h2 className="text-lg font-semibold">
-                {isInitialized ? "Scanning..." : "Initializing..."}
+                {isLoading ? "Initializing..." : "Scanning..."}
               </h2>
             </div>
             <p className="text-sm mt-1 text-white/90">
@@ -214,23 +221,19 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             </p>
           </div>
 
-          {/* Scanner element - html5-qrcode renders here */}
-          {!isInitialized && (
-            <div className="w-full min-h-[400px] flex items-center justify-center">
+          {/* Scanner element */}
+          {isLoading && (
+            <div className="w-full h-[300px] flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 <p className="text-gray-600">Loading camera...</p>
               </div>
             </div>
           )}
-          <div
-            ref={scannerElementRef}
-            id={qrcodeRegionId}
-            className="w-full"
-          ></div>
+          <div id={qrcodeRegionId} className="w-full"></div>
 
           {/* Instructions */}
-          <div className="p-4 bg-gray-50 text-center text-sm text-gray-600">
+          <div className="p-4 bg-gray-50 text-center text-sm text-gray-600 flex-shrink-0">
             <p>✓ Supports QR codes, barcodes (UPC, EAN, Code128, etc.)</p>
             <p className="mt-1">
               Make sure the code is well lit and clearly visible
@@ -243,7 +246,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       <style jsx global>{`
         #${qrcodeRegionId} {
           border: none !important;
-          min-height: 400px;
         }
         #${qrcodeRegionId} > div {
           border: none !important;
@@ -251,6 +253,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         #${qrcodeRegionId} video {
           border-radius: 0 !important;
           width: 100% !important;
+          max-height: 400px;
+          object-fit: cover;
         }
         #${qrcodeRegionId}__dashboard_section {
           padding: 16px;
