@@ -24,6 +24,65 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const hasInitialized = useRef(false);
+  const isCleaningUp = useRef(false);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Comprehensive cleanup function
+  const cleanupCamera = async () => {
+    if (isCleaningUp.current) return;
+    isCleaningUp.current = true;
+
+    try {
+      // 1. Clear the scanner instance
+      if (scannerRef.current) {
+        try {
+          await scannerRef.current.clear();
+        } catch (err) {
+          console.warn("Scanner clear error:", err);
+        }
+        scannerRef.current = null;
+      }
+
+      // 2. Stop the stored stream reference
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => {
+          track.stop();
+          console.log("Stopped stored track:", track.kind);
+        });
+        streamRef.current = null;
+      }
+
+      // 3. Force stop all video elements and their tracks
+      const videoElements = document.querySelectorAll("video");
+      videoElements.forEach((video) => {
+        if (video.srcObject) {
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach((track) => {
+            track.stop();
+            console.log("Stopped video track:", track.kind);
+          });
+          video.srcObject = null;
+        }
+        // Pause and reset video element
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      });
+
+      // 4. Clean up the DOM element
+      const scannerElement = document.getElementById(qrcodeRegionId);
+      if (scannerElement) {
+        scannerElement.innerHTML = "";
+      }
+
+      // Small delay to ensure cleanup completes
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    } catch (err) {
+      console.error("Cleanup error:", err);
+    } finally {
+      isCleaningUp.current = false;
+    }
+  };
 
   useEffect(() => {
     // Prevent double initialization
@@ -31,12 +90,20 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
     hasInitialized.current = true;
 
     const initScanner = async () => {
-      // Check camera permission first
+      setIsLoading(true);
+
+      // Clean up any existing resources first
+      await cleanupCamera();
+
+      // Check camera permission and store the stream
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "environment" },
         });
+        streamRef.current = stream;
+        // Stop the test stream - scanner will create its own
         stream.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       } catch (err: any) {
         console.error("Camera permission error:", err);
         setPermissionDenied(true);
@@ -49,7 +116,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         return;
       }
 
-      // Initialize scanner
+      // Initialize scanner with optimized config
       const config = {
         fps: 10,
         qrbox: 250,
@@ -59,22 +126,26 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         ],
         rememberLastUsedCamera: true,
         showTorchButtonIfSupported: true,
+        // Important: These help with cleanup
+        disableFlip: false,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true,
+        },
       };
 
-      const onScanSuccess = (decodedText: string) => {
+      const onScanSuccess = async (decodedText: string) => {
         console.log("Scanned:", decodedText);
-        // Stop scanner and call callback
-        if (scannerRef.current) {
-          scannerRef.current
-            .clear()
-            .then(() => {
-              scannerRef.current = null;
-              onScanResult(decodedText);
-            })
-            .catch((err) => {
-              console.error("Failed to clear scanner", err);
-              onScanResult(decodedText);
-            });
+
+        // Immediately stop scanning to prevent multiple reads
+        if (scannerRef.current && !isCleaningUp.current) {
+          try {
+            await scannerRef.current.pause(true);
+            await cleanupCamera();
+            onScanResult(decodedText);
+          } catch (err) {
+            console.error("Failed to pause/cleanup scanner", err);
+            onScanResult(decodedText);
+          }
         } else {
           onScanResult(decodedText);
         }
@@ -111,47 +182,28 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
 
     // Cleanup on unmount
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch((error) => {
-          console.error("Failed to clear scanner", error);
-        });
-      }
+      cleanupCamera();
     };
   }, [onScanResult]);
 
   const handleClose = async () => {
-    // Properly stop the scanner and camera
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.clear();
-        scannerRef.current = null;
-      } catch (error) {
-        console.error("Failed to clear scanner on close", error);
-      }
-    }
-
-    // Force stop all video tracks
-    const videoElements = document.querySelectorAll("video");
-    videoElements.forEach((video) => {
-      if (video.srcObject) {
-        const stream = video.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => {
-          track.stop();
-          console.log("Stopped track:", track.kind);
-        });
-        video.srcObject = null;
-      }
-    });
-
+    await cleanupCamera();
     onClose();
   };
 
-  const handleRetry = () => {
+  const handleRetry = async () => {
     setError("");
     setPermissionDenied(false);
     setIsLoading(true);
     hasInitialized.current = false;
-    window.location.reload();
+
+    // Clean up before retry
+    await cleanupCamera();
+
+    // Force a small delay before reinitializing
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   // Permission denied state
@@ -244,7 +296,6 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         </div>
       </div>
 
-      {/* Custom styles for html5-qrcode */}
       {/* Custom styles for html5-qrcode */}
       <style jsx global>{`
         #${qrcodeRegionId} {
