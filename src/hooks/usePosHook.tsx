@@ -24,9 +24,8 @@ export const usePosHook = ({
   const { user } = useUserRole();
   const { showToast } = useToast();
 
-  // Use ref to prevent duplicate processing
+  // Use ref to prevent duplicate processing within the same render cycle
   const processingRef = useRef(false);
-  const lastProcessedSkuRef = useRef<string | null>(null);
 
   // Memoize the normalized search term to prevent unnecessary re-renders
   const searchTerm = useMemo(() => {
@@ -132,18 +131,11 @@ export const usePosHook = ({
 
   // Effect to handle when scanned product data is fetched
   useEffect(() => {
-    // Prevent duplicate processing
+    // Prevent duplicate processing within the same effect cycle
     if (processingRef.current || !scannedSku) return;
 
     if (scannedInventoryData) {
-      // Prevent reprocessing the same SKU
-      if (lastProcessedSkuRef.current === scannedSku) {
-        setScannedSku(null);
-        return;
-      }
-
       processingRef.current = true;
-      lastProcessedSkuRef.current = scannedSku;
 
       const products = scannedInventoryData.data?.results?.data || [];
 
@@ -159,16 +151,18 @@ export const usePosHook = ({
         }
       }
 
-      // Reset state
+      // Reset state - allow immediate re-scanning
       setScannedSku(null);
-      processingRef.current = false;
+      // Small delay to prevent same-cycle duplicate
+      setTimeout(() => {
+        processingRef.current = false;
+      }, 100);
     }
 
     if (scannedProductError) {
       showToast("Error searching for product", "error");
       setScannedSku(null);
       processingRef.current = false;
-      lastProcessedSkuRef.current = null;
     }
   }, [
     scannedInventoryData,
@@ -179,7 +173,7 @@ export const usePosHook = ({
     handleAddToCart,
   ]);
 
-  // Optimized scan result handler
+  // Optimized scan result handler - allows duplicate scans
   const handleScanResult = useCallback(
     (scannedCode: string) => {
       // Validate scanned code
@@ -190,12 +184,9 @@ export const usePosHook = ({
         return;
       }
 
-      // Prevent scanning the same code multiple times
-      if (
-        processingRef.current ||
-        lastProcessedSkuRef.current === trimmedCode
-      ) {
-        console.log("Duplicate scan detected, ignoring");
+      // Only prevent if currently processing (prevents rapid double-scans)
+      if (processingRef.current) {
+        console.log("Currently processing a scan, please wait");
         return;
       }
 

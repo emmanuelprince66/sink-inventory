@@ -636,12 +636,13 @@ const PrintReceiptView = ({
             justify-content: space-between;
             width: 100%;
             font-size: 8px;
-            color: #16a34a;
+            color: #000;
+            font-weight: bold;
             padding-bottom: 1px; /* Small padding between entries */
         }
         .payment-method-title {
             font-size: 8px; /* Slightly larger title for the whole section */
-            color: #6b7280;
+            color: #000;
             font-weight: bold;
             margin-bottom: 2px; /* Space between title and entries */
         }
@@ -671,9 +672,10 @@ const PrintReceiptView = ({
 .discount-text {
   font-size: 7px;
   font-style: italic;
-  color: #16a34a !important;
+  color: #000 !important;
   font-weight: normal;
   line-height: 1;
+  font-weight: bold;
   margin-top: 1px;
 }
 
@@ -685,13 +687,13 @@ td {
   vertical-align: top; /* This ensures all cells align to the top */
 }
 
-
-        .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
+        .total-value { font-weight: bolder; font-size: 12px;}
+        .total-row { font-weight: bolder; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
         .item-name { font-weight: bold; font-size: 10px; }
         .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
-        .detail-label { color: #6b7280; font-size: 10px; }
+        .detail-label { color: #000; font-size: 10px; font-weight: bold; }
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .powered-by { font-size: 8px;  text-align: center; }
         .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
@@ -849,7 +851,7 @@ td {
         {/* Payment summary */}
         <div className="total-row">
           <span className="text-[11px]">TOTAL:</span>
-          <span className="text-green-600 text-[11px]">
+          <span className="text-green-600 text-[11px] total-value">
             {formatToNaira(total)}
           </span>
         </div>

@@ -85,16 +85,6 @@ const Pos = () => {
         <p className="text-xl md:text-2xl font-bold">POS System</p>
       </header>
 
-      {/* Loading overlay for scanned product */}
-      {scannedProductLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg flex items-center gap-3">
-            <Spinner className="text-primary-green-300" />
-            <span>Loading scanned product...</span>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         {/* Products Section */}
@@ -110,11 +100,18 @@ const Pos = () => {
                 />
               </div>
               {/* Scanner Button */}
-              <ScannerButton
-                onScanResult={handleScanResult}
-                variant="outline"
-                size="default"
-              />
+
+              {scannedProductLoading ? (
+                <Button variant="outline" disabled>
+                  <Spinner className="text-primary-green-300" />
+                </Button>
+              ) : (
+                <ScannerButton
+                  onScanResult={handleScanResult}
+                  variant="outline"
+                  size="default"
+                />
+              )}
             </div>
           </div>
 
