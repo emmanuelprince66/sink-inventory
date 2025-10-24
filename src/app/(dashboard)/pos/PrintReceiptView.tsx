@@ -687,7 +687,7 @@ td {
   vertical-align: top; /* This ensures all cells align to the top */
 }
 
-        .total-value { font-weight: bolder; font-size: 12px;}
+        .total-value { font-weight: bold; font-size: 12px; color:#000;}
         .total-row { font-weight: bolder; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
