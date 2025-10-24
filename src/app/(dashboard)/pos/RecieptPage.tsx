@@ -68,7 +68,6 @@ const ReceiptPage = ({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [createSaleResponse, setCreateSaleResponse] = useState(null);
 
-  console.log("");
   const [selectedBank, setSelectedBank] = useState("");
   const [selectedBankForSplitPayment, setSelectedBankForSplitPayment] =
     useState("");
@@ -176,9 +175,11 @@ const ReceiptPage = ({
   });
 
   // Get the first business from the array
-  const business = BusinessData?.data?.[0] || {};
+  const business = BusinessData?.data || {};
 
   console.log("createSaleResponse", createSaleResponse);
+  // console.log("BusinessData", BusinessData);
+
   // Calculate total
   // const total = cart.reduce((sum: number, item: any) => {
   //   return (

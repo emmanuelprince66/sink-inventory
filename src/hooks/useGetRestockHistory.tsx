@@ -131,7 +131,7 @@ export const useGetRestockHistory = ({
       cost_price: values.cost_price,
       selling_price: values.selling_price,
       payment_method: values.payment_method,
-      expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString(),
+      ...(values.expiry_date && { expiry_date: values.expiry_date }),
       ...(values.supplier && { supplier_id: values.supplier }), // Only add if supplier exists
       ...(values.payment_method === "CREDIT" && {
         due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),

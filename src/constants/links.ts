@@ -36,7 +36,7 @@ export const links = [
         title: "Overview",
         url: "/overview",
         icon: LayoutDashboard,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
       },
       {
         title: "Inventory",

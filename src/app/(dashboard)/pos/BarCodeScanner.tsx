@@ -68,12 +68,18 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             // Call the result callback
             onScanResult(code);
 
-            // Auto-close after scan if enabled
-            if (autoCloseOnScan) {
+            // Don't auto-close if hardware scanner is detected - allows continuous scanning
+            // Only auto-close for camera mode
+            if (autoCloseOnScan && !hardwareScannerDetected) {
               setTimeout(() => {
                 onClose();
               }, 500); // Small delay to show the scanned code
             }
+
+            // Clear the scanned code after a short delay to ready for next scan
+            setTimeout(() => {
+              setScannedCode("");
+            }, 1000);
           }
           return;
         }
@@ -105,7 +111,13 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         }
       };
     }
-  }, [enableHardwareScanner, onScanResult, autoCloseOnScan, onClose]);
+  }, [
+    enableHardwareScanner,
+    onScanResult,
+    autoCloseOnScan,
+    onClose,
+    hardwareScannerDetected,
+  ]);
 
   // Camera scanner initialization - only if user chooses camera mode
   useEffect(() => {
