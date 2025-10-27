@@ -228,6 +228,15 @@ const Inventory = () => {
             </div>
 
             {/* Secondary Button - Full width on mobile, natural width on desktop */}
+
+            <Button
+              variant={"outline"}
+              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
+              // onClick={openAttendantsModal}
+            >
+              Download Report
+            </Button>
+
             <Button
               variant="outline"
               className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
