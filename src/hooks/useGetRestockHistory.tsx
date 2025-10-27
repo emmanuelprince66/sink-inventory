@@ -128,8 +128,8 @@ export const useGetRestockHistory = ({
   const onSubmit = (values: RestockFormValues) => {
     const payload = {
       quantity: values.qty,
-      cost_price: Number(values.cost_price),
-      selling_price: Number(values.selling_price),
+      cost_price: Math.round(Number(values.cost_price)),
+      selling_price: Math.round(Number(values.selling_price)),
       payment_method: values.payment_method,
       ...(values.expiry_date && {
         expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString(),
