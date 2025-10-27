@@ -1,6 +1,7 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useUserRole } from "@/lib/store/user-store";
@@ -72,8 +73,16 @@ const Analytics = () => {
           <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
             Analytics
           </p>
-          <div className="w-full sm:w-auto">
+          <div className="grid grid-cols-1 sm:flex justify-end gap-2 sm:gap-3 w-full">
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+
+            <Button
+              variant={"outline"}
+              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
+              // onClick={openAttendantsModal}
+            >
+              Download Report
+            </Button>
           </div>
         </div>
 

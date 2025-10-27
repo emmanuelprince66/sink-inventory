@@ -341,47 +341,50 @@ const ReceiptPDFDocument = ({
             </View>
 
             {/* Table Rows */}
-            {cart.map((item) => (
-              <View key={item.id} style={styles.tableRow}>
-                <View style={styles.cellItem}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                </View>
-                <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
-                <View style={styles.cellPrice}>
-                  {/* {(
-                    (item.selling_price || item.amount || 0) *
-                    (item.cartQuantity || 1)
-                  ).toLocaleString()} */}
+            {cart.map((item) => {
+              // Check if THIS specific item has a discount
+              const hasItemDiscount =
+                item.type === "PRODUCT" &&
+                item.discount_threshold &&
+                item.discount &&
+                (item.cartQuantity || 1) >= item.discount_threshold;
 
-                  <Text>
-                    {item?.selling_price
-                      ? item.selling_price.toLocaleString()
-                      : item.amount.toLocaleString() ?? 0}
-                  </Text>
+              const itemDiscount = hasItemDiscount ? item.discount : 0;
 
-                  {discount && discountAmount > 0 && (
-                    <Text
-                      style={{
-                        fontSize: 6,
-                        fontStyle: "italic",
-                        color: "green",
-                      }}
-                    >
-                      Discount -{" "}
-                      {discount.type === "fixed"
-                        ? `₦${discount.value}`
-                        : `${discount.value}%`}
+              return (
+                <View key={item.id} style={styles.tableRow}>
+                  <View style={styles.cellItem}>
+                    <Text style={styles.itemName}>{item.name}</Text>
+                  </View>
+                  <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
+                  <View style={styles.cellPrice}>
+                    <Text>
+                      {item?.selling_price
+                        ? item.selling_price.toLocaleString()
+                        : item.amount.toLocaleString() ?? 0}
                     </Text>
-                  )}
+                    {/* FIXED: Only show discount if THIS item has one */}
+                    {hasItemDiscount && (
+                      <Text
+                        style={{
+                          fontSize: 6,
+                          fontStyle: "italic",
+                          color: "green",
+                        }}
+                      >
+                        Discount - ₦{itemDiscount.toLocaleString()} per unit
+                      </Text>
+                    )}
+                  </View>
+                  <Text style={styles.cellTotal}>
+                    {(
+                      (item.selling_price || item.amount || 0) *
+                      (item.cartQuantity || 1)
+                    ).toLocaleString()}
+                  </Text>
                 </View>
-                <Text style={styles.cellTotal}>
-                  {(
-                    (item.selling_price || item.amount || 0) *
-                    (item.cartQuantity || 1)
-                  ).toLocaleString()}
-                </Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
 
           {/* Summary Section */}
@@ -559,6 +562,9 @@ const PrintReceiptView = ({
 
   // console.log("customer", customer);
   // console.log("attendant", attendant);
+
+  console.log("discountAmount", discount);
+  console.log("discount", discountAmount);
   // console.log("username", user?.name);
   // console.log("pa", user?.role);
 
@@ -683,12 +689,12 @@ const PrintReceiptView = ({
 td {
   padding: 1px; 
   font-size: 10px; 
-  border-bottom: 0.5px solid #f3f4f6;
+  border-bottom: 0.5px solid #f3f4f6;s
   vertical-align: top; /* This ensures all cells align to the top */
 }
 
-        .total-value { font-weight: bold; font-size: 12px; color:#000;}
-        .total-row { font-weight: bolder; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
+        .total-value { font-weight: bolder; font-size: 15px; color:#000;}
+        .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
         .summary-row, .discount-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
         .item-name { font-weight: bold; font-size: 10px; }
@@ -758,7 +764,9 @@ td {
       >
         {/* Receipt header */}
         <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
-          <h2 className="receipt-title text-[13px] ">PAYMENT RECEIPT</h2>
+          <h2 className="receipt-title text-[13px] detail-value">
+            PAYMENT RECEIPT
+          </h2>
           <p className="business-name receipt-little font-semibold">
             {business?.name}
           </p>
@@ -790,37 +798,46 @@ td {
               </tr>
             </thead>
             <tbody>
-              {cart.map((item) => (
-                <tr key={item.id}>
-                  <td className="item-name text-[11px] ">{item.name}</td>
-                  <td className="text-center text-[11px] ">
-                    {item.cartQuantity || 1}
-                  </td>
-                  <td className="text-right text-[11px] price-cell">
-                    <div className="price-cell-container">
-                      <div className="price-main">
-                        {item?.selling_price
-                          ? formatToNaira(item.selling_price)
-                          : formatToNaira(item.amount) ?? "₦0"}
-                      </div>
-                      {discount && discountAmount > 0 && (
-                        <div className="discount-text">
-                          Discount -{" "}
-                          {discount.type === "fixed"
-                            ? `₦${discount.value}`
-                            : `${discount.value}%`}
+              {cart.map((item) => {
+                // Check if THIS specific item has a discount
+                const hasItemDiscount =
+                  item.type === "PRODUCT" &&
+                  item.discount_threshold &&
+                  item.discount &&
+                  (item.cartQuantity || 1) >= item.discount_threshold;
+
+                const itemDiscount = hasItemDiscount ? item.discount : 0;
+
+                return (
+                  <tr key={item.id}>
+                    <td className="item-name text-[11px]">{item.name}</td>
+                    <td className="text-center text-[11px]">
+                      {item.cartQuantity || 1}
+                    </td>
+                    <td className="text-right text-[11px] price-cell">
+                      <div className="price-cell-container">
+                        <div className="price-main">
+                          {item?.selling_price
+                            ? formatToNaira(item.selling_price)
+                            : formatToNaira(item.amount) ?? "₦0"}
                         </div>
+                        {/* FIXED: Only show discount if THIS item has one */}
+                        {hasItemDiscount && (
+                          <div className="discount-text">
+                            Discount - {formatToNaira(itemDiscount)}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="text-right text-[11px] price-cell">
+                      {formatToNaira(
+                        (item.selling_price || item.amount || 0) *
+                          (item.cartQuantity || 1)
                       )}
-                    </div>
-                  </td>
-                  <td className="text-right text-[11px]  price-cell">
-                    {formatToNaira(
-                      (item.selling_price || item.amount || 0) *
-                        (item.cartQuantity || 1)
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -851,7 +868,7 @@ td {
         {/* Payment summary */}
         <div className="total-row">
           <span className="text-[11px]">TOTAL:</span>
-          <span className="text-green-600 text-[11px] total-value">
+          <span className=" text-[11px] detail-value">
             {formatToNaira(total)}
           </span>
         </div>
@@ -908,7 +925,7 @@ td {
                 ([method, amount], index) => (
                   <div
                     key={index}
-                    className="payment-method-entry flex justify-between w-full"
+                    className="payment-method-entry detail-value flex justify-between w-full"
                   >
                     <span className="text-[10px] capitalize">
                       {method.replace("_", " ")}:

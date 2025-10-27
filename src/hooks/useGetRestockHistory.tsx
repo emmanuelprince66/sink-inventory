@@ -18,7 +18,7 @@ const RestockSchema = z
     qty: z.coerce.number().min(1, "Stock Quantity is required"),
     supplier: z.string().optional(),
     expiry_date: z.string().optional(),
-    cost_price: z.coerce.number().min(1, "Unit Cost Price is required"),
+    cost_price: z.string().min(1, "Unit Cost Price is required"),
     selling_price: z.coerce.number().min(1, "Unit Selling Price is required"),
     payment_method: z.string().min(1, "Payment Method is required"),
     due_date: z.string().optional(),
@@ -128,10 +128,12 @@ export const useGetRestockHistory = ({
   const onSubmit = (values: RestockFormValues) => {
     const payload = {
       quantity: values.qty,
-      cost_price: values.cost_price,
-      selling_price: values.selling_price,
+      cost_price: Number(values.cost_price),
+      selling_price: Number(values.selling_price),
       payment_method: values.payment_method,
-      ...(values.expiry_date && { expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString() }),
+      ...(values.expiry_date && {
+        expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString(),
+      }),
       ...(values.supplier && { supplier_id: values.supplier }), // Only add if supplier exists
       ...(values.payment_method === "CREDIT" && {
         due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),

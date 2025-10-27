@@ -303,6 +303,14 @@ const Sales = () => {
           </div>
 
           <div className="flex flex-col justify-center sm:flex-row items-center sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            <Button
+              variant={"outline"}
+              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
+              // onClick={openAttendantsModal}
+            >
+              Download Report
+            </Button>
+
             {user && user?.role === "OWNER" && (
               <Button
                 className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
@@ -443,7 +451,7 @@ const Sales = () => {
                   {productFilterOptions.map((filter) => (
                     <Button
                       key={filter}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-white font-medium transition-colors whitespace-nowrap ${
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-primary-black-100 font-medium transition-colors whitespace-nowrap ${
                         activeProductFilter === filter
                           ? "bg-primary-green-300 text-white shadow-sm"
                           : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-250"

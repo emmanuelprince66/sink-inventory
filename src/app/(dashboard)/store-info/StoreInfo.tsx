@@ -118,9 +118,7 @@ export default function StoreInfo() {
   const { BusinessData, BusinessDataLoading, business_id } = useStoreHook();
   console.log("BusinessData", BusinessData);
 
-  const findBusiness = BusinessData?.data?.find(
-    (item: any) => item?.id === business_id
-  );
+  const findBusiness = BusinessData?.data;
 
   console.log("findBusiness", findBusiness);
 
