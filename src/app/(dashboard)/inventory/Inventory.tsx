@@ -461,7 +461,6 @@ const Inventory = () => {
             </div>
           )}
         </div>
-        {/* Table Content */}
         <div className="p-6">
           {activeTab === "PRODUCT" ? (
             // Products Content
