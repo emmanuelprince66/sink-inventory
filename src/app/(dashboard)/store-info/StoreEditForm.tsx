@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,55 +12,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { useStoreHook } from "@/hooks/useStoreHook";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Image as ImageIconLucide,
+  Save,
+  Upload,
+  X,
+} from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-
-// Mock data for location selects
-const countries = [
-  { code: "US", name: "United States" },
-  { code: "CA", name: "Canada" },
-  { code: "UK", name: "United Kingdom" },
-  { code: "AU", name: "Australia" },
-];
-
-const states = {
-  US: [
-    { code: "CA", name: "California" },
-    { code: "NY", name: "New York" },
-    { code: "TX", name: "Texas" },
-    { code: "FL", name: "Florida" },
-  ],
-  CA: [
-    { code: "ON", name: "Ontario" },
-    { code: "BC", name: "British Columbia" },
-    { code: "AB", name: "Alberta" },
-    { code: "QC", name: "Quebec" },
-  ],
-  UK: [
-    { code: "ENG", name: "England" },
-    { code: "SCT", name: "Scotland" },
-    { code: "WLS", name: "Wales" },
-    { code: "NIR", name: "Northern Ireland" },
-  ],
-  AU: [
-    { code: "NSW", name: "New South Wales" },
-    { code: "VIC", name: "Victoria" },
-    { code: "QLD", name: "Queensland" },
-    { code: "WA", name: "Western Australia" },
-  ],
-};
-
-const cities = {
-  CA: ["Los Angeles", "San Francisco", "San Diego", "Sacramento"],
-  NY: ["New York City", "Buffalo", "Rochester", "Syracuse"],
-  TX: ["Houston", "Dallas", "Austin", "San Antonio"],
-  FL: ["Miami", "Orlando", "Tampa", "Jacksonville"],
-  ON: ["Toronto", "Ottawa", "Hamilton", "London"],
-  BC: ["Vancouver", "Victoria", "Surrey", "Burnaby"],
-  AB: ["Calgary", "Edmonton", "Red Deer", "Lethbridge"],
-  QC: ["Montreal", "Quebec City", "Laval", "Gatineau"],
-};
 
 const businessSectors = [
   "Electronics & Technology",
@@ -86,337 +45,402 @@ const currencies = [
   { code: "JPY", name: "Japanese Yen (JPY)" },
 ];
 
-interface StoreData {
-  logo: string;
-  storeName: string;
-  businessName: string;
-  businessSector: string;
-  tagline: string;
-  description: string;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-  currency: string;
-}
+const ErrorMessage = ({ message }: { message?: string }) => {
+  if (!message) return null;
+  return (
+    <div className="flex items-center gap-1 text-red-600 text-xs mt-1">
+      <AlertCircle className="w-3 h-3" />
+      <span>{message}</span>
+    </div>
+  );
+};
 
-interface StoreEditFormProps {
-  storeData: any;
-  onSave: (data: StoreData) => void;
-  onCancel: () => void;
-}
+export default function StoreEditForm({ setIsEditing }: any) {
+  const { formData, errors, handleInputChange, handleSubmit } = useStoreHook();
 
-export default function StoreEditForm({
-  storeData,
-  onSave,
-  onCancel,
-}: StoreEditFormProps) {
-  const [formData, setFormData] = useState<StoreData>(storeData);
-  const [availableStates, setAvailableStates] = useState<
-    Array<{ code: string; name: string }>
-  >([]);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-
-  // Update states when country changes
-  useEffect(() => {
-    const countryCode = countries.find(
-      (c) => c.name === formData.country
-    )?.code;
-    if (countryCode && states[countryCode as keyof typeof states]) {
-      setAvailableStates(states[countryCode as keyof typeof states]);
-      // Reset state and city when country changes
-      if (formData.country !== storeData.country) {
-        setFormData((prev) => ({ ...prev, state: "", city: "" }));
-      }
-    } else {
-      setAvailableStates([]);
-    }
-  }, [formData.country, storeData.country]);
-
-  // Update cities when state changes
-  useEffect(() => {
-    const stateCode = availableStates.find(
-      (s) => s.name === formData.state
-    )?.code;
-    if (stateCode && cities[stateCode as keyof typeof cities]) {
-      setAvailableCities(cities[stateCode as keyof typeof cities]);
-      // Reset city when state changes
-      if (formData.state !== storeData.state) {
-        setFormData((prev) => ({ ...prev, city: "" }));
-      }
-    } else {
-      setAvailableCities([]);
-    }
-  }, [formData.state, availableStates, storeData.state]);
-
-  const handleInputChange = (field: keyof StoreData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
+  console.log("StoreEditForm rendered");
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Edit Store Information
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Update your store details and business information
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 w-full">
+      <div className="container mx-auto p-1 md:p-6 max-w-full md:max-w-5xl w-full">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsEditing(false)}
+            className="hover:bg-gray-100"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div>
+            <p className="text-md md:text-3xl font-bold tracking-tight bg-gradient-to-r from-green-900 to-green-600 bg-clip-text text-transparent">
+              Edit Store Information
+            </p>
+            <p className="text-muted-foreground  text-sm md:text-base mt-2 text-base">
+              Update your store details and business information
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-8 w-full ">
+          {/* Image Uploads Section */}
+          <Card className="border border-gray-200 shadow-lg overflow-hidden w-full">
+            <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200 pt-5">
+              <CardTitle className="flex items-center gap-2">
+                <ImageIconLucide className="w-5 h-5 text-green-600" />
+                Store Images
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Header Image */}
+              <div className="space-y-3">
+                <Label
+                  htmlFor="headerImage"
+                  className="text-base font-semibold"
+                >
+                  Header Image
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    (Recommended: 1200x300px)
+                  </span>
+                </Label>
+                <div className="space-y-3">
+                  <div className="relative h-48 w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 hover:border-green-400 transition-colors bg-gradient-to-r from-green-50 to-emerald-50">
+                    <Image
+                      src={formData.headerImage || "/placeholder.svg"}
+                      alt="Header Image"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full hover:bg-green-50 hover:border-green-300"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Header Image
+                  </Button>
+                </div>
+              </div>
+
+              {/* Store Logo */}
+              <div className="space-y-3">
+                <Label htmlFor="logo" className="text-base font-semibold">
+                  Store Logo
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    (Recommended: 400x400px)
+                  </span>
+                </Label>
+                <div className="flex items-center gap-4">
+                  <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200 bg-white shadow-md">
+                    <Image
+                      src={formData.logo || "/placeholder.svg"}
+                      alt="Store Logo"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="hover:bg-green-50 hover:border-green-300"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload New Logo
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Store Profile Section */}
+          <Card className="border border-gray-200 shadow-lg pt-5">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+              <CardTitle>Store Profile</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Store Name and Business Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="storeName" className="font-semibold">
+                    Store Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="storeName"
+                    value={formData.storeName}
+                    onChange={(e) =>
+                      handleInputChange("storeName", e.target.value)
+                    }
+                    placeholder="Enter store name"
+                    className={errors.storeName ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.storeName} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessName" className="font-semibold">
+                    Business Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="businessName"
+                    value={formData.businessName}
+                    onChange={(e) =>
+                      handleInputChange("businessName", e.target.value)
+                    }
+                    placeholder="Enter business name"
+                    className={errors.businessName ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.businessName} />
+                </div>
+              </div>
+
+              {/* Business Sector - Full Width */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="businessSector" className="font-semibold">
+                  Business Sector <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.businessSector}
+                  onValueChange={(value) =>
+                    handleInputChange("businessSector", value)
+                  }
+                >
+                  <SelectTrigger
+                    className={
+                      errors.businessSector ? "border-red-500 w-full" : "w-full"
+                    }
+                  >
+                    <SelectValue placeholder="Select business sector" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {businessSectors.map((sector) => (
+                      <SelectItem key={sector} value={sector}>
+                        {sector}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage message={errors.businessSector} />
+              </div>
+
+              {/* Store Tagline - Full Width */}
+              <div className="space-y-2">
+                <Label htmlFor="tagline" className="font-semibold">
+                  Store Tagline
+                </Label>
+                <Input
+                  id="tagline"
+                  value={formData.tagline || ""}
+                  onChange={(e) => handleInputChange("tagline", e.target.value)}
+                  placeholder="Enter a catchy tagline for your store"
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {formData.tagline?.length || 0}/100 characters
+                </p>
+              </div>
+
+              {/* Store Description - Full Width */}
+              <div className="space-y-2">
+                <Label htmlFor="description" className="font-semibold">
+                  Store Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ""}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  placeholder="Describe your store and what makes it unique"
+                  rows={5}
+                  maxLength={500}
+                  className={errors.description ? "border-red-500" : ""}
+                />
+                <div className="flex justify-between items-center">
+                  <ErrorMessage message={errors.description} />
+                  <p className="text-xs text-muted-foreground">
+                    {formData.description?.length || 0}/500 characters
+                  </p>
+                </div>
+              </div>
+
+              {/* Store Currency - Full Width */}
+              <div className="space-y-2 w-full">
+                <Label htmlFor="currency" className="font-semibold">
+                  Store Currency <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.currency}
+                  onValueChange={(value) =>
+                    handleInputChange("currency", value)
+                  }
+                >
+                  <SelectTrigger
+                    className={
+                      errors.currency ? "border-red-500 w-full" : "w-full"
+                    }
+                  >
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency.code} value={currency.code}>
+                        {currency.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <ErrorMessage message={errors.currency} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contact & Address Section */}
+          <Card className="border border-gray-200 shadow-lg pt-5">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+              <CardTitle>Contact & Address Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Contact Phone and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="font-semibold">
+                    Contact Phone <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    placeholder="+1 (555) 123-4567"
+                    className={errors.phone ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.phone} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="font-semibold">
+                    Email Address
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    placeholder="store@example.com"
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.email} />
+                </div>
+              </div>
+
+              {/* Address - Full Width */}
+              <div className="space-y-2">
+                <Label htmlFor="address" className="font-semibold">
+                  Street Address <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  placeholder="123 Main Street, Suite 100"
+                  className={errors.address ? "border-red-500" : ""}
+                />
+                <ErrorMessage message={errors.address} />
+              </div>
+
+              {/* Location Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Country */}
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="font-semibold">
+                    Country <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) =>
+                      handleInputChange("country", e.target.value)
+                    }
+                    placeholder="Enter country"
+                    className={errors.country ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.country} />
+                </div>
+
+                {/* State */}
+                <div className="space-y-2">
+                  <Label htmlFor="state" className="font-semibold">
+                    State/Province <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => handleInputChange("state", e.target.value)}
+                    placeholder="Enter state/province"
+                    className={errors.state ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.state} />
+                </div>
+
+                {/* City */}
+                <div className="space-y-2">
+                  <Label htmlFor="city" className="font-semibold">
+                    City <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    placeholder="Enter city"
+                    className={errors.city ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.city} />
+                </div>
+
+                {/* Zip Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode" className="font-semibold">
+                    Zip/Postal Code
+                  </Label>
+                  <Input
+                    id="zipCode"
+                    value={formData.zipCode}
+                    onChange={(e) =>
+                      handleInputChange("zipCode", e.target.value)
+                    }
+                    placeholder="12345"
+                    className={errors.zipCode ? "border-red-500" : ""}
+                  />
+                  <ErrorMessage message={errors.zipCode} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end sticky bottom-6 bg-white p-4 rounded-lg border border-gray-200 shadow-lg">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="hover:bg-gray-50"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
         </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Store Profile Section */}
-        <Card className="p-4 border border-gray-200">
-          <CardHeader>
-            <CardTitle>Store Profile</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Store Logo */}
-            <div className="space-y-2">
-              <Label htmlFor="logo">Store Logo</Label>
-              <div className="flex items-center gap-4">
-                <div className="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-border">
-                  <Image
-                    src={formData.logo || "/placeholder.svg"}
-                    alt="Store Logo"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <Button type="button" variant="outline" size="sm">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload New Logo
-                </Button>
-              </div>
-            </div>
-
-            {/* Store Name and Business Name */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="storeName">Store Name</Label>
-                <Input
-                  id="storeName"
-                  value={formData.storeName}
-                  onChange={(e) =>
-                    handleInputChange("storeName", e.target.value)
-                  }
-                  placeholder="Enter store name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="businessName">Business Name</Label>
-                <Input
-                  id="businessName"
-                  value={formData.businessName}
-                  onChange={(e) =>
-                    handleInputChange("businessName", e.target.value)
-                  }
-                  placeholder="Enter business name"
-                />
-              </div>
-            </div>
-
-            {/* Business Sector */}
-            <div className="space-y-2">
-              <Label htmlFor="businessSector">Business Sector</Label>
-              <Select
-                value={formData.businessSector}
-                onValueChange={(value) =>
-                  handleInputChange("businessSector", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select business sector" />
-                </SelectTrigger>
-                <SelectContent>
-                  {businessSectors.map((sector) => (
-                    <SelectItem key={sector} value={sector}>
-                      {sector}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Store Tagline */}
-            <div className="space-y-2">
-              <Label htmlFor="tagline">Store Tagline</Label>
-              <Input
-                id="tagline"
-                value={formData.tagline}
-                onChange={(e) => handleInputChange("tagline", e.target.value)}
-                placeholder="Enter store tagline"
-              />
-            </div>
-
-            {/* Store Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Store Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange("description", e.target.value)
-                }
-                placeholder="Enter store description"
-                rows={4}
-              />
-            </div>
-
-            {/* Store Currency */}
-            <div className="space-y-2">
-              <Label htmlFor="currency">Store Currency</Label>
-              <Select
-                value={formData.currency}
-                onValueChange={(value) => handleInputChange("currency", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.code} value={currency.code}>
-                      {currency.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Address Section */}
-        <Card className="p-4 border border-gray-200">
-          <CardHeader>
-            <CardTitle>Address Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Contact Phone */}
-            <div className="space-y-2">
-              <Label htmlFor="phone">Contact Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                placeholder="Enter contact phone"
-              />
-            </div>
-
-            {/* Address */}
-            <div className="space-y-2">
-              <Label htmlFor="address">Street Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Enter street address"
-              />
-            </div>
-
-            {/* Location Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Country */}
-              <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Select
-                  value={formData.country}
-                  onValueChange={(value) => handleInputChange("country", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country.code} value={country.name}>
-                        {country.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* State */}
-              <div className="space-y-2">
-                <Label htmlFor="state">State/Province</Label>
-                <Select
-                  value={formData.state}
-                  onValueChange={(value) => handleInputChange("state", value)}
-                  disabled={availableStates.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableStates.map((state) => (
-                      <SelectItem key={state.code} value={state.name}>
-                        {state.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* City */}
-              <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
-                <Select
-                  value={formData.city}
-                  onValueChange={(value) => handleInputChange("city", value)}
-                  disabled={availableCities.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableCities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Zip Code */}
-              <div className="space-y-2">
-                <Label htmlFor="zipCode">Zip Code</Label>
-                <Input
-                  id="zipCode"
-                  value={formData.zipCode}
-                  onChange={(e) => handleInputChange("zipCode", e.target.value)}
-                  placeholder="Enter zip code"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            <X className="w-4 h-4 mr-2" />
-            Cancel
-          </Button>
-          <Button type="submit">
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </div>
-      </form>
     </div>
   );
 }
