@@ -191,7 +191,7 @@ export default function StoreInfo() {
                 <div className="space-y-6">
                   {/* Store URL Card */}
                   <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 pt-5">
                       <CardTitle className="flex items-center gap-2 text-green-900">
                         <Globe className="w-5 h-5" />
                         Store URL
