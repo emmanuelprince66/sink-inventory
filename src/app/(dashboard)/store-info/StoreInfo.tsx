@@ -5,42 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStoreHook } from "@/hooks/useStoreHook";
-import { Building2, DollarSign, Edit, MapPin, Phone } from "lucide-react";
+import {
+  Building2,
+  CheckCircle2,
+  Copy,
+  DollarSign,
+  Edit,
+  ExternalLink,
+  Globe,
+  Mail,
+  MapPin,
+  Phone,
+} from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import StoreEditForm from "./StoreEditForm";
-
-interface StoreData {
-  logo: string;
-  storeName: string;
-  businessName: string;
-  businessSector: string;
-  tagline: string | null;
-  description: string | null;
-  phone: string;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  zipCode: string;
-  currency: string;
-}
-
-const initialStoreData: StoreData = {
-  logo: "/placeholder.svg?height=120&width=120",
-  storeName: "",
-  businessName: "",
-  businessSector: "",
-  tagline: null,
-  description: null,
-  phone: "",
-  address: "",
-  city: "",
-  state: "",
-  country: "",
-  zipCode: "",
-  currency: "",
-};
 
 const SkeletonItem = ({
   lines = 1,
@@ -50,64 +29,53 @@ const SkeletonItem = ({
   className?: string;
 }) => (
   <div className={`flex items-start gap-3 ${className}`}>
-    <Skeleton className="h-5 w-5 mt-0.5 bg-[#eef4ef]" />
+    <Skeleton className="h-5 w-5 mt-0.5 bg-gray-100" />
     <div className="space-y-1 flex-1">
-      <Skeleton className="h-4 w-24 bg-[#eef4ef]" />
+      <Skeleton className="h-4 w-24 bg-gray-100" />
       {Array.from({ length: lines }).map((_, index) => (
-        <Skeleton key={index} className="h-4 w-full bg-[#eef4ef]" />
+        <Skeleton key={index} className="h-4 w-full bg-gray-100" />
       ))}
     </div>
   </div>
 );
 
 const SkeletonProfileCard = () => (
-  <Card className="h-fit p-4 border border-gray-200">
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Skeleton className="h-5 w-5 bg-[#eef4ef]" />
-        <Skeleton className="h-6 w-32 bg-[#eef4ef]" />
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-6">
-      <div className="flex justify-center">
-        <Skeleton className="w-32 h-32 rounded-lg bg-[#eef4ef]" />
+  <Card className="overflow-hidden border border-gray-200 shadow-sm">
+    <Skeleton className="h-48 w-full bg-gray-100" />
+    <CardContent className="space-y-6 p-6">
+      <div className="flex justify-center -mt-16">
+        <Skeleton className="w-32 h-32 rounded-xl bg-gray-100 border-4 border-white" />
       </div>
       <div className="text-center space-y-2">
-        <Skeleton className="h-8 w-64 mx-auto bg-[#eef4ef]" />
-        <Skeleton className="h-6 w-32 mx-auto bg-[#eef4ef]" />
+        <Skeleton className="h-8 w-64 mx-auto bg-gray-100" />
+        <Skeleton className="h-6 w-32 mx-auto bg-gray-100" />
       </div>
       <div className="text-center">
-        <Skeleton className="h-6 w-80 mx-auto bg-[#eef4ef]" />
+        <Skeleton className="h-6 w-80 mx-auto bg-gray-100" />
       </div>
       <div className="space-y-2">
-        <Skeleton className="h-4 w-16 bg-[#eef4ef]" />
-        <Skeleton className="h-20 w-full bg-[#eef4ef]" />
+        <Skeleton className="h-4 w-16 bg-gray-100" />
+        <Skeleton className="h-20 w-full bg-gray-100" />
       </div>
     </CardContent>
   </Card>
 );
 
 const SkeletonInfoCard = () => (
-  <Card className="h-fit p-4 border-gray-200">
-    <CardHeader>
+  <Card className="border-gray-200 shadow-sm">
+    <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
       <CardTitle>
-        <Skeleton className="h-6 w-32 bg-[#eef4ef]" />
+        <Skeleton className="h-6 w-32 bg-gray-100" />
       </CardTitle>
     </CardHeader>
-    <CardContent className="space-y-6">
+    <CardContent className="space-y-6 p-6">
       <SkeletonItem lines={1} />
       <SkeletonItem lines={3} className="space-y-0.5" />
       <div className="flex items-start gap-3">
-        <Skeleton className="h-5 w-5 mt-0.5 bg-[#eef4ef]" />
+        <Skeleton className="h-5 w-5 mt-0.5 bg-gray-100" />
         <div className="space-y-1 flex-1">
-          <Skeleton className="h-4 w-20 bg-[#eef4ef]" />
-          <Skeleton className="h-6 w-12 bg-[#eef4ef]" />
-        </div>
-      </div>
-      <div className="pt-4 border-t border-gray-200">
-        <div className="space-y-1">
-          <Skeleton className="h-4 w-32 bg-[#eef4ef]" />
-          <Skeleton className="h-6 w-48 bg-[#eef4ef]" />
+          <Skeleton className="h-4 w-20 bg-gray-100" />
+          <Skeleton className="h-6 w-12 bg-gray-100" />
         </div>
       </div>
     </CardContent>
@@ -115,207 +83,259 @@ const SkeletonInfoCard = () => (
 );
 
 export default function StoreInfo() {
-  const { BusinessData, BusinessDataLoading, business_id } = useStoreHook();
-  console.log("BusinessData", BusinessData);
-
-  const findBusiness = BusinessData?.data;
-
-  console.log("findBusiness", findBusiness);
-
-  const [storeData, setStoreData] = useState<StoreData>(initialStoreData);
   const [isEditing, setIsEditing] = useState(false);
 
-  useEffect(() => {
-    if (findBusiness) {
-      setStoreData({
-        logo: findBusiness.logo || "/placeholder.svg?height=120&width=120",
-        storeName: findBusiness.name || "",
-        businessName: findBusiness.name || "",
-        businessSector: findBusiness.type || "",
-        tagline: findBusiness.tag_line || null,
-        description: findBusiness.description || null,
-        phone: findBusiness.owner?.phone || "",
-        address: findBusiness.street || "",
-        city: findBusiness.city || "",
-        state: findBusiness.state || "",
-        country: findBusiness.country || "",
-        zipCode: "",
-        currency: findBusiness.currency || "",
-      });
-    }
-  }, [findBusiness]);
+  const { BusinessDataLoading, storeData, copySuccess, copyStoreUrl } =
+    useStoreHook();
 
-  const handleSave = (updatedData: StoreData) => {
-    setStoreData(updatedData);
-    setIsEditing(false);
-  };
-
-  // if (!BusinessDataLoading) {
-  //   return (
-  //     <div className="container mx-auto p-6">
-  //       {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-  //         <div className="space-y-2">
-  //           <Skeleton className="h-8 w-48 bg-[#eef4ef]" />
-  //           <Skeleton className="h-4 w-72 bg-[#eef4ef]" />
-  //         </div>
-  //         <Skeleton className="h-10 w-40 bg-[#eef4ef]" />
-  //       </div> */}
-  //       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-  //         <SkeletonProfileCard />
-  //         <SkeletonInfoCard />
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  if (isEditing) {
-    return (
-      <StoreEditForm
-        storeData={storeData}
-        onSave={handleSave}
-        onCancel={() => setIsEditing(false)}
-      />
-    );
-  }
+  console.log("isEditing", isEditing);
 
   return (
-    <div className="container mx-auto p-6 ">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Store Information
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your store details and business information
-          </p>
-        </div>
-        <Button onClick={() => setIsEditing(true)} className="w-fit">
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Store Information
-        </Button>
-      </div>
-
-      {/* Cards Container */}
-
-      {BusinessDataLoading ? (
-        <div className="container mx-auto p-6">
-          {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48 bg-[#eef4ef]" />
-            <Skeleton className="h-4 w-72 bg-[#eef4ef]" />
-          </div>
-          <Skeleton className="h-10 w-40 bg-[#eef4ef]" />
-        </div> */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SkeletonProfileCard />
-            <SkeletonInfoCard />
-          </div>
-        </div>
+    <>
+      {isEditing ? (
+        <StoreEditForm setIsEditing={setIsEditing} />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Store Profile Card */}
-          <Card className="h-fit p-4 border border-gray-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
-                Store Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Store Image */}
-              <div className="flex justify-center">
-                <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-gray-200">
-                  <Image
-                    src={storeData.logo}
-                    alt="Store Logo"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* Business Name */}
-              <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">{storeData.businessName}</h2>
-                <Badge variant="secondary" className="text-sm">
-                  {storeData.businessSector}
-                </Badge>
-              </div>
-
-              {/* Store Tagline */}
-              <div className="text-center">
-                <p className="text-lg font-medium text-primary italic">
-                  "{storeData.tagline || ""}"
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
+          <div className="container mx-auto p-1 md:p-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <div>
+                <h1 className="text-md md:text-3xl  font-bold tracking-tight bg-gradient-to-r from-green-900 to-green-600 bg-clip-text text-transparent">
+                  Store Information
+                </h1>
+                <p className="text-muted-foreground mt-2 text-sm md:text-base">
+                  Manage your store details and business information
                 </p>
               </div>
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="w-fit bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200"
+                size="lg"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Store Information
+              </Button>
+            </div>
 
-              {/* Store Description */}
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
-                  About Us
-                </h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">
-                  {storeData.description || "No description available."}
-                </p>
+            {/* Cards Container */}
+            {BusinessDataLoading ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <SkeletonProfileCard />
+                <SkeletonInfoCard />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Store Information Card */}
-          <Card className="h-fit p-4 border-gray-200">
-            <CardHeader>
-              <CardTitle>Store Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Contact Phone */}
-              <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">Contact Phone</p>
-                  <p className="text-sm text-muted-foreground">
-                    {storeData.phone || "No phone number available."}
-                  </p>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">Address</p>
-                  <div className="text-sm text-muted-foreground space-y-0.5">
-                    <p>{storeData.address || "No address available."}</p>
-                    <p>
-                      {storeData.city}, {storeData.state} {storeData.zipCode}
-                    </p>
-                    <p>{storeData.country}</p>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Store Profile Card */}
+                <Card className="overflow-hidden border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  {/* Header Image */}
+                  <div className="relative h-48 w-full bg-gradient-to-r from-green-500 to-emerald-600">
+                    <Image
+                      src={storeData.headerImage}
+                      alt="Store Header"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                </div>
-              </div>
 
-              {/* Store Currency */}
-              <div className="flex items-start gap-3">
-                <DollarSign className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">Store Currency</p>
-                  <Badge variant="outline" className="text-sm">
-                    {storeData.currency}
-                  </Badge>
-                </div>
-              </div>
+                  <CardContent className="space-y-6 p-6">
+                    {/* Store Logo - Overlapping header */}
+                    <div className="flex justify-center -mt-16">
+                      <div className="relative w-32 h-32 rounded-xl overflow-hidden border-4 border-white shadow-xl bg-white">
+                        <Image
+                          src={storeData.logo}
+                          alt="Store Logo"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
 
-              {/* Store Name */}
-              <div className="pt-4 border-t border-gray-200">
-                <div className="space-y-1">
-                  <p className="font-medium text-sm">Store Display Name</p>
-                  <p className="text-lg font-semibold">{storeData.storeName}</p>
+                    {/* Business Name */}
+                    <div className="text-center space-y-3">
+                      <h2 className="text-3xl font-bold text-gray-900">
+                        {storeData.businessName}
+                      </h2>
+                      <Badge
+                        variant="secondary"
+                        className="text-sm px-4 py-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-200"
+                      >
+                        {storeData.businessSector}
+                      </Badge>
+                    </div>
+
+                    {/* Store Tagline */}
+                    {storeData.tagline && (
+                      <div className="text-center bg-gradient-to-r from-gray-50 to-green-50 p-4 rounded-lg border border-gray-100">
+                        <p className="text-lg font-medium text-gray-700 italic">
+                          "{storeData.tagline}"
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Store Description */}
+                    <div className="space-y-3 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-green-600" />
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-gray-700">
+                          About Us
+                        </h3>
+                      </div>
+                      <p className="text-sm leading-relaxed text-gray-600">
+                        {storeData.description || "No description available."}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Store Information Card */}
+                <div className="space-y-6">
+                  {/* Store URL Card */}
+                  <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100">
+                      <CardTitle className="flex items-center gap-2 text-green-900">
+                        <Globe className="w-5 h-5" />
+                        Store URL
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600">
+                          Share this link with your customers to visit your
+                          store
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
+                            {storeData.storeUrl}
+                          </div>
+                          <Button
+                            onClick={copyStoreUrl}
+                            variant="outline"
+                            size="sm"
+                            className={`shrink-0 ${
+                              copySuccess
+                                ? "bg-green-50 border-green-300 text-green-700"
+                                : "hover:bg-gray-50"
+                            } transition-all duration-200`}
+                          >
+                            {copySuccess ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={() =>
+                            window.open(storeData.storeUrl, "_blank")
+                          }
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Visit Store
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Contact & Details Card */}
+                  <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 pt-5">
+                    <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                      <CardTitle className="text-gray-900">
+                        Contact & Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6 p-6">
+                      {/* Contact Phone */}
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <Phone className="w-5 h-5 text-green-600 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-medium text-sm text-gray-700">
+                            Contact Phone
+                          </p>
+                          <p className="text-sm text-gray-900 font-medium">
+                            {storeData.phone || "No phone number available."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Email */}
+                      {storeData.email && (
+                        <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <Mail className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div className="space-y-1">
+                            <p className="font-medium text-sm text-gray-700">
+                              Email Address
+                            </p>
+                            <p className="text-sm text-gray-900 font-medium">
+                              {storeData.email}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Address */}
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <MapPin className="w-5 h-5 text-green-600 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-medium text-sm text-gray-700">
+                            Address
+                          </p>
+                          <div className="text-sm text-gray-900 space-y-0.5">
+                            <p className="font-medium">
+                              {storeData.address || "No address available."}
+                            </p>
+                            <p>
+                              {storeData.city}, {storeData.state}{" "}
+                              {storeData.zipCode}
+                            </p>
+                            <p>{storeData.country}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Store Currency */}
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <DollarSign className="w-5 h-5 text-green-600 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="font-medium text-sm text-gray-700">
+                            Store Currency
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="text-sm border-green-200 bg-green-50 text-green-700"
+                          >
+                            {storeData.currency}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Store Name */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <div className="space-y-2 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                          <p className="font-medium text-sm text-gray-700">
+                            Store Display Name
+                          </p>
+                          <p className="text-xl font-bold text-gray-900">
+                            {storeData.storeName}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
