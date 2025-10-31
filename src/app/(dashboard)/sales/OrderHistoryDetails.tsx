@@ -425,6 +425,7 @@ const OrderHistoryDetails = ({
         .text-green-600 { color: #16a34a !important; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
         .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
         .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
@@ -549,7 +550,7 @@ const OrderHistoryDetails = ({
               {/* Payment summary */}
               <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
                 <span>TOTAL:</span>
-                <span className="text-green-600">
+                <span className="text-green-600 detail-value">
                   {orderDetails?.total_price}
                 </span>
               </div>

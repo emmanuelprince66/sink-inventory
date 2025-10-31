@@ -30,11 +30,16 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import AddCategory from "../../categories/AddCategory";
 
 const AddProduct = () => {
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
   const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
+  const handleCloseCategoryModal = () => setShowAddCategoryModal(false);
+
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+
   const {
     ProductData,
     onSubmit,
@@ -245,7 +250,17 @@ const AddProduct = () => {
             name="category"
             render={({ field }) => (
               <FormItem className="flex-1 w-full bg-white">
-                <FormLabel>Category</FormLabel>
+                <div className="flex w-full justify-between items-center ">
+                  <div>
+                    <p className="text-sm">Category</p>
+                  </div>
+
+                  <div onClick={() => setShowAddCategoryModal(true)}>
+                    <p className="text-sm text-primary-green-300 cursor-pointer hover:underline">
+                      Add Category
+                    </p>
+                  </div>
+                </div>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -682,6 +697,16 @@ const AddProduct = () => {
       >
         <div className="w-full ">
           <UserNotSubscribe />
+        </div>
+      </CustomModal>
+      <CustomModal
+        isOpen={showAddCategoryModal}
+        onClose={handleCloseCategoryModal}
+        trigger={false}
+        title="Add Category"
+      >
+        <div className="w-full ">
+          <AddCategory type="PRODUCT" closeModal={handleCloseCategoryModal} />
         </div>
       </CustomModal>
     </div>
