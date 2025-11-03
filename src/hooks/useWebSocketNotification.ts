@@ -1,6 +1,6 @@
 // hooks/useSSENotificationsAlt.ts
 // This version passes the token as a URL parameter since EventSource has limited header support
-import { useRef, useState } from "react";
+import { useRef, useState , useEffect } from "react";
 
 interface Notification {
   id?: string;
