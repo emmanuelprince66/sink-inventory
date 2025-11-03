@@ -85,7 +85,6 @@ export const useGetRestockHistory = ({
   });
 
 
-  console.log("hello")
 
   const { mutate: restockProduct, isPending: restockProductPending } =
     useRestockProductMutation({
