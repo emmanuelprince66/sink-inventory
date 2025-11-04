@@ -2,131 +2,194 @@
 import { NextRequest } from "next/server";
 import WebSocket from "ws";
 
+export const config = {
+  runtime: "nodejs",
+  maxDuration: process.env.AWS_LAMBDA_FUNCTION_NAME ? 900 : 0, // 15min for Lambda; indefinite otherwise
+};
+
 export async function GET(request: NextRequest) {
-  // Get token from URL parameters (since EventSource has limited header support)
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
   console.log(
     "Server received token:",
     token ? `${token.substring(0, 20)}...` : "none"
-  ); // Partial log for security
+  ); // CloudWatch-safe
 
   if (!token) {
     return new Response("Unauthorized: Token required", { status: 401 });
   }
 
-  // Create SSE stream
-  const stream = new ReadableStream({
-    start(controller) {
-      let ws: WebSocket | null = null;
-      let isWsConnected = false;
-
-      const connectWs = () => {
-        try {
-          console.log("Attempting WebSocket connection with token...");
-          // Browser-mimicking headers to bypass potential server blocks
-          const wsHeaders = {
-            Authorization: `Bearer ${token}`,
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", // Mimic Chrome
-            // Origin: "https://your-frontend-domain.com", // Uncomment if needed; test without first
-          };
-
-          ws = new WebSocket("wss://www.api.sync360.africa/ws/user/", {
-            headers: wsHeaders,
-            perMessageDeflate: false, // Disable compression to simplify handshake
-          });
-
-          ws.on("open", () => {
-            console.log("WebSocket connected to backend");
-            isWsConnected = true;
-            // Send initial SSE message to confirm connection
-            const data = `data: ${JSON.stringify({
-              type: "connection",
-              status: "connected",
-              timestamp: new Date().toISOString(),
-            })}\n\n`;
-            controller.enqueue(new TextEncoder().encode(data));
-          });
-
-          ws.on("message", (rawData) => {
-            try {
-              // Convert buffer to string if needed
-              const messageData = rawData.toString();
-              console.log("Received WebSocket message:", messageData);
-              // Format as SSE and send to client
-              const data = `data: ${messageData}\n\n`;
-              controller.enqueue(new TextEncoder().encode(data));
-            } catch (error) {
-              console.error("Error processing WebSocket message:", error);
-            }
-          });
-
-          ws.on("close", (code, reason) => {
-            console.log("WebSocket closed:", code, reason?.toString());
-            isWsConnected = false;
-            const data = `data: ${JSON.stringify({
-              type: "connection",
-              status: "disconnected",
-              code,
-              reason: reason?.toString(),
-              timestamp: new Date().toISOString(),
-            })}\n\n`;
-            controller.enqueue(new TextEncoder().encode(data));
-            // Don't close stream here; let it hang for potential reconnect if needed
-          });
-
-          ws.on("error", (error) => {
-            console.error("WebSocket error:", error.message);
-            isWsConnected = false;
-            const errorData = {
-              type: "error",
-              message: error.message,
-              timestamp: new Date().toISOString(),
-            };
-            // Specific handling for 403
-            if (error.message.includes("403")) {
-              errorData.message +=
-                " (Check token validity or server restrictions)";
-            }
-            const data = `data: ${JSON.stringify(errorData)}\n\n`;
-            controller.enqueue(new TextEncoder().encode(data));
-            // Don't call controller.error() here to avoid crashing the stream; instead, close gracefully
-            // controller.error(new Error("WebSocket error: " + error.message)); // Commented out to prevent pipe failure
-          });
-        } catch (error) {
-          console.error("Failed to create WebSocket:", error);
-          const data = `data: ${JSON.stringify({
-            type: "error",
-            message:
-              "Failed to create WebSocket connection: " +
-              (error as Error).message,
-            timestamp: new Date().toISOString(),
-          })}\n\n`;
-          controller.enqueue(new TextEncoder().encode(data));
-          controller.close(); // Close stream on init failure
-        }
-      };
-
-      connectWs(); // Initial connection
-
-      // Handle client disconnect
-      return () => {
-        console.log("SSE client disconnected, closing WebSocket");
-        if (ws && isWsConnected) {
-          ws.close(1000, "Client disconnected");
-        }
-      };
+  // TransformStream for Lambda streaming compat
+  const stream = new TransformStream({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
     },
   });
+  const writer = stream.writable.getWriter();
+  const encoder = new TextEncoder();
+  let closed = false;
 
-  return new Response(stream, {
+  const enqueue = (data: string) => {
+    if (!closed) writer.write(encoder.encode(data));
+  };
+
+  const closeStream = () => {
+    if (!closed) {
+      writer.close();
+      closed = true;
+    }
+  };
+
+  // IMMEDIATE enqueue - kills "pending" (esp. Lambda cold starts)
+  enqueue(
+    `data: ${JSON.stringify({
+      type: "connection",
+      status: "connecting",
+      timestamp: new Date().toISOString(),
+    })}\n\n`
+  );
+  console.log("SSE: Immediate connecting event sent");
+
+  let ws: WebSocket | null = null;
+  let reconnectAttempts = 0;
+  const maxReconnects = 3;
+
+  // Heartbeat every 30s (prevents idle timeouts on Gateway/ALB)
+  const heartbeatInterval = setInterval(() => {
+    if (!closed) {
+      enqueue(
+        `data: ${JSON.stringify({
+          type: "heartbeat",
+          timestamp: new Date().toISOString(),
+        })}\n\n`
+      );
+    }
+  }, 30000);
+
+  const connectWs = async () => {
+    if (reconnectAttempts >= maxReconnects) {
+      enqueue(
+        `data: ${JSON.stringify({
+          type: "error",
+          message: "Max reconnection attempts reached",
+          timestamp: new Date().toISOString(),
+        })}\n\n`
+      );
+      closeStream();
+      return;
+    }
+
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortController.abort();
+      console.log(`WS timeout after 10s (attempt ${reconnectAttempts + 1})`);
+      enqueue(
+        `data: ${JSON.stringify({
+          type: "error",
+          message: "WS connect timeout - check network/latency",
+          timestamp: new Date().toISOString(),
+        })}\n\n`
+      );
+      if (ws) ws.close();
+      setTimeout(() => {
+        reconnectAttempts++;
+        connectWs();
+      }, 2000 * reconnectAttempts);
+    }, 10000); // Tighter for Lambda
+
+    try {
+      console.log(`WS connect attempt ${reconnectAttempts + 1}...`);
+      const wsHeaders = {
+        Authorization: `Bearer ${token}`,
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      };
+
+      ws = new WebSocket("wss://www.api.sync360.africa/ws/user/", {
+        headers: wsHeaders,
+        perMessageDeflate: false,
+        timeout: 10000, // ws lib timeout
+      });
+
+      clearTimeout(timeoutId);
+
+      ws.on("open", () => {
+        console.log("WS connected");
+        reconnectAttempts = 0;
+        enqueue(
+          `data: ${JSON.stringify({
+            type: "connection",
+            status: "connected",
+            timestamp: new Date().toISOString(),
+          })}\n\n`
+        );
+      });
+
+      ws.on("message", (rawData) => {
+        const messageData = rawData.toString();
+        console.log("WS msg:", messageData);
+        enqueue(`data: ${messageData}\n\n`);
+      });
+
+      ws.on("close", (code, reason) => {
+        console.log("WS closed:", code, reason?.toString());
+        enqueue(
+          `data: ${JSON.stringify({
+            type: "connection",
+            status: "disconnected",
+            code,
+            reason: reason?.toString(),
+            timestamp: new Date().toISOString(),
+          })}\n\n`
+        );
+        if (!closed) setTimeout(() => connectWs(), 2000);
+      });
+
+      ws.on("error", (error) => {
+        console.error("WS error:", error.message);
+        const errorMsg = error.message.includes("403")
+          ? `${error.message} (token/server issue)`
+          : error.message;
+        enqueue(
+          `data: ${JSON.stringify({
+            type: "error",
+            message: errorMsg,
+            timestamp: new Date().toISOString(),
+          })}\n\n`
+        );
+      });
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("WS creation failed:", error);
+      enqueue(
+        `data: ${JSON.stringify({
+          type: "error",
+          message: `WS init fail: ${(error as Error).message}`,
+          timestamp: new Date().toISOString(),
+        })}\n\n`
+      );
+      closeStream();
+    }
+  };
+
+  connectWs();
+
+  // Cleanup
+  request.signal.addEventListener("abort", () => {
+    console.log("Client disconnect");
+    clearInterval(heartbeatInterval);
+    if (ws) ws.close(1000, "Client gone");
+    closeStream();
+  });
+
+  return new Response(stream.readable, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+      "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Cache-Control",
+      ...(process.env.AWS_REGION && { "X-Accel-Buffering": "no" }), // AWS-specific anti-buffer
     },
   });
 }
