@@ -70,6 +70,12 @@ export const useSSENotifications = (token: string): SSEHookReturn => {
             return;
           }
 
+          // NEW: Ignore heartbeats - they don't belong in notifications
+          if (data.type === "heartbeat") {
+            console.log("Heartbeat received - ignoring"); // Optional log for debugging
+            return;
+          }
+
           // Handle error messages
           if (data.type === "error") {
             setError(data.message || "Unknown error occurred");
