@@ -49,6 +49,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     connectionAttempts,
   } = useSSENotifications(currentToken);
 
+  console.log("notifications", notifications);
+  console.log("isConnected", isConnected);
+
   // Function to programmatically connect with a new token
   const connectWithToken = useCallback((token: string) => {
     // This will be handled by the useSSENotifications hook when the token changes
