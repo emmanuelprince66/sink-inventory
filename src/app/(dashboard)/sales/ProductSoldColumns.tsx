@@ -82,18 +82,24 @@ export const useSalesColumns = () => {
         );
       },
     },
-    {
-      accessorKey: "discount",
-      header: "Discount",
-      cell: ({ row }) => {
-        const product = row.original;
-        return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product.discount}</p>
-          </div>
-        );
-      },
-    },
+
+    ...(user?.role === "OWNER"
+      ? [
+          {
+            accessorKey: "Discount",
+            header: "Discount",
+            cell: ({ row }: { row: { original: SalesDataItem } }) => {
+              const product = row.original;
+
+              return (
+                <div className="font-medium">
+                  <p className="text-sm text-gray-500">{product.discount}</p>
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 
   return columns;
