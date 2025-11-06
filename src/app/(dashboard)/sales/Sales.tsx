@@ -173,6 +173,7 @@ const Sales = () => {
   const [ShowAttendants, setShowAttendants] = useState(false);
   const [attendantId, setAttendantId] = useState("");
   const [page, setPage] = useState(1);
+
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [activeProductFilter, setActiveProductFilter] = useState<
@@ -352,30 +353,33 @@ const Sales = () => {
             </div>
           ) : (
             <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-              <CustomSalesCard
-                title={"Revenue"}
-                amount={formatToNaira(SalesData?.data?.results?.revenue)}
-              />
-              <CustomSalesCard
-                title={"Product Cost"}
-                amount={formatToNaira(SalesData?.data?.results?.cost)}
-              />
-              <CustomSalesCard
-                title={"Items Sold"}
-                amount={SalesData?.data?.results?.orders}
-              />
-              <CustomSalesCard
-                title={"Total Discount"}
-                amount={formatToNaira(SalesData?.data?.results?.discount || 0)}
-                type="discount"
-                func={handleOpenDiscountSalesModal}
-              />
-
               {user && user?.role === "OWNER" && (
-                <CustomSalesCard
-                  title={"Profit"}
-                  amount={formatToNaira(totalProfit)}
-                />
+                <>
+                  <CustomSalesCard
+                    title={"Revenue"}
+                    amount={formatToNaira(SalesData?.data?.results?.revenue)}
+                  />
+                  <CustomSalesCard
+                    title={"Product Cost"}
+                    amount={formatToNaira(SalesData?.data?.results?.cost)}
+                  />
+                  <CustomSalesCard
+                    title={"Items Sold"}
+                    amount={SalesData?.data?.results?.orders}
+                  />
+                  <CustomSalesCard
+                    title={"Total Discount"}
+                    amount={formatToNaira(
+                      SalesData?.data?.results?.discount || 0
+                    )}
+                    type="discount"
+                    func={handleOpenDiscountSalesModal}
+                  />
+                  <CustomSalesCard
+                    title={"Profit"}
+                    amount={formatToNaira(totalProfit)}
+                  />
+                </>
               )}
             </div>
           )}
