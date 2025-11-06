@@ -3,7 +3,7 @@ import { CustomTable } from "@/components/app/CutomTable";
 import { useSalesHook } from "@/hooks/useSalesHook";
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useEffect, useState } from "react"; // Added useEffect
-import { columns } from "./OrderHistoryColumn";
+import { useOrderHistoryColumn } from "./OrderHistoryColumn";
 import OrderHistoryDetails from "./OrderHistoryDetails";
 import { SalesOrderData } from "./types";
 
@@ -24,6 +24,8 @@ const OrderHistoryTable = ({
     closeOpenOrderHistoryModal,
     orderDetails,
   } = useSalesHook();
+
+  const columns = useOrderHistoryColumn(); // Use the hook here
 
   const businessData = useBusinessDataStore((state) => state.businessData);
 
