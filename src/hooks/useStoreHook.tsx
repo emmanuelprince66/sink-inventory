@@ -57,10 +57,16 @@ export const useStoreHook = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [copySuccess, setCopySuccess] = useState(false);
 
+  console.log("findBusiness", findBusiness);
+
   // Initialize store data from API
   useEffect(() => {
     if (findBusiness) {
-      const storeUrl = `${window.location.origin}/store/${business_id}`;
+      const baseUrl = "https://lucent-genie-21bd93.netlify.app";
+      const slugUrl = findBusiness.store_url || "";
+      const outStoreUrl = `${baseUrl}/out-store/?slug=${slugUrl}`;
+      const inStoreUrl = `${baseUrl}/in-store/?slug=${slugUrl}`;
+
       const data = {
         logo: findBusiness.logo || "/placeholder.svg?height=120&width=120",
         headerImage:
@@ -78,7 +84,9 @@ export const useStoreHook = () => {
         country: findBusiness.country || "",
         zipCode: findBusiness.zip_code || "",
         currency: findBusiness.currency || "",
-        storeUrl: storeUrl,
+        storeUrl: outStoreUrl,
+        inStoreUrl: inStoreUrl, // Add this
+        slugUrl: slugUrl, // Add this
       };
       setStoreData(data);
       setFormData(data);

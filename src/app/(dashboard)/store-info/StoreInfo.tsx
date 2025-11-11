@@ -5,21 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStoreHook } from "@/hooks/useStoreHook";
-import {
-  Building2,
-  CheckCircle2,
-  Copy,
-  DollarSign,
-  Edit,
-  ExternalLink,
-  Globe,
-  Mail,
-  MapPin,
-  Phone,
-} from "lucide-react";
+import { Building2, DollarSign, Edit, Mail, MapPin, Phone } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import StoreEditForm from "./StoreEditForm";
+import StoreUrlCard from "./StoreUrlCard";
 
 const SkeletonItem = ({
   lines = 1,
@@ -87,6 +77,8 @@ export default function StoreInfo() {
 
   const { BusinessDataLoading, storeData, copySuccess, copyStoreUrl } =
     useStoreHook();
+
+  console.log("storeData", storeData);
 
   console.log("isEditing", isEditing);
 
@@ -190,60 +182,8 @@ export default function StoreInfo() {
                 {/* Store Information Card */}
                 <div className="space-y-6">
                   {/* Store URL Card */}
-                  <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 pt-5">
-                      <CardTitle className="flex items-center gap-2 text-green-900">
-                        <Globe className="w-5 h-5" />
-                        Store URL
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-3">
-                        <p className="text-sm text-gray-600">
-                          Share this link with your customers to visit your
-                          store
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
-                            {storeData.storeUrl}
-                          </div>
-                          <Button
-                            onClick={copyStoreUrl}
-                            variant="outline"
-                            size="sm"
-                            className={`shrink-0 ${
-                              copySuccess
-                                ? "bg-green-50 border-green-300 text-green-700"
-                                : "hover:bg-gray-50"
-                            } transition-all duration-200`}
-                          >
-                            {copySuccess ? (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Copied!
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-4 h-4 mr-2" />
-                                Copy
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() =>
-                            window.open(storeData.storeUrl, "_blank")
-                          }
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Visit Store
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+
+                  <StoreUrlCard storeData={storeData} />
 
                   {/* Contact & Details Card */}
                   <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 pt-5">

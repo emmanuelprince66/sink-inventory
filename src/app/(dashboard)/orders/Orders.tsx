@@ -10,6 +10,8 @@ import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowDownLeft,
   CheckCircle,
+  Copy,
+  ExternalLink,
   Filter as FilterIcon,
   ShoppingCart,
   TrendingUp,
@@ -134,6 +136,7 @@ const Orders = () => {
     "OUTSTORE"
   );
   const [page, setPage] = useState(1);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -185,14 +188,40 @@ const Orders = () => {
     return count;
   };
 
+  // Get store URL based on active tab
+  const getStoreUrl = () => {
+    const slug = findBusiness?.store_url || "";
+    const baseUrl = "https://lucent-genie-21bd93.netlify.app";
+
+    if (activeTab === "INSTORE") {
+      return `${baseUrl}/in-store/?slug=${slug}`;
+    } else {
+      return `${baseUrl}/out-store/?slug=${slug}`;
+    }
+  };
+
+  // Copy store URL to clipboard
+  const handleCopyUrl = async () => {
+    const url = getStoreUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
   // Fetch orders data with filters
-  const { OrderData, OrderDataLoading } = useOrdersHook({
+  const { OrderData, OrderDataLoading, findBusiness } = useOrdersHook({
     page,
     searchInput: searchInput.length >= 3 ? searchInput : "",
     order_type: activeTab, // Use active tab for order_type
     shipping_status: filters.shipping_status,
     payment_status: filters.payment_status,
   });
+
+  console.log("findBusiness", findBusiness);
 
   // Extract data safely from API response
   const ordersResults = OrderData?.data?.results || {};
@@ -279,49 +308,86 @@ const Orders = () => {
       <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
         {/* Tabs Header */}
         <div className="border-b border-gray-200">
-          <div className="flex">
-            <button
-              onClick={() => handleTabChange("INSTORE")}
-              className={cn(
-                "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm cursor-pointer font-medium border-b-2 transition-all",
-                activeTab === "INSTORE"
-                  ? "border-blue-500 text-blue-600 bg-blue-50"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              )}
-            >
-              In-store Orders
-              <span
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+            <div className="flex">
+              <button
+                onClick={() => handleTabChange("INSTORE")}
                 className={cn(
-                  "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                  "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm cursor-pointer font-medium border-b-2 transition-all",
                   activeTab === "INSTORE"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-gray-100 text-gray-600"
+                    ? "border-blue-500 text-blue-600 bg-blue-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 )}
               >
-                {instoreCount}
-              </span>
-            </button>
-            <button
-              onClick={() => handleTabChange("OUTSTORE")}
-              className={cn(
-                "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all",
-                activeTab === "OUTSTORE"
-                  ? "border-blue-500 text-blue-600 bg-blue-50"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              )}
-            >
-              Out-store Orders
-              <span
+                In-store Orders
+                <span
+                  className={cn(
+                    "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                    activeTab === "INSTORE"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-gray-100 text-gray-600"
+                  )}
+                >
+                  {instoreCount}
+                </span>
+              </button>
+              <button
+                onClick={() => handleTabChange("OUTSTORE")}
                 className={cn(
-                  "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                  "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all",
                   activeTab === "OUTSTORE"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-gray-100 text-gray-600"
+                    ? "border-blue-500 text-blue-600 bg-blue-50"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 )}
               >
-                {outstoreCount}
-              </span>
-            </button>
+                Out-store Orders
+                <span
+                  className={cn(
+                    "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
+                    activeTab === "OUTSTORE"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-gray-100 text-gray-600"
+                  )}
+                >
+                  {outstoreCount}
+                </span>
+              </button>
+            </div>
+
+            {/* Store URL Copy Section */}
+            {findBusiness?.store_url && (
+              <div className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-gray-200">
+                <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 flex-1 sm:flex-none">
+                  <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <span className="text-xs text-gray-600 truncate max-w-[200px] sm:max-w-[250px]">
+                    {activeTab === "INSTORE" ? "In-store" : "Out-store"} Link
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyUrl}
+                  className={cn(
+                    "text-xs transition-all flex-shrink-0",
+                    copiedUrl
+                      ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                      : "hover:bg-blue-50 hover:border-blue-200"
+                  )}
+                >
+                  {copiedUrl ? (
+                    <>
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3 mr-1" />
+                      Copy URL
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
