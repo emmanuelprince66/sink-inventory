@@ -191,7 +191,7 @@ const Orders = () => {
   // Get store URL based on active tab
   const getStoreUrl = () => {
     const slug = findBusiness?.store_url || "";
-    const baseUrl = "https://store.sync360.africa/in-store";
+    const baseUrl = "https://store.sync360.africa";
 
     if (activeTab === "INSTORE") {
       return `${baseUrl}/in-store/?slug=${slug}`;
