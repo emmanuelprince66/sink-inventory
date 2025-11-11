@@ -1,5 +1,4 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,28 +22,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
-const businessSectors = [
-  "Electronics & Technology",
-  "Fashion & Apparel",
-  "Food & Beverage",
-  "Health & Beauty",
-  "Home & Garden",
-  "Sports & Recreation",
-  "Books & Media",
-  "Automotive",
-  "Arts & Crafts",
-  "Other",
-];
-
-const currencies = [
-  { code: "USD", name: "US Dollar (USD)" },
-  { code: "EUR", name: "Euro (EUR)" },
-  { code: "GBP", name: "British Pound (GBP)" },
-  { code: "CAD", name: "Canadian Dollar (CAD)" },
-  { code: "AUD", name: "Australian Dollar (AUD)" },
-  { code: "JPY", name: "Japanese Yen (JPY)" },
-];
-
 const ErrorMessage = ({ message }: { message?: string }) => {
   if (!message) return null;
   return (
@@ -56,7 +33,22 @@ const ErrorMessage = ({ message }: { message?: string }) => {
 };
 
 export default function StoreEditForm({ setIsEditing }: any) {
-  const { formData, errors, handleInputChange, handleSubmit } = useStoreHook();
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    handleInputChange,
+    handleSubmit,
+    handleLogoChange,
+    handleBannerChange,
+    logoPreview,
+    handleCancel,
+    bannerPreview,
+    logoInputRef,
+    bannerInputRef,
+    CURRENCY_OPTIONS,
+    BUSINESS_SECTOR_OPTIONS,
+  } = useStoreHook({ setIsEditing });
 
   console.log("StoreEditForm rendered");
 
@@ -70,6 +62,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
             size="sm"
             onClick={() => setIsEditing(false)}
             className="hover:bg-gray-100"
+            disabled={isSubmitting}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -83,7 +76,6 @@ export default function StoreEditForm({ setIsEditing }: any) {
             </p>
           </div>
         </div>
-
         <div className="space-y-8 w-full ">
           {/* Image Uploads Section */}
           <Card className="border border-gray-200 shadow-lg overflow-hidden w-full">
@@ -108,24 +100,34 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <div className="space-y-3">
                   <div className="relative h-48 w-full rounded-lg overflow-hidden border-2 border-dashed border-gray-300 hover:border-green-400 transition-colors bg-gradient-to-r from-green-50 to-emerald-50">
                     <Image
-                      src={formData.headerImage || "/placeholder.svg"}
+                      src={bannerPreview || "/placeholder.svg"}
                       alt="Header Image"
                       fill
                       className="object-cover"
                     />
                   </div>
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerChange}
+                    className="hidden"
+                    id="bannerUpload"
+                  />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="w-full hover:bg-green-50 hover:border-green-300"
+                    onClick={() => bannerInputRef.current?.click()}
+                    disabled={isSubmitting}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Header Image
                   </Button>
+                  <ErrorMessage message={errors.headerImage} />
                 </div>
               </div>
-
               {/* Store Logo */}
               <div className="space-y-3">
                 <Label htmlFor="logo" className="text-base font-semibold">
@@ -137,26 +139,36 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <div className="flex items-center gap-4">
                   <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-gray-200 bg-white shadow-md">
                     <Image
-                      src={formData.logo || "/placeholder.svg"}
+                      src={logoPreview || "/placeholder.svg"}
                       alt="Store Logo"
                       fill
                       className="object-cover"
                     />
                   </div>
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                    className="hidden"
+                    id="logoUpload"
+                  />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="hover:bg-green-50 hover:border-green-300"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={isSubmitting}
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Upload New Logo
                   </Button>
                 </div>
+                <ErrorMessage message={errors.logo} />
               </div>
             </CardContent>
           </Card>
-
           {/* Store Profile Section */}
           <Card className="border border-gray-200 shadow-lg pt-5">
             <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
@@ -177,6 +189,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     }
                     placeholder="Enter store name"
                     className={errors.storeName ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.storeName} />
                 </div>
@@ -192,11 +205,11 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     }
                     placeholder="Enter business name"
                     className={errors.businessName ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.businessName} />
                 </div>
               </div>
-
               {/* Business Sector - Full Width */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="businessSector" className="font-semibold">
@@ -207,6 +220,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   onValueChange={(value) =>
                     handleInputChange("businessSector", value)
                   }
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     className={
@@ -216,7 +230,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     <SelectValue placeholder="Select business sector" />
                   </SelectTrigger>
                   <SelectContent>
-                    {businessSectors.map((sector) => (
+                    {BUSINESS_SECTOR_OPTIONS.map((sector) => (
                       <SelectItem key={sector} value={sector}>
                         {sector}
                       </SelectItem>
@@ -225,7 +239,6 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 </Select>
                 <ErrorMessage message={errors.businessSector} />
               </div>
-
               {/* Store Tagline - Full Width */}
               <div className="space-y-2">
                 <Label htmlFor="tagline" className="font-semibold">
@@ -236,13 +249,14 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   value={formData.tagline || ""}
                   onChange={(e) => handleInputChange("tagline", e.target.value)}
                   placeholder="Enter a catchy tagline for your store"
-                  maxLength={100}
+                  maxLength={150}
+                  disabled={isSubmitting}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {formData.tagline?.length || 0}/100 characters
+                  {formData.tagline?.length || 0}/150 characters
                 </p>
+                <ErrorMessage message={errors.tagline} />
               </div>
-
               {/* Store Description - Full Width */}
               <div className="space-y-2">
                 <Label htmlFor="description" className="font-semibold">
@@ -256,17 +270,16 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   }
                   placeholder="Describe your store and what makes it unique"
                   rows={5}
-                  maxLength={500}
                   className={errors.description ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 <div className="flex justify-between items-center">
                   <ErrorMessage message={errors.description} />
                   <p className="text-xs text-muted-foreground">
-                    {formData.description?.length || 0}/500 characters
+                    {formData.description?.length || 0} characters
                   </p>
                 </div>
               </div>
-
               {/* Store Currency - Full Width */}
               <div className="space-y-2 w-full">
                 <Label htmlFor="currency" className="font-semibold">
@@ -277,6 +290,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   onValueChange={(value) =>
                     handleInputChange("currency", value)
                   }
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger
                     className={
@@ -286,9 +300,9 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
-                    {currencies.map((currency) => (
-                      <SelectItem key={currency.code} value={currency.code}>
-                        {currency.name}
+                    {CURRENCY_OPTIONS.map((currency) => (
+                      <SelectItem key={currency} value={currency}>
+                        {currency}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -297,7 +311,6 @@ export default function StoreEditForm({ setIsEditing }: any) {
               </div>
             </CardContent>
           </Card>
-
           {/* Contact & Address Section */}
           <Card className="border border-gray-200 shadow-lg pt-5">
             <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
@@ -316,6 +329,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+1 (555) 123-4567"
                     className={errors.phone ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.phone} />
                 </div>
@@ -330,11 +344,11 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="store@example.com"
                     className={errors.email ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.email} />
                 </div>
               </div>
-
               {/* Address - Full Width */}
               <div className="space-y-2">
                 <Label htmlFor="address" className="font-semibold">
@@ -346,10 +360,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   placeholder="123 Main Street, Suite 100"
                   className={errors.address ? "border-red-500" : ""}
+                  disabled={isSubmitting}
                 />
                 <ErrorMessage message={errors.address} />
               </div>
-
               {/* Location Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Country */}
@@ -365,10 +379,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     }
                     placeholder="Enter country"
                     className={errors.country ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.country} />
                 </div>
-
                 {/* State */}
                 <div className="space-y-2">
                   <Label htmlFor="state" className="font-semibold">
@@ -380,10 +394,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     onChange={(e) => handleInputChange("state", e.target.value)}
                     placeholder="Enter state/province"
                     className={errors.state ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.state} />
                 </div>
-
                 {/* City */}
                 <div className="space-y-2">
                   <Label htmlFor="city" className="font-semibold">
@@ -395,10 +409,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     onChange={(e) => handleInputChange("city", e.target.value)}
                     placeholder="Enter city"
                     className={errors.city ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.city} />
                 </div>
-
                 {/* Zip Code */}
                 <div className="space-y-2">
                   <Label htmlFor="zipCode" className="font-semibold">
@@ -412,20 +426,21 @@ export default function StoreEditForm({ setIsEditing }: any) {
                     }
                     placeholder="12345"
                     className={errors.zipCode ? "border-red-500" : ""}
+                    disabled={isSubmitting}
                   />
                   <ErrorMessage message={errors.zipCode} />
                 </div>
               </div>
             </CardContent>
           </Card>
-
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:justify-end sticky bottom-6 bg-white p-4 rounded-lg border border-gray-200 shadow-lg">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setIsEditing(false)}
+              onClick={handleCancel}
               className="hover:bg-gray-50"
+              disabled={isSubmitting}
             >
               <X className="w-4 h-4 mr-2" />
               Cancel
@@ -434,9 +449,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
               type="button"
               onClick={handleSubmit}
               className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg"
+              disabled={isSubmitting}
             >
               <Save className="w-4 h-4 mr-2" />
-              Save Changes
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>

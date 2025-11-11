@@ -74,12 +74,10 @@ const SkeletonInfoCard = () => (
 
 export default function StoreInfo() {
   const [isEditing, setIsEditing] = useState(false);
-
   const { BusinessDataLoading, storeData, copySuccess, copyStoreUrl } =
-    useStoreHook();
+    useStoreHook({ setIsEditing });
 
   console.log("storeData", storeData);
-
   console.log("isEditing", isEditing);
 
   return (
