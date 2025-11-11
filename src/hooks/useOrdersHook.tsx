@@ -1,4 +1,5 @@
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import {
@@ -38,10 +39,15 @@ export const useOrdersHook = ({
   const router = useRouter();
   const { showToast } = useToast();
 
+  const business_id = useBusinessStore((state: any) => state.business_id);
+
+  const { data: BusinessData, isLoading: BusinessDataLoading } =
+    useFetchBusinessById(business_id);
+
+  const findBusiness = BusinessData?.data;
   const params = useParams();
   const orderId = (params.id as string) || id;
 
-  const business_id = useBusinessStore((state: any) => state.business_id);
   const isUserSubscribed = useIsUserSubscribeStore(
     (state: any) => state.is_subscribed
   );
@@ -450,7 +456,8 @@ export const useOrdersHook = ({
     BankData,
 
     // Loading states
-    OrderDataLoading: OrderDataLoading || isRefetchingOrderData,
+    OrderDataLoading:
+      OrderDataLoading || isRefetchingOrderData || BusinessDataLoading,
     InventoryDataLoading: InventoryDataLoading || isRefetchingInventory,
     CustomersLoading,
     CreateOrderLoading,
@@ -462,6 +469,7 @@ export const useOrdersHook = ({
     selectedProducts,
     setSelectedProducts,
     productErrors,
+    findBusiness,
     shippingFee,
     setShippingFee,
     tax,
