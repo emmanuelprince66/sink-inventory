@@ -191,7 +191,7 @@ const Orders = () => {
   // Get store URL based on active tab
   const getStoreUrl = () => {
     const slug = findBusiness?.store_url || "";
-    const baseUrl = "https://lucent-genie-21bd93.netlify.app";
+    const baseUrl = "https://store.sync360.africa/in-store";
 
     if (activeTab === "INSTORE") {
       return `${baseUrl}/in-store/?slug=${slug}`;
