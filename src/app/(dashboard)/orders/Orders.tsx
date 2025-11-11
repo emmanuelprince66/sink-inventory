@@ -194,9 +194,9 @@ const Orders = () => {
     const baseUrl = "https://store.sync360.africa";
 
     if (activeTab === "INSTORE") {
-      return `${baseUrl}/in-store/?slug=${slug}`;
+      return `${baseUrl}/i/?slug=${slug}`;
     } else {
-      return `${baseUrl}/out-store/?slug=${slug}`;
+      return `${baseUrl}/o/?slug=${slug}`;
     }
   };
 

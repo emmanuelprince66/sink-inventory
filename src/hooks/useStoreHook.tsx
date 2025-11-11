@@ -64,8 +64,8 @@ export const useStoreHook = () => {
     if (findBusiness) {
       const baseUrl = "https://store.sync360.africa";
       const slugUrl = findBusiness.store_url || "";
-      const outStoreUrl = `${baseUrl}/out-store/?slug=${slugUrl}`;
-      const inStoreUrl = `${baseUrl}/in-store/?slug=${slugUrl}`;
+      const outStoreUrl = `${baseUrl}/o/?slug=${slugUrl}`;
+      const inStoreUrl = `${baseUrl}/i/?slug=${slugUrl}`;
 
       const data = {
         logo: findBusiness.logo || "/placeholder.svg?height=120&width=120",
