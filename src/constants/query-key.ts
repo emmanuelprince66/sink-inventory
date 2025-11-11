@@ -3,6 +3,7 @@ export const queryKey = {
     getAllBusiness: "get-all-business",
     createBusiness: "create-business",
     getBusinessById: "get-business-by-id",
+    updateBusiness: "update-business",
   },
   auth: {
     login: "login",
