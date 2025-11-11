@@ -71,8 +71,11 @@ export const BUSINESS_SECTOR_OPTIONS = [
 export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
-  const { data: BusinessData, isLoading: BusinessDataLoading } =
-    useFetchBusinessById(business_id);
+  const {
+    data: BusinessData,
+    isLoading: BusinessDataLoading,
+    refetch,
+  } = useFetchBusinessById(business_id);
 
   const findBusiness = BusinessData?.data;
 
@@ -392,6 +395,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
           setStoreData(formData);
           setIsSubmitting(false);
           setIsEditing(false);
+          refetch();
         },
         onError: (error) => {
           console.error("Error submitting form:", error);
