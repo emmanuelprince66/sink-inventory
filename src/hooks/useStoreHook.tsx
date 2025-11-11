@@ -62,7 +62,7 @@ export const useStoreHook = () => {
   // Initialize store data from API
   useEffect(() => {
     if (findBusiness) {
-      const baseUrl = "https://lucent-genie-21bd93.netlify.app";
+      const baseUrl = "https://store.sync360.africa/in-store";
       const slugUrl = findBusiness.store_url || "";
       const outStoreUrl = `${baseUrl}/out-store/?slug=${slugUrl}`;
       const inStoreUrl = `${baseUrl}/in-store/?slug=${slugUrl}`;
