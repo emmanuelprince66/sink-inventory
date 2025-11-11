@@ -233,8 +233,10 @@ const Orders = () => {
   const totalRevenue = ordersResults.revenue || 0;
 
   // Calculate counts for each tab
-  const instoreCount = ordersResults.instore_count || 0;
-  const outstoreCount = ordersResults.outstore_count || 0;
+
+  console.log("ordersResults", ordersResults);
+  const instoreCount = ordersResults?.data?.length || 0;
+  const outstoreCount = ordersResults?.data?.length || 0;
 
   // Calculate success rate
   const successRate =
@@ -328,7 +330,7 @@ const Orders = () => {
                       : "bg-gray-100 text-gray-600"
                   )}
                 >
-                  {instoreCount}
+                  {activeTab === "INSTORE" && instoreCount}
                 </span>
               </button>
               <button
@@ -349,7 +351,7 @@ const Orders = () => {
                       : "bg-gray-100 text-gray-600"
                   )}
                 >
-                  {outstoreCount}
+                  {activeTab === "OUTSTORE" && outstoreCount}
                 </span>
               </button>
             </div>

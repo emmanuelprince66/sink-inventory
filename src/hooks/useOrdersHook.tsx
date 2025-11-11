@@ -142,6 +142,10 @@ export const useOrdersHook = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  console.log("order_type", order_type);
+
+  console.log("OrderData", OrderData);
+
   // Fetch customers
   const { data: CustomersData, isLoading: CustomersLoading } =
     useGetCustomerQuery({
