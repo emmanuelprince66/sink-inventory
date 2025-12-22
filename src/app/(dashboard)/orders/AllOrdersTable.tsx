@@ -1,6 +1,6 @@
 import { CustomTable } from "@/components/app/CutomTable";
 import { useEffect, useState } from "react";
-import { columns } from "./OrdersColumn";
+import { useOrdersColumn } from "./OrdersColumn";
 import { OrderApiResponse } from "./type";
 
 const AllOrdersTable = ({
@@ -8,11 +8,13 @@ const AllOrdersTable = ({
   loading,
   setPage,
   page,
+  type,
 }: {
   response: OrderApiResponse;
   loading: boolean;
   setPage: (page: number) => void;
   page: number;
+  type: string;
 }) => {
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
@@ -37,13 +39,17 @@ const AllOrdersTable = ({
     setCurrentPage(newPage); // Update local state
     setPage(newPage); // Update parent state
   };
+
+  console.log("response", response);
+
+  const columns = useOrdersColumn(type);
   return (
     <>
       <CustomTable
         loading={loading}
         noDataText="No Orders found"
         columns={columns}
-        data={response?.data?.results?.data}
+        data={response?.data?.results}
         pagination={{
           currentPage,
           totalPages,

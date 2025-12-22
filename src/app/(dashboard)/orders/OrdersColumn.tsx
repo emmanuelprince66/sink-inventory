@@ -40,115 +40,119 @@ const shippingTextMap = {
   DEFAULT: "Unknown",
 } as const;
 
-export const columns: ColumnDef<OrderInfo>[] = [
-  // {
-  //   accessorKey: "id",
-  //   header: "ID",
-  //   cell: ({ row }) => {
-  //     const order = row.original;
-  //     return <div className="font-medium">{order.id}</div>;
-  //   },
-  // },
-  {
-    accessorKey: "customer_info",
-    header: "Customer Name",
-    cell: ({ row }) => {
-      const order = row.original;
-      return (
-        <div className="font-medium">{order.customer_info?.name ?? "-"}</div>
-      );
+export const useOrdersColumn = (type: string) => {
+  const columns: ColumnDef<OrderInfo>[] = [
+    {
+      accessorKey: "customer_info",
+      header: "Customer Name",
+      cell: ({ row }) => {
+        const order = row.original;
+        return (
+          <div className="font-medium">{order.customer_info?.name ?? "-"}</div>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount",
-    cell: ({ row }) => {
-      const order = row.original;
-      return <span>₦{order.amount ? order?.amount : "₦0"}</span>;
+    {
+      accessorKey: "amount",
+      header: "Amount",
+      cell: ({ row }) => {
+        const order = row.original;
+        return <span>₦{order.amount ? order?.amount : "₦0"}</span>;
+      },
     },
-  },
-  {
-    accessorKey: "type",
-    header: "Type",
-    cell: ({ row }) => {
-      const order = row.original;
-      return (
-        <div
-          className={`font-medium p-1 flex justify-center rounded-md text-xs ${
-            order.type === "OUTSTORE"
-              ? "text-blue-600 bg-blue-100"
-              : "text-purple-600 bg-purple-100"
-          }`}
-        >
-          {order.type}
-        </div>
-      );
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        const order = row.original;
+        return (
+          <div
+            className={`font-medium p-1 flex justify-center rounded-md text-xs ${
+              order.type === "OUTSTORE"
+                ? "text-blue-600 bg-blue-100"
+                : "text-purple-600 bg-purple-100"
+            }`}
+          >
+            {order.type}
+          </div>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "created_at",
-    header: "Created At",
-    cell: ({ row }) => {
-      return (
-        <div className="text-sm">
-          {new Date("2025-10-16").toLocaleDateString()}
-        </div>
-      );
+    {
+      accessorKey: "created_at",
+      header: "Created At",
+      cell: ({ row }) => {
+        return (
+          <div className="text-sm">
+            {new Date("2025-10-16").toLocaleDateString()}
+          </div>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "shipping_status",
-    header: "Shipping Status",
-    cell: ({ row }) => {
-      const order = row.original;
-      const status = order.shipping_status || "DEFAULT";
-      const statusClass =
-        shippingColors[status as keyof typeof shippingColors] ||
-        shippingColors.DEFAULT;
+    // Payment status column stays
+    {
+      accessorKey: "status",
+      header: "Payment Status",
+      cell: ({ row }) => {
+        const order = row.original;
+        const status = order.payment_status || "DEFAULT";
+        const statusClass =
+          statusColors[status as keyof typeof statusColors] ||
+          statusColors.DEFAULT;
 
-      const statusTextValue =
-        shippingTextMap[status as keyof typeof shippingTextMap] || "unknown";
+        const statusTextValue =
+          statusTextMap[status as keyof typeof statusTextMap] || "unknown";
 
-      return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
-        >
-          {statusTextValue}
-        </span>
-      );
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
+          >
+            {statusTextValue}
+          </span>
+        );
+      },
     },
-  },
-  {
-    accessorKey: "shipping_fee",
-    header: "Shipping Fee",
-    cell: ({ row }) => {
-      const order = row.original;
-      return <span>₦{order.shipping_fee ?? "0"}</span>;
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Payment Status",
-    cell: ({ row }) => {
-      const order = row.original;
-      const status = order.payment_status || "DEFAULT";
-      const statusClass =
-        statusColors[status as keyof typeof statusColors] ||
-        statusColors.DEFAULT;
+  ];
 
-      const statusTextValue =
-        statusTextMap[status as keyof typeof statusTextMap] || "unknown";
+  // Conditionally add shipping columns only when not INSTORE
+  if (type !== "INSTORE") {
+    const shippingStatusColumn: ColumnDef<OrderInfo> = {
+      accessorKey: "shipping_status",
+      header: "Shipping Status",
+      cell: ({ row }) => {
+        const order = row.original;
+        const status = order.shipping_status || "DEFAULT";
+        const statusClass =
+          shippingColors[status as keyof typeof shippingColors] ||
+          shippingColors.DEFAULT;
 
-      return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
-        >
-          {statusTextValue}
-        </span>
-      );
-    },
-  },
-  {
+        const statusTextValue =
+          shippingTextMap[status as keyof typeof shippingTextMap] || "unknown";
+
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}
+          >
+            {statusTextValue}
+          </span>
+        );
+      },
+    };
+
+    const shippingFeeColumn: ColumnDef<OrderInfo> = {
+      accessorKey: "shipping_fee",
+      header: "Shipping Fee",
+      cell: ({ row }) => {
+        const order = row.original;
+        return <span>₦{order.shipping_fee ?? "0"}</span>;
+      },
+    };
+
+    columns.push(shippingStatusColumn, shippingFeeColumn);
+  }
+
+  // Actions column
+  columns.push({
     id: "actions",
     header: "Action",
     cell: ({ row }) => {
@@ -207,9 +211,9 @@ export const columns: ColumnDef<OrderInfo>[] = [
           >
             <></>
             {/* <ViewDetails
-              closeModal={() => setOpenViewDetails(false)}
-              data={order}
-            /> */}
+            closeModal={() => setOpenViewDetails(false)}
+            data={order}
+          /> */}
           </CustomModal>
 
           <CustomModal
@@ -239,5 +243,7 @@ export const columns: ColumnDef<OrderInfo>[] = [
         </>
       );
     },
-  },
-];
+  });
+
+  return columns;
+};

@@ -29,19 +29,20 @@ export interface Links {
   previous: string | null;
 }
 
-export interface Results {
-  completed_orders: number;
-  data: OrderInfo[];
-  order_count: number;
-  revenue: number;
-  total: number;
-}
+// export interface Results {
+//   completed_orders: number;
+//   data: OrderInfo[];
+//   order_count: number;
+//   revenue: number;
+//   total: number;
+// }
 
 export interface OrderData {
   limit: number;
   links: Links;
   pages: number;
-  results: Results;
+  results: OrderInfo[];
+  summary: any;
 }
 
 export interface OrderApiResponse {

@@ -8,7 +8,8 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "sync-bck-new.s3.amazonaws.com",
+        hostname: "sync360-bucket.s3.amazonaws.com",
+        // hostname: "sync-bck-new.s3.amazonaws.com",
         pathname: "/**",
       },
     ],

@@ -426,6 +426,23 @@ export const useInventoryHook = ({
             queryKey: [queryKey.inventory.getAllInventory],
           });
         },
+        onError: (error: any) => {
+          console.log("Error creating service:", error);
+
+          // const mockError = {
+          //   response: {
+          //     data: {
+          //       hint: "3",
+          //       message: "Test error message from backend",
+          //     },
+          //   },
+          // };
+          // handleSubscriptionError(mockError);
+          const errorMessage =
+            error?.message || error?.error || "Error creating service";
+          showToast(errorMessage, "error");
+          closeModal();
+        },
       }
     );
   };

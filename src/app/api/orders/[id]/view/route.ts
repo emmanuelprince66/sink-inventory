@@ -31,6 +31,7 @@ export async function GET(
       cache: "no-store",
     });
 
+    console.log("respos", response);
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
@@ -40,6 +41,8 @@ export async function GET(
     }
 
     const data = await response.json();
+
+    console.log("daaata", data);
     return NextResponse.json({
       success: true,
       data,

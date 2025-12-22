@@ -28,6 +28,8 @@ interface FetchOrdersParams {
   page?: number;
   limit?: number;
   id: string;
+  start_date?: string;
+  end_date?: string;
   search?: string;
   status?: string;
   order_type?: string;
@@ -65,6 +67,8 @@ export const fetchAllOrders = async ({
   order_type = "",
   shipping_status = "",
   payment_status = "",
+  start_date = "",
+  end_date = "",
 }: FetchOrdersParams) => {
   const queryParams = new URLSearchParams({
     page: page.toString(),
@@ -73,6 +77,8 @@ export const fetchAllOrders = async ({
     ...(order_type && { order_type }),
     ...(shipping_status && { shipping_status }),
     ...(payment_status && { payment_status }),
+    ...(start_date && { start_date }),
+    ...(end_date && { end_date }),
   });
 
   const response = await fetch(`/api/orders/${id}/all?${queryParams}`);

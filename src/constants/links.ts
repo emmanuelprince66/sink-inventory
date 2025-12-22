@@ -1,6 +1,7 @@
 // constants/links.ts
 import {
   Activity,
+  BadgeDollarSignIcon,
   BellIcon,
   ClipboardList,
   CreditCard,
@@ -138,6 +139,12 @@ export const links = [
         title: "Shipping",
         url: "/shipping",
         icon: Truck,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+      },
+      {
+        title: "Online Payment",
+        url: "/payment",
+        icon: BadgeDollarSignIcon,
         roles: ["OWNER", "ADMIN-ATTENDANT"],
       },
     ],

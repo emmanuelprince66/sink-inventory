@@ -47,6 +47,8 @@ export async function POST(
       body: formData,
     });
 
+    console.log("response", response);
+
     if (!response.ok) {
       const errorData = await response.json();
       return NextResponse.json(
@@ -56,6 +58,8 @@ export async function POST(
     }
 
     const responseData = await response.json();
+
+    console.log("responseData", responseData);
     return NextResponse.json(
       { success: true, data: responseData },
       { status: 201 }
