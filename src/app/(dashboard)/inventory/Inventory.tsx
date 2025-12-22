@@ -220,7 +220,7 @@ const Inventory = () => {
               >
                 + Add Service
               </Button>
-              <Link href={"/add-product"} className="w-full">
+              <Link href={"product/add-product"} className="w-full">
                 <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
                   + Add Product
                 </Button>
