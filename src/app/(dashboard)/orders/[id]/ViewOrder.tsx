@@ -1,17 +1,19 @@
 "use client";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import {
   ArrowLeft,
   ChevronDown,
-  Download,
   Mail,
   MessageCircle,
   Phone,
   Share2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import DownloadOrderReceipt from "../DownloadOrderReceipt";
+import UpdateStatusComp from "./UpdateStatus";
 
 type PaymentStatus = "PAID" | "PARTIAL" | "UNPAID";
 type ShippingStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
@@ -25,12 +27,19 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
     OrderIdData,
     OrderIdDataLoading,
     handleUpdateOrderStatus,
+    BusinessData,
     editOrderShippingStatusLoading,
   } = useOrdersHook({ id });
+
+  console.log("orderIdData", OrderIdData);
+  const [openUpdateStatusModal, setOpenUpdateStatusModal] = useState(false);
+
   const [selectedShippingStatus, setSelectedShippingStatus] =
     useState<ShippingStatus>("PENDING");
 
   const orderData = OrderIdData?.data;
+
+  console.log("orderData", orderData);
 
   // Update selectedShippingStatus when orderData loads
   useEffect(() => {
@@ -81,7 +90,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   const getShippingStatusBadge = (status: ShippingStatus) => {
     const statusMap = {
       PENDING: { bg: "bg-gray-100", text: "text-gray-800", label: "Pending" },
-      SHIPPED: { bg: "bg-blue-100", text: "text-blue-800", label: "Shipped" },
+      SHIPPED: { bg: "bg-green-100", text: "text-green-800", label: "Shipped" },
       DELIVERED: {
         bg: "bg-green-100",
         text: "text-green-800",
@@ -124,7 +133,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
         case "PENDING":
           return "bg-gray-200 text-gray-900 border border-gray-400 font-semibold";
         case "SHIPPED":
-          return "bg-blue-200 text-blue-900 border border-blue-500 font-semibold";
+          return "bg-green-200 text-green-900 border border-green-500 font-semibold";
         case "DELIVERED":
           return "bg-green-200 text-green-900 border border-green-500 font-semibold";
         case "RETURNED":
@@ -459,10 +468,10 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <h3 className="text-lg font-semibold text-gray-900">
                   Payment Summary
                 </h3>
-                <button className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700">
-                  <Download className="h-4 w-4" />
-                  <span>Download</span>
-                </button>
+                <DownloadOrderReceipt
+                  orderData={orderData}
+                  business={BusinessData}
+                />
               </div>
 
               <div className="space-y-3">
@@ -509,7 +518,19 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <h3 className="text-lg font-semibold text-gray-900">
                   Payment Status
                 </h3>
-                {getPaymentStatusBadge(orderData.payment_status)}
+
+                <div className="flex gap-1">
+                  {getPaymentStatusBadge(orderData.payment_status)}
+
+                  {orderData.payment_status !== "PAID" && (
+                    <p
+                      onClick={() => setOpenUpdateStatusModal(true)}
+                      className="px-2 py-1 cursor-pointer rounded-md hover:bg-gray-100 text-xs border border-gray-300 font-medium "
+                    >
+                      Update Status
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -562,11 +583,15 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       active={selectedShippingStatus === "PENDING"}
                       onClick={setSelectedShippingStatus}
                     />
-                    <ShippingStatusButton
-                      status="SHIPPED"
-                      active={selectedShippingStatus === "SHIPPED"}
-                      onClick={setSelectedShippingStatus}
-                    />
+
+                    {orderData?.type === "OUTSTORE" && (
+                      <ShippingStatusButton
+                        status="SHIPPED"
+                        active={selectedShippingStatus === "SHIPPED"}
+                        onClick={setSelectedShippingStatus}
+                      />
+                    )}
+
                     <ShippingStatusButton
                       status="DELIVERED"
                       active={selectedShippingStatus === "DELIVERED"}
@@ -595,6 +620,21 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
           </div>
         </div>
       </div>
+
+      {/* modal */}
+      <CustomModal
+        isOpen={openUpdateStatusModal}
+        onClose={() => setOpenUpdateStatusModal(false)}
+        title="Update Order Status"
+      >
+        <UpdateStatusComp
+          orderId={OrderIdData?.id}
+          currentStatus={orderData?.payment_status}
+          currentAmount={orderData?.amount}
+          currentAmountPaid={orderData?.amount_paid}
+          onClose={() => setOpenUpdateStatusModal(false)}
+        />
+      </CustomModal>
     </div>
   );
 };

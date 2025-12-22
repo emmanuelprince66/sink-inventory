@@ -83,6 +83,7 @@ export const queryKey = {
     createOrder: "create-order",
     getOrderById: "get-order-by-id",
     updateOrderStatus: "update-order-status",
+    updateOrderPaymentStatus: "update-order-payment-status",
   },
   analytics: {
     getSalesAnalytics: "get-sales-analytics",

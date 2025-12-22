@@ -2,6 +2,7 @@ import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
+import { useUpdateOrderPaymentStatusMutation } from "@/api/orders/edit-status";
 import {
   UseCreateOrderMutation,
   useFetchAllOrdersQuery,
@@ -14,8 +15,10 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useQueryClient } from "@tanstack/react-query";
+import moment from "moment";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import { useToast } from "./toast/useToast";
 
 export const useOrdersHook = ({
@@ -26,10 +29,12 @@ export const useOrdersHook = ({
   order_type,
   shipping_status,
   payment_status,
+  dateRange,
 }: {
   page?: number;
   searchInput?: string;
   id?: string;
+  dateRange?: DateRange;
   handleOpenNotSubscribeModal?: () => void;
   order_type?: string;
   shipping_status?: string;
@@ -106,6 +111,14 @@ export const useOrdersHook = ({
   } = useUpdateOrderShippingStatusMutation({
     orderId: orderId,
   });
+  // update Payment status
+  const {
+    mutate: updateOrderPaymentStatus,
+    isPending: updateOrderPaymentStatusLoading,
+    isSuccess: updateOrderPaymentStatusSuccess,
+  } = useUpdateOrderPaymentStatusMutation({
+    orderId: orderId,
+  });
 
   const handleUpdateOrderStatus = (status: string) => {
     const payload = {
@@ -114,6 +127,8 @@ export const useOrdersHook = ({
     console.log("payload", payload);
     editOrderShippingStatus({ orderId, payload });
   };
+
+  // update payment status
 
   // fetch order by id
   const {
@@ -134,6 +149,12 @@ export const useOrdersHook = ({
       limit: 20,
       id: business_id,
       search: searchInput,
+      start_date: dateRange?.from
+        ? moment(dateRange.from).format("YYYY-MM-DD")
+        : undefined,
+      end_date: dateRange?.to
+        ? moment(dateRange.to).format("YYYY-MM-DD")
+        : undefined,
       order_type: order_type || undefined,
       shipping_status: shipping_status || undefined,
       payment_status: payment_status || undefined,
@@ -504,6 +525,7 @@ export const useOrdersHook = ({
     isDiscountApplied,
     calculateSubtotal,
     calculateTotalDiscount,
+    BusinessData,
     calculateTotal,
     hasQuantityErrors,
     validateForm,
@@ -520,5 +542,8 @@ export const useOrdersHook = ({
     // Options
     salesChannelOptions,
     shippingStatusOptions,
+    updateOrderPaymentStatusSuccess,
+    updateOrderPaymentStatus,
+    updateOrderPaymentStatusLoading,
   };
 };

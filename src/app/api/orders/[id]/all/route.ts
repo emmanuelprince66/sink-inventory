@@ -28,18 +28,20 @@ export async function GET(
     request.nextUrl.searchParams.get("shipping_status") || "";
   const payment_status =
     request.nextUrl.searchParams.get("payment_status") || "";
+  const start_date = request.nextUrl.searchParams.get("start_date") || "";
+  const end_date = request.nextUrl.searchParams.get("end_date") || "";
 
-  console.log("Query Params:", {
-    search,
-    page,
-    limit,
-    order_type,
-    shipping_status,
-    payment_status,
-  });
+  // console.log("Query Params:", {
+  //   search,
+  //   page,
+  //   limit,
+  //   order_type,
+  //   shipping_status,
+  //   payment_status,
+  // });
 
   // Build the API URL
-  const apiUrl = new URL(`${BaseUrl}order/outstore/${id}/`);
+  const apiUrl = new URL(`${BaseUrl}order/orders/${id}/all`);
 
   // Append parameters only if they have values
   if (search) apiUrl.searchParams.append("search", search);
@@ -50,6 +52,8 @@ export async function GET(
     apiUrl.searchParams.append("shipping_status", shipping_status);
   if (payment_status)
     apiUrl.searchParams.append("payment_status", payment_status);
+  // if (start_date) apiUrl.searchParams.append("start_date", start_date);
+  // if (end_date) apiUrl.searchParams.append("end_date", end_date);
 
   try {
     const response = await fetch(apiUrl.toString(), {

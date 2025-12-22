@@ -1,4 +1,6 @@
 // app/layout.tsx
+import { SubscriptionNotificationModal } from "@/components/app/SubscriptionModal";
+import TawkToChat from "@/components/app/TawkToChat";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { FcmNotificationProvider } from "@/components/providers/notification-provider";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
@@ -31,7 +33,11 @@ export default function RootLayout({
           <FcmNotificationProvider>
             <NotificationProvider>
               <ToastProvider />
-              <AuthProvider>{children}</AuthProvider>
+              <AuthProvider>
+                {children}
+                <SubscriptionNotificationModal />
+              </AuthProvider>
+              <TawkToChat /> {/* Add this component */}
             </NotificationProvider>
           </FcmNotificationProvider>
         </ReactQueryProvider>

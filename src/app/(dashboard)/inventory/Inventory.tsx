@@ -220,7 +220,7 @@ const Inventory = () => {
               >
                 + Add Service
               </Button>
-              <Link href={"/product/add-product"} className="w-full">
+              <Link href={"/add-product"} className="w-full">
                 <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
                   + Add Product
                 </Button>
@@ -255,6 +255,8 @@ const Inventory = () => {
           <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
+
+          {/* <SubscriptionTest /> */}
 
           {InventoryDataLoading || !InventoryData ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">

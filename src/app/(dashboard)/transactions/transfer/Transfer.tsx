@@ -24,6 +24,7 @@ const Transfer = () => {
   const [message, setMessage] = useState("");
   const [openPinModal, setOpenPinModal] = useState(false);
   const [bankOptions, setBankOptions] = useState<SelectOption[]>([]);
+  console.log("bankOptions", bankOptions);
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
   const {
     BankTrxData,
@@ -37,6 +38,7 @@ const Transfer = () => {
 
   console.log("TrxData", trxData?.data?.results?.wallet_details?.balance);
   const trxBalance = trxData?.data?.results?.wallet_details?.balance || 0;
+  console.log("BankTrxData", BankTrxData);
 
   // Transform bank data to select options
   useEffect(() => {

@@ -1,6 +1,7 @@
 "use client";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,9 +20,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import AllOrdersTable from "./AllOrdersTable";
-import NoOrders from "./NoOrders";
 import CreateOrders from "./create/CreateOrders";
+import NoOrders from "./NoOrders";
+import Payment from "./PaymentModal";
 
 interface CustomOrderCardProps {
   title: string;
@@ -129,8 +132,13 @@ const CustomOrderCard = ({
 };
 
 const Orders = () => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
+  const [openSubscriptionModal, setOpenSubscriptionModal] = useState(false);
   const [openFilterModal, setOpenFilterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">(
     "OUTSTORE"
@@ -219,24 +227,26 @@ const Orders = () => {
     order_type: activeTab, // Use active tab for order_type
     shipping_status: filters.shipping_status,
     payment_status: filters.payment_status,
+    dateRange,
   });
 
   console.log("findBusiness", findBusiness);
 
   // Extract data safely from API response
-  const ordersResults = OrderData?.data?.results || {};
-  const ordersData = ordersResults.data || [];
+  const ordersData = OrderData?.data || {};
+  const ordersResults = ordersData?.results || [];
+  console.log("ordersData", ordersData);
 
   // Use backend-provided stats
-  const totalOrders = ordersResults.order_count || 0;
-  const completedOrders = ordersResults.completed_orders || 0;
-  const totalRevenue = ordersResults.revenue || 0;
+  const totalOrders = ordersData?.summary?.total_orders || 0;
+  const completedOrders = ordersData?.summary?.completed_orders || 0;
+  const totalRevenue = ordersData?.summary?.total_revenue || 0;
 
   // Calculate counts for each tab
 
   console.log("ordersResults", ordersResults);
-  const instoreCount = ordersResults?.data?.length || 0;
-  const outstoreCount = ordersResults?.data?.length || 0;
+  const instoreCount = ordersResults?.length || 0;
+  const outstoreCount = ordersResults?.length || 0;
 
   // Calculate success rate
   const successRate =
@@ -254,7 +264,14 @@ const Orders = () => {
             Orders
           </p>
 
-          <div className="flex gap-2 items-center flex-wrap w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row gap-2  w-full sm:w-auto items-center ">
+            <div className="w-full">
+              <DatePickerWithRange
+                date={dateRange}
+                onDateChange={setDateRange}
+                className="w-full sm:w-auto mx-auto sm:mx-auto"
+              />
+            </div>
             <Link href="/orders/create" className="w-full sm:w-auto">
               <Button className="w-full sm:w-auto">Create Order</Button>
             </Link>
@@ -486,12 +503,13 @@ const Orders = () => {
             </div>
           ) : (
             <>
-              {ordersData.length > 0 ? (
+              {ordersResults?.length > 0 ? (
                 <AllOrdersTable
                   setPage={setPage}
                   page={page}
                   response={OrderData}
                   loading={false}
+                  type={activeTab}
                 />
               ) : (
                 <div className="w-full h-64 flex flex-col justify-center items-center">
@@ -587,6 +605,14 @@ const Orders = () => {
         title="Create Order"
       >
         <CreateOrders />
+      </CustomModal>
+      {/* open subscription  Modal */}
+      <CustomModal
+        isOpen={openSubscriptionModal}
+        onClose={() => setOpenSubscriptionModal(false)}
+        title="Create an online payment"
+      >
+        <Payment />
       </CustomModal>
     </div>
   );

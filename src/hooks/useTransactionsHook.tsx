@@ -50,6 +50,8 @@ export const useTransactionsHook = ({
     refetch: refetchTrxBank,
   } = useFetchTrxBank(businessData?.id);
 
+  console.log("BankData", BankData);
+
   // Mutation for beneficiary enquiry using fetch
   const beneficiaryEnquiryMutation = useMutation({
     mutationFn: async (data: { bank_code: string; account_number: string }) => {
