@@ -3,7 +3,6 @@ import { SubscriptionNotificationModal } from "@/components/app/SubscriptionModa
 import TawkToChat from "@/components/app/TawkToChat";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { FcmNotificationProvider } from "@/components/providers/notification-provider";
-import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { ReactQueryProvider } from "@/providers/ReactQueryProviders";
 import { ToastProvider } from "@/providers/ToastProvider";
 import type { Metadata } from "next";
@@ -31,14 +30,15 @@ export default function RootLayout({
       <body className={`${nunito.className} antialiased`}>
         <ReactQueryProvider>
           <FcmNotificationProvider>
-            <NotificationProvider>
-              <ToastProvider />
-              <AuthProvider>
-                {children}
-                <SubscriptionNotificationModal />
-              </AuthProvider>
-              <TawkToChat /> {/* Add this component */}
-            </NotificationProvider>
+            <ToastProvider />
+            <AuthProvider>
+              {children}
+              <SubscriptionNotificationModal />
+            </AuthProvider>
+            <TawkToChat /> {/* Add this component */}
+            {/* <NotificationProvider>
+            
+            </NotificationProvider> */}
           </FcmNotificationProvider>
         </ReactQueryProvider>
       </body>
