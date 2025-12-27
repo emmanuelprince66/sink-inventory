@@ -1,6 +1,6 @@
 // hooks/useSSENotificationsAlt.ts
 // This version passes the token as a URL parameter since EventSource has limited header support
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 interface Notification {
   id?: string;
@@ -150,23 +150,23 @@ export const useSSENotifications = (token: string): SSEHookReturn => {
     }
   };
 
-  useEffect(() => {
-    if (token) {
-      connect();
-    } else {
-      setError("No token provided");
-      setIsConnected(false);
-    }
+  // useEffect(() => {
+  //   if (token) {
+  //     connect();
+  //   } else {
+  //     setError("No token provided");
+  //     setIsConnected(false);
+  //   }
 
-    return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
-  }, [token]);
+  //   return () => {
+  //     if (reconnectTimeoutRef.current) {
+  //       clearTimeout(reconnectTimeoutRef.current);
+  //     }
+  //     if (eventSourceRef.current) {
+  //       eventSourceRef.current.close();
+  //     }
+  //   };
+  // }, [token]);
 
   const clearNotifications = () => {
     setNotifications([]);

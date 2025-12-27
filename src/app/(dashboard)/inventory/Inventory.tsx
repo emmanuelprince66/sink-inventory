@@ -242,7 +242,7 @@ const Inventory = () => {
               className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
               asChild
             >
-              <Link href={"/product/upload-product"}>
+              <Link href={"/product/add-product"}>
                 <Cloud className="w-4 h-4 mr-2" />
                 <span className="whitespace-nowrap">Upload Product</span>
               </Link>

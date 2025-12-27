@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { useEffect, useState } from "react";
 
 const UpdateStatusComp = ({
@@ -8,19 +10,16 @@ const UpdateStatusComp = ({
   onClose,
   onSuccess,
 }: any) => {
-  // Mock hooks for demonstration
-  const BankData = {
-    data: [
-      { id: "1", bank_name: "First Bank" },
-      { id: "2", bank_name: "GTBank" },
-      { id: "3", bank_name: "Access Bank" },
-    ],
-  };
-  const BankDataLoading = false;
-  const updateOrderPaymentStatusLoading = false;
+  const {
+    updateOrderPaymentStatusSuccess,
+    updateOrderPaymentStatus,
+    updateOrderPaymentStatusLoading,
+    BankDataLoading,
+    BankData,
+  } = useOrdersHook({});
+
   const showToast = (message: string, type: string) =>
     console.log(type, message);
-  const updateOrderPaymentStatus = (data: any) => console.log("Update:", data);
 
   const totalAmount = parseFloat(currentAmount) || 0;
   const amountPaid = parseFloat(currentAmountPaid) || 0;
@@ -136,6 +135,14 @@ const UpdateStatusComp = ({
       return;
     }
 
+    console.log("Submitting form with:", {
+      status,
+      amount,
+      paymentMethod,
+      selectedBank,
+    });
+    setIsSubmitting(true);
+
     try {
       const payload: any = { status };
 
@@ -149,12 +156,14 @@ const UpdateStatusComp = ({
       }
 
       updateOrderPaymentStatus({ orderId, payload });
-      showToast("Payment status updated successfully", "success");
-      onClose();
     } catch (error) {
       showToast("Failed to update payment status", "error");
     } finally {
-      setIsSubmitting(false);
+      if (updateOrderPaymentStatusSuccess) {
+        showToast("Payment status updated successfully", "success");
+        onClose();
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -355,20 +364,20 @@ const UpdateStatusComp = ({
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-              disabled={isSubmitting}
+              disabled={updateOrderPaymentStatusLoading}
             >
               Cancel
             </button>
-            <button
+            <Button
               type="button"
               onClick={handleSubmit}
-              disabled={updateOrderPaymentStatusLoading || isSubmitting}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-green-400 disabled:cursor-not-allowed"
+              disabled={updateOrderPaymentStatusLoading}
+              className="flex-1 cursor-pointer px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:bg-green-400 disabled:cursor-not-allowed"
             >
               {updateOrderPaymentStatusLoading
                 ? "Updating..."
                 : "Update Status"}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
