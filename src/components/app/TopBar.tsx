@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useNotificationContext } from "../providers/NotificationProvider";
+// import { useNotificationContext } from "../providers/NotificationProvider";
 import { SidebarTrigger } from "../ui/sidebar";
 import { CustomModal } from "./CustomModal";
 import KycConfirm from "./kyc/KycConfirm";
@@ -34,10 +34,10 @@ import KycConfirm from "./kyc/KycConfirm";
 export function TopBar() {
   const business_id = useBusinessStore((state) => state.business_id);
   const { user } = useUserRole();
-  const { notifications, isConnected } = useNotificationContext();
+  // const { notifications, isConnected } = useNotificationContext();
 
-  console.log("notifications", notifications);
-  console.log("isConnected", isConnected);
+  // console.log("notifications", notifications);
+  // console.log("isConnected", isConnected);
   console.log("user", user);
 
   const [showConfirmKycModal, setShowConfirmKycModal] = useState(false);
@@ -54,7 +54,7 @@ export function TopBar() {
   const firstName = nameParts[0] || "";
 
   // Get notification count
-  const notificationCount = notifications?.length || 0;
+  const notificationCount = []?.length || 0;
 
   // Get user initials for avatar fallback
   const getInitials = (fullName: string) => {
