@@ -23,7 +23,7 @@ const PaymentMethods = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-8 border-b border-gray-200 mb-8">
+        {/* <div className="flex gap-8 border-b border-gray-200 mb-8">
           <button
             onClick={() => setActiveTab("online")}
             className={`pb-4 px-1 text-base md:text-lg font-medium transition-colors relative ${
@@ -50,7 +50,7 @@ const PaymentMethods = () => {
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-green-600" />
             )}
           </button>
-        </div>
+        </div> */}
 
         {/* Content */}
         {activeTab === "online" && (

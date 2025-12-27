@@ -14,6 +14,7 @@ import { useReturnDamagedProductMutation } from "@/api/products/product-return";
 import { useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
 
+import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "./useDebounce";
@@ -429,15 +430,15 @@ export const useInventoryHook = ({
         onError: (error: any) => {
           console.log("Error creating service:", error);
 
-          // const mockError = {
-          //   response: {
-          //     data: {
-          //       hint: "3",
-          //       message: "Test error message from backend",
-          //     },
-          //   },
-          // };
-          // handleSubscriptionError(mockError);
+          const mockError = {
+            response: {
+              data: {
+                hint: "3",
+                message: "Test error message from backend",
+              },
+            },
+          };
+          handleSubscriptionError(mockError);
           const errorMessage =
             error?.message || error?.error || "Error creating service";
           showToast(errorMessage, "error");
