@@ -8,7 +8,7 @@ export const ProductFormSkeleton = () => {
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           {/* Product Summary Skeleton */}
           <div className="order-1 lg:order-2 lg:col-span-3">
-            <Card className="border-gray-200 shadow-sm bg-white sticky top-4 py-5">
+            <Card className="border-gray-200 animate-pulse shadow-sm bg-white sticky top-4 py-5">
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
               </CardHeader>

@@ -11,6 +11,11 @@ const calculateCharges = (amount: number) => {
   return 50;
 };
 
+const calculateStampDuty = (amount: number) => {
+  // Stamp duty only applies to withdrawals above 10,000
+  return amount > 10000 ? 50 : 0;
+};
+
 const ConfirmTransfer = ({
   transferDetails,
   beneficiaryInfo,
@@ -23,7 +28,9 @@ const ConfirmTransfer = ({
   const [error, setError] = useState("");
 
   const charges = calculateCharges(transferDetails?.amount || 0);
-  const totalAmount = (parseInt(transferDetails?.amount) || 0) + charges;
+  const stampDuty = calculateStampDuty(transferDetails?.amount || 0);
+  const totalAmount =
+    (parseInt(transferDetails?.amount) || 0) + charges + stampDuty;
 
   const handleTransfer = async () => {
     if (pin.length !== 4) {
@@ -87,11 +94,19 @@ const ConfirmTransfer = ({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="font-medium text-gray-700">Charges:</span>
+              <span className="font-medium text-gray-700">System Charges:</span>
               <span className="text-gray-700 font-medium">
                 {formatToNaira(charges)}
               </span>
             </div>
+            {stampDuty > 0 && (
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-700">Stamp Duty:</span>
+                <span className="text-gray-700 font-medium">
+                  {formatToNaira(stampDuty)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between border-t pt-2 border-gray-200">
               <span className="font-bold text-gray-800">Total:</span>
               <span className="text-green-600 font-bold">

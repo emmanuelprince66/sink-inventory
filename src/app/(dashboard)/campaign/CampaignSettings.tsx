@@ -264,7 +264,7 @@ const CampaignSettings = () => {
   }, [CampaignSettingsData, CampaignSettingsLoading]);
 
   const handleSave = () => {
-    // Validation checks
+    // Validation checks - only for enabled campaigns
     const errors = [];
 
     if (isPurchaseMessageEnabled && !purchaseMessage.trim()) {
@@ -297,67 +297,66 @@ const CampaignSettings = () => {
     }
 
     // Build the payload as an array of automation objects
+    // Include ALL campaigns, not just enabled ones
     const payload: AutomationSetting[] = [];
 
-    // Point of Purchase
-    if (isPurchaseMessageEnabled && purchaseMessage.trim()) {
-      payload.push({
-        type: "POINT-OF-PURCHASE",
-        message: purchaseMessage.trim(),
-        channel: getChannelFromSendingMethods(sendingMethods),
-        is_active: true,
-      });
-    }
+    // Point of Purchase - always include
+    payload.push({
+      type: "POINT-OF-PURCHASE",
+      message:
+        purchaseMessage.trim() ||
+        "We appreciate your patronage! Looking forward to serving you better. Management St Michael",
+      channel: getChannelFromSendingMethods(sendingMethods),
+      is_active: isPurchaseMessageEnabled,
+    });
 
-    // Inactive Customers
-    if (isActiveCustomersEnabled && activeCustomersMessage.trim()) {
-      payload.push({
-        type: "INACTIVE",
-        message: activeCustomersMessage.trim(),
-        channel: getChannelFromSendingMethods(activeCustomersSendingMethods),
-        is_active: true,
-      });
-    }
+    // Inactive Customers - always include
+    payload.push({
+      type: "INACTIVE",
+      message: activeCustomersMessage.trim() || "",
+      channel: getChannelFromSendingMethods(activeCustomersSendingMethods),
+      is_active: isActiveCustomersEnabled,
+    });
 
-    // Friday Message
-    if (isFridayMessageEnabled && fridayMessage.trim()) {
-      payload.push({
-        type: "FRIDAY",
-        message: fridayMessage.trim(),
-        channel: getChannelFromSendingMethods(fridaySendingMethods),
-        is_active: true,
-      });
-    }
+    // Friday Message - always include
+    payload.push({
+      type: "FRIDAY",
+      message:
+        fridayMessage.trim() ||
+        "Thank God it's Friday! 🎉 Wishing you a fantastic weekend ahead! Don't forget to check out our weekend specials.",
+      channel: getChannelFromSendingMethods(fridaySendingMethods),
+      is_active: isFridayMessageEnabled,
+    });
 
-    // Monday Message
-    if (isMondayMessageEnabled && mondayMessage.trim()) {
-      payload.push({
-        type: "MONDAY",
-        message: mondayMessage.trim(),
-        channel: getChannelFromSendingMethods(mondaySendingMethods),
-        is_active: true,
-      });
-    }
+    // Monday Message - always include
+    payload.push({
+      type: "MONDAY",
+      message:
+        mondayMessage.trim() ||
+        "It's Monday already! 💪 Start your week strong and make it count. We're here to support your goals!",
+      channel: getChannelFromSendingMethods(mondaySendingMethods),
+      is_active: isMondayMessageEnabled,
+    });
 
-    // New Month Message
-    if (isNewMonthMessageEnabled && newMonthMessage.trim()) {
-      payload.push({
-        type: "NEW-MONTH",
-        message: newMonthMessage.trim(),
-        channel: getChannelFromSendingMethods(newMonthSendingMethods),
-        is_active: true,
-      });
-    }
+    // New Month Message - always include
+    payload.push({
+      type: "NEW-MONTH",
+      message:
+        newMonthMessage.trim() ||
+        "Happy New Month! 🌟 May this month bring you joy, success, and amazing opportunities. Check out our monthly deals!",
+      channel: getChannelFromSendingMethods(newMonthSendingMethods),
+      is_active: isNewMonthMessageEnabled,
+    });
 
-    // Returning Customer Message
-    if (isReturnedMessageEnabled && newReturnedMessage.trim()) {
-      payload.push({
-        type: "RETURNING-CUSTOMER",
-        message: newReturnedMessage.trim(),
-        channel: getChannelFromSendingMethods(returnedSendingMethods),
-        is_active: true,
-      });
-    }
+    // Returning Customer Message - always include
+    payload.push({
+      type: "RETURNING-CUSTOMER",
+      message:
+        newReturnedMessage.trim() ||
+        "Welcome back! 🎉 We're thrilled to see you again. Explore our latest offerings and enjoy exclusive deals just for returning customers.",
+      channel: getChannelFromSendingMethods(returnedSendingMethods),
+      is_active: isReturnedMessageEnabled,
+    });
 
     console.log("Final payload:", payload);
     handleSaveSettings(payload);

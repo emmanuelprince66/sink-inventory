@@ -497,6 +497,7 @@ export const useInventoryHook = ({
     addReturnedOrDamagedProductLoading,
     InventoryData,
     CategoriesData,
+    business_id,
     addDiscountSubmit,
     addDiscountForm,
     InventoryDataLoading: InventoryDataLoading || isRefetchingInventory,

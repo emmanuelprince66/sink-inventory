@@ -19,6 +19,7 @@ import {
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
+import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
 import ServiceTable from "./ServiceTable";
@@ -130,6 +131,7 @@ const Inventory = () => {
   const {
     InventoryData,
     CategoriesData,
+    business_id,
     InventoryDataLoading,
     CategoriesDataLoading,
   } = useInventoryHook({
@@ -229,13 +231,14 @@ const Inventory = () => {
 
             {/* Secondary Button - Full width on mobile, natural width on desktop */}
 
-            <Button
+            <DownloadInventoryButton business_id={business_id} />
+            {/* <Button
               variant={"outline"}
               className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
               // onClick={openAttendantsModal}
             >
               Download Report
-            </Button>
+            </Button> */}
 
             <Button
               variant="outline"

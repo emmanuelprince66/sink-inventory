@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/toast/useToast";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { useEffect, useState } from "react";
 
@@ -18,8 +19,7 @@ const UpdateStatusComp = ({
     BankData,
   } = useOrdersHook({});
 
-  const showToast = (message: string, type: string) =>
-    console.log(type, message);
+  const { showToast } = useToast();
 
   const totalAmount = parseFloat(currentAmount) || 0;
   const amountPaid = parseFloat(currentAmountPaid) || 0;
@@ -155,6 +155,8 @@ const UpdateStatusComp = ({
         }
       }
 
+      console.log("orderid:", orderId, "payload:", payload);
+
       updateOrderPaymentStatus({ orderId, payload });
     } catch (error) {
       showToast("Failed to update payment status", "error");
@@ -172,28 +174,28 @@ const UpdateStatusComp = ({
       <div className="w-full">
         <div className="space-y-4">
           {/* Payment Summary */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-blue-900 mb-2">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-green-900 mb-2">
               Payment Summary
             </h3>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span className="text-blue-700">Total Amount:</span>
-                <span className="font-semibold text-blue-900">
+                <span className="text-green-700">Total Amount:</span>
+                <span className="font-semibold text-green-900">
                   ₦{totalAmount.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-blue-700">Amount Paid:</span>
+                <span className="text-green-700">Amount Paid:</span>
                 <span className="font-semibold text-green-600">
                   ₦{amountPaid.toLocaleString()}
                 </span>
               </div>
-              <div className="flex justify-between pt-1 border-t border-blue-200">
-                <span className="text-blue-700 font-medium">
+              <div className="flex justify-between pt-1 border-t border-green-200">
+                <span className="text-green-700 font-medium">
                   Remaining Balance:
                 </span>
-                <span className="font-bold text-blue-900">
+                <span className="font-bold text-green-900">
                   ₦{remainingAmount.toLocaleString()}
                 </span>
               </div>

@@ -1,20 +1,22 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import ShowAllAttendants from "../sales/ShowAllAttendants";
 import CustomerAnalytics from "./CustomerAnalytics";
+import { DownloadReportButton } from "./DownloadReportsButton";
 import ProductAnalytics from "./ProductAnalytics";
 import SalesAnalytics from "./SalesAnalytics";
 import SkeletonComp from "./SkeletonComp";
 
 const Analytics = () => {
   const { user } = useUserRole();
+  const business_id = useBusinessStore((state) => state.business_id);
 
   const AnalyticsOptionsTab =
     user?.role === "OWNER"
@@ -25,8 +27,6 @@ const Analytics = () => {
     from: new Date(),
     to: new Date(),
   });
-
-  console.log("dateRange--33", dateRange);
 
   const [attendantId, setAttendantId] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -54,6 +54,9 @@ const Analytics = () => {
     searchInput,
   });
 
+  // const { mutate: downloadReport, isPending: isDownloading } =
+  //   useDownloadAnalyticsReport();
+
   const handleClearAttendant = () => {
     setAttendantId("");
     setAttendantsName("");
@@ -64,6 +67,23 @@ const Analytics = () => {
     setAttendantsName(attendants?.name);
     closeAttendantsModal();
   };
+
+  // const handleDownloadReport = () => {
+  //   if (!business_id) {
+  //     return;
+  //   }
+
+  //   downloadReport({
+  //     id: business_id,
+  //     start_date: dateRange?.from
+  //       ? moment(dateRange.from).format("YYYY-MM-DD")
+  //       : undefined,
+  //     end_date: dateRange?.to
+  //       ? moment(dateRange.to).format("YYYY-MM-DD")
+  //       : undefined,
+  //     format: "csv",
+  //   });
+  // };
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-2 sm:px-2 lg:px-0">
@@ -76,13 +96,19 @@ const Analytics = () => {
           <div className="grid grid-cols-1 sm:flex justify-end gap-2 sm:gap-3 w-full">
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
 
-            <Button
+            <DownloadReportButton
+              business_id={business_id}
+              dateRange={dateRange}
+            />
+            {/* <Button
               variant={"outline"}
-              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
-              // onClick={openAttendantsModal}
+              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleDownloadReport}
+              disabled={isDownloading || !business_id}
             >
-              Download Report
-            </Button>
+              <Download className="w-4 h-4 mr-2" />
+              {isDownloading ? "Downloading..." : "Download Report"}
+            </Button> */}
           </div>
         </div>
 
