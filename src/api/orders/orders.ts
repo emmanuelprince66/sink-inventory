@@ -152,6 +152,7 @@ export const useFetchAllOrdersQuery = ({
 };
 
 export const FetchOrderById = async (id: string) => {
+  console.log("id--33", id);
   // console.log("useQuery:", useQuery); //
   const response = await fetch(`/api/orders/${id}/view`);
   if (!response.ok) throw new Error("Error fetching order data");
@@ -162,6 +163,7 @@ type QueryFnType = typeof FetchOrderById;
 
 type options = QueryConfigType<QueryFnType>;
 export const useFetchOrderByIdQuery = (id: any, config?: options) => {
+  console.log("useFetchOrderByIdQuery - id:", id);
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
       if ([404, 401].includes(error.status)) return false;

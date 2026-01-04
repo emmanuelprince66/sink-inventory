@@ -90,6 +90,7 @@ export const queryKey = {
     getProductAnalytics: "get-product-analytics",
     getCustomerAnalytics: "get-customer-analytics",
     getBankAnalyticsBreakdown: "get-bank-analytics-breakdown",
+    getReportAnalytics: "get-report-analytics",
   },
   expenses: {
     getAllExpenses: "get-all-expenses",

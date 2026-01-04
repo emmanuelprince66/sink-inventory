@@ -53,6 +53,8 @@ export const useOrdersHook = ({
   const params = useParams();
   const orderId = (params.id as string) || id;
 
+  console.log("orderId in useOrdersHook:", orderId);
+
   const isUserSubscribed = useIsUserSubscribeStore(
     (state: any) => state.is_subscribed
   );
@@ -136,6 +138,8 @@ export const useOrdersHook = ({
     isLoading: OrderIdDataLoading,
     refetch: OrderIdDataRefetch,
   } = useFetchOrderByIdQuery(orderId, { enabled: !!orderId });
+
+  console.log("orderId", orderId);
 
   // Data fetching for orders with filters
   const {

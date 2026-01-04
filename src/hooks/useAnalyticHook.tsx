@@ -54,7 +54,7 @@ export const useAnalyticHook = ({
         : undefined,
       name,
     },
-    enabled: openPaymentDetailsModal,
+    enabled: openPaymentDetailsModal && name !== "" && !!name,
   });
   const { data: ProductAnalyticData, isLoading: ProductAnalyticLoading } =
     useFetchProductAnalyticQuery({
