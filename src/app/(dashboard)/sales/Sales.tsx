@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -21,6 +22,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import DiscountProduct from "./DiscountProduct";
+import { DownloadSalesButton } from "./DownloadSalesButton";
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
 import ShowAllAttendants from "./ShowAllAttendants";
@@ -163,6 +165,7 @@ const CustomSalesCard = ({
 };
 
 const Sales = () => {
+  const business_id = useBusinessStore((state) => state.business_id);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
@@ -304,13 +307,16 @@ const Sales = () => {
           </div>
 
           <div className="flex flex-col justify-center sm:flex-row items-center sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <Button
-              variant={"outline"}
-              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
-              // onClick={openAttendantsModal}
-            >
-              Download Report
-            </Button>
+            <DownloadSalesButton
+              business_id={business_id}
+              dateRange={dateRange}
+              activeTab={activeTab}
+              attendantId={attendantId}
+              searchInput={searchInput}
+              activeProductFilter={activeProductFilter}
+              activeOrderFilter={activeOrderFilter}
+              className="w-full sm:w-auto"
+            />
 
             {user && user?.role === "OWNER" && (
               <Button
