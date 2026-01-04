@@ -41,7 +41,7 @@ export const DownloadInventoryButton = ({
           disabled={isDownloading || !business_id}
         >
           <Download className="w-4 h-4 mr-2" />
-          {isDownloading ? "Downloading..." : "Download Inventory"}
+          {isDownloading ? "Downloading..." : "Download Report"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
