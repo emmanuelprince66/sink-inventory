@@ -430,18 +430,16 @@ export const useInventoryHook = ({
         onError: (error: any) => {
           console.log("Error creating service:", error);
 
-          const mockError = {
-            response: {
-              data: {
-                hint: "3",
-                message: "Test error message from backend",
-              },
-            },
-          };
-          handleSubscriptionError(mockError);
-          const errorMessage =
-            error?.message || error?.error || "Error creating service";
-          showToast(errorMessage, "error");
+          // Check if it's a subscription error first
+          const isSubscriptionError = handleSubscriptionError(error);
+
+          // Only show regular error toast if it's NOT a subscription error
+          if (!isSubscriptionError) {
+            const errorMessage =
+              error?.message || error?.error || "Error creating service";
+            showToast(errorMessage, "error");
+          }
+
           closeModal();
         },
       }

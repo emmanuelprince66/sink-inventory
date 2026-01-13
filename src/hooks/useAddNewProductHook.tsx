@@ -13,7 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -217,24 +217,20 @@ interface ProductVariation {
 // HELPER FUNCTION TO EXTRACT VARIATIONS FROM API DATA
 // ============================================================
 const extractVariationsFromAPI = (variations: any[]): Variation[] => {
+  console.log("🔍 [extractVariationsFromAPI] Input variations:", variations);
   if (!variations || variations.length === 0) return [];
 
-  // Extract variation types from combination names
-  // Example: "Red / 100" -> Color: [Red], Size: [100]
   const variationMap = new Map<string, Set<string>>();
 
   variations.forEach((v) => {
     const parts = v.name.split(" / ").map((p: string) => p.trim());
 
     parts.forEach((part: string, index: number) => {
-      // Determine variation type based on position or content
       let variationType: string;
 
       if (index === 0) {
-        // First part is typically Color
         variationType = "Color";
       } else if (index === 1) {
-        // Second part is typically Size
         variationType = "Size";
       } else {
         variationType = `Variation ${index + 1}`;
@@ -247,12 +243,16 @@ const extractVariationsFromAPI = (variations: any[]): Variation[] => {
     });
   });
 
-  // Convert map to array format
-  return Array.from(variationMap.entries()).map(([name, valuesSet]) => ({
-    id: `variation-${Date.now()}-${name}`,
-    name,
-    values: Array.from(valuesSet),
-  }));
+  const result = Array.from(variationMap.entries()).map(
+    ([name, valuesSet]) => ({
+      id: `variation-${Date.now()}-${name}`,
+      name,
+      values: Array.from(valuesSet),
+    })
+  );
+
+  console.log("✅ [extractVariationsFromAPI] Extracted variations:", result);
+  return result;
 };
 
 // ============================================================
@@ -280,14 +280,23 @@ export const useAddNewProductHook = ({
   );
   const queryClient = useQueryClient();
 
+  // Track form initialization state
+  const [isFormReady, setIsFormReady] = useState(false);
+  const productIdRef = useRef<string | null>(null);
+
+  console.log(
+    "🚀 [useAddNewProductHook] Mode:",
+    isEditMode ? "EDIT" : "CREATE"
+  );
+  console.log("🆔 [useAddNewProductHook] Product ID:", productId);
+  console.log("🏢 [useAddNewProductHook] Business ID:", business_id);
+
   // ============================================================
   // DATA FETCHING
   // ============================================================
 
   const { data: ProductData, isLoading: ProductDataLoading } =
     useFetchProductByIdQuery(productId, { enabled: isEditMode });
-
-  console.log("product data", ProductData);
 
   const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
     useFetchProductTransactionsQuery({
@@ -307,7 +316,7 @@ export const useAddNewProductHook = ({
     });
 
   const { data: SupplierData, isLoading: SupplierLoading } =
-    useFetchSupplierDataQuery(business_id);
+    useFetchSupplierDataQuery(business_id, { enabled: !!business_id });
 
   // ============================================================
   // MUTATIONS
@@ -359,29 +368,35 @@ export const useAddNewProductHook = ({
   // ============================================================
 
   const getCategoryByName = useCallback(
-    (name: string) => {
-      if (!CategoriesData?.data) return undefined;
+    (name: string | null | undefined) => {
+      if (!name || !CategoriesData?.data) return "";
       const category = CategoriesData.data.find(
         (category: any) => category.name === name
       );
-      return category?.id;
+      console.log(`🏷️ [getCategoryByName] "${name}" -> ID:`, category?.id);
+      return category?.id || "";
     },
     [CategoriesData]
   );
 
   const getSupplierByName = useCallback(
-    (name: string) => {
-      if (!SupplierData?.data?.results?.data) return undefined;
+    (name: string | null | undefined) => {
+      if (!name || !SupplierData?.data?.results?.data) return "";
       const supplier = SupplierData.data.results.data.find(
         (supplier: any) => supplier.name === name
       );
-      return supplier?.id;
+      console.log(`🚚 [getSupplierByName] "${name}" -> ID:`, supplier?.id);
+      return supplier?.id || "";
     },
     [SupplierData]
   );
 
   const generateProductVariations = useCallback(
     (variations: Variation[]): ProductVariation[] => {
+      console.log(
+        "🎲 [generateProductVariations] Input variations:",
+        variations
+      );
       if (variations.length === 0) return [];
 
       const generateCombinations = (arrays: string[][]): string[][] => {
@@ -396,7 +411,7 @@ export const useAddNewProductHook = ({
       const valueArrays = variations.map((v) => v.values);
       const combinations = generateCombinations(valueArrays);
 
-      return combinations.map((combination, index) => ({
+      const result = combinations.map((combination, index) => ({
         id: `variation-${Date.now()}-${index}`,
         combination: combination.join(" / "),
         cost_price: "",
@@ -408,58 +423,103 @@ export const useAddNewProductHook = ({
         discount_threshold: "",
         expiry_date: "",
       }));
+
+      console.log(
+        "✅ [generateProductVariations] Generated combinations:",
+        result
+      );
+      return result;
     },
     []
   );
 
   // ============================================================
-  // RESET FORM WITH PRODUCT DATA (EDIT MODE)
+  // RESET FORM WITH PRODUCT DATA (EDIT MODE) - FIXED
   // ============================================================
 
   useEffect(() => {
-    if (
-      isEditMode &&
-      !ProductDataLoading &&
-      ProductData?.data &&
-      CategoriesData &&
-      SupplierData
-    ) {
-      const itemsData = ProductData.data;
+    // Reset form ready state when product ID changes
+    if (productIdRef.current !== productId) {
+      console.log("🔄 [useEffect] Product ID changed, resetting form state");
+      productIdRef.current = productId as string;
+      setIsFormReady(false);
+    }
 
-      // Check if this is a product with variations
-      const hasVariations =
-        itemsData.variations && itemsData.variations.length > 0;
+    // Skip if not in edit mode
+    if (!isEditMode) {
+      setIsFormReady(true);
+      return;
+    }
 
-      if (hasVariations) {
-        // MULTIPLE VARIATIONS FLOW
-        const extractedVariations = extractVariationsFromAPI(
-          itemsData.variations
-        );
+    // Wait for critical data to load (only category and product data)
+    if (ProductDataLoading || CategoriesDataLoading) {
+      console.log("⏳ [useEffect] Waiting for critical data to load...");
+      return;
+    }
 
-        const productVariations = itemsData.variations.map((v: any) => ({
-          id: v.id || "",
-          combination: v.name || "",
-          cost_price: v.cost_price ? String(v.cost_price) : "",
-          selling_price: v.selling_price ? String(v.selling_price) : "",
-          quantity: v.quantity ? String(v.quantity) : "",
-          status: v.status || "IN-STOCK",
-          discount: v.discount ? String(v.discount) : "",
-          low_stock_threshold: v.low_stock_threshold
-            ? String(v.low_stock_threshold)
-            : "",
-          discount_threshold: v.discount_threshold
-            ? String(v.discount_threshold)
-            : "",
-          expiry_date: v.expiry_date || "",
-        }));
+    // Ensure critical data exists
+    if (!ProductData?.data || !CategoriesData) {
+      console.log("⚠️ [useEffect] Critical data not available yet");
+      return;
+    }
 
-        form.reset({
+    console.log("🔄 [useEffect] Starting form reset...");
+
+    const itemsData = ProductData.data;
+    console.log("📦 [useEffect] Product data:", itemsData);
+
+    const hasVariations =
+      itemsData.variations && itemsData.variations.length > 0;
+    console.log("📊 [useEffect] Has variations:", hasVariations);
+
+    if (hasVariations) {
+      // MULTIPLE VARIATIONS FLOW
+      console.log("🔀 [useEffect] Processing MULTIPLE variations");
+      const extractedVariations = extractVariationsFromAPI(
+        itemsData.variations
+      );
+
+      const productVariations = itemsData.variations.map(
+        (v: any, index: number) => {
+          console.log(`📝 [useEffect] Mapping variation ${index}:`, v);
+          return {
+            id: v.id || "",
+            combination: v.name || "",
+            cost_price: v.cost_price ? String(v.cost_price) : "",
+            selling_price: v.selling_price ? String(v.selling_price) : "",
+            quantity: v.quantity ? String(v.quantity) : "",
+            status: v.status || "IN-STOCK",
+            discount: v.discount ? String(v.discount) : "",
+            low_stock_threshold: v.low_stock_threshold
+              ? String(v.low_stock_threshold)
+              : "",
+            discount_threshold: v.discount_threshold
+              ? String(v.discount_threshold)
+              : "",
+            expiry_date: v.expiry_date || "",
+          };
+        }
+      );
+
+      console.log(
+        "✅ [useEffect] Product variations mapped:",
+        productVariations
+      );
+
+      const categoryId = getCategoryByName(itemsData.category);
+      const supplierId = getSupplierByName(itemsData.supplier);
+
+      console.log("🏷️ [useEffect] Resolved category ID:", categoryId);
+      console.log("🚚 [useEffect] Resolved supplier ID:", supplierId);
+
+      form.reset(
+        {
           item_name: itemsData.name || "",
           sku: itemsData.sku || "",
-          category: getCategoryByName(itemsData.category) || "",
+          category: categoryId,
           expiry_date: itemsData.expiry_date || "",
           image: itemsData.image || undefined,
-          supplier: getSupplierByName(itemsData.supplier) || "",
+          supplier: supplierId,
           product_unit: itemsData.unit || "",
           payment_method: "",
           type: "",
@@ -476,16 +536,27 @@ export const useAddNewProductHook = ({
           selling_price: "",
           discount_value: "",
           discount_threshold: "",
-        });
-      } else {
-        // SINGLE PRODUCT FLOW
-        form.reset({
+        },
+        { keepDefaultValues: false }
+      );
+    } else {
+      // SINGLE PRODUCT FLOW
+      console.log("📦 [useEffect] Processing SINGLE product");
+
+      const categoryId = getCategoryByName(itemsData.category);
+      const supplierId = getSupplierByName(itemsData.supplier);
+
+      console.log("🏷️ [useEffect] Resolved category ID:", categoryId);
+      console.log("🚚 [useEffect] Resolved supplier ID:", supplierId);
+
+      form.reset(
+        {
           item_name: itemsData.name || "",
           sku: itemsData.sku || "",
-          category: getCategoryByName(itemsData.category) || "",
+          category: categoryId,
           expiry_date: itemsData.expiry_date || "",
           image: itemsData.image || undefined,
-          supplier: getSupplierByName(itemsData.supplier) || "",
+          supplier: supplierId,
           stock_quantity: itemsData.quantity ? String(itemsData.quantity) : "",
           low_stock_tresh: itemsData.low_stock_threshold
             ? String(itemsData.low_stock_threshold)
@@ -508,42 +579,73 @@ export const useAddNewProductHook = ({
           variation_type: "single",
           variations: [],
           product_variations: [],
-        });
-      }
+        },
+        { keepDefaultValues: false }
+      );
     }
+
+    console.log("✅ [useEffect] Form reset complete");
+
+    // Mark form as ready AFTER reset completes
+    // Use setTimeout to ensure the form state has propagated
+    setTimeout(() => {
+      setIsFormReady(true);
+      console.log("✅ [useEffect] Form marked as ready");
+
+      // Debug log current values
+      const currentValues = form.getValues();
+      console.log("🔍 [useEffect] Current form values after reset:");
+      console.log("  - category:", currentValues.category);
+      console.log("  - supplier:", currentValues.supplier);
+      console.log("  - product_unit:", currentValues.product_unit);
+      console.log("  - expiry_date:", currentValues.expiry_date);
+      console.log("  - item_name:", currentValues.item_name);
+    }, 0);
   }, [
     ProductData,
     ProductDataLoading,
+    CategoriesDataLoading,
     form,
     isEditMode,
     CategoriesData,
-    SupplierData,
+    productId,
     getCategoryByName,
     getSupplierByName,
   ]);
 
   // ============================================================
-  // FORM SUBMISSION
+  // FORM SUBMISSION - IMPROVED
   // ============================================================
 
   const onSubmit = async (values: ProductFormValues) => {
+    console.log("🚀 [onSubmit] Starting submission");
+    console.log("📋 [onSubmit] Form values:", values);
+    console.log("🔧 [onSubmit] Is Edit Mode:", isEditMode);
+
     if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
+      console.log("⚠️ [onSubmit] User not subscribed, opening modal");
       handleOpenNotSubscribeModal?.();
       return;
     }
-    if (!business_id) return;
+    if (!business_id) {
+      console.log("❌ [onSubmit] No business_id found");
+      return;
+    }
 
     const formData = new FormData();
 
-    formData.append("name", values.item_name);
+    // Always append basic product info
+    formData.append("name", values.item_name.trim());
 
     if (values.image instanceof File) {
+      console.log("📷 [onSubmit] Appending image file:", values.image.name);
       formData.append("image", values.image);
     }
 
     const appendIfNotEmpty = (fieldName: string, value: string | undefined) => {
-      if (value !== undefined && value !== null && value !== "") {
-        formData.append(fieldName, value);
+      if (value !== undefined && value !== null && value.trim() !== "") {
+        formData.append(fieldName, value.trim());
+        console.log(`✅ [onSubmit] Appended ${fieldName}:`, value);
       }
     };
 
@@ -556,13 +658,12 @@ export const useAddNewProductHook = ({
     appendIfNotEmpty("percentage_discount", values.percentage_discount);
 
     if (values.expiry_date) {
-      appendIfNotEmpty(
-        "expiry_date",
-        moment(values.expiry_date).format("YYYY-MM-DD")
-      );
+      const formattedDate = moment(values.expiry_date).format("YYYY-MM-DD");
+      appendIfNotEmpty("expiry_date", formattedDate);
     }
 
     if (values.variation_type === "single") {
+      console.log("📦 [onSubmit] Processing SINGLE product variation");
       appendIfNotEmpty("quantity", values.stock_quantity);
       appendIfNotEmpty("low_stock_threshold", values.low_stock_tresh);
       appendIfNotEmpty("status", values.stock_status);
@@ -571,33 +672,62 @@ export const useAddNewProductHook = ({
       appendIfNotEmpty("discount", values.discount_value);
       appendIfNotEmpty("discount_threshold", values.discount_threshold);
     } else {
-      const variationInputs = values.product_variations.map((variation) => {
-        const baseVariation: any = {
-          name: variation.combination,
-          cost_price: variation.cost_price,
-          selling_price: variation.selling_price,
-          quantity: variation.quantity,
-          low_stock_threshold: variation.low_stock_threshold || "",
-          discount_threshold: variation.discount_threshold || "",
-          expiry_date: variation.expiry_date
-            ? moment(variation.expiry_date).format("YYYY-MM-DD")
-            : "",
-          status: variation.status,
-          discount: variation.discount || "",
-        };
+      console.log("🔀 [onSubmit] Processing MULTIPLE product variations");
+      console.log(
+        "📊 [onSubmit] Total variations:",
+        values.product_variations.length
+      );
 
-        // ✅ ADD ID FOR EDIT MODE (only for existing variations)
-        if (
-          isEditMode &&
-          variation.id &&
-          !variation.id.startsWith("variation-")
-        ) {
-          baseVariation.id = variation.id;
+      const variationInputs = values.product_variations.map(
+        (variation, index) => {
+          console.log(
+            `🔍 [onSubmit] Processing variation ${index}:`,
+            variation
+          );
+
+          const baseVariation: any = {
+            name: variation.combination.trim(),
+            cost_price: variation.cost_price.trim(),
+            selling_price: variation.selling_price.trim(),
+            quantity: variation.quantity.trim(),
+            status: variation.status,
+          };
+
+          if (variation.low_stock_threshold?.trim()) {
+            baseVariation.low_stock_threshold =
+              variation.low_stock_threshold.trim();
+          }
+          if (variation.discount?.trim()) {
+            baseVariation.discount = variation.discount.trim();
+          }
+          if (variation.discount_threshold?.trim()) {
+            baseVariation.discount_threshold =
+              variation.discount_threshold.trim();
+          }
+          if (variation.expiry_date) {
+            baseVariation.expiry_date = moment(variation.expiry_date).format(
+              "YYYY-MM-DD"
+            );
+          }
+
+          if (
+            isEditMode &&
+            variation.id &&
+            !variation.id.startsWith("variation-")
+          ) {
+            baseVariation.id = variation.id;
+            console.log(
+              `🆔 [onSubmit] Added ID to variation ${index}:`,
+              variation.id
+            );
+          }
+
+          console.log(`✅ [onSubmit] Final variation ${index}:`, baseVariation);
+          return baseVariation;
         }
+      );
 
-        return baseVariation;
-      });
-
+      console.log("📦 [onSubmit] All variation inputs:", variationInputs);
       formData.append("variation_inputs", JSON.stringify(variationInputs));
     }
 
@@ -618,27 +748,53 @@ export const useAddNewProductHook = ({
       }
     }
 
+    console.log("=== 📋 FORM DATA DEBUG ===");
+    console.log("🔧 Is Edit Mode:", isEditMode);
+    console.log("🆔 Product ID:", productId);
+
+    const formDataObj: Record<string, any> = {};
+    Array.from(formData.keys()).forEach((key) => {
+      const value = formData.get(key);
+      if (key === "variation_inputs" && typeof value === "string") {
+        formDataObj[key] = JSON.parse(value);
+      } else {
+        formDataObj[key] = value;
+      }
+    });
+    console.log("📋 Complete FormData Object:", formDataObj);
+    console.log("=== END DEBUG ===");
+
     if (isEditMode) {
+      console.log("🔄 [onSubmit] Calling editProduct mutation");
       editProduct(
-        { payload: formData, productId: productId },
+        { payload: formData, productId: productId as string },
         {
-          onSuccess: () => {
+          onSuccess: (response) => {
+            console.log("✅ [onSubmit] Edit successful, response:", response);
             queryClient.invalidateQueries({
               queryKey: [queryKey.inventory.getAllInventory],
             });
             router.back();
           },
+          onError: (error) => {
+            console.error("❌ [onSubmit] Edit failed:", error);
+          },
         }
       );
     } else {
+      console.log("➕ [onSubmit] Calling addProduct mutation");
       addProduct(
         { payload: formData, businessId: business_id },
         {
-          onSuccess: () => {
+          onSuccess: (response) => {
+            console.log("✅ [onSubmit] Add successful, response:", response);
             queryClient.invalidateQueries({
               queryKey: [queryKey.inventory.getAllInventory],
             });
             router.back();
+          },
+          onError: (error) => {
+            console.error("❌ [onSubmit] Add failed:", error);
           },
         }
       );
@@ -683,10 +839,37 @@ export const useAddNewProductHook = ({
     { label: "Partial Payment", value: "PART" },
   ];
 
+  // ============================================================
+  // COMPREHENSIVE LOADING STATE - OPTIMIZED
+  // ============================================================
+
+  // Only wait for critical data needed to populate the form
+  const isLoadingCriticalData = isEditMode
+    ? ProductDataLoading || CategoriesDataLoading
+    : CategoriesDataLoading;
+
+  // Check if we have the critical data
+  const hasRequiredData = isEditMode
+    ? !!ProductData && !!CategoriesData
+    : !!CategoriesData;
+
+  // Show loading until form is fully initialized and ready
+  const isPageLoading = isLoadingCriticalData || (isEditMode && !isFormReady);
+
+  console.log("🔍 [Loading State Debug]:");
+  console.log("  - isEditMode:", isEditMode);
+  console.log("  - ProductDataLoading:", ProductDataLoading);
+  console.log("  - CategoriesDataLoading:", CategoriesDataLoading);
+  console.log("  - isFormReady:", isFormReady);
+  console.log("  - hasRequiredData:", hasRequiredData);
+  console.log("  - isPageLoading:", isPageLoading);
+
   return {
     form,
     onSubmit,
-    loading: (isEditMode && ProductDataLoading) || form.formState.isLoading,
+    loading: isPageLoading,
+    isLoadingCriticalData,
+    hasRequiredData,
     addProductPending,
     editProductPending,
     ProductDataLoading,

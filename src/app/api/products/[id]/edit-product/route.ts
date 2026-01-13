@@ -36,6 +36,10 @@ export async function PATCH(
     }
 
     const formData = await request.formData();
+    console.log("formData entries:", Object.fromEntries(formData.entries()));
+
+    console.log("formData", formData);
+
     const apiUrl = `${BaseUrl}product/single_product/${productId}/`;
 
     const response = await fetch(apiUrl, {
