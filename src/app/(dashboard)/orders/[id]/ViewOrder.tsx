@@ -39,7 +39,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   const orderData = OrderIdData?.data;
 
-  console.log("orderData", orderData);
+  console.log("orderData", orderData?.data);
 
   // Update selectedShippingStatus when orderData loads
   useEffect(() => {
@@ -400,7 +400,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                             {index + 1}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900">
-                            Nil
+                            {product?.product_name || "Nil"}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900 text-right">
                             ₦ {unitPrice.toLocaleString()}
@@ -568,9 +568,21 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </p>
                   {orderData.customer_info?.phone && (
                     <p className="text-sm text-gray-500">
-                      {orderData.customer_info.phone}
+                      {orderData.delivery_address.phone}
                     </p>
                   )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    Delivery Location
+                  </h4>
+                  <p className="text-sm text-gray-900 mb-1">
+                    {`${orderData.delivery_address?.city || ""}, ${
+                      orderData.delivery_address?.state || ""
+                    }, ${orderData.delivery_address?.country || ""}`
+                      .replace(/^, |, $|, , /g, "")
+                      .trim() || "N/A"}
+                  </p>
                 </div>
 
                 <div>

@@ -5,50 +5,67 @@ import {
   useSubscriptionStore,
 } from "@/lib/store/subscription-store";
 
-// Map backend error codes/hints to notification types
+// Map backend error codes to notification types
 const ERROR_CODE_MAP: Record<string | number, SubscriptionNotificationType> = {
-  "1": "upgrade_required",
-  "2": "subscription_expired",
-  "3": "feature_limit_reached",
+  "1": "subscription_expired", // User is not subscribed at all
+  "2": "feature_limit_reached", // Current plan limit reached for this feature
+  "3": "upgrade_required", // Generic upgrade required
   UPGRADE_REQUIRED: "upgrade_required",
   SUBSCRIPTION_EXPIRED: "subscription_expired",
   FEATURE_LIMIT_REACHED: "feature_limit_reached",
-  FREE_PLAN_LIMIT: "upgrade_required",
+  FREE_PLAN_LIMIT: "feature_limit_reached",
   PLAN_EXPIRED: "subscription_expired",
 };
 
 interface BackendError {
   code?: string | number;
-  message?: string;
+  message?: string | number;
   hint?: string;
   subscription_status?: string;
-  error?: string;
+  error?: string | number;
 }
 
 /**
  * Checks if an error from the backend indicates a subscription issue
  * and triggers the appropriate notification modal
+ *
+ * Error codes:
+ * "1" - User is not subscribed (no active subscription)
+ * "2" - Feature limit reached for current plan (e.g., max customers, products, etc.)
+ * "3" - Generic upgrade required
  */
 export const handleSubscriptionError = (error: any): boolean => {
   const showNotification = useSubscriptionStore.getState().showNotification;
 
-  // Extract error data
-  const errorData: BackendError = error?.response?.data || error?.data || error;
+  // Extract error data - handle multiple formats
+  const errorData: BackendError =
+    error?.response?.data || error?.data || error || {};
 
-  // Check various possible fields where backend might send the hint
-  const hint =
-    errorData.hint || errorData.code || errorData.subscription_status;
+  // Check various possible fields where backend might send the code
+  // Priority order: message -> error -> code -> hint -> subscription_status
+  const errorCode =
+    errorData.message ||
+    errorData.error ||
+    errorData.code ||
+    errorData.hint ||
+    errorData.subscription_status;
 
-  if (!hint) return false;
+  if (!errorCode) return false;
 
-  // Convert hint to string for comparison
-  const hintStr = String(hint);
+  // Convert to string for comparison
+  const errorCodeStr = String(errorCode);
 
   // Check if this is a subscription-related error
-  const notificationType = ERROR_CODE_MAP[hintStr];
+  const notificationType = ERROR_CODE_MAP[errorCodeStr];
 
   if (notificationType) {
-    showNotification(notificationType, errorData);
+    // Add context about what feature was being accessed
+    const enhancedErrorData = {
+      ...errorData,
+      errorCode: errorCodeStr,
+    };
+
+    showNotification(notificationType, enhancedErrorData);
     return true; // Error was handled as a subscription issue
   }
 

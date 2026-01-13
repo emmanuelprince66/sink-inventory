@@ -27,7 +27,7 @@ interface SubscriptionStore {
   ) => void;
   closeNotification: () => void;
   handleUpgrade: () => void;
-  handleRenew: () => void;
+  handleSubscribe: () => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
@@ -37,39 +37,42 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   showNotification: (type, additionalData) => {
     if (!type) return;
 
-    const notifications: Record<
-      Exclude<SubscriptionNotificationType, null>,
-      SubscriptionNotification
-    > = {
-      upgrade_required: {
-        type: "upgrade_required",
-        title: "Upgrade to Continue",
-        message:
-          "You're currently on the free plan. Upgrade now to unlock more features and grow your business.",
-        ctaText: "Upgrade Plan",
-        ctaAction: () => get().handleUpgrade(),
-      },
+    const notifications = {
       subscription_expired: {
-        type: "subscription_expired",
-        title: "Subscription Expired",
+        // Error code "1" - User is not subscribed at all
+        type: "subscription_expired" as const,
+        title: "Subscription Required",
         message:
-          "Your subscription has expired. Renew now to continue using all features without interruption.",
-        ctaText: "Renew Subscription",
-        ctaAction: () => get().handleRenew(),
+          "You need an active subscription to perform this action. Subscribe now to unlock all features and grow your business.",
+        ctaText: "Subscribe Now",
+        ctaAction: () => get().handleSubscribe(),
+        additionalInfo: "No active subscription found.",
       },
       feature_limit_reached: {
-        type: "feature_limit_reached",
-        title: "Upgrade Required",
+        // Error code "2" - Current plan limit reached for specific feature
+        type: "feature_limit_reached" as const,
+        title: "Plan Limit Reached",
         message:
-          "You've reached the limit of your current plan. Upgrade to access this feature and do more.",
+          "You've reached the maximum limit for this feature on your current plan. Upgrade to a higher plan to continue adding more.",
         ctaText: "Upgrade Plan",
         ctaAction: () => get().handleUpgrade(),
-        additionalInfo: "Current plan limit reached.",
+        additionalInfo:
+          additionalData?.message || "Current plan limit reached.",
+      },
+      upgrade_required: {
+        // Error code "3" - Generic upgrade required
+        type: "upgrade_required" as const,
+        title: "Upgrade Required",
+        message:
+          "This feature is not available on your current plan. Upgrade now to unlock this functionality and do more.",
+        ctaText: "Upgrade Plan",
+        ctaAction: () => get().handleUpgrade(),
+        additionalInfo: additionalData?.message,
       },
     };
 
     set({
-      notification: notifications[type],
+      notification: notifications[type] as SubscriptionNotification,
       isModalOpen: true,
     });
   },
@@ -82,16 +85,16 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   },
 
   handleUpgrade: () => {
-    // Navigate to upgrade page or open upgrade flow
+    // Navigate to upgrade page for existing subscribers
     console.log("Navigating to upgrade page...");
     // Example: router.push('/subscription/upgrade');
     get().closeNotification();
   },
 
-  handleRenew: () => {
-    // Navigate to renewal page or open renewal flow
-    console.log("Navigating to renewal page...");
-    // Example: router.push('/subscription/renew');
+  handleSubscribe: () => {
+    // Navigate to subscription page for non-subscribers
+    console.log("Navigating to subscription page...");
+    // Example: router.push('/subscription/plans');
     get().closeNotification();
   },
 }));

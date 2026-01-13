@@ -66,6 +66,7 @@ export async function PATCH(
         Authorization: `Bearer ${accessToken}`,
       },
       cache: "no-store",
+      body: JSON.stringify(payload),
     });
 
     console.log("Response status:", response);

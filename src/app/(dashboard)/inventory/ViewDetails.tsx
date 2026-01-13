@@ -95,6 +95,8 @@ const ViewDetails = ({
 
         {/* Action Buttons - Stack on mobile */}
         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-3 sm:pt-4 border-t">
+          {/* href={`/product/${data?.id}/edit-product`} */}
+          {/* href={`/new-add-product/${data?.id}/edit-product`} */}
           <Link
             href={`/product/${data?.id}/edit-product`}
             className="w-full sm:w-auto"

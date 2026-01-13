@@ -188,6 +188,8 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
               message: "Invalid credentials",
             });
           }
+
+          setIsLoading(false);
         },
       });
     } catch (error) {

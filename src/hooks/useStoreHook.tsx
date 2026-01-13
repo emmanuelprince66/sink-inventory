@@ -2,6 +2,7 @@ import { useUpdateBusinessMutation } from "@/api/business/create-business";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useEffect, useRef, useState } from "react";
+import { useToast } from "./toast/useToast";
 
 interface StoreData {
   logo: string;
@@ -104,6 +105,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [copySuccess, setCopySuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showToast } = useToast();
 
   // Image handling states
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -136,8 +138,8 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     if (findBusiness) {
       const baseUrl = "https://store.sync360.africa";
       const slugUrl = findBusiness.store_url || "";
-      const outStoreUrl = `${baseUrl}/o/?slug=${slugUrl}`;
-      const inStoreUrl = `${baseUrl}/i/?slug=${slugUrl}`;
+      const outStoreUrl = `${baseUrl}/o/${slugUrl}`;
+      const inStoreUrl = `${baseUrl}/i/${slugUrl}`;
 
       const data = {
         logo: findBusiness.logo || "/placeholder.svg?height=120&width=120",
@@ -391,6 +393,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       // Call the mutation
       updateBusiness(formDataToSend, {
         onSuccess: (data) => {
+          showToast(data?.message, "success");
           console.log("Business updated successfully:", data);
           setStoreData(formData);
           setIsSubmitting(false);
@@ -398,6 +401,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
           refetch();
         },
         onError: (error) => {
+          showToast("Something went wrong. please try again!", "error");
           console.error("Error submitting form:", error);
           setIsSubmitting(false);
         },
