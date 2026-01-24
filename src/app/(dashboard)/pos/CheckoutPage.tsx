@@ -1,4 +1,5 @@
 "use client";
+import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCartStore } from "@/lib/store/cart-store";
@@ -8,6 +9,7 @@ import {
   Edit3,
   MinusCircle,
   PlusCircle,
+  RefreshCw,
   Trash2,
   UserPlus,
   Users,
@@ -16,33 +18,65 @@ import { useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
 import RecieptPage from "./RecieptPage";
+import VariationChangeModal from "./VariationChangeModal";
+
+// Types
+interface Variation {
+  id: string;
+  name: string;
+  sku: string;
+  status: string;
+  selling_price: number;
+  quantity: number;
+  cost_price?: number;
+  discount?: number;
+  discount_threshold?: number;
+  expiry_date?: string;
+  low_stock_threshold?: number;
+  sold?: number;
+  parentProductId?: string;
+  parentProductName?: string;
+  parentProductVariations?: Variation[];
+}
+
+interface CartItem extends Variation {
+  cartQuantity: number;
+  type?: string;
+  category?: string;
+  amount?: number;
+  image?: string;
+}
 
 interface CheckoutPageProps {
   clearCartFunc: () => void;
 }
 
-const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
+const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
   const [customer, setCustomer] = useState<any | null>(null);
   const [attendant, setAttendant] = useState<any | null>(null);
-  const [showReceipt, setShowReceipt] = useState(false);
-  const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
-  const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] = useState(false);
-  const [bulkQuantityInputs, setBulkQuantityInputs] = useState<{
-    [key: string]: string;
-  }>({});
-  const [bulkQuantityErrors, setBulkQuantityErrors] = useState<{
-    [key: string]: string;
-  }>({});
-  const [priceEditInputs, setPriceEditInputs] = useState<{
-    [key: string]: string;
-  }>({});
-  const [priceEditErrors, setPriceEditErrors] = useState<{
-    [key: string]: string;
-  }>({});
+  const [showReceipt, setShowReceipt] = useState<boolean>(false);
+  const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] =
+    useState<boolean>(false);
+  const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] =
+    useState<boolean>(false);
+  const [bulkQuantityInputs, setBulkQuantityInputs] = useState<
+    Record<string, string>
+  >({});
+  const [bulkQuantityErrors, setBulkQuantityErrors] = useState<
+    Record<string, string>
+  >({});
+  const [priceEditInputs, setPriceEditInputs] = useState<
+    Record<string, string>
+  >({});
+  const [priceEditErrors, setPriceEditErrors] = useState<
+    Record<string, string>
+  >({});
   const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [changingVariationItem, setChangingVariationItem] =
+    useState<CartItem | null>(null);
+  const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
   const { user } = useUserRole();
 
-  // Get cart items and actions from the store
   const {
     cartItems,
     removeFromCart,
@@ -57,6 +91,7 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
     getAutomaticDiscountAmount,
     getTotalPrice,
     getEligibleItems,
+    addToCart,
   } = useCartStore();
 
   const subtotal = getSubtotal();
@@ -64,24 +99,15 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
   const total = getTotalPrice();
   const eligibleItems = getEligibleItems();
 
-  // Check if there are any bulk quantity errors
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
     (error) => error !== ""
   );
-
-  // Check if there are any price edit errors
   const hasPriceEditErrors = Object.values(priceEditErrors).some(
     (error) => error !== ""
   );
 
-  // Handle bulk quantity input
-  const handleBulkQuantityChange = (itemId: string, value: string) => {
-    setBulkQuantityInputs((prev) => ({
-      ...prev,
-      [itemId]: value,
-    }));
-
-    // Validate input
+  const handleBulkQuantityChange = (itemId: string, value: string): void => {
+    setBulkQuantityInputs((prev) => ({ ...prev, [itemId]: value }));
     const numValue = parseInt(value);
     if (value === "" || isNaN(numValue) || numValue <= 0) {
       setBulkQuantityErrors((prev) => ({
@@ -89,122 +115,104 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
         [itemId]: "Invalid input",
       }));
     } else {
-      setBulkQuantityErrors((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
+      setBulkQuantityErrors((prev) => ({ ...prev, [itemId]: "" }));
     }
   };
 
-  // Apply bulk quantity
-  const applyBulkQuantity = (itemId: string) => {
+  const applyBulkQuantity = (itemId: string): void => {
     const inputValue = bulkQuantityInputs[itemId];
     const numValue = parseInt(inputValue);
-
     if (inputValue && !isNaN(numValue) && numValue > 0) {
       updateCartItemQuantity(itemId, numValue);
-
-      // Clear the input after applying
-      setBulkQuantityInputs((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
-      setBulkQuantityErrors((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
+      setBulkQuantityInputs((prev) => ({ ...prev, [itemId]: "" }));
+      setBulkQuantityErrors((prev) => ({ ...prev, [itemId]: "" }));
     }
   };
 
-  // Handle price edit input
-  const handlePriceEditChange = (itemId: string, value: string) => {
-    setPriceEditInputs((prev) => ({
-      ...prev,
-      [itemId]: value,
-    }));
-
-    // Validate input
+  const handlePriceEditChange = (itemId: string, value: string): void => {
+    setPriceEditInputs((prev) => ({ ...prev, [itemId]: value }));
     const numValue = parseFloat(value);
     if (value === "" || isNaN(numValue) || numValue <= 0) {
-      setPriceEditErrors((prev) => ({
-        ...prev,
-        [itemId]: "Invalid price",
-      }));
+      setPriceEditErrors((prev) => ({ ...prev, [itemId]: "Invalid price" }));
     } else {
-      setPriceEditErrors((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
+      setPriceEditErrors((prev) => ({ ...prev, [itemId]: "" }));
     }
   };
 
-  // Apply price edit
-  const applyPriceEdit = (itemId: string) => {
+  const applyPriceEdit = (itemId: string): void => {
     const inputValue = priceEditInputs[itemId];
     const numValue = parseFloat(inputValue);
-
     if (inputValue && !isNaN(numValue) && numValue > 0) {
       updateCartItemPrice(itemId, numValue);
-
-      // Clear the input after applying
-      setPriceEditInputs((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
-      setPriceEditErrors((prev) => ({
-        ...prev,
-        [itemId]: "",
-      }));
+      setPriceEditInputs((prev) => ({ ...prev, [itemId]: "" }));
+      setPriceEditErrors((prev) => ({ ...prev, [itemId]: "" }));
       setEditingPriceId(null);
     }
   };
 
-  // Cancel price edit
-  const cancelPriceEdit = (itemId: string) => {
-    setPriceEditInputs((prev) => ({
-      ...prev,
-      [itemId]: "",
-    }));
-    setPriceEditErrors((prev) => ({
-      ...prev,
-      [itemId]: "",
-    }));
+  const cancelPriceEdit = (itemId: string): void => {
+    setPriceEditInputs((prev) => ({ ...prev, [itemId]: "" }));
+    setPriceEditErrors((prev) => ({ ...prev, [itemId]: "" }));
     setEditingPriceId(null);
   };
 
-  // Start price edit
-  const startPriceEdit = (itemId: string, currentPrice: number) => {
+  const startPriceEdit = (itemId: string, currentPrice: number): void => {
     setEditingPriceId(itemId);
     setPriceEditInputs((prev) => ({
       ...prev,
       [itemId]: currentPrice.toString(),
     }));
-    setPriceEditErrors((prev) => ({
-      ...prev,
-      [itemId]: "",
-    }));
+    setPriceEditErrors((prev) => ({ ...prev, [itemId]: "" }));
   };
 
-  // Decimal quantity handler (strict 0.5 increments only)
-  const handleCustomQuantity = (itemId: string, value: string) => {
+  const handleCustomQuantity = (itemId: string, value: string): void => {
     const sanitizedValue = value.replace(/[^0-9.]/g, "");
-
     if (!sanitizedValue || isNaN(parseFloat(sanitizedValue))) {
       updateCartItemQuantity(itemId, 0.5);
       return;
     }
-
     const numValue = parseFloat(sanitizedValue);
     const roundedValue = Math.round(numValue * 2) / 2;
-
     const item = cartItems.find((item) => item.id === itemId);
     if (!item) return;
-
     const availableQuantity = item.quantity ?? 999;
     updateCartItemQuantity(
       itemId,
       Math.min(Math.max(roundedValue, 0.5), availableQuantity)
     );
+  };
+
+  const handleChangeVariation = (
+    currentItemId: string,
+    newVariation: Variation,
+    quantity: number
+  ): void => {
+    // Get the current item to preserve parent product info
+    const currentItem = cartItems.find((item) => item.id === currentItemId);
+
+    // Remove current item
+    removeFromCart(currentItemId);
+
+    // Add new variation with specified quantity and preserve parent product variations
+    addToCart({
+      ...newVariation,
+      id: newVariation.id,
+      name: `${currentItem?.parentProductName || ""} - ${newVariation.name}`,
+      selling_price: newVariation.selling_price,
+      amount: newVariation.selling_price,
+      cartQuantity: quantity,
+      // CRITICAL: Preserve these fields from the current item
+      parentProductId: currentItem?.parentProductId,
+      parentProductName: currentItem?.parentProductName,
+      parentProductVariations: currentItem?.parentProductVariations,
+      type: currentItem?.type,
+      category: currentItem?.category,
+    });
+  };
+
+  const openVariationChanger = (item: CartItem): void => {
+    setChangingVariationItem(item);
+    setShowVariationModal(true);
   };
 
   return (
@@ -227,7 +235,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
         />
       ) : (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
-          {/* Header Section */}
           <div className="flex flex-col space-y-3">
             <p className="text-2xl font-bold text-gray-800">Checkout</p>
             <div className="grid grid-cols-1 gap-2">
@@ -256,7 +263,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
             </div>
           </div>
 
-          {/* Cart Items Section */}
           <div className="flex flex-col flex-grow">
             <div className="flex justify-between items-center w-full mb-1">
               <h2 className="text-sm font-semibold text-gray-800 mb-3">
@@ -278,12 +284,13 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                 </div>
               ) : (
                 <div className="divide-y divide-[#52b661]/10">
-                  {cartItems.map((item) => {
+                  {cartItems.map((item: any) => {
                     const discountInfo = getItemDiscountDisplay(item);
                     const bulkError = bulkQuantityErrors[item.id];
                     const priceError = priceEditErrors[item.id];
                     const isEditingPrice = editingPriceId === item.id;
                     const currentPrice = item.selling_price || item.amount || 0;
+                    const hasVariations = item.parentProductId;
 
                     return (
                       <div key={item.id} className="p-1 flex items-start">
@@ -298,15 +305,31 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                         </div>
 
                         <div className="flex-grow">
-                          <h3 className="font-sm text-gray-800">{item.name}</h3>
+                          <div className="flex items-center gap-1">
+                            <h3 className="font-sm text-gray-800">
+                              {item.name}
+                            </h3>
+                            {hasVariations && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 px-1 text-[8px] hover:bg-green-50"
+                                onClick={() => openVariationChanger(item)}
+                              >
+                                <RefreshCw
+                                  size={10}
+                                  className="text-green-600"
+                                />
+                              </Button>
+                            )}
+                          </div>
                           <p className="text-[10px] text-gray-500">
                             SKU: {item.sku}
                           </p>
 
-                          {/* Price Display with Edit functionality */}
                           <div className="flex items-center gap-2">
                             {isEditingPrice ? (
-                              <div className="flex items-start flex-col  gap-1">
+                              <div className="flex items-start flex-col gap-1">
                                 <input
                                   type="number"
                                   min="0"
@@ -381,7 +404,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                               Discount threshold: {item.discount_threshold}
                             </p>
                           )}
-                          {/* Show enhanced discount applied indicator */}
                           {discountInfo && (
                             <div className="text-[8px] text-green-600 font-semibold">
                               <p>
@@ -398,7 +420,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                         </div>
 
                         <div className="flex flex-col items-end space-y-2 ml-2">
-                          {/* Original quantity controls (whole numbers) */}
                           <div className="flex items-center space-x-2">
                             <Button
                               variant="outline"
@@ -431,7 +452,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                             </Button>
                           </div>
 
-                          {/* Bulk Quantity Input */}
                           <div className="flex items-center gap-1">
                             <span className="text-[8px] text-gray-500">
                               Bulk Qty:
@@ -469,7 +489,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                             </p>
                           )}
 
-                          {/* Decimal quantity controls (0.5 increments only) */}
                           {item?.type?.toLocaleLowerCase() === "product" && (
                             <div className="flex items-center gap-1">
                               <span className="text-[8px] text-gray-500">
@@ -542,7 +561,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
             </div>
           </div>
 
-          {/* Order Summary Section */}
           <div className="bg-white rounded-lg shadow-sm p-1 border border-[#52b661]/20">
             <h2 className="text-sm font-semibold text-gray-800 mb-3">
               Order Summary
@@ -557,7 +575,6 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
                 </span>
               </div>
 
-              {/* Enhanced Automatic Discount Section */}
               {automaticDiscountAmount > 0 && (
                 <div className="flex justify-between items-center">
                   <div>
@@ -606,21 +623,45 @@ const CheckoutPage = ({ clearCartFunc }: CheckoutPageProps) => {
             </div>
           </div>
 
-          {/* Drawers */}
           <CustomerDrawer
             open={isCustomerDrawerOpen}
             onOpenChange={setIsCustomerDrawerOpen}
-            onCustomerSelect={(selectedCustomer: any) => {
-              setCustomer(selectedCustomer);
-            }}
+            onCustomerSelect={(selectedCustomer: any) =>
+              setCustomer(selectedCustomer)
+            }
           />
           <AttendantDrawer
             open={isAttendantDrawerOpen}
             onOpenChange={setIsAttendantDrawerOpen}
-            onAttendantSelect={(selectedAttendant: any) => {
-              setAttendant(selectedAttendant);
-            }}
+            onAttendantSelect={(selectedAttendant: any) =>
+              setAttendant(selectedAttendant)
+            }
           />
+
+          {/* Variation Change Modal */}
+          {changingVariationItem && (
+            <CustomModal
+              isOpen={showVariationModal}
+              onClose={() => {
+                setShowVariationModal(false);
+                setChangingVariationItem(null);
+              }}
+              title=""
+            >
+              <VariationChangeModal
+                isOpen={showVariationModal}
+                onClose={() => {
+                  setShowVariationModal(false);
+                  setChangingVariationItem(null);
+                }}
+                currentItem={changingVariationItem}
+                availableVariations={
+                  changingVariationItem.parentProductVariations || []
+                }
+                onChangeVariation={handleChangeVariation}
+              />
+            </CustomModal>
+          )}
         </div>
       )}
     </>

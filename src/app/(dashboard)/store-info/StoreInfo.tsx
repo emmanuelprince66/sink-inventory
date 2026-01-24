@@ -77,8 +77,8 @@ export default function StoreInfo() {
   const { BusinessDataLoading, storeData, copySuccess, copyStoreUrl } =
     useStoreHook({ setIsEditing });
 
-  console.log("storeData", storeData);
-  console.log("isEditing", isEditing);
+  // console.log("storeData", storeData);
+  // console.log("isEditing", isEditing);
 
   return (
     <>

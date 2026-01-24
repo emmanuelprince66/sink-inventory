@@ -4,6 +4,7 @@ import { useEditProductMutation } from "@/api/products/edit-product";
 import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchProductTransactionsQuery } from "@/api/products/get-transactions-history";
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
+import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -16,6 +17,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 import { z } from "zod";
+import { useToast } from "./toast/useToast";
 
 // ============================================================
 // SCHEMAS
@@ -49,12 +51,12 @@ const createProductSchema = (isEditMode: boolean) => {
           .instanceof(File)
           .refine(
             (file) => file.size <= 5 * 1024 * 1024,
-            "File size must be less than 5MB"
+            "File size must be less than 5MB",
           )
           .refine(
             (file) =>
               ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-            "Only .jpg, .png, and .webp formats are supported"
+            "Only .jpg, .png, and .webp formats are supported",
           ),
         z.string(),
         z.undefined(),
@@ -248,7 +250,7 @@ const extractVariationsFromAPI = (variations: any[]): Variation[] => {
       id: `variation-${Date.now()}-${name}`,
       name,
       values: Array.from(valuesSet),
-    })
+    }),
   );
 
   console.log("✅ [extractVariationsFromAPI] Extracted variations:", result);
@@ -271,12 +273,13 @@ export const useAddNewProductHook = ({
   const params = useParams();
   const { user } = useUserRole();
   const router = useRouter();
+  const { showToast } = useToast();
 
   const productId = id || params.id;
   const business_id = useBusinessStore((state: any) => state.business_id);
   const isEditMode = !!productId;
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state: any) => state.is_subscribed
+    (state: any) => state.is_subscribed,
   );
   const queryClient = useQueryClient();
 
@@ -286,7 +289,7 @@ export const useAddNewProductHook = ({
 
   console.log(
     "🚀 [useAddNewProductHook] Mode:",
-    isEditMode ? "EDIT" : "CREATE"
+    isEditMode ? "EDIT" : "CREATE",
   );
   console.log("🆔 [useAddNewProductHook] Product ID:", productId);
   console.log("🏢 [useAddNewProductHook] Business ID:", business_id);
@@ -295,8 +298,13 @@ export const useAddNewProductHook = ({
   // DATA FETCHING
   // ============================================================
 
-  const { data: ProductData, isLoading: ProductDataLoading } =
-    useFetchProductByIdQuery(productId, { enabled: isEditMode });
+  const {
+    data: ProductData,
+    isLoading: ProductDataLoading,
+    refetch: refetchProduct,
+  } = useFetchProductByIdQuery(productId, { enabled: isEditMode });
+
+  console.log("📦 [ProductData] Fetched product data:", ProductData);
 
   const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
     useFetchProductTransactionsQuery({
@@ -371,31 +379,31 @@ export const useAddNewProductHook = ({
     (name: string | null | undefined) => {
       if (!name || !CategoriesData?.data) return "";
       const category = CategoriesData.data.find(
-        (category: any) => category.name === name
+        (category: any) => category.name === name,
       );
       console.log(`🏷️ [getCategoryByName] "${name}" -> ID:`, category?.id);
       return category?.id || "";
     },
-    [CategoriesData]
+    [CategoriesData],
   );
 
   const getSupplierByName = useCallback(
     (name: string | null | undefined) => {
       if (!name || !SupplierData?.data?.results?.data) return "";
       const supplier = SupplierData.data.results.data.find(
-        (supplier: any) => supplier.name === name
+        (supplier: any) => supplier.name === name,
       );
       console.log(`🚚 [getSupplierByName] "${name}" -> ID:`, supplier?.id);
       return supplier?.id || "";
     },
-    [SupplierData]
+    [SupplierData],
   );
 
   const generateProductVariations = useCallback(
     (variations: Variation[]): ProductVariation[] => {
       console.log(
         "🎲 [generateProductVariations] Input variations:",
-        variations
+        variations,
       );
       if (variations.length === 0) return [];
 
@@ -404,7 +412,7 @@ export const useAddNewProductHook = ({
         const [first, ...rest] = arrays;
         const restCombinations = generateCombinations(rest);
         return first.flatMap((value) =>
-          restCombinations.map((combination) => [value, ...combination])
+          restCombinations.map((combination) => [value, ...combination]),
         );
       };
 
@@ -426,11 +434,11 @@ export const useAddNewProductHook = ({
 
       console.log(
         "✅ [generateProductVariations] Generated combinations:",
-        result
+        result,
       );
       return result;
     },
-    []
+    [],
   );
 
   // ============================================================
@@ -476,7 +484,7 @@ export const useAddNewProductHook = ({
       // MULTIPLE VARIATIONS FLOW
       console.log("🔀 [useEffect] Processing MULTIPLE variations");
       const extractedVariations = extractVariationsFromAPI(
-        itemsData.variations
+        itemsData.variations,
       );
 
       const productVariations = itemsData.variations.map(
@@ -498,12 +506,12 @@ export const useAddNewProductHook = ({
               : "",
             expiry_date: v.expiry_date || "",
           };
-        }
+        },
       );
 
       console.log(
         "✅ [useEffect] Product variations mapped:",
-        productVariations
+        productVariations,
       );
 
       const categoryId = getCategoryByName(itemsData.category);
@@ -537,7 +545,7 @@ export const useAddNewProductHook = ({
           discount_value: "",
           discount_threshold: "",
         },
-        { keepDefaultValues: false }
+        { keepDefaultValues: false },
       );
     } else {
       // SINGLE PRODUCT FLOW
@@ -580,7 +588,7 @@ export const useAddNewProductHook = ({
           variations: [],
           product_variations: [],
         },
-        { keepDefaultValues: false }
+        { keepDefaultValues: false },
       );
     }
 
@@ -675,14 +683,14 @@ export const useAddNewProductHook = ({
       console.log("🔀 [onSubmit] Processing MULTIPLE product variations");
       console.log(
         "📊 [onSubmit] Total variations:",
-        values.product_variations.length
+        values.product_variations.length,
       );
 
       const variationInputs = values.product_variations.map(
         (variation, index) => {
           console.log(
             `🔍 [onSubmit] Processing variation ${index}:`,
-            variation
+            variation,
           );
 
           const baseVariation: any = {
@@ -706,7 +714,7 @@ export const useAddNewProductHook = ({
           }
           if (variation.expiry_date) {
             baseVariation.expiry_date = moment(variation.expiry_date).format(
-              "YYYY-MM-DD"
+              "YYYY-MM-DD",
             );
           }
 
@@ -718,13 +726,13 @@ export const useAddNewProductHook = ({
             baseVariation.id = variation.id;
             console.log(
               `🆔 [onSubmit] Added ID to variation ${index}:`,
-              variation.id
+              variation.id,
             );
           }
 
           console.log(`✅ [onSubmit] Final variation ${index}:`, baseVariation);
           return baseVariation;
-        }
+        },
       );
 
       console.log("📦 [onSubmit] All variation inputs:", variationInputs);
@@ -734,7 +742,7 @@ export const useAddNewProductHook = ({
     if (values.payment_method === "CREDIT" && values.due_date) {
       appendIfNotEmpty(
         "due_date",
-        moment(values.due_date).format("YYYY-MM-DD")
+        moment(values.due_date).format("YYYY-MM-DD"),
       );
     }
 
@@ -743,7 +751,7 @@ export const useAddNewProductHook = ({
       if (values.due_date) {
         appendIfNotEmpty(
           "due_date",
-          moment(values.due_date).format("YYYY-MM-DD")
+          moment(values.due_date).format("YYYY-MM-DD"),
         );
       }
     }
@@ -774,12 +782,13 @@ export const useAddNewProductHook = ({
             queryClient.invalidateQueries({
               queryKey: [queryKey.inventory.getAllInventory],
             });
+            refetchProduct();
             router.back();
           },
           onError: (error) => {
             console.error("❌ [onSubmit] Edit failed:", error);
           },
-        }
+        },
       );
     } else {
       console.log("➕ [onSubmit] Calling addProduct mutation");
@@ -795,8 +804,16 @@ export const useAddNewProductHook = ({
           },
           onError: (error) => {
             console.error("❌ [onSubmit] Add failed:", error);
+            const isSubscriptionError = handleSubscriptionError(error);
+
+            // Only show regular error toast if it's NOT a subscription error
+            if (!isSubscriptionError) {
+              const errorMessage =
+                error?.message || error?.error || "Error creating service";
+              showToast(errorMessage, "error");
+            }
           },
-        }
+        },
       );
     }
   };

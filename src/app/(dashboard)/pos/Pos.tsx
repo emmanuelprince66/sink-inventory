@@ -1,5 +1,6 @@
 "use client";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Spinner } from "@/components/app/Spinner";
@@ -14,6 +15,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
 import { ScannerButton } from "./ScannerButton";
+import VariationSelectorModal from "./VariationSelectorModal";
 
 const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ssr: false,
@@ -24,8 +26,43 @@ const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ),
 });
 
-const Pos = () => {
-  const [searchInput, setSearchInput] = useState("");
+// Types
+interface Variation {
+  id: string;
+  name: string;
+  sku: string;
+  status: string;
+  selling_price: number;
+  quantity: number;
+  cost_price?: number;
+  discount?: number;
+  discount_threshold?: number;
+  expiry_date?: string;
+  low_stock_threshold?: number;
+  sold?: number;
+}
+
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  status: string;
+  selling_price?: number;
+  amount?: number;
+  quantity?: number;
+  image?: string;
+  type: string;
+  category?: string;
+  variations?: Variation[];
+  unit?: string;
+  discount?: number;
+  discount_threshold?: number;
+}
+
+const Pos: React.FC = () => {
+  const [searchInput, setSearchInput] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
 
   const {
     cartItems,
@@ -36,6 +73,7 @@ const Pos = () => {
     getTotalItems,
     getTotalPrice,
   } = useCartStore();
+
   const {
     ProductData,
     handleScanResult,
@@ -51,27 +89,82 @@ const Pos = () => {
     cartItems,
   });
 
-  console.log("product data", ProductData);
-  console.log("cartItems", cartItems);
-
   const { showToast } = useToast();
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     "IN-STOCK": "bg-green-100 text-green-800",
     LOW: "bg-yellow-100 text-yellow-800",
     "OUT-OF-STOCK": "bg-red-100 text-red-800",
     DEFAULT: "bg-gray-100 text-gray-800",
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     const upperStatus = status?.toUpperCase();
     if (upperStatus && statusColors.hasOwnProperty(upperStatus)) {
-      return statusColors[upperStatus as keyof typeof statusColors];
+      return statusColors[upperStatus];
     }
     return statusColors.DEFAULT;
   };
 
-  const handleSearchChange = (value: string) => {
+  const getProductPriceDisplay = (product: Product): string => {
+    if (product.variations && product.variations.length > 0) {
+      const prices = product.variations.map((v) => v.selling_price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+
+      if (minPrice === maxPrice) {
+        return formatToNaira(minPrice);
+      }
+
+      return `${formatToNaira(minPrice)} - ${formatToNaira(maxPrice)}`;
+    }
+
+    return formatToNaira(product.selling_price || product.amount || 0);
+  };
+
+  const handleProductClick = (product: Product): void => {
+    const isOutOfStock =
+      product.quantity === 0 || product.status === "OUT-OF-STOCK";
+
+    if (isOutOfStock) return;
+
+    // If product has variations, show modal
+    if (product.variations && product.variations.length > 0) {
+      setSelectedProduct(product);
+      setShowVariationModal(true);
+    } else {
+      // If no variations, add directly
+      handleAddToCart(product);
+    }
+  };
+
+  const handleAddVariations = (variations: any[]): void => {
+    variations.forEach((variation) => {
+      addToCart({
+        ...variation,
+        id: variation.id,
+        name: `${variation.parentProductName} - ${variation.name}`,
+        selling_price: variation.selling_price,
+        amount: variation.selling_price,
+        quantity: variation.quantity,
+        cartQuantity: variation.cartQuantity,
+        type: variation.type,
+        category: variation.category,
+        sku: variation.sku,
+        discount: variation.discount,
+        discount_threshold: variation.discount_threshold,
+        status: variation.status,
+        // IMPORTANT: Include these fields so variation can be changed later
+        parentProductId: variation.parentProductId,
+        parentProductName: variation.parentProductName,
+        parentProductVariations: variation.parentProductVariations,
+      });
+    });
+
+    showToast(`${variations.length} variation(s) added to cart`, "success");
+  };
+
+  const handleSearchChange = (value: string): void => {
     setSearchInput(value);
     setPage(1);
   };
@@ -99,8 +192,6 @@ const Pos = () => {
                   onValueChange={handleSearchChange}
                 />
               </div>
-              {/* Scanner Button */}
-
               {scannedProductLoading ? (
                 <Button variant="outline" disabled>
                   <Spinner className="text-primary-green-300" />
@@ -128,19 +219,29 @@ const Pos = () => {
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1 md:gap-1">
-                {ProductData?.data?.results?.data?.map((product: any) => {
+                {ProductData?.data?.results?.data?.map((product: Product) => {
                   const isOutOfStock =
                     product.quantity === 0 || product.status === "OUT-OF-STOCK";
+                  const hasVariations =
+                    product.variations && product.variations.length > 0;
+
                   return (
                     <div
                       key={product.id}
-                      onClick={() => !isOutOfStock && handleAddToCart(product)}
-                      className={`border rounded-lg p-2 md:p-2 transition-shadow duration-300 ${
+                      onClick={() => handleProductClick(product)}
+                      className={`border rounded-lg p-2 md:p-2 transition-shadow duration-300 relative ${
                         isOutOfStock
                           ? "border-gray-200 cursor-not-allowed opacity-50"
                           : "hover:border-green-300 border-gray-200 cursor-pointer group"
                       }`}
                     >
+                      {/* Variation Badge */}
+                      {hasVariations && !isOutOfStock && (
+                        <div className="absolute top-1 right-1 bg-green-600 text-white px-2 py-0.5 rounded-full text-[8px] font-medium z-10">
+                          {product?.variations?.length} options
+                        </div>
+                      )}
+
                       <div className="relative h-20 md:h-32 mb-2 rounded overflow-hidden bg-gray-100">
                         {product.image ? (
                           <Image
@@ -164,9 +265,7 @@ const Pos = () => {
                       </h3>
                       <div className="flex justify-between items-center mt-1">
                         <p className="text-[10px] md:text-[10px] font-semibold text-primary">
-                          {formatToNaira(
-                            product.selling_price || product.amount
-                          ) ?? "N/A"}
+                          {getProductPriceDisplay(product)}
                         </p>
                         {product.type === "PRODUCT" && (
                           <p
@@ -248,6 +347,25 @@ const Pos = () => {
           )}
         </aside>
       </div>
+
+      <CustomModal
+        isOpen={showVariationModal}
+        onClose={() => {
+          setShowVariationModal(false);
+          setSelectedProduct(null);
+        }}
+        title=""
+      >
+        <VariationSelectorModal
+          isOpen={showVariationModal}
+          onClose={() => {
+            setShowVariationModal(false);
+            setSelectedProduct(null);
+          }}
+          product={selectedProduct}
+          onAddVariations={handleAddVariations}
+        />
+      </CustomModal>
     </div>
   );
 };

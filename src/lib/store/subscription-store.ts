@@ -23,7 +23,7 @@ interface SubscriptionStore {
   // Actions
   showNotification: (
     type: SubscriptionNotificationType,
-    additionalData?: any
+    additionalData?: any,
   ) => void;
   closeNotification: () => void;
   handleUpgrade: () => void;
@@ -87,7 +87,7 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   handleUpgrade: () => {
     // Navigate to upgrade page for existing subscribers
     console.log("Navigating to upgrade page...");
-    // Example: router.push('/subscription/upgrade');
+    window.location.href = "/settings";
     get().closeNotification();
   },
 
