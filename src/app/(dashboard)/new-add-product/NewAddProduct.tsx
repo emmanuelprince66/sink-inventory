@@ -2134,7 +2134,7 @@ const NewAddProduct = ({
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent
           side="right"
-          className="w-[300px] md:w-[500px] bg-white shadow-xl p-5"
+          className="w-[300px] md:w-[500px] bg-white shadow-xl p-5 overflow-y-auto"
         >
           <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b border-green-200">
             <SheetTitle className="text-lg font-semibold">Add types</SheetTitle>
