@@ -46,6 +46,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -123,6 +124,7 @@ const NewAddProduct = ({
   const [bulkEditField, setBulkEditField] = useState<VariationField | "">("");
   const [bulkEditValue, setBulkEditValue] = useState("");
   const [showBulkEditInput, setShowBulkEditInput] = useState(false);
+  const { showToast } = useToast();
   const [editingVariationIndex, setEditingVariationIndex] = useState<
     number | null
   >(null);
@@ -173,7 +175,7 @@ const NewAddProduct = ({
       const newCombinations = generateProductVariations(variations);
       const mergedVariations = newCombinations.map((newVar) => {
         const existing = currentVariations.find(
-          (c) => c.combination === newVar.combination
+          (c) => c.combination === newVar.combination,
         );
         return existing || newVar;
       });
@@ -208,6 +210,37 @@ const NewAddProduct = ({
   const handleSaveVariation = () => {
     const filteredValues = newVariationValues.filter((v) => v.trim());
     if (!selectedVariationType || filteredValues.length === 0) return;
+
+    // Validation for Color - no numbers allowed
+    if (selectedVariationType === "Color") {
+      for (const value of filteredValues) {
+        if (/\d/.test(value)) {
+          showToast("Color values cannot contain numbers", "error");
+          return;
+        }
+      }
+    }
+
+    // Validation for Size - no letters allowed
+    if (selectedVariationType === "Size") {
+      for (const value of filteredValues) {
+        if (/[a-zA-Z]/.test(value)) {
+          showToast("Size values cannot contain letters", "error");
+          return;
+        }
+      }
+    }
+
+    // Check for duplicates (case-insensitive)
+    const lowerCaseValues = filteredValues.map((v) => v.toLowerCase());
+    const uniqueValues = new Set(lowerCaseValues);
+    if (uniqueValues.size !== lowerCaseValues.length) {
+      showToast(
+        `Duplicate ${selectedVariationType.toLowerCase()} values are not allowed`,
+        "error",
+      );
+      return;
+    }
 
     if (editingVariationIndex !== null) {
       updateVariation(editingVariationIndex, {
@@ -267,7 +300,7 @@ const NewAddProduct = ({
       setSelectedVariations([...selectedVariations, variationId]);
     } else {
       setSelectedVariations(
-        selectedVariations.filter((id) => id !== variationId)
+        selectedVariations.filter((id) => id !== variationId),
       );
     }
   };
@@ -276,7 +309,7 @@ const NewAddProduct = ({
     setBulkEditField(field);
     setBulkEditError(null);
     const firstSelectedVariation = productVariations.find((v) =>
-      selectedVariations.includes(v.id)
+      selectedVariations.includes(v.id),
     );
     if (firstSelectedVariation) {
       setBulkEditValue(String(firstSelectedVariation[field]));
@@ -330,8 +363,8 @@ const NewAddProduct = ({
         if (!/^\d*\.?\d*$/.test(cleanValue) || Number(cleanValue) <= 0) {
           setBulkEditError(
             `Invalid ${formatFieldLabel(
-              field as VariationField
-            )}: Please enter a valid number`
+              field as VariationField,
+            )}: Please enter a valid number`,
           );
           return;
         }
@@ -376,7 +409,7 @@ const NewAddProduct = ({
       const cleanValue = bulkEditValue.replace(/,/g, "");
       if (!/^\d*\.?\d*$/.test(cleanValue) || Number(cleanValue) <= 0) {
         setBulkEditError(
-          "Please enter a valid number greater than 0 for numeric fields"
+          "Please enter a valid number greater than 0 for numeric fields",
         );
         return;
       }
@@ -394,7 +427,7 @@ const NewAddProduct = ({
       if (selectedVariations.includes(variation.id)) {
         form.setValue(
           `product_variations.${index}.${bulkEditField}` as any,
-          bulkEditValue
+          bulkEditValue,
         );
         // ✅ CLEAR FIELD ERRORS AFTER SETTING VALUE
         form.clearErrors(`product_variations.${index}.${bulkEditField}` as any);
@@ -474,7 +507,7 @@ const NewAddProduct = ({
                       <span className="text-gray-600">Category:</span>
                       <span className="text-gray-900">
                         {CategoriesData?.data?.find(
-                          (cat: any) => cat.id === form.watch("category")
+                          (cat: any) => cat.id === form.watch("category"),
                         )?.name || "Not selected"}
                       </span>
                     </div>
@@ -499,7 +532,7 @@ const NewAddProduct = ({
                       {form.watch("expiry_date")
                         ? format(
                             new Date(form.watch("expiry_date")),
-                            "MMM dd, yyyy"
+                            "MMM dd, yyyy",
                           )
                         : "Not set"}
                     </span>
@@ -540,8 +573,8 @@ const NewAddProduct = ({
                     {isLoading
                       ? "Saving..."
                       : isEditMode
-                      ? "Update Product"
-                      : "Save Product"}
+                        ? "Update Product"
+                        : "Save Product"}
                   </Button>
                 </CardContent>
               </Card>
@@ -767,7 +800,7 @@ const NewAddProduct = ({
                                   variant={"outline"}
                                   className={cn(
                                     "w-full pl-3 text-left font-normal py-6 border border-gray-300",
-                                    !field.value && "text-muted-foreground"
+                                    !field.value && "text-muted-foreground",
                                   )}
                                 >
                                   {field.value ? (
@@ -793,7 +826,7 @@ const NewAddProduct = ({
                                 }
                                 onSelect={(date) => {
                                   field.onChange(
-                                    date ? date.toISOString() : ""
+                                    date ? date.toISOString() : "",
                                   );
                                   form.clearErrors("expiry_date");
                                 }}
@@ -1083,7 +1116,7 @@ const NewAddProduct = ({
                                             >
                                               {value}
                                             </Badge>
-                                          )
+                                          ),
                                         )}
                                       </div>
                                     </div>
@@ -1261,7 +1294,7 @@ const NewAddProduct = ({
                               <div className="flex items-center gap-2 w-full">
                                 <label className="text-sm font-medium whitespace-nowrap">
                                   {formatFieldLabel(
-                                    bulkEditField as VariationField
+                                    bulkEditField as VariationField,
                                   )}
                                   :
                                 </label>
@@ -1293,7 +1326,7 @@ const NewAddProduct = ({
                                         className={cn(
                                           "w-full pl-3 text-left py-5 max-w-[200px] font-normal border border-gray-300",
                                           !bulkEditValue &&
-                                            "text-muted-foreground"
+                                            "text-muted-foreground",
                                         )}
                                       >
                                         {bulkEditValue ? (
@@ -1318,14 +1351,14 @@ const NewAddProduct = ({
                                         }
                                         onSelect={(date) => {
                                           setBulkEditValue(
-                                            date ? date.toISOString() : ""
+                                            date ? date.toISOString() : "",
                                           );
                                           setBulkEditError(null);
                                         }}
                                         disabled={(date) =>
                                           date <
                                           new Date(
-                                            new Date().setHours(0, 0, 0, 0)
+                                            new Date().setHours(0, 0, 0, 0),
                                           )
                                         }
                                         initialFocus
@@ -1398,12 +1431,12 @@ const NewAddProduct = ({
                               {isBulkEditMode && (
                                 <Checkbox
                                   checked={selectedVariations.includes(
-                                    variation.id
+                                    variation.id,
                                   )}
                                   onCheckedChange={(checked) =>
                                     handleSelectVariation(
                                       variation.id,
-                                      checked as boolean
+                                      checked as boolean,
                                     )
                                   }
                                   onClick={(e) => e.stopPropagation()}
@@ -1433,7 +1466,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1459,7 +1492,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1485,7 +1518,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1511,7 +1544,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1569,7 +1602,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1595,7 +1628,7 @@ const NewAddProduct = ({
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
                                           form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`
+                                            `product_variations.${index}.discount_threshold`,
                                           );
                                         }}
                                       />
@@ -1620,13 +1653,13 @@ const NewAddProduct = ({
                                             className={cn(
                                               "w-full h-8 pl-3 text-left py-5 font-normal border border-gray-300 text-xs",
                                               !field.value &&
-                                                "text-muted-foreground"
+                                                "text-muted-foreground",
                                             )}
                                           >
                                             {field.value ? (
                                               format(
                                                 new Date(field.value),
-                                                "MMM dd, yyyy"
+                                                "MMM dd, yyyy",
                                               )
                                             ) : (
                                               <span>Pick date</span>
@@ -1649,16 +1682,16 @@ const NewAddProduct = ({
                                           }
                                           onSelect={(date) => {
                                             field.onChange(
-                                              date ? date.toISOString() : ""
+                                              date ? date.toISOString() : "",
                                             );
                                             form.clearErrors(
-                                              `product_variations.${index}.expiry_date`
+                                              `product_variations.${index}.expiry_date`,
                                             );
                                           }}
                                           disabled={(date) =>
                                             date <
                                             new Date(
-                                              new Date().setHours(0, 0, 0, 0)
+                                              new Date().setHours(0, 0, 0, 0),
                                             )
                                           }
                                           initialFocus
@@ -1712,7 +1745,7 @@ const NewAddProduct = ({
                                     >
                                       {supplier.name}
                                     </SelectItem>
-                                  )
+                                  ),
                                 )}
                               </SelectContent>
                             </Select>
@@ -1770,7 +1803,7 @@ const NewAddProduct = ({
                                     variant={"outline"}
                                     className={cn(
                                       "w-full pl-3 text-left font-normal border border-primary-green-300",
-                                      !field.value && "text-muted-foreground"
+                                      !field.value && "text-muted-foreground",
                                     )}
                                   >
                                     {field.value ? (
@@ -1796,7 +1829,7 @@ const NewAddProduct = ({
                                   }
                                   onSelect={(date) =>
                                     field.onChange(
-                                      date ? date.toISOString() : ""
+                                      date ? date.toISOString() : "",
                                     )
                                   }
                                   disabled={(date) => date < new Date()}
@@ -2037,7 +2070,7 @@ const NewAddProduct = ({
                     variant={"outline"}
                     className={cn(
                       "w-full pl-3 text-left py-5 font-normal border border-gray-300",
-                      !editAllData.expiry_date && "text-muted-foreground"
+                      !editAllData.expiry_date && "text-muted-foreground",
                     )}
                   >
                     {editAllData.expiry_date ? (
