@@ -32,7 +32,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
     accessorKey: "name",
     header: "Product",
     cell: ({ row }) => {
-      const inventory = row.original;
+      const inventory = row.original as any;
       return (
         <div className="flex items-center gap-3">
           <div className="relative h-10 w-10 rounded-md overflow-hidden">
@@ -43,7 +43,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
               className="object-cover"
             />
           </div>
-          <div className="font-medium">{inventory.name}</div>
+          <div className="font-medium">
+            {inventory.name}
+            {inventory?.variations?.length > 0 && (
+              <span className="ml-2 text-xs text-gray-500">
+                ({inventory?.variations.length} variants)
+              </span>
+            )}
+          </div>
         </div>
       );
     },
@@ -72,9 +79,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
     header: "Sku",
     cell: ({ row }) => {
       const inventory = row.original;
-      // const isOutOfStock =
-      //   inventory.quantity === 0 || inventory.quantity === null;
-
       return <div className="font-medium">{inventory.sku ?? "-"}</div>;
     },
   },
@@ -103,7 +107,30 @@ export const columns: ColumnDef<InventoryItem>[] = [
     accessorKey: "selling_price",
     header: "Selling Price",
     cell: ({ row }) => {
-      const inventory = row.original;
+      const inventory = row.original as any;
+
+      // Check if it's a product with variations
+      if (inventory.variations && inventory.variations.length > 0) {
+        // Calculate price range for variations
+        const prices = inventory.variations.map((v: any) => v.selling_price);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+
+        if (minPrice === maxPrice) {
+          return <div className="font-medium">{formatToNaira(minPrice)}</div>;
+        }
+
+        return (
+          <div className="font-medium">
+            {formatToNaira(minPrice)} - {formatToNaira(maxPrice)}
+            <div className="text-xs text-gray-500">
+              {inventory.variations.length} variants
+            </div>
+          </div>
+        );
+      }
+
+      // For products without variations
       return (
         <div className="font-medium">
           {formatToNaira(inventory.selling_price || inventory.amount || 0)}
@@ -111,7 +138,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
       );
     },
   },
-
   {
     id: "actions",
     header: "Action",
@@ -201,12 +227,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   Add Damaged Product
                 </DropdownMenuItem>
               )}
-              {/* <DropdownMenuItem
-                onClick={openViewDetailsFunc}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
-              >
-                <span className="">View more details</span>
-              </DropdownMenuItem> */}
               <DropdownMenuItem
                 onClick={handleOpenRestockModal}
                 className={cn(
@@ -240,7 +260,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={() => setOpenEditPriceModal(false)}
             />
           </CustomModal>
-          {/*  */}
 
           <CustomModal
             isOpen={openViewDetails}
@@ -313,8 +332,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={closeDamagedProductModal}
             />
           </CustomModal>
-
-          {/* transfer product */}
         </>
       );
     },

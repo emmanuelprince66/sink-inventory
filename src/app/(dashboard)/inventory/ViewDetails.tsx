@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 
@@ -11,6 +12,29 @@ const ViewDetails = ({
   closeModal: () => void;
 }) => {
   const { handleDeleteProduct, deleting } = useInventoryHook({ closeModal });
+
+  // Check if product has variations
+  const hasVariations = data?.variations && data.variations.length > 0;
+
+  // Calculate price range for variations
+  let sellingPriceDisplay = "N/A";
+  if (hasVariations) {
+    const prices = data.variations.map((v: any) => v.selling_price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+
+    if (minPrice === maxPrice) {
+      sellingPriceDisplay = formatToNaira(minPrice);
+    } else {
+      sellingPriceDisplay = `${formatToNaira(minPrice)} - ${formatToNaira(
+        maxPrice
+      )}`;
+    }
+  } else {
+    // For products without variations
+    const price = data?.selling_price || 0;
+    sellingPriceDisplay = price > 0 ? formatToNaira(price) : "N/A";
+  }
 
   return (
     <div className="bg-[#FEFFFE] p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 max-w-4xl mx-auto">
@@ -33,29 +57,54 @@ const ViewDetails = ({
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <DetailItem
                 label="SKU"
-                value={data?.id?.split("-")[0] || "N/A"}
+                value={data?.sku || data?.id?.split("-")[0] || "N/A"}
               />
               <DetailItem label="Category" value={data?.category || "N/A"} />
-              <DetailItem label="Stock" value="0" />
-              <DetailItem label="Total Sold" value="0" />
-              <DetailItem label="Low Stock Alert" value="0" />
-              <DetailItem label="Expiry Date" value="N/A" />
+              <DetailItem label="Stock" value={data?.quantity || "0"} />
+              <DetailItem label="Total Sold" value={data?.sold || "0"} />
+              <DetailItem
+                label="Low Stock Alert"
+                value={data?.low_stock_threshold || "0"}
+              />
+              <DetailItem
+                label="Expiry Date"
+                value={data?.expiry_date || "N/A"}
+              />
+              <DetailItem label="Unit" value={data?.unit || "N/A"} />
+              <DetailItem label="Product Type" value={data?.type || "N/A"} />
+              {hasVariations && (
+                <DetailItem
+                  label="Variants"
+                  value={`${data.variations.length} variants`}
+                  spanFull
+                />
+              )}
             </div>
           </div>
 
           {/* Right Column - Pricing */}
           <div className="space-y-3 sm:space-y-4 w-full">
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              <DetailItem label="Purchase Price" value="N/A" />
-              <DetailItem label="Discount" value="N/A" />
               <DetailItem
-                label="Selling Price"
-                value={`N${(data?.selling_price || data?.amount / 100).toFixed(
-                  2
-                )}`}
+                label="Purchase Price"
+                value={
+                  data?.cost_price ? formatToNaira(data.cost_price) : "N/A"
+                }
               />
-              <DetailItem label="Total Stock Value" value="N/A" />
-              <DetailItem label="Supplied by" value="N/A" spanFull />
+              <DetailItem
+                label="Discount"
+                value={data?.discount ? `${data.discount}%` : "N/A"}
+              />
+              <DetailItem label="Selling Price" value={sellingPriceDisplay} />
+              <DetailItem
+                label="Discount Threshold"
+                value={
+                  data?.discount_threshold
+                    ? `${data.discount_threshold} units`
+                    : "N/A"
+                }
+              />
+              <DetailItem label="Total Stock Value" value="N/A" spanFull />
             </div>
           </div>
 
@@ -95,10 +144,8 @@ const ViewDetails = ({
 
         {/* Action Buttons - Stack on mobile */}
         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-3 sm:pt-4 border-t">
-          {/* href={`/product/${data?.id}/edit-product`} */}
-          {/* href={`/new-add-product/${data?.id}/edit-product`} */}
           <Link
-            href={`/product/${data?.id}/edit-product`}
+            href={`/new-add-product/${data?.id}/edit-product`}
             className="w-full sm:w-auto"
           >
             <Button className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">

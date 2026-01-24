@@ -1,8 +1,9 @@
 "use client";
 
+import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { Download } from "lucide-react";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import QRCodeModule from "react-qr-code";
 
 const QRCode = QRCodeModule as any;
@@ -15,53 +16,35 @@ interface BusinessData {
 }
 
 export default function HomePage(): React.ReactElement {
-  const [businessData, setBusinessData] = useState<BusinessData | null>(null);
+  const { TrxData, businessData } = useTransactionsHook({});
+
+  console.log("businessData", businessData);
+
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">("INSTORE");
 
-  useEffect(() => {
-    const fetchBusinessData = async () => {
-      try {
-        setIsLoading(true);
-        const mockData: BusinessData = {
-          name: "Aetos Domain",
-          store_url: "aetos-domain",
-          tag_line: "Quality Products at Great Prices",
-          logo: undefined,
-        };
-        setBusinessData(mockData);
-      } catch (err) {
-        console.error("Error fetching business data:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchBusinessData();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white flex items-center justify-center p-4">
-        <div className="text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="relative w-16 h-16">
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full animate-spin" />
-              <div className="absolute inset-1 bg-white rounded-full" />
-            </div>
-          </div>
-          <div>
-            <p className="text-gray-900 font-semibold text-lg mb-2">
-              Loading QR Poster...
-            </p>
-            <p className="text-gray-500 text-sm">
-              Preparing your e-pricing display
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white flex items-center justify-center p-4">
+  //       <div className="text-center space-y-6">
+  //         <div className="flex justify-center">
+  //           <div className="relative w-16 h-16">
+  //             <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full animate-spin" />
+  //             <div className="absolute inset-1 bg-white rounded-full" />
+  //           </div>
+  //         </div>
+  //         <div>
+  //           <p className="text-gray-900 font-semibold text-lg mb-2">
+  //             Loading QR Poster...
+  //           </p>
+  //           <p className="text-gray-500 text-sm">
+  //             Preparing your e-pricing display
+  //           </p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (!businessData) {
     return (
@@ -76,10 +59,7 @@ export default function HomePage(): React.ReactElement {
   }
 
   const getStoreUrl = () => {
-    const slug =
-      businessData.store_url ||
-      businessData.name.toLowerCase().replace(/[^a-z0-9]/g, "-") ||
-      "store";
+    const slug = businessData.store_url || "store";
     const baseUrl = "https://store.sync360.africa";
 
     if (activeTab === "INSTORE") {
@@ -134,7 +114,7 @@ export default function HomePage(): React.ReactElement {
           const link = document.createElement("a");
           const fileName = `${businessData.name.replace(
             /[^a-zA-Z0-9]/g,
-            "_"
+            "_",
           )}_epricing_qr_${activeTab.toLowerCase()}_${Date.now()}.png`;
           link.href = url;
           link.download = fileName;
@@ -147,7 +127,7 @@ export default function HomePage(): React.ReactElement {
           }, 100);
         },
         "image/png",
-        1.0
+        1.0,
       );
     } catch (error) {
       console.error("Error generating image:", error);
@@ -235,8 +215,11 @@ export default function HomePage(): React.ReactElement {
             </div>
 
             {/* QR Code Container */}
-            <div className="bg-gradient-to-b from-emerald-50 to-white p-8 md:p-16 rounded-xl border-2 border-emerald-100 shadow-inner">
-              <div className="bg-white p-6 md:p-10 rounded-lg inline-block shadow-md">
+            <div className="bg-gradient-to-b from-emerald-50 to-white p-8 md:p-10 rounded-xl relative border-2 border-emerald-100 shadow-inner">
+              <div className="bg-white p-6 md:p-10 rounded-lg inline-block shadow-md ">
+                <div className="bg-primary-black-100 text-sm md:text-md text-white rounded-b-xl absolute h-[45px] md:h-[60px] w-[150px] top-0 left-[85px] md:left-[103px] right-0 bottom-10 p-2 md:p-5">
+                  Aetos Domain
+                </div>
                 <QRCode
                   value={storeUrl}
                   size={200}

@@ -35,20 +35,26 @@ export const useCartStore = create<CartStore>()(
           );
 
           if (existingItem) {
+            // Item already exists, increment quantity
             return {
               cartItems: state.cartItems.map((cartItem) =>
                 cartItem.id === item.id
                   ? {
                       ...cartItem,
-                      cartQuantity: cartItem.cartQuantity + 1,
+                      cartQuantity:
+                        cartItem.cartQuantity + (item.cartQuantity || 1),
                     }
                   : cartItem
               ),
             };
           }
 
+          // New item, add to cart with specified quantity or default to 1
           return {
-            cartItems: [...state.cartItems, { ...item, cartQuantity: 1 }],
+            cartItems: [
+              ...state.cartItems,
+              { ...item, cartQuantity: item.cartQuantity || 1 },
+            ],
           };
         });
       },
@@ -94,10 +100,8 @@ export const useCartStore = create<CartStore>()(
       },
       getSubtotal: () => {
         return get().cartItems.reduce((total, item) => {
-          return (
-            total +
-            (item.amount || item.selling_price) * (item.cartQuantity || 1)
-          );
+          const price = item.amount || item.selling_price || 0;
+          return total + price * (item.cartQuantity || 1);
         }, 0);
       },
       getAutomaticDiscountAmount: () => {
