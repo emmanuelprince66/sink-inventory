@@ -604,9 +604,9 @@ const NewAddProduct = ({
                           {field.value instanceof File ||
                           (typeof field.value === "string" && field.value) ? (
                             <div className="relative mt-1 border-2 border-gray-200 rounded-md p-4">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                                     <img
                                       src={
                                         field.value instanceof File
@@ -617,24 +617,20 @@ const NewAddProduct = ({
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">
                                       {field.value instanceof File
                                         ? field.value.name
                                         : "Current image"}
                                     </p>
                                     <p className="text-xs text-gray-500">
                                       {field.value instanceof File
-                                        ? `${(
-                                            field.value.size /
-                                            1024 /
-                                            1024
-                                          ).toFixed(2)} MB`
+                                        ? `${(field.value.size / 1024 / 1024).toFixed(2)} MB`
                                         : "Uploaded image"}
                                     </p>
                                   </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 w-full sm:w-auto">
                                   <Button
                                     variant="outline"
                                     size="sm"
@@ -644,7 +640,7 @@ const NewAddProduct = ({
                                         .getElementById("image-upload")
                                         ?.click()
                                     }
-                                    className="text-green-600 border-green-600 hover:bg-green-50"
+                                    className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-initial"
                                   >
                                     Change
                                   </Button>
@@ -653,10 +649,12 @@ const NewAddProduct = ({
                                     size="sm"
                                     type="button"
                                     onClick={() => field.onChange(undefined)}
-                                    className="text-red-600 border-red-600 hover:bg-red-50"
+                                    className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-initial"
                                   >
-                                    <X className="w-4 h-4 mr-1" />
-                                    Remove
+                                    <X className="w-4 h-4 sm:mr-1" />
+                                    <span className="hidden sm:inline">
+                                      Remove
+                                    </span>
                                   </Button>
                                 </div>
                               </div>
