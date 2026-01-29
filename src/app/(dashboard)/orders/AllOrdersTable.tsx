@@ -16,6 +16,8 @@ const AllOrdersTable = ({
   page: number;
   type: string;
 }) => {
+  console.log("response", response);
+
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
   const [currentPage, setCurrentPage] = useState<number>(page || 1); // Local page state
@@ -49,7 +51,7 @@ const AllOrdersTable = ({
         loading={loading}
         noDataText="No Orders found"
         columns={columns}
-        data={response?.data?.results}
+        data={response?.data?.results?.data || []}
         pagination={{
           currentPage,
           totalPages,

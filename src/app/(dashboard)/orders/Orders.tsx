@@ -107,7 +107,7 @@ const CustomOrderCard = ({
         variant.bg,
         variant.border,
         "p-3 sm:p-4 w-full rounded-lg border transition-all hover:shadow-md",
-        className
+        className,
       )}
     >
       <div className="flex justify-between items-center">
@@ -141,7 +141,7 @@ const Orders = () => {
   const [openSubscriptionModal, setOpenSubscriptionModal] = useState(false);
   const [openFilterModal, setOpenFilterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">(
-    "OUTSTORE"
+    "OUTSTORE",
   );
   const [page, setPage] = useState(1);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -234,19 +234,17 @@ const Orders = () => {
 
   // Extract data safely from API response
   const ordersData = OrderData?.data || {};
-  const ordersResults = ordersData?.results || [];
   console.log("ordersData", ordersData);
 
   // Use backend-provided stats
-  const totalOrders = ordersData?.summary?.total_orders || 0;
-  const completedOrders = ordersData?.summary?.completed_orders || 0;
-  const totalRevenue = ordersData?.summary?.total_revenue || 0;
+  const totalOrders = ordersData?.results?.total_orders || 0;
+  const completedOrders = ordersData?.results?.completed_orders || 0;
+  const totalRevenue = ordersData?.results?.total_revenue || 0;
 
   // Calculate counts for each tab
 
-  console.log("ordersResults", ordersResults);
-  const instoreCount = ordersResults?.length || 0;
-  const outstoreCount = ordersResults?.length || 0;
+  const instoreCount = ordersData?.results?.data?.length || 0;
+  const outstoreCount = ordersData?.results?.data?.length || 0;
 
   // Calculate success rate
   const successRate =
@@ -335,7 +333,7 @@ const Orders = () => {
                   "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm cursor-pointer font-medium border-b-2 transition-all",
                   activeTab === "INSTORE"
                     ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
                 In-store Orders
@@ -344,7 +342,7 @@ const Orders = () => {
                     "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
                     activeTab === "INSTORE"
                       ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-600"
+                      : "bg-gray-100 text-gray-600",
                   )}
                 >
                   {activeTab === "INSTORE" && instoreCount}
@@ -356,7 +354,7 @@ const Orders = () => {
                   "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all",
                   activeTab === "OUTSTORE"
                     ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
                 Out-store Orders
@@ -365,7 +363,7 @@ const Orders = () => {
                     "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
                     activeTab === "OUTSTORE"
                       ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-600"
+                      : "bg-gray-100 text-gray-600",
                   )}
                 >
                   {activeTab === "OUTSTORE" && outstoreCount}
@@ -390,7 +388,7 @@ const Orders = () => {
                     "text-xs transition-all flex-shrink-0",
                     copiedUrl
                       ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                      : "hover:bg-blue-50 hover:border-blue-200"
+                      : "hover:bg-blue-50 hover:border-blue-200",
                   )}
                 >
                   {copiedUrl ? (
@@ -503,7 +501,7 @@ const Orders = () => {
             </div>
           ) : (
             <>
-              {ordersResults?.length > 0 ? (
+              {ordersData?.results?.data?.length > 0 ? (
                 <AllOrdersTable
                   setPage={setPage}
                   page={page}
