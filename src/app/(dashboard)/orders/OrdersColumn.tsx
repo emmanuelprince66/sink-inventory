@@ -57,7 +57,16 @@ export const useOrdersColumn = (type: string) => {
       header: "Amount",
       cell: ({ row }) => {
         const order = row.original;
-        return <span>₦{order.amount ? order?.amount : "₦0"}</span>;
+        return (
+          <span>
+            ₦
+            {order.amount
+              ? order?.amount
+              : order?.total_price
+                ? order?.total_price
+                : "₦0"}
+          </span>
+        );
       },
     },
     {

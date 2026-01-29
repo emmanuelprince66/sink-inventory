@@ -39,14 +39,14 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   const orderData = OrderIdData?.data;
 
-  console.log("orderData", orderData?.data);
-
   // Update selectedShippingStatus when orderData loads
   useEffect(() => {
-    if (orderData?.shipping_status) {
-      setSelectedShippingStatus(orderData.shipping_status);
+    if (orderData?.delivery?.shipping_status) {
+      setSelectedShippingStatus(orderData.delivery.shipping_status as ShippingStatus);
+    } else if (orderData?.shipping_status) {
+      setSelectedShippingStatus(orderData.shipping_status as ShippingStatus);
     }
-  }, [orderData?.shipping_status]);
+  }, [orderData?.delivery?.shipping_status, orderData?.shipping_status]);
 
   // Skeleton Loader Component
   const SkeletonLoader = () => (
@@ -156,9 +156,8 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
     );
   };
 
-  // No calculations - just use backend data
-
   const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
@@ -168,6 +167,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   };
 
   const formatDateTime = (dateString: string) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
       month: "long",
@@ -257,9 +257,11 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
                   <span className="text-sm text-gray-600">Payment:</span>
-                  {getPaymentStatusBadge(orderData.payment_status)}
+                  {getPaymentStatusBadge(orderData.payment_status as PaymentStatus)}
                   <span className="text-sm text-gray-600">Shipping:</span>
-                  {getShippingStatusBadge(orderData.shipping_status)}
+                  {getShippingStatusBadge(
+                    (orderData.delivery?.shipping_status || orderData.shipping_status) as ShippingStatus
+                  )}
                 </div>
               </div>
 
@@ -273,7 +275,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     <div className="flex items-center space-x-2">
                       <MessageCircle className="h-4 w-4 text-green-600" />
                       <span className="text-sm text-gray-900">
-                        {orderData.channel}
+                        {orderData.channel || "N/A"}
                       </span>
                     </div>
                   </div>
@@ -283,7 +285,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       Order Type
                     </h3>
                     <span className="text-sm text-gray-900">
-                      {orderData.type}
+                      {orderData.type || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -304,19 +306,19 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       Contact Details
                     </h3>
                     <div className="space-y-2">
-                      {orderData.customer_info?.phone && (
+                      {orderData?.customer_info?.phone && (
                         <div className="flex items-center space-x-2">
                           <Phone className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">
-                            {orderData.customer_info.phone}
+                            {orderData?.customer_info?.phone}
                           </span>
                         </div>
                       )}
-                      {orderData.customer_info?.email && (
+                      {orderData?.customer_info?.email && (
                         <div className="flex items-center space-x-2">
                           <Mail className="h-4 w-4 text-gray-400" />
                           <span className="text-sm text-gray-900">
-                            {orderData.customer_info.email}
+                            {orderData?.customer_info?.email}
                           </span>
                         </div>
                       )}
@@ -386,9 +388,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </thead>
                   <tbody>
                     {orderData.products?.map((product: any, index: number) => {
-                      const unitPrice = parseFloat(product.unit_price);
-                      const quantity = parseFloat(product.quantity);
-                      const discount = parseFloat(product.discount);
+                      const unitPrice = parseFloat(product.unit_price || "0");
+                      const quantity = parseFloat(product.quantity || "0");
+                      const discount = parseFloat(product.discount || "0");
                       const total = unitPrice * quantity - discount;
 
                       return (
@@ -437,7 +439,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     >
                       <div>
                         <p className="font-medium text-gray-900">
-                          {payment.method}
+                          {payment.method || "N/A"}
                         </p>
                         {payment.bank && (
                           <p className="text-sm text-gray-600">
@@ -450,7 +452,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-900">
-                          ₦ {parseFloat(payment.amount).toLocaleString()}
+                          ₦ {parseFloat(payment.amount || "0").toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -478,7 +480,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Amount</span>
                   <span className="text-gray-900">
-                    ₦ {parseFloat(orderData.amount).toLocaleString()}
+                    ₦ {parseFloat(orderData.amount || "0").toLocaleString()}
                   </span>
                 </div>
 
@@ -490,14 +492,14 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping Fee</span>
                   <span className="text-gray-900">
-                    ₦ {parseFloat(orderData.shipping_fee).toLocaleString()}
+                    ₦ {parseFloat(orderData.delivery?.shipping_fee || orderData.shipping_fee || "0").toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Taxes</span>
                   <span className="text-gray-900">
-                    ₦ {parseFloat(orderData.tax).toLocaleString()}
+                    ₦ {parseFloat(orderData.tax || "0").toLocaleString()}
                   </span>
                 </div>
 
@@ -505,7 +507,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   <div className="flex justify-between text-base font-semibold">
                     <span className="text-gray-900">Total Amount Paid</span>
                     <span className="text-gray-900">
-                      ₦ {parseFloat(orderData.amount_paid).toLocaleString()}
+                      ₦ {parseFloat(orderData.amount_paid || "0").toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -520,7 +522,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </h3>
 
                 <div className="flex gap-1">
-                  {getPaymentStatusBadge(orderData.payment_status)}
+                  {getPaymentStatusBadge(orderData.payment_status as PaymentStatus)}
 
                   {orderData.payment_status !== "PAID" && (
                     <p
@@ -541,7 +543,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   Shipping
                 </h3>
                 <div className="flex items-center space-x-2">
-                  {getShippingStatusBadge(orderData.shipping_status)}
+                  {getShippingStatusBadge(
+                    (orderData.delivery?.shipping_status || orderData.shipping_status) as ShippingStatus
+                  )}
                   <button className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800">
                     <span>Action</span>
                     <ChevronDown className="h-4 w-4" />
@@ -568,18 +572,19 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </p>
                   {orderData.customer_info?.phone && (
                     <p className="text-sm text-gray-500">
-                      {orderData.delivery_address.phone}
+                      {orderData.delivery?.delivery_address?.phone || orderData.customer_info?.phone}
                     </p>
                   )}
                 </div>
+                
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Delivery Location
                   </h4>
                   <p className="text-sm text-gray-900 mb-1">
-                    {`${orderData.delivery_address?.city || ""}, ${
-                      orderData.delivery_address?.state || ""
-                    }, ${orderData.delivery_address?.country || ""}`
+                    {`${orderData.delivery?.delivery_address?.city || ""}, ${
+                      orderData.delivery?.delivery_address?.state || ""
+                    }, ${orderData.delivery?.delivery_address?.country || ""}`
                       .replace(/^, |, $|, , /g, "")
                       .trim() || "N/A"}
                   </p>
@@ -620,7 +625,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     onClick={() =>
                       handleUpdateOrderStatus(selectedShippingStatus)
                     }
-                    className="w-full  cursor-pointer mt-3 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                    className="w-full cursor-pointer mt-3 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
                   >
                     {editOrderShippingStatusLoading
                       ? "Updating..."
@@ -640,7 +645,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
         title="Update Order Status"
       >
         <UpdateStatusComp
-          orderId={OrderIdData?.id}
+          orderId={orderData?.id}
           currentStatus={orderData?.payment_status}
           currentAmount={orderData?.amount}
           currentAmountPaid={orderData?.amount_paid}

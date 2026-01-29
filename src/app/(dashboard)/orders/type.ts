@@ -18,6 +18,7 @@ export interface OrderInfo {
   payment_status: string;
   amount: string;
   shipping_date: string;
+  total_price: string;
   shipping_fee: string;
   shipping_status: string;
   tax: string;
@@ -29,20 +30,19 @@ export interface Links {
   previous: string | null;
 }
 
-// export interface Results {
-//   completed_orders: number;
-//   data: OrderInfo[];
-//   order_count: number;
-//   revenue: number;
-//   total: number;
-// }
+export interface OrderResults {
+  completed_orders: number;
+  data: OrderInfo[];
+  total_orders: number;
+  total_revenue: number;
+}
 
 export interface OrderData {
   limit: number;
   links: Links;
   pages: number;
-  results: OrderInfo[];
-  summary: any;
+  results: OrderResults;  // Changed from OrderInfo[] to OrderResults
+  total: number;
 }
 
 export interface OrderApiResponse {

@@ -218,7 +218,7 @@ export default function HomePage(): React.ReactElement {
             <div className="bg-gradient-to-b from-emerald-50 to-white p-8 md:p-10 rounded-xl relative border-2 border-emerald-100 shadow-inner">
               <div className="bg-white p-6 md:p-10 rounded-lg inline-block shadow-md ">
                 <div className="bg-primary-black-100 text-sm md:text-md text-white rounded-b-xl absolute h-[45px] md:h-[60px] w-[150px] top-0 left-[85px] md:left-[103px] right-0 bottom-10 p-2 md:p-5">
-                  Aetos Domain
+                  {businessData.name}
                 </div>
                 <QRCode
                   value={storeUrl}
