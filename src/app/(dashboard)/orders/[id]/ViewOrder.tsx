@@ -42,7 +42,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   // Update selectedShippingStatus when orderData loads
   useEffect(() => {
     if (orderData?.delivery?.shipping_status) {
-      setSelectedShippingStatus(orderData.delivery.shipping_status as ShippingStatus);
+      setSelectedShippingStatus(
+        orderData.delivery.shipping_status as ShippingStatus,
+      );
     } else if (orderData?.shipping_status) {
       setSelectedShippingStatus(orderData.shipping_status as ShippingStatus);
     }
@@ -148,7 +150,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
         onClick={() => onClick(status)}
         className={`px-3 py-2 cursor-pointer rounded-md text-sm transition-colors ${getStatusColors(
           status,
-          active
+          active,
         )}`}
       >
         {labels[status]}
@@ -257,10 +259,13 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
                   <span className="text-sm text-gray-600">Payment:</span>
-                  {getPaymentStatusBadge(orderData.payment_status as PaymentStatus)}
+                  {getPaymentStatusBadge(
+                    orderData.payment_status as PaymentStatus,
+                  )}
                   <span className="text-sm text-gray-600">Shipping:</span>
                   {getShippingStatusBadge(
-                    (orderData.delivery?.shipping_status || orderData.shipping_status) as ShippingStatus
+                    (orderData.delivery?.shipping_status ||
+                      orderData.shipping_status) as ShippingStatus,
                   )}
                 </div>
               </div>
@@ -333,7 +338,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     Created by
                   </h3>
                   <p className="text-sm text-gray-900">
-                    {orderData.created_by || "N/A"}
+                    {formatDateTime(orderData.created_at) || "N/A"}
                   </p>
                 </div>
                 <div>
@@ -402,7 +407,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                             {index + 1}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900">
-                            {product?.product_name || "Nil"}
+                            {product?.name || "Nil"}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-900 text-right">
                             ₦ {unitPrice.toLocaleString()}
@@ -456,7 +461,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                         </p>
                       </div>
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
@@ -492,7 +497,12 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping Fee</span>
                   <span className="text-gray-900">
-                    ₦ {parseFloat(orderData.delivery?.shipping_fee || orderData.shipping_fee || "0").toLocaleString()}
+                    ₦{" "}
+                    {parseFloat(
+                      orderData.delivery?.shipping_fee ||
+                        orderData.shipping_fee ||
+                        "0",
+                    ).toLocaleString()}
                   </span>
                 </div>
 
@@ -507,7 +517,10 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   <div className="flex justify-between text-base font-semibold">
                     <span className="text-gray-900">Total Amount Paid</span>
                     <span className="text-gray-900">
-                      ₦ {parseFloat(orderData.amount_paid || "0").toLocaleString()}
+                      ₦{" "}
+                      {parseFloat(
+                        orderData.amount_paid || "0",
+                      ).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -522,7 +535,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </h3>
 
                 <div className="flex gap-1">
-                  {getPaymentStatusBadge(orderData.payment_status as PaymentStatus)}
+                  {getPaymentStatusBadge(
+                    orderData.payment_status as PaymentStatus,
+                  )}
 
                   {orderData.payment_status !== "PAID" && (
                     <p
@@ -544,7 +559,8 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </h3>
                 <div className="flex items-center space-x-2">
                   {getShippingStatusBadge(
-                    (orderData.delivery?.shipping_status || orderData.shipping_status) as ShippingStatus
+                    (orderData.delivery?.shipping_status ||
+                      orderData.shipping_status) as ShippingStatus,
                   )}
                   <button className="flex items-center space-x-1 text-sm text-gray-600 hover:text-gray-800">
                     <span>Action</span>
@@ -572,11 +588,12 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </p>
                   {orderData.customer_info?.phone && (
                     <p className="text-sm text-gray-500">
-                      {orderData.delivery?.delivery_address?.phone || orderData.customer_info?.phone}
+                      {orderData.delivery?.delivery_address?.phone ||
+                        orderData.customer_info?.phone}
                     </p>
                   )}
                 </div>
-                
+
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Delivery Location

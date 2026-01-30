@@ -18,7 +18,7 @@ interface BusinessData {
 export default function HomePage(): React.ReactElement {
   const { TrxData, businessData } = useTransactionsHook({});
 
-  console.log("businessData", businessData);
+  console.log("businessData---7", businessData);
 
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">("INSTORE");
