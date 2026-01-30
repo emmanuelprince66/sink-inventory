@@ -618,7 +618,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       onClick={setSelectedShippingStatus}
                     />
 
-                    {orderData?.type === "OUTSTORE" && (
+                    {orderData?.channel === "OUTSTORE" && (
                       <ShippingStatusButton
                         status="SHIPPED"
                         active={selectedShippingStatus === "SHIPPED"}
