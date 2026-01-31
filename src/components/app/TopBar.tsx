@@ -294,7 +294,7 @@ export function TopBar() {
         onClose={() => setShowConfirmKycModal(false)}
         title=""
       >
-        <KycConfirm />
+        <KycConfirm page={false} />
       </CustomModal>
     </>
   );

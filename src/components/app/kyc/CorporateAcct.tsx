@@ -1,3 +1,4 @@
+"use client";
 import { useKycHook } from "@/hooks/useKycHook";
 import { useEffect, useState } from "react";
 
@@ -80,10 +81,10 @@ const CorporateAcct = () => {
             name="reg_date"
             render={({ field }) => {
               const [date, setDate] = useState<Date | undefined>(
-                field.value ? new Date(field.value) : undefined
+                field.value ? new Date(field.value) : undefined,
               );
               const [viewDate, setViewDate] = useState<Date>(
-                field.value ? new Date(field.value) : new Date()
+                field.value ? new Date(field.value) : new Date(),
               );
 
               useEffect(() => {
@@ -107,7 +108,7 @@ const CorporateAcct = () => {
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal border border-primary-green-300",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
                           )}
                         >
                           {date ? (
@@ -139,7 +140,7 @@ const CorporateAcct = () => {
                           <SelectContent>
                             {Array.from(
                               { length: new Date().getFullYear() - 1900 + 1 },
-                              (_, i) => 1900 + i
+                              (_, i) => 1900 + i,
                             ).map((year) => (
                               <SelectItem key={year} value={year.toString()}>
                                 {year}
@@ -154,7 +155,7 @@ const CorporateAcct = () => {
                         onSelect={(selectedDate) => {
                           setDate(selectedDate);
                           field.onChange(
-                            selectedDate ? selectedDate.toISOString() : ""
+                            selectedDate ? selectedDate.toISOString() : "",
                           );
                         }}
                         onMonthChange={setViewDate}

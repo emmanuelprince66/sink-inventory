@@ -38,7 +38,9 @@ export const useFetchBusinessById = (id: any, config?: options) => {
     },
     queryKey: [queryKey.business.getBusinessById, id],
     queryFn: () => fetchBusinessById(id),
-    staleTime: 1000 * 60 * 5,
+    // staleTime: 1000 * 60 * 5,
+    staleTime: 30 * 1000, // 30 seconds – very forgiving
+    gcTime: 5 * 60 * 1000,
     ...config,
   });
 };

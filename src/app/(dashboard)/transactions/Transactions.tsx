@@ -47,7 +47,7 @@ const Transactions = () => {
     (typeof filterOptions)[number]
   >(filterOptions[0]);
   const [kycType, setKycType] = useState<"business" | "individual">(
-    "individual"
+    "individual",
   );
   const handleFilterChange = (filter: (typeof filterOptions)[number]) => {
     setActiveFilter(filter);
@@ -128,7 +128,7 @@ const Transactions = () => {
                   <span className="text-2xl font-bold text-gray-900">
                     {/* {formatToNaira(walletBalance)} */}
                     {formatToNaira(
-                      TrxData?.data?.results?.wallet_details?.balance || 0
+                      TrxData?.data?.results?.wallet_details?.balance || 0,
                     )}
                   </span>
                 </div>
@@ -245,7 +245,7 @@ const Transactions = () => {
                   Available Balance:{" "}
                   <span className="font-medium">
                     {formatToNaira(
-                      TrxData?.data?.results?.wallet_details?.balance || 0
+                      TrxData?.data?.results?.wallet_details?.balance || 0,
                     )}
                   </span>
                 </p>
@@ -337,7 +337,7 @@ const Transactions = () => {
         onClose={() => setShowKycModal(false)}
         title=""
       >
-        <KycConfirm />
+        <KycConfirm page={false} />
       </CustomModal>
       {/* KYC Verification Modal */}
       {/* <CustomModal

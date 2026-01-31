@@ -41,7 +41,7 @@ const IndividualAcct = () => {
         <form
           className="w-full space-y-5"
           onSubmit={createIndividualAcctForm.handleSubmit(
-            onSubmitIndividualAcct
+            onSubmitIndividualAcct,
           )}
         >
           <FormField
@@ -78,10 +78,10 @@ const IndividualAcct = () => {
             name="dob"
             render={({ field }) => {
               const [date, setDate] = useState<Date | undefined>(
-                field.value ? new Date(field.value) : undefined
+                field.value ? new Date(field.value) : undefined,
               );
               const [viewDate, setViewDate] = useState<Date>(
-                field.value ? new Date(field.value) : new Date()
+                field.value ? new Date(field.value) : new Date(),
               );
 
               useEffect(() => {
@@ -105,7 +105,7 @@ const IndividualAcct = () => {
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal border border-primary-green-300",
-                            !date && "text-muted-foreground"
+                            !date && "text-muted-foreground",
                           )}
                         >
                           {date ? (
@@ -137,7 +137,7 @@ const IndividualAcct = () => {
                           <SelectContent>
                             {Array.from(
                               { length: new Date().getFullYear() - 1900 + 1 },
-                              (_, i) => 1900 + i
+                              (_, i) => 1900 + i,
                             ).map((year) => (
                               <SelectItem key={year} value={year.toString()}>
                                 {year}
@@ -152,7 +152,7 @@ const IndividualAcct = () => {
                         onSelect={(selectedDate) => {
                           setDate(selectedDate);
                           field.onChange(
-                            selectedDate ? selectedDate.toISOString() : ""
+                            selectedDate ? selectedDate.toISOString() : "",
                           );
                         }}
                         onMonthChange={setViewDate}

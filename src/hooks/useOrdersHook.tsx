@@ -56,7 +56,7 @@ export const useOrdersHook = ({
   console.log("orderId in useOrdersHook:", orderId);
 
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state: any) => state.is_subscribed
+    (state: any) => state.is_subscribed,
   );
   const queryClient = useQueryClient();
 
@@ -64,13 +64,13 @@ export const useOrdersHook = ({
   const [customer, setCustomer] = useState<any | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [productErrors, setProductErrors] = useState<Record<string, string>>(
-    {}
+    {},
   );
   const [shippingFee, setShippingFee] = useState(0);
   const [tax, setTax] = useState(0);
   const [selectedSalesChannel, setSelectedSalesChannel] = useState("");
   const [shippingDate, setShippingDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split("T")[0],
   );
   const [paymentStatus, setPaymentStatus] = useState("UNPAID");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
@@ -97,12 +97,12 @@ export const useOrdersHook = ({
 
   const { data: BankData, isLoading: BankDataLoading } = useFetchBankQuery(
     business_id,
-    { enabled: !!business_id }
+    { enabled: !!business_id },
   );
 
   // Filter out OUT-OF-STOCK products
   const filteredInventoryData = InventoryData?.data?.results?.data?.filter(
-    (product: any) => product.status !== "OUT-OF-STOCK"
+    (product: any) => product.status !== "OUT-OF-STOCK",
   );
 
   // update shipping status
@@ -225,7 +225,7 @@ export const useOrdersHook = ({
     }
 
     setSelectedProducts((prev) =>
-      prev.map((p) => (p.id === productId ? { ...p, quantity } : p))
+      prev.map((p) => (p.id === productId ? { ...p, quantity } : p)),
     );
   };
 
@@ -282,6 +282,14 @@ export const useOrdersHook = ({
   // Check if there are any quantity errors
   const hasQuantityErrors = () => {
     return Object.keys(productErrors).length > 0;
+  };
+
+  const handleRowClick = (row: any) => {
+    router.push(`/orders/${row.original.id}`);
+    // console.log("Clicked row:", row.original);
+    // console.log("Clicked row ID:", row.id);
+
+    // Perform any additional actions here
   };
 
   // Manual validation before submission
@@ -528,6 +536,7 @@ export const useOrdersHook = ({
     getProductDiscount,
     isDiscountApplied,
     calculateSubtotal,
+    handleRowClick,
     calculateTotalDiscount,
     BusinessData,
     calculateTotal,

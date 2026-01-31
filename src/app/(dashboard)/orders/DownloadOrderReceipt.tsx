@@ -25,7 +25,7 @@ interface DeliveryAddress {
   phone: string;
   alt_phone: string | null;
   email: string;
-  address: string;
+  address?: string;
   city: string;
   state: string;
   country: string;
@@ -40,31 +40,29 @@ interface PaymentHistory {
 }
 
 interface Product {
-  product_name: string;
+  name: string;
+  image?: string;
   unit_price: string;
   price: string;
   quantity: string;
-  discount: string;
+  discount?: string;
 }
 
 interface OrderData {
   id: string;
   created_at: string;
   channel: string;
-  payment_method: string | null;
-  type: string;
-  amount: string;
+  method: string;
+  total_price: string;
   amount_paid: number;
-  shipping_status: "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
   customer_info: CustomerInfo;
-  delivery_address: DeliveryAddress;
+  delivery: {
+    delivery_address: DeliveryAddress;
+    shipping_status: "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
+    shipping_fee: number;
+  };
   payment_status: "PAID" | "PARTIAL" | "UNPAID";
-  note: string;
-  shipping_fee: string;
-  tax: string;
-  shipping_date: string;
-  created_by: string | null;
-  last_updated_by: string | null;
+  description: string;
   payment_history: PaymentHistory[];
   products: Product[];
 }
@@ -96,10 +94,10 @@ Font.register({
   ],
 });
 
-// PDF Styles
+// PDF Styles with green theme and tighter spacing
 const styles = StyleSheet.create({
   page: {
-    padding: 50,
+    padding: 40,
     fontSize: 10,
     fontFamily: "Roboto",
     backgroundColor: "#ffffff",
@@ -108,101 +106,125 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 40,
-    paddingBottom: 20,
+    marginBottom: 25,
+    paddingBottom: 15,
     borderBottomWidth: 2,
-    borderBottomColor: "#2563eb",
+    borderBottomColor: "#059669",
   },
   invoiceTitle: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#065f46",
     letterSpacing: 1,
   },
   orderInfo: {
-    marginTop: 8,
+    marginTop: 6,
   },
   orderNumber: {
-    fontSize: 11,
+    fontSize: 10,
     color: "#6b7280",
-    marginBottom: 4,
+    marginBottom: 3,
   },
   statusContainer: {
     flexDirection: "row",
-    gap: 8,
-    marginTop: 6,
+    gap: 6,
+    marginTop: 4,
   },
   statusBadge: {
-    fontSize: 9,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    fontSize: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
     fontWeight: "bold",
+  },
+  statusPaid: {
+    backgroundColor: "#d1fae5",
+    color: "#065f46",
   },
   statusUnpaid: {
     backgroundColor: "#fef3c7",
     color: "#92400e",
   },
+  statusPartial: {
+    backgroundColor: "#fed7aa",
+    color: "#9a3412",
+  },
   statusPending: {
-    backgroundColor: "#e0e7ff",
-    color: "#3730a3",
+    backgroundColor: "#e0f2fe",
+    color: "#075985",
+  },
+  statusShipped: {
+    backgroundColor: "#dbeafe",
+    color: "#1e40af",
+  },
+  statusDelivered: {
+    backgroundColor: "#d1fae5",
+    color: "#065f46",
+  },
+  statusReturned: {
+    backgroundColor: "#fee2e2",
+    color: "#991b1b",
   },
   dateInfo: {
     textAlign: "right",
   },
   dateText: {
-    fontSize: 10,
+    fontSize: 9,
     color: "#6b7280",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   createdBy: {
-    fontSize: 9,
+    fontSize: 8,
     color: "#9ca3af",
-    marginTop: 4,
+    marginTop: 3,
   },
   addressSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 35,
-    gap: 30,
+    marginBottom: 20,
+    gap: 20,
   },
   addressBlock: {
     flex: 1,
-    backgroundColor: "#f9fafb",
-    padding: 15,
-    borderRadius: 6,
+    backgroundColor: "#f0fdf4",
+    padding: 12,
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: "#10b981",
   },
   addressTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 10,
-    color: "#1f2937",
+    marginBottom: 8,
+    color: "#065f46",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   addressText: {
-    fontSize: 10,
-    color: "#4b5563",
-    lineHeight: 1.6,
-    marginBottom: 3,
+    fontSize: 9,
+    color: "#374151",
+    lineHeight: 1.5,
+    marginBottom: 2,
   },
   table: {
     width: "100%",
-    marginBottom: 25,
-    marginTop: 10,
+    marginBottom: 15,
+    marginTop: 8,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#f3f4f6",
-    paddingVertical: 12,
+    backgroundColor: "#ecfdf5",
+    paddingVertical: 10,
     paddingHorizontal: 10,
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    borderBottomWidth: 2,
+    borderBottomColor: "#10b981",
   },
   tableHeaderText: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    color: "#374151",
+    color: "#065f46",
     textTransform: "uppercase",
     letterSpacing: 0.3,
   },
@@ -210,7 +232,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#e5e7eb",
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     backgroundColor: "#ffffff",
   },
@@ -218,55 +240,57 @@ const styles = StyleSheet.create({
     backgroundColor: "#fafafa",
   },
   cellQty: {
-    width: "10%",
-    fontSize: 10,
+    width: "8%",
+    fontSize: 9,
     color: "#1f2937",
   },
   cellDescription: {
-    width: "48%",
-    fontSize: 10,
+    width: "52%",
+    fontSize: 9,
     color: "#1f2937",
-    paddingRight: 10,
+    paddingRight: 8,
   },
   productName: {
     fontWeight: "bold",
     marginBottom: 2,
   },
   discountBadge: {
-    fontSize: 8,
+    fontSize: 7,
     color: "#059669",
     marginTop: 2,
   },
   cellUnitPrice: {
-    width: "21%",
+    width: "20%",
     textAlign: "right",
-    fontSize: 10,
+    fontSize: 9,
     color: "#4b5563",
   },
   cellAmount: {
-    width: "21%",
+    width: "20%",
     textAlign: "right",
-    fontSize: 10,
-    color: "#1f2937",
+    fontSize: 9,
+    color: "#065f46",
     fontWeight: "bold",
   },
   summarySection: {
-    marginTop: 25,
+    marginTop: 15,
     alignItems: "flex-end",
   },
   summaryBox: {
-    width: "45%",
-    backgroundColor: "#f9fafb",
-    padding: 20,
-    borderRadius: 8,
+    width: "50%",
+    backgroundColor: "#f0fdf4",
+    padding: 15,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#86efac",
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
-    paddingBottom: 10,
+    marginBottom: 8,
+    paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+    borderBottomColor: "#d1fae5",
   },
   summaryRowLast: {
     borderBottomWidth: 0,
@@ -274,77 +298,88 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   summaryLabel: {
-    fontSize: 10,
-    color: "#6b7280",
+    fontSize: 9,
+    color: "#4b5563",
   },
   summaryValue: {
     fontSize: 10,
-    color: "#1f2937",
+    color: "#065f46",
     fontWeight: "bold",
+    minWidth: 80,
+    textAlign: "right",
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 15,
-    paddingTop: 15,
+    marginTop: 12,
+    paddingTop: 12,
     borderTopWidth: 2,
-    borderTopColor: "#2563eb",
+    borderTopColor: "#059669",
+    backgroundColor: "#ecfdf5",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginHorizontal: -15,
+    marginBottom: -15,
+    borderBottomLeftRadius: 5,
+    borderBottomRightRadius: 5,
   },
   totalLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "bold",
-    color: "#1f2937",
+    color: "#065f46",
   },
   totalValue: {
     fontSize: 13,
     fontWeight: "bold",
-    color: "#2563eb",
+    color: "#059669",
+    minWidth: 80,
+    textAlign: "right",
   },
   noteSection: {
-    marginTop: 35,
-    padding: 15,
-    backgroundColor: "#fef3c7",
-    borderRadius: 6,
-    borderLeftWidth: 4,
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: "#fffbeb",
+    borderRadius: 4,
+    borderLeftWidth: 3,
     borderLeftColor: "#f59e0b",
   },
   noteTitle: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 6,
     color: "#92400e",
   },
   noteText: {
-    fontSize: 9,
+    fontSize: 8,
     color: "#78350f",
     lineHeight: 1.5,
   },
   footer: {
-    marginTop: 50,
-    paddingTop: 25,
+    marginTop: 30,
+    paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    borderTopColor: "#d1fae5",
     alignItems: "center",
   },
   thankYou: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
-    color: "#1f2937",
-    marginBottom: 15,
+    color: "#065f46",
+    marginBottom: 12,
   },
   businessInfo: {
     alignItems: "center",
   },
   businessName: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    color: "#374151",
-    marginBottom: 8,
+    color: "#059669",
+    marginBottom: 6,
   },
   contactText: {
-    fontSize: 9,
+    fontSize: 8,
     color: "#6b7280",
-    marginBottom: 3,
+    marginBottom: 2,
   },
 });
 
@@ -355,13 +390,11 @@ const safeParseFloat = (value: string | number | undefined | null): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Helper function to format currency
+// Helper function to format currency - improved version with NGN prefix
 const formatCurrency = (value: string | number | undefined | null): string => {
   const num = safeParseFloat(value);
-  return num.toLocaleString("en-NG", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  // Use standard number formatting without locale to avoid symbol issues
+  return num.toFixed(2);
 };
 
 // PDF Document Component
@@ -372,7 +405,7 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
-        month: "long",
+        month: "short",
         day: "numeric",
         year: "numeric",
         hour: "numeric",
@@ -384,8 +417,8 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
     const calculateSubtotal = (): number => {
       if (!orderData.products || orderData.products.length === 0) {
         return (
-          safeParseFloat(orderData.amount) -
-          safeParseFloat(orderData.shipping_fee)
+          safeParseFloat(orderData.total_price) -
+          safeParseFloat(orderData.delivery?.shipping_fee)
         );
       }
 
@@ -397,9 +430,39 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
     };
 
     const subtotal = calculateSubtotal();
-    const shippingFee = safeParseFloat(orderData.shipping_fee);
-    const tax = safeParseFloat(orderData.tax);
-    const total = safeParseFloat(orderData.amount);
+    const shippingFee = safeParseFloat(orderData.delivery?.shipping_fee);
+    const tax = 0; // No tax in current data structure
+    const total = safeParseFloat(orderData.total_price);
+
+    // Get payment status badge style
+    const getPaymentStatusStyle = () => {
+      switch (orderData.payment_status) {
+        case "PAID":
+          return styles.statusPaid;
+        case "PARTIAL":
+          return styles.statusPartial;
+        case "UNPAID":
+          return styles.statusUnpaid;
+        default:
+          return styles.statusUnpaid;
+      }
+    };
+
+    // Get shipping status badge style
+    const getShippingStatusStyle = () => {
+      switch (orderData.delivery?.shipping_status) {
+        case "DELIVERED":
+          return styles.statusDelivered;
+        case "SHIPPED":
+          return styles.statusShipped;
+        case "RETURNED":
+          return styles.statusReturned;
+        case "PENDING":
+          return styles.statusPending;
+        default:
+          return styles.statusPending;
+      }
+    };
 
     return (
       <Document>
@@ -410,14 +473,14 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
               <Text style={styles.invoiceTitle}>INVOICE</Text>
               <View style={styles.orderInfo}>
                 <Text style={styles.orderNumber}>
-                  Order: #{orderData.id.slice(0, 8).toUpperCase()}
+                  Order #{orderData.id.slice(0, 8).toUpperCase()}
                 </Text>
                 <View style={styles.statusContainer}>
-                  <Text style={[styles.statusBadge, styles.statusUnpaid]}>
+                  <Text style={[styles.statusBadge, getPaymentStatusStyle()]}>
                     {orderData.payment_status}
                   </Text>
-                  <Text style={[styles.statusBadge, styles.statusPending]}>
-                    {orderData.shipping_status}
+                  <Text style={[styles.statusBadge, getShippingStatusStyle()]}>
+                    {orderData.delivery?.shipping_status || "PENDING"}
                   </Text>
                 </View>
               </View>
@@ -426,11 +489,6 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
               <Text style={styles.dateText}>
                 {formatDate(orderData.created_at)}
               </Text>
-              {orderData.created_by && (
-                <Text style={styles.createdBy}>
-                  Created by: {orderData.created_by}
-                </Text>
-              )}
             </View>
           </View>
 
@@ -455,32 +513,32 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
 
             <View style={styles.addressBlock}>
               <Text style={styles.addressTitle}>Ship To</Text>
-              {orderData.delivery_address ? (
+              {orderData.delivery?.delivery_address ? (
                 <>
                   <Text style={[styles.addressText, { fontWeight: "bold" }]}>
-                    {orderData.delivery_address.first_name}{" "}
-                    {orderData.delivery_address.last_name}
+                    {orderData.delivery.delivery_address.first_name}{" "}
+                    {orderData.delivery.delivery_address.last_name}
                   </Text>
-                  {orderData.delivery_address.address && (
+                  {orderData.delivery.delivery_address.address && (
                     <Text style={styles.addressText}>
-                      {orderData.delivery_address.address}
+                      {orderData.delivery.delivery_address.address}
                     </Text>
                   )}
-                  {orderData.delivery_address.city && (
+                  {orderData.delivery.delivery_address.city && (
                     <Text style={styles.addressText}>
-                      {orderData.delivery_address.city}
-                      {orderData.delivery_address.state &&
-                        `, ${orderData.delivery_address.state}`}
+                      {orderData.delivery.delivery_address.city}
+                      {orderData.delivery.delivery_address.state &&
+                        `, ${orderData.delivery.delivery_address.state}`}
                     </Text>
                   )}
-                  {orderData.delivery_address.country && (
+                  {orderData.delivery.delivery_address.country && (
                     <Text style={styles.addressText}>
-                      {orderData.delivery_address.country}
+                      {orderData.delivery.delivery_address.country}
                     </Text>
                   )}
-                  {orderData.delivery_address.phone && (
+                  {orderData.delivery.delivery_address.phone && (
                     <Text style={styles.addressText}>
-                      {orderData.delivery_address.phone}
+                      {orderData.delivery.delivery_address.phone}
                     </Text>
                   )}
                 </>
@@ -497,7 +555,7 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
             <View style={styles.tableHeader}>
               <Text style={[styles.tableHeaderText, styles.cellQty]}>QTY</Text>
               <Text style={[styles.tableHeaderText, styles.cellDescription]}>
-                DESCRIPTION
+                PRODUCT NAME
               </Text>
               <Text style={[styles.tableHeaderText, styles.cellUnitPrice]}>
                 UNIT PRICE
@@ -524,20 +582,18 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                   <View key={index} style={rowStyles}>
                     <Text style={styles.cellQty}>{quantity}</Text>
                     <View style={styles.cellDescription}>
-                      <Text style={styles.productName}>
-                        {product.product_name}
-                      </Text>
+                      <Text style={styles.productName}>{product.name}</Text>
                       {discount > 0 && (
                         <Text style={styles.discountBadge}>
-                          Discount: -₦{formatCurrency(discount)}
+                          Discount: -NGN {formatCurrency(discount)}
                         </Text>
                       )}
                     </View>
                     <Text style={styles.cellUnitPrice}>
-                      ₦{formatCurrency(unitPrice)}
+                      NGN {formatCurrency(unitPrice)}
                     </Text>
                     <Text style={styles.cellAmount}>
-                      ₦{formatCurrency(lineTotal)}
+                      NGN {formatCurrency(lineTotal)}
                     </Text>
                   </View>
                 );
@@ -547,10 +603,10 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                 <Text style={styles.cellQty}>1</Text>
                 <Text style={styles.cellDescription}>Order Payment</Text>
                 <Text style={styles.cellUnitPrice}>
-                  ₦{formatCurrency(subtotal)}
+                  NGN {formatCurrency(subtotal)}
                 </Text>
                 <Text style={styles.cellAmount}>
-                  ₦{formatCurrency(subtotal)}
+                  NGN {formatCurrency(subtotal)}
                 </Text>
               </View>
             )}
@@ -562,7 +618,7 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
                 <Text style={styles.summaryValue}>
-                  ₦{formatCurrency(subtotal)}
+                  NGN {formatCurrency(subtotal)}
                 </Text>
               </View>
 
@@ -570,7 +626,7 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Shipping Fee</Text>
                   <Text style={styles.summaryValue}>
-                    ₦{formatCurrency(shippingFee)}
+                    NGN {formatCurrency(shippingFee)}
                   </Text>
                 </View>
               )}
@@ -579,23 +635,25 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                 <View style={[styles.summaryRow, styles.summaryRowLast]}>
                   <Text style={styles.summaryLabel}>Tax</Text>
                   <Text style={styles.summaryValue}>
-                    ₦{formatCurrency(tax)}
+                    NGN {formatCurrency(tax)}
                   </Text>
                 </View>
               )}
 
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>TOTAL</Text>
-                <Text style={styles.totalValue}>₦{formatCurrency(total)}</Text>
+                <Text style={styles.totalValue}>
+                  NGN {formatCurrency(total)}
+                </Text>
               </View>
             </View>
           </View>
 
           {/* Note Section */}
-          {orderData.note && (
+          {orderData.description && (
             <View style={styles.noteSection}>
-              <Text style={styles.noteTitle}>Delivery Instructions</Text>
-              <Text style={styles.noteText}>{orderData.note}</Text>
+              <Text style={styles.noteTitle}>Note</Text>
+              <Text style={styles.noteText}>{orderData.description}</Text>
             </View>
           )}
 
@@ -629,7 +687,7 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
         </Page>
       </Document>
     );
-  }
+  },
 );
 
 OrderReceiptPDF.displayName = "OrderReceiptPDF";
@@ -639,6 +697,7 @@ const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
   orderData,
   business,
 }) => {
+  console.log("orderData in the receipt", orderData);
   const receiptNumber = orderData?.id?.slice(0, 8).toUpperCase() || "INVOICE";
 
   const dataSignature = useMemo(() => {
@@ -646,17 +705,19 @@ const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
     return JSON.stringify({
       orderId: orderData.id,
       businessId: business?.data?.id,
-      amount: orderData.amount,
+      amount: orderData.total_price,
       paymentStatus: orderData.payment_status,
       productsCount: orderData.products?.length || 0,
     });
   }, [
     orderData?.id,
-    orderData?.amount,
+    orderData?.total_price,
     orderData?.payment_status,
     orderData?.products?.length,
     business?.data?.id,
   ]);
+
+  console.log("dataSignature", dataSignature);
 
   const [pdfDoc, setPdfDoc] = useState<JSX.Element | null>(null);
 

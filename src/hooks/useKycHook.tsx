@@ -80,7 +80,7 @@ export const useKycHook = () => {
             console.error("Error handling success response:", error);
           }
         },
-      }
+      },
     );
   };
   const onSubmitCorporateAcct = (data: AddCorporateAcctFormValues) => {
@@ -116,7 +116,7 @@ export const useKycHook = () => {
             // You might want to show an error toast here
           }
         },
-      }
+      },
     );
   };
 
