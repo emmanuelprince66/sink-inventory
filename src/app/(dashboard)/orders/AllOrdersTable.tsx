@@ -8,12 +8,14 @@ const AllOrdersTable = ({
   loading,
   setPage,
   page,
+  handleRowClick,
   type,
 }: {
   response: OrderApiResponse;
   loading: boolean;
   setPage: (page: number) => void;
   page: number;
+  handleRowClick: (row: any) => void;
   type: string;
 }) => {
   console.log("response", response);
@@ -48,6 +50,7 @@ const AllOrdersTable = ({
   return (
     <>
       <CustomTable
+        onRowClick={handleRowClick}
         loading={loading}
         noDataText="No Orders found"
         columns={columns}

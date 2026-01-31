@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
 import Link from "next/link";
@@ -202,13 +202,13 @@ export const useOrdersColumn = (type: string) => {
                 </DropdownMenuItem>
               </Link>
 
-              <DropdownMenuItem
+              {/* <DropdownMenuItem
                 onClick={confirmDelete}
                 className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
 

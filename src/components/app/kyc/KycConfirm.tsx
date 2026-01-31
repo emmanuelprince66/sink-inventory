@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Briefcase,
   Building,
@@ -8,228 +10,217 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// Import your existing components
 import CorporateAcct from "./CorporateAcct";
 import IndividualAcct from "./IndividualAcct";
 
-const KycConfirm = () => {
+interface KycConfirmProps {
+  page: boolean;
+}
+
+const KycConfirm = ({ page }: KycConfirmProps) => {
   const [showIntro, setShowIntro] = useState(true);
   const [selectedTier, setSelectedTier] = useState<"tier1" | "tier2" | null>(
-    null
+    null,
   );
 
   const handleContinue = () => {
     setShowIntro(false);
   };
 
-  // Introduction/Welcome Screen
+  // ────────────────────────────────────────────────
+  // Intro / Welcome Screen
+  // ────────────────────────────────────────────────
   if (showIntro) {
     return (
-      <div className=" flex items-center justify-center p-4 ">
-        <div className="bg-white rounded-l w-full ">
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-2">
+      <div
+        className={`
+          flex items-center justify-center min-h-[70vh] p-4 sm:p-6
+          ${page ? "max-w-md mx-auto" : "w-full"}
+        `}
+      >
+        <div className="bg-white rounded-xl shadow-sm w-full max-w-lg">
+          <div className="text-center px-5 pt-8 pb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
               Let's verify your identity
             </h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
               In line with recent CBN regulations, all SYNC360 users must
-              complete identity verification before receiving settlements. To
-              get verified, you’ll need:
+              complete identity verification before receiving settlements.
             </p>
           </div>
 
-          <div className="flex items-start space-x-6 mb-6">
-            <div className="flex-1">
-              <p className="font-medium text-gray-800 mb-4">
-                You'll need the following to get verified:
-              </p>
+          <div className="px-5 sm:px-8 pb-8">
+            <p className="font-medium text-gray-800 mb-5 text-center sm:text-left">
+              You'll need the following to get verified:
+            </p>
 
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <FileText className="text-green-600" size={16} />
+            <div className="space-y-4">
+              {[
+                { icon: FileText, text: "Your Bank Verification Number (BVN)" },
+                {
+                  icon: CreditCard,
+                  text: "A valid government-issued ID (NIN, Voter’s Card, or Driver’s License)",
+                },
+                { icon: Building, text: "CAC Document verification" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="p-2.5 bg-green-100 rounded-full shrink-0">
+                    <item.icon className="text-green-600" size={18} />
                   </div>
-                  <span className="text-sm text-gray-700">
-                    Your Bank Verification Number (BVN)
+                  <span className="text-sm sm:text-base text-gray-700">
+                    {item.text}
                   </span>
                 </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <CreditCard className="text-green-600" size={16} />
-                  </div>
-                  <span className="text-sm text-gray-700">
-                    A valid government-issued ID (NIN, Voter’s Card, or Driver’s
-                    License)
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <Building className="text-green-600" size={16} />
-                  </div>
-                  <span className="text-sm text-gray-700">
-                    CAC Document verification 
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-shrink-0">
-              <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
-                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center">
-                  <User className="text-white" size={24} />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <button
-            onClick={handleContinue}
-            className="w-full cursor-pointer bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-          >
-            Continue
-          </button>
+          <div className="px-5 sm:px-8 pb-8">
+            <button
+              onClick={handleContinue}
+              className="w-full bg-green-600 text-white py-3.5 rounded-lg font-medium hover:bg-green-700 transition-colors text-base"
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Main KYC Selection Screen
+  // ────────────────────────────────────────────────
+  // Tier Selection + Form Screen
+  // ────────────────────────────────────────────────
   return (
-    <div className="mx-auto p-6 bg-white rounded-lg shadow-sm max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-800 mb-2">
+    <div
+      className={`
+        mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-sm
+        ${page ? "max-w-2xl w-full" : "w-full"}
+      `}
+    >
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center sm:text-left">
         Choose a tier to get started
       </h1>
 
-      <p className="text-gray-600 mb-6">
+      <p className="text-gray-600 mb-6 text-center sm:text-left max-w-xl mx-auto sm:mx-0">
         In line with recent CBN regulations, all SYNC360 users must complete
         identity verification before receiving settlements.
       </p>
 
       {!selectedTier ? (
-        <div className="space-y-4 mb-8">
-          {/* Tier 1 Card */}
+        <div className="space-y-4 sm:space-y-5 mb-8">
+          {/* Tier 1 – Individual */}
           <div
-            className={`border rounded-lg p-4 cursor-pointer transition-all ${
+            className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
               selectedTier === "tier1"
-                ? "border-green-500 bg-green-50"
-                : "border-gray-200 hover:border-green-300"
+                ? "border-green-500 bg-green-50/60 shadow-sm"
+                : "border-gray-200 hover:border-green-300 hover:shadow"
             }`}
             onClick={() => setSelectedTier("tier1")}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-full ${
-                    selectedTier === "tier1"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-gray-100 text-gray-600"
+                  className={`p-3 rounded-full ${
+                    selectedTier === "tier1" ? "bg-green-100" : "bg-gray-100"
                   }`}
                 >
-                  <User size={20} />
+                  <User
+                    size={22}
+                    className={
+                      selectedTier === "tier1"
+                        ? "text-green-600"
+                        : "text-gray-600"
+                    }
+                  />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800">
+                  <h3 className="font-semibold text-gray-800 text-base sm:text-lg">
                     Individual Account
                   </h3>
-                  {/* <p className="text-sm text-gray-500">
-                    Account can be opened with just BVN
-                  </p> */}
                 </div>
               </div>
               {selectedTier === "tier1" && (
-                <Check className="text-green-600" size={20} />
+                <Check className="text-green-600" size={24} />
               )}
             </div>
-            <div className="mt-4 pl-11">
-              <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Account Limit 5,000,000</span>
+
+            <div className="mt-4 pl-14 sm:pl-16 space-y-2 text-sm sm:text-base">
+              <div className="font-medium text-gray-700">
+                Account Limit: ₦5,000,000
               </div>
-              <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Get a personal account</span>
-                {/* <span className="ml-1">Personal Account</span> */}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <span className="font-medium">
-                  Your Bank Verification Number (BVN)
-                </span>
-                {/* <span className="ml-1">BVN</span> */}
-              </div>
+              <div className="text-gray-600">Personal account</div>
+              <div className="text-gray-600">BVN required</div>
             </div>
           </div>
 
-          {/* Tier 2 Card */}
+          {/* Tier 2 – Corporate */}
           <div
-            className={`border rounded-lg p-4 cursor-pointer transition-all ${
+            className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
               selectedTier === "tier2"
-                ? "border-green-500 bg-green-50"
-                : "border-gray-200 hover:border-green-300"
+                ? "border-green-500 bg-green-50/60 shadow-sm"
+                : "border-gray-200 hover:border-green-300 hover:shadow"
             }`}
             onClick={() => setSelectedTier("tier2")}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div
-                  className={`p-2 rounded-full ${
-                    selectedTier === "tier2"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-gray-100 text-gray-600"
+                  className={`p-3 rounded-full ${
+                    selectedTier === "tier2" ? "bg-green-100" : "bg-gray-100"
                   }`}
                 >
-                  <Briefcase size={20} />
+                  <Briefcase
+                    size={22}
+                    className={
+                      selectedTier === "tier2"
+                        ? "text-green-600"
+                        : "text-gray-600"
+                    }
+                  />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800">
+                  <h3 className="font-semibold text-gray-800 text-base sm:text-lg">
                     Corporate Account
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    Picking this Option means you have a CAC certificate
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    Requires CAC certificate
                   </p>
                 </div>
               </div>
               {selectedTier === "tier2" && (
-                <Check className="text-green-600" size={20} />
+                <Check className="text-green-600" size={24} />
               )}
             </div>
-            <div className="mt-4 pl-11">
-              <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">
-                  Get a Corporate account number
-                </span>
-                {/* <span className="ml-1">Unlimited</span> */}
+
+            <div className="mt-4 pl-14 sm:pl-16 space-y-2 text-sm sm:text-base">
+              <div className="font-medium text-gray-700">
+                Account Limit: ₦10,000,000
               </div>
-              <div className="flex items-center text-sm text-gray-600 mb-1">
-                <span className="font-medium">Account limit 10,000,000</span>
-                {/* <span className="ml-1">Personal/Business Account</span> */}
-              </div>
-              <div className="flex items-center text-sm text-gray-600">
-                <span className="font-medium">
-                  A valid government-issued ID (BVN, NIN, Voter’s Card,
-                  CAC verification.
-                </span>
-                {/* <span className="ml-1">BVN, CAC Verification</span> */}
+              <div className="text-gray-600">Corporate account number</div>
+              <div className="text-gray-600">
+                BVN, NIN / Voter’s Card / Driver’s License + CAC verification
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {selectedTier === "tier1" ? <IndividualAcct /> : <CorporateAcct />}
 
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-start pt-4">
             <button
               type="button"
               onClick={() => setSelectedTier(null)}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Back
+              ← Back to tiers
             </button>
           </div>
         </div>
       )}
 
-      <div className="mt-6 text-center text-xs text-gray-500">
+      <div className="mt-8 text-center text-xs text-gray-500">
         Verified by Third Party Providers
       </div>
     </div>

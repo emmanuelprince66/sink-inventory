@@ -221,14 +221,15 @@ const Orders = () => {
   };
 
   // Fetch orders data with filters
-  const { OrderData, OrderDataLoading, findBusiness } = useOrdersHook({
-    page,
-    searchInput: searchInput.length >= 3 ? searchInput : "",
-    order_type: activeTab, // Use active tab for order_type
-    shipping_status: filters.shipping_status,
-    payment_status: filters.payment_status,
-    dateRange,
-  });
+  const { OrderData, OrderDataLoading, findBusiness, handleRowClick } =
+    useOrdersHook({
+      page,
+      searchInput: searchInput.length >= 3 ? searchInput : "",
+      order_type: activeTab, // Use active tab for order_type
+      shipping_status: filters.shipping_status,
+      payment_status: filters.payment_status,
+      dateRange,
+    });
 
   console.log("findBusiness", findBusiness);
 
@@ -505,6 +506,7 @@ const Orders = () => {
                 <AllOrdersTable
                   setPage={setPage}
                   page={page}
+                  handleRowClick={handleRowClick}
                   response={OrderData}
                   loading={false}
                   type={activeTab}
