@@ -33,7 +33,7 @@ const PaymentMethods = () => {
   // Loading state
   if (BusinessDataLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
           <p className="text-slate-600 text-lg">Loading payment settings...</p>
@@ -43,7 +43,7 @@ const PaymentMethods = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50/30 to-slate-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 md:mb-12">
@@ -164,9 +164,9 @@ const PaymentMethods = () => {
                       <p className="text-slate-900 font-semibold text-sm md:text-base mb-1">
                         Card
                       </p>
-                      {/* <p className="text-slate-600 text-xs md:text-sm">
+                      <p className="text-slate-600 text-xs md:text-sm">
                         1.5% transaction fee per payment
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -177,9 +177,9 @@ const PaymentMethods = () => {
                       <p className="text-slate-900 font-semibold text-sm md:text-base mb-1">
                         Bank Transfer
                       </p>
-                      {/* <p className="text-slate-600 text-xs md:text-sm">
+                      <p className="text-slate-600 text-xs md:text-sm">
                         1% transaction fee per transfer
-                      </p> */}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -302,9 +302,9 @@ const PaymentMethods = () => {
 
             {/* Info Box */}
             {chargeOption === "customer" && (
-              <div className="mt-6 flex gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-blue-900 text-sm leading-relaxed">
+              <div className="mt-6 flex gap-3 p-4 bg-green-50 rounded-xl border border-green-200">
+                <Info className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <p className="text-green-900 text-sm leading-relaxed">
                   Selecting this option will pass transaction charges to your
                   customers. The applicable fee will be added to their total at
                   checkout, ensuring transparent pricing.
