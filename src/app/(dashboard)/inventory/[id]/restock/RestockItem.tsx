@@ -42,8 +42,11 @@ const RestockItem = ({
     restockProductPending,
     onSubmit,
     paymentMethodOptions,
+    hasVariations,
+    variations,
   } = useGetRestockHistory({ data, closeModal });
 
+  console.log("data", data);
   console.log("form", form.getValues());
 
   return (
@@ -61,14 +64,55 @@ const RestockItem = ({
               <FormItem className="flex-1">
                 <FormLabel>Item Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Item Name...." {...field} />
+                  <Input
+                    placeholder="Enter Item Name...."
+                    {...field}
+                    disabled
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* SKU */}
+          {/* Variation Selection - Only show if product has variations */}
+          {hasVariations && (
+            <FormField
+              control={form.control}
+              name="variation_id"
+              render={({ field }) => (
+                <FormItem className="flex-1 w-full bg-white">
+                  <FormLabel>
+                    Select Variation <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full border border-green-300">
+                        <SelectValue placeholder="Select a variation" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                      {variations.map((variation: any) => (
+                        <SelectItem
+                          key={variation.id}
+                          value={variation.id}
+                          className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                        >
+                          {variation.name} - Stock: {variation.quantity}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          {/* Stock Quantity */}
           <FormField
             control={form.control}
             name="qty"
@@ -87,6 +131,7 @@ const RestockItem = ({
             )}
           />
 
+          {/* Expiry Date */}
           <FormField
             control={form.control}
             name="expiry_date"
@@ -100,7 +145,7 @@ const RestockItem = ({
                         variant={"outline"}
                         className={cn(
                           "w-full pl-3 text-left font-normal border border-primary-green-300",
-                          !field.value && "text-muted-foreground"
+                          !field.value && "text-muted-foreground",
                         )}
                       >
                         {field.value ? (
@@ -124,11 +169,9 @@ const RestockItem = ({
                       }
                       disabled={(date) => {
                         const today = new Date();
-                        // Set time to start of day for accurate comparison
                         today.setHours(0, 0, 0, 0);
                         const compareDate = new Date(date);
                         compareDate.setHours(0, 0, 0, 0);
-                        // Disable today and all past dates
                         return compareDate <= today;
                       }}
                       initialFocus
@@ -144,7 +187,7 @@ const RestockItem = ({
             )}
           />
 
-          {/* Low Stock Threshold */}
+          {/* Cost Price */}
           <FormField
             control={form.control}
             name="cost_price"
@@ -152,16 +195,18 @@ const RestockItem = ({
               <FormItem className="flex-1">
                 <FormLabel>Cost Price</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Cost Price...." {...field} />
+                  <Input
+                    placeholder="Enter Cost Price...."
+                    {...field}
+                    disabled={hasVariations && !form.watch("variation_id")}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* Supplier */}
-
-          {/* Stock Status */}
+          {/* Selling Price */}
           <FormField
             control={form.control}
             name="selling_price"
@@ -169,13 +214,18 @@ const RestockItem = ({
               <FormItem className="flex-1">
                 <FormLabel>Selling Price</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Selling Price...." {...field} />
+                  <Input
+                    placeholder="Enter Selling Price...."
+                    {...field}
+                    disabled={hasVariations && !form.watch("variation_id")}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
 
+          {/* Supplier */}
           <FormField
             control={form.control}
             name="supplier"
@@ -243,7 +293,7 @@ const RestockItem = ({
             )}
           />
 
-          {/* Conditional Fields */}
+          {/* Conditional Fields for Credit/Part Payment */}
           {form.watch("payment_method") === "CREDIT" && (
             <FormField
               control={form.control}
@@ -258,7 +308,7 @@ const RestockItem = ({
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal border border-primary-green-300",
-                            !field.value && "text-muted-foreground"
+                            !field.value && "text-muted-foreground",
                           )}
                         >
                           {field.value ? (
@@ -319,7 +369,7 @@ const RestockItem = ({
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal border border-primary-green-300",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (
@@ -355,7 +405,10 @@ const RestockItem = ({
 
           {/* Submit Button */}
           <Button
-            disabled={restockProductPending}
+            disabled={
+              restockProductPending ||
+              (hasVariations && !form.watch("variation_id"))
+            }
             type="submit"
             className="w-full h-[48px] mt-4"
           >

@@ -18,6 +18,7 @@ import {
   ArrowBigLeft,
   BadgePercent,
   Minus,
+  Package,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -78,6 +79,10 @@ const CreateOrders = () => {
     hasQuantityErrors,
     BankData,
     BankDataLoading,
+    selectedVariations,
+    handleVariationSelect,
+    getSelectedVariation,
+    hasVariations,
   } = useOrdersHook({
     page,
     searchInput,
@@ -182,47 +187,37 @@ const CreateOrders = () => {
           {selectedProducts.length > 0 && (
             <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
               {selectedProducts.map((product) => (
-                <div key={product.id} className="p-3 sm:p-4 space-y-2">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-3 flex-1">
-                      {product.image && (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded flex-shrink-0"
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <h4 className="font-medium text-sm sm:text-base truncate">
-                          {product.name}
-                        </h4>
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          ₦{getProductPrice(product).toLocaleString()} per unit
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                      <div className="space-y-1">
-                        <Input
-                          type="number"
-                          min="1"
-                          value={product.quantity || 1}
-                          className={`w-16 sm:w-20 text-sm ${
-                            productErrors[product.id]
-                              ? "border-red-500 focus-visible:ring-red-500"
-                              : ""
-                          }`}
-                          onChange={(e) => {
-                            const quantity = parseInt(e.target.value) || 1;
-                            updateProductQuantity(product.id, quantity);
-                          }}
-                        />
-                        {productErrors[product.id] && (
-                          <p className="text-xs text-red-500 flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            {productErrors[product.id]}
-                          </p>
+                <div key={product.id} className="p-3 sm:p-4 space-y-3">
+                  {/* Product Header with Variation Badge */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        {product.image && (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded flex-shrink-0"
+                          />
                         )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="font-medium text-sm sm:text-base truncate">
+                              {product.name}
+                            </h4>
+                            {hasVariations(product) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 flex-shrink-0">
+                                <Package className="w-3 h-3" />
+                                Has Variations
+                              </span>
+                            )}
+                          </div>
+                          {!hasVariations(product) && (
+                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                              ₦{getProductPrice(product).toLocaleString()} per
+                              unit
+                            </p>
+                          )}
+                        </div>
                       </div>
                       <Button
                         type="button"
@@ -234,51 +229,151 @@ const CreateOrders = () => {
                         <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                       </Button>
                     </div>
+
+                    {/* Variation Selection Section */}
+                    {hasVariations(product) && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-green-600" />
+                          <Label className="text-sm font-medium text-green-900">
+                            Select Variation{" "}
+                            <span className="text-red-500">*</span>
+                          </Label>
+                        </div>
+                        <Select
+                          value={selectedVariations[product.id] || ""}
+                          onValueChange={(value) =>
+                            handleVariationSelect(product.id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-full bg-white border-green-300">
+                            <SelectValue placeholder="Choose a variation..." />
+                          </SelectTrigger>
+                          <SelectContent className="bg-white">
+                            {product.variations.map((variation: any) => (
+                              <SelectItem
+                                key={variation.id}
+                                value={variation.id}
+                                className="cursor-pointer hover:bg-green-50"
+                              >
+                                <div className="flex items-center justify-between w-full gap-4">
+                                  <span className="font-medium">
+                                    {variation.name}
+                                  </span>
+                                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                                    <span>Stock: {variation.quantity}</span>
+                                    <span>•</span>
+                                    <span className="font-semibold text-green-600">
+                                      ₦
+                                      {variation.selling_price?.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedVariations[product.id] && (
+                          <div className="text-xs mt-2 text-green-700 bg-green-100 p-2 rounded border border-green-200">
+                            Selected: {getSelectedVariation(product)?.name} - ₦
+                            {getProductPrice(product).toLocaleString()} per unit
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Quantity Input - Only show if variation is selected or no variations */}
+                    {(!hasVariations(product) ||
+                      selectedVariations[product.id]) && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <Label className="text-xs text-gray-600 mb-1 block">
+                            Quantity
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={product.quantity || 1}
+                            className={`w-full text-sm ${
+                              productErrors[product.id]
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : ""
+                            }`}
+                            onChange={(e) => {
+                              const quantity = parseInt(e.target.value) || 1;
+                              updateProductQuantity(product.id, quantity);
+                            }}
+                            disabled={
+                              hasVariations(product) &&
+                              !selectedVariations[product.id]
+                            }
+                          />
+                          {productErrors[product.id] && (
+                            <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                              <AlertCircle className="w-3 h-3" />
+                              {productErrors[product.id]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Discount Information */}
-                  {isDiscountApplied(product) && (
-                    <div className="flex items-center gap-2 pl-0 sm:pl-14 bg-green-50 p-2 rounded-md border border-green-200">
-                      <BadgePercent className="w-4 h-4 text-green-600" />
-                      <div className="flex-1">
-                        <p className="text-xs text-green-700 font-medium">
-                          Discount Applied!
-                        </p>
-                        <p className="text-xs text-green-600">
-                          ₦{getProductDiscount(product).toLocaleString()} off
-                          per unit
-                          {product.discount_threshold && (
-                            <span className="text-gray-600">
-                              {" "}
-                              (Buy {product.discount_threshold}+ items)
-                            </span>
-                          )}
-                        </p>
+                  {selectedVariations[product.id] &&
+                    isDiscountApplied(product) && (
+                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
+                        <BadgePercent className="w-4 h-4 text-green-600" />
+                        <div className="flex-1">
+                          <p className="text-xs text-green-700 font-medium">
+                            Discount Applied!
+                          </p>
+                          <p className="text-xs text-green-600">
+                            ₦{getProductDiscount(product).toLocaleString()} off
+                            per unit
+                            {getSelectedVariation(product)
+                              ?.discount_threshold && (
+                              <span className="text-gray-600">
+                                {" "}
+                                (Buy{" "}
+                                {
+                                  getSelectedVariation(product)
+                                    .discount_threshold
+                                }
+                                + items)
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Total saved:</p>
+                          <p className="text-sm font-semibold text-green-600">
+                            ₦
+                            {(
+                              getProductDiscount(product) *
+                              (product.quantity || 1)
+                            ).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-gray-500">Total saved:</p>
-                        <p className="text-sm font-semibold text-green-600">
-                          ₦
-                          {(
-                            getProductDiscount(product) *
-                            (product.quantity || 1)
-                          ).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Show threshold info when not yet reached */}
-                  {!isDiscountApplied(product) &&
-                    product.discount_threshold &&
-                    product.discount > 0 && (
-                      <div className="flex items-center gap-2 pl-0 sm:pl-14 bg-green-50 p-2 rounded-md border border-green-200">
+                  {selectedVariations[product.id] &&
+                    !isDiscountApplied(product) &&
+                    getSelectedVariation(product)?.discount_threshold &&
+                    getSelectedVariation(product)?.discount > 0 && (
+                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
                         <BadgePercent className="w-4 h-4 text-green-600" />
                         <p className="text-xs text-green-700">
                           Buy{" "}
-                          {product.discount_threshold - (product.quantity || 1)}{" "}
-                          more to get ₦{product.discount.toLocaleString()} off
-                          per unit
+                          {getSelectedVariation(product).discount_threshold -
+                            (product.quantity || 1)}{" "}
+                          more to get ₦
+                          {getSelectedVariation(
+                            product,
+                          ).discount.toLocaleString()}{" "}
+                          off per unit
                         </p>
                       </div>
                     )}
@@ -287,7 +382,6 @@ const CreateOrders = () => {
 
               {/* Order Summary Section */}
               <div className="p-3 sm:p-4 bg-gray-50 space-y-3">
-                {/* Subtotal */}
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Subtotal:</span>
                   <span className="text-sm">
@@ -295,7 +389,6 @@ const CreateOrders = () => {
                   </span>
                 </div>
 
-                {/* Total Discount */}
                 {calculateTotalDiscount() > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Discount:</span>
@@ -305,7 +398,6 @@ const CreateOrders = () => {
                   </div>
                 )}
 
-                {/* Tax Section */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Tax:</span>
@@ -340,7 +432,6 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
-                {/* Shipping Section */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Shipping:</span>
@@ -385,7 +476,6 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
-                {/* Total */}
                 <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
@@ -397,14 +487,13 @@ const CreateOrders = () => {
           )}
         </div>
 
-        {/* Payment Status Tabs */}
+        {/* Payment Status Tabs - Keep existing code */}
         <div className="space-y-4 w-full">
           <Label>Payment Status *</Label>
           <Tabs
             value={paymentStatus.toLowerCase()}
             onValueChange={(value) => {
               setPaymentStatus(value.toUpperCase() as any);
-              // Reset payment-related states when switching tabs
               setSelectedPaymentMethod("");
               setSelectedBank("");
               setAmountPaid(0);
@@ -446,7 +535,6 @@ const CreateOrders = () => {
                   </Select>
                 </div>
 
-                {/* Bank Selection - Only show if BANK is selected */}
                 {selectedPaymentMethod === "BANK" && (
                   <div className="space-y-2 w-full">
                     <Label htmlFor="bankSelect">Select Bank *</Label>
@@ -559,7 +647,6 @@ const CreateOrders = () => {
                   </Select>
                 </div>
 
-                {/* Bank Selection for Partial Payment */}
                 {selectedPaymentMethod === "BANK" && (
                   <div className="space-y-2 w-full">
                     <Label htmlFor="bankSelect">Select Bank *</Label>

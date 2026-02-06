@@ -77,6 +77,9 @@ export const useOrdersHook = ({
   const [shippingStatus, setShippingStatus] = useState("PENDING");
   const [notes, setNotes] = useState("");
   const [amountPaid, setAmountPaid] = useState(0);
+  const [selectedVariations, setSelectedVariations] = useState<
+    Record<string, string>
+  >({});
 
   // Data fetching for inventory
   const {
@@ -113,6 +116,7 @@ export const useOrdersHook = ({
   } = useUpdateOrderShippingStatusMutation({
     orderId: orderId,
   });
+
   // update Payment status
   const {
     mutate: updateOrderPaymentStatus,
@@ -129,8 +133,6 @@ export const useOrdersHook = ({
     console.log("payload", payload);
     editOrderShippingStatus({ orderId, payload });
   };
-
-  // update payment status
 
   // fetch order by id
   const {
@@ -168,7 +170,6 @@ export const useOrdersHook = ({
   });
 
   console.log("order_type", order_type);
-
   console.log("OrderData", OrderData);
 
   // Fetch customers
@@ -189,9 +190,41 @@ export const useOrdersHook = ({
         queryClient.invalidateQueries({
           queryKey: [queryKey.orders.getAllOrders],
         });
-        router.push(`/orders`); // Redirect to orders list
+        router.push(`/orders`);
       },
     });
+
+  // ========== VARIATION FUNCTIONS ==========
+
+  // Check if product has variations
+  const hasVariations = (product: any) => {
+    return product.variations && product.variations.length > 0;
+  };
+
+  // Handle variation selection
+  const handleVariationSelect = (productId: string, variationId: string) => {
+    setSelectedVariations((prev) => ({
+      ...prev,
+      [productId]: variationId,
+    }));
+
+    // Clear any existing errors for this product
+    setProductErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[productId];
+      return newErrors;
+    });
+  };
+
+  // Get selected variation data
+  const getSelectedVariation = (product: any) => {
+    const variationId = selectedVariations[product.id];
+    if (!variationId || !product.variations) return null;
+
+    return product.variations.find((v: any) => v.id === variationId);
+  };
+
+  // ========== PRODUCT MANAGEMENT FUNCTIONS ==========
 
   // Product management functions
   const removeProduct = (productId: string) => {
@@ -201,11 +234,33 @@ export const useOrdersHook = ({
       delete newErrors[productId];
       return newErrors;
     });
+    // Clear variation selection when product is removed
+    setSelectedVariations((prev) => {
+      const newVariations = { ...prev };
+      delete newVariations[productId];
+      return newVariations;
+    });
   };
 
   const getAvailableQuantity = (productId: string) => {
-    const product = filteredInventoryData?.find((p: any) => p.id === productId);
-    return product?.quantity || 0;
+    const product = selectedProducts.find((p) => p.id === productId);
+    if (!product) {
+      const inventoryProduct = filteredInventoryData?.find(
+        (p: any) => p.id === productId,
+      );
+      return inventoryProduct?.quantity || 0;
+    }
+
+    // If variation is selected, use variation quantity
+    const selectedVariation = getSelectedVariation(product);
+    if (selectedVariation) {
+      return selectedVariation.quantity || 0;
+    }
+
+    const inventoryProduct = filteredInventoryData?.find(
+      (p: any) => p.id === productId,
+    );
+    return inventoryProduct?.quantity || 0;
   };
 
   const updateProductQuantity = (productId: string, quantity: number) => {
@@ -230,14 +285,21 @@ export const useOrdersHook = ({
   };
 
   const getProductPrice = (product: any) => {
+    const selectedVariation = getSelectedVariation(product);
+    if (selectedVariation) {
+      return selectedVariation.selling_price || selectedVariation.amount || 0;
+    }
     return product.selling_price || product.amount || 0;
   };
 
   // Get discount for a product based on quantity and threshold
   const getProductDiscount = (product: any) => {
+    const selectedVariation = getSelectedVariation(product);
+    const targetProduct = selectedVariation || product;
+
     const quantity = product.quantity || 1;
-    const discountThreshold = product.discount_threshold;
-    const discountAmount = product.discount || 0;
+    const discountThreshold = targetProduct.discount_threshold;
+    const discountAmount = targetProduct.discount || 0;
 
     // Only apply discount if threshold is set and quantity meets/exceeds it
     if (
@@ -286,10 +348,6 @@ export const useOrdersHook = ({
 
   const handleRowClick = (row: any) => {
     router.push(`/orders/${row.original.id}`);
-    // console.log("Clicked row:", row.original);
-    // console.log("Clicked row ID:", row.id);
-
-    // Perform any additional actions here
   };
 
   // Manual validation before submission
@@ -341,6 +399,14 @@ export const useOrdersHook = ({
     if (selectedProducts && Array.isArray(selectedProducts)) {
       if (selectedProducts.length > 0 && !shippingFee) {
         showToast("Shipping Fee is required", "error");
+        return false;
+      }
+    }
+
+    // Validate variations for products that have them
+    for (const product of selectedProducts) {
+      if (hasVariations(product) && !selectedVariations[product.id]) {
+        showToast(`Please select a variation for ${product.name}`, "error");
         return false;
       }
     }
@@ -401,13 +467,16 @@ export const useOrdersHook = ({
       return;
     }
 
-    // Prepare products array
+    // Prepare products array with variation_id
     const products = selectedProducts.map((p) => ({
       id: p.id,
       unit_price: getProductPrice(p),
       discount: getProductDiscount(p),
       quantity: p.quantity || 1,
       type: p.type || "",
+      ...(selectedVariations[p.id] && {
+        variation_id: selectedVariations[p.id],
+      }),
     }));
 
     // Build payload
@@ -528,6 +597,10 @@ export const useOrdersHook = ({
     amountPaid,
     setAmountPaid,
 
+    // Variation states
+    selectedVariations,
+    setSelectedVariations,
+
     // Functions
     removeProduct,
     updateProductQuantity,
@@ -544,6 +617,11 @@ export const useOrdersHook = ({
     validateForm,
     editOrderShippingStatusLoading,
     handleUpdateOrderStatus,
+
+    // Variation functions
+    hasVariations,
+    handleVariationSelect,
+    getSelectedVariation,
 
     // shipping
     ShippingData,

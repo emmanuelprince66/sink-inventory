@@ -361,7 +361,7 @@ const ReceiptPDFDocument = ({
                     <Text>
                       {item?.selling_price
                         ? item.selling_price.toLocaleString()
-                        : item.amount.toLocaleString() ?? 0}
+                        : (item.amount.toLocaleString() ?? 0)}
                     </Text>
                     {/* FIXED: Only show discount if THIS item has one */}
                     {hasItemDiscount && (
@@ -424,7 +424,7 @@ const ReceiptPDFDocument = ({
               <Text style={styles.detailValue}>
                 {format(
                   new Date(createSaleResponse?.data?.created_at || Date.now()),
-                  "MMMM d, yyyy, h:mm a"
+                  "MMMM d, yyyy, h:mm a",
                 )}
               </Text>
             </View>
@@ -468,7 +468,7 @@ const ReceiptPDFDocument = ({
                           {parseFloat(amount as string).toLocaleString()}
                         </Text>
                       </View>
-                    )
+                    ),
                   )}
                 </View>
               ) : Array.isArray(multiplePayments) &&
@@ -563,6 +563,7 @@ const PrintReceiptView = ({
   // console.log("customer", customer);
   // console.log("attendant", attendant);
 
+  console.log("cart", cart);
   console.log("discountAmount", discount);
   console.log("discount", discountAmount);
   // console.log("username", user?.name);
@@ -819,7 +820,7 @@ td {
                         <div className="price-main">
                           {item?.selling_price
                             ? formatToNaira(item.selling_price)
-                            : formatToNaira(item.amount) ?? "₦0"}
+                            : (formatToNaira(item.amount) ?? "₦0")}
                         </div>
                         {/* FIXED: Only show discount if THIS item has one */}
                         {hasItemDiscount && (
@@ -832,7 +833,7 @@ td {
                     <td className="text-right text-[11px] price-cell">
                       {formatToNaira(
                         (item.selling_price || item.amount || 0) *
-                          (item.cartQuantity || 1)
+                          (item.cartQuantity || 1),
                       )}
                     </td>
                   </tr>
@@ -880,7 +881,7 @@ td {
             <span className="detail-value text-[11px] ">
               {format(
                 new Date(createSaleResponse?.data?.created_at || Date.now()),
-                "MMMM d, yyyy, h:mm a"
+                "MMMM d, yyyy, h:mm a",
               )}
             </span>
           </div>
@@ -934,7 +935,7 @@ td {
                       {formatToNaira(parseFloat(amount as string))}
                     </span>
                   </div>
-                )
+                ),
               )
             ) : Array.isArray(multiplePayments) &&
               multiplePayments.length > 0 ? (
