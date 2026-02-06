@@ -143,7 +143,7 @@ const Pos: React.FC = () => {
       addToCart({
         ...variation,
         id: variation.id,
-        name: `${variation.parentProductName} - ${variation.name}`,
+        name: `${variation.name}`,
         selling_price: variation.selling_price,
         amount: variation.selling_price,
         quantity: variation.quantity,
@@ -270,7 +270,7 @@ const Pos: React.FC = () => {
                         {product.type === "PRODUCT" && (
                           <p
                             className={`text-[8px] px-2 py-1 rounded-full ${getStatusColor(
-                              product.status
+                              product.status,
                             )}`}
                           >
                             {product.status || "N/A"}
@@ -318,7 +318,7 @@ const Pos: React.FC = () => {
                             {pageNum}
                           </Button>
                         );
-                      }
+                      },
                     )}
                   </div>
 

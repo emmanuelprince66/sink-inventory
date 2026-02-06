@@ -22,7 +22,8 @@ const RestockSchema = z
     selling_price: z.coerce.number().min(1, "Unit Selling Price is required"),
     payment_method: z.string().min(1, "Payment Method is required"),
     due_date: z.string().optional(),
-    amount_paid: z.coerce.number().optional(), // Accepts empty input
+    amount_paid: z.coerce.number().optional(),
+    variation_id: z.string().optional(), // Add this
   })
   .superRefine((data, ctx) => {
     if (data.payment_method === "CREDIT") {
@@ -65,16 +66,14 @@ export const useGetRestockHistory = ({
   closeModal?: any;
 }) => {
   const { showToast } = useToast();
-
   const business_id = useBusinessStore((state) => state.business_id);
   const params = useParams();
   const queryClient = useQueryClient();
 
-  console.log("data", data);
-
   const pId = id || params.id || data?.id;
 
-  console.log("pId", pId);
+  // Check if product has variations
+  const hasVariations = data?.variations && data.variations.length > 0;
 
   const {
     data: restockHistory,
@@ -83,8 +82,6 @@ export const useGetRestockHistory = ({
   } = useFetchRestockHistoryQuery(pId, {
     enabled: !!pId,
   });
-
-
 
   const { mutate: restockProduct, isPending: restockProductPending } =
     useRestockProductMutation({
@@ -112,6 +109,7 @@ export const useGetRestockHistory = ({
       payment_method: "",
       amount_paid: undefined,
       due_date: "",
+      variation_id: "", // Add this
     },
     mode: "onChange",
   });
@@ -119,13 +117,30 @@ export const useGetRestockHistory = ({
   const { data: SupplierData, isLoading: SupplierLoading } =
     useFetchSupplierDataQuery(business_id);
 
-  console.log("SupplierData", SupplierData);
-
   const paymentMethodOptions = [
     { label: "Full Payment", value: "FULL" },
     { label: "Credit", value: "CREDIT" },
     { label: "Partial Payment", value: "PART" },
   ];
+
+  // Watch for variation changes to update cost_price and selling_price
+  const selectedVariationId = form.watch("variation_id");
+
+  useEffect(() => {
+    if (hasVariations && selectedVariationId) {
+      const selectedVariation = data.variations.find(
+        (v: any) => v.id === selectedVariationId,
+      );
+      if (selectedVariation) {
+        form.setValue("cost_price", selectedVariation.cost_price || undefined);
+        form.setValue(
+          "selling_price",
+          selectedVariation.selling_price || undefined,
+        );
+        form.setValue("expiry_date", selectedVariation.expiry_date || "");
+      }
+    }
+  }, [selectedVariationId, hasVariations, data, form]);
 
   const onSubmit = (values: RestockFormValues) => {
     const payload = {
@@ -136,7 +151,9 @@ export const useGetRestockHistory = ({
       ...(values.expiry_date && {
         expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString(),
       }),
-      ...(values.supplier && { supplier_id: values.supplier }), // Only add if supplier exists
+      ...(values.supplier && { supplier_id: values.supplier }),
+      ...(hasVariations &&
+        values.variation_id && { variation_id: values.variation_id }), // Add variation_id if exists
       ...(values.payment_method === "CREDIT" && {
         due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),
       }),
@@ -153,12 +170,6 @@ export const useGetRestockHistory = ({
     });
   };
 
-  console.log("restockHistory", restockHistory);
-
-  useEffect(() => {
-    console.log("form", form.formState.errors);
-  }, [form]);
-
   return {
     restockHistory,
     SupplierData,
@@ -168,5 +179,7 @@ export const useGetRestockHistory = ({
     restockProductPending,
     onSubmit,
     paymentMethodOptions,
+    hasVariations,
+    variations: data?.variations || [],
   };
 };

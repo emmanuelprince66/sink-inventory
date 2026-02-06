@@ -225,7 +225,13 @@ const extractVariationsFromAPI = (variations: any[]): Variation[] => {
   const variationMap = new Map<string, Set<string>>();
 
   variations.forEach((v) => {
-    const parts = v.name.split(" / ").map((p: string) => p.trim());
+    // Remove parent product name if it exists (format: "ProductName - Color / Size")
+    let variationName = v.name;
+    if (variationName.includes(" - ")) {
+      variationName = variationName.split(" - ")[1] || variationName;
+    }
+
+    const parts = variationName.split(" / ").map((p: string) => p.trim());
 
     parts.forEach((part: string, index: number) => {
       let variationType: string;
@@ -490,9 +496,18 @@ export const useAddNewProductHook = ({
       const productVariations = itemsData.variations.map(
         (v: any, index: number) => {
           console.log(`📝 [useEffect] Mapping variation ${index}:`, v);
+
+          // Remove parent product name from combination for editing
+          let combinationWithoutParent = v.name || "";
+          if (combinationWithoutParent.includes(" - ")) {
+            combinationWithoutParent =
+              combinationWithoutParent.split(" - ")[1] ||
+              combinationWithoutParent;
+          }
+
           return {
             id: v.id || "",
-            combination: v.name || "",
+            combination: combinationWithoutParent,
             cost_price: v.cost_price ? String(v.cost_price) : "",
             selling_price: v.selling_price ? String(v.selling_price) : "",
             quantity: v.quantity ? String(v.quantity) : "",
@@ -686,6 +701,8 @@ export const useAddNewProductHook = ({
         values.product_variations.length,
       );
 
+      const parentProductName = values.item_name.trim();
+
       const variationInputs = values.product_variations.map(
         (variation, index) => {
           console.log(
@@ -693,8 +710,11 @@ export const useAddNewProductHook = ({
             variation,
           );
 
+          // Add parent product name to variation combination
+          const variationNameWithParent = `${parentProductName} - ${variation.combination.trim()}`;
+
           const baseVariation: any = {
-            name: variation.combination.trim(),
+            name: variationNameWithParent,
             cost_price: variation.cost_price.trim(),
             selling_price: variation.selling_price.trim(),
             quantity: variation.quantity.trim(),
@@ -873,13 +893,13 @@ export const useAddNewProductHook = ({
   // Show loading until form is fully initialized and ready
   const isPageLoading = isLoadingCriticalData || (isEditMode && !isFormReady);
 
-  console.log("🔍 [Loading State Debug]:");
-  console.log("  - isEditMode:", isEditMode);
-  console.log("  - ProductDataLoading:", ProductDataLoading);
-  console.log("  - CategoriesDataLoading:", CategoriesDataLoading);
-  console.log("  - isFormReady:", isFormReady);
-  console.log("  - hasRequiredData:", hasRequiredData);
-  console.log("  - isPageLoading:", isPageLoading);
+  // console.log("🔍 [Loading State Debug]:");
+  // console.log("  - isEditMode:", isEditMode);
+  // console.log("  - ProductDataLoading:", ProductDataLoading);
+  // console.log("  - CategoriesDataLoading:", CategoriesDataLoading);
+  // console.log("  - isFormReady:", isFormReady);
+  // console.log("  - hasRequiredData:", hasRequiredData);
+  // console.log("  - isPageLoading:", isPageLoading);
 
   return {
     form,
