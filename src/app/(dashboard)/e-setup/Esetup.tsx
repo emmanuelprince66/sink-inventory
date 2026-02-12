@@ -192,9 +192,9 @@ export default function HomePage(): React.ReactElement {
         >
           {/* Dark Green Header Bar */}
           <div className="bg-gradient-to-r from-emerald-700 to-emerald-800 px-6 py-4 md:px-8 md:py-6">
-            <p className="text-emerald-100 text-xs md:text-sm font-semibold tracking-wide uppercase">
+            {/* <p className="text-emerald-100 text-xs md:text-sm font-semibold tracking-wide uppercase">
               Aetos Domain
-            </p>
+            </p> */}
             <h2 className="text-white text-xl md:text-2xl font-bold mt-1">
               {businessData.name}
             </h2>
