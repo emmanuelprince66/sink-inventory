@@ -2,7 +2,6 @@
 
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -12,12 +11,68 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAttendantsHook } from "@/hooks/useAttendantsHook";
+import { CheckCircle2 } from "lucide-react";
+
+const ROLE_PERMISSIONS = {
+  pos_attendant: {
+    name: "POS Attendant",
+    permissions: [
+      "Finalize transaction",
+      "See orders and manage order transactions",
+      "See transactions",
+    ],
+    color: "bg-green-50 border-green-200",
+    iconColor: "text-green-600",
+  },
+  pharmacist: {
+    name: "Pharmacist",
+    permissions: [
+      "Make pre-sale",
+      "Sell watch listed items",
+      "See transactions",
+      "Finalize transaction",
+    ],
+    color: "bg-emerald-50 border-emerald-200",
+    iconColor: "text-emerald-600",
+  },
+  super_admin: {
+    name: "Super Admin",
+    permissions: [
+      "Load inventory",
+      "See all transactions and performance",
+      "Full system access",
+    ],
+    color: "bg-teal-50 border-teal-200",
+    iconColor: "text-teal-600",
+  },
+  inventory_manager: {
+    name: "Inventory Manager",
+    permissions: [
+      "Add product",
+      "Restock product",
+      "Edit selling price",
+      "Adjust stock",
+      "View sold history",
+    ],
+    color: "bg-lime-50 border-lime-200",
+    iconColor: "text-lime-600",
+  },
+};
 
 export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
   const { form, onSubmit, createStaffLoading } = useAttendantsHook({
     closeModal,
   });
+
+  const selectedRole = form.watch("role");
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -77,25 +132,75 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Is Admin Checkbox */}
+            {/* Role Selection */}
             <FormField
               control={form.control}
-              name="is_admin"
+              name="role"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-4">
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
                   <FormControl>
-                    <Checkbox
-                      className="border border-primary-green-300 "
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pos_attendant">
+                          POS Attendant
+                        </SelectItem>
+                        <SelectItem value="pharmacist">Pharmacist</SelectItem>
+                        <SelectItem value="super_admin">Super Admin</SelectItem>
+                        <SelectItem value="inventory_manager">
+                          Inventory Manager
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Grant admin privileges</FormLabel>
-                  </div>
+                  <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Role Permissions Display */}
+            {selectedRole &&
+              ROLE_PERMISSIONS[
+                selectedRole as keyof typeof ROLE_PERMISSIONS
+              ] && (
+                <div
+                  className={`rounded-lg border-2 p-4 ${
+                    ROLE_PERMISSIONS[
+                      selectedRole as keyof typeof ROLE_PERMISSIONS
+                    ].color
+                  }`}
+                >
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    {
+                      ROLE_PERMISSIONS[
+                        selectedRole as keyof typeof ROLE_PERMISSIONS
+                      ].name
+                    }{" "}
+                    Permissions
+                  </h3>
+                  <div className="space-y-2">
+                    {ROLE_PERMISSIONS[
+                      selectedRole as keyof typeof ROLE_PERMISSIONS
+                    ].permissions.map((permission, index) => (
+                      <div key={index} className="flex items-start space-x-3">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                            ROLE_PERMISSIONS[
+                              selectedRole as keyof typeof ROLE_PERMISSIONS
+                            ].iconColor
+                          }`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          {permission}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             <Button
               disabled={createStaffLoading}

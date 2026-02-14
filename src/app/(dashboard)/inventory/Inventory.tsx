@@ -23,6 +23,16 @@ import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
 import ServiceTable from "./ServiceTable";
+// Add this import at the top
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Filter } from "lucide-react";
 
 interface Category {
   id: string;
@@ -84,7 +94,7 @@ const CustomInventoryCard = ({
         variant.bg,
         variant.border,
         "p-4 w-full rounded-lg border transition-all hover:shadow-md",
-        className
+        className,
       )}
     >
       <div className="flex justify-between items-center">
@@ -114,8 +124,11 @@ const Inventory = () => {
   const openddServiceModal = () => setAddServiceModal(true);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    string | null
+  >(null);
   const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE">("PRODUCT");
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
@@ -123,6 +136,22 @@ const Inventory = () => {
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
+
+  // filter for product settings
+  const [productFilters, setProductFilters] = useState({
+    allowTax: false,
+    sellOnline: false,
+    inHouse: false,
+    watchlist: false,
+    rawMaterial: false,
+  });
+
+  // Add this helper function to count active filters
+  const getActiveFiltersCount = () => {
+    return Object.values(productFilters).filter(Boolean).length;
+  };
+
+  // filter for products settings ends here
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -149,6 +178,25 @@ const Inventory = () => {
     setSelectedCategoryId(null);
   };
 
+  // department logic starts
+
+  const DUMMY_DEPARTMENTS = [
+    { id: "1", name: "Supermarket" },
+    { id: "2", name: "Pharmacy" },
+    { id: "3", name: "Bakery" },
+    { id: "4", name: "Fashion" },
+  ];
+
+  const handleDepartmentClick = (departmentId: string) => {
+    setSelectedDepartmentId(departmentId);
+  };
+
+  const handleAllDepartmentsClick = () => {
+    setSelectedDepartmentId(null);
+  };
+
+  // department logic ends
+
   const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
     setActiveTab(tab);
     setSelectedCategoryId(null); // Reset category when switching tabs
@@ -163,7 +211,7 @@ const Inventory = () => {
     if (container) {
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth
+        container.scrollLeft < container.scrollWidth - container.clientWidth,
       );
     }
   };
@@ -279,7 +327,7 @@ const Inventory = () => {
               <CustomInventoryCard
                 title={"Inventory Value"}
                 amount={formatToNaira(
-                  InventoryData?.data?.results?.inventory_value
+                  InventoryData?.data?.results?.inventory_value,
                 )}
                 type="value"
               />
@@ -291,7 +339,7 @@ const Inventory = () => {
               <CustomInventoryCard
                 title={"Selling Price"}
                 amount={formatToNaira(
-                  InventoryData?.data?.results?.selling_price
+                  InventoryData?.data?.results?.selling_price,
                 )}
                 type="other"
               />
@@ -311,7 +359,7 @@ const Inventory = () => {
                 "px-6 py-4 text-sm cursor-pointer font-medium border-b-2 transition-all",
                 activeTab === "PRODUCT"
                   ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
               )}
             >
               Products
@@ -327,7 +375,7 @@ const Inventory = () => {
                 "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
                 activeTab === "SERVICE"
                   ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
               )}
             >
               Services
@@ -360,6 +408,116 @@ const Inventory = () => {
                 />
               </div>
 
+              {/* Product Filters Dropdown - Only show for Products */}
+              {activeTab === "PRODUCT" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="text-gray-700 border-gray-200 hover:bg-gray-50 w-full sm:w-auto relative"
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      <span className="whitespace-nowrap">Filters</span>
+                      {getActiveFiltersCount() > 0 && (
+                        <span className="ml-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                          {getActiveFiltersCount()}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                    <DropdownMenuLabel className="text-sm font-semibold">
+                      Product Settings
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.allowTax}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          allowTax: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Allow tax calculation</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.sellOnline}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          sellOnline: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Sell this product online</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.inHouse}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          inHouse: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Produces in-house</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.watchlist}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          watchlist: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Add to watchlist</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.rawMaterial}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          rawMaterial: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Make raw material</span>
+                    </DropdownMenuCheckboxItem>
+
+                    {getActiveFiltersCount() > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <div className="p-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() =>
+                              setProductFilters({
+                                allowTax: false,
+                                sellOnline: false,
+                                inHouse: false,
+                                watchlist: false,
+                                rawMaterial: false,
+                              })
+                            }
+                          >
+                            Clear all filters
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               <Link href={"/categories"} className="w-full sm:w-auto">
                 <Button
                   variant="outline"
@@ -384,78 +542,114 @@ const Inventory = () => {
                   ))}
                 </div>
               ) : (
-                <div className="w-full">
-                  <div className="flex items-center w-full">
-                    {/* Left Navigation Button - Hidden on mobile if can't scroll */}
-                    {canScrollLeft && (
-                      <button
-                        onClick={() => scrollCategories("left")}
-                        disabled={!canScrollLeft}
-                        className={cn(
-                          "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
-                          canScrollLeft
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
-                      >
-                        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
-                    )}
-
-                    {/* Categories Container */}
-                    <div
-                      ref={categoriesContainerRef}
-                      className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
-                    >
-                      {/* All Tab */}
+                <div className="w-full space-y-4">
+                  {/* Departments Filter */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Department
+                    </h3>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
                       <button
                         className={cn(
                           "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                          selectedCategoryId === null
-                            ? "bg-[#52b661] text-white shadow-sm"
-                            : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                          selectedDepartmentId === null
+                            ? "bg-green-500 text-white shadow-sm"
+                            : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
                         )}
-                        onClick={handleAllClick}
+                        onClick={handleAllDepartmentsClick}
                       >
-                        All
+                        All Departments
                       </button>
 
-                      {/* Category Tabs */}
-                      {CategoriesData.data.map((category: Category) => (
+                      {DUMMY_DEPARTMENTS.map((department) => (
                         <button
-                          key={category.id}
+                          key={department.id}
                           className={cn(
                             "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                            selectedCategoryId === category.id
-                              ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                            selectedDepartmentId === department.id
+                              ? "bg-green-500 text-white shadow-sm"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
                           )}
-                          onClick={() => handleCategoryClick(category.id)}
+                          onClick={() => handleDepartmentClick(department.id)}
                         >
-                          {category.name}
+                          {department.name}
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Right Navigation Button - Hidden on mobile if can't scroll */}
-                    {canScrollRight && (
-                      <button
-                        onClick={() => scrollCategories("right")}
-                        disabled={!canScrollRight}
-                        className={cn(
-                          "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
-                          canScrollRight
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
+                  {/* Categories Filter */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </h3>
+                    <div className="flex items-center w-full">
+                      {canScrollLeft && (
+                        <button
+                          onClick={() => scrollCategories("left")}
+                          disabled={!canScrollLeft}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
+                            canScrollLeft
+                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-300 cursor-not-allowed",
+                          )}
+                        >
+                          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
+
+                      <div
+                        ref={categoriesContainerRef}
+                        className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                        }}
                       >
-                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
-                    )}
+                        <button
+                          className={cn(
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            selectedCategoryId === null
+                              ? "bg-[#52b661] text-white shadow-sm"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                          )}
+                          onClick={handleAllClick}
+                        >
+                          All Categories
+                        </button>
+
+                        {CategoriesData.data.map((category: Category) => (
+                          <button
+                            key={category.id}
+                            className={cn(
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                              selectedCategoryId === category.id
+                                ? "bg-[#52b661] text-white shadow-sm"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                            )}
+                            onClick={() => handleCategoryClick(category.id)}
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                      </div>
+
+                      {canScrollRight && (
+                        <button
+                          onClick={() => scrollCategories("right")}
+                          disabled={!canScrollRight}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
+                            canScrollRight
+                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-300 cursor-not-allowed",
+                          )}
+                        >
+                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -499,7 +693,7 @@ const Inventory = () => {
                 )}
               </>
             )
-          ) : // Products Content
+          ) : // Services Content
           InventoryDataLoading || !InventoryData ? (
             <div className="w-full">
               <div className="space-y-4">

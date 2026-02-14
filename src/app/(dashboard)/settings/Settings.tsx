@@ -15,7 +15,7 @@ const Settings = () => {
     user?.role === "OWNER"
       ? [
           "Bank",
-          "Staff",
+          "HR",
           "Security & Privacy",
           "Subscription",
           "Notifications",
@@ -75,7 +75,7 @@ const Settings = () => {
             )}
 
             {user && user?.role === "OWNER" && (
-              <TabsContent value="Staff" className="mt-0">
+              <TabsContent value="HR" className="mt-0">
                 <div className="w-full overflow-hidden">
                   <VeiwStaff />
                 </div>
@@ -130,7 +130,7 @@ const Settings = () => {
 const getShortTabName = (tabName: string): string => {
   const shortNames: { [key: string]: string } = {
     Bank: "Bank",
-    Staff: "Staff",
+    HR: "HR",
     "Security & Privacy": "Security",
     Subscription: "Plans",
     Notifications: "Alerts",

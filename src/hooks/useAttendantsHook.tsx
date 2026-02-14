@@ -9,19 +9,31 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
+
 const staffSchema = z.object({
   firstname: z.string().min(1, "First name is required").max(50),
   lastname: z.string().min(1, "Last name is required").max(50),
   phone: z.string().min(1, "Phone number is required"),
-  is_admin: z.boolean().optional(),
+  role: z.enum(
+    ["pos_attendant", "pharmacist", "super_admin", "inventory_manager"],
+    {
+      required_error: "Please select a role",
+    },
+  ),
 });
 
 export type AddStaffFormValues = z.infer<typeof staffSchema>;
+
 const EditStaffSchema = z.object({
   firstname: z.string().min(1, "First name is required").max(50),
   lastname: z.string().min(1, "Last name is required").max(50),
   phone: z.string().min(1, "Phone number is required"),
-  is_admin: z.boolean().optional(),
+  role: z.enum(
+    ["pos_attendant", "pharmacist", "super_admin", "inventory_manager"],
+    {
+      required_error: "Please select a role",
+    },
+  ),
 });
 
 export type EditStaffFormValues = z.infer<typeof EditStaffSchema>;
@@ -58,6 +70,7 @@ export const useAttendantsHook = ({
       // Optional: Invalidate queries or update cache
     }
   }, [editAttendantSuccess]);
+
   const { mutate: deleteAttendant, isPending: deleteAttendantLoading } =
     useDeleteAttendantMutation({
       onSuccess: (data) => {
@@ -65,14 +78,9 @@ export const useAttendantsHook = ({
         refetch();
         if (closeModal) closeModal();
         showToast(data.message, "success");
-
-        //   if (closeDellBankModal) closeDellBankModal();
-
-        // if (closeModal) closeModal();
-        // Optional: Invalidate queries or update cache
       },
-      // You can add other callbacks here if needed
     });
+
   const handleDeleteAttendant = (staff: any) => {
     console.log("customer", staff);
     deleteAttendant(staff?.id);
@@ -100,7 +108,7 @@ export const useAttendantsHook = ({
       firstname: "",
       lastname: "",
       phone: "",
-      is_admin: false,
+      role: undefined,
     },
     mode: "onChange",
   });
@@ -111,7 +119,7 @@ export const useAttendantsHook = ({
       firstname: "",
       lastname: "",
       phone: "",
-      is_admin: false,
+      role: undefined,
     },
     mode: "onChange",
   });
@@ -121,7 +129,7 @@ export const useAttendantsHook = ({
       firstname: values.firstname,
       lastname: values.lastname,
       phone: values.phone,
-      is_admin: values.is_admin,
+      role: values.role,
     };
 
     console.log("payload", payload);
@@ -138,16 +146,17 @@ export const useAttendantsHook = ({
         firstname: attendantData?.data?.firstname,
         lastname: attendantData?.data?.lastname,
         phone: attendantData?.data?.phone || "",
-        is_admin: attendantData?.data?.is_admin || false,
+        role: attendantData?.data?.role || undefined,
       });
     }
   }, [attendantData, AttendantLoading, editform, attendantId]);
+
   const onSubmitEditForm = (values: EditStaffFormValues) => {
     const payload = {
       firstname: values.firstname,
       lastname: values.lastname,
       phone: values.phone,
-      is_admin: values.is_admin,
+      role: values.role,
     };
 
     console.log("payload", payload);

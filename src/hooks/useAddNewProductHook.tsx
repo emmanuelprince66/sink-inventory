@@ -65,6 +65,7 @@ const createProductSchema = (isEditMode: boolean) => {
     sku: z.string().default(""),
     category: z.string().default(""),
     expiry_date: z.string().default(""),
+    department: z.string().default(""),
     supplier: z.string().default(""),
     product_unit: z.string().default(""),
     payment_method: z.string().default(""),

@@ -55,7 +55,7 @@ const VeiwStaff = () => {
       <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center ">
         <div className="w-full flex justify-end">
           {user && user?.role === "OWNER" && (
-            <Button onClick={openAddStaffModalFunc}>Add Staff</Button>
+            <Button onClick={openAddStaffModalFunc}>Add HR</Button>
           )}
         </div>
         {AttendantsLoading ? (
@@ -119,7 +119,7 @@ const VeiwStaff = () => {
         isOpen={openAddStaffModal} // FIXED: Removed the negation
         onClose={closeAddStaffModalFunc}
         trigger={false}
-        title="Add Staff"
+        title="Add HR"
       >
         <AddStaff closeModal={closeAddStaffModalFunc} />
       </CustomModal>
