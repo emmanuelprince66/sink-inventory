@@ -5,6 +5,7 @@ export interface InventoryItem {
   category: string;
   cost_price?: number;
   selling_price: number;
+  department?: string;
   quantity: number;
   sold: number;
   sku?: string | null;

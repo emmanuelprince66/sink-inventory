@@ -75,6 +75,17 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "department",
+    header: "Department",
+    cell: ({ row }) => {
+      const inventory = row.original;
+
+      return (
+        <div className={cn("font-medium")}>{inventory.department ?? "-"}</div>
+      );
+    },
+  },
+  {
     accessorKey: "sku",
     header: "Sku",
     cell: ({ row }) => {
@@ -95,7 +106,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
         <span
           className={cn(
             "px-2 py-1 rounded-full text-xs font-medium",
-            statusClass
+            statusClass,
           )}
         >
           {inventory.status}
@@ -233,7 +244,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   "cursor-pointer px-4 py-2 transition-colors",
                   isProduct
                     ? "hover:bg-green-50 hover:text-green-600"
-                    : "text-red-500 opacity-50 cursor-not-allowed"
+                    : "text-red-500 opacity-50 cursor-not-allowed",
                 )}
                 disabled={!isProduct}
               >

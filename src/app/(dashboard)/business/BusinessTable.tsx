@@ -1,16 +1,17 @@
 import { CustomTable } from "@/components/app/CutomTable";
-
-import { columns } from "./columns";
-import { BusinessResponse } from "./types/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { BusinessResponse, BusinessType } from "./types/types";
 
 interface BusinessTableProps {
   data: BusinessResponse;
+  columns: ColumnDef<BusinessType>[];
   loading?: boolean;
-  handleRowClick?: (row: any) => void; // Define the type of row if possible
+  handleRowClick?: (row: any) => void;
 }
 
 export function BusinessTable({
   data,
+  columns,
   loading,
   handleRowClick,
 }: BusinessTableProps) {

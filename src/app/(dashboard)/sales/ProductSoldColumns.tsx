@@ -45,6 +45,19 @@ export const useSalesColumns = () => {
         );
       },
     },
+    {
+      accessorKey: "vat",
+      header: "VAT",
+      cell: ({ row }) => {
+        const product = row.original;
+        console.log("VAT value for product:", product); // Debug log
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{formatToNaira(0)}</p>
+          </div>
+        );
+      },
+    },
     // Conditionally include profit column
     ...(user?.role === "OWNER"
       ? [

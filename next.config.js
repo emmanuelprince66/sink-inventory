@@ -12,6 +12,11 @@ const nextConfig = {
         // hostname: "sync-bck-new.s3.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
     ],
   },
   // Add camera permissions policy for all routes

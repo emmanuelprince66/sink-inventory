@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
+import { UseFormReturn } from "react-hook-form";
 
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
@@ -20,24 +21,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBusinessHook } from "@/hooks/useBusinessHook";
+
+interface OptionType {
+  label: string;
+  value: string;
+}
+
+interface CreateBusinessFormProps {
+  // The shared form instance from useBusinessHook
+  form: UseFormReturn<any>;
+  // Which submit handler to use — create or edit
+  onSubmit: (values: any) => void;
+  // Options for selects
+  businessTypeOptions: OptionType[];
+  currencyOptions: OptionType[];
+  // Loading state — isCreating or isUpdating depending on mode
+  loading: boolean;
+  // Label for the submit button
+  submitLabel?: string;
+}
 
 const CreateBusinessForm = ({
-  closeCreateBusinessModal,
-}: {
-  closeCreateBusinessModal?: () => void;
-}) => {
-  const { form, onSubmit, businessTypeOptions, loading, currencyOptions } =
-    useBusinessHook({ closeCreateBusinessModal });
-  const [preview, setPreview] = useState<string | null>(null);
-
+  form,
+  onSubmit,
+  businessTypeOptions,
+  currencyOptions,
+  loading,
+  submitLabel = "Create Business",
+}: CreateBusinessFormProps) => {
   return (
-    <div className="flex h-full w-full items-center justify-center ">
+    <div className="flex h-full w-full items-center justify-center">
       <div className="w-full max-w-xl bg-white p-4 rounded shadow-md">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-            {/* Logo Upload */}
-
+            {/* ── Logo Upload ── */}
             <FormField
               control={form.control}
               name="logo"
@@ -46,7 +63,7 @@ const CreateBusinessForm = ({
 
                 return (
                   <FormItem className="flex flex-col items-center gap-2">
-                    <FormLabel>Product Image</FormLabel>
+                    <FormLabel>Business Logo</FormLabel>
                     <div className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
                       {field.value ? (
                         <>
@@ -56,7 +73,7 @@ const CreateBusinessForm = ({
                                 ? field.value
                                 : URL.createObjectURL(field.value)
                             }
-                            alt="Product preview"
+                            alt="Business logo preview"
                             className="w-full h-full object-cover"
                           />
                           <button
@@ -99,9 +116,7 @@ const CreateBusinessForm = ({
                         ref={fileInputRef}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            field.onChange(file);
-                          }
+                          if (file) field.onChange(file);
                         }}
                       />
                     </FormControl>
@@ -118,9 +133,8 @@ const CreateBusinessForm = ({
                 );
               }}
             />
-            {/* Item Name */}
 
-            {/* Text Fields */}
+            {/* ── Business Name ── */}
             <FormField
               control={form.control}
               name="name"
@@ -134,54 +148,22 @@ const CreateBusinessForm = ({
                 </FormItem>
               )}
             />
+
+            {/* ── Type ── */}
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem className="flex-1 w-full bg-white">
                   <FormLabel>Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full border border-green-300">
-                        <SelectValue placeholder="Select a category" />
+                        <SelectValue placeholder="Select a type" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white cursor-pointer border border-green-100">
-                      {businessTypeOptions?.map((type: any) => (
-                        <SelectItem
-                          key={type.label}
-                          value={type.value}
-                          className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
-                        >
-                          {type.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="currency"
-              render={({ field }) => (
-                <FormItem className="flex-1 w-full bg-white">
-                  <FormLabel>Currency</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
-                      {currencyOptions?.map((type: any) => (
+                      {businessTypeOptions?.map((type) => (
                         <SelectItem
                           key={type.label}
                           value={type.value}
@@ -197,6 +179,37 @@ const CreateBusinessForm = ({
               )}
             />
 
+            {/* ── Currency ── */}
+            <FormField
+              control={form.control}
+              name="currency"
+              render={({ field }) => (
+                <FormItem className="flex-1 w-full bg-white">
+                  <FormLabel>Currency</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full border border-green-300">
+                        <SelectValue placeholder="Select a currency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                      {currencyOptions?.map((type) => (
+                        <SelectItem
+                          key={type.label}
+                          value={type.value}
+                          className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                        >
+                          {type.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* ── Country ── */}
             <FormField
               control={form.control}
               name="country"
@@ -211,6 +224,7 @@ const CreateBusinessForm = ({
               )}
             />
 
+            {/* ── State ── */}
             <FormField
               control={form.control}
               name="state"
@@ -225,6 +239,7 @@ const CreateBusinessForm = ({
               )}
             />
 
+            {/* ── City ── */}
             <FormField
               control={form.control}
               name="city"
@@ -239,6 +254,7 @@ const CreateBusinessForm = ({
               )}
             />
 
+            {/* ── Street ── */}
             <FormField
               control={form.control}
               name="street"
@@ -253,12 +269,13 @@ const CreateBusinessForm = ({
               )}
             />
 
+            {/* ── Submit ── */}
             <Button
               disabled={loading}
               type="submit"
               className="w-full h-[48px]"
             >
-              {loading ? <Spinner /> : "Create Business"}
+              {loading ? <Spinner /> : submitLabel}
             </Button>
           </form>
         </Form>

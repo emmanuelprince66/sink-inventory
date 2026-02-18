@@ -4,6 +4,14 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
@@ -13,6 +21,7 @@ import {
   ChevronRight,
   Cloud,
   DollarSign,
+  Filter,
   Tag,
   TrendingUp,
 } from "lucide-react";
@@ -23,16 +32,6 @@ import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
 import ServiceTable from "./ServiceTable";
-// Add this import at the top
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Filter } from "lucide-react";
 
 interface Category {
   id: string;
@@ -116,8 +115,6 @@ const CustomInventoryCard = ({
   );
 };
 
-// Dummy Services Table Component
-
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
@@ -137,7 +134,6 @@ const Inventory = () => {
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
-  // filter for product settings
   const [productFilters, setProductFilters] = useState({
     allowTax: false,
     sellOnline: false,
@@ -146,12 +142,9 @@ const Inventory = () => {
     rawMaterial: false,
   });
 
-  // Add this helper function to count active filters
   const getActiveFiltersCount = () => {
     return Object.values(productFilters).filter(Boolean).length;
   };
-
-  // filter for products settings ends here
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -178,8 +171,6 @@ const Inventory = () => {
     setSelectedCategoryId(null);
   };
 
-  // department logic starts
-
   const DUMMY_DEPARTMENTS = [
     { id: "1", name: "Supermarket" },
     { id: "2", name: "Pharmacy" },
@@ -195,17 +186,14 @@ const Inventory = () => {
     setSelectedDepartmentId(null);
   };
 
-  // department logic ends
-
   const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
     setActiveTab(tab);
-    setSelectedCategoryId(null); // Reset category when switching tabs
-    setPage(1); // Reset page when switching tabs
+    setSelectedCategoryId(null);
+    setPage(1);
   };
 
   const totalItems = InventoryData?.data?.total || 0;
 
-  // Check scroll availability
   const checkScrollAvailability = () => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -216,7 +204,6 @@ const Inventory = () => {
     }
   };
 
-  // Category navigation functions
   const scrollCategories = (direction: "left" | "right") => {
     const container = categoriesContainerRef.current;
     if (container) {
@@ -234,7 +221,6 @@ const Inventory = () => {
     }
   };
 
-  // Check scroll availability when categories load or container size changes
   useEffect(() => {
     checkScrollAvailability();
     const container = categoriesContainerRef.current;
@@ -245,7 +231,6 @@ const Inventory = () => {
     }
   }, [CategoriesData]);
 
-  // Check on window resize
   useEffect(() => {
     const handleResize = () => checkScrollAvailability();
     window.addEventListener("resize", handleResize);
@@ -253,7 +238,7 @@ const Inventory = () => {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6 items-start ">
+    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -262,7 +247,6 @@ const Inventory = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-            {/* Primary Buttons - Equal width in their container */}
             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full">
               <Button
                 onClick={openddServiceModal}
@@ -270,8 +254,6 @@ const Inventory = () => {
               >
                 + Add Service
               </Button>
-              {/* href={"/new-add-product"}  */}
-              {/* href={"product/add-product"} */}
               <Link href={"/new-add-product"} className="w-full">
                 <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
                   + Add Product
@@ -279,16 +261,7 @@ const Inventory = () => {
               </Link>
             </div>
 
-            {/* Secondary Button - Full width on mobile, natural width on desktop */}
-
             <DownloadInventoryButton business_id={business_id} />
-            {/* <Button
-              variant={"outline"}
-              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
-              // onClick={openAttendantsModal}
-            >
-              Download Report
-            </Button> */}
 
             <Button
               variant="outline"
@@ -308,8 +281,6 @@ const Inventory = () => {
           <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
-
-          {/* <SubscriptionTest /> */}
 
           {InventoryDataLoading || !InventoryData ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
@@ -389,7 +360,7 @@ const Inventory = () => {
         </div>
 
         {/* Categories and Search Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white w-full">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100">
               {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
@@ -529,7 +500,7 @@ const Inventory = () => {
             </div>
           </div>
 
-          {/* Categories Tabs - Only show for Products */}
+          {/* Categories Tabs */}
           {activeTab && (
             <>
               {CategoriesDataLoading || !CategoriesData ? (
@@ -542,13 +513,19 @@ const Inventory = () => {
                   ))}
                 </div>
               ) : (
-                <div className="w-full space-y-4">
+                <div className="w-full min-w-0 space-y-4">
                   {/* Departments Filter */}
-                  <div>
+                  <div className="min-w-0 w-full">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Department
                     </h3>
-                    <div className="flex gap-2 overflow-x-auto scrollbar-hide py-1">
+                    <div
+                      className="flex gap-2 overflow-x-auto scrollbar-hide py-1 min-w-0"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
                       <button
                         className={cn(
                           "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
@@ -579,11 +556,11 @@ const Inventory = () => {
                   </div>
 
                   {/* Categories Filter */}
-                  <div>
+                  <div className="min-w-0 w-full">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Category
                     </h3>
-                    <div className="flex items-center w-full">
+                    <div className="flex items-center w-full min-w-0">
                       {canScrollLeft && (
                         <button
                           onClick={() => scrollCategories("left")}
@@ -601,7 +578,7 @@ const Inventory = () => {
 
                       <div
                         ref={categoriesContainerRef}
-                        className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
+                        className="flex gap-1 sm:gap-2 overflow-x-auto min-w-0 flex-1 scrollbar-hide py-1"
                         style={{
                           scrollbarWidth: "none",
                           msOverflowStyle: "none",
@@ -662,9 +639,9 @@ const Inventory = () => {
             </div>
           )}
         </div>
+
         <div className="p-6">
           {activeTab === "PRODUCT" ? (
-            // Products Content
             InventoryDataLoading || !InventoryData ? (
               <div className="w-full">
                 <div className="space-y-4">
@@ -693,8 +670,7 @@ const Inventory = () => {
                 )}
               </>
             )
-          ) : // Services Content
-          InventoryDataLoading || !InventoryData ? (
+          ) : InventoryDataLoading || !InventoryData ? (
             <div className="w-full">
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full bg-gray-200" />

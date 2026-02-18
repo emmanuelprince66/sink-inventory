@@ -1,3 +1,4 @@
+// components/business/columns.tsx
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +10,15 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { BusinessType } from "./types/types";
 
-export const columns: ColumnDef<BusinessType>[] = [
+interface ColumnsOptions {
+  onEdit: (businessId: string) => void;
+  onDelete: (businessId: string) => void;
+}
+
+export const columns = ({
+  onEdit,
+  onDelete,
+}: ColumnsOptions): ColumnDef<BusinessType>[] => [
   {
     id: "businessInfo",
     header: "Business",
@@ -17,7 +26,7 @@ export const columns: ColumnDef<BusinessType>[] = [
       const business = row.original;
       return (
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 rounded-md overflow-hidden">
+          <div className="relative h-10 w-10 rounded-md overflow-hidden flex-shrink-0">
             <Image
               src={business.logo}
               alt={`${business.name} logo`}
@@ -46,33 +55,36 @@ export const columns: ColumnDef<BusinessType>[] = [
       const business = row.original;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="bg-primary-green-500 border-gray-200"
-          >
-            <DropdownMenuItem
-              onClick={() => console.log("Edit", business.id)}
-              className="cursor-pointer hover:bg-white"
+        // ✅ Stop the click from reaching the row's onClick handler
+        <div onClick={(e) => e.stopPropagation()}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="bg-white border border-gray-200 shadow-md rounded-md"
             >
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => console.log("Delete", business.id)}
-              className="cursor-pointer hover:bg-white text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                onClick={() => onEdit(business.id)}
+                className="cursor-pointer hover:bg-gray-50 flex items-center gap-2"
+              >
+                <Pencil className="h-4 w-4 text-gray-500" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete(business.id)}
+                className="cursor-pointer hover:bg-red-50 text-red-600 focus:text-red-600 flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },

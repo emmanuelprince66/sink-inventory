@@ -70,7 +70,7 @@ const CustomSalesCard = ({
   const isItemsCard = title === "Items Sold";
   const isDiscountCard = title === "Total Discount";
   const isProfitCard = title === "Profit";
-
+  const isVatCard = title === "VAT";
   const getCardStyle = () => {
     if (isRevenueCard) {
       return {
@@ -108,6 +108,15 @@ const CustomSalesCard = ({
         icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />,
       };
     }
+    if (isVatCard) {
+      return {
+        bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
+        badge: "bg-amber-100",
+        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
+      };
+    }
     if (isProfitCard) {
       return {
         bg: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
@@ -132,7 +141,7 @@ const CustomSalesCard = ({
     <CustomCard
       className={cn(
         "p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
-        cardStyle.bg
+        cardStyle.bg,
       )}
     >
       <div className="flex flex-col gap-1 sm:gap-2 h-full justify-between">
@@ -186,10 +195,10 @@ const Sales = () => {
     (typeof orderFilterOptions)[number]
   >(orderFilterOptions[0]);
   const [activeTab, setActiveTab] = useState<"products" | "history">(
-    "products"
+    "products",
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
@@ -237,7 +246,7 @@ const Sales = () => {
   const totalProfit = useMemo(() => {
     return SalesData?.data?.results?.data.reduce(
       (acc: any, curr: any) => acc + curr.profit,
-      0
+      0,
     );
   }, [SalesData]);
 
@@ -254,7 +263,7 @@ const Sales = () => {
     if (container) {
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth
+        container.scrollLeft < container.scrollWidth - container.clientWidth,
       );
     }
   };
@@ -358,7 +367,7 @@ const Sales = () => {
               ))}
             </div>
           ) : (
-            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-4">
               {user && user?.role === "OWNER" && (
                 <>
                   <CustomSalesCard
@@ -376,7 +385,7 @@ const Sales = () => {
                   <CustomSalesCard
                     title={"Total Discount"}
                     amount={formatToNaira(
-                      SalesData?.data?.results?.discount || 0
+                      SalesData?.data?.results?.discount || 0,
                     )}
                     type="discount"
                     func={handleOpenDiscountSalesModal}
@@ -384,6 +393,10 @@ const Sales = () => {
                   <CustomSalesCard
                     title={"Profit"}
                     amount={formatToNaira(totalProfit)}
+                  />
+                  <CustomSalesCard
+                    title={"VAT"}
+                    amount={formatToNaira(SalesData?.data?.results?.vat || 0)}
                   />
                 </>
               )}
@@ -498,7 +511,7 @@ const Sales = () => {
                             "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
                             canScrollLeft
                               ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed"
+                              : "text-gray-300 cursor-not-allowed",
                           )}
                         >
                           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -520,7 +533,7 @@ const Sales = () => {
                             "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
                               ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50",
                           )}
                           onClick={handleAllClick}
                         >
@@ -535,7 +548,7 @@ const Sales = () => {
                               "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
                               selectedCategoryId === category.id
                                 ? "bg-[#52b661] text-white shadow-sm"
-                                : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50",
                             )}
                             onClick={() => handleCategoryClick(category.id)}
                           >
@@ -553,7 +566,7 @@ const Sales = () => {
                             "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
                             canScrollRight
                               ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed"
+                              : "text-gray-300 cursor-not-allowed",
                           )}
                         >
                           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
