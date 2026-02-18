@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 
 const NoBusiness = ({
   openCreateBusinessModalFunc,
+  form,
+  onSubmit,
+  businessTypeOptions,
+  currencyOptions,
+  loading,
+  // submitLabel,
   section,
   closeCreateBusinessModal,
   openCreateBusinessModal,
@@ -16,6 +22,12 @@ const NoBusiness = ({
   closeCreateBusinessModal: () => void;
   openCreateBusinessModal: boolean;
   section?: string;
+  form: any;
+  onSubmit: (data: any) => void;
+  businessTypeOptions: any;
+  currencyOptions: any;
+  loading: boolean;
+  submitLabel?: string;
 }) => {
   return (
     <div className="flex flex-col  items-center h-[60vh] justify-center w-full gap-4 text-center ">
@@ -52,7 +64,14 @@ const NoBusiness = ({
         description="Add more business "
       >
         <div className="w-full">
-          <CreateBusinessForm />
+          <CreateBusinessForm
+            form={form}
+            onSubmit={onSubmit}
+            businessTypeOptions={businessTypeOptions}
+            currencyOptions={currencyOptions}
+            loading={loading}
+            submitLabel="Create Business"
+          />
         </div>
       </CustomModal>
     </div>

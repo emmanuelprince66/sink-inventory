@@ -79,6 +79,12 @@ const AllBusiness = ({ section }: { section?: string }) => {
   if (!AllBusinessLoading && AllBusinessData?.results?.length === 0) {
     return (
       <NoBusiness
+        form={form}
+        onSubmit={onSubmit}
+        businessTypeOptions={businessTypeOptions}
+        currencyOptions={currencyOptions}
+        loading={isCreating}
+        submitLabel="Create Business"
         section={section}
         closeCreateBusinessModal={closeCreateBusinessModal}
         openCreateBusinessModal={openCreateBusinessModal}
