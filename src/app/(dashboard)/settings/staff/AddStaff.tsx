@@ -46,9 +46,10 @@ const ROLE_PERMISSIONS = {
   PHARMACIST: {
     name: "Pharmacist",
     permissions: [
-      "Load inventory",
-      "See all transactions and performance",
-      "Full system access",
+      "Make pre-sale",
+      "Sell watch listed items ",
+      "See transactions",
+      "Finalize transactions",
     ],
     color: "bg-teal-50 border-teal-200",
     iconColor: "text-teal-600",
