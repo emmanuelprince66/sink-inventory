@@ -20,6 +20,7 @@ const staffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
+  watchlist: z.boolean(),
 });
 
 export type AddStaffFormValues = z.infer<typeof staffSchema>;
@@ -34,6 +35,7 @@ const EditStaffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
+  watchlist: z.boolean(),
 });
 
 export type EditStaffFormValues = z.infer<typeof EditStaffSchema>;
@@ -69,7 +71,7 @@ export const useAttendantsHook = ({
       if (closeModal) closeModal();
       // Optional: Invalidate queries or update cache
     }
-  }, [editAttendantSuccess]);
+  }, [editAttendantSuccess, refetch, closeModal]);
 
   const { mutate: deleteAttendant, isPending: deleteAttendantLoading } =
     useDeleteAttendantMutation({
@@ -108,7 +110,8 @@ export const useAttendantsHook = ({
       firstname: "",
       lastname: "",
       phone: "",
-      role: undefined,
+      role: undefined as any,
+      watchlist: false,
     },
     mode: "onChange",
   });
@@ -119,18 +122,24 @@ export const useAttendantsHook = ({
       firstname: "",
       lastname: "",
       phone: "",
-      role: undefined,
+      role: undefined as any,
+      watchlist: false,
     },
     mode: "onChange",
   });
 
   const onSubmit = (values: AddStaffFormValues) => {
-    const payload = {
+    const payload: any = {
       firstname: values.firstname,
       lastname: values.lastname,
       phone: values.phone,
       role: values.role,
     };
+
+    // Only include watchlist if role is PHARMACIST
+    if (values.role === "PHARMACIST") {
+      payload.watchlist = values.watchlist;
+    }
 
     console.log("payload", payload);
 
@@ -193,17 +202,23 @@ export const useAttendantsHook = ({
         lastname: attendantData?.data?.lastname,
         phone: attendantData?.data?.phone || "",
         role: attendantData?.data?.role || undefined,
+        watchlist: attendantData?.data?.watchlist || false,
       });
     }
   }, [attendantData, AttendantLoading, editform, attendantId]);
 
   const onSubmitEditForm = (values: EditStaffFormValues) => {
-    const payload = {
+    const payload: any = {
       firstname: values.firstname,
       lastname: values.lastname,
       phone: values.phone,
       role: values.role,
     };
+
+    // Only include watchlist if role is PHARMACIST
+    if (values.role === "PHARMACIST") {
+      payload.watchlist = values.watchlist;
+    }
 
     console.log("payload", payload);
 

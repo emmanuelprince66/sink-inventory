@@ -73,6 +73,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
   });
 
   const selectedRole = form.watch("role");
+  const watchlist = form.watch("watchlist");
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -157,6 +158,41 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
+            {/* Watchlist Toggle - Only for Pharmacist */}
+            {selectedRole === "PHARMACIST" && (
+              <FormField
+                control={form.control}
+                name="watchlist"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center justify-between p-4 rounded-lg border-2 border-teal-200 bg-teal-50">
+                      <div className="flex-1">
+                        <FormLabel className="text-base font-semibold text-gray-900">
+                          See Watchlisted Items
+                        </FormLabel>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Allow this pharmacist to view and manage watchlisted
+                          inventory items
+                        </p>
+                      </div>
+                      <FormControl>
+                        <label className="relative inline-flex items-center cursor-pointer ml-4">
+                          <input
+                            type="checkbox"
+                            checked={field.value || false}
+                            onChange={field.onChange}
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                        </label>
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             {selectedRole &&
               ROLE_PERMISSIONS[
                 selectedRole as keyof typeof ROLE_PERMISSIONS
@@ -185,6 +221,18 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                         </span>
                       </div>
                     ))}
+
+                    {/* Show watchlist permission if enabled for Pharmacist */}
+                    {selectedRole === "PHARMACIST" && watchlist && (
+                      <div className="flex items-start space-x-3 pt-2 border-t border-teal-200">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${ROLE_PERMISSIONS[selectedRole as keyof typeof ROLE_PERMISSIONS].iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed font-medium">
+                          Can see watchlisted items
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
