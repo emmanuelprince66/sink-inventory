@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInventoryHook } from "@/hooks/useInventoryHook";
+import { ProductFilters, useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -39,10 +39,9 @@ interface Category {
   type: string;
 }
 
-interface CategoriesResponse {
-  success: boolean;
-  message: string;
-  data: Category[];
+interface Department {
+  id: string;
+  name: string;
 }
 
 interface CustomInventoryCardProps {
@@ -115,6 +114,14 @@ const CustomInventoryCard = ({
   );
 };
 
+const DEFAULT_FILTERS: ProductFilters = {
+  allowTax: false,
+  sellOnline: false,
+  inHouse: false,
+  rawMaterial: false,
+  watchlist: false,
+};
+
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
@@ -134,17 +141,11 @@ const Inventory = () => {
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
-  const [productFilters, setProductFilters] = useState({
-    allowTax: false,
-    sellOnline: false,
-    inHouse: false,
-    watchlist: false,
-    rawMaterial: false,
-  });
+  const [productFilters, setProductFilters] =
+    useState<ProductFilters>(DEFAULT_FILTERS);
 
-  const getActiveFiltersCount = () => {
-    return Object.values(productFilters).filter(Boolean).length;
-  };
+  const getActiveFiltersCount = () =>
+    Object.values(productFilters).filter(Boolean).length;
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -153,6 +154,8 @@ const Inventory = () => {
   const {
     InventoryData,
     CategoriesData,
+    DepartmentData,
+    DepartmentDataLoading,
     business_id,
     InventoryDataLoading,
     CategoriesDataLoading,
@@ -160,31 +163,17 @@ const Inventory = () => {
     selectedCategoryId,
     selectedType: activeTab === "PRODUCT" ? "PRODUCT" : "SERVICE",
     searchInput,
+    selectedDepartmentId,
     page,
+    productFilters: activeTab === "PRODUCT" ? productFilters : undefined,
   });
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryId: string) =>
     setSelectedCategoryId(categoryId);
-  };
-
-  const handleAllClick = () => {
-    setSelectedCategoryId(null);
-  };
-
-  const DUMMY_DEPARTMENTS = [
-    { id: "1", name: "Supermarket" },
-    { id: "2", name: "Pharmacy" },
-    { id: "3", name: "Bakery" },
-    { id: "4", name: "Fashion" },
-  ];
-
-  const handleDepartmentClick = (departmentId: string) => {
+  const handleAllClick = () => setSelectedCategoryId(null);
+  const handleDepartmentClick = (departmentId: string) =>
     setSelectedDepartmentId(departmentId);
-  };
-
-  const handleAllDepartmentsClick = () => {
-    setSelectedDepartmentId(null);
-  };
+  const handleAllDepartmentsClick = () => setSelectedDepartmentId(null);
 
   const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
     setActiveTab(tab);
@@ -208,14 +197,10 @@ const Inventory = () => {
     const container = categoriesContainerRef.current;
     if (container) {
       const scrollAmount = 200;
-      const currentScroll = container.scrollLeft;
-      const newScroll =
-        direction === "left"
-          ? currentScroll - scrollAmount
-          : currentScroll + scrollAmount;
-
       container.scrollTo({
-        left: newScroll,
+        left:
+          container.scrollLeft +
+          (direction === "left" ? -scrollAmount : scrollAmount),
         behavior: "smooth",
       });
     }
@@ -438,18 +423,6 @@ const Inventory = () => {
                       <span className="text-sm">Produces in-house</span>
                     </DropdownMenuCheckboxItem>
                     <DropdownMenuCheckboxItem
-                      checked={productFilters.watchlist}
-                      onCheckedChange={(checked) =>
-                        setProductFilters({
-                          ...productFilters,
-                          watchlist: checked,
-                        })
-                      }
-                      className="cursor-pointer"
-                    >
-                      <span className="text-sm">Add to watchlist</span>
-                    </DropdownMenuCheckboxItem>
-                    <DropdownMenuCheckboxItem
                       checked={productFilters.rawMaterial}
                       onCheckedChange={(checked) =>
                         setProductFilters({
@@ -461,6 +434,18 @@ const Inventory = () => {
                     >
                       <span className="text-sm">Make raw material</span>
                     </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.watchlist}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          watchlist: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Watchlist</span>
+                    </DropdownMenuCheckboxItem>
 
                     {getActiveFiltersCount() > 0 && (
                       <>
@@ -470,15 +455,7 @@ const Inventory = () => {
                             variant="ghost"
                             size="sm"
                             className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() =>
-                              setProductFilters({
-                                allowTax: false,
-                                sellOnline: false,
-                                inHouse: false,
-                                watchlist: false,
-                                rawMaterial: false,
-                              })
-                            }
+                            onClick={() => setProductFilters(DEFAULT_FILTERS)}
                           >
                             Clear all filters
                           </Button>
@@ -500,17 +477,33 @@ const Inventory = () => {
             </div>
           </div>
 
-          {/* Categories Tabs */}
+          {/* Departments + Categories Filters */}
           {activeTab && (
             <>
               {CategoriesDataLoading || !CategoriesData ? (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
-                    />
-                  ))}
+                <div className="space-y-4">
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-2 bg-gray-200" />
+                    <div className="flex gap-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-20 mb-2 bg-gray-200" />
+                    <div className="flex gap-2">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-8 w-20 rounded-md bg-gray-200 flex-shrink-0"
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="w-full min-w-0 space-y-4">
@@ -519,69 +512,73 @@ const Inventory = () => {
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Department
                     </h3>
-                    <div
-                      className="flex gap-2 overflow-x-auto scrollbar-hide py-1 min-w-0"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
-                    >
-                      <button
-                        className={cn(
-                          "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                          selectedDepartmentId === null
-                            ? "bg-green-500 text-white shadow-sm"
-                            : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
-                        )}
-                        onClick={handleAllDepartmentsClick}
+                    {DepartmentDataLoading ? (
+                      <div className="flex gap-2 py-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Skeleton
+                            key={i}
+                            className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div
+                        className="flex gap-2 overflow-x-auto scrollbar-hide py-1 min-w-0"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                        }}
                       >
-                        All Departments
-                      </button>
-
-                      {DUMMY_DEPARTMENTS.map((department) => (
                         <button
-                          key={department.id}
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                            selectedDepartmentId === department.id
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            selectedDepartmentId === null
                               ? "bg-green-500 text-white shadow-sm"
                               : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
                           )}
-                          onClick={() => handleDepartmentClick(department.id)}
+                          onClick={handleAllDepartmentsClick}
                         >
-                          {department.name}
+                          All Departments
                         </button>
-                      ))}
-                    </div>
+                        {DepartmentData?.data?.map((department: Department) => (
+                          <button
+                            key={department.id}
+                            className={cn(
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0 capitalize",
+                              selectedDepartmentId === department.id
+                                ? "bg-green-500 text-white shadow-sm"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                            )}
+                            onClick={() => handleDepartmentClick(department.id)}
+                          >
+                            {department.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Categories Filter */}
-                  <div className="min-w-0 w-full">
+                  <div className="w-full overflow-hidden">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">
                       Category
                     </h3>
-                    <div className="flex items-center w-full min-w-0">
+                    <div className="flex items-center gap-1 sm:gap-2">
                       {canScrollLeft && (
                         <button
                           onClick={() => scrollCategories("left")}
-                          disabled={!canScrollLeft}
-                          className={cn(
-                            "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
-                            canScrollLeft
-                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed",
-                          )}
+                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
                         >
                           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       )}
-
                       <div
                         ref={categoriesContainerRef}
-                        className="flex gap-1 sm:gap-2 overflow-x-auto min-w-0 flex-1 scrollbar-hide py-1"
+                        className="flex gap-1 sm:gap-2 py-1 overflow-x-auto w-0 flex-1"
                         style={{
                           scrollbarWidth: "none",
                           msOverflowStyle: "none",
+                          WebkitOverflowScrolling: "touch",
                         }}
                       >
                         <button
@@ -595,7 +592,6 @@ const Inventory = () => {
                         >
                           All Categories
                         </button>
-
                         {CategoriesData.data.map((category: Category) => (
                           <button
                             key={category.id}
@@ -611,17 +607,10 @@ const Inventory = () => {
                           </button>
                         ))}
                       </div>
-
                       {canScrollRight && (
                         <button
                           onClick={() => scrollCategories("right")}
-                          disabled={!canScrollRight}
-                          className={cn(
-                            "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
-                            canScrollRight
-                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed",
-                          )}
+                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
                         >
                           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>

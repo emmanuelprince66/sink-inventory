@@ -100,11 +100,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
   const eligibleItems = getEligibleItems();
 
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
-    (error) => error !== ""
+    (error) => error !== "",
   );
   const hasPriceEditErrors = Object.values(priceEditErrors).some(
-    (error) => error !== ""
+    (error) => error !== "",
   );
+
+  // Check if user is pharmacist - they shouldn't see checkout page
+  const isPharmacist = user && user.role === "PHARMACIST";
 
   const handleBulkQuantityChange = (itemId: string, value: string): void => {
     setBulkQuantityInputs((prev) => ({ ...prev, [itemId]: value }));
@@ -178,22 +181,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
     const availableQuantity = item.quantity ?? 999;
     updateCartItemQuantity(
       itemId,
-      Math.min(Math.max(roundedValue, 0.5), availableQuantity)
+      Math.min(Math.max(roundedValue, 0.5), availableQuantity),
     );
   };
 
   const handleChangeVariation = (
     currentItemId: string,
     newVariation: Variation,
-    quantity: number
+    quantity: number,
   ): void => {
-    // Get the current item to preserve parent product info
     const currentItem = cartItems.find((item) => item.id === currentItemId);
-
-    // Remove current item
     removeFromCart(currentItemId);
-
-    // Add new variation with specified quantity and preserve parent product variations
     addToCart({
       ...newVariation,
       id: newVariation.id,
@@ -201,7 +199,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
       selling_price: newVariation.selling_price,
       amount: newVariation.selling_price,
       cartQuantity: quantity,
-      // CRITICAL: Preserve these fields from the current item
       parentProductId: currentItem?.parentProductId,
       parentProductName: currentItem?.parentProductName,
       parentProductVariations: currentItem?.parentProductVariations,
@@ -214,6 +211,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
     setChangingVariationItem(item);
     setShowVariationModal(true);
   };
+
+  // If pharmacist, don't render checkout page
+  if (isPharmacist) {
+    return null;
+  }
 
   return (
     <>
@@ -338,7 +340,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                                   onChange={(e) =>
                                     handlePriceEditChange(
                                       item.id,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className={`w-20 text-center text-xs border rounded-md py-1 ${
@@ -464,7 +466,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                               onChange={(e) =>
                                 handleBulkQuantityChange(
                                   item.id,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className={`w-16 text-center text-xs border rounded-md py-1 ${

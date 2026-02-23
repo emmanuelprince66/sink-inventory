@@ -1,6 +1,7 @@
 import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useAddProductMutation } from "@/api/products/add-product";
 import { useEditProductMutation } from "@/api/products/edit-product";
+import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchProductTransactionsQuery } from "@/api/products/get-transactions-history";
 import { useFetchTransferHistoryQuery } from "@/api/products/transfer-history";
@@ -44,6 +45,11 @@ const productVariationSchema = z.object({
 
 const createProductSchema = (isEditMode: boolean) => {
   const baseSchema = z.object({
+    allow_tax: z.boolean().default(false),
+    in_house: z.boolean().default(false),
+    raw_material: z.boolean().default(false),
+    sell_online: z.boolean().default(false),
+    watchlist: z.boolean().default(false),
     item_name: z.string().min(1, "Item name is required"),
     image: z
       .union([
@@ -367,6 +373,12 @@ export const useAddNewProductHook = ({
       payment_method: "",
       discount_value: "",
       discount_threshold: "",
+
+      allow_tax: false,
+      in_house: false,
+      raw_material: false,
+      sell_online: false,
+      watchlist: false,
       type: "",
       percentage_discount: "",
       due_date: "",
@@ -406,6 +418,16 @@ export const useAddNewProductHook = ({
     [SupplierData],
   );
 
+  const {
+    data: DepartmentData,
+    isLoading: DepartmentDataLoading,
+    refetch: refetchDepartments,
+    isRefetching: isRefetchingDepartments,
+  } = useFetchDepartmentsQuery(business_id, {
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5,
+  });
+  console.log("DepartmentDatae", DepartmentData);
   const generateProductVariations = useCallback(
     (variations: Variation[]): ProductVariation[] => {
       console.log(
@@ -550,6 +572,11 @@ export const useAddNewProductHook = ({
           percentage_discount: "",
           due_date: "",
           amount_paid: "",
+          allow_tax: false,
+          in_house: false,
+          raw_material: false,
+          sell_online: false,
+          watchlist: false,
           variation_type: "multiple",
           variations: extractedVariations,
           product_variations: productVariations,
@@ -675,11 +702,18 @@ export const useAddNewProductHook = ({
 
     appendIfNotEmpty("sku", values.sku);
     appendIfNotEmpty("category_id", values.category);
+    appendIfNotEmpty("department_id", values.department);
     appendIfNotEmpty("supplier_id", values.supplier);
     appendIfNotEmpty("unit", values.product_unit);
     appendIfNotEmpty("payment_method", values.payment_method);
     appendIfNotEmpty("discount_type", values.type);
     appendIfNotEmpty("percentage_discount", values.percentage_discount);
+
+    formData.append("allow_tax", String(values.allow_tax));
+    formData.append("in_house", String(values.in_house));
+    formData.append("raw_material", String(values.raw_material));
+    formData.append("sell_online", String(values.sell_online));
+    formData.append("watchlist", String(values.watchlist));
 
     if (values.expiry_date) {
       const formattedDate = moment(values.expiry_date).format("YYYY-MM-DD");
@@ -883,13 +917,12 @@ export const useAddNewProductHook = ({
 
   // Only wait for critical data needed to populate the form
   const isLoadingCriticalData = isEditMode
-    ? ProductDataLoading || CategoriesDataLoading
-    : CategoriesDataLoading;
-
+    ? ProductDataLoading || CategoriesDataLoading || DepartmentDataLoading
+    : CategoriesDataLoading || DepartmentDataLoading;
   // Check if we have the critical data
   const hasRequiredData = isEditMode
-    ? !!ProductData && !!CategoriesData
-    : !!CategoriesData;
+    ? !!ProductData && !!CategoriesData && !!DepartmentData
+    : !!CategoriesData && !!DepartmentData;
 
   // Show loading until form is fully initialized and ready
   const isPageLoading = isLoadingCriticalData || (isEditMode && !isFormReady);
@@ -915,6 +948,8 @@ export const useAddNewProductHook = ({
     TransferHistoryLoading,
     CategoriesDataLoading,
     SupplierLoading,
+    DepartmentData,
+    DepartmentDataLoading,
     ProductData,
     ProductTransactionData,
     TransferHistoryData,

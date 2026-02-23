@@ -53,8 +53,8 @@ export const useUserStore = create<UserStore>()(
       onRehydrateStorage: () => (state) => {
         state?.hydrate();
       },
-    }
-  )
+    },
+  ),
 );
 
 export const useUserRole = () => {
@@ -80,6 +80,8 @@ export const useUserRole = () => {
         OWNER: 3,
         "ADMIN-ATTENDANT": 2,
         ATTENDANT: 1,
+        PHARMACIST: 0,
+        "INVENTORY-MANAGER": 0,
       };
 
       return roleHierarchy[user.role] >= roleHierarchy[requiredRole];

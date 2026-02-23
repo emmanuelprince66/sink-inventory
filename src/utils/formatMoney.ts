@@ -29,7 +29,7 @@ const CURRENCY_LOCALE_MAP: Record<string, string> = {
 // ─── Core formatter (pure function — no hooks, safe anywhere) ─────────────────
 
 export const formatMoney = (amount: number, currency: string): string => {
-  console.log("formatMoney called with amount:", amount, "currency:", currency);
+  // console.log("formatMoney called with amount:", amount, "currency:", currency);
   const safeCurrency = currency?.toUpperCase() || "NGN";
   const locale = CURRENCY_LOCALE_MAP[safeCurrency] || "en-US";
 
@@ -65,7 +65,7 @@ export const useFormatMoney = () => {
 export const formatToNaira = (amount: number): string => {
   const data = useBusinessDataStore.getState()?.businessData;
 
-  console.log("data003", data);
+  // console.log("data003", data);
   const currency =
     useBusinessDataStore.getState()?.businessData?.currency || "NGN";
   return formatMoney(amount, currency);

@@ -26,7 +26,7 @@ export const links = [
         title: "POS Terminal",
         url: "/pos",
         icon: ShoppingCart,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
       },
     ],
   },
@@ -50,7 +50,7 @@ export const links = [
         title: "Sales",
         url: "/sales",
         icon: Percent,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
       },
       {
         title: "Expenses",
@@ -62,7 +62,7 @@ export const links = [
         title: "Orders",
         url: "/orders",
         icon: ClipboardList,
-        roles: ["OWNER", "ADMIN-ATTENDANT" , "ATTENDANT"],
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
       },
       {
         title: "Supplier",
@@ -90,7 +90,7 @@ export const links = [
         title: "Transactions",
         url: "/transactions",
         icon: CreditCard,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
       },
       {
         title: "Payment Terminal",

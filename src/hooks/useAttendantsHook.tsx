@@ -15,7 +15,7 @@ const staffSchema = z.object({
   lastname: z.string().min(1, "Last name is required").max(50),
   phone: z.string().min(1, "Phone number is required"),
   role: z.enum(
-    ["pos_attendant", "pharmacist", "super_admin", "inventory_manager"],
+    ["ATTENDANT", "ADMIN-ATTENDANT", "PHARMACIST", "INVENTORY-MANAGER"],
     {
       required_error: "Please select a role",
     },
@@ -29,7 +29,7 @@ const EditStaffSchema = z.object({
   lastname: z.string().min(1, "Last name is required").max(50),
   phone: z.string().min(1, "Phone number is required"),
   role: z.enum(
-    ["pos_attendant", "pharmacist", "super_admin", "inventory_manager"],
+    ["ATTENDANT", "ADMIN-ATTENDANT", "PHARMACIST", "INVENTORY-MANAGER"],
     {
       required_error: "Please select a role",
     },
@@ -140,6 +140,52 @@ export const useAttendantsHook = ({
     });
   };
 
+  const ROLE_PERMISSIONS = {
+    ATTENDANT: {
+      name: "Attendant",
+      permissions: [
+        "Finalize transaction",
+        "See orders and manage order transactions",
+        "See transactions",
+      ],
+      color: "bg-green-50 border-green-200",
+      iconColor: "text-green-600",
+    },
+    "ADMIN-ATTENDANT": {
+      name: "Admin Attendant",
+      permissions: [
+        "Make pre-sale",
+        "Sell watch listed items",
+        "See transactions",
+        "Finalize transaction",
+      ],
+      color: "bg-emerald-50 border-emerald-200",
+      iconColor: "text-emerald-600",
+    },
+    PHARMACIST: {
+      name: "Pharmacist",
+      permissions: [
+        "Load inventory",
+        "See all transactions and performance",
+        "Full system access",
+      ],
+      color: "bg-teal-50 border-teal-200",
+      iconColor: "text-teal-600",
+    },
+    "INVENTORY-MANAGER": {
+      name: "Inventory Manager",
+      permissions: [
+        "Add product",
+        "Restock product",
+        "Edit selling price",
+        "Adjust stock",
+        "View sold history",
+      ],
+      color: "bg-lime-50 border-lime-200",
+      iconColor: "text-lime-600",
+    },
+  };
+
   useEffect(() => {
     if (attendantData && attendantId && !AttendantLoading) {
       editform.reset({
@@ -178,6 +224,7 @@ export const useAttendantsHook = ({
     handleDeleteAttendant,
     deleteAttendant,
     editAttendant,
+    ROLE_PERMISSIONS,
     editAttendantLoading,
     AttendantLoading,
     deleteAttendantLoading,

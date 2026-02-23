@@ -22,8 +22,8 @@ import { useAttendantsHook } from "@/hooks/useAttendantsHook";
 import { CheckCircle2 } from "lucide-react";
 
 const ROLE_PERMISSIONS = {
-  pos_attendant: {
-    name: "POS Attendant",
+  ATTENDANT: {
+    name: "Attendant",
     permissions: [
       "Finalize transaction",
       "See orders and manage order transactions",
@@ -32,8 +32,8 @@ const ROLE_PERMISSIONS = {
     color: "bg-green-50 border-green-200",
     iconColor: "text-green-600",
   },
-  pharmacist: {
-    name: "Pharmacist",
+  "ADMIN-ATTENDANT": {
+    name: "Admin Attendant",
     permissions: [
       "Make pre-sale",
       "Sell watch listed items",
@@ -43,8 +43,8 @@ const ROLE_PERMISSIONS = {
     color: "bg-emerald-50 border-emerald-200",
     iconColor: "text-emerald-600",
   },
-  super_admin: {
-    name: "Super Admin",
+  PHARMACIST: {
+    name: "Pharmacist",
     permissions: [
       "Load inventory",
       "See all transactions and performance",
@@ -53,7 +53,7 @@ const ROLE_PERMISSIONS = {
     color: "bg-teal-50 border-teal-200",
     iconColor: "text-teal-600",
   },
-  inventory_manager: {
+  "INVENTORY-MANAGER": {
     name: "Inventory Manager",
     permissions: [
       "Add product",
@@ -79,7 +79,6 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
       <div className="w-full max-w-xl bg-white p-4 rounded shadow-md">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* First Name */}
             <FormField
               control={form.control}
               name="firstname"
@@ -98,7 +97,6 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Last Name */}
             <FormField
               control={form.control}
               name="lastname"
@@ -117,7 +115,6 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Phone Number */}
             <FormField
               control={form.control}
               name="phone"
@@ -132,7 +129,6 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Role Selection */}
             <FormField
               control={form.control}
               name="role"
@@ -145,12 +141,12 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pos_attendant">
-                          POS Attendant
+                        <SelectItem value="ATTENDANT">Attendant</SelectItem>
+                        <SelectItem value="ADMIN-ATTENDANT">
+                          Admin Attendant
                         </SelectItem>
-                        <SelectItem value="pharmacist">Pharmacist</SelectItem>
-                        <SelectItem value="super_admin">Super Admin</SelectItem>
-                        <SelectItem value="inventory_manager">
+                        <SelectItem value="PHARMACIST">Pharmacist</SelectItem>
+                        <SelectItem value="INVENTORY-MANAGER">
                           Inventory Manager
                         </SelectItem>
                       </SelectContent>
@@ -161,17 +157,12 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Role Permissions Display */}
             {selectedRole &&
               ROLE_PERMISSIONS[
                 selectedRole as keyof typeof ROLE_PERMISSIONS
               ] && (
                 <div
-                  className={`rounded-lg border-2 p-4 ${
-                    ROLE_PERMISSIONS[
-                      selectedRole as keyof typeof ROLE_PERMISSIONS
-                    ].color
-                  }`}
+                  className={`rounded-lg border-2 p-4 ${ROLE_PERMISSIONS[selectedRole as keyof typeof ROLE_PERMISSIONS].color}`}
                 >
                   <h3 className="font-semibold text-gray-900 mb-3">
                     {
@@ -187,11 +178,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                     ].permissions.map((permission, index) => (
                       <div key={index} className="flex items-start space-x-3">
                         <CheckCircle2
-                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                            ROLE_PERMISSIONS[
-                              selectedRole as keyof typeof ROLE_PERMISSIONS
-                            ].iconColor
-                          }`}
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${ROLE_PERMISSIONS[selectedRole as keyof typeof ROLE_PERMISSIONS].iconColor}`}
                         />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           {permission}

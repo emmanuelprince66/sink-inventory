@@ -6,7 +6,12 @@ export interface BusinessStore {
 }
 
 // types/index.ts
-export type UserRole = "OWNER" | "ADMIN-ATTENDANT" | "ATTENDANT";
+export type UserRole =
+  | "OWNER"
+  | "ADMIN-ATTENDANT"
+  | "ATTENDANT"
+  | "PHARMACIST"
+  | "INVENTORY-MANAGER";
 
 export type Subscription = {
   name: string;

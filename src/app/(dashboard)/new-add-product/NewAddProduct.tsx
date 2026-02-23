@@ -110,6 +110,8 @@ const NewAddProduct = ({
     StatusTypeOptions,
     paymentMethodOptions,
     isEditMode,
+    DepartmentData,
+    DepartmentDataLoading,
     ProductData,
     addProductPending,
     editProductPending,
@@ -439,13 +441,6 @@ const NewAddProduct = ({
     setBulkEditValue("");
     setSelectedVariations([]);
   };
-
-  const DUMMY_DEPARTMENTS = [
-    { id: "1", name: "Supermarket" },
-    { id: "2", name: "Pharmacy" },
-    { id: "3", name: "Bakery" },
-    { id: "4", name: "Fashion" },
-  ];
 
   const isSaveDisabled =
     !selectedVariationType ||
@@ -869,14 +864,16 @@ const NewAddProduct = ({
                                   <SelectValue placeholder="Select department" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {DUMMY_DEPARTMENTS.map((department) => (
-                                    <SelectItem
-                                      key={department.id}
-                                      value={department.id}
-                                    >
-                                      {department.name}
-                                    </SelectItem>
-                                  ))}
+                                  {DepartmentData?.data?.map(
+                                    (department: any) => (
+                                      <SelectItem
+                                        key={department.id}
+                                        value={department.id}
+                                      >
+                                        {department.name}
+                                      </SelectItem>
+                                    ),
+                                  )}
                                 </SelectContent>
                               </Select>
                             </FormControl>
@@ -893,7 +890,6 @@ const NewAddProduct = ({
                         </FormItem>
                       )}
                     />
-
                     {/* Category Field */}
                     <FormField
                       control={form.control}
@@ -1809,67 +1805,114 @@ const NewAddProduct = ({
               )}
 
               {/* Card 4: Product Settings */}
-              {/* Card 4: Product Settings */}
-              <Card className="border-gray-200 shadow-sm bg-white py-5">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
-                    Product Settings
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-4 gap-2">
-                      <Checkbox id="allow-tax" className="cursor-pointer" />
-                      <label
-                        htmlFor="allow-tax"
-                        className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
-                      >
-                        Allow tax calculation
-                      </label>
-                    </div>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="allow_tax"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="allow-tax"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="allow-tax"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Allow tax calculation
+                        </label>
+                      </div>
+                    )}
+                  />
 
-                    <div className="flex items-center space-x-4 gap-2">
-                      <Checkbox id="sell-online" className="cursor-pointer" />
-                      <label
-                        htmlFor="sell-online"
-                        className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
-                      >
-                        Sell this product online
-                      </label>
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="sell_online"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="sell-online"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="sell-online"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Sell this product online
+                        </label>
+                      </div>
+                    )}
+                  />
 
-                    <div className="flex items-center space-x-4 gap-2">
-                      <Checkbox id="in-house" className="cursor-pointer" />
-                      <label
-                        htmlFor="in-house"
-                        className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
-                      >
-                        Produces in-house
-                      </label>
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="in_house"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="in-house"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="in-house"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Produces in-house
+                        </label>
+                      </div>
+                    )}
+                  />
 
-                    <div className="flex items-center space-x-4 gap-2">
-                      <Checkbox id="watchlist" className="cursor-pointer" />
-                      <label
-                        htmlFor="watchlist"
-                        className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
-                      >
-                        Add to watchlist
-                      </label>
-                    </div>
+                  <FormField
+                    control={form.control}
+                    name="watchlist"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="watchlist"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="watchlist"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Add to watchlist
+                        </label>
+                      </div>
+                    )}
+                  />
 
-                    <div className="flex items-center space-x-4 gap-2">
-                      <Checkbox id="raw-material" className="cursor-pointer" />
-                      <label
-                        htmlFor="raw-material"
-                        className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
-                      >
-                        Make raw material
-                      </label>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  <FormField
+                    control={form.control}
+                    name="raw_material"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="raw-material"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="raw-material"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Make raw material
+                        </label>
+                      </div>
+                    )}
+                  />
+                </div>
+              </CardContent>
               {/* Card 5: Supplies & Payment */}
               {/* Card 5: Supplies & Payment */}
 

@@ -77,6 +77,8 @@ export const queryKey = {
     createSale: "create-sale",
     reverseSale: "reverse-sale",
     salesDashboard: "sales-dashboard",
+    fetchPresaleDetails: "fetch-presale-details",
+    createPresale: "create-presale",
   },
   orders: {
     getAllOrders: "get-all-orders",
@@ -117,6 +119,8 @@ export const queryKey = {
     transactionsHistory: "transactions-history",
     returnDamagedProduct: "return-damaged-product",
     getAllSku: "get-all-sku",
+    getAllDepartments: "get-all-departments",
+    createDepartment: "create-department",
   },
   categories: {
     getAllCategories: "get-all-categories",

@@ -31,7 +31,7 @@ const CustomCard = ({
 }) => {
   return (
     <div
-      className={`p-6 rounded-xl border ${className} ${
+      className={`p-4 sm:p-6 rounded-xl border ${className} ${
         shadow ? "shadow-sm" : ""
       }`}
       style={{ backgroundColor: "#FEFFFE" }}
@@ -63,8 +63,10 @@ const CustomSalesCard = ({
       shadow
     >
       <div className="flex flex-col gap-2 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p className="font-[600] text-xl text-primary-black-100">
+        <p className="font-[500] text-xs sm:text-sm text-primary-black-100">
+          {title}
+        </p>
+        <p className="font-[600] text-lg sm:text-xl text-primary-black-100">
           {type === "transaction" ? amount : formattedAmount}
         </p>
         {change !== undefined && (
@@ -109,7 +111,74 @@ const SalesAnalytics = ({
   const { BankBreakDownAnalytics, BankBreakDownAnalyticsLoading } =
     useAnalyticHook({ openPaymentDetailsModal, name, dateRange });
 
-  console.log("BankBreakDownAnalytics", BankBreakDownAnalytics);
+  // Dummy data for Income Statement
+  const incomeStatementData = [
+    {
+      number: "01",
+      category: "Sales Revenue",
+      date: "2025/Jan",
+      amount: 5000000,
+    },
+    {
+      number: "02",
+      category: "Service Revenue",
+      date: "2025/Jan",
+      amount: 2000000,
+    },
+    {
+      number: "03",
+      category: "Other Income",
+      date: "2025/Jan",
+      amount: 500000,
+    },
+    {
+      number: "04",
+      category: "Total Revenue",
+      date: "2025/Jan",
+      amount: 7500000,
+    },
+  ];
+
+  // Dummy data for Cost of Operation Statement
+  const costOfOperationData = [
+    {
+      number: "01",
+      category: "Cost of Goods Sold",
+      date: "2025/Jan",
+      amount: 2500000,
+    },
+    {
+      number: "02",
+      category: "Operating Expenses",
+      date: "2025/Jan",
+      amount: 1200000,
+    },
+    {
+      number: "03",
+      category: "Marketing Costs",
+      date: "2025/Jan",
+      amount: 800000,
+    },
+    {
+      number: "04",
+      category: "Administrative Costs",
+      date: "2025/Jan",
+      amount: 600000,
+    },
+    {
+      number: "05",
+      category: "Total Costs",
+      date: "2025/Jan",
+      amount: 5100000,
+    },
+  ];
+
+  // Dummy data for Gross Profit Analytics
+  const grossProfitData = [
+    { label: "Profit", jan: 3000000, feb: 3500000 },
+    { label: "Direct Cost", jan: 1500000, feb: 1200000 },
+    { label: "Net Profit", jan: 1500000, feb: 2300000 },
+  ];
 
   // Doughnut chart data
   const chartData = {
@@ -155,11 +224,11 @@ const SalesAnalytics = ({
   };
 
   return (
-    <div className="w-full  py-8">
-      <div className="w-full justify-end flex gap-3 mb-4 ">
+    <div className="w-full py-4 sm:py-8">
+      <div className="w-full justify-end flex gap-3 mb-4">
         {user && user?.role === "OWNER" && (
           <Button
-            className=" border-primary-green-300 "
+            className="border-primary-green-300 text-xs sm:text-sm"
             onClick={openAttendantsModal}
           >
             {attendantsName ? `${attendantsName}` : "Select Attendant"}
@@ -169,15 +238,16 @@ const SalesAnalytics = ({
         {attendantsName && (
           <Button
             variant={"outline"}
-            className=" border primary-red-100 text-primary-red-100"
+            className="border primary-red-100 text-primary-red-100 text-xs sm:text-sm"
             onClick={handleClearAttendant}
           >
             clear
           </Button>
         )}
       </div>
+
       {/* First Row - 4 cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomSalesCard
           title="Total Revenue"
           amount={SalesAnalyticData?.data.total_Revenue}
@@ -205,15 +275,15 @@ const SalesAnalytics = ({
         />
       </div>
 
-      {/* Second Row - 2 cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Second Row - 2 cards (Doughnut Chart & Payment Methods) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Doughnut Chart Card */}
         <CustomCard className="h-full border-gray-200" shadow>
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-lg mb-4">
+            <h3 className="font-[600] text-base sm:text-lg mb-4">
               Net Profit : {formatToNaira(SalesAnalyticData?.data.net_profit)}
             </h3>
-            <div className="flex-grow h-[300px]">
+            <div className="flex-grow h-[250px] sm:h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
             </div>
           </div>
@@ -222,7 +292,9 @@ const SalesAnalytics = ({
         {/* Payment Method Card */}
         <CustomCard className="border-gray-200" shadow>
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-lg mb-4">Payment Methods</h3>
+            <h3 className="font-[600] text-base sm:text-lg mb-4">
+              Payment Methods
+            </h3>
             <div className="space-y-4 flex-grow">
               {SalesAnalyticData?.data?.transaction_breakdown.map(
                 (method: any, index: any) => (
@@ -231,7 +303,7 @@ const SalesAnalytics = ({
                     onClick={() =>
                       handleOpenPaymentDetailsModal(method?.payment_method)
                     }
-                    className="flex cursor-pointer p-2 hover:bg-primary-green-500  justify-between items-center w-full"
+                    className="flex cursor-pointer p-2 hover:bg-primary-green-500 justify-between items-center w-full text-sm sm:text-base"
                   >
                     <span className="font-medium">
                       {method?.payment_method}
@@ -240,25 +312,191 @@ const SalesAnalytics = ({
                       {formatToNaira(method?.total_amount)}
                     </span>
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
         </CustomCard>
-
-        <CustomModal
-          isOpen={openPaymentDetailsModal}
-          onClose={handleClosePaymentDetailsModal}
-          trigger={true}
-          title="Payment Details"
-          description=""
-        >
-          <PaymentDetails
-            BankBreakDownAnalyticsLoading={BankBreakDownAnalyticsLoading}
-            BankBreakDownAnalytics={BankBreakDownAnalytics}
-          />
-        </CustomModal>
       </div>
+
+      {/* Third Row - 3 new cards (Income Statement, Cost of Operation, Gross Profit) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Income Statement Card */}
+        <CustomCard className="border-gray-200" shadow>
+          <div className="h-full flex flex-col">
+            <h3 className="font-[600] text-base sm:text-lg mb-4">
+              Income Statement
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      #
+                    </th>
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Category
+                    </th>
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Date
+                    </th>
+                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {incomeStatementData.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        item.category.includes("Total")
+                          ? "font-bold bg-gray-50"
+                          : ""
+                      }`}
+                    >
+                      <td className="py-2 px-1 sm:px-2">{item.number}</td>
+                      <td className="py-2 px-1 sm:px-2">{item.category}</td>
+                      <td className="py-2 px-1 sm:px-2 text-gray-500">
+                        {item.date}
+                      </td>
+                      <td className="py-2 px-1 sm:px-2 text-right text-green-600 font-semibold">
+                        {formatToNaira(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </CustomCard>
+
+        {/* Cost of Operation Statement Card */}
+        <CustomCard className="border-gray-200" shadow>
+          <div className="h-full flex flex-col">
+            <h3 className="font-[600] text-base sm:text-lg mb-4">
+              Cost of Operation
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      #
+                    </th>
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Category
+                    </th>
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Date
+                    </th>
+                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {costOfOperationData.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        item.category.includes("Total")
+                          ? "font-bold bg-gray-50"
+                          : ""
+                      }`}
+                    >
+                      <td className="py-2 px-1 sm:px-2">{item.number}</td>
+                      <td className="py-2 px-1 sm:px-2">{item.category}</td>
+                      <td className="py-2 px-1 sm:px-2 text-gray-500">
+                        {item.date}
+                      </td>
+                      <td className="py-2 px-1 sm:px-2 text-right text-red-600 font-semibold">
+                        {formatToNaira(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </CustomCard>
+
+        {/* Gross Profit Analytics Card */}
+        <CustomCard className="border-gray-200" shadow>
+          <div className="h-full flex flex-col">
+            <h3 className="font-[600] text-base sm:text-lg mb-4">
+              Gross Profit Analytics
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b-2 border-gray-200">
+                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Metric
+                    </th>
+                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Jan
+                    </th>
+                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
+                      Feb
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {grossProfitData.map((item, index) => (
+                    <tr
+                      key={index}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${
+                        item.label.includes("Net") ? "font-bold bg-blue-50" : ""
+                      }`}
+                    >
+                      <td className="py-2 px-1 sm:px-2 font-medium">
+                        {item.label}
+                      </td>
+                      <td
+                        className={`py-2 px-1 sm:px-2 text-right font-semibold ${
+                          item.label === "Profit"
+                            ? "text-green-600"
+                            : item.label === "Direct Cost"
+                              ? "text-red-600"
+                              : "text-blue-600"
+                        }`}
+                      >
+                        {formatToNaira(item.jan)}
+                      </td>
+                      <td
+                        className={`py-2 px-1 sm:px-2 text-right font-semibold ${
+                          item.label === "Profit"
+                            ? "text-green-600"
+                            : item.label === "Direct Cost"
+                              ? "text-red-600"
+                              : "text-blue-600"
+                        }`}
+                      >
+                        {formatToNaira(item.feb)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </CustomCard>
+      </div>
+
+      {/* Payment Details Modal */}
+      <CustomModal
+        isOpen={openPaymentDetailsModal}
+        onClose={handleClosePaymentDetailsModal}
+        trigger={true}
+        title="Payment Details"
+        description=""
+      >
+        <PaymentDetails
+          BankBreakDownAnalyticsLoading={BankBreakDownAnalyticsLoading}
+          BankBreakDownAnalytics={BankBreakDownAnalytics}
+        />
+      </CustomModal>
     </div>
   );
 };

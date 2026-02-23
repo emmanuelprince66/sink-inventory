@@ -6,7 +6,7 @@ const PROTECTED_PATHS = {
   "/inventory": ["OWNER", "ADMIN-ATTENDANT"],
   "/customers": ["OWNER", "ADMIN-ATTENDANT"],
   "/expenses": ["OWNER"],
-  "/create-business": ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+  "/create-business": ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
 };
 
 export function middleware(request: NextRequest) {

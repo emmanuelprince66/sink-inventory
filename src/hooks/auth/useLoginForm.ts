@@ -103,7 +103,11 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
 
       // connect(data.tokens.access);
 
-      if (data?.role === "OWNER") {
+      if (
+        data?.role === "OWNER" ||
+        data?.role === "PHARMACIST" ||
+        data?.role === "ADMIN-ATTENDANT"
+      ) {
         router.push(options?.redirectTo || "/create-business");
         router.refresh();
       } else if (data?.role === "ATTENDANT") {
@@ -166,7 +170,7 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
           setIsLoading(false);
           console.error(
             "❌ Error during permission or token retrieval:",
-            error
+            error,
           );
         }
       }
