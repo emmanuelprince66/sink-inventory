@@ -53,7 +53,6 @@ const CustomSalesCard = ({
   change?: number;
   type?: string;
 }) => {
-  // Format amount as currency
   const formattedAmount =
     typeof amount === "number" ? formatToNaira(amount) : amount;
 
@@ -111,74 +110,100 @@ const SalesAnalytics = ({
   const { BankBreakDownAnalytics, BankBreakDownAnalyticsLoading } =
     useAnalyticHook({ openPaymentDetailsModal, name, dateRange });
 
-  // Dummy data for Income Statement
+  // Get month/year from dateRange
+  const getMonthYear = () => {
+    if (dateRange?.from) {
+      const date = new Date(dateRange.from);
+      const month = date.toLocaleString("en-US", { month: "long" });
+      const year = date.getFullYear();
+      return `${month} ${year}`;
+    }
+    return "April 2025";
+  };
+
+  // Data from screenshot - Income Statement
   const incomeStatementData = [
-    {
-      number: "01",
-      category: "Sales Revenue",
-      date: "2025/Jan",
-      amount: 5000000,
-    },
-    {
-      number: "02",
-      category: "Service Revenue",
-      date: "2025/Jan",
-      amount: 2000000,
-    },
-    {
-      number: "03",
-      category: "Other Income",
-      date: "2025/Jan",
-      amount: 500000,
-    },
-    {
-      number: "04",
-      category: "Total Revenue",
-      date: "2025/Jan",
-      amount: 7500000,
-    },
+    { number: "1", category: "Revenue", actual: 1172380, budget: 1146700 },
+    { number: "2", category: "Bed", actual: 0, budget: 47850 },
+    { number: "3", category: "Nasal Mask & Prongs", actual: 0, budget: 62325 },
+    { number: "4", category: "CPAP/BIPAP", actual: 66500, budget: 103000 },
+    { number: "5", category: "Oral/Nasal", actual: 0, budget: 50250 },
+    { number: "6", category: "Humidifier", actual: 0, budget: 167500 },
+    { number: "7", category: "Cable", actual: 40000, budget: 145000 },
+    { number: "8", category: "Home Care", actual: 30200, budget: 83600 },
+    { number: "9", category: "Others", actual: 0, budget: 0 },
+    { number: "10", category: "Staging", actual: 0, budget: 0 },
   ];
 
-  // Dummy data for Cost of Operation Statement
-  const costOfOperationData = [
+  const incomeTotal = {
+    actual: incomeStatementData.reduce((sum, item) => sum + item.actual, 0),
+    budget: incomeStatementData.reduce((sum, item) => sum + item.budget, 0),
+  };
+
+  // Data from screenshot - Cost of Sales/Direct Costs
+  const directCostsData = [
+    { number: "7", category: "Consumables", actual: 465000, budget: 163000 },
+    { number: "8", category: "Commission Paid", actual: 0, budget: 0 },
+    { number: "9", category: "Sleep Studies", actual: 0, budget: 0 },
     {
-      number: "01",
-      category: "Cost of Goods Sold",
-      date: "2025/Jan",
-      amount: 2500000,
+      number: "10",
+      category: "Referral Party Waiver",
+      actual: 107375,
+      budget: 60751,
     },
-    {
-      number: "02",
-      category: "Operating Expenses",
-      date: "2025/Jan",
-      amount: 1200000,
-    },
-    {
-      number: "03",
-      category: "Marketing Costs",
-      date: "2025/Jan",
-      amount: 800000,
-    },
-    {
-      number: "04",
-      category: "Administrative Costs",
-      date: "2025/Jan",
-      amount: 600000,
-    },
-    {
-      number: "05",
-      category: "Total Costs",
-      date: "2025/Jan",
-      amount: 5100000,
-    },
+    { number: "11", category: "Bank Charges (POS)", actual: 0, budget: 0 },
+    { number: "12", category: "Trade Fairs", actual: 0, budget: 0 },
+    { number: "13", category: "Re-Inspection Fees", actual: 0, budget: 0 },
+    { number: "14", category: "Transportation", actual: 0, budget: 0 },
   ];
 
-  // Dummy data for Gross Profit Analytics
-  const grossProfitData = [
-    { label: "Profit", jan: 3000000, feb: 3500000 },
-    { label: "Direct Cost", jan: 1500000, feb: 1200000 },
-    { label: "Net Profit", jan: 1500000, feb: 2300000 },
+  const directCostsTotal = {
+    actual: directCostsData.reduce((sum, item) => sum + item.actual, 0),
+    budget: directCostsData.reduce((sum, item) => sum + item.budget, 0),
+  };
+
+  // Data from screenshot - Operating Expenses (OPEX)
+  const opexData = [
+    { number: "14", category: "Staff", actual: 150000, budget: 166667 },
+    { number: "15", category: "Welfare", actual: 607500, budget: 645000 },
+    { number: "16", category: "Stationery", actual: 1000, budget: 0 },
+    {
+      number: "17",
+      category: "Recruitment/Promotional Expe",
+      actual: 0,
+      budget: 40000,
+    },
+    {
+      number: "18",
+      category: "Training/Induction",
+      actual: 27600,
+      budget: 68500,
+    },
+    { number: "19", category: "Electricity", actual: 26200, budget: 50000 },
+    { number: "20", category: "Internet/Boiler", actual: 0, budget: 20000 },
+    { number: "21", category: "Rent", actual: 42000, budget: 0 },
+    {
+      number: "22",
+      category: "Taxation & Licence",
+      actual: 110500,
+      budget: 37800,
+    },
+    {
+      number: "23",
+      category: "Office Equipment",
+      actual: 27000,
+      budget: 25000,
+    },
+    { number: "24", category: "Postage", actual: 5000, budget: 14000 },
+    { number: "25", category: "Lab. Expenses", actual: 143700, budget: 40000 },
+    { number: "26", category: "Operational Exp", actual: 4500, budget: 0 },
+    { number: "27", category: "Bank Charges", actual: 15155, budget: 16000 },
   ];
+
+  const opexTotal = {
+    actual: opexData.reduce((sum, item) => sum + item.actual, 0),
+    budget: opexData.reduce((sum, item) => sum + item.budget, 0),
+  };
 
   // Doughnut chart data
   const chartData = {
@@ -319,29 +344,36 @@ const SalesAnalytics = ({
         </CustomCard>
       </div>
 
-      {/* Third Row - 3 new cards (Income Statement, Cost of Operation, Gross Profit) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Income Statement Card */}
+      {/* Third Row - Single Column Layout with Month Heading */}
+      <div className="space-y-6">
+        {/* Month Heading */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Month of {getMonthYear()}
+          </h2>
+        </div>
+
+        {/* Income Statement */}
         <CustomCard className="border-gray-200" shadow>
-          <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-base sm:text-lg mb-4">
+          <div className="flex flex-col">
+            <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
               Income Statement
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                  <tr className="border-b-2 border-gray-300">
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
                       #
                     </th>
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
                       Category
                     </th>
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Date
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Actual
                     </th>
-                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Amount
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Budget
                     </th>
                   </tr>
                 </thead>
@@ -349,134 +381,158 @@ const SalesAnalytics = ({
                   {incomeStatementData.map((item, index) => (
                     <tr
                       key={index}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${
-                        item.category.includes("Total")
-                          ? "font-bold bg-gray-50"
-                          : ""
-                      }`}
+                      className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td className="py-2 px-1 sm:px-2">{item.number}</td>
-                      <td className="py-2 px-1 sm:px-2">{item.category}</td>
-                      <td className="py-2 px-1 sm:px-2 text-gray-500">
-                        {item.date}
+                      <td className="py-3 px-2 sm:px-4 text-gray-600">
+                        {item.number}
                       </td>
-                      <td className="py-2 px-1 sm:px-2 text-right text-green-600 font-semibold">
-                        {formatToNaira(item.amount)}
+                      <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
+                        {item.category}
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-right text-green-600 font-semibold">
+                        {formatToNaira(item.actual)}
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-right text-blue-600 font-semibold">
+                        {formatToNaira(item.budget)}
                       </td>
                     </tr>
                   ))}
+                  {/* Total Row */}
+                  <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+                    <td className="py-3 px-2 sm:px-4" colSpan={2}>
+                      TOTAL
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-green-700">
+                      {formatToNaira(incomeTotal.actual)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-blue-700">
+                      {formatToNaira(incomeTotal.budget)}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </CustomCard>
 
-        {/* Cost of Operation Statement Card */}
+        {/* Direct Costs / Out of Sales */}
         <CustomCard className="border-gray-200" shadow>
-          <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-base sm:text-lg mb-4">
-              Cost of Operation
+          <div className="flex flex-col">
+            <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+              Direct Costs (Out of Sales)
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                  <tr className="border-b-2 border-gray-300">
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
                       #
                     </th>
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
                       Category
                     </th>
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Date
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Actual
                     </th>
-                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Amount
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Budget
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {costOfOperationData.map((item, index) => (
+                  {directCostsData.map((item, index) => (
                     <tr
                       key={index}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${
-                        item.category.includes("Total")
-                          ? "font-bold bg-gray-50"
-                          : ""
-                      }`}
+                      className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td className="py-2 px-1 sm:px-2">{item.number}</td>
-                      <td className="py-2 px-1 sm:px-2">{item.category}</td>
-                      <td className="py-2 px-1 sm:px-2 text-gray-500">
-                        {item.date}
+                      <td className="py-3 px-2 sm:px-4 text-gray-600">
+                        {item.number}
                       </td>
-                      <td className="py-2 px-1 sm:px-2 text-right text-red-600 font-semibold">
-                        {formatToNaira(item.amount)}
+                      <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
+                        {item.category}
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-right text-red-600 font-semibold">
+                        {formatToNaira(item.actual)}
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-right text-orange-600 font-semibold">
+                        {formatToNaira(item.budget)}
                       </td>
                     </tr>
                   ))}
+                  {/* Total Row */}
+                  <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+                    <td className="py-3 px-2 sm:px-4" colSpan={2}>
+                      TOTAL DIRECT COSTS
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-red-700">
+                      {formatToNaira(directCostsTotal.actual)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-orange-700">
+                      {formatToNaira(directCostsTotal.budget)}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </CustomCard>
 
-        {/* Gross Profit Analytics Card */}
+        {/* Operating Expenses (OPEX) */}
         <CustomCard className="border-gray-200" shadow>
-          <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-base sm:text-lg mb-4">
-              Gross Profit Analytics
+          <div className="flex flex-col">
+            <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+              Operating Expenses (OPEX)
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Metric
+                  <tr className="border-b-2 border-gray-300">
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      #
                     </th>
-                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Jan
+                    <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Category
                     </th>
-                    <th className="text-right py-2 px-1 sm:px-2 font-medium text-gray-600">
-                      Feb
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Actual
+                    </th>
+                    <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+                      Budget
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {grossProfitData.map((item, index) => (
+                  {opexData.map((item, index) => (
                     <tr
                       key={index}
-                      className={`border-b border-gray-100 hover:bg-gray-50 ${
-                        item.label.includes("Net") ? "font-bold bg-blue-50" : ""
-                      }`}
+                      className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td className="py-2 px-1 sm:px-2 font-medium">
-                        {item.label}
+                      <td className="py-3 px-2 sm:px-4 text-gray-600">
+                        {item.number}
                       </td>
-                      <td
-                        className={`py-2 px-1 sm:px-2 text-right font-semibold ${
-                          item.label === "Profit"
-                            ? "text-green-600"
-                            : item.label === "Direct Cost"
-                              ? "text-red-600"
-                              : "text-blue-600"
-                        }`}
-                      >
-                        {formatToNaira(item.jan)}
+                      <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
+                        {item.category}
                       </td>
-                      <td
-                        className={`py-2 px-1 sm:px-2 text-right font-semibold ${
-                          item.label === "Profit"
-                            ? "text-green-600"
-                            : item.label === "Direct Cost"
-                              ? "text-red-600"
-                              : "text-blue-600"
-                        }`}
-                      >
-                        {formatToNaira(item.feb)}
+                      <td className="py-3 px-2 sm:px-4 text-right text-purple-600 font-semibold">
+                        {formatToNaira(item.actual)}
+                      </td>
+                      <td className="py-3 px-2 sm:px-4 text-right text-indigo-600 font-semibold">
+                        {formatToNaira(item.budget)}
                       </td>
                     </tr>
                   ))}
+                  {/* Total Row */}
+                  <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+                    <td className="py-3 px-2 sm:px-4" colSpan={2}>
+                      TOTAL OPERATING EXPENSES
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-purple-700">
+                      {formatToNaira(opexTotal.actual)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-right text-indigo-700">
+                      {formatToNaira(opexTotal.budget)}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
