@@ -13,6 +13,7 @@ import { DownloadReportButton } from "./DownloadReportsButton";
 import ProductAnalytics from "./ProductAnalytics";
 import SalesAnalytics from "./SalesAnalytics";
 import SkeletonComp from "./SkeletonComp";
+import TaxAnalytics from "./TaxAnalytics";
 
 const Analytics = () => {
   const { user } = useUserRole();
@@ -20,7 +21,7 @@ const Analytics = () => {
 
   const AnalyticsOptionsTab =
     user?.role === "OWNER"
-      ? (["Sales", "Products", "Customers"] as const)
+      ? (["Sales", "Products", "Customers", "Tax"] as const)
       : (["Sales"] as const);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -36,7 +37,7 @@ const Analytics = () => {
   const [attendantsName, setAttendantsName] = useState("");
 
   const [activeTab, setActiveTab] = useState<
-    "Sales" | "Products" | "Customers"
+    "Sales" | "Products" | "Customers" | "Tax"
   >("Sales");
 
   const {
@@ -181,6 +182,14 @@ const Analytics = () => {
                       />
                     </div>
                   )}
+                </TabsContent>
+              )}
+
+              {user && user?.role === "OWNER" && (
+                <TabsContent value="Tax" className="mt-0">
+                  <div className="w-full overflow-hidden">
+                    <TaxAnalytics dateRange={dateRange} />
+                  </div>
                 </TabsContent>
               )}
             </div>

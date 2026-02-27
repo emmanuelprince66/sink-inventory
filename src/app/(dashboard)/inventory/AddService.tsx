@@ -42,7 +42,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
 
               // Handle file change separately from rendering preview
               const handleFileChange = (
-                e: React.ChangeEvent<HTMLInputElement>
+                e: React.ChangeEvent<HTMLInputElement>,
               ) => {
                 const file = e.target.files?.[0];
                 if (file) {
@@ -139,6 +139,19 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
                 <FormLabel>Service Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter Service Name...." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="vat"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel> VAT</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter Vat ...." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

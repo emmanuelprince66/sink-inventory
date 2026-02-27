@@ -10,6 +10,7 @@ import { MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DeleteItem from "./DeleteItem";
 import EditProductPrice from "./EditProductPrice";
 import EditService from "./EditService";
 import { InventoryItem } from "./type";
@@ -87,6 +88,10 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const closeSetDiscountModal = () => setAddDiscountModal(false);
 
       const [openEditServiceModal, setOpenEditServiceModal] = useState(false);
+      const [openDeleteServiceModal, setOpenDeleteServiceModal] =
+        useState(false);
+      const closeDeleteServiceModal = () => setOpenDeleteServiceModal(false);
+
       const [openRestockModal, setOpenRestockModal] = useState(false);
 
       const handleOpenRestockModal = () => setOpenRestockModal(true);
@@ -135,6 +140,13 @@ export const columns: ColumnDef<InventoryItem>[] = [
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
                 Edit Service
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => setOpenDeleteServiceModal(true)}
+                className="cursor-pointer px-4 py-2 text-red-600  hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                Delete Service
               </DropdownMenuItem>
               {/* {isProduct && (
                 <DropdownMenuItem
@@ -210,6 +222,19 @@ export const columns: ColumnDef<InventoryItem>[] = [
               service={inventory}
               type={inventory.type}
               closeModal={() => setOpenEditServiceModal(false)}
+            />
+          </CustomModal>
+          <CustomModal
+            isOpen={openDeleteServiceModal}
+            onClose={() => setOpenDeleteServiceModal(false)}
+            trigger={false}
+            title={`Delete ${inventory.type.toLocaleLowerCase()} `}
+          >
+            <DeleteItem
+              id={inventory.id}
+              text={`Are you sure you want to delete this ${inventory.type.toLocaleLowerCase()}?`}
+              type={inventory.type}
+              closeModal={() => setOpenDeleteServiceModal(false)}
             />
           </CustomModal>
           {/*  */}

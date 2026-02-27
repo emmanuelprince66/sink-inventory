@@ -13,6 +13,7 @@ import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
 import DamagedProduct from "./DamagedProduct";
+import DeleteItem from "./DeleteItem";
 import EditProductPrice from "./EditProductPrice";
 import ReturnProduct from "./ReturnProduct";
 import SetDiscountModal from "./SetDiscountModal";
@@ -188,7 +189,13 @@ export const columns: ColumnDef<InventoryItem>[] = [
       };
 
       const [transferProductModal, setTransferProductModal] = useState(false);
+
       const closeTransferProductModal = () => setTransferProductModal(false);
+
+      const [openDeleteProductModal, setOpenDeleteProductModal] =
+        useState(false);
+      const closeDeleteProductModal = () => setOpenDeleteProductModal(false);
+      const openDeleteProductModalFunc = () => setOpenDeleteProductModal(true);
 
       const [openReturnedProductModal, setOpenReturnedProductModal] =
         useState(false);
@@ -269,8 +276,27 @@ export const columns: ColumnDef<InventoryItem>[] = [
               >
                 Transfer Product
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setOpenDeleteProductModal(true)}
+                className="cursor-pointer text-red-500 px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                Delete Product
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <CustomModal
+            isOpen={openDeleteProductModal}
+            onClose={closeDeleteProductModal}
+            trigger={false}
+            title={`Delete ${inventory.type.toLocaleLowerCase()}`}
+          >
+            <DeleteItem
+              closeModal={closeDeleteProductModal}
+              id={inventory.id}
+              type={inventory.type}
+              text={`Are you sure you want to delete this ${inventory.type}?`}
+            />
+          </CustomModal>
           <CustomModal
             isOpen={openEditPriceModal}
             onClose={() => setOpenEditPriceModal(false)}

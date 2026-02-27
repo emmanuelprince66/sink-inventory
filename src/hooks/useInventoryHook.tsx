@@ -12,12 +12,11 @@ import { useEditProductMutation } from "@/api/products/edit-product";
 import { useEditServiceMutation } from "@/api/products/edit-service";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useReturnDamagedProductMutation } from "@/api/products/product-return";
-import { useEffect, useState } from "react";
-import { useToast } from "./toast/useToast";
-
 import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
 const AddReturnProductSchema = z.object({
@@ -47,6 +46,7 @@ const AddServiceSchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1, "Category name is required"),
   amount: z.string().min(1, "Amount is required"),
+  vat: z.string().optional(),
 });
 const AddDiscountSchema = z.object({
   product_threshold: z.string().min(1, "Product threshold is required"),
@@ -172,29 +172,48 @@ export const useInventoryHook = ({
     }
   }, [editProductSuccess]);
 
-  const { mutate: deleteProduct, isPending: isDeleting } =
-    useDeleteProductMutation({
-      onSuccess: (data) => {
-        showToast(data.message, "success");
-        refetchInventory();
-        if (closeModal) closeModal();
-      },
-    });
+  const {
+    mutate: deleteProduct,
+    isPending: isDeleting,
+    isSuccess: isDeletingProductSuccess,
+  } = useDeleteProductMutation({
+    onSuccess: (data) => {
+      showToast(data.message, "success");
+      refetchInventory();
+      if (closeModal) closeModal();
+    },
+  });
 
-  const { mutate: deleteService, isPending: isDeletingService } =
-    useDeleteServiceMutation({
-      onSuccess: (data) => {
-        showToast(data.message, "success");
-        refetchInventory();
-        if (closeModal) closeModal();
-      },
-    });
+  const {
+    mutate: deleteService,
+    isPending: isDeletingService,
+    isSuccess: isDeletingServiceSuccess,
+  } = useDeleteServiceMutation({
+    onSuccess: (data) => {
+      showToast(data.message, "success");
+      refetchInventory();
+      if (closeModal) closeModal();
+    },
+  });
+
+  useEffect(() => {
+    if (isDeletingServiceSuccess || isDeletingProductSuccess) {
+      refetchInventory();
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
+      if (closeModal) closeModal();
+    }
+  }, [isDeletingServiceSuccess, isDeletingProductSuccess]);
 
   const handleDeleteProduct = (id: string, type: string) => {
+    console.log("delete id", id);
+    console.log("delete type", type);
     if (type === "PRODUCT") {
       deleteProduct(id);
+    } else {
+      deleteService(id);
     }
-    deleteService(id);
   };
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
@@ -206,6 +225,13 @@ export const useInventoryHook = ({
   } = useAddServiceMutation({
     businessId: business_id || "",
   });
+
+  useEffect(() => {
+    if (isCreatingServiceSuccess) {
+      refetchInventory();
+      if (closeModal) closeModal();
+    }
+  }, [isCreatingServiceSuccess]);
 
   useEffect(() => {
     if (isCreatingServiceSuccess) {

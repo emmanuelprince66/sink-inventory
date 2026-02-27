@@ -104,6 +104,7 @@ export const queryKey = {
   inventory: {
     getAllInventory: "get-all-inventory",
     addService: "add-service",
+    deleteService: "delete-service",
   },
   products: {
     getProductsById: "get-products-by-id",
