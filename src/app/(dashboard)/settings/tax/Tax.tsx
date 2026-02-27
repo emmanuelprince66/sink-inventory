@@ -62,6 +62,8 @@ const taxSchema = z.object({
   name: z.string().min(1, "Tax name is required"),
   percentage: z.string().min(1, "Percentage is required"),
   description: z.string().optional(),
+  vat_number: z.string().optional(),
+  tin: z.string().optional(),
 });
 
 const profitMarginSchema = z.object({
@@ -87,6 +89,8 @@ const Tax = () => {
     defaultValues: {
       name: "",
       percentage: "",
+      vat_number: "",
+      tin: "",
       description: "",
     },
   });
@@ -340,6 +344,42 @@ const Tax = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Percentage (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 7.5"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={taxForm.control}
+              name="vat_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>VAT Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="e.g., 7.5"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={taxForm.control}
+              name="tin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>TIN</FormLabel>
                   <FormControl>
                     <Input
                       type="number"

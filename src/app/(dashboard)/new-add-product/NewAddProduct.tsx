@@ -118,6 +118,8 @@ const NewAddProduct = ({
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
 
+  console.log("form values", form.getValues());
+
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedVariationType, setSelectedVariationType] = useState("");
   const [newVariationValues, setNewVariationValues] = useState<string[]>([""]);

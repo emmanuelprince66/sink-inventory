@@ -86,6 +86,19 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "watchlist",
+    header: "Watchlist",
+    cell: ({ row }) => {
+      const inventory = row.original;
+
+      return (
+        <div className={cn("font-medium")}>
+          {inventory?.watchlist ? "Yes" : "No"}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "sku",
     header: "Sku",
     cell: ({ row }) => {

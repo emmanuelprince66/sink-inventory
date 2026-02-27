@@ -187,16 +187,16 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
               {/*  */}
 
               <div className="bg-white rounded-lg border border-gray-200 p-4 ">
-                <span className="text-sm font-medium text-green-800">
+                {/* <span className="text-sm font-medium text-green-800">
                   Net Sales
-                </span>
+                </span> */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div className="">
-                    <div className="flex justify-between items-center">
+                    {/* <div className="flex justify-between items-center">
                       <span className="text-lg font-bold">
                         ₦{summary.netSales.toLocaleString()}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                   {/* <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
               <div className="flex justify-between items-center">

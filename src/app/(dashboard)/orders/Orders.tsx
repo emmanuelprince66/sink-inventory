@@ -243,7 +243,6 @@ const Orders = () => {
   const totalRevenue = ordersData?.results?.total_revenue || 0;
 
   // Calculate counts for each tab
-
   const instoreCount = ordersData?.results?.data?.length || 0;
   const outstoreCount = ordersData?.results?.data?.length || 0;
 
@@ -254,13 +253,17 @@ const Orders = () => {
   // Calculate total link visits
   const totalLinkVisits = Math.floor(totalOrders * 2.6);
 
+  // Calculate paid and unpaid for invoices
+  const paidInvoices = ordersData?.results?.paid_orders || 0;
+  const unpaidInvoices = totalOrders - paidInvoices;
+
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
-            Orders
+            Invoices and Orders
           </p>
 
           <div className="flex flex-col sm:flex-row gap-2  w-full sm:w-auto items-center ">
@@ -272,7 +275,9 @@ const Orders = () => {
               />
             </div>
             <Link href="/orders/create" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto">Create Order</Button>
+              <Button className="w-full sm:w-auto">
+                {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
+              </Button>
             </Link>
           </div>
         </div>
@@ -291,10 +296,43 @@ const Orders = () => {
                 />
               ))}
             </div>
+          ) : activeTab === "INSTORE" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+              <CustomOrderCard
+                title="Total Invoice"
+                amount={totalOrders}
+                type="total"
+                subtitle="+12% from last month"
+              />
+              <CustomOrderCard
+                title="Paid"
+                amount={paidInvoices}
+                type="completed"
+                subtitle={`${successRate}% success rate`}
+              />
+              <CustomOrderCard
+                title="Unpaid"
+                amount={unpaidInvoices}
+                type="visits"
+                subtitle="+8% from last month"
+              />
+              <CustomOrderCard
+                title="Total Revenue"
+                amount={formatToNaira(totalRevenue)}
+                type="revenue"
+                subtitle="+8% from last month"
+              />
+              <CustomOrderCard
+                title="Completed Orders"
+                amount={completedOrders}
+                type="completed"
+                subtitle={`${successRate}% success rate`}
+              />
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <CustomOrderCard
-                title={`Total Orders`}
+                title="Total Orders"
                 amount={totalOrders}
                 type="total"
                 subtitle="+12% from last month"
@@ -337,7 +375,7 @@ const Orders = () => {
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
-                In-store Orders
+                Invoices
                 <span
                   className={cn(
                     "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",

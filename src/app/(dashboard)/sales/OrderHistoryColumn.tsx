@@ -41,6 +41,20 @@ export const useOrderHistoryColumn = () => {
       },
     },
     {
+      accessorKey: "pre_sale",
+      header: "Presaled By",
+      cell: ({ row }) => {
+        const order = row.original;
+        // Format date with moment
+
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{order.pre_sale}</p>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "created_at",
       header: "Date",
       cell: ({ row }) => {
@@ -89,8 +103,8 @@ export const useOrderHistoryColumn = () => {
           order.payment_status === "PAID"
             ? "text-green-500"
             : order.payment_status === "PENDING"
-            ? "text-yellow-500"
-            : "text-red-500";
+              ? "text-yellow-500"
+              : "text-red-500";
 
         return (
           <div className="font-medium">

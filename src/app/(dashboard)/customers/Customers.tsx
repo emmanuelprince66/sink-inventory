@@ -47,8 +47,8 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
         isDebtCard
           ? "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
           : isWalletCard
-          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
-          : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200"
+            ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
+            : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200",
       )}
     >
       <div className="flex justify-between items-center">
@@ -59,8 +59,8 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
               isDebtCard
                 ? "bg-red-100"
                 : isWalletCard
-                ? "bg-emerald-100"
-                : "bg-indigo-100"
+                  ? "bg-emerald-100"
+                  : "bg-indigo-100",
             )}
           >
             {getIcon()}
@@ -71,8 +71,8 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
               isDebtCard
                 ? "text-primary-black-100"
                 : isWalletCard
-                ? "text-primary-black-100"
-                : "text-primary-black-100"
+                  ? "text-primary-black-100"
+                  : "text-primary-black-100",
             )}
           >
             {title}
@@ -86,8 +86,8 @@ const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
             isDebtCard
               ? "text-primary-black-100"
               : isWalletCard
-              ? "text-primary-black-100"
-              : "text-primary-black-100"
+                ? "text-primary-black-100"
+                : "text-primary-black-100",
           )}
         >
           {amount}
@@ -127,6 +127,8 @@ const Customers = () => {
     activeFilter,
     handleSearchChange,
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
+
+  console.log("CustomerData:", CustomerData);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-2 ">

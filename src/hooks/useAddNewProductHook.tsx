@@ -543,6 +543,10 @@ export const useAddNewProductHook = ({
               ? String(v.discount_threshold)
               : "",
             expiry_date: v.expiry_date || "",
+            watchlist: v.is_watchlist || false,
+            sell_online: v.sell_online || false,
+            in_house: v.in_house || false,
+            raw_material: v.raw_material || false,
           };
         },
       );
@@ -630,6 +634,11 @@ export const useAddNewProductHook = ({
           variation_type: "single",
           variations: [],
           product_variations: [],
+          allow_tax: itemsData.allow_tax || false,
+          in_house: itemsData.in_house || false,
+          raw_material: itemsData.raw_material || false,
+          sell_online: itemsData.sell_online || false,
+          watchlist: itemsData.watchlist || false,
         },
         { keepDefaultValues: false },
       );

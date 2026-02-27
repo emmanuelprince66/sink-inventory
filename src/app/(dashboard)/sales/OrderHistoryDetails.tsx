@@ -572,6 +572,20 @@ const OrderHistoryDetails = ({
                       {receiptNumber}
                     </span>
                   </div>
+                  {/* <div className="detail-row flex justify-between">
+                    <span className="detail-label text-gray-500">
+                      Sale Type:
+                    </span>
+                    <span className="detail-value font-medium">Presale</span>
+                  </div> */}
+                  <div className="detail-row flex justify-between">
+                    <span className="detail-label text-gray-500">
+                      Presaled By:
+                    </span>
+                    <span className="detail-value font-medium">
+                      {orderDetails?.pre_sale || "N/A"}
+                    </span>
+                  </div>
                   <div className="detail-row flex justify-between">
                     <span className="detail-label text-gray-500">Status:</span>
                     <span className="detail-value font-medium">

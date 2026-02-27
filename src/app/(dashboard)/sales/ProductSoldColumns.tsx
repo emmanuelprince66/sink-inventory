@@ -1,4 +1,5 @@
 import { useUserRole } from "@/lib/store/user-store";
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { SalesDataItem } from "./types";
@@ -27,6 +28,19 @@ export const useSalesColumns = () => {
         return (
           <div className="font-medium">
             <p className="text-sm text-gray-500">{product.unit_sold}</p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "is_watchlist",
+      header: "Watchlist",
+      cell: ({ row }) => {
+        const inventory = row.original;
+
+        return (
+          <div className={cn("font-medium")}>
+            {inventory.is_watchlist ? "Yes" : "No"}
           </div>
         );
       },

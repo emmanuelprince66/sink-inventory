@@ -7,6 +7,7 @@ export interface InventoryItem {
   selling_price: number;
   department?: string;
   quantity: number;
+  watchlist: boolean;
   sold: number;
   sku?: string | null;
   status: "IN-STOCK" | "LOW" | "OUT-OF-STOCK" | string; // Add other possible status values
