@@ -342,7 +342,7 @@ const NetProfitTable = ({
 
     const summaryRows = [
       {
-        label: "Revenue",
+        label: "Gross Profit",
         values: incomeByMonth,
         ytd: ytdRevenue,
         accent: "text-green-600",

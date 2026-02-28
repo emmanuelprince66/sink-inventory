@@ -170,149 +170,6 @@ const TaxAnalytics = ({ dateRange, TaxAnalyticData }: TaxAnalyticsProps) => {
         </div>
       </div>
 
-      {/* Top Row - 3 Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-        {/* Tax Calendar Card */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-sm sm:text-base">
-                Tax Calendar
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="flex items-start gap-2 mb-2">
-                <Clock className="w-4 h-4 text-blue-600 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    VAT Return Filing Due
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    VAT return for {currentMonth} {currentYear} is due
-                  </p>
-                  <p className="text-xs text-gray-600">Due: {filingDueDate}</p>
-                </div>
-              </div>
-              <div className="inline-block bg-black text-white text-xs px-2 py-1 rounded">
-                In {daysUntilDue} days
-              </div>
-            </div>
-          </div>
-        </CustomCard>
-
-        {/* Filing Status Card */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-sm sm:text-base">
-                Filing Status
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">
-                {currentMonth} {currentYear}
-              </span>
-              <span className="text-gray-900 font-medium">
-                No Filing Required
-              </span>
-            </div>
-
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-black h-2 rounded-full w-full"></div>
-            </div>
-
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-gray-600 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    No Filing Required
-                  </p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    No tax obligations for this period
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <Button variant="outline" className="w-full text-sm" size="sm">
-              <FileText className="w-4 h-4 mr-2" />
-              View Filing Guide
-            </Button>
-          </div>
-        </CustomCard>
-
-        {/* Export & Reports Card */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-gray-600" />
-              <h3 className="font-semibold text-sm sm:text-base">
-                Export & Reports
-              </h3>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Export Package</span>
-              <span className="bg-black text-white text-xs px-2 py-1 rounded">
-                3 items
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              {exportPackages.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <span className="text-gray-600 text-xs">{item.name}</span>
-                  {item.completed && (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  )}
-                  {!item.completed && (
-                    <div className="w-4 h-4 border border-gray-300 rounded-full" />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-2 border-t">
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Total Sales</span>
-                <span className="font-medium">{formatToNaira(totalSales)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">VAT Position</span>
-                <span className="font-medium text-red-600">
-                  +{formatToNaira(netVatPosition)}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button variant="outline" size="sm" className="text-xs">
-                <FileText className="w-3 h-3 mr-1" />
-                PDF
-              </Button>
-              <Button variant="outline" size="sm" className="text-xs">
-                <Download className="w-3 h-3 mr-1" />
-                Excel
-              </Button>
-            </div>
-          </div>
-        </CustomCard>
-      </div>
-
       {/* Bottom Row - 4 Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <CustomCard className="p-4 border border-gray-200 bg-white hover:shadow-md transition-shadow">
@@ -462,6 +319,149 @@ const TaxAnalytics = ({ dateRange, TaxAnalyticData }: TaxAnalyticsProps) => {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </CustomCard>
+      </div>
+
+      {/* Top Row - 3 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        {/* Tax Calendar Card */}
+        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-gray-600" />
+              <h3 className="font-semibold text-sm sm:text-base">
+                Tax Calendar
+              </h3>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex items-start gap-2 mb-2">
+                <Clock className="w-4 h-4 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    VAT Return Filing Due
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    VAT return for {currentMonth} {currentYear} is due
+                  </p>
+                  <p className="text-xs text-gray-600">Due: {filingDueDate}</p>
+                </div>
+              </div>
+              <div className="inline-block bg-black text-white text-xs px-2 py-1 rounded">
+                In {daysUntilDue} days
+              </div>
+            </div>
+          </div>
+        </CustomCard>
+
+        {/* Filing Status Card */}
+        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gray-600" />
+              <h3 className="font-semibold text-sm sm:text-base">
+                Filing Status
+              </h3>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-gray-600">
+                {currentMonth} {currentYear}
+              </span>
+              <span className="text-gray-900 font-medium">
+                No Filing Required
+              </span>
+            </div>
+
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="bg-black h-2 rounded-full w-full"></div>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="flex items-start gap-2">
+                <CheckCircle className="w-4 h-4 text-gray-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    No Filing Required
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    No tax obligations for this period
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button variant="outline" className="w-full text-sm" size="sm">
+              <FileText className="w-4 h-4 mr-2" />
+              View Filing Guide
+            </Button>
+          </div>
+        </CustomCard>
+
+        {/* Export & Reports Card */}
+        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-gray-600" />
+              <h3 className="font-semibold text-sm sm:text-base">
+                Export & Reports
+              </h3>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Export Package</span>
+              <span className="bg-black text-white text-xs px-2 py-1 rounded">
+                3 items
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {exportPackages.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-gray-600 text-xs">{item.name}</span>
+                  {item.completed && (
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  )}
+                  {!item.completed && (
+                    <div className="w-4 h-4 border border-gray-300 rounded-full" />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Total Sales</span>
+                <span className="font-medium">{formatToNaira(totalSales)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">VAT Position</span>
+                <span className="font-medium text-red-600">
+                  +{formatToNaira(netVatPosition)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <Button variant="outline" size="sm" className="text-xs">
+                <FileText className="w-3 h-3 mr-1" />
+                PDF
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs">
+                <Download className="w-3 h-3 mr-1" />
+                Excel
+              </Button>
             </div>
           </div>
         </CustomCard>
