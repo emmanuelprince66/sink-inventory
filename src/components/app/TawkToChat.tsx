@@ -59,7 +59,6 @@ export default function TawkToChat() {
     }
   };
 
-  // Listen for when user closes chat from within the Tawk window
   useEffect(() => {
     if (!window.Tawk_API) return;
     window.Tawk_API.onChatMinimized = function () {
