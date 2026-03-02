@@ -24,6 +24,8 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
   const [presaleCode, setPresaleCode] = useState("");
   const [fetchEnabled, setFetchEnabled] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+
+  console.log("selectedProducts", selectedProducts);
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
 
@@ -39,6 +41,8 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
   // Backend returns: { success: true, data: [...products], message: "..." }
   const responseData = presaleResponse as any;
   const presaleData = responseData;
+
+  console.log("presaleData", presaleData);
   const products: any[] = Array.isArray(responseData?.data)
     ? responseData.data
     : responseData?.data?.products || [];
@@ -106,6 +110,7 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
       // Ensure all required fields are present
       id: product.id,
       name: product.name,
+      allow_tax: product.allow_tax || false,
       selling_price: product.selling_price || product.amount || 0,
       amount: product.amount || product.selling_price || 0,
       sku: product.sku || "",
@@ -117,6 +122,8 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
         product.quantity ||
         999,
     }));
+
+    console.log("pproductsForCart", productsForCart);
 
     onAddToCart(productsForCart);
     showToast(`${productsForCart.length} products added to cart`, "success");
