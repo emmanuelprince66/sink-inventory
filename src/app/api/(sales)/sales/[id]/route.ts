@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   // Await the params promise
   const { id } = await params;
@@ -16,7 +16,7 @@ export async function GET(
   if (!accessToken) {
     return NextResponse.json(
       { error: "Unauthorized - No access token provided" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -27,8 +27,6 @@ export async function GET(
   const start_date = request.nextUrl.searchParams.get("start_date") || "";
   const end_date = request.nextUrl.searchParams.get("end_date") || "";
   const attendance_id = request.nextUrl.searchParams.get("attendance_id") || "";
-
-  console.log("category_id---44546", category_id);
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}sale/sales_history/${id}/`);
@@ -53,7 +51,7 @@ export async function GET(
       const errorData = await response.json();
       return NextResponse.json(
         { error: errorData.message || "Failed to fetch sales history data" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -67,7 +65,7 @@ export async function GET(
     console.error("Error fetching sales history data:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

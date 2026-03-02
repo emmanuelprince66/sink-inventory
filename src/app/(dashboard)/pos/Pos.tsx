@@ -9,11 +9,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
+import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Package } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
+import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
+import LoadPresaleModal from "./LoadPresaleModal";
 import { ScannerButton } from "./ScannerButton";
 import VariationSelectorModal from "./VariationSelectorModal";
 
@@ -63,6 +66,13 @@ const Pos: React.FC = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
+  const [showGeneratePresaleModal, setShowGeneratePresaleModal] =
+    useState<boolean>(false);
+  const [showLoadPresaleModal, setShowLoadPresaleModal] =
+    useState<boolean>(false);
+
+  const { user } = useUserRole();
+  const userRole = user?.role;
 
   const {
     cartItems,
@@ -82,13 +92,13 @@ const Pos: React.FC = () => {
     page,
     scannedProductLoading,
     setPage,
+    businessData, // ADD THIS
   } = usePosHook({
     searchInput,
     setSearchInput,
     addToCart,
     cartItems,
   });
-
   const { showToast } = useToast();
 
   const statusColors: Record<string, string> = {
@@ -154,7 +164,6 @@ const Pos: React.FC = () => {
         discount: variation.discount,
         discount_threshold: variation.discount_threshold,
         status: variation.status,
-        // IMPORTANT: Include these fields so variation can be changed later
         parentProductId: variation.parentProductId,
         parentProductName: variation.parentProductName,
         parentProductVariations: variation.parentProductVariations,
@@ -169,16 +178,75 @@ const Pos: React.FC = () => {
     setPage(1);
   };
 
+  const handleAddPresaleToCart = (products: any[]): void => {
+    products.forEach((product) => {
+      addToCart({
+        ...product,
+        id: product.id,
+        name: product.name,
+        selling_price: product.selling_price || product.amount,
+        amount: product.amount || product.selling_price,
+        cartQuantity: product.quantity || product.cartQuantity || 1,
+        type: product.type,
+        category: product.category,
+        sku: product.sku,
+        discount: product.discount,
+        discount_threshold: product.discount_threshold,
+        status: product.status,
+        quantity: product.quantity,
+      });
+    });
+  };
+
   const totalPages = ProductData?.data?.pages || 1;
+
+  // Determine if user can access presale features
+  const isPharmacist = userRole === "PHARMACIST";
+  const isAttendant = userRole === "ATTENDANT";
+  const isAdminAttendant = userRole === "ADMIN-ATTENDANT";
+
+  // Show generate code button for pharmacist
+  const showGenerateCodeButton = isPharmacist && cartItems.length > 0;
+
+  // Show load presale button for attendant
+  const showLoadPresaleButton = isAttendant;
 
   return (
     <div className="w-full min-h-screen flex flex-col">
       {/* Header with fixed height */}
-      <header className="w-full h-16 min-h-[4rem] bg-gray-100 border-b border-gray-300 flex items-center px-4">
-        <p className="text-xl md:text-2xl font-bold">POS System</p>
+      <header className="w-full h-16 min-h-[4rem] bg-gray-100 border-b border-gray-300 flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <p className="text-xl md:text-2xl font-bold">POS System</p>
+          {isPharmacist && (
+            <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+              Pharmacist Mode
+            </span>
+          )}
+          {isAttendant && (
+            <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">
+              Attendant Mode
+            </span>
+          )}
+          {isAdminAttendant && (
+            <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
+              Admin Attendant Mode
+            </span>
+          )}
+        </div>
+
+        {/* Load Presale Button for Attendants */}
+        {showLoadPresaleButton && (
+          <Button
+            onClick={() => setShowLoadPresaleModal(true)}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50"
+          >
+            <Package className="h-4 w-4 mr-2" />
+            Load Presale
+          </Button>
+        )}
       </header>
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         {/* Products Section */}
         <main className="w-full md:w-[70%] h-full border-r border-gray-300 p-4 overflow-y-auto">
@@ -338,16 +406,84 @@ const Pos: React.FC = () => {
           )}
         </main>
 
-        {/* Cart Sidebar - now responsive */}
+        {/* Cart Sidebar */}
         <aside className="w-full md:w-[30%] h-full bg-gray-50 p-3 md:p-4 overflow-y-auto border-t md:border-t-0 border-gray-300">
           {cartItems.length > 0 ? (
-            <CheckoutPage clearCartFunc={clearCartFunc} />
+            <>
+              {/* Show Generate Code button for Pharmacist */}
+              {showGenerateCodeButton && (
+                <div className="mb-4">
+                  <Button
+                    onClick={() => setShowGeneratePresaleModal(true)}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Presale Code
+                  </Button>
+                </div>
+              )}
+
+              {/* Show normal checkout for non-pharmacist roles */}
+              {!isPharmacist && (
+                <CheckoutPage
+                  clearCartFunc={clearCartFunc}
+                  businessData={businessData} // ADD THIS PROP
+                />
+              )}
+
+              {/* Show cart items for pharmacist but no checkout */}
+              {isPharmacist && (
+                <div className="space-y-4">
+                  <h2 className="text-lg font-semibold">
+                    Cart Items ({cartItems.length})
+                  </h2>
+                  <div className="border-gray-100 shadow-sm rounded-md bg-white overflow-y-auto max-h-[400px]">
+                    <div className="space-y-1">
+                      {cartItems.map((item: any) => (
+                        <div
+                          key={item.id}
+                          className="p-3 flex items-center gap-3"
+                        >
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{item.name}</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <span>Qty: {item.cartQuantity || 1}</span>
+                              <span>•</span>
+                              <span>
+                                {formatToNaira(
+                                  item.selling_price || item.amount,
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 p-3 bg-green-50 rounded-md">
+                    <p className="font-medium">Pharmacist Mode</p>
+                    <p className="text-xs mt-1">
+                      Generate a presale code to share with an attendant who
+                      will complete the payment.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <NoCartItem />
           )}
         </aside>
       </div>
 
+      {/* Modals */}
       <CustomModal
         isOpen={showVariationModal}
         onClose={() => {
@@ -366,6 +502,21 @@ const Pos: React.FC = () => {
           onAddVariations={handleAddVariations}
         />
       </CustomModal>
+
+      <GeneratePresaleCodeModal
+        isOpen={showGeneratePresaleModal}
+        onClose={() => setShowGeneratePresaleModal(false)}
+        cartItems={cartItems}
+        clearCart={clearCartFunc}
+        removeFromCart={removeFromCart}
+        updateCartItemQuantity={updateCartItemQuantity}
+      />
+
+      <LoadPresaleModal
+        isOpen={showLoadPresaleModal}
+        onClose={() => setShowLoadPresaleModal(false)}
+        onAddToCart={handleAddPresaleToCart}
+      />
     </div>
   );
 };

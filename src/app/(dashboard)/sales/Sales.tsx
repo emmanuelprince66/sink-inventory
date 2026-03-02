@@ -70,7 +70,7 @@ const CustomSalesCard = ({
   const isItemsCard = title === "Items Sold";
   const isDiscountCard = title === "Total Discount";
   const isProfitCard = title === "Profit";
-
+  const isVatCard = title === "VAT";
   const getCardStyle = () => {
     if (isRevenueCard) {
       return {
@@ -108,6 +108,15 @@ const CustomSalesCard = ({
         icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />,
       };
     }
+    if (isVatCard) {
+      return {
+        bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
+        text: "text-primary-black-100",
+        amount: "text-primary-black-100",
+        badge: "bg-amber-100",
+        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
+      };
+    }
     if (isProfitCard) {
       return {
         bg: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
@@ -132,7 +141,7 @@ const CustomSalesCard = ({
     <CustomCard
       className={cn(
         "p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
-        cardStyle.bg
+        cardStyle.bg,
       )}
     >
       <div className="flex flex-col gap-1 sm:gap-2 h-full justify-between">
@@ -186,10 +195,10 @@ const Sales = () => {
     (typeof orderFilterOptions)[number]
   >(orderFilterOptions[0]);
   const [activeTab, setActiveTab] = useState<"products" | "history">(
-    "products"
+    "products",
   );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
@@ -237,7 +246,7 @@ const Sales = () => {
   const totalProfit = useMemo(() => {
     return SalesData?.data?.results?.data.reduce(
       (acc: any, curr: any) => acc + curr.profit,
-      0
+      0,
     );
   }, [SalesData]);
 
@@ -254,7 +263,7 @@ const Sales = () => {
     if (container) {
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth
+        container.scrollLeft < container.scrollWidth - container.clientWidth,
       );
     }
   };
@@ -296,7 +305,7 @@ const Sales = () => {
   const totalOrderItems = SalesOrderData?.data?.total || 0;
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
+    <div className="w-0 min-w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -337,15 +346,15 @@ const Sales = () => {
           </div>
         </div>
 
-        {/* Overview Cards */}
+        {/* Overview Cards - Updated Responsive Version */}
         <div className="mb-4 sm:mb-6">
           <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
 
           {SalesLoading || !SalesData ? (
-            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
-              {Array.from({ length: 5 }).map((_, index) => (
+            <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+              {Array.from({ length: 6 }).map((_, index) => (
                 <CustomCard
                   key={index}
                   className="w-full border-gray-200 h-[100px] sm:h-[120px]"
@@ -358,36 +367,107 @@ const Sales = () => {
               ))}
             </div>
           ) : (
-            <div className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
+            <>
               {user && user?.role === "OWNER" && (
                 <>
-                  <CustomSalesCard
-                    title={"Revenue"}
-                    amount={formatToNaira(SalesData?.data?.results?.revenue)}
-                  />
-                  <CustomSalesCard
-                    title={"Product Cost"}
-                    amount={formatToNaira(SalesData?.data?.results?.cost)}
-                  />
-                  <CustomSalesCard
-                    title={"Items Sold"}
-                    amount={SalesData?.data?.results?.orders}
-                  />
-                  <CustomSalesCard
-                    title={"Total Discount"}
-                    amount={formatToNaira(
-                      SalesData?.data?.results?.discount || 0
-                    )}
-                    type="discount"
-                    func={handleOpenDiscountSalesModal}
-                  />
-                  <CustomSalesCard
-                    title={"Profit"}
-                    amount={formatToNaira(totalProfit)}
-                  />
+                  {/* Mobile: 2 columns */}
+                  <div className="grid grid-cols-2 gap-2 md:hidden">
+                    <CustomSalesCard
+                      title={"Revenue"}
+                      amount={formatToNaira(SalesData?.data?.results?.revenue)}
+                    />
+                    <CustomSalesCard
+                      title={"Product Cost"}
+                      amount={formatToNaira(SalesData?.data?.results?.cost)}
+                    />
+                    <CustomSalesCard
+                      title={"Items Sold"}
+                      amount={SalesData?.data?.results?.orders}
+                    />
+                    <CustomSalesCard
+                      title={"Total Discount"}
+                      amount={formatToNaira(
+                        SalesData?.data?.results?.discount || 0,
+                      )}
+                      type="discount"
+                      func={handleOpenDiscountSalesModal}
+                    />
+                    <CustomSalesCard
+                      title={"Profit"}
+                      amount={formatToNaira(totalProfit)}
+                    />
+                    <CustomSalesCard
+                      title={"VAT"}
+                      amount={formatToNaira(SalesData?.data?.results?.vat || 0)}
+                    />
+                  </div>
+
+                  {/* Tablet: 3 columns */}
+                  <div className="hidden md:grid md:grid-cols-3 lg:hidden gap-3">
+                    <CustomSalesCard
+                      title={"Revenue"}
+                      amount={formatToNaira(SalesData?.data?.results?.revenue)}
+                    />
+                    <CustomSalesCard
+                      title={"Product Cost"}
+                      amount={formatToNaira(SalesData?.data?.results?.cost)}
+                    />
+                    <CustomSalesCard
+                      title={"Items Sold"}
+                      amount={SalesData?.data?.results?.orders}
+                    />
+                    <CustomSalesCard
+                      title={"Total Discount"}
+                      amount={formatToNaira(
+                        SalesData?.data?.results?.discount || 0,
+                      )}
+                      type="discount"
+                      func={handleOpenDiscountSalesModal}
+                    />
+                    <CustomSalesCard
+                      title={"Profit"}
+                      amount={formatToNaira(totalProfit)}
+                    />
+                    <CustomSalesCard
+                      title={"VAT"}
+                      amount={formatToNaira(SalesData?.data?.results?.vat || 0)}
+                    />
+                  </div>
+
+                  {/* Desktop: 6 columns */}
+                  <div className="hidden lg:grid lg:grid-cols-6 gap-4">
+                    <CustomSalesCard
+                      title={"Revenue"}
+                      amount={formatToNaira(SalesData?.data?.results?.revenue)}
+                    />
+                    <CustomSalesCard
+                      title={"Product Cost"}
+                      amount={formatToNaira(SalesData?.data?.results?.cost)}
+                    />
+                    <CustomSalesCard
+                      title={"Items Sold"}
+                      amount={SalesData?.data?.results?.orders}
+                    />
+                    <CustomSalesCard
+                      title={"Total Discount"}
+                      amount={formatToNaira(
+                        SalesData?.data?.results?.discount || 0,
+                      )}
+                      type="discount"
+                      func={handleOpenDiscountSalesModal}
+                    />
+                    <CustomSalesCard
+                      title={"Profit"}
+                      amount={formatToNaira(totalProfit)}
+                    />
+                    <CustomSalesCard
+                      title={"VAT"}
+                      amount={formatToNaira(SalesData?.data?.results?.vat || 0)}
+                    />
+                  </div>
                 </>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -498,7 +578,7 @@ const Sales = () => {
                             "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
                             canScrollLeft
                               ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed"
+                              : "text-gray-300 cursor-not-allowed",
                           )}
                         >
                           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -520,7 +600,7 @@ const Sales = () => {
                             "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
                               ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50",
                           )}
                           onClick={handleAllClick}
                         >
@@ -535,7 +615,7 @@ const Sales = () => {
                               "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
                               selectedCategoryId === category.id
                                 ? "bg-[#52b661] text-white shadow-sm"
-                                : "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50",
                             )}
                             onClick={() => handleCategoryClick(category.id)}
                           >
@@ -553,7 +633,7 @@ const Sales = () => {
                             "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
                             canScrollRight
                               ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed"
+                              : "text-gray-300 cursor-not-allowed",
                           )}
                         >
                           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />

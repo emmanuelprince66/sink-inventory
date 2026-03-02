@@ -3,6 +3,9 @@ export interface SalesDataItem {
   unit_sold: number;
   revenue: number;
   profit: number;
+  tax: any;
+  watchlist?: boolean;
+  sku: any;
   discount: number;
 }
 
@@ -40,6 +43,7 @@ export interface SalesOrder {
   id: string;
   date: string;
   created_at: string;
+  pre_sale: string;
   attendant: string;
   payment_status: "PAID" | string; // Add other possible statuses if they exist
   method: "BANK" | "ADVANCE" | string; // Add other payment methods if they exist

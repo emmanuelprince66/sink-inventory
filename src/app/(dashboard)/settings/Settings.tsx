@@ -7,6 +7,7 @@ import ChangePassword from "./change-password/ChangePassword";
 import PinComp from "./pin/PinComp";
 import Subscription from "./premuim/Subscription";
 import VeiwStaff from "./staff/VeiwStaff";
+import Tax from "./tax/Tax";
 
 const Settings = () => {
   const { user } = useUserRole();
@@ -15,7 +16,8 @@ const Settings = () => {
     user?.role === "OWNER"
       ? [
           "Bank",
-          "Staff",
+          "HR",
+          "Tax",
           "Security & Privacy",
           "Subscription",
           "Notifications",
@@ -75,9 +77,17 @@ const Settings = () => {
             )}
 
             {user && user?.role === "OWNER" && (
-              <TabsContent value="Staff" className="mt-0">
+              <TabsContent value="HR" className="mt-0">
                 <div className="w-full overflow-hidden">
                   <VeiwStaff />
+                </div>
+              </TabsContent>
+            )}
+
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Tax" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <Tax />
                 </div>
               </TabsContent>
             )}
@@ -130,7 +140,8 @@ const Settings = () => {
 const getShortTabName = (tabName: string): string => {
   const shortNames: { [key: string]: string } = {
     Bank: "Bank",
-    Staff: "Staff",
+    HR: "HR",
+    Tax: "Tax",
     "Security & Privacy": "Security",
     Subscription: "Plans",
     Notifications: "Alerts",

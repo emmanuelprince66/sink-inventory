@@ -38,7 +38,7 @@ const AddCategory = ({
                 <FormItem className="flex-1">
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Customer Name...." {...field} />
+                    <Input placeholder="Category Name...." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

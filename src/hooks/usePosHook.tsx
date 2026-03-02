@@ -1,4 +1,6 @@
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
+import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,10 +20,25 @@ export const usePosHook = ({
   cartItems?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+
+  const {
+    data: BusinessData,
+    isLoading: BusinessDataLoading,
+    refetch,
+  } = useFetchBusinessById(business_id);
+
+  const findBusiness = BusinessData?.data;
+
+  // Extract business data for use in components
+  const businessData = findBusiness;
+
+  console.log("BusinessData", BusinessData);
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
   const [page, setPage] = useState(1);
   const [scannedSku, setScannedSku] = useState<string | null>(null);
   const { user } = useUserRole();
+
+  console.log("User in POS Hook:", user);
   const { showToast } = useToast();
 
   // Use ref to prevent duplicate processing within the same render cycle
@@ -35,9 +52,7 @@ export const usePosHook = ({
   }, [debouncedSearchTerm]);
 
   const { notifications, isConnected, clearNotifications, connectionAttempts } =
-    useSSENotifications(
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MzU0ODcxLCJpYXQiOjE3NTc5MjI4NzEsImp0aSI6Ijg1YmNiNzAyZmFmNzQ1MmRhNmIwOTcwMWFkNGE4NGY1IiwidXNlcl9pZCI6IjY4OGU1OWEzLTFiNTAtNDM3My1hZTEyLWI1MzRkYzNjZWUwYyIsImxvZ2luX3RzIjoiMTc1NzkyMjg3MS4yNDI5NjQifQ.2fHk7xqbCH97SENymevnNBrcfNI_Eesyk3vL47lG8ZU"
-    );
+    useSSENotifications(user?.tokens?.access || "");
 
   // Main product search query for regular search input
   const {
@@ -54,6 +69,18 @@ export const usePosHook = ({
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const {
+    data: DepartmentData,
+    isLoading: DepartmentDataLoading,
+    refetch: refetchDepartments,
+    isRefetching: isRefetchingDepartments,
+  } = useFetchDepartmentsQuery(business_id, {
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5,
+  });
+
+  console.log("DepartmentData", DepartmentData);
 
   // Separate query for scanned SKU search
   const {
@@ -72,13 +99,87 @@ export const usePosHook = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  // Filter products based on user role and department
+  const filterProductsByRole = useCallback(
+    (products: any[]) => {
+      if (!products || products.length === 0) return [];
+
+      const userRole = user?.role;
+
+      // ADMIN-ATTENDANT: See everything
+      if (userRole === "ADMIN-ATTENDANT") {
+        return products;
+      }
+
+      // PHARMACIST: See only pharmacy department products
+      if (userRole === "PHARMACIST") {
+        return products.filter((product) => {
+          const department = product.department?.toLowerCase();
+          return department === "pharmacy";
+        });
+      }
+
+      // ATTENDANT: See everything EXCEPT pharmacy department products
+      if (userRole === "ATTENDANT") {
+        return products.filter((product) => {
+          const department = product.department?.toLowerCase();
+          return department !== "pharmacy";
+        });
+      }
+
+      // Default: Return all products (for OWNER or other roles)
+      return products;
+    },
+    [user?.role],
+  );
+
+  // Memoized filtered product data
+  const filteredProductData = useMemo(() => {
+    if (!ProductData?.data?.results?.data) return ProductData;
+
+    const filteredProducts = filterProductsByRole(
+      ProductData.data.results.data,
+    );
+
+    return {
+      ...ProductData,
+      data: {
+        ...ProductData.data,
+        results: {
+          ...ProductData.data.results,
+          data: filteredProducts,
+        },
+      },
+    };
+  }, [ProductData, filterProductsByRole]);
+
+  // Memoized filtered scanned inventory data
+  const filteredScannedInventoryData = useMemo(() => {
+    if (!scannedInventoryData?.data?.results?.data) return scannedInventoryData;
+
+    const filteredProducts = filterProductsByRole(
+      scannedInventoryData.data.results.data,
+    );
+
+    return {
+      ...scannedInventoryData,
+      data: {
+        ...scannedInventoryData.data,
+        results: {
+          ...scannedInventoryData.data.results,
+          data: filteredProducts,
+        },
+      },
+    };
+  }, [scannedInventoryData, filterProductsByRole]);
+
   // Utility function to normalize SKU/Barcode values
   const normalizeCode = useCallback(
     (code: string | number | null | undefined): string => {
       if (!code) return "";
       return String(code).replace(/\.0+$/, "").trim().toLowerCase();
     },
-    []
+    [],
   );
 
   // Memoized function to find matching product
@@ -98,7 +199,7 @@ export const usePosHook = ({
         );
       });
     },
-    [normalizeCode]
+    [normalizeCode],
   );
 
   // Memoized add to cart handler
@@ -126,7 +227,7 @@ export const usePosHook = ({
       addToCart(cart);
       showToast(`${cart.name} added to cart`, "success");
     },
-    [cartItems, addToCart, showToast]
+    [cartItems, addToCart, showToast],
   );
 
   // Effect to handle when scanned product data is fetched
@@ -134,13 +235,23 @@ export const usePosHook = ({
     // Prevent duplicate processing within the same effect cycle
     if (processingRef.current || !scannedSku) return;
 
-    if (scannedInventoryData) {
+    if (filteredScannedInventoryData) {
       processingRef.current = true;
 
-      const products = scannedInventoryData.data?.results?.data || [];
+      const products = filteredScannedInventoryData.data?.results?.data || [];
 
       if (products.length === 0) {
-        showToast("Product not found with scanned code", "error");
+        const userRole = user?.role;
+        let errorMessage = "Product not found with scanned code";
+
+        // Provide role-specific error messages
+        if (userRole === "PHARMACIST") {
+          errorMessage = "Product not found or not a pharmacy product";
+        } else if (userRole === "ATTENDANT") {
+          errorMessage = "Product not found or is a pharmacy product";
+        }
+
+        showToast(errorMessage, "error");
       } else {
         const scannedProduct = findMatchingProduct(products, scannedSku);
 
@@ -165,12 +276,13 @@ export const usePosHook = ({
       processingRef.current = false;
     }
   }, [
-    scannedInventoryData,
+    filteredScannedInventoryData,
     scannedProductError,
     scannedSku,
     showToast,
     findMatchingProduct,
     handleAddToCart,
+    user?.role,
   ]);
 
   // Optimized scan result handler - allows duplicate scans
@@ -193,7 +305,7 @@ export const usePosHook = ({
       console.log("Processing scanned barcode:", trimmedCode);
       setScannedSku(trimmedCode);
     },
-    [showToast]
+    [showToast],
   );
 
   // Function to manually refetch scanned product (if needed)
@@ -204,15 +316,17 @@ export const usePosHook = ({
   }, [scannedSku, refetchScannedProduct]);
 
   return {
-    ProductData,
+    ProductData: filteredProductData,
     handleScanResult,
     handleAddToCart,
     scannedProductLoading,
+    BusinessDataLoading,
     ProductDataLoading,
     page,
     setPage,
     scannedSku,
     refetchScannedProduct: refetchScannedProductData,
     refetchProducts,
+    businessData, // Export business data for tax calculation
   };
 };

@@ -9,10 +9,11 @@ import { useRouter } from "next/navigation";
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { formatToNaira } from "@/utils/formatMoney";
-import { MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import DeleteCustomer from "./DeleteCustomer";
 import { CustomerType } from "./types";
+
 export const columns: ColumnDef<CustomerType>[] = [
   //   {
   //     accessorKey: "logo",
@@ -68,8 +69,18 @@ export const columns: ColumnDef<CustomerType>[] = [
     },
   },
   {
-    accessorKey: "total_trx",
-    header: "Total Transactions",
+    accessorKey: "sales_count",
+    header: ({ column }) => {
+      return (
+        <button
+          className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Total Transactions
+          <ArrowUpDown className="h-4 w-4" />
+        </button>
+      );
+    },
     cell: ({ row }) => {
       const customer = row.original;
       return (
@@ -78,6 +89,8 @@ export const columns: ColumnDef<CustomerType>[] = [
         </div>
       );
     },
+    sortingFn: "basic",
+    enableSorting: true,
   },
 
   {

@@ -260,7 +260,7 @@ const OrderHistoryPDFDocument = ({
               <Text style={styles.detailValue}>
                 {format(
                   new Date(orderDetails.created_at),
-                  "MMMM d, yyyy, h:mm a"
+                  "MMMM d, yyyy, h:mm a",
                 )}
               </Text>
             </View>
@@ -382,7 +382,7 @@ const OrderHistoryDetails = ({
 
   // Format the date using moment.js
   const formattedDate = moment(orderDetails.created_at).format(
-    "MMMM DD, YYYY, h:mm A"
+    "MMMM DD, YYYY, h:mm A",
   );
 
   // Extract the order ID (last 6 characters)
@@ -572,6 +572,20 @@ const OrderHistoryDetails = ({
                       {receiptNumber}
                     </span>
                   </div>
+                  {/* <div className="detail-row flex justify-between">
+                    <span className="detail-label text-gray-500">
+                      Sale Type:
+                    </span>
+                    <span className="detail-value font-medium">Presale</span>
+                  </div> */}
+                  <div className="detail-row flex justify-between">
+                    <span className="detail-label text-gray-500">
+                      Presaled By:
+                    </span>
+                    <span className="detail-value font-medium">
+                      {orderDetails?.pre_sale || "N/A"}
+                    </span>
+                  </div>
                   <div className="detail-row flex justify-between">
                     <span className="detail-label text-gray-500">Status:</span>
                     <span className="detail-value font-medium">
@@ -585,6 +599,10 @@ const OrderHistoryDetails = ({
                     <span className="detail-value font-medium">
                       {orderDetails.attendant}
                     </span>
+                  </div>
+                  <div className="detail-row flex justify-between">
+                    <span className="detail-label text-gray-500">VAT:</span>
+                    <span className="detail-value font-medium">{0}</span>
                   </div>
                   {/* <div className="detail-row flex justify-between">
                     <span className="detail-label text-gray-500">

@@ -8,11 +8,12 @@ import {
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import { EyeOff, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
 import DamagedProduct from "./DamagedProduct";
+import DeleteItem from "./DeleteItem";
 import EditProductPrice from "./EditProductPrice";
 import ReturnProduct from "./ReturnProduct";
 import SetDiscountModal from "./SetDiscountModal";
@@ -43,12 +44,18 @@ export const columns: ColumnDef<InventoryItem>[] = [
               className="object-cover"
             />
           </div>
-          <div className="font-medium">
+          <div className="font-medium flex items-center gap-1.5">
             {inventory.name}
             {inventory?.variations?.length > 0 && (
               <span className="ml-2 text-xs text-gray-500">
                 ({inventory?.variations.length} variants)
               </span>
+            )}
+            {inventory?.watchlist && (
+              <EyeOff
+                className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                // title="On watchlist"
+              />
             )}
           </div>
         </div>
@@ -75,6 +82,16 @@ export const columns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "department",
+    header: "Department",
+    cell: ({ row }) => {
+      const inventory = row.original;
+      return (
+        <div className={cn("font-medium")}>{inventory.department ?? "-"}</div>
+      );
+    },
+  },
+  {
     accessorKey: "sku",
     header: "Sku",
     cell: ({ row }) => {
@@ -95,7 +112,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
         <span
           className={cn(
             "px-2 py-1 rounded-full text-xs font-medium",
-            statusClass
+            statusClass,
           )}
         >
           {inventory.status}
@@ -109,9 +126,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
     cell: ({ row }) => {
       const inventory = row.original as any;
 
-      // Check if it's a product with variations
       if (inventory.variations && inventory.variations.length > 0) {
-        // Calculate price range for variations
         const prices = inventory.variations.map((v: any) => v.selling_price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
@@ -130,7 +145,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
         );
       }
 
-      // For products without variations
       return (
         <div className="font-medium">
           {formatToNaira(inventory.selling_price || inventory.amount || 0)}
@@ -166,12 +180,18 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const [transferProductModal, setTransferProductModal] = useState(false);
       const closeTransferProductModal = () => setTransferProductModal(false);
 
+      const [openDeleteProductModal, setOpenDeleteProductModal] =
+        useState(false);
+      const closeDeleteProductModal = () => setOpenDeleteProductModal(false);
+      const openDeleteProductModalFunc = () => setOpenDeleteProductModal(true);
+
       const [openReturnedProductModal, setOpenReturnedProductModal] =
         useState(false);
       const closeReturnedProductModal = () =>
         setOpenReturnedProductModal(false);
       const openReturnedProductModalFunc = () =>
         setOpenReturnedProductModal(true);
+
       const [openDamagedProductModal, setOpenDamagedProductModal] =
         useState(false);
       const closeDamagedProductModal = () => setOpenDamagedProductModal(false);
@@ -201,7 +221,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
                 onClick={openViewDetailsFunc}
                 className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
               >
-                <span className="">View more details</span>
+                <span>View more details</span>
               </DropdownMenuItem>
               {isProduct && (
                 <DropdownMenuItem
@@ -233,7 +253,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   "cursor-pointer px-4 py-2 transition-colors",
                   isProduct
                     ? "hover:bg-green-50 hover:text-green-600"
-                    : "text-red-500 opacity-50 cursor-not-allowed"
+                    : "text-red-500 opacity-50 cursor-not-allowed",
                 )}
                 disabled={!isProduct}
               >
@@ -245,8 +265,29 @@ export const columns: ColumnDef<InventoryItem>[] = [
               >
                 Transfer Product
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setOpenDeleteProductModal(true)}
+                className="cursor-pointer text-red-500 px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                Delete Product
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <CustomModal
+            isOpen={openDeleteProductModal}
+            onClose={closeDeleteProductModal}
+            trigger={false}
+            title={`Delete ${inventory.type.toLocaleLowerCase()}`}
+          >
+            <DeleteItem
+              closeModal={closeDeleteProductModal}
+              id={inventory.id}
+              type={inventory.type}
+              text={`Are you sure you want to delete this ${inventory.type}?`}
+            />
+          </CustomModal>
+
           <CustomModal
             isOpen={openEditPriceModal}
             onClose={() => setOpenEditPriceModal(false)}
@@ -272,6 +313,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               data={inventory}
             />
           </CustomModal>
+
           <CustomModal
             isOpen={addDiscountModal}
             onClose={closeSetDiscountModal}
@@ -285,7 +327,6 @@ export const columns: ColumnDef<InventoryItem>[] = [
             />
           </CustomModal>
 
-          {/* restock */}
           <CustomModal
             isOpen={openRestockModal}
             onClose={() => setOpenRestockModal(false)}
@@ -321,6 +362,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={closeReturnedProductModal}
             />
           </CustomModal>
+
           <CustomModal
             isOpen={openDamagedProductModal}
             onClose={closeDamagedProductModal}

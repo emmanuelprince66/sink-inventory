@@ -41,7 +41,7 @@ export const useDeleteServiceMutation = (config?: UseDeleteServiceOptions) => {
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("service deleted successfully", "success");
+      showToast("Service deleted successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

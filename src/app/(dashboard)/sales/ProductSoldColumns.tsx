@@ -1,6 +1,7 @@
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
+import { EyeOff } from "lucide-react";
 import { SalesDataItem } from "./types";
 
 export const useSalesColumns = () => {
@@ -15,6 +16,13 @@ export const useSalesColumns = () => {
         return (
           <div className="font-medium">
             <p className="text-sm text-gray-500">{product.name}</p>
+
+            {product?.watchlist && (
+              <EyeOff
+                className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                // title="On watchlist"
+              />
+            )}
           </div>
         );
       },
@@ -31,6 +39,19 @@ export const useSalesColumns = () => {
         );
       },
     },
+    // {
+    //   accessorKey: "is_watchlist",
+    //   header: "Watchlist",
+    //   cell: ({ row }) => {
+    //     const inventory = row.original;
+
+    //     return (
+    //       <div className={cn("font-medium")}>
+    //         {inventory.is_watchlist ? "Yes" : "No"}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       accessorKey: "revenue",
       header: "Revenue",
@@ -41,6 +62,19 @@ export const useSalesColumns = () => {
             <p className="text-sm text-gray-500">
               {formatToNaira(product.revenue)}
             </p>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "vat",
+      header: "VAT",
+      cell: ({ row }) => {
+        const product = row.original;
+        console.log("VAT value for product:", product); // Debug log
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{product?.tax}</p>
           </div>
         );
       },
@@ -77,7 +111,7 @@ export const useSalesColumns = () => {
         const product = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">-</p>
+            <p className="text-sm text-gray-500">{product?.sku}</p>
           </div>
         );
       },

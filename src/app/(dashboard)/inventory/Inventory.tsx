@@ -4,8 +4,16 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInventoryHook } from "@/hooks/useInventoryHook";
+import { ProductFilters, useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -13,6 +21,7 @@ import {
   ChevronRight,
   Cloud,
   DollarSign,
+  Filter,
   Tag,
   TrendingUp,
 } from "lucide-react";
@@ -30,10 +39,9 @@ interface Category {
   type: string;
 }
 
-interface CategoriesResponse {
-  success: boolean;
-  message: string;
-  data: Category[];
+interface Department {
+  id: string;
+  name: string;
 }
 
 interface CustomInventoryCardProps {
@@ -84,7 +92,7 @@ const CustomInventoryCard = ({
         variant.bg,
         variant.border,
         "p-4 w-full rounded-lg border transition-all hover:shadow-md",
-        className
+        className,
       )}
     >
       <div className="flex justify-between items-center">
@@ -106,7 +114,13 @@ const CustomInventoryCard = ({
   );
 };
 
-// Dummy Services Table Component
+const DEFAULT_FILTERS: ProductFilters = {
+  allowTax: false,
+  sellOnline: false,
+  inHouse: false,
+  rawMaterial: false,
+  watchlist: false,
+};
 
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
@@ -114,8 +128,11 @@ const Inventory = () => {
   const openddServiceModal = () => setAddServiceModal(true);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
-    null
+    null,
   );
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<
+    string | null
+  >(null);
   const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE">("PRODUCT");
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
@@ -124,6 +141,12 @@ const Inventory = () => {
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
+  const [productFilters, setProductFilters] =
+    useState<ProductFilters>(DEFAULT_FILTERS);
+
+  const getActiveFiltersCount = () =>
+    Object.values(productFilters).filter(Boolean).length;
+
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
@@ -131,6 +154,8 @@ const Inventory = () => {
   const {
     InventoryData,
     CategoriesData,
+    DepartmentData,
+    DepartmentDataLoading,
     business_id,
     InventoryDataLoading,
     CategoriesDataLoading,
@@ -138,55 +163,49 @@ const Inventory = () => {
     selectedCategoryId,
     selectedType: activeTab === "PRODUCT" ? "PRODUCT" : "SERVICE",
     searchInput,
+    selectedDepartmentId,
     page,
+    productFilters: activeTab === "PRODUCT" ? productFilters : undefined,
   });
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryId: string) =>
     setSelectedCategoryId(categoryId);
-  };
-
-  const handleAllClick = () => {
-    setSelectedCategoryId(null);
-  };
+  const handleAllClick = () => setSelectedCategoryId(null);
+  const handleDepartmentClick = (departmentId: string) =>
+    setSelectedDepartmentId(departmentId);
+  const handleAllDepartmentsClick = () => setSelectedDepartmentId(null);
 
   const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
     setActiveTab(tab);
-    setSelectedCategoryId(null); // Reset category when switching tabs
-    setPage(1); // Reset page when switching tabs
+    setSelectedCategoryId(null);
+    setPage(1);
   };
 
   const totalItems = InventoryData?.data?.total || 0;
 
-  // Check scroll availability
   const checkScrollAvailability = () => {
     const container = categoriesContainerRef.current;
     if (container) {
       setCanScrollLeft(container.scrollLeft > 0);
       setCanScrollRight(
-        container.scrollLeft < container.scrollWidth - container.clientWidth
+        container.scrollLeft < container.scrollWidth - container.clientWidth,
       );
     }
   };
 
-  // Category navigation functions
   const scrollCategories = (direction: "left" | "right") => {
     const container = categoriesContainerRef.current;
     if (container) {
       const scrollAmount = 200;
-      const currentScroll = container.scrollLeft;
-      const newScroll =
-        direction === "left"
-          ? currentScroll - scrollAmount
-          : currentScroll + scrollAmount;
-
       container.scrollTo({
-        left: newScroll,
+        left:
+          container.scrollLeft +
+          (direction === "left" ? -scrollAmount : scrollAmount),
         behavior: "smooth",
       });
     }
   };
 
-  // Check scroll availability when categories load or container size changes
   useEffect(() => {
     checkScrollAvailability();
     const container = categoriesContainerRef.current;
@@ -197,7 +216,6 @@ const Inventory = () => {
     }
   }, [CategoriesData]);
 
-  // Check on window resize
   useEffect(() => {
     const handleResize = () => checkScrollAvailability();
     window.addEventListener("resize", handleResize);
@@ -205,7 +223,7 @@ const Inventory = () => {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-6 items-start ">
+    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -214,7 +232,6 @@ const Inventory = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-            {/* Primary Buttons - Equal width in their container */}
             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full">
               <Button
                 onClick={openddServiceModal}
@@ -222,8 +239,6 @@ const Inventory = () => {
               >
                 + Add Service
               </Button>
-              {/* href={"/new-add-product"}  */}
-              {/* href={"product/add-product"} */}
               <Link href={"/new-add-product"} className="w-full">
                 <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
                   + Add Product
@@ -231,16 +246,7 @@ const Inventory = () => {
               </Link>
             </div>
 
-            {/* Secondary Button - Full width on mobile, natural width on desktop */}
-
             <DownloadInventoryButton business_id={business_id} />
-            {/* <Button
-              variant={"outline"}
-              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
-              // onClick={openAttendantsModal}
-            >
-              Download Report
-            </Button> */}
 
             <Button
               variant="outline"
@@ -261,8 +267,6 @@ const Inventory = () => {
             Overview
           </h2>
 
-          {/* <SubscriptionTest /> */}
-
           {InventoryDataLoading || !InventoryData ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {Array.from({ length: 3 }).map((_, index) => (
@@ -279,7 +283,7 @@ const Inventory = () => {
               <CustomInventoryCard
                 title={"Inventory Value"}
                 amount={formatToNaira(
-                  InventoryData?.data?.results?.inventory_value
+                  InventoryData?.data?.results?.inventory_value,
                 )}
                 type="value"
               />
@@ -291,7 +295,7 @@ const Inventory = () => {
               <CustomInventoryCard
                 title={"Selling Price"}
                 amount={formatToNaira(
-                  InventoryData?.data?.results?.selling_price
+                  InventoryData?.data?.results?.selling_price,
                 )}
                 type="other"
               />
@@ -311,7 +315,7 @@ const Inventory = () => {
                 "px-6 py-4 text-sm cursor-pointer font-medium border-b-2 transition-all",
                 activeTab === "PRODUCT"
                   ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
               )}
             >
               Products
@@ -327,7 +331,7 @@ const Inventory = () => {
                 "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
                 activeTab === "SERVICE"
                   ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
               )}
             >
               Services
@@ -341,7 +345,7 @@ const Inventory = () => {
         </div>
 
         {/* Categories and Search Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white w-full">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100">
               {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
@@ -360,6 +364,108 @@ const Inventory = () => {
                 />
               </div>
 
+              {/* Product Filters Dropdown - Only show for Products */}
+              {activeTab === "PRODUCT" && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="text-gray-700 border-gray-200 hover:bg-gray-50 w-full sm:w-auto relative"
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      <span className="whitespace-nowrap">Filters</span>
+                      {getActiveFiltersCount() > 0 && (
+                        <span className="ml-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                          {getActiveFiltersCount()}
+                        </span>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                    <DropdownMenuLabel className="text-sm font-semibold">
+                      Product Settings
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.allowTax}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          allowTax: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Allow tax calculation</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.sellOnline}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          sellOnline: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Sell this product online</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.inHouse}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          inHouse: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Produces in-house</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.rawMaterial}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          rawMaterial: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Make raw material</span>
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                      checked={productFilters.watchlist}
+                      onCheckedChange={(checked) =>
+                        setProductFilters({
+                          ...productFilters,
+                          watchlist: checked,
+                        })
+                      }
+                      className="cursor-pointer"
+                    >
+                      <span className="text-sm">Watchlist</span>
+                    </DropdownMenuCheckboxItem>
+
+                    {getActiveFiltersCount() > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <div className="p-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setProductFilters(DEFAULT_FILTERS)}
+                          >
+                            Clear all filters
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
               <Link href={"/categories"} className="w-full sm:w-auto">
                 <Button
                   variant="outline"
@@ -371,91 +477,145 @@ const Inventory = () => {
             </div>
           </div>
 
-          {/* Categories Tabs - Only show for Products */}
+          {/* Departments + Categories Filters */}
           {activeTab && (
             <>
               {CategoriesDataLoading || !CategoriesData ? (
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="w-full">
-                  <div className="flex items-center w-full">
-                    {/* Left Navigation Button - Hidden on mobile if can't scroll */}
-                    {canScrollLeft && (
-                      <button
-                        onClick={() => scrollCategories("left")}
-                        disabled={!canScrollLeft}
-                        className={cn(
-                          "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
-                          canScrollLeft
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
-                      >
-                        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
-                    )}
-
-                    {/* Categories Container */}
-                    <div
-                      ref={categoriesContainerRef}
-                      className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
-                    >
-                      {/* All Tab */}
-                      <button
-                        className={cn(
-                          "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                          selectedCategoryId === null
-                            ? "bg-[#52b661] text-white shadow-sm"
-                            : "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                        )}
-                        onClick={handleAllClick}
-                      >
-                        All
-                      </button>
-
-                      {/* Category Tabs */}
-                      {CategoriesData.data.map((category: Category) => (
-                        <button
-                          key={category.id}
-                          className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
-                            selectedCategoryId === category.id
-                              ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                          )}
-                          onClick={() => handleCategoryClick(category.id)}
-                        >
-                          {category.name}
-                        </button>
+                <div className="space-y-4">
+                  <div>
+                    <Skeleton className="h-4 w-24 mb-2 bg-gray-200" />
+                    <div className="flex gap-2">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                        />
                       ))}
                     </div>
-
-                    {/* Right Navigation Button - Hidden on mobile if can't scroll */}
-                    {canScrollRight && (
-                      <button
-                        onClick={() => scrollCategories("right")}
-                        disabled={!canScrollRight}
-                        className={cn(
-                          "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
-                          canScrollRight
-                            ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                            : "text-gray-300 cursor-not-allowed"
-                        )}
+                  </div>
+                  <div>
+                    <Skeleton className="h-4 w-20 mb-2 bg-gray-200" />
+                    <div className="flex gap-2">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="h-8 w-20 rounded-md bg-gray-200 flex-shrink-0"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full min-w-0 space-y-4">
+                  {/* Departments Filter */}
+                  <div className="min-w-0 w-full">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Department
+                    </h3>
+                    {DepartmentDataLoading ? (
+                      <div className="flex gap-2 py-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Skeleton
+                            key={i}
+                            className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div
+                        className="flex gap-2 overflow-x-auto scrollbar-hide py-1 min-w-0"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                        }}
                       >
-                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
+                        <button
+                          className={cn(
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            selectedDepartmentId === null
+                              ? "bg-green-500 text-white shadow-sm"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                          )}
+                          onClick={handleAllDepartmentsClick}
+                        >
+                          All Departments
+                        </button>
+                        {DepartmentData?.data?.map((department: Department) => (
+                          <button
+                            key={department.id}
+                            className={cn(
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0 capitalize",
+                              selectedDepartmentId === department.id
+                                ? "bg-green-500 text-white shadow-sm"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                            )}
+                            onClick={() => handleDepartmentClick(department.id)}
+                          >
+                            {department.name}
+                          </button>
+                        ))}
+                      </div>
                     )}
+                  </div>
+
+                  {/* Categories Filter */}
+                  <div className="w-full overflow-hidden">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </h3>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      {canScrollLeft && (
+                        <button
+                          onClick={() => scrollCategories("left")}
+                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
+                        >
+                          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
+                      <div
+                        ref={categoriesContainerRef}
+                        className="flex gap-1 sm:gap-2 py-1 overflow-x-auto w-0 flex-1"
+                        style={{
+                          scrollbarWidth: "none",
+                          msOverflowStyle: "none",
+                          WebkitOverflowScrolling: "touch",
+                        }}
+                      >
+                        <button
+                          className={cn(
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            selectedCategoryId === null
+                              ? "bg-[#52b661] text-white shadow-sm"
+                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                          )}
+                          onClick={handleAllClick}
+                        >
+                          All Categories
+                        </button>
+                        {CategoriesData.data.map((category: Category) => (
+                          <button
+                            key={category.id}
+                            className={cn(
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                              selectedCategoryId === category.id
+                                ? "bg-[#52b661] text-white shadow-sm"
+                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                            )}
+                            onClick={() => handleCategoryClick(category.id)}
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                      </div>
+                      {canScrollRight && (
+                        <button
+                          onClick={() => scrollCategories("right")}
+                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
+                        >
+                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -468,9 +628,9 @@ const Inventory = () => {
             </div>
           )}
         </div>
+
         <div className="p-6">
           {activeTab === "PRODUCT" ? (
-            // Products Content
             InventoryDataLoading || !InventoryData ? (
               <div className="w-full">
                 <div className="space-y-4">
@@ -499,8 +659,7 @@ const Inventory = () => {
                 )}
               </>
             )
-          ) : // Products Content
-          InventoryDataLoading || !InventoryData ? (
+          ) : InventoryDataLoading || !InventoryData ? (
             <div className="w-full">
               <div className="space-y-4">
                 <Skeleton className="h-10 w-full bg-gray-200" />

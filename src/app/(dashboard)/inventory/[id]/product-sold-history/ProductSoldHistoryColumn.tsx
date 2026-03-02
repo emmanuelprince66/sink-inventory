@@ -83,6 +83,18 @@ export const useProductSoldHistoryColumns = () => {
         );
       },
     },
+    {
+      accessorKey: "pre_sale",
+      header: "Presaled By",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{transfer.pre_sale || "-"}</p>
+          </div>
+        );
+      },
+    },
   ];
 
   return columns;

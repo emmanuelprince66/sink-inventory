@@ -42,6 +42,7 @@ export interface CartItem {
   sku: string;
   status: string;
   selling_price?: number;
+  allow_tax?: boolean;
   amount?: number;
   quantity?: number;
   cartQuantity: number;

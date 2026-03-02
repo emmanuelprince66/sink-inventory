@@ -20,7 +20,7 @@ const ProductSoldTable = ({
         loading={loading}
         noDataText="No customers found"
         columns={columns}
-        data={response?.data?.results?.data}
+        data={response?.data?.results?.data || []}
       />
     </>
   );

@@ -37,6 +37,8 @@ const ReceiptPage = ({
   discount,
   discountAmount,
   setShowReceipt,
+  vatInfo,
+  businessData,
   subtotal,
   total,
 }: {
@@ -44,19 +46,18 @@ const ReceiptPage = ({
   attendant: any;
   customer: any;
   clearCartFunc: any;
+  vatInfo: any;
+  businessData: any;
   discount: any;
   discountAmount: any;
   setShowReceipt: any;
   subtotal: any;
   total: any;
 }) => {
-  // console.log("discountAmount", discountAmount);
-  // console.log("totalDiscountAmount", total);
-  // console.log("subtotal", subtotal);
-  // console.log("discount", discount);
+  console.log("vatInfo in checkout", vatInfo);
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
+    new Date(),
   );
   const { user } = useUserRole();
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
@@ -72,7 +73,7 @@ const ReceiptPage = ({
   const [selectedBankForSplitPayment, setSelectedBankForSplitPayment] =
     useState("");
   const [partialAmount, setPartialAmount] = useState("");
-  const [partialPaymentMethod, setPartialPaymentMethod] = useState(""); // New state for partial payment method
+  const [partialPaymentMethod, setPartialPaymentMethod] = useState("");
   const [splitPayments, setSplitPayments] = useState<
     Array<{
       method: string;
@@ -87,13 +88,8 @@ const ReceiptPage = ({
     bank: "",
   });
 
-  // console.log("tempSplitPayment", tempSplitPayment);
-
-  // console.log("partial_payment", partialPaymentMethod);
-
   const { showToast } = useToast();
 
-  // console.log("sales response", createSaleResponse);
   const [remainingAmount, setRemainingAmount] = useState(0);
   const [openAddBankModal, setOpenAddBankModal] = useState(false);
   const openAddBankModalFunc = () => setOpenAddBankModal(true);
@@ -121,11 +117,11 @@ const ReceiptPage = ({
     if (splitPayments.length === 0 && selectedBank) {
       // Handle case when splitPayments is empty but selectedBank exists
       const bankInfo = BankData.data.find(
-        (bank: any) => bank.id === selectedBank
+        (bank: any) => bank.id === selectedBank,
       );
       if (bankInfo) {
         const bankKey = bankInfo.bank_name.toLowerCase();
-        payload[bankKey] = total; // Assuming 'total' is the fixed amount you mentioned
+        payload[bankKey] = total;
       }
     } else {
       // Original logic for when splitPayments has items
@@ -134,7 +130,7 @@ const ReceiptPage = ({
           payload["cash"] = payment.amount;
         } else if (payment.method === "BANK" && payment.bank) {
           const bankInfo = BankData.data.find(
-            (bank: any) => bank.id === payment.bank
+            (bank: any) => bank.id === payment.bank,
           );
           if (bankInfo) {
             const bankKey = bankInfo.bank_name.toLowerCase();
@@ -145,20 +141,15 @@ const ReceiptPage = ({
     }
 
     setPayloadData(payload);
-
-    // console.log("Constructed payload:", payload);
-
-    // console.log("splitPayments", splitPayments);
     setSureModal(true);
   };
 
   console.log("payload", payloadData);
-  const [splitPaymentError, setSplitPaymentError] = useState(""); // For split payment errors
+  const [splitPaymentError, setSplitPaymentError] = useState("");
   const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
-  // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
 
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state) => state.is_subscribed
+    (state) => state.is_subscribed,
   );
 
   const {
@@ -178,14 +169,6 @@ const ReceiptPage = ({
   const business = BusinessData?.data || {};
 
   console.log("createSaleResponse", createSaleResponse);
-  // console.log("BusinessData", BusinessData);
-
-  // Calculate total
-  // const total = cart.reduce((sum: number, item: any) => {
-  //   return (
-  //     sum + (item.amount || item.selling_price || 0) * (item.cartQuantity || 1)
-  //   );
-  // }, 0);
 
   // Set initial remaining amount when the component loads or when total changes
   useEffect(() => {
@@ -205,7 +188,7 @@ const ReceiptPage = ({
   useEffect(() => {
     const paidAmount = splitPayments.reduce(
       (sum, payment) => sum + payment.amount,
-      0
+      0,
     );
     setRemainingAmount(total - paidAmount);
   }, [splitPayments, total]);
@@ -227,15 +210,14 @@ const ReceiptPage = ({
   // For split payments, filter out methods already used
   const availableSplitPaymentMethods = paymentMethodOptions.filter(
     (option) =>
-      // Allow multiple BANK selections by removing the check for BANK method
       (option.value !== "BANK"
         ? !splitPayments.some((payment) => payment.method === option.value)
-        : true) && option.value !== "PARTIAL" // Still remove partial option for split payments
+        : true) && option.value !== "PARTIAL",
   );
-  const handleAddSplitPayment = () => {
-    setSplitPaymentError(""); // Reset error message
 
-    // Validate inputs
+  const handleAddSplitPayment = () => {
+    setSplitPaymentError("");
+
     if (!tempSplitPayment.method) {
       setSplitPaymentError("Payment method is required");
       return;
@@ -253,19 +235,16 @@ const ReceiptPage = ({
       return;
     }
 
-    // Bank validation for bank transfer
     if (tempSplitPayment.method === "BANK" && !tempSplitPayment.bank) {
       setSplitPaymentError("Bank selection is required for bank transfers");
       return;
     }
 
-    // Due date validation for credit payments
     if (tempSplitPayment.method === "CREDIT" && !dueDate) {
       setSplitPaymentError("Due date is required for credit payments");
       return;
     }
 
-    // Add to split payments
     const newPayment = {
       method: tempSplitPayment.method,
       amount: amount,
@@ -277,7 +256,6 @@ const ReceiptPage = ({
 
     setSplitPayments([...splitPayments, newPayment]);
 
-    // Reset temp values
     setTempSplitPayment({
       method: "",
       amount: "",
@@ -295,7 +273,6 @@ const ReceiptPage = ({
   // Create the final payload
   const createPayload = () => {
     if (isChecked) {
-      // For split payments
       if (remainingAmount > 0) {
         showToast("All payments must be covered", "error");
         return null;
@@ -309,8 +286,6 @@ const ReceiptPage = ({
         dueDate: selectedDate ? selectedDate.toISOString() : null,
       };
     } else {
-      // For single payment
-      // Validate based on payment method
       if (!paymentMethod) {
         showToast("Payment method is required", "error");
         return null;
@@ -333,7 +308,7 @@ const ReceiptPage = ({
           parseFloat(partialAmount) >= total
         ) {
           console.log(
-            "Valid partial amount is required (greater than 0 and less than total)"
+            "Valid partial amount is required (greater than 0 and less than total)",
           );
 
           return null;
@@ -374,13 +349,12 @@ const ReceiptPage = ({
     const payload = createPayload();
 
     if (payload) {
-      // Construct the final payload according to the API structure
       const apiPayload: any = {
         date: selectedDate
           ? format(selectedDate, "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
 
-        description: "Sales transaction", // You can customize this
+        description: "Sales transaction",
         products: cart.map((item: any) => ({
           id: item.id,
           quantity: item.cartQuantity || 1,
@@ -393,7 +367,6 @@ const ReceiptPage = ({
       };
 
       if (isChecked) {
-        // For split payments
         apiPayload.method = "MULTIPLE";
 
         apiPayload.bank = selectedBankForSplitPayment;
@@ -407,7 +380,6 @@ const ReceiptPage = ({
         }));
         apiPayload.amount_paid = total.toString();
       } else {
-        // For single payment
         apiPayload.method = paymentMethod;
         apiPayload.amount_paid =
           paymentMethod === "PARTIAL" ? partialAmount : total.toString();
@@ -427,19 +399,16 @@ const ReceiptPage = ({
           apiPayload.due_date = format(dueDate, "yyyy-MM-dd");
         }
       }
-      // setPayloadData(apiPayload);
+
       console.log("apiPayload", apiPayload);
 
       createSale({
         apiPayload,
         businessId: business_id,
       });
-
-      // Here you would submit the payload to your API endpoint
-      // Example: submitToApi(apiPayload);
     }
   };
-  // Determine if the submit button should be disabled
+
   const isSubmitDisabled = () => {
     if (isChecked) {
       return remainingAmount > 0;
@@ -464,6 +433,7 @@ const ReceiptPage = ({
     <>
       {showPrintReceiptView ? (
         <PrintReceiptView
+          vatInfo={vatInfo}
           setShowReceipt={setShowReceipt}
           setShowPrintReceiptView={setShowPrintReceiptView}
           createSaleResponse={createSaleResponse}
@@ -509,7 +479,6 @@ const ReceiptPage = ({
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  // disabled={(date) => date < new Date()}
                   initialFocus
                 />
               </PopoverContent>
@@ -594,6 +563,11 @@ const ReceiptPage = ({
                                 {item.category}
                               </p>
                             )}
+                            {item.allow_tax && vatInfo?.enabled && (
+                              <span className="text-[8px] px-1 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                +VAT
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -631,15 +605,43 @@ const ReceiptPage = ({
                       </td>
                     </tr>
                   )}
+                  {vatInfo?.enabled && vatInfo?.amount > 0 && (
+                    <>
+                      <tr className="bg-white">
+                        <td
+                          colSpan={4}
+                          className="p-2 border text-[11px] border-primary-green-300 text-right text-gray-500"
+                        >
+                          Subtotal (before VAT):
+                        </td>
+                        <td className="p-2 text-[11px] border border-primary-green-300 font-semibold">
+                          {formatToNaira(total)}
+                        </td>
+                      </tr>
+                      <tr className="bg-white">
+                        <td
+                          colSpan={4}
+                          className="p-2 border text-[11px] border-primary-green-300 text-right text-blue-600"
+                        >
+                          VAT ({vatInfo.rate}%):
+                        </td>
+                        <td className="p-2 text-[11px] border border-primary-green-300 text-blue-600 font-semibold">
+                          +{formatToNaira(vatInfo.amount)}
+                        </td>
+                      </tr>
+                    </>
+                  )}
                   <tr className="bg-primary-green-200 font-bold">
                     <td
                       colSpan={4}
-                      className="p-2 border text-[11px]  border-primary-green-300 text-right"
+                      className="p-2 border text-[11px] border-primary-green-300 text-right"
                     >
                       Total:
                     </td>
-                    <td className="p-2 text-[11px]  border border-primary-green-300">
-                      {formatToNaira(total)}
+                    <td className="p-2 text-[11px] border border-primary-green-300">
+                      {formatToNaira(
+                        vatInfo?.enabled ? vatInfo.totalWithVat : total,
+                      )}
                     </td>
                   </tr>
                 </tfoot>
@@ -660,7 +662,7 @@ const ReceiptPage = ({
             </div>
           )}
 
-          {/* customer details */}
+          {/* attendant details */}
           <p className="text-xs mb-1">Attendant responsible</p>
           {attendant ? (
             <div className=" w-full bg-primary-green-200 p-2 text-xs rounded-lg">
@@ -671,6 +673,7 @@ const ReceiptPage = ({
               <p>No attendant selected</p>
             </div>
           )}
+
           {/* Split Bill Toggle */}
           <div className="w-full bg-primary-green-200 flex flex-end p-1 rounded-lg">
             <label className="relative inline-flex items-center cursor-pointer">
@@ -691,16 +694,15 @@ const ReceiptPage = ({
                     bank: "",
                   });
                 }}
-                className="sr-only peer" // Hide default input
+                className="sr-only peer"
               />
-              {/* Switch Track */}
               <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-              {/* Optional Label */}
               <span className="ml-3 text-sm font-medium text-[10px] text-gray-700">
                 Split Bill (Multiple Payment Methods)
               </span>
             </label>
           </div>
+
           {/* Payment Method Section */}
           {!isChecked && (
             <div className="w-full space-y-4">
@@ -727,7 +729,6 @@ const ReceiptPage = ({
                 </SelectContent>
               </Select>
 
-              {/* Conditional fields based on payment method selection */}
               {paymentMethod === "BANK" && (
                 <div className="space-y-2 mt-2">
                   <p className="text-xs">Select Bank</p>
@@ -888,7 +889,6 @@ const ReceiptPage = ({
           {/* Split Bill Section */}
           {isChecked && (
             <div className="w-full space-y-4">
-              {/* Remaining Amount Display */}
               <div
                 className={`w-full p-4 rounded-lg ${
                   remainingAmount > 0
@@ -901,7 +901,6 @@ const ReceiptPage = ({
                   : "All payments have been added ✓"}
               </div>
 
-              {/* Split Payment Form */}
               <div className="w-full p-4 border border-primary-green-300 rounded-lg space-y-4">
                 <p className="font-medium">Add Payment</p>
 
@@ -951,8 +950,6 @@ const ReceiptPage = ({
                     )}
                 </div>
 
-                {/* Conditional fields for split payment */}
-                {/* Conditional fields for split payment */}
                 {tempSplitPayment.method === "BANK" && (
                   <div className="space-y-2 mt-2">
                     <p className="text-xs">Select Bank</p>
@@ -1038,7 +1035,6 @@ const ReceiptPage = ({
                 </Button>
               </div>
 
-              {/* Split Payments Summary */}
               {splitPayments.length > 0 && (
                 <div className="w-full p-4 border border-primary-green-300 rounded-lg">
                   <p className="font-medium mb-4">Payment Summary</p>
@@ -1051,7 +1047,7 @@ const ReceiptPage = ({
                         <div>
                           <p className="font-medium">
                             {paymentMethodOptions.find(
-                              (opt) => opt.value === payment.method
+                              (opt) => opt.value === payment.method,
                             )?.label || payment.method}
                           </p>
                           <p className="text-sm text-gray-600">
@@ -1091,12 +1087,13 @@ const ReceiptPage = ({
               onClick={openSureModal}
               disabled={isSubmitDisabled()}
             >
-              Pay {formatToNaira(total)}
+              Pay{" "}
+              {/* {formatToNaira(vatInfo?.enabled ? vatInfo.totalWithVat : total)} */}
             </Button>
           </div>
 
           <CustomModal
-            isOpen={sureModal} // FIXED: Removed the negation
+            isOpen={sureModal}
             onClose={closeSureModal}
             trigger={false}
             title=""
@@ -1127,7 +1124,7 @@ const ReceiptPage = ({
           </CustomModal>
 
           <CustomModal
-            isOpen={openAddBankModal} // FIXED: Removed the negation
+            isOpen={openAddBankModal}
             onClose={closeAddBankModal}
             trigger={false}
             title="Add Bank"

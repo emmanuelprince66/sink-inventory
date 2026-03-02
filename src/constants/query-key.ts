@@ -16,6 +16,9 @@ export const queryKey = {
     verifyReset: "verify-reset",
     resetPassword: "reset-password",
   },
+  tax: {
+    addTax: "add-tax",
+  },
   shipping: {
     createShipping: "create-shipping",
     getAllShippings: "get-all-shippings",
@@ -77,6 +80,8 @@ export const queryKey = {
     createSale: "create-sale",
     reverseSale: "reverse-sale",
     salesDashboard: "sales-dashboard",
+    fetchPresaleDetails: "fetch-presale-details",
+    createPresale: "create-presale",
   },
   orders: {
     getAllOrders: "get-all-orders",
@@ -91,6 +96,8 @@ export const queryKey = {
     getCustomerAnalytics: "get-customer-analytics",
     getBankAnalyticsBreakdown: "get-bank-analytics-breakdown",
     getReportAnalytics: "get-report-analytics",
+    getMaxSalesAnalytics: "get-max-sales-analytics",
+    getTaxAnalytics: "get-tax-analytics",
   },
   expenses: {
     getAllExpenses: "get-all-expenses",
@@ -102,6 +109,7 @@ export const queryKey = {
   inventory: {
     getAllInventory: "get-all-inventory",
     addService: "add-service",
+    deleteService: "delete-service",
   },
   products: {
     getProductsById: "get-products-by-id",
@@ -117,6 +125,8 @@ export const queryKey = {
     transactionsHistory: "transactions-history",
     returnDamagedProduct: "return-damaged-product",
     getAllSku: "get-all-sku",
+    getAllDepartments: "get-all-departments",
+    createDepartment: "create-department",
   },
   categories: {
     getAllCategories: "get-all-categories",

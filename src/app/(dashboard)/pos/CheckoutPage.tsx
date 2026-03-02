@@ -14,7 +14,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
 import RecieptPage from "./RecieptPage";
@@ -37,6 +37,7 @@ interface Variation {
   parentProductId?: string;
   parentProductName?: string;
   parentProductVariations?: Variation[];
+  allow_tax?: boolean;
 }
 
 interface CartItem extends Variation {
@@ -49,9 +50,14 @@ interface CartItem extends Variation {
 
 interface CheckoutPageProps {
   clearCartFunc: () => void;
+  businessData?: any;
 }
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
+const CheckoutPage: React.FC<CheckoutPageProps> = ({
+  clearCartFunc,
+  businessData,
+}) => {
+  console.log("businessData in checkout", businessData);
   const [customer, setCustomer] = useState<any | null>(null);
   const [attendant, setAttendant] = useState<any | null>(null);
   const [showReceipt, setShowReceipt] = useState<boolean>(false);
@@ -94,17 +100,72 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
     addToCart,
   } = useCartStore();
 
+  console.log("cartItems in checkout", cartItems);
+
   const subtotal = getSubtotal();
   const automaticDiscountAmount = getAutomaticDiscountAmount();
-  const total = getTotalPrice();
+  const totalBeforeTax = getTotalPrice();
   const eligibleItems = getEligibleItems();
 
+  // VAT calculation logic - Per product basis
+  const vatCalculation = useMemo(() => {
+    // Check if business has VAT enabled
+    const hasVatEnabled =
+      businessData?.tax_rate &&
+      parseFloat(businessData.tax_rate) > 0 &&
+      businessData.tax_rate_last_updated;
+
+    if (!hasVatEnabled) {
+      return {
+        enabled: false,
+        rate: 0,
+        amount: 0,
+        totalWithVat: totalBeforeTax,
+        itemsBreakdown: [],
+      };
+    }
+
+    const vatRate = parseFloat(businessData.tax_rate);
+
+    // Calculate VAT only for items with allow_tax: true
+    const itemsBreakdown = cartItems
+      .filter((item) => item.allow_tax === true)
+      .map((item) => {
+        const itemTotal =
+          (item.selling_price || item.amount || 0) * (item.cartQuantity || 1);
+        const itemVat = (itemTotal * vatRate) / 100;
+        return {
+          id: item.id,
+          name: item.name,
+          itemTotal,
+          itemVat,
+        };
+      });
+
+    const totalVat = itemsBreakdown.reduce(
+      (sum, item) => sum + item.itemVat,
+      0,
+    );
+    const totalWithVat = totalBeforeTax + totalVat;
+
+    return {
+      enabled: true,
+      rate: vatRate,
+      amount: totalVat,
+      totalWithVat: totalWithVat,
+      itemsBreakdown,
+    };
+  }, [businessData, totalBeforeTax, cartItems]);
+
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
-    (error) => error !== ""
+    (error) => error !== "",
   );
   const hasPriceEditErrors = Object.values(priceEditErrors).some(
-    (error) => error !== ""
+    (error) => error !== "",
   );
+
+  // Check if user is pharmacist - they shouldn't see checkout page
+  const isPharmacist = user && user.role === "PHARMACIST";
 
   const handleBulkQuantityChange = (itemId: string, value: string): void => {
     setBulkQuantityInputs((prev) => ({ ...prev, [itemId]: value }));
@@ -178,22 +239,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
     const availableQuantity = item.quantity ?? 999;
     updateCartItemQuantity(
       itemId,
-      Math.min(Math.max(roundedValue, 0.5), availableQuantity)
+      Math.min(Math.max(roundedValue, 0.5), availableQuantity),
     );
   };
 
   const handleChangeVariation = (
     currentItemId: string,
     newVariation: Variation,
-    quantity: number
+    quantity: number,
   ): void => {
-    // Get the current item to preserve parent product info
     const currentItem = cartItems.find((item) => item.id === currentItemId);
-
-    // Remove current item
     removeFromCart(currentItemId);
-
-    // Add new variation with specified quantity and preserve parent product variations
     addToCart({
       ...newVariation,
       id: newVariation.id,
@@ -201,7 +257,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
       selling_price: newVariation.selling_price,
       amount: newVariation.selling_price,
       cartQuantity: quantity,
-      // CRITICAL: Preserve these fields from the current item
       parentProductId: currentItem?.parentProductId,
       parentProductName: currentItem?.parentProductName,
       parentProductVariations: currentItem?.parentProductVariations,
@@ -214,6 +269,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
     setChangingVariationItem(item);
     setShowVariationModal(true);
   };
+
+  // If pharmacist, don't render checkout page
+  if (isPharmacist) {
+    return null;
+  }
 
   return (
     <>
@@ -230,8 +290,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
               : null
           }
           discountAmount={automaticDiscountAmount}
-          subtotal={getTotalPrice()}
-          total={total}
+          subtotal={subtotal}
+          total={totalBeforeTax}
+          vatInfo={vatCalculation}
+          businessData={businessData}
         />
       ) : (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
@@ -322,6 +384,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                                 />
                               </Button>
                             )}
+                            {item.allow_tax && vatCalculation.enabled && (
+                              <span className="text-[8px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                +VAT
+                              </span>
+                            )}
                           </div>
                           <p className="text-[10px] text-gray-500">
                             SKU: {item.sku}
@@ -338,7 +405,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                                   onChange={(e) =>
                                     handlePriceEditChange(
                                       item.id,
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className={`w-20 text-center text-xs border rounded-md py-1 ${
@@ -464,7 +531,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                               onChange={(e) =>
                                 handleBulkQuantityChange(
                                   item.id,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className={`w-16 text-center text-xs border rounded-md py-1 ${
@@ -602,11 +669,48 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                 </div>
               )}
 
+              {/* VAT Display */}
+              {vatCalculation.enabled && vatCalculation.amount > 0 && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 text-xs">
+                      Subtotal (before VAT)
+                    </span>
+                    <span className="font-medium text-xs">
+                      {formatToNaira(totalBeforeTax)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-gray-600 text-xs">
+                        VAT ({vatCalculation.rate}%)
+                      </span>
+                      {vatCalculation.itemsBreakdown.length > 0 && (
+                        <div className="text-[10px] text-gray-500">
+                          {vatCalculation.itemsBreakdown.map((item: any) => (
+                            <div key={item.id}>
+                              {item.name}: {formatToNaira(item.itemVat)}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-medium text-xs text-blue-600">
+                      +{formatToNaira(vatCalculation.amount)}
+                    </span>
+                  </div>
+                </>
+              )}
+
               <Separator className="my-2 bg-[#52b661]/30" />
               <div className="flex justify-between">
                 <span className="font-bold text-sm text-gray-800">Total</span>
                 <span className="font-bold text-sm text-[#52b661]">
-                  {formatToNaira(total)}
+                  {formatToNaira(
+                    vatCalculation.enabled
+                      ? vatCalculation.totalWithVat
+                      : totalBeforeTax,
+                  )}
                 </span>
               </div>
               <Button

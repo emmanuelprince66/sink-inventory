@@ -110,11 +110,15 @@ const NewAddProduct = ({
     StatusTypeOptions,
     paymentMethodOptions,
     isEditMode,
+    DepartmentData,
+    DepartmentDataLoading,
     ProductData,
     addProductPending,
     editProductPending,
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
+
+  console.log("form values", form.getValues());
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedVariationType, setSelectedVariationType] = useState("");
@@ -841,7 +845,100 @@ const NewAddProduct = ({
                       )}
                     />
                   </div>
+
                   <div className="w-full mt-2">
+                    {/* Department Field */}
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Department
+                          </FormLabel>
+                          <div className="flex items-center gap-2">
+                            <FormControl className="flex-1">
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <SelectTrigger className="mt-1 w-full">
+                                  <SelectValue placeholder="Select department" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {DepartmentData?.data?.map(
+                                    (department: any) => (
+                                      <SelectItem
+                                        key={department.id}
+                                        value={department.id}
+                                      >
+                                        {department.name}
+                                      </SelectItem>
+                                    ),
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="text-green-600 border-green-600 hover:bg-green-50 mt-1 h-10 w-10"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                    {/* Category Field */}
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem className="w-full mt-4">
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Category
+                          </FormLabel>
+                          <div className="flex items-center gap-2">
+                            <FormControl className="flex-1">
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <SelectTrigger className="mt-1 w-full">
+                                  <SelectValue placeholder="Select category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {CategoriesData?.data?.map(
+                                    (category: any) => (
+                                      <SelectItem
+                                        key={category.id}
+                                        value={category.id}
+                                      >
+                                        {category.name}
+                                      </SelectItem>
+                                    ),
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="text-green-600 border-green-600 hover:bg-green-50 mt-1 h-10 w-10"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {/* <div className="w-full mt-2">
                     <FormField
                       control={form.control}
                       name="category"
@@ -874,7 +971,7 @@ const NewAddProduct = ({
                         </FormItem>
                       )}
                     />
-                  </div>
+                  </div> */}
                 </CardContent>
               </Card>
 
@@ -1708,6 +1805,118 @@ const NewAddProduct = ({
                   </CardContent>
                 </Card>
               )}
+
+              {/* Card 4: Product Settings */}
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="allow_tax"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="allow-tax"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="allow-tax"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Allow tax calculation
+                        </label>
+                      </div>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="sell_online"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="sell-online"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="sell-online"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Sell this product online
+                        </label>
+                      </div>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="in_house"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="in-house"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="in-house"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Produces in-house
+                        </label>
+                      </div>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="watchlist"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="watchlist"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="watchlist"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Add to watchlist
+                        </label>
+                      </div>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="raw_material"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="raw-material"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="raw-material"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Make raw material
+                        </label>
+                      </div>
+                    )}
+                  />
+                </div>
+              </CardContent>
+              {/* Card 5: Supplies & Payment */}
+              {/* Card 5: Supplies & Payment */}
 
               {/* Card 4: Supplies & Payment */}
               <Card className="border-gray-200 shadow-sm bg-white py-5">

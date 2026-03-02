@@ -1,6 +1,5 @@
 // components/chat/TawkToChat.tsx
 "use client";
-
 import { MessageCircle, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -8,6 +7,7 @@ declare global {
   interface Window {
     Tawk_API?: any;
     Tawk_LoadStart?: Date;
+    Tawk_API_Ready?: boolean;
   }
 }
 
@@ -16,85 +16,84 @@ export default function TawkToChat() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Check if Tawk.to script is already loaded
-    if (window.Tawk_API) {
-      setIsLoaded(true);
-      return;
-    }
+    // Initialize Tawk_API before script loads
+    window.Tawk_API = window.Tawk_API || {};
 
-    // Load Tawk.to script
+    // This runs as soon as Tawk is ready — hide the default bubble immediately
+    window.Tawk_API.onLoad = function () {
+      window.Tawk_API.hideWidget();
+      setIsLoaded(true);
+    };
+
+    if (document.getElementById("tawk-script")) return;
+
     const script = document.createElement("script");
+    script.id = "tawk-script";
     script.async = true;
     script.src = "https://embed.tawk.to/682b0e7cd2236a190fe0a0c1/1irk317a3";
     script.charset = "UTF-8";
     script.setAttribute("crossorigin", "*");
 
-    script.onload = () => {
-      setIsLoaded(true);
-      // Hide the default Tawk.to widget
-      if (window.Tawk_API) {
-        window.Tawk_API.onLoad = function () {
-          window.Tawk_API.hideWidget();
-        };
-      }
-    };
-
     document.body.appendChild(script);
-
     window.Tawk_LoadStart = new Date();
 
     return () => {
-      // Cleanup if needed
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+      // hide on unmount
+      if (window.Tawk_API?.hideWidget) {
+        window.Tawk_API.hideWidget();
       }
     };
   }, []);
 
   const toggleChat = () => {
-    if (window.Tawk_API) {
-      if (isOpen) {
-        window.Tawk_API.hideWidget();
-      } else {
-        window.Tawk_API.showWidget();
-        window.Tawk_API.maximize();
-      }
-      setIsOpen(!isOpen);
+    if (!window.Tawk_API) return;
+
+    if (isOpen) {
+      window.Tawk_API.minimize();
+      window.Tawk_API.hideWidget();
+      setIsOpen(false);
+    } else {
+      window.Tawk_API.showWidget();
+      window.Tawk_API.maximize();
+      setIsOpen(true);
     }
   };
 
-  if (!isLoaded) {
-    return null;
-  }
+  useEffect(() => {
+    if (!window.Tawk_API) return;
+    window.Tawk_API.onChatMinimized = function () {
+      window.Tawk_API.hideWidget();
+      setIsOpen(false);
+    };
+  }, [isLoaded]);
+
+  if (!isLoaded) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-2 right-2 z-50 group">
       <button
         onClick={toggleChat}
-        className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        className="relative flex items-center justify-center w-9 h-9 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300"
         aria-label="Open live chat"
       >
-        {/* Pulse animation ring */}
-        <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-20"></span>
+        {/* Pulse ring */}
+        <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-20" />
 
-        {/* Icon */}
-        <div className="relative">
-          {isOpen ? (
-            <X className="w-6 h-6 transition-transform duration-300" />
-          ) : (
-            <MessageCircle className="w-6 h-6 transition-transform duration-300" />
-          )}
-        </div>
+        {isOpen ? (
+          <X className="w-4 h-4" />
+        ) : (
+          <MessageCircle className="w-4 h-4" />
+        )}
 
-        {/* Unread indicator (optional) */}
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>
+        {/* Unread dot */}
+        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 border border-white rounded-full" />
       </button>
 
       {/* Tooltip */}
-      <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-        <div className="bg-gray-900 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap shadow-lg">
+      <div className="absolute bottom-full right-0 mb-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+        <div className="bg-gray-900 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow">
           {isOpen ? "Close chat" : "Chat with us"}
-          <div className="absolute top-full right-6 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+          <div className="absolute top-full right-3 -mt-1 border-4 border-transparent border-t-gray-900" />
         </div>
       </div>
     </div>

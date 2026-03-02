@@ -8,6 +8,7 @@ import { Edit2Icon, Trash2 } from "lucide-react";
 import { useState } from "react";
 import AddStaff from "./AddStaff";
 import EditStaff from "./EditStaff";
+
 const VeiwStaff = () => {
   const [editStaffModal, setEditStaffModal] = useState(false);
   const closeEditStaffModal = () => setEditStaffModal(false);
@@ -55,7 +56,7 @@ const VeiwStaff = () => {
       <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center ">
         <div className="w-full flex justify-end">
           {user && user?.role === "OWNER" && (
-            <Button onClick={openAddStaffModalFunc}>Add Staff</Button>
+            <Button onClick={openAddStaffModalFunc}>Add HR</Button>
           )}
         </div>
         {AttendantsLoading ? (
@@ -116,15 +117,16 @@ const VeiwStaff = () => {
       </div>
 
       <CustomModal
-        isOpen={openAddStaffModal} // FIXED: Removed the negation
+        isOpen={openAddStaffModal}
         onClose={closeAddStaffModalFunc}
         trigger={false}
-        title="Add Staff"
+        title="Add HR"
       >
         <AddStaff closeModal={closeAddStaffModalFunc} />
       </CustomModal>
+
       <CustomModal
-        isOpen={deleteAttendantModal} // FIXED: Removed the negation
+        isOpen={deleteAttendantModal}
         onClose={closeDeleteAttendantModal}
         trigger={false}
         title=""
@@ -157,13 +159,19 @@ const VeiwStaff = () => {
           </div>
         </div>
       </CustomModal>
+
       <CustomModal
-        isOpen={editStaffModal} // FIXED: Removed the negation
+        isOpen={editStaffModal}
         onClose={closeEditStaffModal}
         trigger={false}
         title=""
       >
-        <EditStaff staff={staffData} closeModal={closeEditStaffModal} />
+        {staffData && (
+          <EditStaff
+            attendantId={staffData.id}
+            closeModal={closeEditStaffModal}
+          />
+        )}
       </CustomModal>
     </>
   );
