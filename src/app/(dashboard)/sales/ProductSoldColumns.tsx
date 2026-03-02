@@ -17,7 +17,7 @@ export const useSalesColumns = () => {
           <div className="font-medium">
             <p className="text-sm text-gray-500">{product.name}</p>
 
-            {product?.is_watchlist && (
+            {product?.watchlist && (
               <EyeOff
                 className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
                 // title="On watchlist"
@@ -74,7 +74,7 @@ export const useSalesColumns = () => {
         console.log("VAT value for product:", product); // Debug log
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{formatToNaira(0)}</p>
+            <p className="text-sm text-gray-500">{product?.tax}</p>
           </div>
         );
       },
@@ -111,7 +111,7 @@ export const useSalesColumns = () => {
         const product = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">-</p>
+            <p className="text-sm text-gray-500">{product?.sku}</p>
           </div>
         );
       },

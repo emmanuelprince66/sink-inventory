@@ -3,7 +3,9 @@ export interface SalesDataItem {
   unit_sold: number;
   revenue: number;
   profit: number;
-  is_watchlist?: boolean;
+  tax: any;
+  watchlist?: boolean;
+  sku: any;
   discount: number;
 }
 
