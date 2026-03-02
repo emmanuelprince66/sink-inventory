@@ -1,3 +1,4 @@
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -19,6 +20,19 @@ export const usePosHook = ({
   cartItems?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+
+  const {
+    data: BusinessData,
+    isLoading: BusinessDataLoading,
+    refetch,
+  } = useFetchBusinessById(business_id);
+
+  const findBusiness = BusinessData?.data;
+
+  // Extract business data for use in components
+  const businessData = findBusiness;
+
+  console.log("BusinessData", BusinessData);
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
   const [page, setPage] = useState(1);
   const [scannedSku, setScannedSku] = useState<string | null>(null);
@@ -306,11 +320,13 @@ export const usePosHook = ({
     handleScanResult,
     handleAddToCart,
     scannedProductLoading,
+    BusinessDataLoading,
     ProductDataLoading,
     page,
     setPage,
     scannedSku,
     refetchScannedProduct: refetchScannedProductData,
     refetchProducts,
+    businessData, // Export business data for tax calculation
   };
 };

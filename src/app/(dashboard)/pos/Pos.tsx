@@ -92,13 +92,13 @@ const Pos: React.FC = () => {
     page,
     scannedProductLoading,
     setPage,
+    businessData, // ADD THIS
   } = usePosHook({
     searchInput,
     setSearchInput,
     addToCart,
     cartItems,
   });
-
   const { showToast } = useToast();
 
   const statusColors: Record<string, string> = {
@@ -424,7 +424,12 @@ const Pos: React.FC = () => {
               )}
 
               {/* Show normal checkout for non-pharmacist roles */}
-              {!isPharmacist && <CheckoutPage clearCartFunc={clearCartFunc} />}
+              {!isPharmacist && (
+                <CheckoutPage
+                  clearCartFunc={clearCartFunc}
+                  businessData={businessData} // ADD THIS PROP
+                />
+              )}
 
               {/* Show cart items for pharmacist but no checkout */}
               {isPharmacist && (

@@ -16,6 +16,9 @@ export const queryKey = {
     verifyReset: "verify-reset",
     resetPassword: "reset-password",
   },
+  tax: {
+    addTax: "add-tax",
+  },
   shipping: {
     createShipping: "create-shipping",
     getAllShippings: "get-all-shippings",
@@ -93,6 +96,8 @@ export const queryKey = {
     getCustomerAnalytics: "get-customer-analytics",
     getBankAnalyticsBreakdown: "get-bank-analytics-breakdown",
     getReportAnalytics: "get-report-analytics",
+    getMaxSalesAnalytics: "get-max-sales-analytics",
+    getTaxAnalytics: "get-tax-analytics",
   },
   expenses: {
     getAllExpenses: "get-all-expenses",

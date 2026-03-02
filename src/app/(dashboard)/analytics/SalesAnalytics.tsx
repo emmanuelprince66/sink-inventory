@@ -17,8 +17,6 @@ import PaymentDetails from "./PaymentDetails";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type FilterMode = "year" | "month";
 
 const MONTHS = [
@@ -35,7 +33,6 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
-
 const FULL_MONTHS = [
   "January",
   "February",
@@ -51,9 +48,12 @@ const FULL_MONTHS = [
   "December",
 ];
 
-const YEARS = [2024, 2025, 2026];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const CURRENT_YEAR = new Date().getFullYear();
+// 2016 → current year, displayed newest-first
+const YEARS = Array.from(
+  { length: CURRENT_YEAR - 2016 + 1 },
+  (_, i) => CURRENT_YEAR - i,
+);
 
 const fmt = (n: number) =>
   typeof n === "number"
@@ -64,7 +64,81 @@ const fmt = (n: number) =>
       }).format(n)
     : "₦0";
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Convert API monthly object {1..12} → 0-indexed array [0..11] */
+const monthObjToArray = (monthObj: Record<string, number> = {}): number[] =>
+  Array.from({ length: 12 }, (_, i) => monthObj[String(i + 1)] ?? 0);
+
+/** Build rows for YearTable from API categories */
+const buildYearRows = (
+  categories: Record<
+    string,
+    { monthly: Record<string, number>; ytd: number }
+  > = {},
+) =>
+  Object.entries(categories).map(([name, val], i) => ({
+    number: String(i + 1),
+    category: name,
+    monthly: monthObjToArray(val.monthly),
+    ytd: val.ytd,
+  }));
+
+/** Build rows for MonthTable from API categories, filtered to a given month */
+const buildMonthRows = (
+  categories: Record<
+    string,
+    { monthly: Record<string, number>; ytd: number }
+  > = {},
+  monthIndex: number, // 0-based
+) =>
+  Object.entries(categories).map(([name, val], i) => ({
+    number: String(i + 1),
+    category: name,
+    actual: val.monthly[String(monthIndex + 1)] ?? 0, // API keys are 1-based
+  }));
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+const TableSkeleton = ({
+  rows = 6,
+  cols = 15,
+}: {
+  rows?: number;
+  cols?: number;
+}) => (
+  <div className="p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm bg-white animate-pulse">
+    <div className="h-6 w-56 bg-gray-200 rounded mx-auto mb-6" />
+    <div className="overflow-x-auto">
+      <table className="w-full" style={{ minWidth: cols > 6 ? 900 : "auto" }}>
+        <thead>
+          <tr>
+            {Array.from({ length: cols }).map((_, i) => (
+              <th key={i} className="py-3 px-2">
+                <div className="h-4 bg-gray-200 rounded" />
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }).map((_, ri) => (
+            <tr key={ri} className="border-b border-gray-100">
+              {Array.from({ length: cols }).map((_, ci) => (
+                <td key={ci} className="py-3 px-2">
+                  <div
+                    className={`h-4 rounded ${ci === 1 ? "bg-gray-200 w-3/4" : "bg-gray-100"}`}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
 
 const CustomCard = ({
   children,
@@ -120,7 +194,7 @@ const CustomSalesCard = ({
   );
 };
 
-// ─── Year-view table (columns = months) ──────────────────────────────────────
+// ─── Year Table ───────────────────────────────────────────────────────────────
 
 const YearTable = ({
   title,
@@ -129,7 +203,7 @@ const YearTable = ({
   accentClass,
 }: {
   title: string;
-  rows: { number: string; category: string; monthly: number[] }[];
+  rows: { number: string; category: string; monthly: number[]; ytd: number }[];
   totalsLabel: string;
   accentClass: string;
 }) => {
@@ -137,7 +211,6 @@ const YearTable = ({
     rows.reduce((s, r) => s + (r.monthly[mi] ?? 0), 0),
   );
   const grandTotal = colTotals.reduce((a, b) => a + b, 0);
-  const rowTotals = rows.map((r) => r.monthly.reduce((a, b) => a + b, 0));
 
   return (
     <CustomCard className="border-gray-200" shadow>
@@ -153,7 +226,7 @@ const YearTable = ({
               </th>
               <th
                 className="text-left py-3 px-2 font-semibold text-gray-700 sticky left-6 bg-white"
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 160 }}
               >
                 Category
               </th>
@@ -175,31 +248,42 @@ const YearTable = ({
             </tr>
           </thead>
           <tbody>
-            {rows.map((item, i) => (
-              <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-2 px-2 text-gray-500 sticky left-0 bg-inherit">
-                  {item.number}
-                </td>
-                <td className="py-2 px-2 font-medium text-gray-900 sticky left-6 bg-inherit">
-                  {item.category}
-                </td>
-                {item.monthly.map((v, mi) => (
-                  <td
-                    key={mi}
-                    className={`py-2 px-2 text-right font-semibold ${accentClass}`}
-                  >
-                    {v !== 0 ? (
-                      fmt(v)
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
-                  </td>
-                ))}
-                <td className="py-2 px-2 text-right font-bold text-gray-800 bg-gray-50">
-                  {fmt(rowTotals[i])}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={15} className="text-center py-8 text-gray-400">
+                  No data for this period
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((item, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
+                  <td className="py-2 px-2 text-gray-500 sticky left-0 bg-inherit">
+                    {item.number}
+                  </td>
+                  <td className="py-2 px-2 font-medium text-gray-900 sticky left-6 bg-inherit">
+                    {item.category}
+                  </td>
+                  {item.monthly.map((v, mi) => (
+                    <td
+                      key={mi}
+                      className={`py-2 px-2 text-right font-semibold ${accentClass}`}
+                    >
+                      {v !== 0 ? (
+                        fmt(v)
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
+                  ))}
+                  <td className="py-2 px-2 text-right font-bold text-gray-800 bg-gray-50">
+                    {fmt(item.ytd)}
+                  </td>
+                </tr>
+              ))
+            )}
             <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
               <td className="py-3 px-2" colSpan={2}>
                 {totalsLabel}
@@ -220,25 +304,21 @@ const YearTable = ({
   );
 };
 
-// ─── Month-view table (single-month, Actual vs Budget) ───────────────────────
+// ─── Month Table ──────────────────────────────────────────────────────────────
 
 const MonthTable = ({
   title,
   rows,
   totalsLabel,
   actualAccent,
-  budgetAccent,
 }: {
   title: string;
-  rows: { number: string; category: string; actual: number; budget: number }[];
+  rows: { number: string; category: string; actual: number }[];
   totalsLabel: string;
   actualAccent: string;
-  budgetAccent: string;
 }) => {
-  const total = {
-    actual: rows.reduce((s, r) => s + r.actual, 0),
-    budget: rows.reduce((s, r) => s + r.budget, 0),
-  };
+  const totalActual = rows.reduce((s, r) => s + r.actual, 0);
+
   return (
     <CustomCard className="border-gray-200" shadow>
       <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
@@ -255,55 +335,47 @@ const MonthTable = ({
                 Category
               </th>
               <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
-                Actual
-              </th>
-              <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
-                Budget
+                Amount
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((item, i) => (
-              <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-2 sm:px-4 text-gray-600">
-                  {item.number}
-                </td>
-                <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
-                  {item.category}
-                </td>
-                <td
-                  className={`py-3 px-2 sm:px-4 text-right font-semibold ${actualAccent}`}
-                >
-                  {item.actual !== 0 ? (
-                    fmt(item.actual)
-                  ) : (
-                    <span className="text-gray-300">—</span>
-                  )}
-                </td>
-                <td
-                  className={`py-3 px-2 sm:px-4 text-right font-semibold ${budgetAccent}`}
-                >
-                  {item.budget !== 0 ? (
-                    fmt(item.budget)
-                  ) : (
-                    <span className="text-gray-300">—</span>
-                  )}
+            {rows.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center py-8 text-gray-400">
+                  No data for this month
                 </td>
               </tr>
-            ))}
+            ) : (
+              rows.map((item, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-100 hover:bg-gray-50"
+                >
+                  <td className="py-3 px-2 sm:px-4 text-gray-600">
+                    {item.number}
+                  </td>
+                  <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
+                    {item.category}
+                  </td>
+                  <td
+                    className={`py-3 px-2 sm:px-4 text-right font-semibold ${actualAccent}`}
+                  >
+                    {item.actual !== 0 ? (
+                      fmt(item.actual)
+                    ) : (
+                      <span className="text-gray-300">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
             <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
               <td className="py-3 px-2 sm:px-4" colSpan={2}>
                 {totalsLabel}
               </td>
-              <td
-                className={`py-3 px-2 sm:px-4 text-right ${actualAccent.replace("600", "700")}`}
-              >
-                {fmt(total.actual)}
-              </td>
-              <td
-                className={`py-3 px-2 sm:px-4 text-right ${budgetAccent.replace("600", "700")}`}
-              >
-                {fmt(total.budget)}
+              <td className={`py-3 px-2 sm:px-4 text-right ${actualAccent}`}>
+                {fmt(totalActual)}
               </td>
             </tr>
           </tbody>
@@ -313,51 +385,46 @@ const MonthTable = ({
   );
 };
 
-// ─── Net Profit Summary Table ─────────────────────────────────────────────────
+// ─── Net Profit Summary ───────────────────────────────────────────────────────
 
 const NetProfitTable = ({
   filterMode,
   selectedYear,
   selectedMonth,
-  incomeByMonth,
-  directCostsByMonth,
-  incomeMonthData,
-  directCostsMonthData,
+  revenueByMonth,
+  expensesByMonth,
+  netProfitByMonth,
 }: {
   filterMode: FilterMode;
   selectedYear: number;
   selectedMonth: number;
-  incomeByMonth: number[];
-  directCostsByMonth: number[];
-  incomeMonthData: { actual: number; budget: number };
-  directCostsMonthData: { actual: number; budget: number };
+  revenueByMonth: number[];
+  expensesByMonth: number[];
+  netProfitByMonth: number[];
 }) => {
   if (filterMode === "year") {
-    const netProfits = MONTHS.map(
-      (_, i) => incomeByMonth[i] - directCostsByMonth[i],
-    );
-    const ytdRevenue = incomeByMonth.reduce((a, b) => a + b, 0);
-    const ytdDirectCosts = directCostsByMonth.reduce((a, b) => a + b, 0);
-    const ytdNet = ytdRevenue - ytdDirectCosts;
+    const ytdRevenue = revenueByMonth.reduce((a, b) => a + b, 0);
+    const ytdExpenses = expensesByMonth.reduce((a, b) => a + b, 0);
+    const ytdNet = netProfitByMonth.reduce((a, b) => a + b, 0);
 
     const summaryRows = [
       {
-        label: "Gross Profit",
-        values: incomeByMonth,
+        label: "Gross Revenue",
+        values: revenueByMonth,
         ytd: ytdRevenue,
         accent: "text-green-600",
         bold: false,
       },
       {
         label: "Direct Costs (Expenses)",
-        values: directCostsByMonth,
-        ytd: ytdDirectCosts,
+        values: expensesByMonth,
+        ytd: ytdExpenses,
         accent: "text-red-500",
         bold: false,
       },
       {
         label: "Net Profit",
-        values: netProfits,
+        values: netProfitByMonth,
         ytd: ytdNet,
         accent: "text-emerald-700",
         bold: true,
@@ -423,7 +490,7 @@ const NetProfitTable = ({
                     </td>
                   ))}
                   <td
-                    className={`py-3 px-2 text-right ${row.bold ? "font-bold text-gray-900" : "font-semibold"} ${row.ytd < 0 ? "text-red-600" : row.accent} bg-gray-50`}
+                    className={`py-3 px-2 text-right bg-gray-50 ${row.bold ? "font-bold text-gray-900" : "font-semibold"} ${row.ytd < 0 ? "text-red-600" : row.accent}`}
                   >
                     {fmt(row.ytd)}
                   </td>
@@ -436,29 +503,27 @@ const NetProfitTable = ({
     );
   }
 
-  // Month view
-  const netActual = incomeMonthData.actual - directCostsMonthData.actual;
-  const netBudget = incomeMonthData.budget - directCostsMonthData.budget;
+  // ── Month view ──
+  const revenueActual = revenueByMonth[selectedMonth] ?? 0;
+  const expensesActual = expensesByMonth[selectedMonth] ?? 0;
+  const netActual = netProfitByMonth[selectedMonth] ?? 0;
 
   const rows = [
     {
       label: "Revenue",
-      actual: incomeMonthData.actual,
-      budget: incomeMonthData.budget,
+      actual: revenueActual,
       accent: "text-green-600",
       bold: false,
     },
     {
       label: "Direct Costs (Expenses)",
-      actual: directCostsMonthData.actual,
-      budget: directCostsMonthData.budget,
+      actual: expensesActual,
       accent: "text-red-500",
       bold: false,
     },
     {
       label: "Net Profit",
       actual: netActual,
-      budget: netBudget,
       accent: "text-emerald-700",
       bold: true,
     },
@@ -477,48 +542,28 @@ const NetProfitTable = ({
                 Category
               </th>
               <th className="text-right py-3 px-4 font-semibold text-gray-700">
-                Actual
-              </th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">
-                Budget
-              </th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">
-                Variance
+                Amount
               </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => {
-              const variance = row.actual - row.budget;
-              return (
-                <tr
-                  key={i}
-                  className={`border-b ${row.bold ? "border-t-2 border-gray-300 bg-gray-50" : "border-gray-100 hover:bg-gray-50"}`}
+            {rows.map((row, i) => (
+              <tr
+                key={i}
+                className={`border-b ${row.bold ? "border-t-2 border-gray-300 bg-gray-50" : "border-gray-100 hover:bg-gray-50"}`}
+              >
+                <td
+                  className={`py-3 px-4 ${row.bold ? "font-bold" : "font-medium"} text-gray-900`}
                 >
-                  <td
-                    className={`py-3 px-4 ${row.bold ? "font-bold" : "font-medium"} text-gray-900`}
-                  >
-                    {row.label}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${row.actual < 0 ? "text-red-600" : row.accent}`}
-                  >
-                    {fmt(row.actual)}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${row.budget < 0 ? "text-red-500" : "text-gray-600"}`}
-                  >
-                    {fmt(row.budget)}
-                  </td>
-                  <td
-                    className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${variance >= 0 ? "text-green-600" : "text-red-600"}`}
-                  >
-                    {variance >= 0 ? "+" : ""}
-                    {fmt(variance)}
-                  </td>
-                </tr>
-              );
-            })}
+                  {row.label}
+                </td>
+                <td
+                  className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${row.actual < 0 ? "text-red-600" : row.accent}`}
+                >
+                  {fmt(row.actual)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -552,7 +597,7 @@ const FilterBar = ({
           onClick={() => setFilterMode(m)}
           className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
             filterMode === m
-              ? "bg-primary-green-300 text-white"
+              ? "text-white"
               : "bg-white text-gray-600 hover:bg-gray-100"
           }`}
           style={filterMode === m ? { backgroundColor: "#16a34a" } : {}}
@@ -578,7 +623,7 @@ const FilterBar = ({
       </select>
     </div>
 
-    {/* Month selector — only shown in month mode */}
+    {/* Month selector — only in month mode */}
     {filterMode === "month" && (
       <div className="flex items-center gap-2">
         <label className="text-sm font-medium text-gray-700">Month:</label>
@@ -596,28 +641,13 @@ const FilterBar = ({
       </div>
     )}
 
-    <span className="ml-auto text-xs text-gray-500">
+    <span className="ml-auto text-xs text-gray-500 italic">
       {filterMode === "year"
         ? `Showing all months for ${selectedYear}`
         : `Showing ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
     </span>
   </div>
 );
-
-// ─── Static sample data (replace with API data in production) ────────────────
-
-// Income statement monthly actuals [Jan..Dec] for 2025
-const INCOME_MONTHLY_2025 = [
-  1389600, 1489200, 1661492, 1407630, 1961112, 2087052, 2480180, 1946324,
-  4090375, 3386313, 3309770, 2680625,
-];
-const INCOME_MONTHLY_2026 = [1172380, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-const DIRECT_COSTS_MONTHLY_2025 = [
-  405252, 513030, 576325, 570375, 489700, 522750, 750225, 670530, 742125,
-  615575, 772800, 744000,
-];
-const DIRECT_COSTS_MONTHLY_2026 = [572375, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -638,10 +668,11 @@ const SalesAnalytics = ({
   const [openPaymentDetailsModal, setOpenPaymentDetailsModal] = useState(false);
   const [name, setName] = useState("");
 
-  // Filter state
   const [filterMode, setFilterMode] = useState<FilterMode>("year");
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
-  const [selectedMonth, setSelectedMonth] = useState<number>(0); // 0 = Jan
+  const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR);
+  const [selectedMonth, setSelectedMonth] = useState<number>(
+    new Date().getMonth(),
+  ); // 0-based
 
   const handleOpenPaymentDetailsModal = (name: string) => {
     setName(name);
@@ -650,96 +681,48 @@ const SalesAnalytics = ({
   const handleClosePaymentDetailsModal = () =>
     setOpenPaymentDetailsModal(false);
 
-  const { BankBreakDownAnalytics, BankBreakDownAnalyticsLoading } =
-    useAnalyticHook({ openPaymentDetailsModal, name, dateRange });
+  // ── Single hook call — passes selectedYear so API refetches on year change ──
+  const {
+    BankBreakDownAnalytics,
+    BankBreakDownAnalyticsLoading,
+    MaxSalesAnalyticData,
+    MaxSalesAnalyticLoading,
+  } = useAnalyticHook({
+    openPaymentDetailsModal,
+    name,
+    dateRange,
+    selectedYear, // ← triggers new fetch when user changes year
+  });
 
-  // ── Pick monthly data based on year ──────────────────────────────────────
-  const incomeMonthlyTotals =
-    selectedYear === 2025 ? INCOME_MONTHLY_2025 : INCOME_MONTHLY_2026;
-  const directCostsMonthlyTotals =
-    selectedYear === 2025
-      ? DIRECT_COSTS_MONTHLY_2025
-      : DIRECT_COSTS_MONTHLY_2026;
+  // ── Derive arrays from real API data ─────────────────────────────────────
+  const apiData = MaxSalesAnalyticData?.data;
 
-  // ── Income Statement rows ─────────────────────────────────────────────────
-  const incomeCategories = [
-    { number: "1", category: "Revenue", budget: 1146700 },
-    { number: "2", category: "Bed", budget: 47850 },
-    { number: "3", category: "Nasal Mask & Prongs", budget: 62325 },
-    { number: "4", category: "CPAP/BIPAP", budget: 103000 },
-    { number: "5", category: "Oral/Nasal", budget: 50250 },
-    { number: "6", category: "Humidifier", budget: 167500 },
-    { number: "7", category: "Cable", budget: 145000 },
-    { number: "8", category: "Home Care", budget: 83600 },
-    { number: "9", category: "Others", budget: 0 },
-    { number: "10", category: "Staging", budget: 0 },
-  ];
+  const revenueByMonth = monthObjToArray(apiData?.revenue?.total?.monthly);
+  const expensesByMonth = monthObjToArray(apiData?.expenses?.total?.monthly);
+  const netProfitByMonth = monthObjToArray(apiData?.net_profit?.monthly);
 
-  const incomeRowsMonthly = incomeCategories.map((c, i) => ({
-    ...c,
-    monthly: incomeMonthlyTotals.map((total) =>
-      i === 0
-        ? Math.round(total * 0.55)
-        : Math.round(total * 0.04 * (i % 3 === 0 ? 1.5 : 1)),
-    ),
-  }));
+  const revenueCategories = apiData?.revenue?.categories ?? {};
+  const expensesCategories = apiData?.expenses?.categories ?? {};
 
-  // ── Direct Costs rows ─────────────────────────────────────────────────────
-  const directCostCategories = [
-    { number: "7", category: "Consumables", budget: 163000 },
-    { number: "8", category: "Commission Paid", budget: 0 },
-    { number: "9", category: "Sleep Studies", budget: 0 },
-    { number: "10", category: "Referral Party Waiver", budget: 60751 },
-    { number: "11", category: "Bank Charges (POS)", budget: 0 },
-    { number: "12", category: "Trade Fairs", budget: 0 },
-    { number: "13", category: "Re-Inspection Fees", budget: 0 },
-    { number: "14", category: "Transportation", budget: 0 },
-  ];
+  // Year view rows — all 12 months
+  const incomeYearRows = buildYearRows(revenueCategories);
+  const directCostYearRows = buildYearRows(expensesCategories);
 
-  const directCostRowsMonthly = directCostCategories.map((c, i) => ({
-    ...c,
-    monthly: directCostsMonthlyTotals.map((total) =>
-      i === 0
-        ? Math.round(total * 0.8)
-        : i === 3
-          ? Math.round(total * 0.18)
-          : 0,
-    ),
-  }));
+  // Month view rows — slice to selectedMonth only
+  const incomeMonthRows = buildMonthRows(revenueCategories, selectedMonth);
+  const directCostMonthRows = buildMonthRows(expensesCategories, selectedMonth);
 
-  // ── Month-view single-month data ──────────────────────────────────────────
-  const incomeMonthActual = incomeMonthlyTotals[selectedMonth] ?? 0;
-  const directCostsMonthActual = directCostsMonthlyTotals[selectedMonth] ?? 0;
-
-  const incomeMonthRows = incomeCategories.map((c, i) => ({
-    ...c,
-    actual:
-      i === 0
-        ? Math.round(incomeMonthActual * 0.55)
-        : Math.round(incomeMonthActual * 0.04 * (i % 3 === 0 ? 1.5 : 1)),
-  }));
-
-  const directCostMonthRows = directCostCategories.map((c, i) => ({
-    ...c,
-    actual:
-      i === 0
-        ? Math.round(directCostsMonthActual * 0.8)
-        : i === 3
-          ? Math.round(directCostsMonthActual * 0.18)
-          : 0,
-  }));
-
-  // ── Chart data ────────────────────────────────────────────────────────────
+  // ── Chart ─────────────────────────────────────────────────────────────────
   const chartData = {
     labels: [
-      `Total Profit ${fmt(SalesAnalyticData?.data.total_profit ?? 0)}`,
-      `Expenses ${fmt(SalesAnalyticData?.data.expenses ?? 0)}`,
+      `Total Profit ${fmt(SalesAnalyticData?.data?.total_profit ?? 0)}`,
+      `Expenses ${fmt(SalesAnalyticData?.data?.expenses ?? 0)}`,
     ],
     datasets: [
       {
         data: [
-          SalesAnalyticData?.data.total_profit ?? 0,
-          SalesAnalyticData?.data.expenses ?? 0,
+          SalesAnalyticData?.data?.total_profit ?? 0,
+          SalesAnalyticData?.data?.expenses ?? 0,
         ],
         backgroundColor: ["#4CAF50", "#DC2626"],
         borderColor: ["#388E3C", "red"],
@@ -755,10 +738,10 @@ const SalesAnalytics = ({
       legend: { position: "right" },
       tooltip: {
         callbacks: {
-          label: (context) => {
-            let label = context.label || "";
+          label: (ctx) => {
+            let label = ctx.label || "";
             if (label) label += ": ";
-            if (context.parsed !== null) label += fmt(context.parsed);
+            if (ctx.parsed !== null) label += fmt(ctx.parsed);
             return label;
           },
         },
@@ -766,58 +749,59 @@ const SalesAnalytics = ({
     },
   };
 
-  // ── Heading text ──────────────────────────────────────────────────────────
   const headingText =
     filterMode === "year"
       ? `${selectedYear} — Year to Date`
       : `${FULL_MONTHS[selectedMonth]} ${selectedYear}`;
 
+  const tableCols = filterMode === "year" ? 15 : 3;
+
   return (
     <div className="w-full py-4 sm:py-8">
-      {/* Top row controls */}
+      {/* Top controls */}
       <div className="w-full justify-end flex gap-3 mb-4">
-        {user && user?.role === "OWNER" && (
+        {user?.role === "OWNER" && (
           <Button
             className="border-primary-green-300 text-xs sm:text-sm"
             onClick={openAttendantsModal}
           >
-            {attendantsName ? `${attendantsName}` : "Select Attendant"}
+            {attendantsName || "Select Attendant"}
           </Button>
         )}
         {attendantsName && (
           <Button
-            variant={"outline"}
+            variant="outline"
             className="border primary-red-100 text-primary-red-100 text-xs sm:text-sm"
             onClick={handleClearAttendant}
           >
-            clear
+            Clear
           </Button>
         )}
       </div>
 
-      {/* Summary KPI cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomSalesCard
           title="Total Revenue"
-          amount={SalesAnalyticData?.data.total_Revenue}
-          change={SalesAnalyticData?.data.total_Revenue_change}
+          amount={SalesAnalyticData?.data?.total_Revenue}
+          change={SalesAnalyticData?.data?.total_Revenue_change}
         />
-        {user && user?.role === "OWNER" && (
+        {user?.role === "OWNER" && (
           <CustomSalesCard
             title="Total Profit"
-            amount={SalesAnalyticData?.data.total_profit}
-            change={SalesAnalyticData?.data.total_profit_change}
+            amount={SalesAnalyticData?.data?.total_profit}
+            change={SalesAnalyticData?.data?.total_profit_change}
           />
         )}
         <CustomSalesCard
           title="Avg. Transaction"
-          amount={SalesAnalyticData?.data.average_transaction_value}
-          change={SalesAnalyticData?.data.average_transaction_value_change}
+          amount={SalesAnalyticData?.data?.average_transaction_value}
+          change={SalesAnalyticData?.data?.average_transaction_value_change}
         />
         <CustomSalesCard
           title="Transactions"
-          amount={SalesAnalyticData?.data.transaction_count}
-          change={SalesAnalyticData?.data.transaction_count_change}
+          amount={SalesAnalyticData?.data?.transaction_count}
+          change={SalesAnalyticData?.data?.transaction_count_change}
           type="transaction"
         />
       </div>
@@ -827,7 +811,7 @@ const SalesAnalytics = ({
         <CustomCard className="h-full border-gray-200" shadow>
           <div className="h-full flex flex-col">
             <h3 className="font-[600] text-base sm:text-lg mb-4">
-              Net Profit : {fmt(SalesAnalyticData?.data.net_profit ?? 0)}
+              Net Profit : {fmt(SalesAnalyticData?.data?.net_profit ?? 0)}
             </h3>
             <div className="flex-grow h-[250px] sm:h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
@@ -841,8 +825,8 @@ const SalesAnalytics = ({
               Payment Methods
             </h3>
             <div className="space-y-4 flex-grow">
-              {SalesAnalyticData?.data?.transaction_breakdown.map(
-                (method: any, index: any) => (
+              {SalesAnalyticData?.data?.transaction_breakdown?.map(
+                (method: any, index: number) => (
                   <div
                     key={index}
                     onClick={() =>
@@ -864,9 +848,8 @@ const SalesAnalytics = ({
         </CustomCard>
       </div>
 
-      {/* ── Financial Tables Section ── */}
+      {/* Financial Tables */}
       <div className="space-y-6">
-        {/* Section heading + filter bar */}
         <div>
           <div className="text-center mb-4">
             <h2 className="text-2xl font-bold text-gray-900">{headingText}</h2>
@@ -881,58 +864,57 @@ const SalesAnalytics = ({
           />
         </div>
 
-        {/* Income Statement */}
-        {filterMode === "year" ? (
+        {/* Revenue table */}
+        {MaxSalesAnalyticLoading ? (
+          <TableSkeleton rows={6} cols={tableCols} />
+        ) : filterMode === "year" ? (
           <YearTable
-            title="Income Statement"
-            rows={incomeRowsMonthly}
-            totalsLabel="TOTAL"
+            title="Revenue"
+            rows={incomeYearRows}
+            totalsLabel="TOTAL REVENUE"
             accentClass="text-green-600"
           />
         ) : (
           <MonthTable
-            title="Income Statement"
+            title={`Revenue — ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
             rows={incomeMonthRows}
-            totalsLabel="TOTAL"
+            totalsLabel="TOTAL REVENUE"
             actualAccent="text-green-600"
-            budgetAccent="text-blue-600"
           />
         )}
 
-        {/* Direct Costs */}
-        {filterMode === "year" ? (
+        {/* Expenses table */}
+        {MaxSalesAnalyticLoading ? (
+          <TableSkeleton rows={5} cols={tableCols} />
+        ) : filterMode === "year" ? (
           <YearTable
-            title="Direct Costs (Out of Sales)"
-            rows={directCostRowsMonthly}
+            title="Direct Costs (Expenses)"
+            rows={directCostYearRows}
             totalsLabel="TOTAL DIRECT COSTS"
             accentClass="text-red-600"
           />
         ) : (
           <MonthTable
-            title="Direct Costs (Out of Sales)"
+            title={`Direct Costs — ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
             rows={directCostMonthRows}
             totalsLabel="TOTAL DIRECT COSTS"
             actualAccent="text-red-600"
-            budgetAccent="text-orange-600"
           />
         )}
 
-        {/* Net Profit Summary */}
-        <NetProfitTable
-          filterMode={filterMode}
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-          incomeByMonth={incomeMonthlyTotals}
-          directCostsByMonth={directCostsMonthlyTotals}
-          incomeMonthData={{
-            actual: incomeMonthActual,
-            budget: incomeCategories.reduce((s, c) => s + c.budget, 0),
-          }}
-          directCostsMonthData={{
-            actual: directCostsMonthActual,
-            budget: directCostCategories.reduce((s, c) => s + c.budget, 0),
-          }}
-        />
+        {/* Net Profit summary */}
+        {MaxSalesAnalyticLoading ? (
+          <TableSkeleton rows={3} cols={tableCols} />
+        ) : (
+          <NetProfitTable
+            filterMode={filterMode}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            revenueByMonth={revenueByMonth}
+            expensesByMonth={expensesByMonth}
+            netProfitByMonth={netProfitByMonth}
+          />
+        )}
       </div>
 
       {/* Payment Details Modal */}

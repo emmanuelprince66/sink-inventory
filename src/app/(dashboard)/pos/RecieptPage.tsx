@@ -37,6 +37,8 @@ const ReceiptPage = ({
   discount,
   discountAmount,
   setShowReceipt,
+  taxInfo,
+  businessData,
   subtotal,
   total,
 }: {
@@ -44,6 +46,8 @@ const ReceiptPage = ({
   attendant: any;
   customer: any;
   clearCartFunc: any;
+  taxInfo: any;
+  businessData: any;
   discount: any;
   discountAmount: any;
   setShowReceipt: any;
@@ -55,8 +59,10 @@ const ReceiptPage = ({
   // console.log("subtotal", subtotal);
   // console.log("discount", discount);
 
+  console.log("taxinfo in chechout", taxInfo);
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date()
+    new Date(),
   );
   const { user } = useUserRole();
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
@@ -121,7 +127,7 @@ const ReceiptPage = ({
     if (splitPayments.length === 0 && selectedBank) {
       // Handle case when splitPayments is empty but selectedBank exists
       const bankInfo = BankData.data.find(
-        (bank: any) => bank.id === selectedBank
+        (bank: any) => bank.id === selectedBank,
       );
       if (bankInfo) {
         const bankKey = bankInfo.bank_name.toLowerCase();
@@ -134,7 +140,7 @@ const ReceiptPage = ({
           payload["cash"] = payment.amount;
         } else if (payment.method === "BANK" && payment.bank) {
           const bankInfo = BankData.data.find(
-            (bank: any) => bank.id === payment.bank
+            (bank: any) => bank.id === payment.bank,
           );
           if (bankInfo) {
             const bankKey = bankInfo.bank_name.toLowerCase();
@@ -158,7 +164,7 @@ const ReceiptPage = ({
   // console.log("selectedBankForSplitPayment", selectedBankForSplitPayment);
 
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state) => state.is_subscribed
+    (state) => state.is_subscribed,
   );
 
   const {
@@ -205,7 +211,7 @@ const ReceiptPage = ({
   useEffect(() => {
     const paidAmount = splitPayments.reduce(
       (sum, payment) => sum + payment.amount,
-      0
+      0,
     );
     setRemainingAmount(total - paidAmount);
   }, [splitPayments, total]);
@@ -230,7 +236,7 @@ const ReceiptPage = ({
       // Allow multiple BANK selections by removing the check for BANK method
       (option.value !== "BANK"
         ? !splitPayments.some((payment) => payment.method === option.value)
-        : true) && option.value !== "PARTIAL" // Still remove partial option for split payments
+        : true) && option.value !== "PARTIAL", // Still remove partial option for split payments
   );
   const handleAddSplitPayment = () => {
     setSplitPaymentError(""); // Reset error message
@@ -333,7 +339,7 @@ const ReceiptPage = ({
           parseFloat(partialAmount) >= total
         ) {
           console.log(
-            "Valid partial amount is required (greater than 0 and less than total)"
+            "Valid partial amount is required (greater than 0 and less than total)",
           );
 
           return null;
@@ -464,6 +470,7 @@ const ReceiptPage = ({
     <>
       {showPrintReceiptView ? (
         <PrintReceiptView
+          taxInfo={taxInfo}
           setShowReceipt={setShowReceipt}
           setShowPrintReceiptView={setShowPrintReceiptView}
           createSaleResponse={createSaleResponse}
@@ -631,15 +638,43 @@ const ReceiptPage = ({
                       </td>
                     </tr>
                   )}
+                  {taxInfo?.enabled && (
+                    <>
+                      <tr className="bg-white">
+                        <td
+                          colSpan={4}
+                          className="p-2 border text-[11px] border-primary-green-300 text-right text-gray-500"
+                        >
+                          Subtotal (before tax):
+                        </td>
+                        <td className="p-2 text-[11px] border border-primary-green-300 font-semibold">
+                          {formatToNaira(total)}
+                        </td>
+                      </tr>
+                      <tr className="bg-white">
+                        <td
+                          colSpan={4}
+                          className="p-2 border text-[11px] border-primary-green-300 text-right text-blue-600"
+                        >
+                          Tax ({taxInfo.rate}%):
+                        </td>
+                        <td className="p-2 text-[11px] border border-primary-green-300 text-blue-600 font-semibold">
+                          +{formatToNaira(taxInfo.amount)}
+                        </td>
+                      </tr>
+                    </>
+                  )}
                   <tr className="bg-primary-green-200 font-bold">
                     <td
                       colSpan={4}
-                      className="p-2 border text-[11px]  border-primary-green-300 text-right"
+                      className="p-2 border text-[11px] border-primary-green-300 text-right"
                     >
                       Total:
                     </td>
-                    <td className="p-2 text-[11px]  border border-primary-green-300">
-                      {formatToNaira(total)}
+                    <td className="p-2 text-[11px] border border-primary-green-300">
+                      {formatToNaira(
+                        taxInfo?.enabled ? taxInfo.totalWithTax : total,
+                      )}
                     </td>
                   </tr>
                 </tfoot>
@@ -1051,7 +1086,7 @@ const ReceiptPage = ({
                         <div>
                           <p className="font-medium">
                             {paymentMethodOptions.find(
-                              (opt) => opt.value === payment.method
+                              (opt) => opt.value === payment.method,
                             )?.label || payment.method}
                           </p>
                           <p className="text-sm text-gray-600">
@@ -1091,7 +1126,8 @@ const ReceiptPage = ({
               onClick={openSureModal}
               disabled={isSubmitDisabled()}
             >
-              Pay {formatToNaira(total)}
+              Pay{" "}
+              {formatToNaira(taxInfo?.enabled ? taxInfo.totalWithTax : total)}
             </Button>
           </div>
 

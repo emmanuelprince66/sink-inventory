@@ -14,7 +14,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
 import RecieptPage from "./RecieptPage";
@@ -49,9 +49,14 @@ interface CartItem extends Variation {
 
 interface CheckoutPageProps {
   clearCartFunc: () => void;
+  businessData?: any;
 }
 
-const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
+const CheckoutPage: React.FC<CheckoutPageProps> = ({
+  clearCartFunc,
+  businessData,
+}) => {
+  console.log("businessData in checkout", businessData);
   const [customer, setCustomer] = useState<any | null>(null);
   const [attendant, setAttendant] = useState<any | null>(null);
   const [showReceipt, setShowReceipt] = useState<boolean>(false);
@@ -96,8 +101,38 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
 
   const subtotal = getSubtotal();
   const automaticDiscountAmount = getAutomaticDiscountAmount();
-  const total = getTotalPrice();
+  const totalBeforeTax = getTotalPrice();
   const eligibleItems = getEligibleItems();
+
+  // Tax calculation logic
+  const taxCalculation = useMemo(() => {
+    // Check if business has tax enabled
+    const hasTaxEnabled =
+      businessData?.tax_rate &&
+      parseFloat(businessData.tax_rate) > 0 &&
+      businessData.tax_rate_last_updated;
+
+    if (!hasTaxEnabled) {
+      return {
+        enabled: false,
+        rate: 0,
+        amount: 0,
+        totalWithTax: totalBeforeTax,
+      };
+    }
+
+    const taxRate = parseFloat(businessData.tax_rate);
+    // Tax calculation: (total * taxRate) / 100
+    const taxAmount = (totalBeforeTax * taxRate) / 100;
+    const totalWithTax = totalBeforeTax + taxAmount;
+
+    return {
+      enabled: true,
+      rate: taxRate,
+      amount: taxAmount,
+      totalWithTax: totalWithTax,
+    };
+  }, [businessData, totalBeforeTax]);
 
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
     (error) => error !== "",
@@ -232,8 +267,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
               : null
           }
           discountAmount={automaticDiscountAmount}
-          subtotal={getTotalPrice()}
-          total={total}
+          subtotal={subtotal}
+          total={totalBeforeTax}
+          taxInfo={taxCalculation}
+          businessData={businessData}
         />
       ) : (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
@@ -604,11 +641,37 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({ clearCartFunc }) => {
                 </div>
               )}
 
+              {/* Tax Display */}
+              {taxCalculation.enabled && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 text-xs">
+                      Subtotal (before tax)
+                    </span>
+                    <span className="font-medium text-xs">
+                      {formatToNaira(totalBeforeTax)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-xs">
+                      Tax ({taxCalculation.rate}%)
+                    </span>
+                    <span className="font-medium text-xs text-blue-600">
+                      +{formatToNaira(taxCalculation.amount)}
+                    </span>
+                  </div>
+                </>
+              )}
+
               <Separator className="my-2 bg-[#52b661]/30" />
               <div className="flex justify-between">
                 <span className="font-bold text-sm text-gray-800">Total</span>
                 <span className="font-bold text-sm text-[#52b661]">
-                  {formatToNaira(total)}
+                  {formatToNaira(
+                    taxCalculation.enabled
+                      ? taxCalculation.totalWithTax
+                      : totalBeforeTax,
+                  )}
                 </span>
               </div>
               <Button
