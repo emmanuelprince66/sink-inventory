@@ -1,7 +1,7 @@
 import { useUserRole } from "@/lib/store/user-store";
-import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
+import { EyeOff } from "lucide-react";
 import { SalesDataItem } from "./types";
 
 export const useSalesColumns = () => {
@@ -16,6 +16,13 @@ export const useSalesColumns = () => {
         return (
           <div className="font-medium">
             <p className="text-sm text-gray-500">{product.name}</p>
+
+            {product?.is_watchlist && (
+              <EyeOff
+                className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                // title="On watchlist"
+              />
+            )}
           </div>
         );
       },
@@ -32,19 +39,19 @@ export const useSalesColumns = () => {
         );
       },
     },
-    {
-      accessorKey: "is_watchlist",
-      header: "Watchlist",
-      cell: ({ row }) => {
-        const inventory = row.original;
+    // {
+    //   accessorKey: "is_watchlist",
+    //   header: "Watchlist",
+    //   cell: ({ row }) => {
+    //     const inventory = row.original;
 
-        return (
-          <div className={cn("font-medium")}>
-            {inventory.is_watchlist ? "Yes" : "No"}
-          </div>
-        );
-      },
-    },
+    //     return (
+    //       <div className={cn("font-medium")}>
+    //         {inventory.is_watchlist ? "Yes" : "No"}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       accessorKey: "revenue",
       header: "Revenue",

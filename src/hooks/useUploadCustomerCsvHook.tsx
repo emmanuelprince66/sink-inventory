@@ -32,7 +32,7 @@ export const useUploadCustomerCsvHook = () => {
 
   const [previewData, setPreviewData] = useState<CustomerItem[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    []
+    [],
   );
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -76,7 +76,7 @@ export const useUploadCustomerCsvHook = () => {
           setApiError(null);
         } else {
           setApiError(
-            formatApiError(data.message || data.error || "Upload failed")
+            formatApiError(data.message || data.error || "Upload failed"),
           );
           setIsSuccess(false);
         }
@@ -85,12 +85,12 @@ export const useUploadCustomerCsvHook = () => {
         setApiError(formatApiError(error));
         setIsSuccess(false);
       },
-    }
+    },
   );
 
   const validateCustomer = (
     customer: any,
-    rowIndex: number
+    rowIndex: number,
   ): ValidationError[] => {
     const errors: ValidationError[] = [];
     const requiredFields = ["name", "phone", "email"];
@@ -121,7 +121,7 @@ export const useUploadCustomerCsvHook = () => {
     if (data.length > 0) {
       const headers = Object.keys(data[0]);
       const missingColumns = requiredColumns.filter(
-        (col) => !headers.includes(col)
+        (col) => !headers.includes(col),
       );
 
       if (missingColumns.length > 0) {
@@ -168,7 +168,9 @@ export const useUploadCustomerCsvHook = () => {
         reader.readAsArrayBuffer(file);
       } else {
         reject(
-          new Error("Unsupported file type. Please upload a CSV or Excel file.")
+          new Error(
+            "Unsupported file type. Please upload a CSV or Excel file.",
+          ),
         );
       }
     });
@@ -183,6 +185,8 @@ export const useUploadCustomerCsvHook = () => {
     try {
       const parsedData = await parseFile(file);
       const errors = validateCsvData(parsedData);
+
+      console.log("errors", errors);
 
       setValidationErrors(errors);
 

@@ -37,6 +37,7 @@ interface Variation {
   parentProductId?: string;
   parentProductName?: string;
   parentProductVariations?: Variation[];
+  allow_tax?: boolean;
 }
 
 interface CartItem extends Variation {
@@ -99,40 +100,62 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     addToCart,
   } = useCartStore();
 
+  console.log("cartItems in checkout", cartItems);
+
   const subtotal = getSubtotal();
   const automaticDiscountAmount = getAutomaticDiscountAmount();
   const totalBeforeTax = getTotalPrice();
   const eligibleItems = getEligibleItems();
 
-  // Tax calculation logic
-  const taxCalculation = useMemo(() => {
-    // Check if business has tax enabled
-    const hasTaxEnabled =
+  // VAT calculation logic - Per product basis
+  const vatCalculation = useMemo(() => {
+    // Check if business has VAT enabled
+    const hasVatEnabled =
       businessData?.tax_rate &&
       parseFloat(businessData.tax_rate) > 0 &&
       businessData.tax_rate_last_updated;
 
-    if (!hasTaxEnabled) {
+    if (!hasVatEnabled) {
       return {
         enabled: false,
         rate: 0,
         amount: 0,
-        totalWithTax: totalBeforeTax,
+        totalWithVat: totalBeforeTax,
+        itemsBreakdown: [],
       };
     }
 
-    const taxRate = parseFloat(businessData.tax_rate);
-    // Tax calculation: (total * taxRate) / 100
-    const taxAmount = (totalBeforeTax * taxRate) / 100;
-    const totalWithTax = totalBeforeTax + taxAmount;
+    const vatRate = parseFloat(businessData.tax_rate);
+
+    // Calculate VAT only for items with allow_tax: true
+    const itemsBreakdown = cartItems
+      .filter((item) => item.allow_tax === true)
+      .map((item) => {
+        const itemTotal =
+          (item.selling_price || item.amount || 0) * (item.cartQuantity || 1);
+        const itemVat = (itemTotal * vatRate) / 100;
+        return {
+          id: item.id,
+          name: item.name,
+          itemTotal,
+          itemVat,
+        };
+      });
+
+    const totalVat = itemsBreakdown.reduce(
+      (sum, item) => sum + item.itemVat,
+      0,
+    );
+    const totalWithVat = totalBeforeTax + totalVat;
 
     return {
       enabled: true,
-      rate: taxRate,
-      amount: taxAmount,
-      totalWithTax: totalWithTax,
+      rate: vatRate,
+      amount: totalVat,
+      totalWithVat: totalWithVat,
+      itemsBreakdown,
     };
-  }, [businessData, totalBeforeTax]);
+  }, [businessData, totalBeforeTax, cartItems]);
 
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
     (error) => error !== "",
@@ -269,7 +292,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           discountAmount={automaticDiscountAmount}
           subtotal={subtotal}
           total={totalBeforeTax}
-          taxInfo={taxCalculation}
+          vatInfo={vatCalculation}
           businessData={businessData}
         />
       ) : (
@@ -360,6 +383,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                   className="text-green-600"
                                 />
                               </Button>
+                            )}
+                            {item.allow_tax && vatCalculation.enabled && (
+                              <span className="text-[8px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+                                +VAT
+                              </span>
                             )}
                           </div>
                           <p className="text-[10px] text-gray-500">
@@ -641,23 +669,34 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </div>
               )}
 
-              {/* Tax Display */}
-              {taxCalculation.enabled && (
+              {/* VAT Display */}
+              {vatCalculation.enabled && vatCalculation.amount > 0 && (
                 <>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-xs">
-                      Subtotal (before tax)
+                      Subtotal (before VAT)
                     </span>
                     <span className="font-medium text-xs">
                       {formatToNaira(totalBeforeTax)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 text-xs">
-                      Tax ({taxCalculation.rate}%)
-                    </span>
+                    <div>
+                      <span className="text-gray-600 text-xs">
+                        VAT ({vatCalculation.rate}%)
+                      </span>
+                      {vatCalculation.itemsBreakdown.length > 0 && (
+                        <div className="text-[10px] text-gray-500">
+                          {vatCalculation.itemsBreakdown.map((item: any) => (
+                            <div key={item.id}>
+                              {item.name}: {formatToNaira(item.itemVat)}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <span className="font-medium text-xs text-blue-600">
-                      +{formatToNaira(taxCalculation.amount)}
+                      +{formatToNaira(vatCalculation.amount)}
                     </span>
                   </div>
                 </>
@@ -668,8 +707,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <span className="font-bold text-sm text-gray-800">Total</span>
                 <span className="font-bold text-sm text-[#52b661]">
                   {formatToNaira(
-                    taxCalculation.enabled
-                      ? taxCalculation.totalWithTax
+                    vatCalculation.enabled
+                      ? vatCalculation.totalWithVat
                       : totalBeforeTax,
                   )}
                 </span>

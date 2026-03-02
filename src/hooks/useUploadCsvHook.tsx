@@ -64,7 +64,7 @@ export const useUploadCsvHook = () => {
 
   const [previewData, setPreviewData] = useState<ProductItem[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
-    []
+    [],
   );
   const router = useRouter();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -117,7 +117,7 @@ export const useUploadCsvHook = () => {
         setApiError(null);
       } else {
         setApiError(
-          formatApiError(data.message || data.error || "Upload failed")
+          formatApiError(data.message || data.error || "Upload failed"),
         );
         setIsSuccess(false);
       }
@@ -136,7 +136,7 @@ export const useUploadCsvHook = () => {
 
   const validateProduct = (
     product: any,
-    rowIndex: number
+    rowIndex: number,
   ): ValidationError[] => {
     const errors: ValidationError[] = [];
     const requiredFields = [
@@ -163,14 +163,24 @@ export const useUploadCsvHook = () => {
       if (
         product[field] !== undefined &&
         product[field] !== null &&
-        product[field] !== "" &&
-        isNaN(Number(product[field]))
+        product[field] !== ""
       ) {
-        errors.push({
-          row: rowIndex,
-          field,
-          message: `${field} must be a number`,
-        });
+        // Convert string with comma separator to number
+        const numValue =
+          typeof product[field] === "string"
+            ? Number(product[field].replace(/,/g, ""))
+            : Number(product[field]);
+
+        if (isNaN(numValue)) {
+          errors.push({
+            row: rowIndex,
+            field,
+            message: `${field} must be a number`,
+          });
+        } else {
+          // Update the product with the converted number
+          product[field] = numValue;
+        }
       }
     });
 
@@ -179,7 +189,7 @@ export const useUploadCsvHook = () => {
         row: rowIndex,
         field: "unit",
         message: `Invalid unit. Allowed values are: ${ALLOWED_UNITS.join(
-          ", "
+          ", ",
         )}`,
       });
     }
@@ -208,7 +218,7 @@ export const useUploadCsvHook = () => {
     if (data.length > 0) {
       const headers = Object.keys(data[0]);
       const missingColumns = requiredColumns.filter(
-        (col) => !headers.includes(col)
+        (col) => !headers.includes(col),
       );
 
       if (missingColumns.length > 0) {
@@ -265,7 +275,7 @@ export const useUploadCsvHook = () => {
                 const date = new Date(
                   jsDate.y,
                   jsDate.m - 1, // months are 0-indexed in JS
-                  jsDate.d
+                  jsDate.d,
                 );
 
                 // Format to YYYY-MM-DD
@@ -283,7 +293,9 @@ export const useUploadCsvHook = () => {
         reader.readAsArrayBuffer(file);
       } else {
         reject(
-          new Error("Unsupported file type. Please upload a CSV or Excel file.")
+          new Error(
+            "Unsupported file type. Please upload a CSV or Excel file.",
+          ),
         );
       }
     });

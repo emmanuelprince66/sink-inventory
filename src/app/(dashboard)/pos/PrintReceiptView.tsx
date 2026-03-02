@@ -44,7 +44,7 @@ Font.register({
   ],
 });
 
-// Updated PDF Styles with tax styles added
+// Updated PDF Styles with VAT styles
 const styles = StyleSheet.create({
   page: {
     padding: 4,
@@ -202,21 +202,30 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#dc2626",
   },
-  // TAX STYLES - ADDED
-  taxRow: {
+  // VAT STYLES
+  vatRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 2,
     fontSize: 10,
   },
-  taxLabel: {
+  vatLabel: {
     fontSize: 10,
     color: "#2563eb",
   },
-  taxValue: {
+  vatValue: {
     fontSize: 10,
     fontWeight: "bold",
     color: "#2563eb",
+  },
+  vatBadge: {
+    fontSize: 6,
+    color: "#2563eb",
+    backgroundColor: "#dbeafe",
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    borderRadius: 2,
+    marginTop: 2,
   },
   summaryRow: {
     flexDirection: "row",
@@ -293,7 +302,7 @@ const ReceiptPDFDocument = ({
   discountAmount,
   subtotal,
   total,
-  taxInfo,
+  vatInfo,
 }: {
   cart: any[];
   business: any;
@@ -308,15 +317,21 @@ const ReceiptPDFDocument = ({
   user: any;
   businessData: any;
   attendant: any;
-  taxInfo?: {
+  vatInfo?: {
     enabled: boolean;
     rate: number;
     amount: number;
-    totalWithTax: number;
+    totalWithVat: number;
+    itemsBreakdown?: Array<{
+      id: string;
+      name: string;
+      itemTotal: number;
+      itemVat: number;
+    }>;
   };
 }) => {
   try {
-    console.log("taxInfo in receipt", taxInfo);
+    console.log("vatInfo in receipt PDF", vatInfo);
     return (
       <Document>
         <Page size="A5" style={styles.page}>
@@ -369,11 +384,13 @@ const ReceiptPDFDocument = ({
                 (item.cartQuantity || 1) >= item.discount_threshold;
 
               const itemDiscount = hasItemDiscount ? item.discount : 0;
+              const hasVat = item.allow_tax && vatInfo?.enabled;
 
               return (
                 <View key={item.id} style={styles.tableRow}>
                   <View style={styles.cellItem}>
                     <Text style={styles.itemName}>{item.name}</Text>
+                    {hasVat && <Text style={styles.vatBadge}>+VAT</Text>}
                   </View>
                   <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                   <View style={styles.cellPrice}>
@@ -429,30 +446,30 @@ const ReceiptPDFDocument = ({
             </View>
           )}
 
-          {/* Tax Display Section - ADDED */}
-          {taxInfo?.enabled && (
+          {/* VAT Display Section */}
+          {vatInfo?.enabled && vatInfo?.amount > 0 && (
             <View style={styles.summarySection}>
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal (before tax):</Text>
+                <Text style={styles.summaryLabel}>Subtotal (before VAT):</Text>
                 <Text style={styles.summaryValue}>
                   {total.toLocaleString()}
                 </Text>
               </View>
-              <View style={styles.taxRow}>
-                <Text style={styles.taxLabel}>Tax ({taxInfo.rate}%):</Text>
-                <Text style={styles.taxValue}>
-                  +{taxInfo.amount.toLocaleString()}
+              <View style={styles.vatRow}>
+                <Text style={styles.vatLabel}>VAT ({vatInfo.rate}%):</Text>
+                <Text style={styles.vatValue}>
+                  +{vatInfo.amount.toLocaleString()}
                 </Text>
               </View>
             </View>
           )}
 
-          {/* Total - Updated to use totalWithTax if tax enabled */}
+          {/* Total - Updated to use totalWithVat if VAT enabled */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
             <Text style={styles.totalAmount}>
-              {taxInfo?.enabled
-                ? taxInfo.totalWithTax.toLocaleString()
+              {vatInfo?.enabled
+                ? vatInfo.totalWithVat.toLocaleString()
                 : total.toLocaleString()}
             </Text>
           </View>
@@ -576,7 +593,7 @@ const PrintReceiptView = ({
   discount,
   attendant,
   business,
-  taxInfo,
+  vatInfo,
 }: {
   setShowReceipt: (show: boolean) => void;
   setShowPrintReceiptView: (show: boolean) => void;
@@ -591,11 +608,17 @@ const PrintReceiptView = ({
   cart: any[];
   discountAmount: any;
   business: any;
-  taxInfo?: {
+  vatInfo?: {
     enabled: boolean;
     rate: number;
     amount: number;
-    totalWithTax: number;
+    totalWithVat: number;
+    itemsBreakdown?: Array<{
+      id: string;
+      name: string;
+      itemTotal: number;
+      itemVat: number;
+    }>;
   };
 }) => {
   const receiptRef = useRef<HTMLDivElement>(null);
@@ -704,6 +727,17 @@ const PrintReceiptView = ({
           margin-top: 1px;
         }
 
+        .vat-badge {
+          font-size: 7px;
+          color: #2563eb;
+          background-color: #dbeafe;
+          padding: 1px 3px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-top: 2px;
+          font-weight: bold;
+        }
+
         td {
           padding: 1px; 
           font-size: 10px; 
@@ -714,10 +748,10 @@ const PrintReceiptView = ({
         .total-value { font-weight: bolder; font-size: 15px; color:#000;}
         .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
         .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
-        .summary-row, .discount-row, .tax-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
-        .tax-row { color: #2563eb; }
-        .tax-label { color: #2563eb; font-size: 10px; }
-        .tax-value { font-weight: bold; font-size: 10px; color: #2563eb; }
+        .summary-row, .discount-row, .vat-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
+        .vat-row { color: #2563eb; }
+        .vat-label { color: #2563eb; font-size: 10px; }
+        .vat-value { font-weight: bold; font-size: 10px; color: #2563eb; }
         .item-name { font-weight: bold; font-size: 10px; }
         .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
         .detail-label { color: #000; font-size: 10px; font-weight: bold; }
@@ -827,10 +861,16 @@ const PrintReceiptView = ({
                   (item.cartQuantity || 1) >= item.discount_threshold;
 
                 const itemDiscount = hasItemDiscount ? item.discount : 0;
+                const hasVat = item.allow_tax && vatInfo?.enabled;
 
                 return (
                   <tr key={item.id}>
-                    <td className="item-name text-[11px]">{item.name}</td>
+                    <td className="item-name text-[11px]">
+                      <div>
+                        {item.name}
+                        {hasVat && <span className="vat-badge ml-1">+VAT</span>}
+                      </div>
+                    </td>
                     <td className="text-center text-[11px]">
                       {item.cartQuantity || 1}
                     </td>
@@ -885,33 +925,33 @@ const PrintReceiptView = ({
           </div>
         )}
 
-        {/* Tax Display Section - ADDED */}
-        {taxInfo?.enabled && (
-          <div className="tax-section">
+        {/* VAT Display Section */}
+        {vatInfo?.enabled && vatInfo?.amount > 0 && (
+          <div className="vat-section">
             <div className="summary-row flex justify-between items-center">
               <span className="text-[11px] text-gray-500">
-                Subtotal (before tax):
+                Subtotal (before VAT):
               </span>
               <span className="text-[11px] font-bold">
                 {formatToNaira(total)}
               </span>
             </div>
-            <div className="tax-row flex justify-between items-center">
-              <span className="text-[11px] tax-label">
-                Tax ({taxInfo.rate}%):
+            <div className="vat-row flex justify-between items-center">
+              <span className="text-[11px] vat-label">
+                VAT ({vatInfo.rate}%):
               </span>
-              <span className="text-[11px] font-bold tax-value">
-                +{formatToNaira(taxInfo.amount)}
+              <span className="text-[11px] font-bold vat-value">
+                +{formatToNaira(vatInfo.amount)}
               </span>
             </div>
           </div>
         )}
 
-        {/* Payment summary - Updated to use totalWithTax if tax enabled */}
+        {/* Payment summary - Updated to use totalWithVat if VAT enabled */}
         <div className="total-row">
           <span className="text-[11px]">TOTAL:</span>
           <span className=" text-[11px] detail-value">
-            {formatToNaira(taxInfo?.enabled ? taxInfo.totalWithTax : total)}
+            {formatToNaira(vatInfo?.enabled ? vatInfo.totalWithVat : total)}
           </span>
         </div>
 
@@ -1055,7 +1095,7 @@ const PrintReceiptView = ({
               discountAmount={discountAmount}
               discount={discount}
               businessData={businessData}
-              taxInfo={taxInfo}
+              vatInfo={vatInfo}
             />
           }
           fileName={`receipt-${receiptNumber}.pdf`}
