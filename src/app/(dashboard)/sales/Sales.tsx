@@ -435,7 +435,7 @@ const Sales = () => {
                   </div>
 
                   {/* Desktop: 6 columns */}
-                  <div className="hidden lg:grid lg:grid-cols-6 gap-4">
+                  <div className="hidden lg:grid lg:grid-cols-3 gap-4">
                     <CustomSalesCard
                       title={"Revenue"}
                       amount={formatToNaira(SalesData?.data?.results?.revenue)}
