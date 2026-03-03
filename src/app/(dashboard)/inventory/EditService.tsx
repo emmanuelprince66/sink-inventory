@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { useRef, useState } from "react";
+
 const EditService = ({
   serviceId,
   service,
@@ -29,33 +30,27 @@ const EditService = ({
   type: any;
   closeModal: any;
 }) => {
-  const {
-    form,
-    onSubmit,
-    CategoriesData,
-    CategoriesDataLoading,
-    isCreatingService,
-  } = useInventoryHook({ closeModal, service, serviceId });
+  const { form, onSubmit, CategoriesData, CategoriesDataLoading, loading } =
+    useInventoryHook({ closeModal, service, serviceId });
 
   console.log("forms", form.getValues());
+
   return (
     <div>
       <div className="w-full">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            {/* First Name and Last Name in same row */}
             <FormField
               control={form.control}
               name="image"
               render={({ field }) => {
                 const fileInputRef = useRef<HTMLInputElement>(null);
                 const [previewUrl, setPreviewUrl] = useState<string | null>(
-                  null
+                  null,
                 );
 
-                // Handle file change separately from rendering preview
                 const handleFileChange = (
-                  e: React.ChangeEvent<HTMLInputElement>
+                  e: React.ChangeEvent<HTMLInputElement>,
                 ) => {
                   const file = e.target.files?.[0];
                   if (file) {
@@ -69,7 +64,7 @@ const EditService = ({
 
                 return (
                   <FormItem className="flex flex-col items-center gap-2">
-                    <FormLabel>Product Image</FormLabel>
+                    <FormLabel>Service Image</FormLabel>
                     <div
                       className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer"
                       onClick={() => fileInputRef.current?.click()}
@@ -84,7 +79,7 @@ const EditService = ({
                                 ? field.value
                                 : "")
                             }
-                            alt="Product preview"
+                            alt="Service preview"
                             className="w-full h-full object-cover"
                           />
                           <button
@@ -162,6 +157,25 @@ const EditService = ({
 
             <FormField
               control={form.control}
+              name="vat"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>VAT (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter VAT percentage...."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem className="flex-1">
@@ -176,7 +190,7 @@ const EditService = ({
 
             <FormField
               control={form.control}
-              name="category" // You might want to rename this to "category" or similar
+              name="category"
               render={({ field }) => (
                 <FormItem className="flex-1 w-full bg-white">
                   <FormLabel>Category</FormLabel>
@@ -215,7 +229,12 @@ const EditService = ({
                 <FormItem className="flex-1">
                   <FormLabel>Amount</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter Amount...." {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter Amount...."
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -224,10 +243,10 @@ const EditService = ({
 
             <Button
               type="submit"
-              className="w-full h-[48px] "
-              disabled={isCreatingService}
+              className="w-full h-[48px]"
+              disabled={loading}
             >
-              {isCreatingService ? <Spinner /> : "Save"}
+              {loading ? <Spinner /> : "Update Service"}
             </Button>
           </form>
         </Form>

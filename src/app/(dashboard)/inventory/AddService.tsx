@@ -32,7 +32,6 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          {/* First Name and Last Name in same row */}
           <FormField
             control={form.control}
             name="image"
@@ -40,7 +39,6 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
               const fileInputRef = useRef<HTMLInputElement>(null);
               const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-              // Handle file change separately from rendering preview
               const handleFileChange = (
                 e: React.ChangeEvent<HTMLInputElement>,
               ) => {
@@ -56,7 +54,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
 
               return (
                 <FormItem className="flex flex-col items-center gap-2">
-                  <FormLabel>Product Image</FormLabel>
+                  <FormLabel>Service Image</FormLabel>
                   <div
                     className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer"
                     onClick={() => fileInputRef.current?.click()}
@@ -69,7 +67,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
                             previewUrl ||
                             (typeof field.value === "string" ? field.value : "")
                           }
-                          alt="Product preview"
+                          alt="Service preview"
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -144,14 +142,20 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="vat"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel> VAT</FormLabel>
+                <FormLabel>VAT (%)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Vat ...." {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter VAT percentage...."
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -174,7 +178,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
 
           <FormField
             control={form.control}
-            name="category" // You might want to rename this to "category" or similar
+            name="category"
             render={({ field }) => (
               <FormItem className="flex-1 w-full bg-white">
                 <FormLabel>Category</FormLabel>
@@ -213,7 +217,12 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
               <FormItem className="flex-1">
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Amount...." {...field} />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter Amount...."
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -222,10 +231,10 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
 
           <Button
             type="submit"
-            className="w-full h-[48px] "
+            className="w-full h-[48px]"
             disabled={isCreatingService}
           >
-            {isCreatingService ? <Spinner /> : "Save"}
+            {isCreatingService ? <Spinner /> : "Create Service"}
           </Button>
         </form>
       </Form>

@@ -11,7 +11,13 @@ import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ChevronLeft, ChevronRight, FileText, Package } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Package,
+  Star,
+} from "lucide-react"; // ADD Star import
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
@@ -60,6 +66,7 @@ interface Product {
   unit?: string;
   discount?: number;
   discount_threshold?: number;
+  watchlist?: boolean; // ADD THIS
 }
 
 const Pos: React.FC = () => {
@@ -92,13 +99,15 @@ const Pos: React.FC = () => {
     page,
     scannedProductLoading,
     setPage,
-    businessData, // ADD THIS
+    businessData,
   } = usePosHook({
     searchInput,
     setSearchInput,
     addToCart,
     cartItems,
   });
+
+  console.log("ProductData", ProductData);
   const { showToast } = useToast();
 
   const statusColors: Record<string, string> = {
@@ -292,6 +301,7 @@ const Pos: React.FC = () => {
                     product.quantity === 0 || product.status === "OUT-OF-STOCK";
                   const hasVariations =
                     product.variations && product.variations.length > 0;
+                  const isWatchlist = product.watchlist === true; // ADD THIS
 
                   return (
                     <div
@@ -303,6 +313,13 @@ const Pos: React.FC = () => {
                           : "hover:border-green-300 border-gray-200 cursor-pointer group"
                       }`}
                     >
+                      {/* Watchlist Badge - ADD THIS SECTION */}
+                      {isWatchlist && !isOutOfStock && (
+                        <div className="absolute top-1 left-1 bg-red-500 text-white p-1 rounded-full z-10 shadow-md">
+                          <Star className="h-3 w-3 fill-white" />
+                        </div>
+                      )}
+
                       {/* Variation Badge */}
                       {hasVariations && !isOutOfStock && (
                         <div className="absolute top-1 right-1 bg-green-600 text-white px-2 py-0.5 rounded-full text-[8px] font-medium z-10">
@@ -427,7 +444,7 @@ const Pos: React.FC = () => {
               {!isPharmacist && (
                 <CheckoutPage
                   clearCartFunc={clearCartFunc}
-                  businessData={businessData} // ADD THIS PROP
+                  businessData={businessData}
                 />
               )}
 

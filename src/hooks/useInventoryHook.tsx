@@ -23,10 +23,12 @@ const AddReturnProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
   note: z.string().optional(),
 });
+
 const AddDamagedProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
   note: z.string().optional(),
 });
+
 const AddServiceSchema = z.object({
   image: z.union([
     z
@@ -48,6 +50,7 @@ const AddServiceSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
   vat: z.string().optional(),
 });
+
 const AddDiscountSchema = z.object({
   product_threshold: z.string().min(1, "Product threshold is required"),
   price_discount: z.string().min(1, "Price discount is required"),
@@ -233,13 +236,6 @@ export const useInventoryHook = ({
     }
   }, [isCreatingServiceSuccess]);
 
-  useEffect(() => {
-    if (isCreatingServiceSuccess) {
-      refetchInventory();
-      if (closeModal) closeModal();
-    }
-  }, [isCreatingServiceSuccess]);
-
   const searchTerm =
     debouncedSearchTerm?.length >= 3 || debouncedSearchTerm?.length === 0
       ? debouncedSearchTerm
@@ -332,6 +328,7 @@ export const useInventoryHook = ({
       description: "",
       category: "",
       amount: "",
+      vat: "",
     },
     mode: "onChange",
   });
@@ -390,30 +387,56 @@ export const useInventoryHook = ({
     appendIfNotEmpty("description", values.description);
     appendIfNotEmpty("category_id", values.category);
     appendIfNotEmpty("amount", values.amount);
+    appendIfNotEmpty("vat", values.vat);
 
-    createService(
-      { payload: formData, businessId: business_id },
-      {
-        onSuccess: () => {
-          showToast(
-            `Service ${serviceId ? "Updated" : "Created"} successfully`,
-            "success",
-          );
-          queryClient.invalidateQueries({
-            queryKey: [queryKey.inventory.getAllInventory],
-          });
+    // Differentiate between creating and editing
+    if (serviceId) {
+      // EDITING existing service
+      editService(
+        { payload: formData, productId: serviceId },
+        {
+          onSuccess: () => {
+            showToast("Service updated successfully", "success");
+            queryClient.invalidateQueries({
+              queryKey: [queryKey.inventory.getAllInventory],
+            });
+            if (closeModal) closeModal();
+          },
+          onError: (error: any) => {
+            const isSubscriptionError = handleSubscriptionError(error);
+            if (!isSubscriptionError) {
+              const errorMessage =
+                error?.message || error?.error || "Error updating service";
+              showToast(errorMessage, "error");
+            }
+            if (closeModal) closeModal();
+          },
         },
-        onError: (error: any) => {
-          const isSubscriptionError = handleSubscriptionError(error);
-          if (!isSubscriptionError) {
-            const errorMessage =
-              error?.message || error?.error || "Error creating service";
-            showToast(errorMessage, "error");
-          }
-          closeModal();
+      );
+    } else {
+      // CREATING new service
+      createService(
+        { payload: formData, businessId: business_id },
+        {
+          onSuccess: () => {
+            showToast("Service created successfully", "success");
+            queryClient.invalidateQueries({
+              queryKey: [queryKey.inventory.getAllInventory],
+            });
+            if (closeModal) closeModal();
+          },
+          onError: (error: any) => {
+            const isSubscriptionError = handleSubscriptionError(error);
+            if (!isSubscriptionError) {
+              const errorMessage =
+                error?.message || error?.error || "Error creating service";
+              showToast(errorMessage, "error");
+            }
+            if (closeModal) closeModal();
+          },
         },
-      },
-    );
+      );
+    }
   };
 
   useEffect(() => {
@@ -424,6 +447,7 @@ export const useInventoryHook = ({
         description: service.description,
         category: getCategoryByName(service.category) || "",
         amount: service.amount.toString(),
+        vat: service.vat ? service.vat.toString() : "",
       });
     }
   }, [serviceId, service]);
