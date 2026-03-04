@@ -1,5 +1,6 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -30,16 +31,32 @@ const EditService = ({
   type: any;
   closeModal: any;
 }) => {
-  const { form, onSubmit, CategoriesData, CategoriesDataLoading, loading } =
-    useInventoryHook({ closeModal, service, serviceId });
+  const {
+    form,
+    onSubmit,
+    CategoriesData,
+    CategoriesDataLoading,
+    loading,
+    isFormReady,
+  } = useInventoryHook({ closeModal, service, serviceId });
 
-  console.log("forms", form.getValues());
+  // Mirror the pattern from useAddNewProductHook/NewAddProduct:
+  // block render until categories are loaded AND form.reset has completed
+  // This eliminates the flash of empty values before useEffect fires
+  if (CategoriesDataLoading || !CategoriesData || !isFormReady) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="w-full">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            {/* Image Upload */}
             <FormField
               control={form.control}
               name="image"
@@ -55,12 +72,14 @@ const EditService = ({
                   const file = e.target.files?.[0];
                   if (file) {
                     field.onChange(file);
-                    if (previewUrl) {
-                      URL.revokeObjectURL(previewUrl);
-                    }
+                    if (previewUrl) URL.revokeObjectURL(previewUrl);
                     setPreviewUrl(URL.createObjectURL(file));
                   }
                 };
+
+                const displaySrc =
+                  previewUrl ||
+                  (typeof field.value === "string" ? field.value : null);
 
                 return (
                   <FormItem className="flex flex-col items-center gap-2">
@@ -69,16 +88,10 @@ const EditService = ({
                       className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      {previewUrl ||
-                      (typeof field.value === "string" && field.value) ? (
+                      {displaySrc ? (
                         <>
                           <img
-                            src={
-                              previewUrl ||
-                              (typeof field.value === "string"
-                                ? field.value
-                                : "")
-                            }
+                            src={displaySrc}
                             alt="Service preview"
                             className="w-full h-full object-cover"
                           />
@@ -141,6 +154,7 @@ const EditService = ({
               }}
             />
 
+            {/* Service Name */}
             <FormField
               control={form.control}
               name="service_name"
@@ -155,25 +169,7 @@ const EditService = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="vat"
-              render={({ field }) => (
-                <FormItem className="flex-1">
-                  <FormLabel>VAT (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Enter VAT percentage...."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -188,33 +184,29 @@ const EditService = ({
               )}
             />
 
+            {/* Category — rendered only after CategoriesData is loaded, value is controlled */}
             <FormField
               control={form.control}
               name="category"
               render={({ field }) => (
                 <FormItem className="flex-1 w-full bg-white">
                   <FormLabel>Category</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full border border-green-300">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white cursor-pointer border border-green-100">
-                      {!CategoriesDataLoading
-                        ? CategoriesData?.data?.map((category: any) => (
-                            <SelectItem
-                              key={category.id}
-                              value={category.id}
-                              className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
-                            >
-                              {category.name}
-                            </SelectItem>
-                          ))
-                        : "Loading..."}
+                      {CategoriesData?.data?.map((category: any) => (
+                        <SelectItem
+                          key={category.id}
+                          value={category.id}
+                          className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                        >
+                          {category.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -222,6 +214,7 @@ const EditService = ({
               )}
             />
 
+            {/* Amount */}
             <FormField
               control={form.control}
               name="amount"
@@ -237,6 +230,27 @@ const EditService = ({
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* VAT Checkbox */}
+            <FormField
+              control={form.control}
+              name="vat"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="leading-none">
+                    <FormLabel className="text-sm font-medium cursor-pointer">
+                      Apply VAT to this service
+                    </FormLabel>
+                  </div>
                 </FormItem>
               )}
             />

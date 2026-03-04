@@ -1,5 +1,6 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -32,6 +33,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
     <div className="w-full">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          {/* Image Upload */}
           <FormField
             control={form.control}
             name="image"
@@ -45,9 +47,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
                 const file = e.target.files?.[0];
                 if (file) {
                   field.onChange(file);
-                  if (previewUrl) {
-                    URL.revokeObjectURL(previewUrl);
-                  }
+                  if (previewUrl) URL.revokeObjectURL(previewUrl);
                   setPreviewUrl(URL.createObjectURL(file));
                 }
               };
@@ -129,6 +129,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
             }}
           />
 
+          {/* Service Name */}
           <FormField
             control={form.control}
             name="service_name"
@@ -143,25 +144,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="vat"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>VAT (%)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="Enter VAT percentage...."
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+          {/* Description */}
           <FormField
             control={form.control}
             name="description"
@@ -176,6 +159,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
             )}
           />
 
+          {/* Category */}
           <FormField
             control={form.control}
             name="category"
@@ -210,6 +194,7 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
             )}
           />
 
+          {/* Amount */}
           <FormField
             control={form.control}
             name="amount"
@@ -225,6 +210,27 @@ const AddService = ({ closeModal }: { closeModal: any }) => {
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* VAT Checkbox */}
+          <FormField
+            control={form.control}
+            name="vat"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="leading-none">
+                  <FormLabel className="text-sm font-medium cursor-pointer">
+                    Apply VAT to this service
+                  </FormLabel>
+                </div>
               </FormItem>
             )}
           />
