@@ -4,15 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   console.log("PATCH /api/service/[id]/edit called");
+
   try {
-    const { id: productId } = await params; // Await the params promise
+    const { id: productId } = await params;
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
 
-    // Authentication check
     if (!accessToken) {
       return NextResponse.json(
         {
@@ -20,11 +20,10 @@ export async function PATCH(
           error: "Unauthorized",
           message: "Please authenticate first",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    // Validate productId
     if (!productId) {
       return NextResponse.json(
         {
@@ -32,21 +31,34 @@ export async function PATCH(
           error: "Product ID is required",
           message: "No product identifier provided",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const formData = await request.formData();
+
+    // Debug log — safe to keep in dev
+    const formDataEntries: Record<string, any> = {};
+    for (const [key, value] of Array.from(formData.entries())) {
+      formDataEntries[key] =
+        value instanceof File
+          ? `File: ${value.name} (${value.size} bytes)`
+          : value;
+    }
+    console.log("PATCH form data received:", formDataEntries);
+
     const apiUrl = `${BaseUrl}service/single_service/${productId}/`;
 
+    // FIX: Forward FormData directly — no JSON.stringify, no Content-Type header
+    // Let fetch set the correct multipart/form-data boundary automatically
     const response = await fetch(apiUrl, {
       method: "PATCH",
       headers: {
         accept: "application/json",
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        // DO NOT set Content-Type here — fetch sets it automatically with the correct boundary
       },
-      body: JSON.stringify(Object.fromEntries(formData)),
+      body: formData,
     });
 
     const responseData = await response.json();
@@ -58,7 +70,7 @@ export async function PATCH(
           message: responseData.message || "Failed to edit Service",
           error: responseData.error || "Service edit failed",
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -68,7 +80,7 @@ export async function PATCH(
         data: responseData,
         message: "Service updated successfully",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Server error:", error);
@@ -78,7 +90,7 @@ export async function PATCH(
         error: "Internal server error",
         message: "An unexpected error occurred",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

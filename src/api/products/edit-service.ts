@@ -29,7 +29,7 @@ interface UseEditProductMutationOptions extends MutationConfig<QueryFnType> {
 }
 export const useEditServiceMutation = (
   productId: any,
-  config?: UseEditProductMutationOptions
+  config?: UseEditProductMutationOptions,
 ) => {
   const { showToast } = useToast();
 
@@ -44,7 +44,7 @@ export const useEditServiceMutation = (
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Service Updated successfully", "success");
+      // showToast("Service Updated successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

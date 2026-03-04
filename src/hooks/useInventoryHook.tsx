@@ -48,7 +48,7 @@ const AddServiceSchema = z.object({
   description: z.string().optional(),
   category: z.string().min(1, "Category name is required"),
   amount: z.string().min(1, "Amount is required"),
-  vat: z.string().optional(),
+  vat: z.boolean(),
 });
 
 const AddDiscountSchema = z.object({
@@ -123,6 +123,7 @@ export const useInventoryHook = ({
   const queryClient = useQueryClient();
 
   const [deleteProductId, setDeleteProductId] = useState<string | null>(null);
+  const [isFormReady, setIsFormReady] = useState(false);
 
   const {
     mutate: addReturnedOrDamagedProduct,
@@ -210,8 +211,6 @@ export const useInventoryHook = ({
   }, [isDeletingServiceSuccess, isDeletingProductSuccess]);
 
   const handleDeleteProduct = (id: string, type: string) => {
-    console.log("delete id", id);
-    console.log("delete type", type);
     if (type === "PRODUCT") {
       deleteProduct(id);
     } else {
@@ -255,7 +254,6 @@ export const useInventoryHook = ({
       category_id: selectedCategoryId,
       department_id: selectedDepartmentId,
       ...(selectedType && { type: selectedType }),
-      // Boolean filters — only pass if true to avoid sending false unnecessarily
       ...(productFilters?.allowTax && { allow_tax: true }),
       ...(productFilters?.sellOnline && { sell_online: true }),
       ...(productFilters?.inHouse && { in_house: true }),
@@ -293,16 +291,6 @@ export const useInventoryHook = ({
     return category?.id;
   };
 
-  const getCategoryIdForEditServiceFunc = () => {
-    if (type === "SERVICE" && CategoriesData) {
-      const productCat = CategoriesData?.data?.find(
-        (category: any) => category.name === product.category,
-      ).id;
-      return productCat;
-    }
-    return null;
-  };
-
   const addReturnedProductForm = useForm<AddReturnedFormValues>({
     resolver: zodResolver(AddReturnProductSchema) as any,
     defaultValues: { quantity: "", note: "" },
@@ -328,7 +316,7 @@ export const useInventoryHook = ({
       description: "",
       category: "",
       amount: "",
-      vat: "",
+      vat: false,
     },
     mode: "onChange",
   });
@@ -375,7 +363,11 @@ export const useInventoryHook = ({
 
   const onSubmit = (values: any) => {
     const formData = new FormData();
-    if (values.image instanceof File) formData.append("image", values.image);
+
+    // FIX: Only append image if it's an actual new File — never send a string URL
+    if (values.image instanceof File) {
+      formData.append("image", values.image);
+    }
 
     const appendIfNotEmpty = (fieldName: string, value: string | undefined) => {
       if (value !== undefined && value !== null && value !== "") {
@@ -387,11 +379,13 @@ export const useInventoryHook = ({
     appendIfNotEmpty("description", values.description);
     appendIfNotEmpty("category_id", values.category);
     appendIfNotEmpty("amount", values.amount);
-    appendIfNotEmpty("vat", values.vat);
 
-    // Differentiate between creating and editing
+    // VAT is now a boolean — send "true" or "false" as string for FormData
+    if (values.vat !== undefined) {
+      formData.append("vat", values.vat ? "true" : "false");
+    }
+
     if (serviceId) {
-      // EDITING existing service
       editService(
         { payload: formData, productId: serviceId },
         {
@@ -409,12 +403,10 @@ export const useInventoryHook = ({
                 error?.message || error?.error || "Error updating service";
               showToast(errorMessage, "error");
             }
-            if (closeModal) closeModal();
           },
         },
       );
     } else {
-      // CREATING new service
       createService(
         { payload: formData, businessId: business_id },
         {
@@ -432,7 +424,6 @@ export const useInventoryHook = ({
                 error?.message || error?.error || "Error creating service";
               showToast(errorMessage, "error");
             }
-            if (closeModal) closeModal();
           },
         },
       );
@@ -440,17 +431,26 @@ export const useInventoryHook = ({
   };
 
   useEffect(() => {
-    if (serviceId && service) {
-      form.reset({
-        image: service.image,
-        service_name: service.name,
-        description: service.description,
-        category: getCategoryByName(service.category) || "",
-        amount: service.amount.toString(),
-        vat: service.vat ? service.vat.toString() : "",
-      });
+    if (!serviceId) {
+      setIsFormReady(true);
+      return;
     }
-  }, [serviceId, service]);
+    if (serviceId && service && CategoriesData) {
+      const categoryId = getCategoryByName(service.category) || "";
+      form.reset({
+        image: service.image || "",
+        service_name: service.name,
+        description: service.description || "",
+        category: categoryId,
+        amount: service.amount.toString(),
+        vat:
+          service.vat === true ||
+          service.vat === "true" ||
+          Number(service.vat) > 0,
+      });
+      setTimeout(() => setIsFormReady(true), 0);
+    }
+  }, [serviceId, service, CategoriesData]);
 
   const onSubmitEditSellingPrice = (values: EditSellingPriceFormValues) => {
     const formData = new FormData();
@@ -486,5 +486,6 @@ export const useInventoryHook = ({
     editSellingPriceForm,
     onSubmit,
     CategoriesDataLoading,
+    isFormReady,
   };
 };
