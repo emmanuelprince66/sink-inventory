@@ -72,6 +72,8 @@ export const useAnalyticHook = ({
       enabled: !!business_id,
     });
 
+  console.log("MaxSalesAnalyticData", MaxSalesAnalyticData);
+
   const {
     data: BankBreakDownAnalytics,
     isLoading: BankBreakDownAnalyticsLoading,
