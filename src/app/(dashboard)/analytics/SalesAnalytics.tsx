@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Button } from "@/components/ui/button";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useUserRole } from "@/lib/store/user-store";
@@ -11,8 +12,10 @@ import {
   Legend,
   Tooltip,
 } from "chart.js";
-import { useState } from "react";
+import { endOfMonth, format, getDaysInMonth, startOfMonth } from "date-fns";
+import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
+import { DateRange } from "react-day-picker";
 import PaymentDetails from "./PaymentDetails";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -84,19 +87,51 @@ const buildYearRows = (
     ytd: val.ytd,
   }));
 
-/** Build rows for MonthTable from API categories, filtered to a given month */
+/** Build rows for MonthTable from API categories, filtered to a given month with date range */
 const buildMonthRows = (
   categories: Record<
     string,
     { monthly: Record<string, number>; ytd: number }
   > = {},
   monthIndex: number, // 0-based
-) =>
-  Object.entries(categories).map(([name, val], i) => ({
+  dateRange?: DateRange,
+  selectedYear?: number,
+) => {
+  // Get the base monthly amount for this month
+  const baseRows = Object.entries(categories).map(([name, val], i) => ({
     number: String(i + 1),
     category: name,
     actual: val.monthly[String(monthIndex + 1)] ?? 0, // API keys are 1-based
   }));
+
+  // If we have a date range, calculate the prorated amount
+  if (dateRange?.from && dateRange?.to && selectedYear) {
+    const fromDate = new Date(dateRange.from);
+    const toDate = new Date(dateRange.to);
+
+    // Only prorate if both dates are in the same month
+    if (
+      fromDate.getMonth() === toDate.getMonth() &&
+      fromDate.getFullYear() === selectedYear &&
+      toDate.getFullYear() === selectedYear
+    ) {
+      const daysInMonth = getDaysInMonth(new Date(selectedYear, monthIndex));
+      const startDay = fromDate.getDate();
+      const endDay = toDate.getDate();
+      const daysInRange = endDay - startDay + 1;
+
+      // Prorate the amounts based on days in range vs days in month
+      const prorateRatio = daysInRange / daysInMonth;
+
+      return baseRows.map((row) => ({
+        ...row,
+        actual: Math.round(row.actual * prorateRatio),
+      }));
+    }
+  }
+
+  return baseRows;
+};
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -394,6 +429,10 @@ const NetProfitTable = ({
   revenueByMonth,
   expensesByMonth,
   netProfitByMonth,
+  dateRangeLabel,
+  proratedRevenue,
+  proratedExpenses,
+  proratedNetProfit,
 }: {
   filterMode: FilterMode;
   selectedYear: number;
@@ -401,6 +440,10 @@ const NetProfitTable = ({
   revenueByMonth: number[];
   expensesByMonth: number[];
   netProfitByMonth: number[];
+  dateRangeLabel?: string;
+  proratedRevenue?: number;
+  proratedExpenses?: number;
+  proratedNetProfit?: number;
 }) => {
   if (filterMode === "year") {
     const ytdRevenue = revenueByMonth.reduce((a, b) => a + b, 0);
@@ -504,9 +547,10 @@ const NetProfitTable = ({
   }
 
   // ── Month view ──
-  const revenueActual = revenueByMonth[selectedMonth] ?? 0;
-  const expensesActual = expensesByMonth[selectedMonth] ?? 0;
-  const netActual = netProfitByMonth[selectedMonth] ?? 0;
+  const revenueActual = proratedRevenue ?? revenueByMonth[selectedMonth] ?? 0;
+  const expensesActual =
+    proratedExpenses ?? expensesByMonth[selectedMonth] ?? 0;
+  const netActual = proratedNetProfit ?? netProfitByMonth[selectedMonth] ?? 0;
 
   const rows = [
     {
@@ -532,7 +576,8 @@ const NetProfitTable = ({
   return (
     <CustomCard className="border-gray-200" shadow>
       <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
-        Net Profit Summary — {FULL_MONTHS[selectedMonth]} {selectedYear}
+        Net Profit Summary —{" "}
+        {dateRangeLabel || `${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs sm:text-sm">
@@ -578,76 +623,75 @@ const FilterBar = ({
   setFilterMode,
   selectedYear,
   setSelectedYear,
-  selectedMonth,
-  setSelectedMonth,
+  monthDateRange,
+  setMonthDateRange,
 }: {
   filterMode: FilterMode;
   setFilterMode: (m: FilterMode) => void;
   selectedYear: number;
   setSelectedYear: (y: number) => void;
-  selectedMonth: number;
-  setSelectedMonth: (m: number) => void;
-}) => (
-  <div className="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-xl border border-gray-200 bg-gray-50">
-    {/* Mode toggle */}
-    <div className="flex rounded-lg overflow-hidden border border-gray-300">
-      {(["year", "month"] as FilterMode[]).map((m) => (
-        <button
-          key={m}
-          onClick={() => setFilterMode(m)}
-          className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
-            filterMode === m
-              ? "text-white"
-              : "bg-white text-gray-600 hover:bg-gray-100"
-          }`}
-          style={filterMode === m ? { backgroundColor: "#16a34a" } : {}}
-        >
-          {m === "year" ? "Year (YTD)" : "Month"}
-        </button>
-      ))}
-    </div>
-
-    {/* Year selector */}
-    <div className="flex items-center gap-2">
-      <label className="text-sm font-medium text-gray-700">Year:</label>
-      <select
-        value={selectedYear}
-        onChange={(e) => setSelectedYear(Number(e.target.value))}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
-      >
-        {YEARS.map((y) => (
-          <option key={y} value={y}>
-            {y}
-          </option>
+  monthDateRange: DateRange | undefined;
+  setMonthDateRange: (d: DateRange | undefined) => void;
+}) => {
+  return (
+    <div className="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-xl border border-gray-200 bg-gray-50">
+      {/* Mode toggle */}
+      <div className="flex rounded-lg overflow-hidden border border-gray-300">
+        {(["year", "month"] as FilterMode[]).map((m) => (
+          <button
+            key={m}
+            onClick={() => setFilterMode(m)}
+            className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+              filterMode === m
+                ? "text-white"
+                : "bg-white text-gray-600 hover:bg-gray-100"
+            }`}
+            style={filterMode === m ? { backgroundColor: "#16a34a" } : {}}
+          >
+            {m === "year" ? "Year (YTD)" : "Month"}
+          </button>
         ))}
-      </select>
-    </div>
+      </div>
 
-    {/* Month selector — only in month mode */}
-    {filterMode === "month" && (
+      {/* Year selector */}
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">Month:</label>
+        <label className="text-sm font-medium text-gray-700">Year:</label>
         <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
         >
-          {FULL_MONTHS.map((m, i) => (
-            <option key={i} value={i}>
-              {m}
+          {YEARS.map((y) => (
+            <option key={y} value={y}>
+              {y}
             </option>
           ))}
         </select>
       </div>
-    )}
 
-    <span className="ml-auto text-xs text-gray-500 italic">
-      {filterMode === "year"
-        ? `Showing all months for ${selectedYear}`
-        : `Showing ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
-    </span>
-  </div>
-);
+      {/* Date Range selector — only in month mode */}
+      {filterMode === "month" && (
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">
+            Date Range:
+          </label>
+          <DatePickerWithRange
+            date={monthDateRange}
+            onDateChange={setMonthDateRange}
+          />
+        </div>
+      )}
+
+      <span className="ml-auto text-xs text-gray-500 italic">
+        {filterMode === "year"
+          ? `Showing all months for ${selectedYear}`
+          : monthDateRange?.from && monthDateRange?.to
+            ? `Showing ${format(monthDateRange.from, "MMM dd")} - ${format(monthDateRange.to, "MMM dd, yyyy")}`
+            : "Select a date range"}
+      </span>
+    </div>
+  );
+};
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -674,6 +718,36 @@ const SalesAnalytics = ({
     new Date().getMonth(),
   ); // 0-based
 
+  // New state for month date range filter
+  const [monthDateRange, setMonthDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date(),
+  });
+
+  // Update month date range to current month bounds when year or filter mode changes
+  useEffect(() => {
+    if (filterMode === "month") {
+      const now = new Date();
+      const year = selectedYear;
+      const month = now.getMonth(); // Use current month
+      setMonthDateRange({
+        from: startOfMonth(new Date(year, month)),
+        to: endOfMonth(new Date(year, month)),
+      });
+      setSelectedMonth(month);
+    }
+  }, [filterMode, selectedYear]);
+
+  // Extract month from date range when it changes
+  useEffect(() => {
+    if (monthDateRange?.from) {
+      const newMonth = new Date(monthDateRange.from).getMonth();
+      if (newMonth !== selectedMonth) {
+        setSelectedMonth(newMonth);
+      }
+    }
+  }, [monthDateRange]);
+
   const handleOpenPaymentDetailsModal = (name: string) => {
     setName(name);
     setOpenPaymentDetailsModal(true);
@@ -681,7 +755,7 @@ const SalesAnalytics = ({
   const handleClosePaymentDetailsModal = () =>
     setOpenPaymentDetailsModal(false);
 
-  // ── Single hook call — passes selectedYear so API refetches on year change ──
+  // ── Single hook call — only passes selectedYear (no monthDateRange) ──
   const {
     BankBreakDownAnalytics,
     BankBreakDownAnalyticsLoading,
@@ -691,7 +765,7 @@ const SalesAnalytics = ({
     openPaymentDetailsModal,
     name,
     dateRange,
-    selectedYear, // ← triggers new fetch when user changes year
+    selectedYear, // ← Only year changes trigger new API fetch
   });
 
   // ── Derive arrays from real API data ─────────────────────────────────────
@@ -699,7 +773,7 @@ const SalesAnalytics = ({
 
   const revenueByMonth = monthObjToArray(apiData?.revenue?.total?.monthly);
   const expensesByMonth = monthObjToArray(apiData?.expenses?.total?.monthly);
-  const netProfitByMonth = monthObjToArray(apiData?.net_profit?.monthly);
+  const netProfitByMonth = monthObjToArray(apiData?.net_profit?.total?.monthly);
 
   const revenueCategories = apiData?.revenue?.categories ?? {};
   const expensesCategories = apiData?.expenses?.categories ?? {};
@@ -708,9 +782,55 @@ const SalesAnalytics = ({
   const incomeYearRows = buildYearRows(revenueCategories);
   const directCostYearRows = buildYearRows(expensesCategories);
 
-  // Month view rows — slice to selectedMonth only
-  const incomeMonthRows = buildMonthRows(revenueCategories, selectedMonth);
-  const directCostMonthRows = buildMonthRows(expensesCategories, selectedMonth);
+  // Month view rows — filtered by date range on the frontend
+  const incomeMonthRows = buildMonthRows(
+    revenueCategories,
+    selectedMonth,
+    monthDateRange,
+    selectedYear,
+  );
+  const directCostMonthRows = buildMonthRows(
+    expensesCategories,
+    selectedMonth,
+    monthDateRange,
+    selectedYear,
+  );
+
+  // Calculate prorated totals for Net Profit table
+  let proratedRevenue: number | undefined;
+  let proratedExpenses: number | undefined;
+  let proratedNetProfit: number | undefined;
+
+  if (filterMode === "month" && monthDateRange?.from && monthDateRange?.to) {
+    const fromDate = new Date(monthDateRange.from);
+    const toDate = new Date(monthDateRange.to);
+
+    // Only prorate if both dates are in the same month
+    if (
+      fromDate.getMonth() === toDate.getMonth() &&
+      fromDate.getFullYear() === selectedYear &&
+      toDate.getFullYear() === selectedYear
+    ) {
+      const daysInMonth = getDaysInMonth(new Date(selectedYear, selectedMonth));
+      const startDay = fromDate.getDate();
+      const endDay = toDate.getDate();
+      const daysInRange = endDay - startDay + 1;
+      const prorateRatio = daysInRange / daysInMonth;
+
+      const baseRevenue = revenueByMonth[selectedMonth] ?? 0;
+      const baseExpenses = expensesByMonth[selectedMonth] ?? 0;
+      const baseNetProfit = netProfitByMonth[selectedMonth] ?? 0;
+
+      proratedRevenue = Math.round(baseRevenue * prorateRatio);
+      proratedExpenses = Math.round(baseExpenses * prorateRatio);
+      proratedNetProfit = Math.round(baseNetProfit * prorateRatio);
+    }
+  }
+
+  const dateRangeLabel =
+    monthDateRange?.from && monthDateRange?.to
+      ? `${format(monthDateRange.from, "MMM dd")} - ${format(monthDateRange.to, "MMM dd, yyyy")}`
+      : `${FULL_MONTHS[selectedMonth]} ${selectedYear}`;
 
   // ── Chart ─────────────────────────────────────────────────────────────────
   const chartData = {
@@ -750,9 +870,7 @@ const SalesAnalytics = ({
   };
 
   const headingText =
-    filterMode === "year"
-      ? `${selectedYear} — Year to Date`
-      : `${FULL_MONTHS[selectedMonth]} ${selectedYear}`;
+    filterMode === "year" ? `${selectedYear} — Year to Date` : dateRangeLabel;
 
   const tableCols = filterMode === "year" ? 15 : 3;
 
@@ -859,8 +977,8 @@ const SalesAnalytics = ({
             setFilterMode={setFilterMode}
             selectedYear={selectedYear}
             setSelectedYear={setSelectedYear}
-            selectedMonth={selectedMonth}
-            setSelectedMonth={setSelectedMonth}
+            monthDateRange={monthDateRange}
+            setMonthDateRange={setMonthDateRange}
           />
         </div>
 
@@ -876,7 +994,7 @@ const SalesAnalytics = ({
           />
         ) : (
           <MonthTable
-            title={`Revenue — ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
+            title={`Revenue — ${dateRangeLabel}`}
             rows={incomeMonthRows}
             totalsLabel="TOTAL REVENUE"
             actualAccent="text-green-600"
@@ -895,7 +1013,7 @@ const SalesAnalytics = ({
           />
         ) : (
           <MonthTable
-            title={`Direct Costs — ${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
+            title={`Direct Costs — ${dateRangeLabel}`}
             rows={directCostMonthRows}
             totalsLabel="TOTAL DIRECT COSTS"
             actualAccent="text-red-600"
@@ -913,6 +1031,10 @@ const SalesAnalytics = ({
             revenueByMonth={revenueByMonth}
             expensesByMonth={expensesByMonth}
             netProfitByMonth={netProfitByMonth}
+            dateRangeLabel={filterMode === "month" ? dateRangeLabel : undefined}
+            proratedRevenue={proratedRevenue}
+            proratedExpenses={proratedExpenses}
+            proratedNetProfit={proratedNetProfit}
           />
         )}
       </div>
