@@ -50,18 +50,11 @@ import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  ChevronDown,
-  Edit,
-  Plus,
-  Trash2,
-  Upload,
-  X,
-} from "lucide-react";
+import { CalendarIcon, ChevronDown, Edit, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { ProductFormSkeleton } from "./ProductSkeleton";
+import { ImageUploadWithOptions } from "./[id]/ImageUploadWithOptions";
 
 interface NewAddProductProps {
   id?: string;
@@ -603,150 +596,15 @@ const NewAddProduct = ({
                           <FormLabel className="text-sm font-medium text-gray-700">
                             Product Image
                           </FormLabel>
-
-                          {/* Show preview if image exists */}
-                          {field.value instanceof File ||
-                          (typeof field.value === "string" && field.value) ? (
-                            <div className="relative mt-1 border-2 border-gray-200 rounded-md p-4">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-                                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                                    <img
-                                      src={
-                                        field.value instanceof File
-                                          ? URL.createObjectURL(field.value)
-                                          : field.value
-                                      }
-                                      alt="Product preview"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-gray-900 truncate">
-                                      {field.value instanceof File
-                                        ? field.value.name
-                                        : "Current image"}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {field.value instanceof File
-                                        ? `${(field.value.size / 1024 / 1024).toFixed(2)} MB`
-                                        : "Uploaded image"}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2 w-full sm:w-auto">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    type="button"
-                                    onClick={() =>
-                                      document
-                                        .getElementById("image-upload")
-                                        ?.click()
-                                    }
-                                    className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-initial"
-                                  >
-                                    Change
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    type="button"
-                                    onClick={() => field.onChange(undefined)}
-                                    className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-initial"
-                                  >
-                                    <X className="w-4 h-4 sm:mr-1" />
-                                    <span className="hidden sm:inline">
-                                      Remove
-                                    </span>
-                                  </Button>
-                                </div>
-                              </div>
-
-                              {/* ✅ IMPROVED FILE INPUT - Hidden but properly configured */}
-                              <input
-                                id="image-upload"
-                                type="file"
-                                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
-                                capture="environment"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    console.log(
-                                      "File selected:",
-                                      file.name,
-                                      "Type:",
-                                      file.type,
-                                      "Size:",
-                                      file.size,
-                                    );
-                                    field.onChange(file);
-                                  }
-                                }}
-                              />
-                            </div>
-                          ) : (
-                            /* Show upload area if no image */
-                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
-                              <div className="space-y-1 text-center flex flex-col items-center">
-                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                                <div className="flex text-sm text-gray-600">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    type="button"
-                                    onClick={() =>
-                                      document
-                                        .getElementById("image-upload")
-                                        ?.click()
-                                    }
-                                  >
-                                    Upload Image
-                                  </Button>
-
-                                  {/* ✅ IMPROVED FILE INPUT with camera support */}
-                                  <input
-                                    id="image-upload"
-                                    type="file"
-                                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
-                                    capture="environment"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        console.log(
-                                          "File selected:",
-                                          file.name,
-                                          "Type:",
-                                          file.type,
-                                          "Size:",
-                                          file.size,
-                                        );
-
-                                        // Additional validation
-                                        if (file.size > 5 * 1024 * 1024) {
-                                          showToast(
-                                            "File size must be less than 5MB",
-                                            "error",
-                                          );
-                                          return;
-                                        }
-
-                                        field.onChange(file);
-                                      } else {
-                                        console.log("No file selected");
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  PNG, JPG, WEBP, HEIC up to 5MB
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
+                          <FormControl>
+                            <ImageUploadWithOptions
+                              value={field.value}
+                              onChange={field.onChange}
+                              onError={(message) => {
+                                showToast(message, "error");
+                              }}
+                            />
+                          </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
                       )}
