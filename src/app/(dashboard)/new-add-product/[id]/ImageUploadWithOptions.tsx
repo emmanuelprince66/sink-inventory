@@ -215,7 +215,11 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {value instanceof File ? value.name : "Current image"}
+                  {value instanceof File
+                    ? value.name.length > 10
+                      ? value.name.slice(0, 10) + "......."
+                      : value.name
+                    : "Current image"}
                 </p>
                 <p className="text-xs text-gray-500">
                   {value instanceof File
