@@ -1,6 +1,3 @@
-// COMPLETE ImageUploadWithOptions.tsx WITH IMAGE COMPRESSION
-// This compresses camera photos before upload to work around AWS limits
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -72,7 +69,32 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
       return;
     }
 
-    let processedFile = file;
+    // Infer MIME type from extension (needed for HEIC and files missing type)
+    const inferMimeType = (fileName: string, fallback: string): string => {
+      const ext = fileName.toLowerCase().split(".").pop();
+      switch (ext) {
+        case "png":
+          return "image/png";
+        case "jpg":
+        case "jpeg":
+          return "image/jpeg";
+        case "webp":
+          return "image/webp";
+        case "heic":
+          return "image/heic";
+        case "heif":
+          return "image/heif";
+        default:
+          return fallback || "image/jpeg";
+      }
+    };
+
+    const mimeType =
+      file.type && file.type !== "application/octet-stream"
+        ? file.type
+        : inferMimeType(file.name, "image/jpeg");
+
+    let processedFile: File;
 
     // Compress if larger than 1MB
     if (file.size > 1 * 1024 * 1024) {
@@ -81,13 +103,20 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       try {
         const options = {
-          maxSizeMB: 0.9, // Target size slightly under 1MB to be safe
-          maxWidthOrHeight: 1920, // Maintain good quality
-          useWebWorker: true, // Use web worker for better performance
-          fileType: file.type || "image/jpeg", // Preserve original type if possible
+          maxSizeMB: 0.9,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          fileType: mimeType,
         };
 
-        processedFile = await imageCompression(file, options);
+        const compressed = await imageCompression(file, options);
+
+        // ✅ FIX: imageCompression returns a Blob-like object, not a true File.
+        // Wrapping in new File() ensures `instanceof File` checks pass downstream.
+        processedFile = new File([compressed], file.name, {
+          type: mimeType,
+          lastModified: file.lastModified,
+        });
 
         console.log("✅ Compression successful:", {
           name: processedFile.name,
@@ -109,43 +138,11 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
       }
     } else {
       console.log("✅ File small enough, no compression needed");
-    }
 
-    // For files without MIME type, infer from extension
-    if (
-      !processedFile.type ||
-      processedFile.type === "application/octet-stream"
-    ) {
-      console.log("⚠️ File has no MIME type, inferring from extension...");
-      const ext = processedFile.name.toLowerCase().split(".").pop();
-      let mimeType = "image/jpeg";
-
-      switch (ext) {
-        case "png":
-          mimeType = "image/png";
-          break;
-        case "jpg":
-        case "jpeg":
-          mimeType = "image/jpeg";
-          break;
-        case "webp":
-          mimeType = "image/webp";
-          break;
-        case "heic":
-          mimeType = "image/heic";
-          break;
-        case "heif":
-          mimeType = "image/heif";
-          break;
-        default:
-          mimeType = "image/jpeg";
-      }
-
-      console.log(`✅ Inferred MIME type: ${mimeType}`);
-
-      processedFile = new File([processedFile], processedFile.name, {
+      // Still wrap in new File() to normalise type, in case it was missing
+      processedFile = new File([file], file.name, {
         type: mimeType,
-        lastModified: processedFile.lastModified,
+        lastModified: file.lastModified,
       });
     }
 
@@ -154,6 +151,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
       type: processedFile.type,
       size: processedFile.size,
       sizeInMB: (processedFile.size / 1024 / 1024).toFixed(2) + " MB",
+      isFile: processedFile instanceof File,
     });
 
     onChange(processedFile);
@@ -278,7 +276,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center">
+        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center bg-white border-gray-50 shadow-sm">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
