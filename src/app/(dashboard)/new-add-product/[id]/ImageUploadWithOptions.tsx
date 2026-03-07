@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Camera, Upload, X } from "lucide-react";
 import React, { useState } from "react";
@@ -27,7 +27,14 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      console.log("File selected:", file.name, "Type:", file.type, "Size:", file.size);
+      console.log(
+        "File selected:",
+        file.name,
+        "Type:",
+        file.type,
+        "Size:",
+        file.size,
+      );
 
       // Validate file size
       if (file.size > 5 * 1024 * 1024) {
@@ -70,9 +77,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                 <img
                   src={
-                    value instanceof File
-                      ? URL.createObjectURL(value)
-                      : value
+                    value instanceof File ? URL.createObjectURL(value) : value
                   }
                   alt="Product preview"
                   className="w-full h-full object-cover"
@@ -114,7 +119,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </div>
       ) : (
         /* Upload Area */
-        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
+        <div className="mt-1 flex justify-center px-6 bg-white pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
           <div className="space-y-1 text-center flex flex-col items-center">
             <Upload className="mx-auto h-12 w-12 text-gray-400" />
             <div className="flex text-sm text-gray-600">
@@ -136,7 +141,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-white border-gray-100 shadow-sm">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
