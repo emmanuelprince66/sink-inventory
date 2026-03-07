@@ -55,37 +55,52 @@ const createProductSchema = (isEditMode: boolean) => {
       .union([
         z
           .instanceof(File)
-          .refine(
-            (file) => file.size <= 5 * 1024 * 1024,
-            "File size must be less than 5MB",
-          )
           .refine((file) => {
-            // More permissive MIME type checking for iOS Safari
-            const validTypes = [
-              "image/jpeg",
-              "image/jpg",
-              "image/png",
-              "image/webp",
-              "image/heic", // iOS specific format
-              "image/heif", // iOS specific format
-            ];
+            // Check file size
+            return file.size <= 5 * 1024 * 1024;
+          }, "File size must be less than 5MB")
+          .refine((file) => {
+            console.log("🔍 Validating file:", {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+            });
 
-            // iOS Safari sometimes returns empty MIME type,
-            // so we check file extension as fallback
-            if (!file.type && file.name) {
+            // If no MIME type provided (common with camera), check extension
+            if (!file.type || file.type === "") {
+              console.log("⚠️ No MIME type, checking extension...");
               const ext = file.name.toLowerCase().split(".").pop();
-              return ["jpg", "jpeg", "png", "webp", "heic", "heif"].includes(
-                ext || "",
-              );
+              const validExtensions = [
+                "jpg",
+                "jpeg",
+                "png",
+                "webp",
+                "heic",
+                "heif",
+                "gif",
+              ];
+              const isValidExt = validExtensions.includes(ext || "");
+              console.log(`Extension: ${ext}, Valid: ${isValidExt}`);
+              return isValidExt;
             }
 
-            return validTypes.includes(file.type.toLowerCase());
-          }, "Only .jpg, .png, .webp, and .heic formats are supported"),
-        z.string().url().optional(), // For existing image URLs
-        z.string().length(0).optional(), // Allow empty string
+            // Accept any image MIME type
+            const isImage = file.type.startsWith("image/");
+            console.log(`MIME type: ${file.type}, Is image: ${isImage}`);
+            return isImage;
+          }, "Please select a valid image file"),
+        z.string().url().optional(),
+        z.string().length(0).optional(),
         z.undefined(),
       ])
-      .optional(),
+      .optional()
+      .transform((val) => {
+        // Log what we're getting
+        if (val instanceof File) {
+          console.log("✅ Image validated successfully:", val.name);
+        }
+        return val;
+      }),
     sku: z.string().default(""),
     category: z.string().default(""),
     expiry_date: z.string().default(""),

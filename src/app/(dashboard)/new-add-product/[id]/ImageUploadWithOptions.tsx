@@ -1,3 +1,5 @@
+// UPDATED ImageUploadWithOptions.tsx with better camera photo handling
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,13 +21,11 @@ interface ImageUploadWithOptionsProps {
 const isMobileDevice = () => {
   if (typeof window === "undefined") return false;
 
-  // Check user agent
   const userAgent =
     navigator.userAgent || navigator.vendor || (window as any).opera;
   const mobileRegex =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 
-  // Check for touch support and screen size
   const hasTouchScreen =
     "ontouchstart" in window || navigator.maxTouchPoints > 0;
   const isSmallScreen = window.innerWidth <= 768;
@@ -43,37 +43,84 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Check if mobile on mount
   React.useEffect(() => {
     setIsMobile(isMobileDevice());
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      console.log(
-        "File selected:",
-        file.name,
-        "Type:",
-        file.type,
-        "Size:",
-        file.size,
-      );
+    if (!file) {
+      console.log("❌ No file selected");
+      return;
+    }
 
-      // Validate file size
-      if (file.size > 5 * 1024 * 1024) {
-        onError?.("File size must be less than 5MB");
-        return;
+    console.log("📸 File selected from camera/gallery:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: new Date(file.lastModified).toISOString(),
+    });
+
+    // Validate file size
+    if (file.size > 5 * 1024 * 1024) {
+      console.log("❌ File too large:", file.size);
+      onError?.("File size must be less than 5MB");
+      e.target.value = ""; // Reset input
+      return;
+    }
+
+    // For files without MIME type or with generic types, create a new File with proper type
+    let processedFile = file;
+
+    if (!file.type || file.type === "application/octet-stream") {
+      console.log("⚠️ File has no MIME type, inferring from extension...");
+      const ext = file.name.toLowerCase().split(".").pop();
+      let mimeType = "image/jpeg"; // Default
+
+      switch (ext) {
+        case "png":
+          mimeType = "image/png";
+          break;
+        case "jpg":
+        case "jpeg":
+          mimeType = "image/jpeg";
+          break;
+        case "webp":
+          mimeType = "image/webp";
+          break;
+        case "heic":
+          mimeType = "image/heic";
+          break;
+        case "heif":
+          mimeType = "image/heif";
+          break;
+        default:
+          mimeType = "image/jpeg";
       }
 
-      onChange(file);
-      setShowOptionsModal(false);
+      console.log(`✅ Inferred MIME type: ${mimeType}`);
+
+      // Create new file with correct MIME type
+      processedFile = new File([file], file.name, {
+        type: mimeType,
+        lastModified: file.lastModified,
+      });
     }
+
+    console.log("✅ Processed file:", {
+      name: processedFile.name,
+      type: processedFile.type,
+      size: processedFile.size,
+    });
+
+    onChange(processedFile);
+    setShowOptionsModal(false);
+
+    // Reset input to allow selecting same file again
+    e.target.value = "";
   };
 
   const handleUploadClick = () => {
-    // On mobile: show options modal
-    // On desktop: go directly to file picker
     if (isMobile) {
       setShowOptionsModal(true);
     } else {
@@ -82,8 +129,6 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
   };
 
   const handleChangeClick = () => {
-    // On mobile: show options modal
-    // On desktop: go directly to file picker
     if (isMobile) {
       setShowOptionsModal(true);
     } else {
@@ -92,16 +137,16 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
   };
 
   const handleTakePhoto = () => {
+    console.log("📷 Opening camera...");
     setShowOptionsModal(false);
-    // Small delay to ensure modal closes before opening camera
     setTimeout(() => {
       cameraInputRef.current?.click();
     }, 100);
   };
 
   const handleChooseFile = () => {
+    console.log("📁 Opening file picker...");
     setShowOptionsModal(false);
-    // Small delay to ensure modal closes before opening file picker
     setTimeout(() => {
       fileInputRef.current?.click();
     }, 100);
@@ -185,14 +230,14 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md flex-col justify-center align-center bg-white border-gray-50 shadow-sm">
+        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center bg-white border-gray-50 shadow-sm">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
               Choose how you want to add your product image
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3 py-4 flex-col align-center justify-center  w-full">
+          <div className="grid gap-3 py-4">
             <Button
               type="button"
               variant="outline"
@@ -230,11 +275,11 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Hidden Camera Input */}
+      {/* Hidden Camera Input - UPDATED with better accept attribute */}
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+        accept="image/*"
         capture="environment"
         className="hidden"
         onChange={handleFileChange}
@@ -244,7 +289,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+        accept="image/*"
         className="hidden"
         onChange={handleFileChange}
       />
