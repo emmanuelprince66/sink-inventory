@@ -237,7 +237,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
               Choose how you want to add your product image
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3 py-4">
+          <div className="grid gap-3 py-4 flex flex-col w-full justify-center items-center">
             <Button
               type="button"
               variant="outline"
