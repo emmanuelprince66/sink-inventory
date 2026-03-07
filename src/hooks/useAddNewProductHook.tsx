@@ -59,12 +59,30 @@ const createProductSchema = (isEditMode: boolean) => {
             (file) => file.size <= 5 * 1024 * 1024,
             "File size must be less than 5MB",
           )
-          .refine(
-            (file) =>
-              ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-            "Only .jpg, .png, and .webp formats are supported",
-          ),
-        z.string(),
+          .refine((file) => {
+            // More permissive MIME type checking for iOS Safari
+            const validTypes = [
+              "image/jpeg",
+              "image/jpg",
+              "image/png",
+              "image/webp",
+              "image/heic", // iOS specific format
+              "image/heif", // iOS specific format
+            ];
+
+            // iOS Safari sometimes returns empty MIME type,
+            // so we check file extension as fallback
+            if (!file.type && file.name) {
+              const ext = file.name.toLowerCase().split(".").pop();
+              return ["jpg", "jpeg", "png", "webp", "heic", "heif"].includes(
+                ext || "",
+              );
+            }
+
+            return validTypes.includes(file.type.toLowerCase());
+          }, "Only .jpg, .png, .webp, and .heic formats are supported"),
+        z.string().url().optional(), // For existing image URLs
+        z.string().length(0).optional(), // Allow empty string
         z.undefined(),
       ])
       .optional(),
