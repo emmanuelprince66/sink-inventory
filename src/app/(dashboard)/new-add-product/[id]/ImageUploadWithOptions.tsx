@@ -15,14 +15,38 @@ interface ImageUploadWithOptionsProps {
   onError?: (message: string) => void;
 }
 
+// Helper function to detect if device is mobile
+const isMobileDevice = () => {
+  if (typeof window === "undefined") return false;
+
+  // Check user agent
+  const userAgent =
+    navigator.userAgent || navigator.vendor || (window as any).opera;
+  const mobileRegex =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
+  // Check for touch support and screen size
+  const hasTouchScreen =
+    "ontouchstart" in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 768;
+
+  return mobileRegex.test(userAgent) || (hasTouchScreen && isSmallScreen);
+};
+
 export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
   value,
   onChange,
   onError,
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Check if mobile on mount
+  React.useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,6 +68,26 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       onChange(file);
       setShowOptionsModal(false);
+    }
+  };
+
+  const handleUploadClick = () => {
+    // On mobile: show options modal
+    // On desktop: go directly to file picker
+    if (isMobile) {
+      setShowOptionsModal(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleChangeClick = () => {
+    // On mobile: show options modal
+    // On desktop: go directly to file picker
+    if (isMobile) {
+      setShowOptionsModal(true);
+    } else {
+      fileInputRef.current?.click();
     }
   };
 
@@ -99,7 +143,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
                 variant="outline"
                 size="sm"
                 type="button"
-                onClick={() => setShowOptionsModal(true)}
+                onClick={handleChangeClick}
                 className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-initial"
               >
                 Change
@@ -118,7 +162,8 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
           </div>
         </div>
       ) : (
-        <div className="mt-1 flex justify-center px-6 bg-white pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
+        /* Upload Area */
+        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
           <div className="space-y-1 text-center flex flex-col items-center">
             <Upload className="mx-auto h-12 w-12 text-gray-400" />
             <div className="flex text-sm text-gray-600">
@@ -126,7 +171,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
                 variant="outline"
                 size="sm"
                 type="button"
-                onClick={() => setShowOptionsModal(true)}
+                onClick={handleUploadClick}
               >
                 Upload Image
               </Button>
@@ -138,15 +183,16 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </div>
       )}
 
+      {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md bg-white border-gray-100 shadow-sm flex flex-col justify-center items-center">
+        <DialogContent className="sm:max-w-md flex-col justify-center align-center">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
               Choose how you want to add your product image
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3 py-4 flex flex-col justify-center items-center w-full">
+          <div className="grid gap-3 py-4 flex-col align-center justify-center  w-full">
             <Button
               type="button"
               variant="outline"
@@ -184,6 +230,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* Hidden Camera Input */}
       <input
         ref={cameraInputRef}
         type="file"
