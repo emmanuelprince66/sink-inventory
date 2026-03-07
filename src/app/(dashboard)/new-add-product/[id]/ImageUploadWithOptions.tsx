@@ -1,4 +1,5 @@
-// UPDATED ImageUploadWithOptions.tsx with better camera photo handling
+// COMPLETE ImageUploadWithOptions.tsx WITH IMAGE COMPRESSION
+// This compresses camera photos before upload to work around AWS limits
 
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import imageCompression from "browser-image-compression";
 import { Camera, Upload, X } from "lucide-react";
 import React, { useState } from "react";
 
@@ -40,6 +42,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 }) => {
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const cameraInputRef = React.useRef<HTMLInputElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -54,28 +57,68 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
       return;
     }
 
-    console.log("📸 File selected from camera/gallery:", {
+    console.log("📸 Original file:", {
       name: file.name,
       type: file.type,
       size: file.size,
-      lastModified: new Date(file.lastModified).toISOString(),
+      sizeInMB: (file.size / 1024 / 1024).toFixed(2) + " MB",
     });
 
-    // Validate file size
-    if (file.size > 5 * 1024 * 1024) {
-      console.log("❌ File too large:", file.size);
-      onError?.("File size must be less than 5MB");
-      e.target.value = ""; // Reset input
+    // Validate file size before compression
+    if (file.size > 10 * 1024 * 1024) {
+      console.log("❌ File too large even for compression:", file.size);
+      onError?.("File size must be less than 10MB");
+      e.target.value = "";
       return;
     }
 
-    // For files without MIME type or with generic types, create a new File with proper type
     let processedFile = file;
 
-    if (!file.type || file.type === "application/octet-stream") {
+    // Compress if larger than 1MB
+    if (file.size > 1 * 1024 * 1024) {
+      setIsCompressing(true);
+      console.log("🔄 Compressing image...");
+
+      try {
+        const options = {
+          maxSizeMB: 0.9, // Target size slightly under 1MB to be safe
+          maxWidthOrHeight: 1920, // Maintain good quality
+          useWebWorker: true, // Use web worker for better performance
+          fileType: file.type || "image/jpeg", // Preserve original type if possible
+        };
+
+        processedFile = await imageCompression(file, options);
+
+        console.log("✅ Compression successful:", {
+          name: processedFile.name,
+          type: processedFile.type,
+          size: processedFile.size,
+          sizeInMB: (processedFile.size / 1024 / 1024).toFixed(2) + " MB",
+          originalSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+          compressionRatio:
+            ((1 - processedFile.size / file.size) * 100).toFixed(1) + "%",
+        });
+      } catch (error) {
+        console.error("❌ Compression failed:", error);
+        onError?.("Failed to process image. Please try another photo.");
+        setIsCompressing(false);
+        e.target.value = "";
+        return;
+      } finally {
+        setIsCompressing(false);
+      }
+    } else {
+      console.log("✅ File small enough, no compression needed");
+    }
+
+    // For files without MIME type, infer from extension
+    if (
+      !processedFile.type ||
+      processedFile.type === "application/octet-stream"
+    ) {
       console.log("⚠️ File has no MIME type, inferring from extension...");
-      const ext = file.name.toLowerCase().split(".").pop();
-      let mimeType = "image/jpeg"; // Default
+      const ext = processedFile.name.toLowerCase().split(".").pop();
+      let mimeType = "image/jpeg";
 
       switch (ext) {
         case "png":
@@ -100,23 +143,23 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       console.log(`✅ Inferred MIME type: ${mimeType}`);
 
-      // Create new file with correct MIME type
-      processedFile = new File([file], file.name, {
+      processedFile = new File([processedFile], processedFile.name, {
         type: mimeType,
-        lastModified: file.lastModified,
+        lastModified: processedFile.lastModified,
       });
     }
 
-    console.log("✅ Processed file:", {
+    console.log("✅ Final file ready for upload:", {
       name: processedFile.name,
       type: processedFile.type,
       size: processedFile.size,
+      sizeInMB: (processedFile.size / 1024 / 1024).toFixed(2) + " MB",
     });
 
     onChange(processedFile);
     setShowOptionsModal(false);
 
-    // Reset input to allow selecting same file again
+    // Reset input
     e.target.value = "";
   };
 
@@ -189,15 +232,17 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
                 size="sm"
                 type="button"
                 onClick={handleChangeClick}
+                disabled={isCompressing}
                 className="text-green-600 border-green-600 hover:bg-green-50 flex-1 sm:flex-initial"
               >
-                Change
+                {isCompressing ? "Processing..." : "Change"}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 type="button"
                 onClick={handleRemoveImage}
+                disabled={isCompressing}
                 className="text-red-600 border-red-600 hover:bg-red-50 flex-1 sm:flex-initial"
               >
                 <X className="w-4 h-4 sm:mr-1" />
@@ -217,12 +262,15 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
                 size="sm"
                 type="button"
                 onClick={handleUploadClick}
+                disabled={isCompressing}
               >
-                Upload Image
+                {isCompressing ? "Processing..." : "Upload Image"}
               </Button>
             </div>
             <p className="text-xs text-gray-500">
-              PNG, JPG, WEBP, HEIC up to 5MB
+              {isCompressing
+                ? "Compressing image..."
+                : "PNG, JPG, WEBP, HEIC up to 10MB"}
             </p>
           </div>
         </div>
@@ -230,14 +278,14 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center bg-white border-gray-50 shadow-sm">
+        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
               Choose how you want to add your product image
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3 py-4 flex flex-col w-full justify-center items-center">
+          <div className="grid gap-3 py-4 w-full flex flex-col justify-center align-center">
             <Button
               type="button"
               variant="outline"
@@ -275,7 +323,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Hidden Camera Input - UPDATED with better accept attribute */}
+      {/* Hidden Camera Input */}
       <input
         ref={cameraInputRef}
         type="file"
@@ -283,6 +331,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         capture="environment"
         className="hidden"
         onChange={handleFileChange}
+        disabled={isCompressing}
       />
 
       {/* Hidden File Input */}
@@ -292,6 +341,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         accept="image/*"
         className="hidden"
         onChange={handleFileChange}
+        disabled={isCompressing}
       />
     </>
   );
