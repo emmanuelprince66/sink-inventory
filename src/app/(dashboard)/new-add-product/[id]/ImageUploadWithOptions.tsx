@@ -276,7 +276,7 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
 
       {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center">
+        <DialogContent className="sm:max-w-md flex flex-col align-center justify-center bg-white border-gray-50 shadow-sm">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
