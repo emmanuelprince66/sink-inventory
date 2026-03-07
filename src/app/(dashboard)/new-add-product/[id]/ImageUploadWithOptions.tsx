@@ -118,7 +118,6 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
           </div>
         </div>
       ) : (
-        /* Upload Area */
         <div className="mt-1 flex justify-center px-6 bg-white pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
           <div className="space-y-1 text-center flex flex-col items-center">
             <Upload className="mx-auto h-12 w-12 text-gray-400" />
@@ -139,9 +138,8 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </div>
       )}
 
-      {/* Options Modal */}
       <Dialog open={showOptionsModal} onOpenChange={setShowOptionsModal}>
-        <DialogContent className="sm:max-w-md bg-white border-gray-100 shadow-sm">
+        <DialogContent className="sm:max-w-md bg-white border-gray-100 shadow-sm flex flex-col justify-center items-center">
           <DialogHeader>
             <DialogTitle>Add Image</DialogTitle>
             <DialogDescription>
