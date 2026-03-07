@@ -184,7 +184,6 @@ export const ImageUploadWithOptions: React.FC<ImageUploadWithOptionsProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Hidden Camera Input */}
       <input
         ref={cameraInputRef}
         type="file"
