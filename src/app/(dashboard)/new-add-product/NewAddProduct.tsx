@@ -662,14 +662,27 @@ const NewAddProduct = ({
                                   </Button>
                                 </div>
                               </div>
+
+                              {/* ✅ IMPROVED FILE INPUT - Hidden but properly configured */}
                               <input
                                 id="image-upload"
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+                                capture="environment"
                                 className="hidden"
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
-                                  if (file) field.onChange(file);
+                                  if (file) {
+                                    console.log(
+                                      "File selected:",
+                                      file.name,
+                                      "Type:",
+                                      file.type,
+                                      "Size:",
+                                      file.size,
+                                    );
+                                    field.onChange(file);
+                                  }
                                 }}
                               />
                             </div>
@@ -691,19 +704,44 @@ const NewAddProduct = ({
                                   >
                                     Upload Image
                                   </Button>
+
+                                  {/* ✅ IMPROVED FILE INPUT with camera support */}
                                   <input
                                     id="image-upload"
                                     type="file"
-                                    accept="image/*"
+                                    accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,image/*"
+                                    capture="environment"
                                     className="hidden"
                                     onChange={(e) => {
                                       const file = e.target.files?.[0];
-                                      if (file) field.onChange(file);
+                                      if (file) {
+                                        console.log(
+                                          "File selected:",
+                                          file.name,
+                                          "Type:",
+                                          file.type,
+                                          "Size:",
+                                          file.size,
+                                        );
+
+                                        // Additional validation
+                                        if (file.size > 5 * 1024 * 1024) {
+                                          showToast(
+                                            "File size must be less than 5MB",
+                                            "error",
+                                          );
+                                          return;
+                                        }
+
+                                        field.onChange(file);
+                                      } else {
+                                        console.log("No file selected");
+                                      }
                                     }}
                                   />
                                 </div>
                                 <p className="text-xs text-gray-500">
-                                  PNG, JPG, WEBP up to 5MB
+                                  PNG, JPG, WEBP, HEIC up to 5MB
                                 </p>
                               </div>
                             </div>
@@ -713,7 +751,6 @@ const NewAddProduct = ({
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name="item_name"
