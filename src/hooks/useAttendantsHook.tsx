@@ -20,7 +20,10 @@ const staffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
-  watchlist: z.boolean(),
+  // New pharmacist permissions
+  canCreatePresale: z.boolean().optional(),
+  canLoadPresalesAndFinalize: z.boolean().optional(),
+  canSellWatchlisted: z.boolean().optional(),
 });
 
 export type AddStaffFormValues = z.infer<typeof staffSchema>;
@@ -35,7 +38,10 @@ const EditStaffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
-  watchlist: z.boolean(),
+  // New pharmacist permissions
+  canCreatePresale: z.boolean().optional(),
+  canLoadPresalesAndFinalize: z.boolean().optional(),
+  canSellWatchlisted: z.boolean().optional(),
 });
 
 export type EditStaffFormValues = z.infer<typeof EditStaffSchema>;
@@ -111,7 +117,9 @@ export const useAttendantsHook = ({
       lastname: "",
       phone: "",
       role: undefined as any,
-      watchlist: false,
+      canCreatePresale: false,
+      canLoadPresalesAndFinalize: false,
+      canSellWatchlisted: false,
     },
     mode: "onChange",
   });
@@ -123,7 +131,9 @@ export const useAttendantsHook = ({
       lastname: "",
       phone: "",
       role: undefined as any,
-      watchlist: false,
+      canCreatePresale: false,
+      canLoadPresalesAndFinalize: false,
+      canSellWatchlisted: false,
     },
     mode: "onChange",
   });
@@ -136,9 +146,12 @@ export const useAttendantsHook = ({
       role: values.role,
     };
 
-    // Only include watchlist if role is PHARMACIST
+    // Only include pharmacist permissions if role is PHARMACIST
     if (values.role === "PHARMACIST") {
-      payload.watchlist = values.watchlist;
+      payload.canCreatePresale = values.canCreatePresale || false;
+      payload.canLoadPresalesAndFinalize =
+        values.canLoadPresalesAndFinalize || false;
+      payload.canSellWatchlisted = values.canSellWatchlisted || false;
     }
 
     console.log("payload", payload);
@@ -202,7 +215,10 @@ export const useAttendantsHook = ({
         lastname: attendantData?.data?.lastname,
         phone: attendantData?.data?.phone || "",
         role: attendantData?.data?.role || undefined,
-        watchlist: attendantData?.data?.watchlist || false,
+        canCreatePresale: attendantData?.data?.canCreatePresale || false,
+        canLoadPresalesAndFinalize:
+          attendantData?.data?.canLoadPresalesAndFinalize || false,
+        canSellWatchlisted: attendantData?.data?.canSellWatchlisted || false,
       });
     }
   }, [attendantData, AttendantLoading, editform, attendantId]);
@@ -215,9 +231,12 @@ export const useAttendantsHook = ({
       role: values.role,
     };
 
-    // Only include watchlist if role is PHARMACIST
+    // Only include pharmacist permissions if role is PHARMACIST
     if (values.role === "PHARMACIST") {
-      payload.watchlist = values.watchlist;
+      payload.canCreatePresale = values.canCreatePresale || false;
+      payload.canLoadPresalesAndFinalize =
+        values.canLoadPresalesAndFinalize || false;
+      payload.canSellWatchlisted = values.canSellWatchlisted || false;
     }
 
     console.log("payload", payload);
