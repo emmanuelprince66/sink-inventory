@@ -46,10 +46,9 @@ const ROLE_PERMISSIONS = {
   PHARMACIST: {
     name: "Pharmacist",
     permissions: [
-      "Make pre-sale",
-      "Sell watch listed items ",
-      "See transactions",
-      "Finalize transactions",
+      "Load inventory",
+      "See all transactions and performance",
+      "Full system access",
     ],
     color: "bg-teal-50 border-teal-200",
     iconColor: "text-teal-600",
@@ -74,7 +73,9 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
   });
 
   const selectedRole = form.watch("role");
-  const watchlist = form.watch("watchlist");
+  const canCreatePresale = form.watch("canCreatePresale");
+  const canLoadPresalesAndFinalize = form.watch("canLoadPresalesAndFinalize");
+  const canSellWatchlisted = form.watch("canSellWatchlisted");
 
   return (
     <div className="flex h-full w-full items-center justify-center">
@@ -159,42 +160,111 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               )}
             />
 
-            {/* Watchlist Toggle - Only for Pharmacist */}
+            {/* Pharmacist Permissions - Checkbox based */}
             {selectedRole === "PHARMACIST" && (
-              <FormField
-                control={form.control}
-                name="watchlist"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between p-4 rounded-lg border-2 border-teal-200 bg-teal-50">
-                      <div className="flex-1">
-                        <FormLabel className="text-base font-semibold text-gray-900">
-                          See Watchlisted Items
-                        </FormLabel>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Allow this pharmacist to view and manage watchlisted
-                          inventory items
-                        </p>
-                      </div>
-                      <FormControl>
-                        <label className="relative inline-flex items-center cursor-pointer ml-4">
+              <div className="rounded-lg border-2 border-teal-200 bg-teal-50 p-4 space-y-3">
+                <h3 className="font-semibold text-gray-900 mb-2">
+                  Pharmacist Permissions
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Select the permissions for this pharmacist
+                </p>
+
+                {/* Create Presale */}
+                <FormField
+                  control={form.control}
+                  name="canCreatePresale"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-3 p-3 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                        <FormControl>
                           <input
                             type="checkbox"
                             checked={field.value || false}
                             onChange={field.onChange}
-                            className="sr-only peer"
+                            className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                        </label>
-                      </FormControl>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        </FormControl>
+                        <div className="flex-1">
+                          <FormLabel className="text-sm font-medium text-gray-900 cursor-pointer">
+                            Create Presale
+                          </FormLabel>
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            Allow this user to create presales for pharmacy
+                            items
+                          </p>
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Load Presales and Finalize Transaction */}
+                <FormField
+                  control={form.control}
+                  name="canLoadPresalesAndFinalize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-3  p-3 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value || false}
+                            onChange={field.onChange}
+                            className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
+                          />
+                        </FormControl>
+                        <div className="flex-1">
+                          <FormLabel className="text-sm font-medium text-gray-900 cursor-pointer">
+                            Load Presales and Finalize Transaction
+                          </FormLabel>
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            Load presales and complete transaction payments
+                            (like attendant but for pharmacy)
+                          </p>
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Sell Watchlisted Item */}
+                <FormField
+                  control={form.control}
+                  name="canSellWatchlisted"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-3 p-3 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value || false}
+                            onChange={field.onChange}
+                            className="w-4 h-4 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
+                          />
+                        </FormControl>
+                        <div className="flex-1">
+                          <FormLabel className="text-sm font-medium text-gray-900 cursor-pointer">
+                            Sell Watchlisted Item
+                          </FormLabel>
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            Allow this user to view and sell watchlisted
+                            inventory items
+                          </p>
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
+            {/* Role Permissions Display */}
             {selectedRole &&
+              selectedRole !== "PHARMACIST" &&
               ROLE_PERMISSIONS[
                 selectedRole as keyof typeof ROLE_PERMISSIONS
               ] && (
@@ -222,15 +292,41 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                         </span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
 
-                    {/* Show watchlist permission if enabled for Pharmacist */}
-                    {selectedRole === "PHARMACIST" && watchlist && (
-                      <div className="flex items-start space-x-3 pt-2 border-t border-teal-200">
-                        <CheckCircle2
-                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${ROLE_PERMISSIONS[selectedRole as keyof typeof ROLE_PERMISSIONS].iconColor}`}
-                        />
-                        <span className="text-sm text-gray-700 leading-relaxed font-medium">
-                          Can see watchlisted items
+            {/* Show selected permissions summary for Pharmacist */}
+            {selectedRole === "PHARMACIST" &&
+              (canCreatePresale ||
+                canLoadPresalesAndFinalize ||
+                canSellWatchlisted) && (
+                <div className="rounded-lg border-2 p-4 bg-teal-50 border-teal-200">
+                  <h3 className="font-semibold text-gray-900 mb-3">
+                    Selected Permissions Summary
+                  </h3>
+                  <div className="space-y-2">
+                    {canCreatePresale && (
+                      <div className="flex items-start space-x-3">
+                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can create presales
+                        </span>
+                      </div>
+                    )}
+                    {canLoadPresalesAndFinalize && (
+                      <div className="flex items-start space-x-3">
+                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can load presales and finalize transactions
+                        </span>
+                      </div>
+                    )}
+                    {canSellWatchlisted && (
+                      <div className="flex items-start space-x-3">
+                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can see and sell watchlisted items
                         </span>
                       </div>
                     )}
