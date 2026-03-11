@@ -471,7 +471,7 @@ const Inventory = () => {
                   variant="outline"
                   className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
                 >
-                  View More
+                  Manage Category
                 </Button>
               </Link>
             </div>

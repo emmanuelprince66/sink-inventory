@@ -7,9 +7,11 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
+
 const CategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
 });
+
 const AddCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
 });
@@ -58,6 +60,7 @@ export const useGetAllCategories = ({
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
   const {
     data: ExpensesCategoriesData,
     isLoading: ExpensesCategoriesDataLoading,
@@ -73,7 +76,7 @@ export const useGetAllCategories = ({
 
   const { mutate: createCategory, isPending: createCategoryLoading } =
     useCreateCategoryMutation({
-      businessId: business_id, // Convert null to undefined
+      businessId: business_id,
       onSuccess: (data) => {
         console.log("data---4", data);
         showToast(data.message, "success");
@@ -85,10 +88,6 @@ export const useGetAllCategories = ({
         }
 
         if (closeModal) closeModal();
-
-        // if (closeAddBankModal) closeAddBankModal();
-
-        // Optional: Invalidate queries or update cache
       },
     });
 
@@ -99,6 +98,7 @@ export const useGetAllCategories = ({
     },
     mode: "onChange",
   });
+
   const AddCategoryForm = useForm<AddCategoryFormValues>({
     resolver: zodResolver(AddCategorySchema),
     defaultValues: {
@@ -117,6 +117,7 @@ export const useGetAllCategories = ({
 
     refetch();
   };
+
   const onAddCategorySubmit = (values: AddCategoryFormValues) => {
     createCategory({
       businessId: business_id,
@@ -138,5 +139,7 @@ export const useGetAllCategories = ({
     createCategoryLoading,
     ExpensesCategoriesData,
     isEditing,
+    refetch, // ✅ Expose refetch for manual refresh
+    ExpensesRefetch, // ✅ Expose expenses refetch
   };
 };

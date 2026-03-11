@@ -53,6 +53,8 @@ import { format } from "date-fns";
 import { CalendarIcon, ChevronDown, Edit, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray } from "react-hook-form";
+import AddCategory from "../categories/AddCategory";
+import AddDepartments from "../departments/AddDepartments";
 import { ProductFormSkeleton } from "./ProductSkeleton";
 import { ImageUploadWithOptions } from "./[id]/ImageUploadWithOptions";
 
@@ -111,6 +113,16 @@ const NewAddProduct = ({
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
 
+  const [createCategoryModal, setCreateCategoryModal] = useState(false);
+
+  const handleCloseCategoryModal = () => {
+    setCreateCategoryModal(false);
+  };
+
+  const [createDepartmentModal, setCreateDepartmentModal] = useState(false);
+  const handleCloseDepartmentModal = () => {
+    setCreateDepartmentModal(false);
+  };
   console.log("form values", form.getValues());
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -775,6 +787,7 @@ const NewAddProduct = ({
                               </Select>
                             </FormControl>
                             <Button
+                              onClick={() => setCreateDepartmentModal(true)}
                               type="button"
                               variant="outline"
                               size="icon"
@@ -820,6 +833,7 @@ const NewAddProduct = ({
                               </Select>
                             </FormControl>
                             <Button
+                              onClick={() => setCreateCategoryModal(true)}
                               type="button"
                               variant="outline"
                               size="icon"
@@ -2317,6 +2331,24 @@ const NewAddProduct = ({
           </div>
         </SheetContent>
       </Sheet>
+
+      <CustomModal
+        isOpen={createCategoryModal}
+        onClose={handleCloseCategoryModal}
+        trigger={false}
+        title="Create Category"
+      >
+        <AddCategory closeModal={handleCloseCategoryModal} type="PRODUCT" />
+      </CustomModal>
+
+      <CustomModal
+        isOpen={createDepartmentModal}
+        onClose={handleCloseDepartmentModal}
+        trigger={false}
+        title="Add Department"
+      >
+        <AddDepartments closeModal={handleCloseDepartmentModal} />
+      </CustomModal>
     </div>
   );
 };
