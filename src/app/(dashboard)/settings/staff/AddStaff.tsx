@@ -171,7 +171,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                 </p>
 
                 {/* Create Presale */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="canCreatePresale"
                   render={({ field }) => (
@@ -198,7 +198,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 {/* Load Presales and Finalize Transaction */}
                 <FormField

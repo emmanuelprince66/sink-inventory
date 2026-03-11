@@ -132,6 +132,7 @@ export const queryKey = {
     getAllCategories: "get-all-categories",
     updateCategory: "update-category",
     createCategory: "create-category",
+    deleteCategory: "delete-category",
   },
   notification: {
     getNotification: "get-notification",

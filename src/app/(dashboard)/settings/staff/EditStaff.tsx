@@ -192,7 +192,7 @@ export const EditStaff = ({
                 </p>
 
                 {/* Create Presale */}
-                <FormField
+                {/* <FormField
                   control={editform.control}
                   name="canCreatePresale"
                   render={({ field }) => (
@@ -219,7 +219,7 @@ export const EditStaff = ({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 {/* Load Presales and Finalize Transaction */}
                 <FormField

@@ -3,33 +3,59 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/toast/useToast";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useState } from "react";
 import Departments from "../departments/Departments";
 import AddCategory from "./AddCategory";
+import DeleteCategory from "./DeleteCategory";
 import EditCategory from "./EditCategory";
 
 const Categories = () => {
   const [activeTab, setActiveTab] = useState("categories");
   const [searchInput, setSearchInput] = useState("");
   const [editModal, setEditModal] = useState(false);
+  const { showToast } = useToast();
+
   const closeEditModal = () => setEditModal(false);
-  const [categoryObj, setCategoryObj] = useState({});
+  const [categoryObj, setCategoryObj] = useState<any>({});
 
   const [createModal, setCreateModal] = useState(false);
   const handleOpenCreateModal = () => setCreateModal(true);
   const handleCloseCreateModal = () => setCreateModal(false);
 
-  const { CategoriesData, CategoriesDataLoading } =
-    useGetAllCategories(categoryObj);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  const { CategoriesData, CategoriesDataLoading, refetch } =
+    useGetAllCategories({ categoryObj });
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
   };
+
   const handleOpenEditModal = (category: any) => {
     setEditModal(true);
     setCategoryObj(category);
+  };
+
+  const handleOpenDeleteModal = (category: any) => {
+    setCategoryToDelete({ id: category.id, name: category.name });
+    setDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteModal(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleDeleteSuccess = () => {
+    showToast("Category deleted successfully", "success");
+    refetch(); // Refresh the categories list after deletion
   };
 
   return (
@@ -127,12 +153,22 @@ const Categories = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button
-                          onClick={() => handleOpenEditModal(category)}
-                          className="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors"
-                        >
-                          <Edit className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => handleOpenEditModal(category)}
+                            className="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors"
+                            title="Edit category"
+                          >
+                            <Edit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenDeleteModal(category)}
+                            className="cursor-pointer text-red-500 hover:text-red-600 transition-colors"
+                            title="Delete category"
+                          >
+                            <Trash2 className="w-5 h-5text-red-500" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -163,6 +199,23 @@ const Categories = () => {
             title="Create Category"
           >
             <AddCategory closeModal={handleCloseCreateModal} type="PRODUCT" />
+          </CustomModal>
+
+          {/* Delete Category Modal */}
+          <CustomModal
+            isOpen={deleteModal}
+            onClose={handleCloseDeleteModal}
+            trigger={false}
+            title="Delete Category"
+          >
+            {categoryToDelete && (
+              <DeleteCategory
+                categoryId={categoryToDelete.id}
+                categoryName={categoryToDelete.name}
+                closeModal={handleCloseDeleteModal}
+                onDeleteSuccess={handleDeleteSuccess}
+              />
+            )}
           </CustomModal>
         </>
       ) : (
