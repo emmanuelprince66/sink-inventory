@@ -157,8 +157,9 @@ const Analytics = () => {
                 )}
               </TabsContent>
 
-              {(user && user?.role === "OWNER") ||
-                (user?.role === "ADMIN-ATTENDANT" && (
+              {user &&
+                (user?.role === "OWNER" ||
+                  user?.role === "ADMIN-ATTENDANT") && (
                   <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
                     {ProductAnalyticLoading ? (
                       <SkeletonComp />
@@ -170,10 +171,11 @@ const Analytics = () => {
                       </div>
                     )}
                   </TabsContent>
-                ))}
+                )}
 
-              {(user && user?.role === "OWNER") ||
-                (user?.role === "ADMIN-ATTENDANT" && (
+              {user &&
+                (user?.role === "OWNER" ||
+                  user?.role === "ADMIN-ATTENDANT") && (
                   <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
                     {CustomerAnalyticLoading ? (
                       <SkeletonComp />
@@ -185,16 +187,17 @@ const Analytics = () => {
                       </div>
                     )}
                   </TabsContent>
-                ))}
+                )}
 
-              {(user && user?.role === "OWNER") ||
-                (user?.role === "ADMIN-ATTENDANT" && (
+              {user &&
+                (user?.role === "OWNER" ||
+                  user?.role === "ADMIN-ATTENDANT") && (
                   <TabsContent value="Tax" className="mt-0">
                     <div className="w-full overflow-hidden">
                       <TaxAnalytics dateRange={dateRange} />
                     </div>
                   </TabsContent>
-                ))}
+                )}
             </div>
           </Tabs>
         </div>
