@@ -20,7 +20,7 @@ const Analytics = () => {
   const business_id = useBusinessStore((state) => state.business_id);
 
   const AnalyticsOptionsTab =
-    user?.role === "OWNER"
+    user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT"
       ? (["Sales", "Products", "Customers", "Tax"] as const)
       : (["Sales"] as const);
 
@@ -148,7 +148,7 @@ const Analytics = () => {
                   <div className="w-full overflow-hidden">
                     <SalesAnalytics
                       openAttendantsModal={openAttendantsModal}
-                      SalesAnalyticData={SalesAnalyticData}
+                      SalesAnalyticData={SalesAnalyticData || []}
                       attendantsName={attendantsName}
                       handleClearAttendant={handleClearAttendant}
                       dateRange={dateRange}
@@ -157,41 +157,44 @@ const Analytics = () => {
                 )}
               </TabsContent>
 
-              {user && user?.role === "OWNER" && (
-                <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
-                  {ProductAnalyticLoading ? (
-                    <SkeletonComp />
-                  ) : (
-                    <div className="w-full overflow-hidden">
-                      <ProductAnalytics
-                        ProductAnalyticData={ProductAnalyticData}
-                      />
-                    </div>
-                  )}
-                </TabsContent>
-              )}
+              {(user && user?.role === "OWNER") ||
+                (user?.role === "ADMIN-ATTENDANT" && (
+                  <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
+                    {ProductAnalyticLoading ? (
+                      <SkeletonComp />
+                    ) : (
+                      <div className="w-full overflow-hidden">
+                        <ProductAnalytics
+                          ProductAnalyticData={ProductAnalyticData || []}
+                        />
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
 
-              {user && user?.role === "OWNER" && (
-                <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
-                  {CustomerAnalyticLoading ? (
-                    <SkeletonComp />
-                  ) : (
-                    <div className="w-full overflow-hidden">
-                      <CustomerAnalytics
-                        CustomerAnalyticData={CustomerAnalyticData}
-                      />
-                    </div>
-                  )}
-                </TabsContent>
-              )}
+              {(user && user?.role === "OWNER") ||
+                (user?.role === "ADMIN-ATTENDANT" && (
+                  <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
+                    {CustomerAnalyticLoading ? (
+                      <SkeletonComp />
+                    ) : (
+                      <div className="w-full overflow-hidden">
+                        <CustomerAnalytics
+                          CustomerAnalyticData={CustomerAnalyticData}
+                        />
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
 
-              {user && user?.role === "OWNER" && (
-                <TabsContent value="Tax" className="mt-0">
-                  <div className="w-full overflow-hidden">
-                    <TaxAnalytics dateRange={dateRange} />
-                  </div>
-                </TabsContent>
-              )}
+              {(user && user?.role === "OWNER") ||
+                (user?.role === "ADMIN-ATTENDANT" && (
+                  <TabsContent value="Tax" className="mt-0">
+                    <div className="w-full overflow-hidden">
+                      <TaxAnalytics dateRange={dateRange} />
+                    </div>
+                  </TabsContent>
+                ))}
             </div>
           </Tabs>
         </div>

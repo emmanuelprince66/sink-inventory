@@ -129,7 +129,7 @@ export const links = [
         title: "Analytics",
         url: "/analytics",
         icon: Activity,
-        roles: ["OWNER"],
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
       },
     ],
   },

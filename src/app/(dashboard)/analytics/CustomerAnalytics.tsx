@@ -67,8 +67,8 @@ const CustomerAnalytics = ({
     datasets: [
       {
         data: [
-          CustomerAnalyticData.data.new_customers,
-          CustomerAnalyticData.data.returning_customers,
+          CustomerAnalyticData?.data?.new_customers || 0,
+          CustomerAnalyticData?.data?.returning_customers || 0,
         ],
         backgroundColor: ["#FF6384", "#36A2EB"],
         borderColor: ["#FF6384", "#36A2EB"],
@@ -100,16 +100,16 @@ const CustomerAnalytics = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomCustomerCard
           title="Total Customers"
-          value={CustomerAnalyticData.data.total_customers}
+          value={CustomerAnalyticData?.data?.total_customers}
         />
         <CustomCustomerCard
           title="New Customers"
-          value={CustomerAnalyticData.data.new_customers}
-          description={`${CustomerAnalyticData.data.change_customers}% change`}
+          value={CustomerAnalyticData?.data?.new_customers || 0}
+          description={`${CustomerAnalyticData?.data?.change_customers || 0}% change`}
         />
         <CustomCustomerCard
           title="Returning Customers"
-          value={CustomerAnalyticData.data.returning_customers}
+          value={CustomerAnalyticData?.data?.returning_customers || 0}
           description="Repeat purchases"
         />
         <CustomCustomerCard
@@ -132,7 +132,7 @@ const CustomerAnalytics = ({
                 <p className="text-xs text-gray-500">
                   Last purchase{" "}
                   {formatToNaira(
-                    CustomerAnalyticData?.data?.top_customer?.last_amount
+                    CustomerAnalyticData?.data?.top_customer?.last_amount,
                   ) || "N/A"}{" "}
                 </p>
               </div>
