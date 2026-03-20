@@ -15,6 +15,7 @@ import RestockItem from "./[id]/restock/RestockItem";
 import DamagedProduct from "./DamagedProduct";
 import DeleteItem from "./DeleteItem";
 import EditProductPrice from "./EditProductPrice";
+import MoveProduction from "./MoveProduction";
 import ReturnProduct from "./ReturnProduct";
 import SetDiscountModal from "./SetDiscountModal";
 import TransferProduct from "./TransferProduct";
@@ -194,9 +195,11 @@ export const columns: ColumnDef<InventoryItem>[] = [
 
       const [openDamagedProductModal, setOpenDamagedProductModal] =
         useState(false);
+      const [openMoveProdModal, setOpenMoveProdModal] = useState(false);
       const closeDamagedProductModal = () => setOpenDamagedProductModal(false);
       const openDamagedProductModalFunc = () =>
         setOpenDamagedProductModal(true);
+      const openMoveProdModalFunc = () => setOpenMoveProdModal(true);
 
       return (
         <>
@@ -245,6 +248,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
                   className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
                 >
                   Add Damaged Product
+                </DropdownMenuItem>
+              )}
+              {isProduct && (
+                <DropdownMenuItem
+                  onClick={openDamagedProductModalFunc}
+                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                >
+                  Move to production
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
@@ -337,6 +348,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
               closeModal={() => setOpenRestockModal(false)}
               data={inventory}
             />
+          </CustomModal>
+          <CustomModal
+            isOpen={openMoveProdModal}
+            onClose={() => setOpenMoveProdModal(false)}
+            trigger={false}
+            title="Move to Production"
+          >
+            <MoveProduction />
           </CustomModal>
 
           <CustomModal
