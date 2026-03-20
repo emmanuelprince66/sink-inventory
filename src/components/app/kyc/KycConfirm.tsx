@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  Briefcase,
-  Building,
-  Check,
-  CreditCard,
-  FileText,
-  User,
-} from "lucide-react";
+import { Briefcase, Check, Shield, User } from "lucide-react";
 import { useState } from "react";
 
 import CorporateAcct from "./CorporateAcct";
-import IndividualAcct from "./IndividualAcct";
+import IndividualTierFlow from "./IndividualAcct";
 
 interface KycConfirmProps {
   page: boolean;
@@ -19,9 +12,9 @@ interface KycConfirmProps {
 
 const KycConfirm = ({ page }: KycConfirmProps) => {
   const [showIntro, setShowIntro] = useState(true);
-  const [selectedTier, setSelectedTier] = useState<"tier1" | "tier2" | null>(
-    null,
-  );
+  const [selectedAccountType, setSelectedAccountType] = useState<
+    "individual" | "corporate" | null
+  >(null);
 
   const handleContinue = () => {
     setShowIntro(false);
@@ -51,25 +44,37 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
 
           <div className="px-5 sm:px-8 pb-8">
             <p className="font-medium text-gray-800 mb-5 text-center sm:text-left">
-              You'll need the following to get verified:
+              Choose your account type to get started:
             </p>
 
             <div className="space-y-4">
               {[
-                { icon: FileText, text: "Your Bank Verification Number (BVN)" },
                 {
-                  icon: CreditCard,
-                  text: "A valid government-issued ID (NIN, Voter’s Card, or Driver’s License)",
+                  icon: User,
+                  title: "Individual Account",
+                  text: "Progressive verification with tiered limits",
                 },
-                { icon: Building, text: "CAC Document verification" },
+                {
+                  icon: Briefcase,
+                  title: "Corporate Account",
+                  text: "Business verification with CAC documentation",
+                },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50/30 transition-all cursor-pointer"
+                >
                   <div className="p-2.5 bg-green-100 rounded-full shrink-0">
                     <item.icon className="text-green-600" size={18} />
                   </div>
-                  <span className="text-sm sm:text-base text-gray-700">
-                    {item.text}
-                  </span>
+                  <div>
+                    <div className="font-medium text-gray-800 text-sm sm:text-base">
+                      {item.title}
+                    </div>
+                    <div className="text-xs sm:text-sm text-gray-600">
+                      {item.text}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -89,7 +94,7 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
   }
 
   // ────────────────────────────────────────────────
-  // Tier Selection + Form Screen
+  // Account Type Selection Screen
   // ────────────────────────────────────────────────
   return (
     <div
@@ -99,36 +104,38 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
       `}
     >
       <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center sm:text-left">
-        Choose a tier to get started
+        Choose your account type
       </h1>
 
       <p className="text-gray-600 mb-6 text-center sm:text-left max-w-xl mx-auto sm:mx-0">
-        In line with recent CBN regulations, all SYNC360 users must complete
-        identity verification before receiving settlements.
+        Select the account type that best suits your needs. You can upgrade your
+        tier limits at any time.
       </p>
 
-      {!selectedTier ? (
+      {!selectedAccountType ? (
         <div className="space-y-4 sm:space-y-5 mb-8">
-          {/* Tier 1 – Individual */}
+          {/* Individual Account */}
           <div
             className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
-              selectedTier === "tier1"
+              selectedAccountType === "individual"
                 ? "border-green-500 bg-green-50/60 shadow-sm"
                 : "border-gray-200 hover:border-green-300 hover:shadow"
             }`}
-            onClick={() => setSelectedTier("tier1")}
+            onClick={() => setSelectedAccountType("individual")}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className={`p-3 rounded-full ${
-                    selectedTier === "tier1" ? "bg-green-100" : "bg-gray-100"
+                    selectedAccountType === "individual"
+                      ? "bg-green-100"
+                      : "bg-gray-100"
                   }`}
                 >
                   <User
                     size={22}
                     className={
-                      selectedTier === "tier1"
+                      selectedAccountType === "individual"
                         ? "text-green-600"
                         : "text-gray-600"
                     }
@@ -138,42 +145,60 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
                   <h3 className="font-semibold text-gray-800 text-base sm:text-lg">
                     Individual Account
                   </h3>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                    Progressive verification tiers
+                  </p>
                 </div>
               </div>
-              {selectedTier === "tier1" && (
+              {selectedAccountType === "individual" && (
                 <Check className="text-green-600" size={24} />
               )}
             </div>
 
-            <div className="mt-4 pl-14 sm:pl-16 space-y-2 text-sm sm:text-base">
-              <div className="font-medium text-gray-700">
-                Account Limit: ₦5,000,000
+            <div className="mt-4 pl-14 sm:pl-16 space-y-3 text-sm">
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-green-600" />
+                <span className="font-medium text-gray-700">
+                  Tier 1: ₦5,000,000 (BVN or NIN)
+                </span>
               </div>
-              <div className="text-gray-600">Personal account</div>
-              <div className="text-gray-600">BVN required</div>
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-green-600" />
+                <span className="font-medium text-gray-700">
+                  Tier 2: ₦10,000,000 (BVN + NIN)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield size={16} className="text-green-600" />
+                <span className="font-medium text-gray-700">
+                  Tier 3: ₦50,000,000 (+ Proof of Address)
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Tier 2 – Corporate */}
+          {/* Corporate Account */}
           <div
             className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
-              selectedTier === "tier2"
+              selectedAccountType === "corporate"
                 ? "border-green-500 bg-green-50/60 shadow-sm"
                 : "border-gray-200 hover:border-green-300 hover:shadow"
             }`}
-            onClick={() => setSelectedTier("tier2")}
+            onClick={() => setSelectedAccountType("corporate")}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className={`p-3 rounded-full ${
-                    selectedTier === "tier2" ? "bg-green-100" : "bg-gray-100"
+                    selectedAccountType === "corporate"
+                      ? "bg-green-100"
+                      : "bg-gray-100"
                   }`}
                 >
                   <Briefcase
                     size={22}
                     className={
-                      selectedTier === "tier2"
+                      selectedAccountType === "corporate"
                         ? "text-green-600"
                         : "text-gray-600"
                     }
@@ -184,37 +209,44 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
                     Corporate Account
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    Requires CAC certificate
+                    For registered businesses
                   </p>
                 </div>
               </div>
-              {selectedTier === "tier2" && (
+              {selectedAccountType === "corporate" && (
                 <Check className="text-green-600" size={24} />
               )}
             </div>
 
             <div className="mt-4 pl-14 sm:pl-16 space-y-2 text-sm sm:text-base">
               <div className="font-medium text-gray-700">
-                Account Limit: ₦10,000,000
+                Account Limit: ₦100,000,000
               </div>
-              <div className="text-gray-600">Corporate account number</div>
-              <div className="text-gray-600">
-                BVN, NIN / Voter’s Card / Driver’s License + CAC verification
-              </div>
+              <div className="text-gray-600">Required documents:</div>
+              <ul className="text-gray-600 space-y-1 ml-4">
+                <li>• Director's BVN</li>
+                <li>• RC/BN Number</li>
+                <li>• CAC Certificate</li>
+                <li>• Utility Bill & Director's ID</li>
+              </ul>
             </div>
           </div>
         </div>
       ) : (
         <div className="space-y-6">
-          {selectedTier === "tier1" ? <IndividualAcct /> : <CorporateAcct />}
+          {selectedAccountType === "individual" ? (
+            <IndividualTierFlow />
+          ) : (
+            <CorporateAcct />
+          )}
 
           <div className="flex justify-start pt-4">
             <button
               type="button"
-              onClick={() => setSelectedTier(null)}
+              onClick={() => setSelectedAccountType(null)}
               className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              ← Back to tiers
+              ← Back to account types
             </button>
           </div>
         </div>
