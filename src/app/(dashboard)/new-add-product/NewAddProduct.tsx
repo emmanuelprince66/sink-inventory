@@ -1738,6 +1738,26 @@ const NewAddProduct = ({
                       </div>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="hide_from_pos"
+                    render={({ field }) => (
+                      <div className="flex items-center space-x-4 gap-2">
+                        <Checkbox
+                          id="allow-tax"
+                          className="cursor-pointer"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                        <label
+                          htmlFor="allow-tax"
+                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                        >
+                          Hide product from POS
+                        </label>
+                      </div>
+                    )}
+                  />
 
                   <FormField
                     control={form.control}
