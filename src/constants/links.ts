@@ -6,6 +6,8 @@ import {
   ClipboardList,
   CreditCard,
   DollarSign,
+  FlaskConical,
+  History,
   LayoutDashboard,
   Megaphone,
   Package,
@@ -41,12 +43,6 @@ export const links = [
         roles: ["OWNER", "ADMIN-ATTENDANT"],
       },
       {
-        title: "Inventory",
-        url: "/inventory",
-        icon: Package,
-        roles: ["OWNER", "ADMIN-ATTENDANT"],
-      },
-      {
         title: "Sales",
         url: "/sales",
         icon: Percent,
@@ -69,6 +65,39 @@ export const links = [
         url: "/supply",
         icon: Truck,
         roles: ["OWNER"],
+      },
+    ],
+  },
+  {
+    title: "Inventory Management",
+    items: [
+      {
+        title: "Inventory",
+        url: "/inventory",
+        icon: Package,
+        roles: [
+          "OWNER",
+          "ADMIN-ATTENDANT",
+          "INVENTORY-MANAGER",
+          "PRODUCTION-MANAGER",
+        ],
+      },
+      {
+        title: "Restock History",
+        url: "/inventory/restock-history",
+        icon: History,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"],
+      },
+      {
+        title: "Production History",
+        url: "/inventory/production-history",
+        icon: FlaskConical,
+        roles: [
+          "OWNER",
+          "ADMIN-ATTENDANT",
+          "INVENTORY-MANAGER",
+          "PRODUCTION-MANAGER",
+        ],
       },
     ],
   },
