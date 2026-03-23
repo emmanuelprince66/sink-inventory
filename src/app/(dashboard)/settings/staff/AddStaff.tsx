@@ -21,142 +21,18 @@ import {
 import { useAttendantsHook } from "@/hooks/useAttendantsHook";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-const ROLE_PERMISSIONS = {
-  ATTENDANT: {
-    name: "Attendant",
-    description:
-      "Front-line staff member responsible for completing sales and managing customer transactions",
-    permissions: [
-      "Finalize transaction",
-      "See orders and manage order transactions",
-      "See transactions",
-    ],
-    restrictions: [],
-    color: "bg-green-50 border-green-200",
-    iconColor: "text-green-600",
-    hasCustomPermissions: false,
-  },
-  "ADMIN-ATTENDANT": {
-    name: "Admin Attendant",
-    description:
-      "Senior attendant with extended privileges for managing special sales and watchlisted items",
-    permissions: [
-      "Make pre-sale",
-      "Sell watch listed items",
-      "See transactions",
-      "Finalize transaction",
-    ],
-    restrictions: [],
-    color: "bg-emerald-50 border-emerald-200",
-    iconColor: "text-emerald-600",
-    hasCustomPermissions: false,
-  },
-  PHARMACIST: {
-    name: "Pharmacist",
-    description:
-      "Licensed pharmacy professional with full system access and inventory management",
-    permissions: [
-      "Load inventory",
-      "See all transactions and performance",
-      "Full system access",
-    ],
-    restrictions: [],
-    color: "bg-teal-50 border-teal-200",
-    iconColor: "text-teal-600",
-    hasCustomPermissions: true,
-  },
-  ACCOUNTANT: {
-    name: "Accountant",
-    description:
-      "Financial oversight role with comprehensive transaction visibility across all branches",
-    permissions: [
-      "View transactions",
-      "Access all transactions",
-      "Inventory visibility",
-      "Access all branches",
-    ],
-    restrictions: [
-      "Cannot restock products",
-      "Cannot transfer inventory",
-      "Cannot process returns/damaged/production items",
-    ],
-    color: "bg-blue-50 border-blue-200",
-    iconColor: "text-blue-600",
-    hasCustomPermissions: true,
-  },
-  "INVENTORY-MANAGER": {
-    name: "Inventory Manager",
-    description:
-      "Comprehensive inventory control across multiple locations with full product lifecycle management",
-    permissions: [
-      "Manage inventory across multiple branches",
-      "Restock products",
-      "Move items to production",
-      "Transfer to other locations",
-      "Process product returns",
-      "Record damaged products",
-    ],
-    restrictions: [
-      "Cannot view transactions",
-      "Cannot access orders",
-      "Cannot access POS",
-      "Cannot view transaction reports",
-    ],
-    color: "bg-lime-50 border-lime-200",
-    iconColor: "text-lime-600",
-    hasCustomPermissions: true,
-  },
-  "PRODUCTION-MANAGER": {
-    name: "Production Manager",
-    description:
-      "Specialized role focused on production inventory and quality control",
-    permissions: [
-      "Access inventory",
-      "Restock products only",
-      "Record damaged products",
-    ],
-    restrictions: [
-      "Cannot transfer products to other branches",
-      "Cannot process returns",
-    ],
-    color: "bg-amber-50 border-amber-200",
-    iconColor: "text-amber-600",
-    hasCustomPermissions: true,
-  },
-};
-
 export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
-  const { form, onSubmit, createStaffLoading } = useAttendantsHook({
+  const {
+    form,
+    onSubmit,
+    createStaffLoading,
+    selectedRole,
+    permissions,
+    roleConfig,
+    getSelectedPermissionsCount,
+  } = useAttendantsHook({
     closeModal,
   });
-
-  const selectedRole = form.watch("role");
-  const canCreatePresale = form.watch("canCreatePresale");
-  const canLoadPresalesAndFinalize = form.watch("canLoadPresalesAndFinalize");
-  const canSellWatchlisted = form.watch("canSellWatchlisted");
-
-  // Inventory Manager permissions
-  const canManageMultipleBranches = form.watch("canManageMultipleBranches");
-  const canRestock = form.watch("canRestock");
-  const canMoveToProduction = form.watch("canMoveToProduction");
-  const canTransfer = form.watch("canTransfer");
-  const canReturnProduct = form.watch("canReturnProduct");
-  const canRecordDamaged = form.watch("canRecordDamaged");
-
-  // Accountant permissions
-  const canViewTransactions = form.watch("canViewTransactions");
-  const canAccessAllTransactions = form.watch("canAccessAllTransactions");
-  const canViewInventory = form.watch("canViewInventory");
-  const canAccessAllBranches = form.watch("canAccessAllBranches");
-
-  // Production Manager permissions
-  const canAccessInventory = form.watch("canAccessInventory");
-  const canRestockProduction = form.watch("canRestockProduction");
-  const canRecordDamagedProduction = form.watch("canRecordDamagedProduction");
-
-  const roleConfig = selectedRole
-    ? ROLE_PERMISSIONS[selectedRole as keyof typeof ROLE_PERMISSIONS]
-    : null;
 
   return (
     <div className="flex h-full w-full items-center justify-center overflow-y-auto py-6">
@@ -286,7 +162,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                 <div className="space-y-3">
                   <FormField
                     control={form.control}
-                    name="canLoadPresalesAndFinalize"
+                    name="set_permissions.dispense_drugs"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
@@ -300,13 +176,11 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                           </FormControl>
                           <div className="flex-1">
                             <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Load Presales and Finalize Transaction
+                              Dispense Drugs
                             </FormLabel>
                             <p className="text-xs text-gray-600 mt-1">
-                              Enables loading of pre-created sales and
-                              completing payment transactions for pharmacy items
-                              (similar to attendant role but specific to
-                              pharmacy operations)
+                              Allow this pharmacist to dispense prescription
+                              medications to customers
                             </p>
                           </div>
                         </div>
@@ -317,7 +191,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canSellWatchlisted"
+                    name="set_permissions.view_prescriptions"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
@@ -331,12 +205,40 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                           </FormControl>
                           <div className="flex-1">
                             <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Sell Watchlisted Items
+                              View Prescriptions
                             </FormLabel>
                             <p className="text-xs text-gray-600 mt-1">
-                              Grants access to view and process sales for
-                              inventory items marked as watchlisted or requiring
-                              special authorization
+                              Access and review customer prescriptions and
+                              medical records
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="set_permissions.process_sales"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Process Sales
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Complete transaction payments and finalize
+                              pharmacy sales
                             </p>
                           </div>
                         </div>
@@ -364,7 +266,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                 <div className="space-y-3">
                   <FormField
                     control={form.control}
-                    name="canManageMultipleBranches"
+                    name="set_permissions.manage_inventory_across_branches"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -393,7 +295,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canRestock"
+                    name="set_permissions.restock_products"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -422,7 +324,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canMoveToProduction"
+                    name="set_permissions.move_items_to_production"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -451,7 +353,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canTransfer"
+                    name="set_permissions.transfer_items"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -480,7 +382,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canReturnProduct"
+                    name="set_permissions.return_items"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -509,7 +411,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="canRecordDamaged"
+                    name="set_permissions.damage_items"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-lime-100 hover:border-lime-300 transition-colors">
@@ -528,243 +430,6 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                             <p className="text-xs text-gray-600 mt-1">
                               Document and process damaged or unusable inventory
                               items for write-off
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Accountant Permissions - Checkbox based */}
-            {selectedRole === "ACCOUNTANT" && (
-              <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-5 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">
-                    Accountant Permissions
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Select the specific financial and reporting capabilities for
-                    this accountant
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="canViewTransactions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              View Transactions
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Access to view all transaction records and payment
-                              details
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="canAccessAllTransactions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Access All Transactions
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Complete access to all transaction history
-                              including historical data and reports
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="canViewInventory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Inventory Visibility
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Read-only access to inventory levels, product
-                              values, and stock reports
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="canAccessAllBranches"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Access All Branches
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              View financial data and reports across all
-                              business branches and locations
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Production Manager Permissions - Checkbox based */}
-            {selectedRole === "PRODUCTION-MANAGER" && (
-              <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">
-                    Production Manager Permissions
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Select the specific production and inventory capabilities
-                    for this role
-                  </p>
-                </div>
-
-                <div className="space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="canAccessInventory"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Access Inventory
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              View production inventory levels, raw materials,
-                              and finished goods
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="canRestockProduction"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Restock Products Only
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Add new production inventory quantities and manage
-                              stock replenishment for production items only
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="canRecordDamagedProduction"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Record Damaged Products
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Document and track damaged or defective items
-                              during production process
                             </p>
                           </div>
                         </div>
@@ -837,187 +502,103 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
               </div>
             )}
 
-            {/* Pharmacist Permissions Summary */}
-            {selectedRole === "PHARMACIST" &&
-              (canCreatePresale ||
-                canLoadPresalesAndFinalize ||
-                canSellWatchlisted) && (
-                <div className="rounded-lg border-2 p-5 bg-teal-50 border-teal-200">
+            {/* Permissions Summary for roles with custom permissions */}
+            {roleConfig &&
+              roleConfig.hasCustomPermissions &&
+              getSelectedPermissionsCount() > 0 && (
+                <div className={`rounded-lg border-2 p-5 ${roleConfig.color}`}>
                   <h3 className="font-semibold text-gray-900 mb-3 text-lg">
-                    Selected Permissions Summary
+                    Selected Permissions Summary (
+                    {getSelectedPermissionsCount()} selected)
                   </h3>
                   <div className="space-y-2">
-                    {canCreatePresale && (
+                    {permissions.manage_inventory_across_branches && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can create presales
-                        </span>
-                      </div>
-                    )}
-                    {canLoadPresalesAndFinalize && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can load presales and finalize transactions
-                        </span>
-                      </div>
-                    )}
-                    {canSellWatchlisted && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-teal-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can see and sell watchlisted items
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* Inventory Manager Permissions Summary */}
-            {selectedRole === "INVENTORY-MANAGER" &&
-              (canManageMultipleBranches ||
-                canRestock ||
-                canMoveToProduction ||
-                canTransfer ||
-                canReturnProduct ||
-                canRecordDamaged) && (
-                <div className="rounded-lg border-2 p-5 bg-lime-50 border-lime-200">
-                  <h3 className="font-semibold text-gray-900 mb-3 text-lg">
-                    Selected Permissions Summary
-                  </h3>
-                  <div className="space-y-2">
-                    {canManageMultipleBranches && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can manage inventory across multiple branches
                         </span>
                       </div>
                     )}
-                    {canRestock && (
+                    {permissions.restock_products && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can restock products
                         </span>
                       </div>
                     )}
-                    {canMoveToProduction && (
+                    {permissions.move_items_to_production && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can move items to production
                         </span>
                       </div>
                     )}
-                    {canTransfer && (
+                    {permissions.transfer_items && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can transfer to other locations
                         </span>
                       </div>
                     )}
-                    {canReturnProduct && (
+                    {permissions.return_items && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can process product returns
                         </span>
                       </div>
                     )}
-                    {canRecordDamaged && (
+                    {permissions.damage_items && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-lime-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can record damaged products
                         </span>
                       </div>
                     )}
-                  </div>
-                </div>
-              )}
-
-            {/* Accountant Permissions Summary */}
-            {selectedRole === "ACCOUNTANT" &&
-              (canViewTransactions ||
-                canAccessAllTransactions ||
-                canViewInventory ||
-                canAccessAllBranches) && (
-                <div className="rounded-lg border-2 p-5 bg-blue-50 border-blue-200">
-                  <h3 className="font-semibold text-gray-900 mb-3 text-lg">
-                    Selected Permissions Summary
-                  </h3>
-                  <div className="space-y-2">
-                    {canViewTransactions && (
+                    {permissions.dispense_drugs && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
-                          Can view transactions
+                          Can dispense drugs
                         </span>
                       </div>
                     )}
-                    {canAccessAllTransactions && (
+                    {permissions.view_prescriptions && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
-                          Can access all transactions
+                          Can view prescriptions
                         </span>
                       </div>
                     )}
-                    {canViewInventory && (
+                    {permissions.process_sales && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600" />
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
                         <span className="text-sm text-gray-700 leading-relaxed">
-                          Has inventory visibility
-                        </span>
-                      </div>
-                    )}
-                    {canAccessAllBranches && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-blue-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can access all branches
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            {/* Production Manager Permissions Summary */}
-            {selectedRole === "PRODUCTION-MANAGER" &&
-              (canAccessInventory ||
-                canRestockProduction ||
-                canRecordDamagedProduction) && (
-                <div className="rounded-lg border-2 p-5 bg-amber-50 border-amber-200">
-                  <h3 className="font-semibold text-gray-900 mb-3 text-lg">
-                    Selected Permissions Summary
-                  </h3>
-                  <div className="space-y-2">
-                    {canAccessInventory && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can access inventory
-                        </span>
-                      </div>
-                    )}
-                    {canRestockProduction && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can restock products
-                        </span>
-                      </div>
-                    )}
-                    {canRecordDamagedProduction && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2 className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-600" />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can record damaged products
+                          Can process sales
                         </span>
                       </div>
                     )}

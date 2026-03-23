@@ -10,6 +10,23 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
 
+// Permission schema matching backend structure
+const permissionsSchema = z.object({
+  manage_inventory_across_branches: z.boolean().optional(),
+  restock_products: z.boolean().optional(),
+  move_items_to_production: z.boolean().optional(),
+  transfer_items: z.boolean().optional(),
+  return_items: z.boolean().optional(),
+  damage_items: z.boolean().optional(),
+  process_sales: z.boolean().optional(),
+  apply_discounts: z.boolean().optional(),
+  manage_suppliers: z.boolean().optional(),
+  manage_bank_details: z.boolean().optional(),
+  dispense_drugs: z.boolean().optional(),
+  view_prescriptions: z.boolean().optional(),
+  view_transactions: z.boolean().optional(),
+});
+
 const staffSchema = z.object({
   firstname: z.string().min(1, "First name is required").max(50),
   lastname: z.string().min(1, "Last name is required").max(50),
@@ -27,26 +44,7 @@ const staffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
-  // Pharmacist permissions
-  canCreatePresale: z.boolean().optional(),
-  canLoadPresalesAndFinalize: z.boolean().optional(),
-  canSellWatchlisted: z.boolean().optional(),
-  // Inventory Manager permissions
-  canManageMultipleBranches: z.boolean().optional(),
-  canRestock: z.boolean().optional(),
-  canMoveToProduction: z.boolean().optional(),
-  canTransfer: z.boolean().optional(),
-  canReturnProduct: z.boolean().optional(),
-  canRecordDamaged: z.boolean().optional(),
-  // Accountant permissions
-  canViewTransactions: z.boolean().optional(),
-  canAccessAllTransactions: z.boolean().optional(),
-  canViewInventory: z.boolean().optional(),
-  canAccessAllBranches: z.boolean().optional(),
-  // Production Manager permissions
-  canAccessInventory: z.boolean().optional(),
-  canRestockProduction: z.boolean().optional(),
-  canRecordDamagedProduction: z.boolean().optional(),
+  set_permissions: permissionsSchema.optional(),
 });
 
 export type AddStaffFormValues = z.infer<typeof staffSchema>;
@@ -68,26 +66,7 @@ const EditStaffSchema = z.object({
       required_error: "Please select a role",
     },
   ),
-  // Pharmacist permissions
-  canCreatePresale: z.boolean().optional(),
-  canLoadPresalesAndFinalize: z.boolean().optional(),
-  canSellWatchlisted: z.boolean().optional(),
-  // Inventory Manager permissions
-  canManageMultipleBranches: z.boolean().optional(),
-  canRestock: z.boolean().optional(),
-  canMoveToProduction: z.boolean().optional(),
-  canTransfer: z.boolean().optional(),
-  canReturnProduct: z.boolean().optional(),
-  canRecordDamaged: z.boolean().optional(),
-  // Accountant permissions
-  canViewTransactions: z.boolean().optional(),
-  canAccessAllTransactions: z.boolean().optional(),
-  canViewInventory: z.boolean().optional(),
-  canAccessAllBranches: z.boolean().optional(),
-  // Production Manager permissions
-  canAccessInventory: z.boolean().optional(),
-  canRestockProduction: z.boolean().optional(),
-  canRecordDamagedProduction: z.boolean().optional(),
+  set_permissions: permissionsSchema.optional(),
 });
 
 export type EditStaffFormValues = z.infer<typeof EditStaffSchema>;
@@ -162,26 +141,21 @@ export const useAttendantsHook = ({
       lastname: "",
       phone: "",
       role: undefined as any,
-      // Pharmacist permissions
-      canCreatePresale: false,
-      canLoadPresalesAndFinalize: false,
-      canSellWatchlisted: false,
-      // Inventory Manager permissions
-      canManageMultipleBranches: false,
-      canRestock: false,
-      canMoveToProduction: false,
-      canTransfer: false,
-      canReturnProduct: false,
-      canRecordDamaged: false,
-      // Accountant permissions
-      canViewTransactions: false,
-      canAccessAllTransactions: false,
-      canViewInventory: false,
-      canAccessAllBranches: false,
-      // Production Manager permissions
-      canAccessInventory: false,
-      canRestockProduction: false,
-      canRecordDamagedProduction: false,
+      set_permissions: {
+        manage_inventory_across_branches: false,
+        restock_products: false,
+        move_items_to_production: false,
+        transfer_items: false,
+        return_items: false,
+        damage_items: false,
+        process_sales: false,
+        apply_discounts: false,
+        manage_suppliers: false,
+        manage_bank_details: false,
+        dispense_drugs: false,
+        view_prescriptions: false,
+        view_transactions: false,
+      },
     },
     mode: "onChange",
   });
@@ -193,26 +167,21 @@ export const useAttendantsHook = ({
       lastname: "",
       phone: "",
       role: undefined as any,
-      // Pharmacist permissions
-      canCreatePresale: false,
-      canLoadPresalesAndFinalize: false,
-      canSellWatchlisted: false,
-      // Inventory Manager permissions
-      canManageMultipleBranches: false,
-      canRestock: false,
-      canMoveToProduction: false,
-      canTransfer: false,
-      canReturnProduct: false,
-      canRecordDamaged: false,
-      // Accountant permissions
-      canViewTransactions: false,
-      canAccessAllTransactions: false,
-      canViewInventory: false,
-      canAccessAllBranches: false,
-      // Production Manager permissions
-      canAccessInventory: false,
-      canRestockProduction: false,
-      canRecordDamagedProduction: false,
+      set_permissions: {
+        manage_inventory_across_branches: false,
+        restock_products: false,
+        move_items_to_production: false,
+        transfer_items: false,
+        return_items: false,
+        damage_items: false,
+        process_sales: false,
+        apply_discounts: false,
+        manage_suppliers: false,
+        manage_bank_details: false,
+        dispense_drugs: false,
+        view_prescriptions: false,
+        view_transactions: false,
+      },
     },
     mode: "onChange",
   });
@@ -225,40 +194,9 @@ export const useAttendantsHook = ({
       role: values.role,
     };
 
-    // Include pharmacist permissions if role is PHARMACIST
-    if (values.role === "PHARMACIST") {
-      payload.canCreatePresale = values.canCreatePresale || false;
-      payload.canLoadPresalesAndFinalize =
-        values.canLoadPresalesAndFinalize || false;
-      payload.canSellWatchlisted = values.canSellWatchlisted || false;
-    }
-
-    // Include inventory manager permissions if role is INVENTORY-MANAGER
-    if (values.role === "INVENTORY-MANAGER") {
-      payload.canManageMultipleBranches =
-        values.canManageMultipleBranches || false;
-      payload.canRestock = values.canRestock || false;
-      payload.canMoveToProduction = values.canMoveToProduction || false;
-      payload.canTransfer = values.canTransfer || false;
-      payload.canReturnProduct = values.canReturnProduct || false;
-      payload.canRecordDamaged = values.canRecordDamaged || false;
-    }
-
-    // Include accountant permissions if role is ACCOUNTANT
-    if (values.role === "ACCOUNTANT") {
-      payload.canViewTransactions = values.canViewTransactions || false;
-      payload.canAccessAllTransactions =
-        values.canAccessAllTransactions || false;
-      payload.canViewInventory = values.canViewInventory || false;
-      payload.canAccessAllBranches = values.canAccessAllBranches || false;
-    }
-
-    // Include production manager permissions if role is PRODUCTION-MANAGER
-    if (values.role === "PRODUCTION-MANAGER") {
-      payload.canAccessInventory = values.canAccessInventory || false;
-      payload.canRestockProduction = values.canRestockProduction || false;
-      payload.canRecordDamagedProduction =
-        values.canRecordDamagedProduction || false;
+    // Add permissions if they exist
+    if (values.set_permissions) {
+      payload.set_permissions = values.set_permissions;
     }
 
     console.log("payload", payload);
@@ -330,7 +268,7 @@ export const useAttendantsHook = ({
       ],
       color: "bg-blue-50 border-blue-200",
       iconColor: "text-blue-600",
-      hasCustomPermissions: true,
+      hasCustomPermissions: false,
     },
     "INVENTORY-MANAGER": {
       name: "Inventory Manager",
@@ -369,43 +307,36 @@ export const useAttendantsHook = ({
       ],
       color: "bg-amber-50 border-amber-200",
       iconColor: "text-amber-600",
-      hasCustomPermissions: true,
+      hasCustomPermissions: false,
     },
   };
 
   useEffect(() => {
     if (attendantData && attendantId && !AttendantLoading) {
+      const permissions = attendantData?.data?.set_permissions || {};
+
       editform.reset({
         firstname: attendantData?.data?.firstname,
         lastname: attendantData?.data?.lastname,
         phone: attendantData?.data?.phone || "",
         role: attendantData?.data?.role || undefined,
-        // Pharmacist permissions
-        canCreatePresale: attendantData?.data?.canCreatePresale || false,
-        canLoadPresalesAndFinalize:
-          attendantData?.data?.canLoadPresalesAndFinalize || false,
-        canSellWatchlisted: attendantData?.data?.canSellWatchlisted || false,
-        // Inventory Manager permissions
-        canManageMultipleBranches:
-          attendantData?.data?.canManageMultipleBranches || false,
-        canRestock: attendantData?.data?.canRestock || false,
-        canMoveToProduction: attendantData?.data?.canMoveToProduction || false,
-        canTransfer: attendantData?.data?.canTransfer || false,
-        canReturnProduct: attendantData?.data?.canReturnProduct || false,
-        canRecordDamaged: attendantData?.data?.canRecordDamaged || false,
-        // Accountant permissions
-        canViewTransactions: attendantData?.data?.canViewTransactions || false,
-        canAccessAllTransactions:
-          attendantData?.data?.canAccessAllTransactions || false,
-        canViewInventory: attendantData?.data?.canViewInventory || false,
-        canAccessAllBranches:
-          attendantData?.data?.canAccessAllBranches || false,
-        // Production Manager permissions
-        canAccessInventory: attendantData?.data?.canAccessInventory || false,
-        canRestockProduction:
-          attendantData?.data?.canRestockProduction || false,
-        canRecordDamagedProduction:
-          attendantData?.data?.canRecordDamagedProduction || false,
+        set_permissions: {
+          manage_inventory_across_branches:
+            permissions.manage_inventory_across_branches || false,
+          restock_products: permissions.restock_products || false,
+          move_items_to_production:
+            permissions.move_items_to_production || false,
+          transfer_items: permissions.transfer_items || false,
+          return_items: permissions.return_items || false,
+          damage_items: permissions.damage_items || false,
+          process_sales: permissions.process_sales || false,
+          apply_discounts: permissions.apply_discounts || false,
+          manage_suppliers: permissions.manage_suppliers || false,
+          manage_bank_details: permissions.manage_bank_details || false,
+          dispense_drugs: permissions.dispense_drugs || false,
+          view_prescriptions: permissions.view_prescriptions || false,
+          view_transactions: permissions.view_transactions || false,
+        },
       });
     }
   }, [attendantData, AttendantLoading, editform, attendantId]);
@@ -418,40 +349,9 @@ export const useAttendantsHook = ({
       role: values.role,
     };
 
-    // Include pharmacist permissions if role is PHARMACIST
-    if (values.role === "PHARMACIST") {
-      payload.canCreatePresale = values.canCreatePresale || false;
-      payload.canLoadPresalesAndFinalize =
-        values.canLoadPresalesAndFinalize || false;
-      payload.canSellWatchlisted = values.canSellWatchlisted || false;
-    }
-
-    // Include inventory manager permissions if role is INVENTORY-MANAGER
-    if (values.role === "INVENTORY-MANAGER") {
-      payload.canManageMultipleBranches =
-        values.canManageMultipleBranches || false;
-      payload.canRestock = values.canRestock || false;
-      payload.canMoveToProduction = values.canMoveToProduction || false;
-      payload.canTransfer = values.canTransfer || false;
-      payload.canReturnProduct = values.canReturnProduct || false;
-      payload.canRecordDamaged = values.canRecordDamaged || false;
-    }
-
-    // Include accountant permissions if role is ACCOUNTANT
-    if (values.role === "ACCOUNTANT") {
-      payload.canViewTransactions = values.canViewTransactions || false;
-      payload.canAccessAllTransactions =
-        values.canAccessAllTransactions || false;
-      payload.canViewInventory = values.canViewInventory || false;
-      payload.canAccessAllBranches = values.canAccessAllBranches || false;
-    }
-
-    // Include production manager permissions if role is PRODUCTION-MANAGER
-    if (values.role === "PRODUCTION-MANAGER") {
-      payload.canAccessInventory = values.canAccessInventory || false;
-      payload.canRestockProduction = values.canRestockProduction || false;
-      payload.canRecordDamagedProduction =
-        values.canRecordDamagedProduction || false;
+    // Add permissions if they exist
+    if (values.set_permissions) {
+      payload.set_permissions = values.set_permissions;
     }
 
     console.log("payload", payload);
@@ -478,5 +378,21 @@ export const useAttendantsHook = ({
     AttendantLoading,
     deleteAttendantLoading,
     createStaffLoading,
+    // Computed values and helpers for clean UI
+    selectedRole: form.watch("role") || editform.watch("role"),
+    permissions:
+      form.watch("set_permissions") || editform.watch("set_permissions") || {},
+    roleConfig: (() => {
+      const role = form.watch("role") || editform.watch("role");
+      return role
+        ? ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]
+        : null;
+    })(),
+    getSelectedPermissionsCount: () => {
+      const perms =
+        form.watch("set_permissions") || editform.watch("set_permissions");
+      if (!perms) return 0;
+      return Object.values(perms).filter(Boolean).length;
+    },
   };
 };
