@@ -8,7 +8,7 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
@@ -54,7 +54,6 @@ export const useSalesHook = ({
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // console.log("business_id", business_id);
   const [productId, setProductId] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -67,8 +66,6 @@ export const useSalesHook = ({
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
-
-  console.log("CategoriesData", CategoriesData);
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
@@ -83,43 +80,20 @@ export const useSalesHook = ({
         queryClient.invalidateQueries({
           queryKey: [queryKey.sales.getAllSalesHistory],
         });
-        // refetchOrders();
-        // refetchSales();
-
         setLoading(false);
-
         if (closeModal) closeModal();
-
-        // Optional: Invalidate queries or update cache
       },
       onError: (error) => {
         console.error("Error reversing sale:", error);
         setLoading(false);
       },
-
-      // You can add other callbacks here if needed
     });
 
-  // const { mutate: reverseSale, isPending: ReverseSalePending } =
-  //   useReverseSaleMutation({
-  //     onSuccess: (data) => {
-  //       setLoading(false);
-  //       console.log("Sale reversed successfully", data);
-  //     },
-  //     onError: (error, variables, context) => {
-  //       setLoading(false);
-
-  //       console.error("Error reversing sale:", error);
-  //     },
-  //   });
-
   const handleReverseSale = (productId: any) => {
-    // console.log("productId", productId);
     setLoading(true);
     reverseSale(productId);
   };
 
-  // console.log("Attendanrs", AttendantsData);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
 
   const [orderDetails, setOrderDetails] = useState<any>({});
@@ -131,18 +105,28 @@ export const useSalesHook = ({
     setOrderDetails(row?.original);
     openOrderHistoryModalFunc();
   };
+
   const handleProductsRowClick = (row: any) => {
     if (row?.original?.type?.toLowerCase() === "product") {
-      console.log("row", row.original);
-
       router.push(`/inventory/${row?.original?.id}/product-sold-history`);
     }
   };
 
+  // Only pass searchTerm to API when it's empty or at least 3 characters
   const searchTerm =
-    debouncedSearchTerm?.length || 0 >= 3 || debouncedSearchTerm?.length === 0
-      ? debouncedSearchTerm
-      : null;
+    !debouncedSearchTerm || debouncedSearchTerm.length === 0
+      ? undefined
+      : debouncedSearchTerm.length >= 3
+        ? debouncedSearchTerm
+        : undefined;
+
+  const startDate = dateRange?.from
+    ? moment(dateRange.from).format("YYYY-MM-DD")
+    : undefined;
+
+  const endDate = dateRange?.to
+    ? moment(dateRange.to).format("YYYY-MM-DD")
+    : undefined;
 
   const {
     data: SalesData,
@@ -155,18 +139,12 @@ export const useSalesHook = ({
       attendance_id: attendantId,
       search: searchTerm,
       type: activeFilter && filterMapping[activeFilter],
-      start_date: dateRange?.from
-        ? moment(dateRange.from).format("YYYY-MM-DD")
-        : undefined,
-      end_date: dateRange?.to
-        ? moment(dateRange.to).format("YYYY-MM-DD")
-        : undefined,
+      start_date: startDate,
+      end_date: endDate,
       category_id: selectedCategoryId,
     },
     enabled: !!business_id,
   });
-
-  console.log("selectedCategoryId", selectedCategoryId);
 
   const {
     data: SalesOrderData,
@@ -179,31 +157,28 @@ export const useSalesHook = ({
       page,
       limit: 15,
       status: activeFilterTwo && filterMappingTwo[activeFilterTwo],
-      start_date: dateRange?.from
-        ? moment(dateRange.from).format("YYYY-MM-DD")
-        : undefined,
-      end_date: dateRange?.to
-        ? moment(dateRange.to).format("YYYY-MM-DD")
-        : undefined,
+      start_date: startDate,
+      end_date: endDate,
     },
     enabled: !!business_id,
   });
 
-  // console.log("SalesOrderData", SalesOrderData);
-
-  // Refetch when any critical parameter changes
-  useEffect(() => {
-    refetchSales();
-    refetchOrders();
-  }, [
-    activeFilter,
-    activeFilterTwo,
-    dateRange,
-    searchTerm,
-    refetchSales,
-    refetchOrders,
-    attendantId,
-  ]);
+  // ✅ REMOVED the useEffect that was manually calling refetchSales() and refetchOrders().
+  // That was causing a second request with stale/missing params every time a dependency
+  // changed (e.g. picking a date). React Query automatically refetches when the params
+  // passed to the query change — as long as those params are included in the query key
+  // inside useFetchSalesHistoryQuery and useFetchOrderHistoryQuery.
+  //
+  // ⚠️  Make sure your query keys look like this in the query files:
+  //
+  //   useFetchSalesHistoryQuery:
+  //     queryKey: [queryKey.sales.getAllSalesHistory, params]
+  //
+  //   useFetchOrderHistoryQuery:
+  //     queryKey: [queryKey.sales.getAllOrdersHistory, params]
+  //
+  // With the full params object in the key, React Query treats every unique combination
+  // of filters/dates/search as a separate cache entry and re-fetches automatically.
 
   return {
     SalesData,
