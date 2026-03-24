@@ -2,6 +2,7 @@
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
+import FeatureUnavailable from "@/components/FeatureUnavailable";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -158,6 +159,7 @@ const ReceiptPage = ({
     createSalePending,
     BankDataLoading,
     BankData,
+    BankError,
     BusinessDataLoading,
   } = useCheckoutHook({
     closeSureModal,
@@ -731,6 +733,11 @@ const ReceiptPage = ({
 
               {paymentMethod === "BANK" && (
                 <div className="space-y-2 mt-2">
+                  <FeatureUnavailable
+                    errorCode={BankError?.data?.error}
+                    settingsPath="/settings/"
+                    settingsLabel="Manage Subscription"
+                  />
                   <p className="text-xs">Select Bank</p>
                   {BankData?.data?.length > 0 ? (
                     <Select

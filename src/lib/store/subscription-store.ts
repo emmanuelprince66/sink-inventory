@@ -95,6 +95,7 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
     // Navigate to subscription page for non-subscribers
     console.log("Navigating to subscription page...");
     // Example: router.push('/subscription/plans');
+    window.location.href = "/settings";
     get().closeNotification();
   },
 }));

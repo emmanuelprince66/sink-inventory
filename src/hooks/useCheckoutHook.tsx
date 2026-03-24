@@ -22,15 +22,23 @@ export const useCheckoutHook = ({
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
-  const { data: BusinessData, isLoading: BusinessDataLoading } =
-    useFetchBusinessById(business_id);
+  const {
+    data: BusinessData,
+    isLoading: BusinessDataLoading,
+    error: bankError,
+  } = useFetchBusinessById(business_id);
+
+  console.log("bannkerror", bankError);
   const { showToast } = useToast();
 
-  const { data: BankData, isLoading: BankDataLoading } =
-    useFetchBankQuery(business_id);
+  const {
+    data: BankData,
+    isLoading: BankDataLoading,
+    error: BankError,
+  } = useFetchBankQuery(business_id);
 
   // console.log("businessData", BusinessData);
-  // console.log("BankData", BankData);
+  console.log("BankError---5", BankError?.data?.error);
 
   const debouncedSearchTerm = useDebounce(searchInput || "", 500); // 500ms debounce
 
@@ -71,6 +79,7 @@ export const useCheckoutHook = ({
     CustomerLoading,
     BusinessData,
     BankDataLoading,
+    BankError,
     BankData,
     createSalePending,
     BusinessDataLoading,
