@@ -106,7 +106,8 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
       if (
         data?.role === "OWNER" ||
         data?.role === "PHARMACIST" ||
-        data?.role === "ADMIN-ATTENDANT"
+        data?.role === "ADMIN-ATTENDANT" ||
+        data?.role === "INVENTORY-MANAGER"
       ) {
         router.push(options?.redirectTo || "/create-business");
         router.refresh();
