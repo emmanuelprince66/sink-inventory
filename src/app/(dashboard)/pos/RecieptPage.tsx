@@ -167,6 +167,8 @@ const ReceiptPage = ({
     setCreateSaleResponse,
   });
 
+  console.log("BankError----5-neek55", BankError);
+
   // Get the first business from the array
   const business = BusinessData?.data || {};
 
@@ -733,11 +735,14 @@ const ReceiptPage = ({
 
               {paymentMethod === "BANK" && (
                 <div className="space-y-2 mt-2">
-                  <FeatureUnavailable
-                    errorCode={BankError?.data?.error}
-                    settingsPath="/settings/"
-                    settingsLabel="Manage Subscription"
-                  />
+                  {BankError !== null && BankError !== undefined && (
+                    <FeatureUnavailable
+                      errorCode={BankError?.data?.error}
+                      settingsPath="/settings/"
+                      settingsLabel="Manage Subscription"
+                    />
+                  )}
+
                   <p className="text-xs">Select Bank</p>
                   {BankData?.data?.length > 0 ? (
                     <Select
