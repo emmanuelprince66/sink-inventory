@@ -183,64 +183,6 @@ export const EditStaff = ({
                 <div className="space-y-3">
                   <FormField
                     control={editform.control}
-                    name="set_permissions.dispense_drugs"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              Dispense Drugs
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Allow this pharmacist to dispense prescription
-                              medications to customers
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={editform.control}
-                    name="set_permissions.view_prescriptions"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value || false}
-                              onChange={field.onChange}
-                              className="w-5 h-5 mt-0.5 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
-                            />
-                          </FormControl>
-                          <div className="flex-1">
-                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              View Prescriptions
-                            </FormLabel>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Access and review customer prescriptions and
-                              medical records
-                            </p>
-                          </div>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={editform.control}
                     name="set_permissions.process_sales"
                     render={({ field }) => (
                       <FormItem>
@@ -258,8 +200,7 @@ export const EditStaff = ({
                               Process Sales
                             </FormLabel>
                             <p className="text-xs text-gray-600 mt-1">
-                              Complete transaction payments and finalize
-                              pharmacy sales
+                              Load presales and complete sales transactions
                             </p>
                           </div>
                         </div>
@@ -267,6 +208,142 @@ export const EditStaff = ({
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.make_presale"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Make Presale
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Create and manage presale transactions
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.sell_watchlist"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-teal-100 hover:border-teal-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-teal-600 bg-gray-100 border-gray-300 rounded focus:ring-teal-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Sell Watchlisted Items
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Ability to sell items marked on the watchlist
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Accountant Custom Permissions */}
+            {selectedRole === "ACCOUNTANT" && (
+              <div className="rounded-lg border-2 border-blue-200 bg-blue-50 p-5 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    Accountant Permissions
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Configure financial visibility and access permissions
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.view_transactions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              View Transactions
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Access all transaction records and financial data
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.view_orders"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-blue-100 hover:border-blue-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              View Orders and History
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Review order history and transaction records
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-100 rounded-md">
+                  <p className="text-xs text-blue-800 font-medium">
+                    Note: Accountants have view-only access to inventory and
+                    cannot perform restocking, transfers, returns, or damage
+                    operations.
+                  </p>
                 </div>
               </div>
             )}
@@ -462,6 +539,114 @@ export const EditStaff = ({
               </div>
             )}
 
+            {/* Production Manager Custom Permissions */}
+            {selectedRole === "PRODUCTION-MANAGER" && (
+              <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    Production Manager Permissions
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Configure production and inventory management permissions
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.restock_products"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Restock Products
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Add new inventory quantities for production items
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.damage_items"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Record Damaged Products
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Document damaged or unusable production items
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.view_orders"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              View Orders and History
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              See who sold what and review order history
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="mt-4 p-3 bg-amber-100 rounded-md">
+                  <p className="text-xs text-amber-800 font-medium">
+                    Note: Production Managers cannot sell at POS, view payments,
+                    transfer products, process returns, or see checklist
+                    products.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Standard Role Permissions Display */}
             {roleConfig && !roleConfig.hasCustomPermissions && (
               <div className={`rounded-lg border-2 p-5 ${roleConfig.color}`}>
@@ -593,26 +778,6 @@ export const EditStaff = ({
                         </span>
                       </div>
                     )}
-                    {permissions.dispense_drugs && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2
-                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
-                        />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can dispense drugs
-                        </span>
-                      </div>
-                    )}
-                    {permissions.view_prescriptions && (
-                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
-                        <CheckCircle2
-                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
-                        />
-                        <span className="text-sm text-gray-700 leading-relaxed">
-                          Can view prescriptions
-                        </span>
-                      </div>
-                    )}
                     {permissions.process_sales && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
                         <CheckCircle2
@@ -620,6 +785,46 @@ export const EditStaff = ({
                         />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can process sales
+                        </span>
+                      </div>
+                    )}
+                    {permissions.make_presale && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can make presale
+                        </span>
+                      </div>
+                    )}
+                    {permissions.sell_watchlist && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can sell watchlisted items
+                        </span>
+                      </div>
+                    )}
+                    {permissions.view_transactions && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can view transactions
+                        </span>
+                      </div>
+                    )}
+                    {permissions.view_orders && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can view orders and history
                         </span>
                       </div>
                     )}
