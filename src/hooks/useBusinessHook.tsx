@@ -99,7 +99,9 @@ export const useBusinessHook = ({
   closeCreateBusinessModal?: () => void;
 } = {}) => {
   const router = useRouter();
-  const { user } = useUserRole();
+  const { user, role } = useUserRole();
+
+  console.log("user--3", user);
   const setBusinessId = useBusinessStore((state) => state.setBusinessId);
   const setBusinessData = useBusinessDataStore(
     (state) => state.setBusinessData,
@@ -129,9 +131,21 @@ export const useBusinessHook = ({
 
   // ── Row click — set business and navigate to POS ──────────────────────────
   const handleRowClick = (row: any) => {
+    console.log("role---4", role);
     setBusinessData(row?.original);
     setBusinessId(row?.original?.id);
-    router.push(`/pos`);
+
+    const roleRouteMap: Record<string, string> = {
+      ACCOUNTANT: "/sales",
+      PHARMACIST: "/pos",
+      "ADMIN-ATTENDANT": "/pos",
+      ATTENDANT: "/pos",
+      "PRODUCTION-MANAGER": "/sales",
+      "INVENTORY-MANAGER": "/inventory",
+    };
+
+    const route = role ? roleRouteMap[role] || "/pos" : "/pos";
+    router.push(route);
   };
 
   // ── Create ────────────────────────────────────────────────────────────────
@@ -141,7 +155,7 @@ export const useBusinessHook = ({
   const onSubmit = (values: BusinessFormValues) => {
     setLoading(true);
 
-    const formData = new FormData();  
+    const formData = new FormData();
     formData.append("name", values.name);
     formData.append("type", values.type);
     formData.append("currency", values.currency);

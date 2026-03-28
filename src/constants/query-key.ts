@@ -118,6 +118,7 @@ export const queryKey = {
     deleteProduct: "delete-product",
     deleteService: "delete-service",
     editProduct: "edit-product",
+    fetchAllRestockHistory: "fetch-all-restock-history",
     editService: "edit-service",
     transferProduct: "transfer-product",
     bulkUpload: "bulk-upload",
