@@ -12,6 +12,7 @@ import { EyeOff, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import RestockItem from "./[id]/restock/RestockItem";
+import AddWaste from "./AddWaste";
 import DamagedProduct from "./DamagedProduct";
 import DeleteItem from "./DeleteItem";
 import EditProductPrice from "./EditProductPrice";
@@ -171,8 +172,10 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
 
         const [openViewDetails, setOpenViewDetails] = useState(false);
         const [openRestockModal, setOpenRestockModal] = useState(false);
+        const [openWasteModal, setOpenWasteModal] = useState(false);
 
         const handleOpenRestockModal = () => setOpenRestockModal(true);
+        const handleOpenWasteModal = () => setOpenWasteModal(true);
 
         const openViewDetailsFunc = (e: React.MouseEvent) => {
           setOpenViewDetails(true);
@@ -238,6 +241,14 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                     className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
                   >
                     Set Discount
+                  </DropdownMenuItem>
+                )}
+                {isProduct && (
+                  <DropdownMenuItem
+                    onClick={handleOpenWasteModal}
+                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  >
+                    Add Waste
                   </DropdownMenuItem>
                 )}
                 {isProduct && can("return_items") && (
@@ -348,6 +359,17 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 productId={inventory.id}
                 product={inventory}
                 closeModal={closeSetDiscountModal}
+              />
+            </CustomModal>
+            <CustomModal
+              isOpen={openWasteModal}
+              onClose={() => setOpenWasteModal(false)}
+              trigger={false}
+              title="Add Waste"
+            >
+              <AddWaste
+                productId={inventory.id}
+                closeModal={() => setOpenWasteModal(false)}
               />
             </CustomModal>
 

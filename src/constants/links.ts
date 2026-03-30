@@ -5,6 +5,7 @@ import {
   BellIcon,
   ClipboardList,
   CreditCard,
+  Delete,
   DollarSign,
   FlaskConical,
   History,
@@ -101,6 +102,18 @@ export const links = [
         title: "Restock History",
         url: "/inventory/restock-history",
         icon: History,
+        roles: [
+          "OWNER",
+          "ADMIN-ATTENDANT",
+          "INVENTORY-MANAGER",
+          "PRODUCTION-MANAGER",
+        ],
+        permission: "restock_products", // Only who can restock can see history
+      },
+      {
+        title: "Waste History",
+        url: "/inventory/waste-history",
+        icon: Delete,
         roles: [
           "OWNER",
           "ADMIN-ATTENDANT",
