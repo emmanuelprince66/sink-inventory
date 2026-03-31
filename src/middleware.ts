@@ -3,10 +3,26 @@ import { UserRole } from "./lib/store/types";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forget-password", "/unauthorized"];
 const PROTECTED_PATHS = {
-  "/inventory": ["OWNER", "ADMIN-ATTENDANT"],
-  "/customers": ["OWNER", "ADMIN-ATTENDANT"],
+  "/inventory": [
+    "OWNER",
+    "ADMIN-ATTENDANT",
+    "ATTENDANT",
+    "PHARMACIST",
+    "PRODUCTION-MANAGER",
+    "ACCOUNTANT",
+    "INVENTORY-MANAGER",
+  ],
+  "/customers": ["OWNER", "ADMIN-ATTENDANT", "ACCOUNTANT"],
   "/expenses": ["OWNER"],
-  "/create-business": ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
+  "/create-business": [
+    "OWNER",
+    "ADMIN-ATTENDANT",
+    "ATTENDANT",
+    "PHARMACIST",
+    "PRODUCTION-MANAGER",
+    "ACCOUNTANT",
+    "INVENTORY-MANAGER",
+  ],
 };
 
 export function middleware(request: NextRequest) {

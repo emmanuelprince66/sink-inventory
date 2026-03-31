@@ -1,4 +1,3 @@
-import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -11,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
-const MoveProduction = ({
+const AddWaste = ({
   productId,
   closeModal,
 }: {
@@ -19,23 +18,23 @@ const MoveProduction = ({
   closeModal: any;
 }) => {
   const {
-    onSubmitAddMoveToProduction,
-    addMoveToProductionForm,
-    isMovingToProduction,
+    onSubmitAddReturnedProduct,
+    addReturnedProductForm,
+    addReturnedOrDamagedProductLoading,
   } = useInventoryHook({ productId, closeModal });
 
   return (
     <div className="w-full">
-      <Form {...addMoveToProductionForm}>
+      <Form {...addReturnedProductForm}>
         <form
-          onSubmit={addMoveToProductionForm.handleSubmit(
-            onSubmitAddMoveToProduction,
+          onSubmit={addReturnedProductForm.handleSubmit(
+            onSubmitAddReturnedProduct,
           )}
           className="space-y-5"
         >
           {/* First Name and Last Name in same row */}
           <FormField
-            control={addMoveToProductionForm.control}
+            control={addReturnedProductForm.control}
             name="quantity"
             render={({ field }) => (
               <FormItem className="flex-1">
@@ -49,7 +48,7 @@ const MoveProduction = ({
           />
 
           <FormField
-            control={addMoveToProductionForm.control}
+            control={addReturnedProductForm.control}
             name="note"
             render={({ field }) => (
               <FormItem>
@@ -68,12 +67,8 @@ const MoveProduction = ({
             )}
           />
 
-          <Button
-            type="submit"
-            className="w-full h-[48px] "
-            disabled={isMovingToProduction}
-          >
-            {isMovingToProduction ? <Spinner /> : "Save"}
+          <Button type="submit" className="w-full h-[48px] ">
+            Save
           </Button>
         </form>
       </Form>
@@ -81,4 +76,4 @@ const MoveProduction = ({
   );
 };
 
-export default MoveProduction;
+export default AddWaste;

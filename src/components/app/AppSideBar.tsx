@@ -24,7 +24,7 @@ import { useState } from "react";
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
-  const { hasPermission, user } = useUserRole();
+  const { role } = useUserRole(); // Only need role now
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
@@ -36,15 +36,15 @@ export function AppSidebar() {
     logout();
   };
 
-  // Filter links to only include groups that have at least one accessible item
-  const filteredLinks = links.filter((group) => {
-    return group.items.some((item) =>
-      item.roles.some((role: any) => hasPermission(role)),
-    );
-  });
-  console.log("User Role:", user);
+  // Simple role-based check
+  const canSeeLink = (item: any) => {
+    return item.roles.includes(role);
+  };
 
-  console.log("Filtered Links:", filteredLinks);
+  // Filter links based on role only
+  const filteredLinks = links.filter((group) => {
+    return group.items.some((item) => canSeeLink(item));
+  });
 
   return (
     <Sidebar className="z-10 bg-white border-gray-200">
@@ -66,9 +66,9 @@ export function AppSidebar() {
           {filteredLinks.map((group) => {
             // Special case for Store Management
             if (group.title === "Store Management") {
-              const storeItems = group.items.filter((item) =>
-                item.roles.some((role: any) => hasPermission(role)),
-              );
+              const storeItems = group.items.filter((item) => canSeeLink(item));
+
+              if (storeItems.length === 0) return null;
 
               return (
                 <SidebarGroup key={group.title}>
@@ -133,8 +133,10 @@ export function AppSidebar() {
             // Special case for Inventory Management
             if (group.title === "Inventory Management") {
               const inventoryItems = group.items.filter((item) =>
-                item.roles.some((role: any) => hasPermission(role)),
+                canSeeLink(item),
               );
+
+              if (inventoryItems.length === 0) return null;
 
               return (
                 <SidebarGroup key={group.title}>
@@ -199,9 +201,7 @@ export function AppSidebar() {
             }
 
             // Normal groups
-            const groupItems = group.items.filter((item) =>
-              item.roles.some((role: any) => hasPermission(role)),
-            );
+            const groupItems = group.items.filter((item) => canSeeLink(item));
 
             if (groupItems.length === 0) return null;
 

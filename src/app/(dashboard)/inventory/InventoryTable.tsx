@@ -7,12 +7,16 @@ const InventoryTable = ({
   response,
   loading,
   setPage,
+  can,
   page,
+  role,
 }: {
   response: DetailedInventoryResponse;
   loading: boolean;
   setPage: (page: number) => void;
   page: number;
+  role: any;
+  can: any;
 }) => {
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
   const [currentPage, setCurrentPage] = useState<number>(page || 1);
@@ -39,7 +43,7 @@ const InventoryTable = ({
     <CustomTable
       loading={loading}
       noDataText="No Inventory found"
-      columns={columns}
+      columns={columns(role, can)}
       data={tableData}
       pagination={{
         currentPage,

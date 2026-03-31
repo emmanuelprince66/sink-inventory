@@ -16,6 +16,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductFilters, useInventoryHook } from "@/hooks/useInventoryHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+
+import { useUserRole } from "@/lib/store/user-store";
 import {
   ChevronLeft,
   ChevronRight,
@@ -126,6 +128,12 @@ const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
+  const { role, can } = useUserRole();
+  const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
+  const canManageInventory = role ? allowedRoles.includes(role) : false;
+  console.log("can", can("damage_items"));
+  console.log("can-1", can("transfer_items"));
+  console.log("role", role);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -233,31 +241,40 @@ const Inventory = () => {
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full">
-              <Button
-                onClick={openddServiceModal}
-                className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap"
-              >
-                + Add Service
-              </Button>
-              <Link href={"/new-add-product"} className="w-full">
-                <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
-                  + Add Product
+              {canManageInventory && (
+                <Button
+                  onClick={openddServiceModal}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap"
+                >
+                  + Add Service
                 </Button>
-              </Link>
+              )}
+
+              {canManageInventory && (
+                <Link href={"/new-add-product"} className="w-full">
+                  <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
+                    + Add Product
+                  </Button>
+                </Link>
+              )}
             </div>
 
-            <DownloadInventoryButton business_id={business_id} />
+            {canManageInventory && (
+              <DownloadInventoryButton business_id={business_id} />
+            )}
 
-            <Button
-              variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
-              asChild
-            >
-              <Link href={"/product/upload-product"}>
-                <Cloud className="w-4 h-4 mr-2" />
-                <span className="whitespace-nowrap">Upload Product</span>
-              </Link>
-            </Button>
+            {canManageInventory && (
+              <Button
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
+                asChild
+              >
+                <Link href={"/product/upload-product"}>
+                  <Cloud className="w-4 h-4 mr-2" />
+                  <span className="whitespace-nowrap">Upload Product</span>
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -466,14 +483,17 @@ const Inventory = () => {
                 </DropdownMenu>
               )}
 
-              <Link href={"/categories"} className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
-                >
-                  Manage Category
-                </Button>
-              </Link>
+              {role === "ADMIN-ATTENDANT" ||
+                (role === "OWNER" && (
+                  <Link href={"/categories"} className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
+                    >
+                      Manage Category
+                    </Button>
+                  </Link>
+                ))}
             </div>
           </div>
 
@@ -647,6 +667,8 @@ const Inventory = () => {
               <>
                 {InventoryData?.data?.results?.data?.length > 0 ? (
                   <InventoryTable
+                    role={role}
+                    can={can}
                     setPage={setPage}
                     page={page}
                     response={InventoryData}

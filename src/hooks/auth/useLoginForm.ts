@@ -81,20 +81,8 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   } = useLoginMutation({
     onSuccess: (data) => {
       console.log("Login successful:", data);
-      login({
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        is_verified: data.is_verified,
-        is_subscribed: data.is_subscribed,
-        subscription: data.subscription,
-        kyc: data?.kyc,
-        tokens: {
-          access: data.tokens.access,
-          refresh: data.tokens.refresh,
-        },
-      });
+      login(data);
+
       showToast("Login successful", "success");
 
       console.log("trying to connect to socket");
@@ -107,7 +95,9 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         data?.role === "OWNER" ||
         data?.role === "PHARMACIST" ||
         data?.role === "ADMIN-ATTENDANT" ||
-        data?.role === "INVENTORY-MANAGER"
+        data?.role === "INVENTORY-MANAGER" ||
+        data?.role === "ACCOUNTANT" ||
+        data?.role === "PRODUCTION-MANAGER"
       ) {
         router.push(options?.redirectTo || "/create-business");
         router.refresh();

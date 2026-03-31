@@ -3,6 +3,8 @@ import { useDeleteAttendantMutation } from "@/api/attendants/delete-attendants";
 import { useEditAttendantMutation } from "@/api/attendants/edit-attendants";
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchAttendantByIdQuery } from "@/api/attendants/get-attendant-by-id";
+import { useUpdateAttendantBusinessesMutation } from "@/api/attendants/update-attendant-business";
+import { useGetAllBusinessQuery } from "@/api/business/get-business";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
@@ -12,7 +14,7 @@ import { useToast } from "./toast/useToast";
 
 // Permission schema matching backend structure
 const permissionsSchema = z.object({
-  manage_inventory_across_branches: z.boolean().optional(),
+  // manage_inventory_across_branches: z.boolean().optional(),
   restock_products: z.boolean().optional(),
   move_items_to_production: z.boolean().optional(),
   transfer_items: z.boolean().optional(),
@@ -94,10 +96,32 @@ export const useAttendantsHook = ({
     useFetchAttendantByIdQuery(attendantId, { enabled: !!attendantId });
 
   const {
+    data: AllBusinessData,
+    isLoading: AllBusinessLoading,
+    refetch: businessRefetch,
+  } = useGetAllBusinessQuery();
+
+  const {
     mutate: editAttendant,
     isPending: editAttendantLoading,
     isSuccess: editAttendantSuccess,
   } = useEditAttendantMutation();
+
+  const {
+    mutate: updateAttendantBusinesses,
+    isPending: updateBusinessesLoading,
+  } = useUpdateAttendantBusinessesMutation({
+    onSuccess: (data: any) => {
+      refetch();
+      showToast(
+        data.message || "Attendant businesses updated successfully",
+        "success",
+      );
+    },
+    onError: (error: any) => {
+      showToast(error.message || "Failed to update businesses", "error");
+    },
+  });
 
   useEffect(() => {
     if (editAttendantSuccess) {
@@ -119,6 +143,16 @@ export const useAttendantsHook = ({
   const handleDeleteAttendant = (staff: any) => {
     console.log("customer", staff);
     deleteAttendant(staff?.id);
+  };
+
+  const handleUpdateBusinesses = (
+    attendantId: string,
+    businessIds: string[],
+  ) => {
+    updateAttendantBusinesses({
+      attendantId,
+      payload: { business_ids: businessIds },
+    });
   };
 
   const {
@@ -145,7 +179,7 @@ export const useAttendantsHook = ({
       phone: "",
       role: undefined as any,
       set_permissions: {
-        manage_inventory_across_branches: false,
+        // manage_inventory_across_branches: false,
         restock_products: false,
         move_items_to_production: false,
         transfer_items: false,
@@ -174,7 +208,7 @@ export const useAttendantsHook = ({
       phone: "",
       role: undefined as any,
       set_permissions: {
-        manage_inventory_across_branches: false,
+        // manage_inventory_across_branches: false,
         restock_products: false,
         move_items_to_production: false,
         transfer_items: false,
@@ -286,7 +320,7 @@ export const useAttendantsHook = ({
       description:
         "Comprehensive inventory control across multiple locations with full product lifecycle management",
       permissions: [
-        "Manage inventory across multiple branches",
+        // "Manage inventory across multiple branches",
         "Restock products",
         "Move items to production",
         "Transfer to other locations",
@@ -337,8 +371,8 @@ export const useAttendantsHook = ({
         phone: attendantData?.data?.phone || "",
         role: attendantData?.data?.role || undefined,
         set_permissions: {
-          manage_inventory_across_branches:
-            permissions.manage_inventory_across_branches || false,
+          // manage_inventory_across_branches:
+          //   permissions.manage_inventory_across_branches || false,
           restock_products: permissions.restock_products || false,
           move_items_to_production:
             permissions.move_items_to_production || false,
@@ -385,18 +419,24 @@ export const useAttendantsHook = ({
     AttendantsData,
     AttendantsLoading,
     attendantData,
+    AllBusinessData,
+    AllBusinessLoading,
     form,
     editform,
     onSubmitEditForm,
     onSubmit,
     handleDeleteAttendant,
+    handleUpdateBusinesses,
     deleteAttendant,
     editAttendant,
+    updateAttendantBusinesses,
     ROLE_PERMISSIONS,
     editAttendantLoading,
     AttendantLoading,
     deleteAttendantLoading,
     createStaffLoading,
+    updateBusinessesLoading,
+    businessRefetch,
     // Computed values and helpers for clean UI
     selectedRole: form.watch("role") || editform.watch("role"),
     permissions:

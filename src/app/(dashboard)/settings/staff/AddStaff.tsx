@@ -36,7 +36,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
   return (
     <div className="flex h-full w-full items-center justify-center overflow-y-auto py-6">
-      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
+      <div className="w-full max-w-full bg-white  rounded-lg shadow-lg">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Add Staff Member</h2>
           <p className="text-sm text-gray-600 mt-1">
@@ -341,7 +341,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                 </div>
 
                 <div className="space-y-3">
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="set_permissions.manage_inventory_across_branches"
                     render={({ field }) => (
@@ -368,7 +368,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   <FormField
                     control={form.control}
@@ -697,7 +697,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                     {getSelectedPermissionsCount()} selected)
                   </h3>
                   <div className="space-y-2">
-                    {permissions.manage_inventory_across_branches && (
+                    {/* {permissions.manage_inventory_across_branches && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
                         <CheckCircle2
                           className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
@@ -706,7 +706,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                           Can manage inventory across multiple branches
                         </span>
                       </div>
-                    )}
+                    )} */}
                     {permissions.restock_products && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
                         <CheckCircle2

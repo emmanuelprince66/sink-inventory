@@ -30,6 +30,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOverviewHook } from "@/hooks/useOverviewHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import ProductsInfo from "./ProductsInfo";
 import { QuickActionCard } from "./quick-action-card";
@@ -111,6 +112,8 @@ export default function Overview() {
   const [selectedType, setSelectedType] = useState("");
   const [openInfoModal, setOpenInfoModal] = useState(false);
   const closeInfoModal = () => setOpenInfoModal(false);
+
+  const { role } = useUserRole();
 
   // Calculate metrics from real data
   const getMetricsData = () => {
@@ -432,28 +435,31 @@ export default function Overview() {
       </p>
       <main className="flex flex-1 flex-col gap-4">
         {/* Metrics Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-          {SalesDashboardLoading
-            ? [...Array(5)].map((_, index) => (
-                <MetricsCardSkeleton key={index} />
-              ))
-            : metricsData.map((metric, index) => (
-                <Card
-                  key={index}
-                  className={`${metric.bgColor} border-gray-200 shadow-sm px-0 `}
-                >
-                  <CardHeader className="flex flex-row items-center mt-3 justify-between pb-2 space-y-0">
-                    <CardTitle className="text-sm font-medium ">
-                      {metric.title}
-                    </CardTitle>
-                    <metric.icon className={`h-3 w-3 ${metric.iconColor}`} />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-1xl font-bold">{metric.value}</div>
-                  </CardContent>
-                </Card>
-              ))}
-        </div>
+
+        {(role === "OWNER" || role === "ADMIN-ATTENDANT") && (
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+            {SalesDashboardLoading
+              ? [...Array(5)].map((_, index) => (
+                  <MetricsCardSkeleton key={index} />
+                ))
+              : metricsData.map((metric, index) => (
+                  <Card
+                    key={index}
+                    className={`${metric.bgColor} border-gray-200 shadow-sm px-0`}
+                  >
+                    <CardHeader className="flex flex-row items-center mt-3 justify-between pb-2 space-y-0">
+                      <CardTitle className="text-sm font-medium">
+                        {metric.title}
+                      </CardTitle>
+                      <metric.icon className={`h-3 w-3 ${metric.iconColor}`} />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-1xl font-bold">{metric.value}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+          </div>
+        )}
 
         {/* Store URL and Quick Actions */}
         <div className="grid gap-2 grid-cols-1 lg:grid-cols-2 mb-6">
@@ -494,7 +500,7 @@ export default function Overview() {
                         (prev: any, current: any) =>
                           prev.quantity_sold > current.quantity_sold
                             ? prev
-                            : current
+                            : current,
                       ),
                     ].map((item) => ({
                       name: item.product__name,
@@ -520,7 +526,7 @@ export default function Overview() {
                         (prev: any, current: any) =>
                           prev.quantity_sold > current.quantity_sold
                             ? prev
-                            : current
+                            : current,
                       ),
                     ].map((item) => ({
                       name: item.product__name,
@@ -547,7 +553,7 @@ export default function Overview() {
                         (prev: any, current: any) =>
                           prev.quantity_sold > current.quantity_sold
                             ? prev
-                            : current
+                            : current,
                       ),
                     ].map((item) => ({
                       name: item.product__name,
@@ -573,7 +579,7 @@ export default function Overview() {
                         (prev: any, current: any) =>
                           prev.quantity_sold > current.quantity_sold
                             ? prev
-                            : current
+                            : current,
                       ),
                     ].map((item) => ({
                       name: item.product__name,

@@ -52,7 +52,7 @@ export const EditStaff = ({
 
   return (
     <div className="flex h-full w-full items-center justify-center overflow-y-auto py-6">
-      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
+      <div className="w-full  bg-white  rounded-lg shadow-lg">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
             Edit Staff Member
@@ -362,7 +362,7 @@ export const EditStaff = ({
                 </div>
 
                 <div className="space-y-3">
-                  <FormField
+                  {/* <FormField
                     control={editform.control}
                     name="set_permissions.manage_inventory_across_branches"
                     render={({ field }) => (
@@ -389,7 +389,7 @@ export const EditStaff = ({
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
 
                   <FormField
                     control={editform.control}
@@ -718,7 +718,7 @@ export const EditStaff = ({
                     {getSelectedPermissionsCount()} selected)
                   </h3>
                   <div className="space-y-2">
-                    {permissions.manage_inventory_across_branches && (
+                    {/* {permissions.manage_inventory_across_branches && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
                         <CheckCircle2
                           className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
@@ -727,7 +727,7 @@ export const EditStaff = ({
                           Can manage inventory across multiple branches
                         </span>
                       </div>
-                    )}
+                    )} */}
                     {permissions.restock_products && (
                       <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
                         <CheckCircle2

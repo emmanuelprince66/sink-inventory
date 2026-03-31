@@ -22,7 +22,7 @@ export function RouteGuard({
 }) {
   const router = useRouter();
   const { isAuthenticated, isLoading, isHydrated } = useUserStore();
-  const { hasPermission, isVerified, isSubscribed } = useUserRole();
+  const { isVerified, isSubscribed } = useUserRole();
   const [isChecking, setIsChecking] = useState(true);
 
   const { data: userSubData, isLoading: userSubDataLoading } =
@@ -30,7 +30,7 @@ export function RouteGuard({
 
   console.log("userSubData----4", userSubData);
   const setIsSubscribed = useIsUserSubscribeStore(
-    (state) => state.setIsSubscribed
+    (state) => state.setIsSubscribed,
   );
 
   useEffect(() => {
@@ -73,7 +73,6 @@ export function RouteGuard({
     isLoading,
     isHydrated,
     requiredRole,
-    hasPermission,
     requireVerified,
     isVerified,
     requireSubscription,

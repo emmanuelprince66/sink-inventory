@@ -12,6 +12,8 @@ import Tax from "./tax/Tax";
 const Settings = () => {
   const { user } = useUserRole();
 
+  console.log("user", user);
+
   const SettingsOptionsTab =
     user?.role === "OWNER"
       ? [
