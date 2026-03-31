@@ -49,7 +49,7 @@ const createProductSchema = (isEditMode: boolean) => {
     in_house: z.boolean().default(false),
     raw_material: z.boolean().default(false),
     sell_online: z.boolean().default(false),
-    hide_from_pos: z.boolean().default(false),
+    // hide_from_pos: z.boolean().default(false),
     watchlist: z.boolean().default(false),
     item_name: z.string().min(1, "Item name is required"),
     image: z
@@ -400,7 +400,7 @@ export const useAddNewProductHook = ({
       supplier: "",
       stock_quantity: "",
       low_stock_tresh: "",
-      hide_from_pos: false,
+      // hide_from_pos: false,
       stock_status: "IN-STOCK",
       product_unit: "",
       cost_price: "",
@@ -612,7 +612,7 @@ export const useAddNewProductHook = ({
           due_date: "",
           amount_paid: "",
           allow_tax: false,
-          hide_from_pos: false,
+          // hide_from_pos: false,
           in_house: false,
           raw_material: false,
           sell_online: false,
@@ -671,7 +671,7 @@ export const useAddNewProductHook = ({
           variations: [],
           product_variations: [],
           allow_tax: itemsData.allow_tax || false,
-          hide_from_pos: itemsData.hide_from_pos || false,
+          // hide_from_pos: itemsData.hide_from_pos || false,
           in_house: itemsData.in_house || false,
           raw_material: itemsData.raw_material || false,
           sell_online: itemsData.sell_online || false,
@@ -756,7 +756,7 @@ export const useAddNewProductHook = ({
     appendIfNotEmpty("percentage_discount", values.percentage_discount);
 
     formData.append("allow_tax", String(values.allow_tax));
-    formData.append("hide_from_pos", String(values.hide_from_pos));
+    // formData.append("hide_from_pos", String(values.hide_from_pos));
     formData.append("in_house", String(values.in_house));
     formData.append("raw_material", String(values.raw_material));
     formData.append("sell_online", String(values.sell_online));

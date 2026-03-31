@@ -82,7 +82,7 @@ export const links = [
         title: "Supplier",
         url: "/supply",
         icon: Truck,
-        roles: ["OWNER", "ACCOUNTANT"],
+        roles: ["OWNER", "ACCOUNTANT", "INVENTORY-MANAGER"],
         permission: "manage_suppliers",
       },
     ],

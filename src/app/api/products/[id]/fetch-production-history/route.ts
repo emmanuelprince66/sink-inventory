@@ -24,13 +24,14 @@ export async function GET(
   const status = request.nextUrl.searchParams.get("status") || "";
 
   const start_date = request.nextUrl.searchParams.get("start_date") || "";
-  //   const end_date = request.nextUrl.searchParams.get("end_date") || "";
+  const end_date = request.nextUrl.searchParams.get("end_date") || "";
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}product/production_history/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
-  if (start_date) apiUrl.searchParams.append("date", start_date);
+  if (start_date) apiUrl.searchParams.append("start_date", start_date);
+  if (end_date) apiUrl.searchParams.append("end_date", end_date);
   //   if (end_date) apiUrl.searchParams.append("end_date", end_date);
 
   try {

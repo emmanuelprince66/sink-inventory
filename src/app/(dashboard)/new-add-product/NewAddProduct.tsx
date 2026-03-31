@@ -1738,7 +1738,7 @@ const NewAddProduct = ({
                       </div>
                     )}
                   />
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="hide_from_pos"
                     render={({ field }) => (
@@ -1757,7 +1757,7 @@ const NewAddProduct = ({
                         </label>
                       </div>
                     )}
-                  />
+                  /> */}
 
                   <FormField
                     control={form.control}
