@@ -52,7 +52,7 @@ export const EditStaff = ({
 
   return (
     <div className="flex h-full w-full items-center justify-center overflow-y-auto py-6">
-      <div className="w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg">
+      <div className="w-full  bg-white  rounded-lg shadow-lg">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
             Edit Staff Member

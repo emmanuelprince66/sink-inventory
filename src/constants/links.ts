@@ -42,7 +42,12 @@ export const links = [
         title: "Overview",
         url: "/overview",
         icon: LayoutDashboard,
-        roles: ["OWNER", "ADMIN-ATTENDANT"],
+        roles: [
+          "OWNER",
+          "ADMIN-ATTENDANT",
+          "PRODUCTION-MANAGER",
+          "INVENTORY-MANAGER",
+        ],
         permission: null, // No specific permission needed (role-based only)
       },
       {

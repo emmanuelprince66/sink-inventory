@@ -129,9 +129,11 @@ const Inventory = () => {
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
   const { role, can } = useUserRole();
-  console.log("role", role);
+  const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
+  const canManageInventory = role ? allowedRoles.includes(role) : false;
   console.log("can", can("damage_items"));
   console.log("can-1", can("transfer_items"));
+  console.log("role", role);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -239,48 +241,40 @@ const Inventory = () => {
 
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full">
-              {role === "OWNER" ||
-                role === "ADMIN-ATTENDANT" ||
-                (role === "INVENTORY-MANAGER" && (
-                  <Button
-                    onClick={openddServiceModal}
-                    className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap"
-                  >
-                    + Add Service
-                  </Button>
-                ))}
+              {canManageInventory && (
+                <Button
+                  onClick={openddServiceModal}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap"
+                >
+                  + Add Service
+                </Button>
+              )}
 
-              {role === "OWNER" ||
-                role === "ADMIN-ATTENDANT" ||
-                (role === "INVENTORY-MANAGER" && (
-                  <Link href={"/new-add-product"} className="w-full">
-                    <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
-                      + Add Product
-                    </Button>
-                  </Link>
-                ))}
+              {canManageInventory && (
+                <Link href={"/new-add-product"} className="w-full">
+                  <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
+                    + Add Product
+                  </Button>
+                </Link>
+              )}
             </div>
 
-            {role === "OWNER" ||
-              role === "ADMIN-ATTENDANT" ||
-              (role === "INVENTORY-MANAGER" && (
-                <DownloadInventoryButton business_id={business_id} />
-              ))}
+            {canManageInventory && (
+              <DownloadInventoryButton business_id={business_id} />
+            )}
 
-            {role === "OWNER" ||
-              role === "ADMIN-ATTENDANT" ||
-              (role === "INVENTORY-MANAGER" && (
-                <Button
-                  variant="outline"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
-                  asChild
-                >
-                  <Link href={"/product/upload-product"}>
-                    <Cloud className="w-4 h-4 mr-2" />
-                    <span className="whitespace-nowrap">Upload Product</span>
-                  </Link>
-                </Button>
-              ))}
+            {canManageInventory && (
+              <Button
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
+                asChild
+              >
+                <Link href={"/product/upload-product"}>
+                  <Cloud className="w-4 h-4 mr-2" />
+                  <span className="whitespace-nowrap">Upload Product</span>
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 

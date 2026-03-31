@@ -113,7 +113,10 @@ export const queryKey = {
   },
   products: {
     getProductsById: "get-products-by-id",
+    fetchProductionHistiory: "fetch-production-history",
+    moveProductToProduction: "move-product-to-production",
     getRestockHistory: "restock-history",
+    acceptProduct: "accept-product",
     addRestockItem: "add-restock-item",
     deleteProduct: "delete-product",
     deleteService: "delete-service",

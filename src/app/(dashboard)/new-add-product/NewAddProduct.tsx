@@ -1744,13 +1744,13 @@ const NewAddProduct = ({
                     render={({ field }) => (
                       <div className="flex items-center space-x-4 gap-2">
                         <Checkbox
-                          id="allow-tax"
+                          id="hide-from-pos"
                           className="cursor-pointer"
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                         <label
-                          htmlFor="allow-tax"
+                          htmlFor="hide-from-pos"
                           className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
                         >
                           Hide product from POS

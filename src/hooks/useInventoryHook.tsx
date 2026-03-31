@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { useMoveProductToProductionMutation } from "@/api/inventory/move-to-production";
 import { useDeleteServiceMutation } from "@/api/products/delete-service";
 import { useEditProductMutation } from "@/api/products/edit-product";
 import { useEditServiceMutation } from "@/api/products/edit-service";
@@ -25,6 +26,10 @@ const AddReturnProductSchema = z.object({
 });
 
 const AddDamagedProductSchema = z.object({
+  quantity: z.string().min(1, " Quantity is required"),
+  note: z.string().optional(),
+});
+const AddMoveToProductionSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
   note: z.string().optional(),
 });
@@ -60,6 +65,9 @@ export type AddServiceFormValues = z.infer<typeof AddServiceSchema>;
 export type AddDiscountFormValues = z.infer<typeof AddDiscountSchema>;
 export type AddReturnedFormValues = z.infer<typeof AddReturnProductSchema>;
 export type AddDamagedFormValues = z.infer<typeof AddDamagedProductSchema>;
+export type AddMoveToProductionFormValues = z.infer<
+  typeof AddMoveToProductionSchema
+>;
 
 export type ProductFilters = {
   allowTax: boolean;
@@ -117,6 +125,7 @@ export const useInventoryHook = ({
   product?: any;
   productFilters?: ProductFilters;
 }) => {
+  console.log("productId", productId);
   const business_id = useBusinessStore((state) => state.business_id);
 
   const { showToast } = useToast();
@@ -200,6 +209,19 @@ export const useInventoryHook = ({
     },
   });
 
+  const {
+    mutate: moveToProduction,
+    isPending: isMovingToProduction,
+    isSuccess: isMovingToProductionSuccess,
+  } = useMoveProductToProductionMutation({
+    productId: productId || "",
+    onSuccess: (data) => {
+      showToast(data.message, "success");
+      refetchInventory();
+      if (closeModal) closeModal();
+    },
+  });
+
   useEffect(() => {
     if (isDeletingServiceSuccess || isDeletingProductSuccess) {
       refetchInventory();
@@ -264,6 +286,8 @@ export const useInventoryHook = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  console.log("InventoryData", InventoryData);
+
   const {
     data: DepartmentData,
     isLoading: DepartmentDataLoading,
@@ -299,6 +323,11 @@ export const useInventoryHook = ({
 
   const addDamagedProductForm = useForm<AddDamagedFormValues>({
     resolver: zodResolver(AddDamagedProductSchema) as any,
+    defaultValues: { quantity: "", note: "" },
+    mode: "onChange",
+  });
+  const addMoveToProductionForm = useForm<AddMoveToProductionFormValues>({
+    resolver: zodResolver(AddMoveToProductionSchema) as any,
     defaultValues: { quantity: "", note: "" },
     mode: "onChange",
   });
@@ -352,6 +381,16 @@ export const useInventoryHook = ({
     };
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });
+  };
+
+  const onSubmitAddMoveToProduction = (
+    values: AddMoveToProductionFormValues,
+  ) => {
+    const payload: { quantity: number; note?: string } = {
+      quantity: Number(values.quantity),
+    };
+    if (values.note && values.note.trim() !== "") payload.note = values.note;
+    moveToProduction({ payload, productId });
   };
 
   const addDiscountSubmit = (values: AddDiscountFormValues) => {
@@ -466,7 +505,11 @@ export const useInventoryHook = ({
   return {
     onSubmitAddReturnedProduct,
     onSubmitAddDamagedProduct,
+    onSubmitAddMoveToProduction,
+    addMoveToProductionForm,
     addReturnedProductForm,
+    moveToProduction,
+    isMovingToProduction,
     addDamagedProductForm,
     addReturnedOrDamagedProductLoading,
     InventoryData,

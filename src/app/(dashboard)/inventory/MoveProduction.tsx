@@ -19,23 +19,23 @@ const MoveProduction = ({
   closeModal: any;
 }) => {
   const {
-    onSubmitAddDamagedProduct,
-    addDamagedProductForm,
-    addReturnedOrDamagedProductLoading,
+    onSubmitAddMoveToProduction,
+    addMoveToProductionForm,
+    isMovingToProduction,
   } = useInventoryHook({ productId, closeModal });
 
   return (
     <div className="w-full">
-      <Form {...addDamagedProductForm}>
+      <Form {...addMoveToProductionForm}>
         <form
-          onSubmit={addDamagedProductForm.handleSubmit(
-            onSubmitAddDamagedProduct,
+          onSubmit={addMoveToProductionForm.handleSubmit(
+            onSubmitAddMoveToProduction,
           )}
           className="space-y-5"
         >
           {/* First Name and Last Name in same row */}
           <FormField
-            control={addDamagedProductForm.control}
+            control={addMoveToProductionForm.control}
             name="quantity"
             render={({ field }) => (
               <FormItem className="flex-1">
@@ -49,7 +49,7 @@ const MoveProduction = ({
           />
 
           <FormField
-            control={addDamagedProductForm.control}
+            control={addMoveToProductionForm.control}
             name="note"
             render={({ field }) => (
               <FormItem>
@@ -68,8 +68,12 @@ const MoveProduction = ({
             )}
           />
 
-          <Button type="submit" className="w-full h-[48px] " disabled={true}>
-            {addReturnedOrDamagedProductLoading ? <Spinner /> : "Save"}
+          <Button
+            type="submit"
+            className="w-full h-[48px] "
+            disabled={isMovingToProduction}
+          >
+            {isMovingToProduction ? <Spinner /> : "Save"}
           </Button>
         </form>
       </Form>
