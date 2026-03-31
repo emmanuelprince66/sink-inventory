@@ -267,14 +267,16 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                     Add Damaged Product
                   </DropdownMenuItem>
                 )}
-                {isProduct && can("move_items_to_production") && (
-                  <DropdownMenuItem
-                    onClick={openMoveProdModalFunc}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
-                  >
-                    Move to production
-                  </DropdownMenuItem>
-                )}
+                {isProduct &&
+                  can("move_items_to_production") &&
+                  inventory?.raw_material && (
+                    <DropdownMenuItem
+                      onClick={openMoveProdModalFunc}
+                      className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    >
+                      Move to production
+                    </DropdownMenuItem>
+                  )}
 
                 {can("restock_products") && (
                   <DropdownMenuItem

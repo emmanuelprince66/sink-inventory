@@ -7,6 +7,7 @@ export interface InventoryItem {
   selling_price: number;
   department?: string;
   quantity: number;
+  raw_material: boolean;
   watchlist: boolean;
   sold: number;
   sku?: string | null;
