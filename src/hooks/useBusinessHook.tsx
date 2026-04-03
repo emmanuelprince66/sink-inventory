@@ -131,9 +131,9 @@ export const useBusinessHook = ({
 
   // ── Row click — set business and navigate to POS ──────────────────────────
   const handleRowClick = (row: any) => {
-    console.log("role---4", role);
     setBusinessData(row?.original);
     setBusinessId(row?.original?.id);
+    z;
 
     const roleRouteMap: Record<string, string> = {
       ACCOUNTANT: "/sales",

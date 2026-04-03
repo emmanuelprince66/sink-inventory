@@ -368,7 +368,7 @@ export const useInventoryHook = ({
   const onSubmitAddReturnedProduct = (values: AddReturnedFormValues) => {
     const payload: { quantity: number; type: string; note?: string } = {
       quantity: Number(values.quantity),
-      type: "RETURN",
+      type: "WASTE",
     };
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });

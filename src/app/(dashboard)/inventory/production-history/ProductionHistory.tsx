@@ -29,7 +29,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { createProductionHistoryColumns } from "./ProductionHistoryColunm";
 import { ProductionHistorySkeleton } from "./ProductionHistorySkeleton";
 
@@ -65,38 +65,18 @@ const ProductionHistoryPage = () => {
     isAccepting,
   } = useProductionHistory();
 
-  // Compute worth stats from filtered data
-  const worthStats = useMemo(() => {
-    const results = data?.results || [];
-    const totalWorth = results.reduce(
-      (sum: number, item: { quantity: string; unit_price: any }) =>
-        sum + parseFloat(item.quantity) * (item.unit_price || 0),
-      0,
-    );
-    const receivedWorth = results
-      .filter((item: { status: string }) => item.status === "RECEIVED")
-      .reduce(
-        (sum: number, item: { quantity: string; unit_price: any }) =>
-          sum + parseFloat(item.quantity) * (item.unit_price || 0),
-        0,
-      );
-    const pendingWorth = results
-      .filter((item: { status: string }) => item.status === "MOVED")
-      .reduce(
-        (sum: number, item: { quantity: string; unit_price: any }) =>
-          sum + parseFloat(item.quantity) * (item.unit_price || 0),
-        0,
-      );
+  console.log("Production History Data:", data);
 
-    return { totalWorth, receivedWorth, pendingWorth };
-  }, [data?.results]);
+  const productionStats = {
+    total: data?.data?.results?.total || 0,
+    received: data?.data?.results?.received || 0,
+    moved: data?.data?.results?.moved || 0,
+  };
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 2,
-    }).format(value);
+  console.log("Production Stats:", productionStats);
+
+  const formatNumber = (value: number) =>
+    new Intl.NumberFormat("en-NG").format(value);
 
   const columns = createProductionHistoryColumns({
     canManageProduction,
@@ -111,8 +91,8 @@ const ProductionHistoryPage = () => {
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
       {/* Header Section */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
@@ -134,7 +114,7 @@ const ProductionHistoryPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <div className="max-w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Worth Summary Card */}
         <Card className="border-0 shadow-md overflow-hidden">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-1 rounded-xl">
@@ -146,7 +126,7 @@ const ProductionHistoryPage = () => {
             </CardHeader>
             <CardContent className="px-5 pb-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Total Worth */}
+                {/* Total */}
                 <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full" />
                   <div className="flex items-center gap-2 mb-1">
@@ -154,19 +134,16 @@ const ProductionHistoryPage = () => {
                       <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
                     </div>
                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Total Moved
+                      Total Production
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-white tracking-tight">
-                    {formatCurrency(worthStats.totalWorth)}
+                    {formatNumber(productionStats.total)}
                   </span>
-                  <span className="text-xs text-slate-500">
-                    {data?.results?.length || 0} record
-                    {data?.results?.length !== 1 ? "s" : ""}
-                  </span>
+                  <span className="text-xs text-slate-500">units produced</span>
                 </div>
 
-                {/* Received Worth */}
+                {/* Received */}
                 <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-bl-full" />
                   <div className="flex items-center gap-2 mb-1">
@@ -178,17 +155,12 @@ const ProductionHistoryPage = () => {
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-green-400 tracking-tight">
-                    {formatCurrency(worthStats.receivedWorth)}
+                    {formatNumber(productionStats.received)}
                   </span>
-                  <span className="text-xs text-slate-500">
-                    {data?.results?.filter(
-                      (d: { status: string }) => d.status === "RECEIVED",
-                    ).length || 0}{" "}
-                    completed
-                  </span>
+                  <span className="text-xs text-slate-500">units received</span>
                 </div>
 
-                {/* Pending Worth */}
+                {/* Moved */}
                 <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-bl-full" />
                   <div className="flex items-center gap-2 mb-1">
@@ -196,29 +168,24 @@ const ProductionHistoryPage = () => {
                       <PackageMinus className="h-3.5 w-3.5 text-amber-400" />
                     </div>
                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Pending
+                      Moved
                     </span>
                   </div>
                   <span className="text-2xl font-bold text-amber-400 tracking-tight">
-                    {formatCurrency(worthStats.pendingWorth)}
+                    {formatNumber(productionStats.moved)}
                   </span>
-                  <span className="text-xs text-slate-500">
-                    {data?.results?.filter(
-                      (d: { status: string }) => d.status === "MOVED",
-                    ).length || 0}{" "}
-                    awaiting receipt
-                  </span>
+                  <span className="text-xs text-slate-500">units moved</span>
                 </div>
               </div>
 
               {/* Progress bar showing received vs total */}
-              {worthStats.totalWorth > 0 && (
+              {productionStats.total > 0 && (
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-slate-500 mb-1.5">
                     <span>Receipt progress</span>
                     <span>
                       {Math.round(
-                        (worthStats.receivedWorth / worthStats.totalWorth) *
+                        (productionStats.received / productionStats.total) *
                           100,
                       )}
                       % received
@@ -228,7 +195,7 @@ const ProductionHistoryPage = () => {
                     <div
                       className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
                       style={{
-                        width: `${(worthStats.receivedWorth / worthStats.totalWorth) * 100}%`,
+                        width: `${(productionStats.received / productionStats.total) * 100}%`,
                       }}
                     />
                   </div>
