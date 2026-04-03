@@ -123,11 +123,11 @@ export const useSalesHook = ({
 
   const startDate = dateRange?.from
     ? moment(dateRange.from).format("YYYY-MM-DD")
-    : undefined;
+    : moment().format("YYYY-MM-DD");
 
   const endDate = dateRange?.to
     ? moment(dateRange.to).format("YYYY-MM-DD")
-    : undefined;
+    : moment().format("YYYY-MM-DD");
 
   const {
     data: SalesData,
