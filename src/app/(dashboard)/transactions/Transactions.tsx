@@ -41,6 +41,7 @@ const Transactions = () => {
   const [showChangePin, setShowChangePin] = useState(false);
   const [showSubAccountModal, setShowSubAccountModal] = useState(false);
   const [previousAccount, setPreviousAccount] = useState("");
+  const [branchName, setBranchName] = useState("");
 
   const filterOptions = ["All", "Credit", "Debit"] as const;
   const filterMapping = {
@@ -74,13 +75,14 @@ const Transactions = () => {
       onSuccess: () => {
         setShowSubAccountModal(false);
         setPreviousAccount("");
+        setBranchName("");
       },
     });
 
   const handleCreateSubAccount = () => {
-    if (!previousAccount.trim()) return;
+    if (!previousAccount.trim() || !branchName.trim()) return;
     createSubAccount({
-      body: { previous_account: previousAccount },
+      body: { previous_account: previousAccount, branch: branchName },
       businessId: businessData?.id,
     });
   };
@@ -379,12 +381,14 @@ const Transactions = () => {
         onClose={() => {
           setShowSubAccountModal(false);
           setPreviousAccount("");
+          setBranchName("");
         }}
         title="Create Sub Account"
       >
         <div className="flex flex-col gap-4 p-2">
           <p className="text-sm text-gray-600">
-            Enter your previous account number to create a sub account.
+            Enter your previous account number and branch name to create a sub
+            account.
           </p>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">
@@ -396,9 +400,23 @@ const Transactions = () => {
               onChange={(e) => setPreviousAccount(e.target.value)}
             />
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Branch Name
+            </label>
+            <Input
+              placeholder="Enter branch name"
+              value={branchName}
+              onChange={(e) => setBranchName(e.target.value)}
+            />
+          </div>
           <Button
             onClick={handleCreateSubAccount}
-            disabled={!previousAccount.trim() || isCreatingSubAccount}
+            disabled={
+              !previousAccount.trim() ||
+              !branchName.trim() ||
+              isCreatingSubAccount
+            }
             className="w-full h-12 bg-green-600 hover:bg-green-700 text-white"
           >
             {isCreatingSubAccount ? <Spinner /> : "Create Sub Account"}
