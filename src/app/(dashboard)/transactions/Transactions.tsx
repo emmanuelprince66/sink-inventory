@@ -1,15 +1,18 @@
 "use client";
 
+import { useCreateSubAccountMutation } from "@/api/transactions/create-sub-account";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import KycConfirm from "@/components/app/kyc/KycConfirm";
 import { SearchInput } from "@/components/app/SearchInput";
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowDownLeft, ArrowUpRight, Landmark, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Landmark, Plus, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -36,6 +39,8 @@ const Transactions = () => {
   const [showKycModal, setShowKycModal] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showChangePin, setShowChangePin] = useState(false);
+  const [showSubAccountModal, setShowSubAccountModal] = useState(false);
+  const [previousAccount, setPreviousAccount] = useState("");
 
   const filterOptions = ["All", "Credit", "Debit"] as const;
   const filterMapping = {
@@ -56,11 +61,29 @@ const Transactions = () => {
   const { TrxData, TrxDataLoading, user, businessData } = useTransactionsHook({
     searchInput,
     dateRange,
-
     page,
     type: filterMapping[activeFilter],
     setShowPinModal,
   });
+
+  const hasAccountNumber =
+    !!TrxData?.data?.results?.wallet_details?.account_number;
+
+  const { mutate: createSubAccount, isPending: isCreatingSubAccount } =
+    useCreateSubAccountMutation({
+      onSuccess: () => {
+        setShowSubAccountModal(false);
+        setPreviousAccount("");
+      },
+    });
+
+  const handleCreateSubAccount = () => {
+    if (!previousAccount.trim()) return;
+    createSubAccount({
+      body: { previous_account: previousAccount },
+      businessId: businessData?.id,
+    });
+  };
   console.log("TrxData", TrxData);
 
   // const formatToNaira = (amount: number) => {
@@ -220,15 +243,25 @@ const Transactions = () => {
                 </Button> */}
 
                 {user?.role === "OWNER" && (
-                  <Link href="transactions/transfer">
+                  <>
+                    <Link href="transactions/transfer">
+                      <Button
+                        variant="outline"
+                        className="bg-white/10 min-w-[150px] min-h-[50px] text-white hover:bg-white/20 w-full sm:w-auto"
+                      >
+                        Transfer
+                      </Button>
+                    </Link>
                     <Button
-                      // disabled={user && user?.kyc ? false : true}
                       variant="outline"
                       className="bg-white/10 min-w-[150px] min-h-[50px] text-white hover:bg-white/20 w-full sm:w-auto"
+                      disabled={hasAccountNumber}
+                      onClick={() => setShowSubAccountModal(true)}
                     >
-                      Transfer
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Sub Account
                     </Button>
-                  </Link>
+                  </>
                 )}
               </div>
             </div>
@@ -338,6 +371,39 @@ const Transactions = () => {
         title=""
       >
         <KycConfirm page={false} />
+      </CustomModal>
+
+      {/* Create Sub Account Modal */}
+      <CustomModal
+        isOpen={showSubAccountModal}
+        onClose={() => {
+          setShowSubAccountModal(false);
+          setPreviousAccount("");
+        }}
+        title="Create Sub Account"
+      >
+        <div className="flex flex-col gap-4 p-2">
+          <p className="text-sm text-gray-600">
+            Enter your previous account number to create a sub account.
+          </p>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Previous Account Number
+            </label>
+            <Input
+              placeholder="Enter previous account number"
+              value={previousAccount}
+              onChange={(e) => setPreviousAccount(e.target.value)}
+            />
+          </div>
+          <Button
+            onClick={handleCreateSubAccount}
+            disabled={!previousAccount.trim() || isCreatingSubAccount}
+            className="w-full h-12 bg-green-600 hover:bg-green-700 text-white"
+          >
+            {isCreatingSubAccount ? <Spinner /> : "Create Sub Account"}
+          </Button>
+        </div>
       </CustomModal>
       {/* KYC Verification Modal */}
       {/* <CustomModal

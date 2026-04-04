@@ -156,5 +156,6 @@ export const queryKey = {
     requestReset: "request-reset",
     verifyToken: "verify-token",
     resetPin: "reset-pin",
+    createSubAccount: "create-sub-account",
   },
 };

@@ -99,21 +99,26 @@ export const usePosHook = ({
     staleTime: 1000 * 60 * 5,
   });
 
-  // Filter products based on user role and department
+  // Filter products based on user role, department, and POS visibility
   const filterProductsByRole = useCallback(
     (products: any[]) => {
       if (!products || products.length === 0) return [];
+
+      // First, filter out products hidden from POS
+      const visibleProducts = products.filter(
+        (product) => !product.hide_from_pos,
+      );
 
       const userRole = user?.role;
 
       // ADMIN-ATTENDANT: See everything
       if (userRole === "ADMIN-ATTENDANT") {
-        return products;
+        return visibleProducts;
       }
 
       // PHARMACIST: See only pharmacy department products
       if (userRole === "PHARMACIST") {
-        return products.filter((product) => {
+        return visibleProducts.filter((product) => {
           const department = product.department?.toLowerCase();
           return department === "pharmacy";
         });
@@ -121,14 +126,14 @@ export const usePosHook = ({
 
       // ATTENDANT: See everything EXCEPT pharmacy department products
       if (userRole === "ATTENDANT") {
-        return products.filter((product) => {
+        return visibleProducts.filter((product) => {
           const department = product.department?.toLowerCase();
           return department !== "pharmacy";
         });
       }
 
-      // Default: Return all products (for OWNER or other roles)
-      return products;
+      // Default: Return all visible products (for OWNER or other roles)
+      return visibleProducts;
     },
     [user?.role],
   );

@@ -6,7 +6,7 @@ import {
 } from "@/lib/react-query";
 import { useLogoutMutation } from "../auth/logout-user";
 
-export type ProductHistoryType = "WASTE" | "RETURN" | "DAMAGED";
+export type ProductHistoryType = "WASTE" | "RETURN" | "DAMAGE";
 
 export interface ProductHistoryItem {
   id: string;
@@ -32,7 +32,11 @@ export interface ProductHistoryResponse {
   total: number;
   limit: number;
   pages: number;
-  results: ProductHistoryItem[];
+  results: {
+    value: number;
+    count: number;
+    data: ProductHistoryItem[];
+  };
 }
 
 type FetchProductHistoryProps = {
@@ -40,6 +44,9 @@ type FetchProductHistoryProps = {
   type: ProductHistoryType;
   page?: number;
   limit?: number;
+  start_date?: string;
+  end_date?: string;
+  department?: string;
 };
 
 export const fetchProductHistory = async ({
@@ -47,6 +54,9 @@ export const fetchProductHistory = async ({
   type,
   page,
   limit,
+  start_date,
+  end_date,
+  department,
 }: FetchProductHistoryProps) => {
   const url = new URL(
     `/api/products/${id}/product-history`,
@@ -57,6 +67,9 @@ export const fetchProductHistory = async ({
   if (type) params.append("type", type);
   if (page) params.append("page", String(page));
   if (limit) params.append("limit", String(limit));
+  if (start_date) params.append("start_date", start_date);
+  if (end_date) params.append("end_date", end_date);
+  if (department) params.append("department", department);
 
   url.search = params.toString();
 
@@ -104,7 +117,7 @@ export const useFetchProductHistoryQuery = ({
       if ([404, 401].includes(error.type)) return false;
       return failureCount < 2;
     },
-    queryKey: [queryKey.products.productHistory, params.id, params.type, params.page, params.limit],
+    queryKey: [queryKey.products.productHistory, params.id, params.type, params.page, params.limit, params.start_date, params.end_date, params.department],
     queryFn: () => fetchProductHistory(params),
     ...config,
   });

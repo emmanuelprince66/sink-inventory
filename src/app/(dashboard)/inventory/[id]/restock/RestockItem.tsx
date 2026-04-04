@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Popover,
   PopoverContent,
@@ -402,6 +403,26 @@ const RestockItem = ({
               />
             </>
           )}
+
+          {/* Remark */}
+          <FormField
+            control={form.control}
+            name="remark"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>Remark</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Enter any additional remarks..."
+                    className="resize-none border border-green-300"
+                    rows={3}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           {/* Submit Button */}
           <Button
