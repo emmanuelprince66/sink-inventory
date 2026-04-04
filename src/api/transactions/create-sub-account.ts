@@ -6,7 +6,7 @@ const createSubAccount = async ({
   body,
   businessId,
 }: {
-  body: { previous_account: string };
+  body: { previous_account: string; branch: string };
   businessId: string;
 }) => {
   const response = await fetch(
