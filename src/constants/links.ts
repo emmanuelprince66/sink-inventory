@@ -5,7 +5,6 @@ import {
   BellIcon,
   ClipboardList,
   CreditCard,
-  Delete,
   DollarSign,
   FlaskConical,
   History,
@@ -117,7 +116,7 @@ export const links = [
       },
       {
         title: "Product History",
-        url: "/inventory/waste-history",
+        url: "/inventory/product-history",
         icon: ClipboardList,
         roles: [
           "OWNER",

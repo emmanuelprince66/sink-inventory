@@ -1,4 +1,4 @@
-import ProductHistory from "./WasteHistory";
+import ProductHistory from "./ProductHistory";
 
 const page = () => {
   return (

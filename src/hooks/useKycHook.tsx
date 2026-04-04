@@ -14,11 +14,15 @@ const individualAccountSchema = z.object({
 });
 const corporateAccountSchema = z.object({
   bvn: z.string().min(1, " Bvn is required"),
+  firstname: z.string().min(1, "First name is required"),
+  lastname: z.string().min(1, "Last name is required"),
+  dob: z.string().optional(),
   business_name: z.string().optional(),
   registration_number: z.string().optional(),
   reg_date: z.string().optional(),
   address: z.string().min(1, "Business address is required"),
   state: z.string().min(1, "State is required"),
+  tin: z.string().optional(),
 });
 
 export type AddIndividualAcctFormValues = z.infer<
@@ -45,11 +49,15 @@ export const useKycHook = () => {
     resolver: zodResolver(corporateAccountSchema) as any, // Temporary workaround
     defaultValues: {
       bvn: "",
+      firstname: "",
+      lastname: "",
+      dob: "",
       business_name: "",
       registration_number: "",
       reg_date: "",
       address: "",
       state: "",
+      tin: "",
     },
     mode: "onChange",
   });
@@ -91,6 +99,7 @@ export const useKycHook = () => {
     const insert = {
       ...data,
       type: "CORPORATE",
+      dob: data.dob ? moment(data.dob).format("DD-MMM-YYYY") : undefined,
       reg_date: data.reg_date
         ? moment(data.reg_date).format("DD-MMM-YYYY")
         : undefined,

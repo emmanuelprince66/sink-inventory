@@ -18,10 +18,8 @@ import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
-  Banknote,
   CalendarDays,
   Package,
-  PackageCheck,
   PackageMinus,
   RotateCcw,
   Search,
@@ -115,95 +113,36 @@ const ProductionHistoryPage = () => {
       </div>
 
       <div className="max-w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
-        {/* Worth Summary Card */}
-        <Card className="border-0 shadow-md overflow-hidden">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-1 rounded-xl">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <CardTitle className="text-sm font-semibold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-                <Banknote className="h-4 w-4 text-emerald-400" />
-                Production Worth Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-5 pb-5">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Total */}
-                <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full" />
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-1.5 rounded-md bg-emerald-500/20">
-                      <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
-                    </div>
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Total Production
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-white tracking-tight">
-                    {formatNumber(productionStats.total)}
-                  </span>
-                  <span className="text-xs text-slate-500">units produced</span>
-                </div>
-
-                {/* Received */}
-                <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-green-500/10 rounded-bl-full" />
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-1.5 rounded-md bg-green-500/20">
-                      <PackageCheck className="h-3.5 w-3.5 text-green-400" />
-                    </div>
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Received
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-green-400 tracking-tight">
-                    {formatNumber(productionStats.received)}
-                  </span>
-                  <span className="text-xs text-slate-500">units received</span>
-                </div>
-
-                {/* Moved */}
-                <div className="bg-white/5 rounded-lg px-4 py-4 border border-white/10 flex flex-col gap-1 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/10 rounded-bl-full" />
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="p-1.5 rounded-md bg-amber-500/20">
-                      <PackageMinus className="h-3.5 w-3.5 text-amber-400" />
-                    </div>
-                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                      Moved
-                    </span>
-                  </div>
-                  <span className="text-2xl font-bold text-amber-400 tracking-tight">
-                    {formatNumber(productionStats.moved)}
-                  </span>
-                  <span className="text-xs text-slate-500">units moved</span>
-                </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <Card className="shadow-sm border border-emerald-100 bg-emerald-50">
+            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/80">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
-
-              {/* Progress bar showing received vs total */}
-              {productionStats.total > 0 && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                    <span>Receipt progress</span>
-                    <span>
-                      {Math.round(
-                        (productionStats.received / productionStats.total) *
-                          100,
-                      )}
-                      % received
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-emerald-500 to-green-400 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${(productionStats.received / productionStats.total) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+              <div>
+                <p className="text-sm text-slate-500">Total Production</p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {formatNumber(productionStats.total)}
+                </p>
+              </div>
             </CardContent>
-          </div>
-        </Card>
+          </Card>
+
+          <Card className="shadow-sm border border-amber-100 bg-amber-50">
+            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/80">
+                <PackageMinus className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Moved</p>
+                <p className="text-2xl font-bold text-amber-700">
+                  {formatNumber(productionStats.moved)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Filters Section */}
         <Card className="shadow-sm border-0 ring-1 ring-slate-200/60 overflow-hidden">

@@ -2,6 +2,7 @@
 import { useAcceptProductMutation } from "@/api/inventory/accept-product";
 import { useFetchProductionHistoryQuery } from "@/api/inventory/fetch-production-history";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import moment from "moment";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { useToast } from "./toast/useToast";
@@ -41,8 +42,12 @@ export const useProductionHistory = () => {
         search: appliedFilters.search,
         status:
           appliedFilters.status === "all" ? undefined : appliedFilters.status,
-        start_date: appliedFilters.dateRange?.from?.toISOString(),
-        end_date: appliedFilters.dateRange?.to?.toISOString(),
+        start_date: appliedFilters.dateRange?.from
+          ? moment(appliedFilters.dateRange.from).format("YYYY-MM-DD")
+          : undefined,
+        end_date: appliedFilters.dateRange?.to
+          ? moment(appliedFilters.dateRange.to).format("YYYY-MM-DD")
+          : undefined,
       },
       enabled: !!business_id,
     });

@@ -23,7 +23,8 @@ const RestockSchema = z
     payment_method: z.string().min(1, "Payment Method is required"),
     due_date: z.string().optional(),
     amount_paid: z.coerce.number().optional(),
-    variation_id: z.string().optional(), // Add this
+    variation_id: z.string().optional(),
+    remark: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.payment_method === "CREDIT") {
@@ -109,7 +110,8 @@ export const useGetRestockHistory = ({
       payment_method: "",
       amount_paid: undefined,
       due_date: "",
-      variation_id: "", // Add this
+      variation_id: "",
+      remark: "",
     },
     mode: "onChange",
   });
@@ -161,6 +163,7 @@ export const useGetRestockHistory = ({
         amount_paid: Number(values.amount_paid),
         due_date: moment(values.due_date).format("YYYY-MM-DD").toString(),
       }),
+      ...(values.remark && { remark: values.remark }),
     };
     console.log("payload----5", payload);
 

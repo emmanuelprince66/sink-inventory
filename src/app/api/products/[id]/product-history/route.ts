@@ -21,12 +21,17 @@ export async function GET(
   const type = request.nextUrl.searchParams.get("type") || "";
   const page = request.nextUrl.searchParams.get("page") || "";
   const limit = request.nextUrl.searchParams.get("limit") || "";
+  const start_date = request.nextUrl.searchParams.get("start_date") || "";
+  const end_date = request.nextUrl.searchParams.get("end_date") || "";
+  const department = request.nextUrl.searchParams.get("department") || "";
 
   const apiUrl = new URL(`${BaseUrl}product/return/${id}/`);
   if (type) apiUrl.searchParams.append("type", type);
   if (page) apiUrl.searchParams.append("page", page);
   if (limit) apiUrl.searchParams.append("limit", limit);
-
+  if (start_date) apiUrl.searchParams.append("start_date", start_date);
+  if (end_date) apiUrl.searchParams.append("end_date", end_date);
+  if (department) apiUrl.searchParams.append("department", department);
   try {
     const response = await fetch(apiUrl.toString(), {
       method: "GET",
