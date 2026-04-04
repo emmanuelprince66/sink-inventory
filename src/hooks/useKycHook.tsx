@@ -17,6 +17,8 @@ const corporateAccountSchema = z.object({
   business_name: z.string().optional(),
   registration_number: z.string().optional(),
   reg_date: z.string().optional(),
+  address: z.string().min(1, "Business address is required"),
+  state: z.string().min(1, "State is required"),
 });
 
 export type AddIndividualAcctFormValues = z.infer<
@@ -46,6 +48,8 @@ export const useKycHook = () => {
       business_name: "",
       registration_number: "",
       reg_date: "",
+      address: "",
+      state: "",
     },
     mode: "onChange",
   });

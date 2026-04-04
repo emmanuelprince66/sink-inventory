@@ -1,3 +1,4 @@
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -67,8 +68,12 @@ const AddWaste = ({
             )}
           />
 
-          <Button type="submit" className="w-full h-[48px] ">
-            Save
+          <Button
+            disabled={addReturnedOrDamagedProductLoading}
+            type="submit"
+            className="w-full h-[48px] "
+          >
+            {addReturnedOrDamagedProductLoading ? <Spinner /> : "Add Waste"}
           </Button>
         </form>
       </Form>

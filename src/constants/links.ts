@@ -116,9 +116,9 @@ export const links = [
         permission: "restock_products", // Only who can restock can see history
       },
       {
-        title: "Waste History",
+        title: "Product History",
         url: "/inventory/waste-history",
-        icon: Delete,
+        icon: ClipboardList,
         roles: [
           "OWNER",
           "ADMIN-ATTENDANT",
