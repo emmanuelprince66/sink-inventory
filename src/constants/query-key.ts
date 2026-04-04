@@ -128,6 +128,7 @@ export const queryKey = {
     transferHistory: "transfer-history",
     transactionsHistory: "transactions-history",
     returnDamagedProduct: "return-damaged-product",
+    productHistory: "product-history",
     getAllSku: "get-all-sku",
     getAllDepartments: "get-all-departments",
     createDepartment: "create-department",

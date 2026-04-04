@@ -1,9 +1,9 @@
-import WasteHistory from "./WasteHistory";
+import ProductHistory from "./WasteHistory";
 
 const page = () => {
   return (
     <div>
-      <WasteHistory />
+      <ProductHistory />
     </div>
   );
 };
