@@ -106,7 +106,7 @@ export const usePosHook = ({
 
       // First, filter out products hidden from POS
       const visibleProducts = products.filter(
-        (product) => !product.hide_from_pos,
+        (product) => !product.raw_material,
       );
 
       const userRole = user?.role;
