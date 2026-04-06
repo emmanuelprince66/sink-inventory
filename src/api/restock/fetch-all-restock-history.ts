@@ -26,7 +26,11 @@ export type RestockHistoryResponse = {
   total: number;
   limit: number;
   pages: number;
-  results: RestockHistoryItem[];
+  results: {
+    value: number;
+    count: number;
+    data: RestockHistoryItem[];
+  };
 };
 
 type FetchAllRestockHistoryParams = {
@@ -34,6 +38,7 @@ type FetchAllRestockHistoryParams = {
   search?: string;
   dateRange?: DateRange;
   user?: string;
+  department?: string;
   page?: number;
   limit?: number;
 };
@@ -43,6 +48,7 @@ export const fetchAllRestockHistory = async ({
   search = "",
   dateRange,
   user = "",
+  department = "",
   page = 1,
   limit = 10,
 }: FetchAllRestockHistoryParams): Promise<RestockHistoryResponse> => {
@@ -56,6 +62,7 @@ export const fetchAllRestockHistory = async ({
   if (dateRange?.from) params.append("start_date", formatDate(dateRange.from));
   if (dateRange?.to) params.append("end_date", formatDate(dateRange.to));
   if (user) params.append("user", user);
+  if (department) params.append("department", department);
   params.append("page", page.toString());
   params.append("limit", limit.toString());
 
@@ -103,6 +110,7 @@ export const useFetchAllRestockHistoryQuery = ({
       params.search,
       params.dateRange,
       params.user,
+      params.department,
       params.page,
       params.limit,
     ],

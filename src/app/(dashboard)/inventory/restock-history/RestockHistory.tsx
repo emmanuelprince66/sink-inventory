@@ -1,6 +1,7 @@
 "use client";
 
 import { useFetchAllRestockHistoryQuery } from "@/api/restock/fetch-all-restock-history";
+import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarDays,
+  DollarSign,
   Package,
   RotateCcw,
   Search,
@@ -37,11 +39,18 @@ const RestockHistoryPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [userFilter, setUserFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({
     search: "",
     dateRange: undefined as DateRange | undefined,
     user: "",
+    department: "",
+  });
+
+  const { data: DepartmentData } = useFetchDepartmentsQuery(business_id, {
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5,
   });
 
   // Pagination state
@@ -55,6 +64,7 @@ const RestockHistoryPage = () => {
       search: appliedFilters.search,
       dateRange: appliedFilters.dateRange,
       user: appliedFilters.user,
+      department: appliedFilters.department,
       page,
       limit: pageSize,
     },
@@ -62,10 +72,11 @@ const RestockHistoryPage = () => {
   });
 
   // Extract unique users from results for filter dropdown
-  const uniqueUsers = data?.results
+  const restockResults = data?.results?.data || [];
+  const uniqueUsers: { id: string; name: string }[] = restockResults.length > 0
     ? Array.from(
-        new Map(data.results.map((item) => [item.user.id, item.user])).values(),
-      )
+        new Map(restockResults.map((item: any) => [item.user.id, item.user])).values(),
+      ) as { id: string; name: string }[]
     : [];
 
   // Apply filters
@@ -74,6 +85,7 @@ const RestockHistoryPage = () => {
       search: searchQuery,
       dateRange,
       user: userFilter === "all" ? "" : userFilter,
+      department: departmentFilter === "all" ? "" : departmentFilter,
     });
     setPage(1);
   };
@@ -83,19 +95,22 @@ const RestockHistoryPage = () => {
     setSearchQuery("");
     setDateRange(undefined);
     setUserFilter("");
+    setDepartmentFilter("");
     setAppliedFilters({
       search: "",
       dateRange: undefined,
       user: "",
+      department: "",
     });
     setPage(1);
   };
 
   // Quick remove individual filter
-  const removeFilter = (type: "search" | "date" | "user") => {
+  const removeFilter = (type: "search" | "date" | "user" | "department") => {
     if (type === "search") setSearchQuery("");
     if (type === "date") setDateRange(undefined);
     if (type === "user") setUserFilter("");
+    if (type === "department") setDepartmentFilter("");
 
     setTimeout(handleApplyFilters, 0);
   };
@@ -105,6 +120,7 @@ const RestockHistoryPage = () => {
     searchQuery,
     dateRange?.from,
     userFilter && userFilter !== "all",
+    departmentFilter && departmentFilter !== "all",
   ].filter(Boolean).length;
 
   const hasActiveFilters = activeFiltersCount > 0;
@@ -130,7 +146,7 @@ const RestockHistoryPage = () => {
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full text-sm text-slate-600">
                 <Package className="h-4 w-4" />
-                <span>{data?.total || 0} records</span>
+                <span>{data?.results?.count || 0} records</span>
               </div>
             </div>
           </div>
@@ -138,26 +154,38 @@ const RestockHistoryPage = () => {
       </div>
 
       <div className="max-w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
-        {/* Quick Stats Row - Mobile Only */}
-        <div className="sm:hidden grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">
-              <Package className="h-3.5 w-3.5" />
-              Total Records
-            </div>
-            <div className="text-2xl font-bold text-slate-900">
-              {data?.total || 0}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-wider mb-1">
-              <Users className="h-3.5 w-3.5" />
-              Unique Users
-            </div>
-            <div className="text-2xl font-bold text-slate-900">
-              {uniqueUsers.length}
-            </div>
-          </div>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <Card className="shadow-sm border border-emerald-100 bg-emerald-50">
+            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/80">
+                <Package className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Total Records</p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  {data?.results?.count || 0}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border border-blue-100 bg-blue-50">
+            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/80">
+                <DollarSign className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-500">Total Value</p>
+                <p className="text-2xl font-bold text-blue-700">
+                  {new Intl.NumberFormat("en-NG", {
+                    style: "currency",
+                    currency: "NGN",
+                  }).format(data?.results?.value || 0)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters Section */}
@@ -198,7 +226,7 @@ const RestockHistoryPage = () => {
               {/* Search and Date Row */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                 {/* Search Input */}
-                <div className="md:col-span-5 relative group">
+                <div className="md:col-span-4 relative group">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search className="h-4 w-4 text-slate-400 group-focus-within:text-green-500 transition-colors" />
                   </div>
@@ -207,13 +235,13 @@ const RestockHistoryPage = () => {
                     placeholder="Search by product name or SKU..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10   max-h-[35px] bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg transition-all"
+                    className="pl-10 max-h-[35px] bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg transition-all"
                     onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
                   />
                 </div>
 
                 {/* Date Range Picker */}
-                <div className="md:col-span-4 relative">
+                <div className="md:col-span-3 relative">
                   <DatePickerWithRange
                     date={dateRange}
                     onDateChange={setDateRange}
@@ -224,7 +252,7 @@ const RestockHistoryPage = () => {
                 {/* User Filter */}
                 <div className="md:col-span-3">
                   <Select value={userFilter} onValueChange={setUserFilter}>
-                    <SelectTrigger className=" min-h-[14px] w-full bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg">
+                    <SelectTrigger className="min-h-[14px] w-full bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg">
                       <div className="flex items-center gap-2 text-slate-600">
                         <Users className="h-4 w-4 text-slate-400" />
                         <SelectValue placeholder="All Users" />
@@ -241,6 +269,32 @@ const RestockHistoryPage = () => {
                           className="rounded-md"
                         >
                           {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Department Filter */}
+                <div className="md:col-span-2">
+                  <Select
+                    value={departmentFilter}
+                    onValueChange={setDepartmentFilter}
+                  >
+                    <SelectTrigger className="min-h-[14px] w-full bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg">
+                      <SelectValue placeholder="All Depts" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-lg w-full border-slate-200 shadow-lg">
+                      <SelectItem value="all" className="rounded-md w-full">
+                        All Departments
+                      </SelectItem>
+                      {DepartmentData?.data?.map((dept: any) => (
+                        <SelectItem
+                          key={dept.id}
+                          value={dept.id}
+                          className="rounded-md"
+                        >
+                          {dept.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -344,6 +398,18 @@ const RestockHistoryPage = () => {
                         <X className="h-3 w-3 group-hover:scale-110 transition-transform" />
                       </button>
                     )}
+
+                    {departmentFilter && departmentFilter !== "all" && (
+                      <button
+                        onClick={() => removeFilter("department")}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors group"
+                      >
+                        {DepartmentData?.data?.find(
+                          (d: any) => d.id === departmentFilter,
+                        )?.name || departmentFilter}
+                        <X className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -360,7 +426,7 @@ const RestockHistoryPage = () => {
                   Restock Records
                 </CardTitle>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                  {data?.total || 0}
+                  {data?.results?.count || 0}
                 </span>
               </div>
 
@@ -377,7 +443,7 @@ const RestockHistoryPage = () => {
             <div className="overflow-x-auto">
               <CustomTable
                 columns={allRestockHistoryColumns}
-                data={data?.results || []}
+                data={restockResults}
                 loading={isFetching}
                 noDataText={
                   <div className="py-12 text-center">
