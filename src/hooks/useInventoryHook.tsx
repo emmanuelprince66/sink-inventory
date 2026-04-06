@@ -145,6 +145,9 @@ export const useInventoryHook = ({
       queryClient.invalidateQueries({
         queryKey: [queryKey.inventory.getAllInventory],
       });
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.products.productHistory],
+      });
       if (closeModal) closeModal();
     },
   });
@@ -218,6 +221,9 @@ export const useInventoryHook = ({
     onSuccess: (data) => {
       showToast(data.message, "success");
       refetchInventory();
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.products.fetchProductionHistiory],
+      });
       if (closeModal) closeModal();
     },
   });
@@ -368,7 +374,7 @@ export const useInventoryHook = ({
   const onSubmitAddReturnedProduct = (values: AddReturnedFormValues) => {
     const payload: { quantity: number; type: string; note?: string } = {
       quantity: Number(values.quantity),
-      type: "WASTE",
+      type: "RETURN",
     };
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });

@@ -67,7 +67,7 @@ export const links = [
         title: "Expenses",
         url: "/expenses",
         icon: DollarSign,
-        roles: ["OWNER"],
+        roles: ["OWNER", "ACCOUNTANT"],
         permission: null,
       },
       {
@@ -111,6 +111,7 @@ export const links = [
           "ADMIN-ATTENDANT",
           "INVENTORY-MANAGER",
           "PRODUCTION-MANAGER",
+          "ACCOUNTANT",
         ],
         permission: "restock_products", // Only who can restock can see history
       },
@@ -123,6 +124,7 @@ export const links = [
           "ADMIN-ATTENDANT",
           "INVENTORY-MANAGER",
           "PRODUCTION-MANAGER",
+          "ACCOUNTANT",
         ],
         permission: "restock_products", // Only who can restock can see history
       },
@@ -135,6 +137,7 @@ export const links = [
           "ADMIN-ATTENDANT",
           "INVENTORY-MANAGER",
           "PRODUCTION-MANAGER",
+          "ACCOUNTANT",
         ],
         permission: "move_items_to_production", // Only who can do production
       },

@@ -124,25 +124,40 @@ const SupplyHistoryDetails = ({
               </CardContent>
             </Card>
 
-            {/* Payment Method section */}
+            {/* Payment Status section */}
             <Card className="m-4 border-0">
-              <CardContent className="p-4 ">
-                <div className="flex justify-start flex-col items-center w-full">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex gap-2 items-center">
-                      <span className="text-primary-green-300 bg-primary-100 rounded ">
-                        {supplierDetails?.status?.toLocaleLowerCase()}
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Payment Status
+                      </p>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                          supplierDetails?.status === "PAID"
+                            ? "bg-green-100 text-green-700"
+                            : supplierDetails?.status === "UNPAID"
+                              ? "bg-red-100 text-red-700"
+                              : supplierDetails?.status === "PART"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {supplierDetails?.status === "PAID" && (
+                          <CheckCircle size={12} />
+                        )}
+                        {supplierDetails?.status?.toUpperCase() || "N/A"}
                       </span>
-                      <CheckCircle className="text-green-500" size={12} />
                     </div>
-                    <Button>Confirm Payment</Button>
+                    {supplierDetails?.status !== "PAID" && (
+                      <Button size="sm">Confirm Payment</Button>
+                    )}
                   </div>
-                  <div className="w-full">
-                    <p className="text-sm text-gray-500">Payment Method</p>
-                    {/* <p className="font-medium">{historyDetailsData.method}</p> */}
 
-                    <p className="text-sm text-gray-500 mt-3">Transaction ID</p>
-                    <p className="text-sm">#{transactionId}</p>
+                  <div>
+                    <p className="text-sm text-gray-500">Transaction ID</p>
+                    <p className="text-sm font-medium">#{transactionId}</p>
                   </div>
                 </div>
               </CardContent>

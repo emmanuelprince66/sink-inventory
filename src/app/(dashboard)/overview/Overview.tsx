@@ -463,28 +463,32 @@ export default function Overview() {
 
         {/* Store URL and Quick Actions */}
         <div className="grid gap-2 grid-cols-1 lg:grid-cols-2 mb-6">
-          {/* Quick Actions Card - Left Column */}
-          <Card className="border-gray-200 shadow-sm py-2">
-            <CardHeader>
-              <CardTitle className="text-sm font-bold">Quick Actions</CardTitle>
-              <CardDescription className="text-[14px]">
-                Frequently used actions for your store management.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                {quickActions.map((action, index) => (
-                  <QuickActionCard
-                    key={index}
-                    icon={action.icon}
-                    title={action.title}
-                    description={action.description}
-                    href={action.href}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Quick Actions Card - Left Column (OWNER & ADMIN-ATTENDANT only) */}
+          {(role === "OWNER" || role === "ADMIN-ATTENDANT") && (
+            <Card className="border-gray-200 shadow-sm py-2">
+              <CardHeader>
+                <CardTitle className="text-sm font-bold">
+                  Quick Actions
+                </CardTitle>
+                <CardDescription className="text-[14px]">
+                  Frequently used actions for your store management.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  {quickActions.map((action, index) => (
+                    <QuickActionCard
+                      key={index}
+                      icon={action.icon}
+                      title={action.title}
+                      description={action.description}
+                      href={action.href}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Product Status Cards - Right Column (Flex on Desktop) */}
           <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 xl:grid-cols-4">

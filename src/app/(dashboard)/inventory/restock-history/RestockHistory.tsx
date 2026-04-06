@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   CalendarDays,
-  DollarSign,
+  Banknote,
   Package,
   RotateCcw,
   Search,
@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
+import { formatToNaira } from "@/utils/formatMoney";
 import { allRestockHistoryColumns } from "./AllRestockColunm";
 import { RestockHistorySkeleton } from "./AllRestockSkeleton";
 
@@ -173,15 +174,12 @@ const RestockHistoryPage = () => {
           <Card className="shadow-sm border border-blue-100 bg-blue-50">
             <CardContent className="p-4 sm:p-5 flex items-center gap-4">
               <div className="p-2.5 rounded-full bg-white/80">
-                <DollarSign className="h-5 w-5 text-blue-500" />
+                <Banknote className="h-5 w-5 text-blue-500" />
               </div>
               <div>
                 <p className="text-sm text-slate-500">Total Value</p>
                 <p className="text-2xl font-bold text-blue-700">
-                  {new Intl.NumberFormat("en-NG", {
-                    style: "currency",
-                    currency: "NGN",
-                  }).format(data?.results?.value || 0)}
+                  {formatToNaira(data?.results?.value || 0)}
                 </p>
               </div>
             </CardContent>

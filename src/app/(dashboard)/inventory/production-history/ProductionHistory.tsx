@@ -16,6 +16,7 @@ import {
 import { useProductionHistory } from "@/hooks/useProductionHistory";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
+import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import {
   CalendarDays,
@@ -73,8 +74,7 @@ const ProductionHistoryPage = () => {
 
   console.log("Production Stats:", productionStats);
 
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat("en-NG").format(value);
+  const formatNumber = (value: number) => formatToNaira(value);
 
   const columns = createProductionHistoryColumns({
     canManageProduction,
@@ -121,7 +121,7 @@ const ProductionHistoryPage = () => {
                 <TrendingUp className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
-                <p className="text-sm text-slate-500">Total Production</p>
+                <p className="text-sm text-slate-500">Total Production Cost</p>
                 <p className="text-2xl font-bold text-emerald-700">
                   {formatNumber(productionStats.total)}
                 </p>
@@ -137,7 +137,7 @@ const ProductionHistoryPage = () => {
               <div>
                 <p className="text-sm text-slate-500">Moved</p>
                 <p className="text-2xl font-bold text-amber-700">
-                  {formatNumber(productionStats.moved)}
+                  {new Intl.NumberFormat("en-NG").format(productionStats.moved)}
                 </p>
               </div>
             </CardContent>
@@ -349,7 +349,7 @@ const ProductionHistoryPage = () => {
           <div className="overflow-x-auto">
             <CustomTable
               columns={columns}
-              data={data?.data?.results || []}
+              data={data?.data?.results?.data || []}
               loading={isFetching}
               noDataText={
                 <div className="py-12 text-center">
