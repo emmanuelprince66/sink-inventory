@@ -20,13 +20,14 @@ import { format } from "date-fns";
 import {
   AlertTriangle,
   CalendarDays,
-  DollarSign,
+  Banknote,
   Package,
   RotateCcw,
   SlidersHorizontal,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
+import { formatToNaira } from "@/utils/formatMoney";
 import { createProductHistoryColumns } from "./ProductHistoryColumns";
 import { ProductHistorySkeleton } from "./ProductHistorySkeleton";
 
@@ -96,11 +97,7 @@ const ProductHistory = () => {
 
   const hasActiveFilters = !!(dateRange?.from || departmentFilter);
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-    }).format(value);
+  const formatCurrency = (value: number) => formatToNaira(value);
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
@@ -163,7 +160,7 @@ const ProductHistory = () => {
           <Card className={cn("shadow-sm border", colors.border, colors.bg)}>
             <CardContent className="p-4 sm:p-5 flex items-center gap-4">
               <div className={cn("p-2.5 rounded-full bg-white/80")}>
-                <DollarSign className={cn("h-5 w-5", colors.icon)} />
+                <Banknote className={cn("h-5 w-5", colors.icon)} />
               </div>
               <div>
                 <p className="text-sm text-slate-500">Total Value</p>

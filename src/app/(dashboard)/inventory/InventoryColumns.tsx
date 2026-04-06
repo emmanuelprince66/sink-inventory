@@ -248,7 +248,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                     onClick={handleOpenWasteModal}
                     className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
                   >
-                    Add Waste
+                    Add Waste/Left Over
                   </DropdownMenuItem>
                 )}
                 {isProduct && can("return_items") && (

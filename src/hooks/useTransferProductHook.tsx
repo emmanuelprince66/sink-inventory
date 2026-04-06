@@ -1,8 +1,10 @@
 import { useGetAllBusinessQuery } from "@/api/business/get-business";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useTransferProductMutation } from "@/api/products/transfer-product";
+import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -32,6 +34,7 @@ export const useTransferProductHook = ({
   closeModal: any;
 }) => {
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const business_id = useBusinessStore((state) => state.business_id);
   const [otherBusiness, setOtherBusiness] = useState<any>(null);
   const [selectedBusiness, setSelectedBusiness] = useState<string | null>(null);
@@ -67,6 +70,12 @@ export const useTransferProductHook = ({
           data.message || "Product transferred successfully",
           "success"
         );
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.inventory.getAllInventory],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.products.fetchProductionHistiory],
+        });
         closeModal();
         form.reset();
       },

@@ -20,7 +20,9 @@ const Analytics = () => {
   const business_id = useBusinessStore((state) => state.business_id);
 
   const AnalyticsOptionsTab =
-    user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT"
+    user?.role === "OWNER" ||
+    user?.role === "ADMIN-ATTENDANT" ||
+    user?.role === "ACCOUNTANT"
       ? (["Sales", "Products", "Customers", "Tax"] as const)
       : (["Sales"] as const);
 
@@ -159,7 +161,8 @@ const Analytics = () => {
 
               {user &&
                 (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT") && (
+                  user?.role === "ADMIN-ATTENDANT" ||
+                  user?.role === "ACCOUNTANT") && (
                   <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
                     {ProductAnalyticLoading ? (
                       <SkeletonComp />
@@ -175,7 +178,8 @@ const Analytics = () => {
 
               {user &&
                 (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT") && (
+                  user?.role === "ADMIN-ATTENDANT" ||
+                  user?.role === "ACCOUNTANT") && (
                   <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
                     {CustomerAnalyticLoading ? (
                       <SkeletonComp />
@@ -191,7 +195,8 @@ const Analytics = () => {
 
               {user &&
                 (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT") && (
+                  user?.role === "ADMIN-ATTENDANT" ||
+                  user?.role === "ACCOUNTANT") && (
                   <TabsContent value="Tax" className="mt-0">
                     <div className="w-full overflow-hidden">
                       <TaxAnalytics dateRange={dateRange} />

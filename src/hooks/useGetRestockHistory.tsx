@@ -94,6 +94,9 @@ export const useGetRestockHistory = ({
         queryClient.invalidateQueries({
           queryKey: [queryKey.inventory.getAllInventory],
         });
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.products.fetchAllRestockHistory],
+        });
         if (closeModal) closeModal();
       },
     });
