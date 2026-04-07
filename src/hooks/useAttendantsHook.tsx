@@ -5,7 +5,9 @@ import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchAttendantByIdQuery } from "@/api/attendants/get-attendant-by-id";
 import { useUpdateAttendantBusinessesMutation } from "@/api/attendants/update-attendant-business";
 import { useGetAllBusinessQuery } from "@/api/business/get-business";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -92,6 +94,7 @@ export const useAttendantsHook = ({
   } = useFetchAttendants(business_id);
 
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: attendantData, isLoading: AttendantLoading } =
     useFetchAttendantByIdQuery(attendantId, { enabled: !!attendantId });
@@ -127,9 +130,12 @@ export const useAttendantsHook = ({
   useEffect(() => {
     if (editAttendantSuccess) {
       refetch();
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.attendants.getAttendantById],
+      });
       if (closeModal) closeModal();
     }
-  }, [editAttendantSuccess, refetch, closeModal]);
+  }, [editAttendantSuccess, refetch, closeModal, queryClient]);
 
   const { mutate: deleteAttendant, isPending: deleteAttendantLoading } =
     useDeleteAttendantMutation({
