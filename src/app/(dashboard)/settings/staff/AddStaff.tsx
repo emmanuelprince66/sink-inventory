@@ -589,7 +589,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
                   <FormField
                     control={form.control}
-                    name="set_permissions.view_orders"
+                    name="set_permissions.return_items"
                     render={({ field }) => (
                       <FormItem>
                         <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
@@ -603,10 +603,39 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                           </FormControl>
                           <div className="flex-1">
                             <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
-                              View Orders and History
+                              Process Product Returns
                             </FormLabel>
                             <p className="text-xs text-gray-600 mt-1">
-                              See who sold what and review order history
+                              Handle returned items and process them back into
+                              inventory
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="set_permissions.raw_material"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Can View Raw Materials
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Access and view raw material inventory items
                             </p>
                           </div>
                         </div>
@@ -619,8 +648,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                 <div className="mt-4 p-3 bg-amber-100 rounded-md">
                   <p className="text-xs text-amber-800 font-medium">
                     Note: Production Managers cannot sell at POS, view payments,
-                    transfer products, process returns, or see checklist
-                    products.
+                    transfer products, or see checklist products.
                   </p>
                 </div>
               </div>
@@ -754,6 +782,16 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                         />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can record damaged products
+                        </span>
+                      </div>
+                    )}
+                    {permissions.raw_material && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can view raw materials
                         </span>
                       </div>
                     )}

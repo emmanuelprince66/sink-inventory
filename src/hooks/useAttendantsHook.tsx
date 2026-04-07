@@ -20,6 +20,7 @@ const permissionsSchema = z.object({
   transfer_items: z.boolean().optional(),
   return_items: z.boolean().optional(),
   damage_items: z.boolean().optional(),
+  raw_material: z.boolean().optional(),
   process_sales: z.boolean().optional(),
   apply_discounts: z.boolean().optional(),
   view_orders: z.boolean().optional(),
@@ -179,12 +180,12 @@ export const useAttendantsHook = ({
       phone: "",
       role: undefined as any,
       set_permissions: {
-        // manage_inventory_across_branches: false,
         restock_products: false,
         move_items_to_production: false,
         transfer_items: false,
         return_items: false,
         damage_items: false,
+        raw_material: false,
         process_sales: false,
         apply_discounts: false,
         view_orders: false,
@@ -202,18 +203,19 @@ export const useAttendantsHook = ({
 
   const editform = useForm<EditStaffFormValues>({
     resolver: zodResolver(EditStaffSchema),
+    mode: "onSubmit",
     defaultValues: {
       firstname: "",
       lastname: "",
       phone: "",
       role: undefined as any,
       set_permissions: {
-        // manage_inventory_across_branches: false,
         restock_products: false,
         move_items_to_production: false,
         transfer_items: false,
         return_items: false,
         damage_items: false,
+        raw_material: false,
         process_sales: false,
         apply_discounts: false,
         view_orders: false,
@@ -226,7 +228,6 @@ export const useAttendantsHook = ({
         view_transactions: false,
       },
     },
-    mode: "onChange",
   });
 
   const onSubmit = (values: AddStaffFormValues) => {
@@ -344,15 +345,15 @@ export const useAttendantsHook = ({
         "Specialized role focused on production inventory and quality control",
       permissions: [
         "Access inventory",
-        "Restock products only",
+        "Restock products",
         "Record damaged products",
-        "View orders and history (see who sold what)",
+        "Process product returns",
+        "View raw materials",
       ],
       restrictions: [
         "Cannot sell at point of sales",
         "Cannot view payments",
         "Cannot transfer products to other branches",
-        "Cannot process returns",
         "Cannot see products with checklist at POS",
       ],
       color: "bg-amber-50 border-amber-200",
@@ -363,7 +364,10 @@ export const useAttendantsHook = ({
 
   useEffect(() => {
     if (attendantData && attendantId && !AttendantLoading) {
-      const permissions = attendantData?.data?.set_permissions || {};
+      const perms =
+        attendantData?.data?.permissions ||
+        attendantData?.data?.set_permissions ||
+        {};
 
       editform.reset({
         firstname: attendantData?.data?.firstname,
@@ -371,24 +375,23 @@ export const useAttendantsHook = ({
         phone: attendantData?.data?.phone || "",
         role: attendantData?.data?.role || undefined,
         set_permissions: {
-          // manage_inventory_across_branches:
-          //   permissions.manage_inventory_across_branches || false,
-          restock_products: permissions.restock_products || false,
+          restock_products: perms.restock_products || false,
           move_items_to_production:
-            permissions.move_items_to_production || false,
-          transfer_items: permissions.transfer_items || false,
-          return_items: permissions.return_items || false,
-          damage_items: permissions.damage_items || false,
-          process_sales: permissions.process_sales || false,
-          apply_discounts: permissions.apply_discounts || false,
-          view_orders: permissions.view_orders || false,
-          manage_suppliers: permissions.manage_suppliers || false,
-          manage_bank_details: permissions.manage_bank_details || false,
-          sell_watchlist: permissions.sell_watchlist || false,
-          dispense_drugs: permissions.dispense_drugs || false,
-          view_prescriptions: permissions.view_prescriptions || false,
-          make_presale: permissions.make_presale || false,
-          view_transactions: permissions.view_transactions || false,
+            perms.move_items_to_production || false,
+          transfer_items: perms.transfer_items || false,
+          return_items: perms.return_items || false,
+          damage_items: perms.damage_items || false,
+          raw_material: perms.raw_material || false,
+          process_sales: perms.process_sales || false,
+          apply_discounts: perms.apply_discounts || false,
+          view_orders: perms.view_orders || false,
+          manage_suppliers: perms.manage_suppliers || false,
+          manage_bank_details: perms.manage_bank_details || false,
+          sell_watchlist: perms.sell_watchlist || false,
+          dispense_drugs: perms.dispense_drugs || false,
+          view_prescriptions: perms.view_prescriptions || false,
+          make_presale: perms.make_presale || false,
+          view_transactions: perms.view_transactions || false,
         },
       });
     }
@@ -437,19 +440,25 @@ export const useAttendantsHook = ({
     createStaffLoading,
     updateBusinessesLoading,
     businessRefetch,
-    // Computed values and helpers for clean UI
-    selectedRole: form.watch("role") || editform.watch("role"),
-    permissions:
-      form.watch("set_permissions") || editform.watch("set_permissions") || {},
+    // Computed values and helpers for clean UI — use attendantId to pick the right form
+    selectedRole: attendantId
+      ? editform.watch("role")
+      : form.watch("role"),
+    permissions: attendantId
+      ? editform.watch("set_permissions") || {}
+      : form.watch("set_permissions") || {},
     roleConfig: (() => {
-      const role = form.watch("role") || editform.watch("role");
+      const role = attendantId
+        ? editform.watch("role")
+        : form.watch("role");
       return role
         ? ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]
         : null;
     })(),
     getSelectedPermissionsCount: () => {
-      const perms =
-        form.watch("set_permissions") || editform.watch("set_permissions");
+      const perms = attendantId
+        ? editform.watch("set_permissions")
+        : form.watch("set_permissions");
       if (!perms) return 0;
       return Object.values(perms).filter(Boolean).length;
     },
