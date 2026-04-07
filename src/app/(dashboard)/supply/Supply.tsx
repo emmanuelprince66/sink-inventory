@@ -6,6 +6,7 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
+import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 
 import { formatToNaira } from "@/utils/formatMoney";
@@ -94,6 +95,7 @@ const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
 };
 
 const Supply = () => {
+  const { role } = useUserRole();
   const { handleRowClick, SupplierData, SupplierLoading } = useSupplyHook({});
 
   const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
@@ -108,15 +110,17 @@ const Supply = () => {
             Supplier
           </p>
 
-          <div
-            className="text-[14px] md:text-[20px]"
-            onClick={openSupplyModalFunc}
-          >
-            <Button className="flex items-center py-0 md:py-[25px]">
-              <Plus />
-              Add Supplier
-            </Button>
-          </div>
+          {(role === "OWNER" || role === "ADMIN-ATTENDANT" || role === "ACCOUNTANT") && (
+            <div
+              className="text-[14px] md:text-[20px]"
+              onClick={openSupplyModalFunc}
+            >
+              <Button className="flex items-center py-0 md:py-[25px]">
+                <Plus />
+                Add Supplier
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

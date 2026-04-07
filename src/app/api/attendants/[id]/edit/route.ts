@@ -6,7 +6,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: businessId } = await params;
+  const { id: attendantId } = await params;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -22,13 +22,13 @@ export async function PATCH(
     );
   }
 
-  // Validate businessId
-  if (!businessId) {
+  // Validate attendantId
+  if (!attendantId) {
     return NextResponse.json(
       {
         success: false,
-        error: "Category ID is required",
-        message: "No category identifier provided",
+        error: "Attendant ID is required",
+        message: "No attendant identifier provided",
       },
       { status: 400 }
     );
@@ -56,7 +56,7 @@ export async function PATCH(
       );
     }
 
-    const apiUrl = `${BaseUrl}business/single_attendant/${businessId}/`;
+    const apiUrl = `${BaseUrl}business/single_attendant/${attendantId}/`;
     console.log("Forwarding to:", apiUrl);
 
     const response = await fetch(apiUrl, {
