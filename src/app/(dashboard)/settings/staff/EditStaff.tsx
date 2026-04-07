@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Form,
   FormControl,
@@ -44,8 +45,29 @@ export const EditStaff = ({
 
   if (AttendantLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Spinner />
+      <div className="w-full space-y-5 py-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48 bg-gray-200" />
+          <Skeleton className="h-4 w-72 bg-gray-100" />
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <Skeleton className="h-4 w-36 bg-gray-200" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-10 w-full bg-gray-200" />
+            <Skeleton className="h-10 w-full bg-gray-200" />
+          </div>
+          <Skeleton className="h-10 w-full bg-gray-200" />
+        </div>
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <Skeleton className="h-4 w-28 bg-gray-200" />
+          <Skeleton className="h-10 w-full bg-gray-200" />
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-16 w-full bg-gray-100 rounded-lg" />
+          <Skeleton className="h-16 w-full bg-gray-100 rounded-lg" />
+          <Skeleton className="h-16 w-full bg-gray-100 rounded-lg" />
+        </div>
+        <Skeleton className="h-12 w-full bg-gray-200 rounded-lg" />
       </div>
     );
   }
