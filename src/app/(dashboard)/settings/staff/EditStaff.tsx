@@ -540,7 +540,6 @@ export const EditStaff = ({
               </div>
             )}
 
-            {/* Production Manager Custom Permissions */}
             {selectedRole === "PRODUCTION-MANAGER" && (
               <div className="rounded-lg border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
                 <div>
