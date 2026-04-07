@@ -3,7 +3,9 @@ import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useCreateSalesMutation } from "@/api/sales/create-sales";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
@@ -28,8 +30,8 @@ export const useCheckoutHook = ({
     error: bankError,
   } = useFetchBusinessById(business_id);
 
-  console.log("bannkerror", bankError);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     data: BankData,
@@ -69,6 +71,9 @@ export const useCheckoutHook = ({
         console.log("data----4", data);
         showToast("Sale created successfully", "success");
         setCreateSaleResponse(data);
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.transactions.getAllTransactions],
+        });
         closeSureModal();
         setShowPrintReceiptView(true);
       },

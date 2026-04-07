@@ -29,6 +29,10 @@ const AddDamagedProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
   note: z.string().optional(),
 });
+const AddWasteProductSchema = z.object({
+  quantity: z.string().min(1, " Quantity is required"),
+  note: z.string().optional(),
+});
 const AddMoveToProductionSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
   note: z.string().optional(),
@@ -64,6 +68,7 @@ const AddDiscountSchema = z.object({
 export type AddServiceFormValues = z.infer<typeof AddServiceSchema>;
 export type AddDiscountFormValues = z.infer<typeof AddDiscountSchema>;
 export type AddReturnedFormValues = z.infer<typeof AddReturnProductSchema>;
+export type AddWasteFormValues = z.infer<typeof AddWasteProductSchema>;
 export type AddDamagedFormValues = z.infer<typeof AddDamagedProductSchema>;
 export type AddMoveToProductionFormValues = z.infer<
   typeof AddMoveToProductionSchema
@@ -326,6 +331,11 @@ export const useInventoryHook = ({
     defaultValues: { quantity: "", note: "" },
     mode: "onChange",
   });
+  const addWasteProductForm = useForm<AddWasteFormValues>({
+    resolver: zodResolver(AddWasteProductSchema) as any,
+    defaultValues: { quantity: "", note: "" },
+    mode: "onChange",
+  });
 
   const addDamagedProductForm = useForm<AddDamagedFormValues>({
     resolver: zodResolver(AddDamagedProductSchema) as any,
@@ -375,6 +385,14 @@ export const useInventoryHook = ({
     const payload: { quantity: number; type: string; note?: string } = {
       quantity: Number(values.quantity),
       type: "RETURN",
+    };
+    if (values.note && values.note.trim() !== "") payload.note = values.note;
+    addReturnedOrDamagedProduct({ payload, productId });
+  };
+  const onSubmitAddWasteProduct = (values: AddWasteFormValues) => {
+    const payload: { quantity: number; type: string; note?: string } = {
+      quantity: Number(values.quantity),
+      type: "WASTE",
     };
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });
@@ -511,6 +529,8 @@ export const useInventoryHook = ({
   return {
     onSubmitAddReturnedProduct,
     onSubmitAddDamagedProduct,
+    onSubmitAddWasteProduct,
+    addWasteProductForm,
     onSubmitAddMoveToProduction,
     addMoveToProductionForm,
     addReturnedProductForm,

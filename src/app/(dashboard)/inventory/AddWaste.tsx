@@ -19,23 +19,21 @@ const AddWaste = ({
   closeModal: any;
 }) => {
   const {
-    onSubmitAddReturnedProduct,
-    addReturnedProductForm,
+    onSubmitAddWasteProduct,
+    addWasteProductForm,
     addReturnedOrDamagedProductLoading,
   } = useInventoryHook({ productId, closeModal });
 
   return (
     <div className="w-full">
-      <Form {...addReturnedProductForm}>
+      <Form {...addWasteProductForm}>
         <form
-          onSubmit={addReturnedProductForm.handleSubmit(
-            onSubmitAddReturnedProduct,
-          )}
+          onSubmit={addWasteProductForm.handleSubmit(onSubmitAddWasteProduct)}
           className="space-y-5"
         >
           {/* First Name and Last Name in same row */}
           <FormField
-            control={addReturnedProductForm.control}
+            control={addWasteProductForm.control}
             name="quantity"
             render={({ field }) => (
               <FormItem className="flex-1">
@@ -49,7 +47,7 @@ const AddWaste = ({
           />
 
           <FormField
-            control={addReturnedProductForm.control}
+            control={addWasteProductForm.control}
             name="note"
             render={({ field }) => (
               <FormItem>
