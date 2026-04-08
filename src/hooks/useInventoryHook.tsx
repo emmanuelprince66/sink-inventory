@@ -228,6 +228,9 @@ export const useInventoryHook = ({
       showToast(data.message, "success");
       refetchInventory();
       queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
+      queryClient.invalidateQueries({
         queryKey: [queryKey.products.fetchProductionHistiory],
       });
       if (closeModal) closeModal();
