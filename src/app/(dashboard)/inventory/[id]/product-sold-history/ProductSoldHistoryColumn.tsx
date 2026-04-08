@@ -84,6 +84,18 @@ export const useProductSoldHistoryColumns = () => {
       },
     },
     {
+      accessorKey: "moved_to_production",
+      header: "Moved to Production By",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          <div className="font-medium">
+            <p className="text-sm text-gray-500">{"-"}</p>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "pre_sale",
       header: "Presaled By",
       cell: ({ row }) => {
