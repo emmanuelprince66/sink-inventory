@@ -84,13 +84,13 @@ export const useProductSoldHistoryColumns = () => {
       },
     },
     {
-      accessorKey: "moved_to_production",
+      accessorKey: "moved_by",
       header: "Moved to Production By",
       cell: ({ row }) => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{"-"}</p>
+            <p className="text-sm text-gray-500">{transfer.moved_by || "-"}</p>
           </div>
         );
       },
