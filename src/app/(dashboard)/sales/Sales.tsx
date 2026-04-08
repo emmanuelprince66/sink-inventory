@@ -368,7 +368,7 @@ const Sales = () => {
             </div>
           ) : (
             <>
-              { user && (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT" || user?.role === "ACCOUNTANT") && (
+              { user && (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT" || user?.role === "ACCOUNTANT" || user?.role === "PRODUCTION-MANAGER") && (
                   <>
                     {/* Mobile: 2 columns */}
                     <div className="grid grid-cols-2 gap-2 md:hidden">

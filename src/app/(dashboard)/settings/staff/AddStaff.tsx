@@ -643,12 +643,39 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="set_permissions.transfer_items"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-amber-100 hover:border-amber-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-amber-600 bg-gray-100 border-gray-300 rounded focus:ring-amber-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Transfer Products
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Transfer products to other branches or locations
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 <div className="mt-4 p-3 bg-amber-100 rounded-md">
                   <p className="text-xs text-amber-800 font-medium">
                     Note: Production Managers cannot sell at POS, view payments,
-                    transfer products, or see checklist products.
+                    or see checklist products.
                   </p>
                 </div>
               </div>
