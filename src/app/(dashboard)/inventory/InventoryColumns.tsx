@@ -31,6 +31,8 @@ const statusColors = {
 };
 
 export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
+  console.log("User role in columns:", role);
+  console.log("User permissions in columns:", can);
   const baseColumns: ColumnDef<InventoryItem>[] = [
     {
       accessorKey: "name",
@@ -293,7 +295,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                   </DropdownMenuItem>
                 )}
 
-                {can("transfer_products") && (
+                {can("transfer_items") && (
                   <DropdownMenuItem
                     onClick={() => setTransferProductModal(true)}
                     className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
