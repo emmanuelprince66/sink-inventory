@@ -147,6 +147,7 @@ export const useInventoryHook = ({
     productId: productId || "",
     onSuccess: (data) => {
       showToast(data.message, "success");
+      refetchInventory();
       queryClient.invalidateQueries({
         queryKey: [queryKey.inventory.getAllInventory],
       });
