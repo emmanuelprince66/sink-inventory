@@ -3,6 +3,7 @@ import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
+import { useCartStore } from "@/lib/store/cart-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
@@ -40,6 +41,7 @@ export const usePosHook = ({
 
   console.log("User in POS Hook:", user);
   const { showToast } = useToast();
+  const saleCompleted = useCartStore((state) => state.saleCompleted);
 
   // Use ref to prevent duplicate processing within the same render cycle
   const processingRef = useRef(false);
@@ -229,10 +231,15 @@ export const usePosHook = ({
         return;
       }
 
+      if (saleCompleted) {
+        showToast("Please start a new sale first", "info");
+        return;
+      }
+
       addToCart(cart);
       showToast(`${cart.name} added to cart`, "success");
     },
-    [cartItems, addToCart, showToast],
+    [cartItems, addToCart, showToast, saleCompleted],
   );
 
   // Effect to handle when scanned product data is fetched

@@ -4,6 +4,7 @@ import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useCreateSalesMutation } from "@/api/sales/create-sales";
 import { queryKey } from "@/constants/query-key";
+import { useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./toast/useToast";
@@ -32,6 +33,7 @@ export const useCheckoutHook = ({
 
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const setSaleCompleted = useCartStore((state) => state.setSaleCompleted);
 
   const {
     data: BankData,
@@ -71,6 +73,7 @@ export const useCheckoutHook = ({
         console.log("data----4", data);
         showToast("Sale created successfully", "success");
         setCreateSaleResponse(data);
+        setSaleCompleted(true);
         queryClient.invalidateQueries({
           queryKey: [queryKey.transactions.getAllTransactions],
         });

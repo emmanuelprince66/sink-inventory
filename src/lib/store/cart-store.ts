@@ -4,6 +4,8 @@ import { persist } from "zustand/middleware";
 
 interface CartStore {
   cartItems: CartItem[];
+  saleCompleted: boolean;
+  setSaleCompleted: (completed: boolean) => void;
   addToCart: (item: CartItem) => void;
   removeFromCart: (id: string) => void;
   updateCartItemQuantity: (id: string, quantity: number) => void;
@@ -28,7 +30,10 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       cartItems: [],
+      saleCompleted: false,
+      setSaleCompleted: (completed) => set({ saleCompleted: completed }),
       addToCart: (item) => {
+        if (get().saleCompleted) return;
         set((state) => {
           const existingItem = state.cartItems.find(
             (cartItem) => cartItem.id === item.id
@@ -90,7 +95,7 @@ export const useCartStore = create<CartStore>()(
         }));
       },
       clearCart: () => {
-        set({ cartItems: [] });
+        set({ cartItems: [], saleCompleted: false });
       },
       getTotalItems: () => {
         return get().cartItems.reduce(
