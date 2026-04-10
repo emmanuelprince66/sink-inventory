@@ -112,11 +112,11 @@ interface ComboItem {
   category: string;
   unit: string;
   comboQty: number;
+  comboPrice: number; // editable per-item selling price for this combo
 }
 
 const CreateCombo = () => {
   const [comboName, setComboName] = useState("");
-  const [comboSellingPrice, setComboSellingPrice] = useState("");
   const [selectedItems, setSelectedItems] = useState<ComboItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProductPicker, setShowProductPicker] = useState(false);
@@ -134,11 +134,21 @@ const CreateCombo = () => {
     );
   }, [searchQuery, selectedItems]);
 
-  // Calculate total individual value
-  const totalIndividualValue = useMemo(
+  // Total using original selling prices
+  const totalOriginalValue = useMemo(
     () =>
       selectedItems.reduce(
         (sum, item) => sum + item.selling_price * item.comboQty,
+        0,
+      ),
+    [selectedItems],
+  );
+
+  // Total using combo prices (editable per item)
+  const comboSellingTotal = useMemo(
+    () =>
+      selectedItems.reduce(
+        (sum, item) => sum + item.comboPrice * item.comboQty,
         0,
       ),
     [selectedItems],
@@ -153,8 +163,7 @@ const CreateCombo = () => {
     [selectedItems],
   );
 
-  const comboPrice = parseFloat(comboSellingPrice) || 0;
-  const savings = totalIndividualValue - comboPrice;
+  const savings = totalOriginalValue - comboSellingTotal;
 
   const togglePendingSelection = (id: string) => {
     setPendingSelections((prev) => {
@@ -171,7 +180,7 @@ const CreateCombo = () => {
   const addSelectedItems = () => {
     const newItems = DUMMY_PRODUCTS.filter((p) =>
       pendingSelections.has(p.id),
-    ).map((p) => ({ ...p, comboQty: 1 }));
+    ).map((p) => ({ ...p, comboQty: 1, comboPrice: p.selling_price }));
     setSelectedItems((prev) => [...prev, ...newItems]);
     setPendingSelections(new Set());
     setSearchQuery("");
@@ -193,21 +202,30 @@ const CreateCombo = () => {
     );
   };
 
+  const updateItemPrice = (id: string, price: number) => {
+    setSelectedItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, comboPrice: Math.max(0, price) } : item,
+      ),
+    );
+  };
+
   const handleSubmit = () => {
     // TODO: Wire to API when ready
     const payload = {
       name: comboName,
-      selling_price: comboPrice,
+      selling_price: comboSellingTotal,
       items: selectedItems.map((item) => ({
         product_id: item.id,
         quantity: item.comboQty,
+        selling_price: item.comboPrice,
       })),
     };
     console.log("Combo payload:", payload);
   };
 
   const isValid =
-    comboName.trim() && selectedItems.length >= 2 && comboPrice > 0;
+    comboName.trim() && selectedItems.length >= 2 && comboSellingTotal > 0;
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-12">
@@ -325,8 +343,8 @@ const CreateCombo = () => {
                         {item.name}
                       </p>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                        <p className="text-xs text-slate-500">
-                          Selling: {formatToNaira(item.selling_price)}
+                        <p className="text-xs text-slate-400">
+                          Original: {formatToNaira(item.selling_price)}
                         </p>
                         <span className="text-xs text-slate-300">·</span>
                         <p className="text-xs text-slate-400">
@@ -337,6 +355,25 @@ const CreateCombo = () => {
                           Stock: {item.quantity}
                         </p>
                       </div>
+                    </div>
+
+                    {/* Editable Price */}
+                    <div className="shrink-0">
+                      <label className="text-[10px] text-slate-400 block mb-0.5">
+                        Price
+                      </label>
+                      <input
+                        type="number"
+                        value={item.comboPrice}
+                        onChange={(e) =>
+                          updateItemPrice(
+                            item.id,
+                            parseFloat(e.target.value) || 0,
+                          )
+                        }
+                        className="w-20 h-8 text-center text-sm font-medium border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        min={0}
+                      />
                     </div>
 
                     {/* Quantity Controls */}
@@ -393,23 +430,22 @@ const CreateCombo = () => {
           </CardContent>
         </Card>
 
-        {/* Pricing */}
+        {/* Pricing Summary */}
         {selectedItems.length > 0 && (
           <Card className="shadow-sm border-0 ring-1 ring-slate-200/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold text-slate-800">
-                Pricing
+                Pricing Summary
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Price Breakdown */}
+            <CardContent>
               <div className="bg-slate-50 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">
-                    Total Individual Value ({selectedItems.length} items)
+                    Original Total ({selectedItems.length} items)
                   </span>
-                  <span className="font-medium text-slate-900">
-                    {formatToNaira(totalIndividualValue)}
+                  <span className="font-medium text-slate-500">
+                    {formatToNaira(totalOriginalValue)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -418,62 +454,53 @@ const CreateCombo = () => {
                     {formatToNaira(totalCostValue)}
                   </span>
                 </div>
-              </div>
-
-              {/* Combo Selling Price Input */}
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                  Combo Selling Price
-                </label>
-                <Input
-                  type="number"
-                  placeholder="Enter combo selling price"
-                  value={comboSellingPrice}
-                  onChange={(e) => setComboSellingPrice(e.target.value)}
-                />
-                {comboPrice > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {savings > 0 && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                          Customer saves {formatToNaira(savings)}
-                        </span>
-                        <span className="text-slate-500">
-                          (
-                          {Math.round(
-                            (savings / totalIndividualValue) * 100,
-                          )}
-                          % off)
-                        </span>
-                      </div>
-                    )}
-                    {comboPrice > totalIndividualValue && (
-                      <p className="text-xs text-amber-600 font-medium">
-                        Combo price is higher than individual items total
-                      </p>
-                    )}
-                    {comboPrice <= totalCostValue && (
-                      <p className="text-xs text-red-600 font-medium">
-                        Warning: Combo price is at or below cost price
-                      </p>
-                    )}
-                    {comboPrice > totalCostValue && (
-                      <div className="flex justify-between text-sm pt-1 border-t border-slate-100">
-                        <span className="text-slate-600">Profit per combo</span>
-                        <span className="font-semibold text-green-700">
-                          {formatToNaira(comboPrice - totalCostValue)}
-                        </span>
-                      </div>
-                    )}
+                <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
+                  <span className="text-slate-900 font-semibold">
+                    Combo Selling Price
+                  </span>
+                  <span className="font-bold text-green-700 text-base">
+                    {formatToNaira(comboSellingTotal)}
+                  </span>
+                </div>
+                {savings > 0 && (
+                  <div className="flex items-center gap-2 text-sm pt-1">
+                    <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                      Customer saves {formatToNaira(savings)}
+                    </span>
+                    <span className="text-slate-500">
+                      (
+                      {Math.round(
+                        (savings / totalOriginalValue) * 100,
+                      )}
+                      % off)
+                    </span>
+                  </div>
+                )}
+                {comboSellingTotal <= totalCostValue &&
+                  comboSellingTotal > 0 && (
+                    <p className="text-xs text-red-600 font-medium pt-1">
+                      Warning: Combo price is at or below cost price
+                    </p>
+                  )}
+                {comboSellingTotal > totalCostValue && (
+                  <div className="flex justify-between text-sm pt-1">
+                    <span className="text-slate-600">Profit per combo</span>
+                    <span className="font-semibold text-green-700">
+                      {formatToNaira(comboSellingTotal - totalCostValue)}
+                    </span>
                   </div>
                 )}
               </div>
+              <p className="text-xs text-slate-500 mt-3">
+                Edit individual item prices above to adjust the combo selling
+                price.
+              </p>
             </CardContent>
           </Card>
         )}
 
         {/* Inventory Impact Preview */}
-        {selectedItems.length > 0 && comboPrice > 0 && (
+        {selectedItems.length > 0 && comboSellingTotal > 0 && (
           <Card className="shadow-sm border border-blue-100 bg-blue-50/50">
             <CardContent className="p-4">
               <h4 className="text-sm font-semibold text-blue-800 mb-3">
