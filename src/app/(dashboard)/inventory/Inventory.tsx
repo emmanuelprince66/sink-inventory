@@ -257,6 +257,17 @@ const Inventory = () => {
                   </Button>
                 </Link>
               )}
+
+              {canManageInventory && (
+                <Link href={"/inventory/create-combo"} className="w-full">
+                  <Button
+                    variant="outline"
+                    className="border-green-200 text-green-600 hover:bg-green-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap"
+                  >
+                    + Create Combo
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {canManageInventory && (
