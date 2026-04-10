@@ -117,12 +117,34 @@ interface ComboItem {
 
 const CreateCombo = () => {
   const [comboName, setComboName] = useState("");
+  const [comboImage, setComboImage] = useState<File | null>(null);
+  const [comboImagePreview, setComboImagePreview] = useState<string | null>(
+    null,
+  );
   const [selectedItems, setSelectedItems] = useState<ComboItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [pendingSelections, setPendingSelections] = useState<Set<string>>(
     new Set(),
   );
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image must be less than 5MB");
+      return;
+    }
+    setComboImage(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setComboImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setComboImage(null);
+    setComboImagePreview(null);
+  };
 
   // Filter products based on search and exclude already selected
   const filteredProducts = useMemo(() => {
@@ -214,6 +236,7 @@ const CreateCombo = () => {
     // TODO: Wire to API when ready
     const payload = {
       name: comboName,
+      image: comboImage,
       selling_price: comboSellingTotal,
       items: selectedItems.map((item) => ({
         product_id: item.id,
@@ -268,6 +291,64 @@ const CreateCombo = () => {
                 value={comboName}
                 onChange={(e) => setComboName(e.target.value)}
               />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                Combo Image
+              </label>
+              {comboImagePreview ? (
+                <div className="relative w-full max-w-xs">
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-slate-200">
+                    <Image
+                      src={comboImagePreview}
+                      alt="Combo preview"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <label className="flex-1 cursor-pointer">
+                      <span className="inline-flex items-center justify-center w-full h-9 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                        Change
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <button
+                      onClick={removeImage}
+                      className="flex items-center justify-center h-9 px-3 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="cursor-pointer block">
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-green-400 transition-colors text-center">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                      <Plus className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <p className="text-sm font-medium text-green-600">
+                      Upload image
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      JPG, PNG or WebP (max 5MB)
+                    </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
           </CardContent>
         </Card>
