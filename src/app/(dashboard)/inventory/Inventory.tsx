@@ -8,6 +8,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -19,18 +20,25 @@ import { formatToNaira } from "@/utils/formatMoney";
 
 import { useUserRole } from "@/lib/store/user-store";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Cloud,
   DollarSign,
   Filter,
+  Layers,
+  MoreHorizontal,
+  Package,
+  Plus,
   Tag,
   TrendingUp,
+  Wrench,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
+import ComboTable from "./ComboTable";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
 import ServiceTable from "./ServiceTable";
@@ -141,7 +149,9 @@ const Inventory = () => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<
     string | null
   >(null);
-  const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE">("PRODUCT");
+  const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE" | "COMBO">(
+    "PRODUCT",
+  );
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -169,7 +179,12 @@ const Inventory = () => {
     CategoriesDataLoading,
   } = useInventoryHook({
     selectedCategoryId,
-    selectedType: activeTab === "PRODUCT" ? "PRODUCT" : "SERVICE",
+    selectedType:
+      activeTab === "PRODUCT"
+        ? "PRODUCT"
+        : activeTab === "COMBO"
+          ? "COMBO"
+          : "SERVICE",
     searchInput,
     selectedDepartmentId,
     page,
@@ -183,7 +198,7 @@ const Inventory = () => {
     setSelectedDepartmentId(departmentId);
   const handleAllDepartmentsClick = () => setSelectedDepartmentId(null);
 
-  const handleTabChange = (tab: "PRODUCT" | "SERVICE") => {
+  const handleTabChange = (tab: "PRODUCT" | "SERVICE" | "COMBO") => {
     setActiveTab(tab);
     setSelectedCategoryId(null);
     setPage(1);
@@ -239,54 +254,80 @@ const Inventory = () => {
             Inventory
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-            <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3 w-full">
-              {canManageInventory && (
-                <Button
-                  onClick={openddServiceModal}
-                  className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap"
-                >
-                  + Add Service
-                </Button>
-              )}
-
-              {canManageInventory && (
-                <Link href={"/new-add-product"} className="w-full">
-                  <Button className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap">
-                    + Add Product
+          {canManageInventory && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {/* Add New dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-medium gap-1.5">
+                    <Plus className="w-4 h-4" />
+                    Add New
+                    <ChevronDown className="w-4 h-4 ml-0.5" />
                   </Button>
-                </Link>
-              )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-white border border-gray-200 shadow-lg min-w-[200px]"
+                >
+                  <DropdownMenuItem
+                    asChild
+                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  >
+                    <Link href={"/new-add-product"}>
+                      <Package className="w-4 h-4 mr-2" />
+                      New Product
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={openddServiceModal}
+                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  >
+                    <Wrench className="w-4 h-4 mr-2" />
+                    New Service
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    asChild
+                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  >
+                    <Link href={"/inventory/combo"}>
+                      <Layers className="w-4 h-4 mr-2" />
+                      New Combo
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {canManageInventory && (
-                <Link href={"/inventory/create-combo"} className="w-full">
+              {/* More actions dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-green-200 text-green-600 hover:bg-green-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full text-sm whitespace-nowrap"
+                    className="border-gray-200 text-gray-700 hover:bg-gray-50 px-3 py-2 text-sm font-medium gap-1.5"
                   >
-                    + Create Combo
+                    <MoreHorizontal className="w-4 h-4" />
+                    <span className="hidden sm:inline">More</span>
                   </Button>
-                </Link>
-              )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-white border border-gray-200 shadow-lg min-w-[200px] p-0"
+                >
+                  <div className="px-2 py-1.5">
+                    <DownloadInventoryButton business_id={business_id} />
+                  </div>
+                  <DropdownMenuItem
+                    asChild
+                    className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                  >
+                    <Link href={"/product/upload-product"}>
+                      <Cloud className="w-4 h-4 mr-2" />
+                      Bulk Upload
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-
-            {canManageInventory && (
-              <DownloadInventoryButton business_id={business_id} />
-            )}
-
-            {canManageInventory && (
-              <Button
-                variant="outline"
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-3 sm:px-4 py-1.5 sm:py-2 w-full sm:w-auto text-sm"
-                asChild
-              >
-                <Link href={"/product/upload-product"}>
-                  <Cloud className="w-4 h-4 mr-2" />
-                  <span className="whitespace-nowrap">Upload Product</span>
-                </Link>
-              </Button>
-            )}
-          </div>
+          )}
         </div>
 
         {/* Overview Cards */}
@@ -364,6 +405,22 @@ const Inventory = () => {
             >
               Services
               {activeTab === "SERVICE" && (
+                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                  {totalItems.toLocaleString()}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => handleTabChange("COMBO")}
+              className={cn(
+                "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
+                activeTab === "COMBO"
+                  ? "border-green-500 text-green-600 bg-green-50"
+                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
+              )}
+            >
+              Combos
+              {activeTab === "COMBO" && (
                 <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
                   {totalItems.toLocaleString()}
                 </span>
@@ -661,7 +718,28 @@ const Inventory = () => {
         </div>
 
         <div className="p-6">
-          {activeTab === "PRODUCT" ? (
+          {activeTab === "COMBO" ? (
+            InventoryDataLoading || !InventoryData ? (
+              <div className="w-full">
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full bg-gray-200" />
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="h-16 w-full bg-gray-200 mt-2"
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <ComboTable
+                setPage={setPage}
+                page={page}
+                response={InventoryData}
+                loading={false}
+              />
+            )
+          ) : activeTab === "PRODUCT" ? (
             InventoryDataLoading || !InventoryData ? (
               <div className="w-full">
                 <div className="space-y-4">
