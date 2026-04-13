@@ -14,6 +14,7 @@ export interface OrderInfo {
   customer_info: CustomerInfo;
   note: string | null;
   payment_method: string;
+  created_at: string;
   amount_paid: string;
   payment_status: string;
   amount: string;

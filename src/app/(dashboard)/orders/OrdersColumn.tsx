@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import moment from "moment";
 import { useState } from "react";
 
 import Link from "next/link";
@@ -89,11 +90,18 @@ export const useOrdersColumn = (type: string) => {
     },
     {
       accessorKey: "created_at",
-      header: "Created At",
+      header: "Date",
       cell: ({ row }) => {
+        const date = row.original.created_at;
+        if (!date) return <div className="text-sm text-gray-400">-</div>;
         return (
-          <div className="text-sm">
-            {new Date("2025-10-16").toLocaleDateString()}
+          <div>
+            <div className="text-sm font-medium text-gray-900">
+              {moment(date).format("MMM DD, YYYY")}
+            </div>
+            <div className="text-xs text-gray-500">
+              {moment(date).format("h:mm A")}
+            </div>
           </div>
         );
       },
