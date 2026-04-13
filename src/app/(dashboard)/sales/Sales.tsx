@@ -12,6 +12,7 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertCircle,
   ChevronLeft,
@@ -23,6 +24,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import DiscountProduct from "./DiscountProduct";
 import { DownloadSalesButton } from "./DownloadSalesButton";
+import ComboSalesTable from "./ComboSalesTable";
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
 import ShowAllAttendants from "./ShowAllAttendants";
@@ -197,6 +199,7 @@ const Sales = () => {
   const [activeTab, setActiveTab] = useState<"products" | "history">(
     "products",
   );
+  const [showComboSales, setShowComboSales] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
@@ -516,8 +519,26 @@ const Sales = () => {
             </div>
           </div>
 
+          {/* Combo Sales Toggle */}
+          <div className="flex items-center gap-2 mb-4">
+            <Switch
+              id="combo-toggle"
+              checked={showComboSales}
+              onCheckedChange={setShowComboSales}
+            />
+            <label
+              htmlFor="combo-toggle"
+              className="text-sm font-medium text-slate-700 cursor-pointer"
+            >
+              View Combo Sales
+            </label>
+          </div>
+
+          {/* Combo Sales View */}
+          {showComboSales && <ComboSalesTable />}
+
           {/* Tabs Navigation */}
-          <div className="w-full">
+          <div className={showComboSales ? "hidden" : "w-full"}>
             <Tabs
               value={activeTab}
               onValueChange={(value) =>
@@ -682,7 +703,7 @@ const Sales = () => {
         </div>
 
         {/* Table Content */}
-        <div className="p-4 sm:p-6">
+        <div className={showComboSales ? "hidden" : "p-4 sm:p-6"}>
           <Tabs
             value={activeTab}
             onValueChange={(value) =>

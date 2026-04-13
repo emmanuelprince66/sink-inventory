@@ -191,6 +191,78 @@ export const EditStaff = ({
               />
             </div>
 
+            {/* Attendant Custom Permissions */}
+            {selectedRole === "ATTENDANT" && (
+              <div className="rounded-lg border-2 border-green-200 bg-green-50 p-5 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    Attendant Permissions
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Configure additional access for this attendant
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.manage_logistics"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-green-100 hover:border-green-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Manage Logistics
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Access the delivery and shipping management screen
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editform.control}
+                    name="set_permissions.manage_online_setup"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 p-4 rounded-md bg-white border border-green-100 hover:border-green-300 transition-colors">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value || false}
+                              onChange={field.onChange}
+                              className="w-5 h-5 mt-0.5 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 cursor-pointer"
+                            />
+                          </FormControl>
+                          <div className="flex-1">
+                            <FormLabel className="text-sm font-semibold text-gray-900 cursor-pointer block">
+                              Manage Online Setup
+                            </FormLabel>
+                            <p className="text-xs text-gray-600 mt-1">
+                              Access to edit and manage the online store settings
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Pharmacist Custom Permissions */}
             {selectedRole === "PHARMACIST" && (
               <div className="rounded-lg border-2 border-teal-200 bg-teal-50 p-5 space-y-4">
@@ -913,6 +985,26 @@ export const EditStaff = ({
                         />
                         <span className="text-sm text-gray-700 leading-relaxed">
                           Can view orders and history
+                        </span>
+                      </div>
+                    )}
+                    {permissions.manage_logistics && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can manage logistics
+                        </span>
+                      </div>
+                    )}
+                    {permissions.manage_online_setup && (
+                      <div className="flex items-start space-x-3 bg-white/50 p-2 rounded">
+                        <CheckCircle2
+                          className={`w-5 h-5 mt-0.5 flex-shrink-0 ${roleConfig.iconColor}`}
+                        />
+                        <span className="text-sm text-gray-700 leading-relaxed">
+                          Can manage online setup
                         </span>
                       </div>
                     )}

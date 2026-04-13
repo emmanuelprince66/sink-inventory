@@ -62,7 +62,7 @@ interface ComboItem {
   hasVariation: boolean;
   variationName?: string;
   comboQty: number;
-  comboPrice: number;
+  comboPrice: number | "";
 }
 
 const CreateCombo = ({
@@ -172,7 +172,7 @@ const CreateCombo = ({
   const comboSellingTotal = useMemo(
     () =>
       selectedItems.reduce(
-        (sum, item) => sum + item.comboPrice * item.comboQty,
+        (sum, item) => sum + (Number(item.comboPrice) || 0) * item.comboQty,
         0,
       ),
     [selectedItems],
@@ -306,10 +306,12 @@ const CreateCombo = ({
     );
   };
 
-  const updateItemPrice = (id: string, price: number) => {
+  const updateItemPrice = (id: string, value: string) => {
     setSelectedItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, comboPrice: Math.max(0, price) } : item,
+        item.id === id
+          ? { ...item, comboPrice: value === "" ? "" : Math.max(0, parseFloat(value) || 0) }
+          : item,
       ),
     );
   };
@@ -324,7 +326,7 @@ const CreateCombo = ({
     const itemsPayload = selectedItems.map((item) => ({
       product: item.id,
       quantity: item.comboQty,
-      price: item.comboPrice,
+      price: Number(item.comboPrice) || 0,
     }));
     formData.append("items", JSON.stringify(itemsPayload));
 
@@ -340,8 +342,14 @@ const CreateCombo = ({
     }
   };
 
+  const hasEmptyPrice = selectedItems.some(
+    (item) => item.comboPrice === "" || item.comboPrice === undefined,
+  );
   const isValid =
-    comboName.trim() && selectedItems.length >= 2 && comboSellingTotal > 0;
+    comboName.trim() &&
+    selectedItems.length >= 2 &&
+    comboSellingTotal > 0 &&
+    !hasEmptyPrice;
   const isSubmitting = creatingCombo || editingCombo;
 
   const pendingCount = Object.keys(pendingSelections).length;
@@ -481,26 +489,15 @@ const CreateCombo = ({
         {/* Selected Items */}
         <Card className="shadow-sm border-0 ring-1 ring-slate-200/60">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4 text-green-600" />
-                Combo Items
-                {selectedItems.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                    {selectedItems.length}
-                  </span>
-                )}
-              </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsSheetOpen(true)}
-                className="text-green-600 border-green-200 hover:bg-green-50"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Item
-              </Button>
-            </div>
+            <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-green-600" />
+              Combo Items
+              {selectedItems.length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                  {selectedItems.length}
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {selectedItems.length === 0 ? (
@@ -573,10 +570,7 @@ const CreateCombo = ({
                           type="number"
                           value={item.comboPrice}
                           onChange={(e) =>
-                            updateItemPrice(
-                              item.id,
-                              parseFloat(e.target.value) || 0,
-                            )
+                            updateItemPrice(item.id, e.target.value)
                           }
                           className="w-20 h-8 text-center text-sm font-medium border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                           min={0}
@@ -628,6 +622,15 @@ const CreateCombo = ({
                     </div>
                   </div>
                 ))}
+
+                <Button
+                  variant="outline"
+                  onClick={() => setIsSheetOpen(true)}
+                  className="w-full mt-2 text-green-600 border-green-200 border-dashed hover:bg-green-50"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Products
+                </Button>
               </div>
             )}
           </CardContent>
