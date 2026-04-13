@@ -596,6 +596,14 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    Delivery Address
+                  </h4>
+                  <p className="text-sm text-gray-900 mb-1">
+                    {`${orderData.delivery?.delivery_address?.shipping_address || "N/A"}`}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
                     Delivery Location
                   </h4>
                   <p className="text-sm text-gray-900 mb-1">
