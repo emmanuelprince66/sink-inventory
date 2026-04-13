@@ -26,6 +26,7 @@ interface DeliveryAddress {
   alt_phone: string | null;
   email: string;
   address?: string;
+  shipping_address?: string;
   city: string;
   state: string;
   country: string;
@@ -519,9 +520,11 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                     {orderData.delivery.delivery_address.first_name}{" "}
                     {orderData.delivery.delivery_address.last_name}
                   </Text>
-                  {orderData.delivery.delivery_address.address && (
+                  {(orderData.delivery.delivery_address.shipping_address ||
+                    orderData.delivery.delivery_address.address) && (
                     <Text style={styles.addressText}>
-                      {orderData.delivery.delivery_address.address}
+                      {orderData.delivery.delivery_address.shipping_address ||
+                        orderData.delivery.delivery_address.address}
                     </Text>
                   )}
                   {orderData.delivery.delivery_address.city && (

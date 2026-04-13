@@ -4,6 +4,54 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 
+const compressImage = (
+  file: File,
+  maxWidth = 1200,
+  quality = 0.7,
+): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          const compressed = new File([blob], file.name, {
+            type: "image/jpeg",
+            lastModified: Date.now(),
+          });
+          resolve(compressed);
+        },
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.onerror = () => reject(new Error("Failed to load image"));
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 interface StoreData {
   logo: string;
   headerImage: string;
@@ -308,8 +356,10 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     handleInputChange("logo", previewUrl);
   };
 
-  // Handle banner change
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle banner change with compression
+  const handleBannerChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -331,10 +381,19 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       return;
     }
 
-    setBannerFile(file);
-    const previewUrl = URL.createObjectURL(file);
-    setBannerPreview(previewUrl);
-    handleInputChange("headerImage", previewUrl);
+    try {
+      const compressed = await compressImage(file, 1200, 0.7);
+      setBannerFile(compressed);
+      const previewUrl = URL.createObjectURL(compressed);
+      setBannerPreview(previewUrl);
+      handleInputChange("headerImage", previewUrl);
+    } catch {
+      // Fallback to original if compression fails
+      setBannerFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setBannerPreview(previewUrl);
+      handleInputChange("headerImage", previewUrl);
+    }
   };
 
   // Handle form submission
