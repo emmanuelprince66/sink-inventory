@@ -132,6 +132,11 @@ export const queryKey = {
     getAllSku: "get-all-sku",
     getAllDepartments: "get-all-departments",
     createDepartment: "create-department",
+    getAllCombos: "get-all-combos",
+    getComboById: "get-combo-by-id",
+    createCombo: "create-combo",
+    editCombo: "edit-combo",
+    deleteCombo: "delete-combo",
   },
   categories: {
     getAllCategories: "get-all-categories",

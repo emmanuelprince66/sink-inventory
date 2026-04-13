@@ -33,6 +33,8 @@ const permissionsSchema = z.object({
   view_prescriptions: z.boolean().optional(),
   make_presale: z.boolean().optional(),
   view_transactions: z.boolean().optional(),
+  manage_logistics: z.boolean().optional(),
+  manage_online_setup: z.boolean().optional(),
 });
 
 const staffSchema = z.object({
@@ -202,6 +204,8 @@ export const useAttendantsHook = ({
         view_prescriptions: false,
         make_presale: false,
         view_transactions: false,
+        manage_logistics: false,
+        manage_online_setup: false,
       },
     },
     mode: "onChange",
@@ -232,6 +236,8 @@ export const useAttendantsHook = ({
         view_prescriptions: false,
         make_presale: false,
         view_transactions: false,
+        manage_logistics: false,
+        manage_online_setup: false,
       },
     },
   });
@@ -270,7 +276,7 @@ export const useAttendantsHook = ({
       restrictions: [],
       color: "bg-green-50 border-green-200",
       iconColor: "text-green-600",
-      hasCustomPermissions: false,
+      hasCustomPermissions: true,
     },
     "ADMIN-ATTENDANT": {
       name: "Admin Attendant",
@@ -398,6 +404,8 @@ export const useAttendantsHook = ({
           view_prescriptions: perms.view_prescriptions || false,
           make_presale: perms.make_presale || false,
           view_transactions: perms.view_transactions || false,
+          manage_logistics: perms.manage_logistics || false,
+          manage_online_setup: perms.manage_online_setup || false,
         },
       });
     }
