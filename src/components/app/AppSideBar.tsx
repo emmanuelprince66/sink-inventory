@@ -15,7 +15,7 @@ import { links } from "@/constants/links";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { deleteCookie } from "cookies-next";
-import { ChevronDown, LogOut, Package, Store } from "lucide-react";
+import { ChevronDown, LogOut, Package, Settings, Store } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +27,7 @@ export function AppSidebar() {
   const { role } = useUserRole(); // Only need role now
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isOperationsOpen, setIsOperationsOpen] = useState(false);
 
   const handleLogOut = () => {
     deleteCookie("accessToken");
@@ -168,6 +169,76 @@ export function AppSidebar() {
                       )}
                     >
                       {inventoryItems.map((item) => {
+                        const isActive = pathname === item.url;
+
+                        return (
+                          <SidebarMenuItem
+                            key={item.title}
+                            className={cn(
+                              "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                              isActive
+                                ? "bg-primary-green-300 text-white"
+                                : "hover:bg-gray-100 text-gray-700",
+                            )}
+                          >
+                            <SidebarMenuButton asChild>
+                              <Link
+                                href={item.url}
+                                className="flex items-center font-medium pl-8 text-xs"
+                              >
+                                {item.icon && (
+                                  <item.icon className="mr-3 h-4 w-4" />
+                                )}
+                                <span>{item.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      })}
+                    </div>
+                  </SidebarMenu>
+                </SidebarGroup>
+              );
+            }
+
+            // Special case for Operations
+            if (group.title === "Operations") {
+              const operationsItems = group.items.filter((item) =>
+                canSeeLink(item),
+              );
+
+              if (operationsItems.length === 0) return null;
+
+              return (
+                <SidebarGroup key={group.title}>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        onClick={() => setIsOperationsOpen(!isOperationsOpen)}
+                        className="flex items-center justify-between cursor-pointer px-4 py-2 hover:bg-gray-50 rounded transition-colors duration-200"
+                      >
+                        <div className="flex items-center">
+                          <Settings className="mr-3 h-4 w-4" />
+                          <span className="text-xs font-medium">
+                            Operations
+                          </span>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "h-3 w-3 transform transition-transform duration-300 ease-in-out",
+                            isOperationsOpen ? "rotate-180" : "",
+                          )}
+                        />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+
+                    <div
+                      className={cn(
+                        "transition-all duration-300 ease-in-out overflow-hidden",
+                        isOperationsOpen ? "max-h-96" : "max-h-0",
+                      )}
+                    >
+                      {operationsItems.map((item) => {
                         const isActive = pathname === item.url;
 
                         return (
