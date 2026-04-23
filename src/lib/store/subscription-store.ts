@@ -19,8 +19,10 @@ interface SubscriptionNotification {
 interface SubscriptionStore {
   notification: SubscriptionNotification | null;
   isModalOpen: boolean;
+  navigate: ((path: string) => void) | null;
 
   // Actions
+  setNavigate: (navigate: (path: string) => void) => void;
   showNotification: (
     type: SubscriptionNotificationType,
     additionalData?: any,
@@ -33,6 +35,9 @@ interface SubscriptionStore {
 export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   notification: null,
   isModalOpen: false,
+  navigate: null,
+
+  setNavigate: (navigate) => set({ navigate }),
 
   showNotification: (type, additionalData) => {
     if (!type) return;
@@ -85,17 +90,23 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   },
 
   handleUpgrade: () => {
-    // Navigate to upgrade page for existing subscribers
-    console.log("Navigating to upgrade page...");
-    window.location.href = "/settings";
+    const { navigate } = get();
+    if (navigate) {
+      navigate("/plan");
+    } else {
+      // Fallback if navigate hasn't been registered yet
+      window.location.href = "/plan";
+    }
     get().closeNotification();
   },
 
   handleSubscribe: () => {
-    // Navigate to subscription page for non-subscribers
-    console.log("Navigating to subscription page...");
-    // Example: router.push('/subscription/plans');
-    window.location.href = "/settings";
+    const { navigate } = get();
+    if (navigate) {
+      navigate("/plan");
+    } else {
+      window.location.href = "/plan";
+    }
     get().closeNotification();
   },
 }));

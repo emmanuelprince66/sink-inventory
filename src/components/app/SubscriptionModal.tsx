@@ -2,11 +2,20 @@
 "use client";
 
 import { useSubscriptionStore } from "@/lib/store/subscription-store";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { CustomModal } from "./CustomModal";
 
 export const SubscriptionNotificationModal = () => {
-  const { notification, isModalOpen, closeNotification } =
+  const { notification, isModalOpen, closeNotification, setNavigate } =
     useSubscriptionStore();
+  const router = useRouter();
+
+  // Register Next.js router with the store so notifications can navigate
+  // without a full page reload.
+  useEffect(() => {
+    setNavigate((path: string) => router.push(path));
+  }, [router, setNavigate]);
 
   if (!notification) return null;
 
