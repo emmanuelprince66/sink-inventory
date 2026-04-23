@@ -250,6 +250,25 @@ export const links = [
     ],
   },
   {
+    title: "Operations",
+    items: [
+      {
+        title: "General Settings",
+        url: "/operations/general-settings",
+        icon: Settings,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+        permission: null,
+      },
+      {
+        title: "Connected Apps",
+        url: "/operations/connected-apps",
+        icon: Activity,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+        permission: null,
+      },
+    ],
+  },
+  {
     title: "Administrator",
     items: [
       {
