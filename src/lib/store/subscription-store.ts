@@ -94,7 +94,6 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
     if (navigate) {
       navigate("/plan");
     } else {
-      // Fallback if navigate hasn't been registered yet
       window.location.href = "/plan";
     }
     get().closeNotification();
