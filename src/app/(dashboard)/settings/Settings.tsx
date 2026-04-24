@@ -1,7 +1,8 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserRole } from "@/lib/store/user-store";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Bank } from "./bank/Bank";
 import ChangePassword from "./change-password/ChangePassword";
 import PinComp from "./pin/PinComp";
@@ -11,6 +12,8 @@ import Tax from "./tax/Tax";
 
 const Settings = () => {
   const { user } = useUserRole();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   console.log("user", user);
 
@@ -31,10 +34,61 @@ const Settings = () => {
           "Currency & Localization",
         ] as const);
 
-  const initialTab = user?.role === "OWNER" ? "Bank" : "Security & Privacy";
+  // Map URL tab param to actual tab names
+  const getTabFromUrl = (
+    urlTab: string | null,
+  ): (typeof SettingsOptionsTab)[number] => {
+    const tabMapping: { [key: string]: (typeof SettingsOptionsTab)[number] } = {
+      plans: "Subscription",
+      subscription: "Subscription",
+      bank: "Bank",
+      hr: "HR",
+      tax: "Tax",
+      security: "Security & Privacy",
+      notifications: "Notifications",
+      currency: "Currency & Localization",
+    };
+    return (
+      tabMapping[urlTab || ""] ||
+      (user?.role === "OWNER" ? "Bank" : "Security & Privacy")
+    );
+  };
+
+  const urlTab = searchParams.get("tab");
+  const initialTab = getTabFromUrl(urlTab);
 
   const [activeTab, setActiveTab] =
     useState<(typeof SettingsOptionsTab)[number]>(initialTab);
+
+  // Update activeTab when URL changes
+  useEffect(() => {
+    const currentUrlTab = searchParams.get("tab");
+    const mappedTab = getTabFromUrl(currentUrlTab);
+    if (mappedTab !== activeTab) {
+      setActiveTab(mappedTab);
+    }
+  }, [searchParams, activeTab]);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    const newTab = value as (typeof SettingsOptionsTab)[number];
+    setActiveTab(newTab);
+
+    // Map tab names back to URL params
+    const urlMapping: { [key: string]: string } = {
+      Subscription: "plans",
+      Bank: "bank",
+      HR: "hr",
+      Tax: "tax",
+      "Security & Privacy": "security",
+      Notifications: "notifications",
+      "Currency & Localization": "currency",
+    };
+
+    const urlParam =
+      urlMapping[newTab] || newTab.toLowerCase().replace(/\s+/g, "");
+    router.replace(`/settings?tab=${urlParam}`, { scroll: false });
+  };
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
@@ -45,7 +99,7 @@ const Settings = () => {
         </p>
         <Tabs
           value={activeTab}
-          onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          onValueChange={handleTabChange}
           className="w-full"
         >
           {/* Mobile Tabs - Horizontally Scrollable */}
