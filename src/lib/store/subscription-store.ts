@@ -92,9 +92,9 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   handleUpgrade: () => {
     const { navigate } = get();
     if (navigate) {
-      navigate("/plan");
+      navigate("/settings?tab=plans");
     } else {
-      window.location.href = "/plan";
+      window.location.href = "/settings?tab=plans";
     }
     get().closeNotification();
   },
@@ -102,9 +102,9 @@ export const useSubscriptionStore = create<SubscriptionStore>((set, get) => ({
   handleSubscribe: () => {
     const { navigate } = get();
     if (navigate) {
-      navigate("/plan");
+      navigate("/settings?tab=plans");
     } else {
-      window.location.href = "/plan";
+      window.location.href = "/settings?tab=plans";
     }
     get().closeNotification();
   },

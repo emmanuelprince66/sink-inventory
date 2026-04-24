@@ -35,6 +35,7 @@ const permissionsSchema = z.object({
   view_transactions: z.boolean().optional(),
   manage_logistics: z.boolean().optional(),
   manage_online_setup: z.boolean().optional(),
+  edit_price: z.boolean().optional(),
 });
 
 const staffSchema = z.object({
@@ -206,6 +207,7 @@ export const useAttendantsHook = ({
         view_transactions: false,
         manage_logistics: false,
         manage_online_setup: false,
+        edit_price: false,
       },
     },
     mode: "onChange",
@@ -238,6 +240,7 @@ export const useAttendantsHook = ({
         view_transactions: false,
         manage_logistics: false,
         manage_online_setup: false,
+        edit_price: false,
       },
     },
   });
@@ -406,6 +409,7 @@ export const useAttendantsHook = ({
           view_transactions: perms.view_transactions || false,
           manage_logistics: perms.manage_logistics || false,
           manage_online_setup: perms.manage_online_setup || false,
+          edit_price: perms.edit_price || false,
         },
       });
     }

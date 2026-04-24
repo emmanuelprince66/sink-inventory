@@ -965,8 +965,15 @@ const NewAddProduct = ({
                                         placeholder="Enter quantity"
                                         className="mt-1"
                                         {...field}
+                                        disabled={isEditMode}
                                       />
                                     </FormControl>
+                                    {isEditMode && (
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Quantity can only be updated via
+                                        restock
+                                      </p>
+                                    )}
                                     <FormMessage className="text-xs" />
                                   </FormItem>
                                 )}
@@ -1260,11 +1267,13 @@ const NewAddProduct = ({
                                 >
                                   Discount Threshold
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleBulkEdit("quantity")}
-                                >
-                                  Quantity
-                                </DropdownMenuItem>
+                                {!isEditMode && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleBulkEdit("quantity")}
+                                  >
+                                    Quantity
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   onClick={() => handleBulkEdit("status")}
                                 >
@@ -1518,6 +1527,7 @@ const NewAddProduct = ({
                                         placeholder="Enter quantity"
                                         className="mt-1"
                                         {...field}
+                                        disabled={isEditMode}
                                         onChange={(e) => {
                                           field.onChange(e);
                                           // ✅ CLEAR ERROR WHEN USER TYPES
@@ -2113,19 +2123,24 @@ const NewAddProduct = ({
                 placeholder="Enter selling price"
               />
             </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                Quantity
-              </label>
-              <Input
-                value={editAllData.quantity}
-                onChange={(e) => {
-                  setEditAllData({ ...editAllData, quantity: e.target.value });
-                  setBulkEditError(null);
-                }}
-                placeholder="Enter quantity"
-              />
-            </div>
+            {!isEditMode && (
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                  Quantity
+                </label>
+                <Input
+                  value={editAllData.quantity}
+                  onChange={(e) => {
+                    setEditAllData({
+                      ...editAllData,
+                      quantity: e.target.value,
+                    });
+                    setBulkEditError(null);
+                  }}
+                  placeholder="Enter quantity"
+                />
+              </div>
+            )}
 
             <div className="w-full">
               <label className="text-sm font-medium text-gray-700 mb-1 block">
