@@ -39,8 +39,8 @@ const ConnectShipbubbleModal = ({
             Connect Shipbubble to your store
           </DialogTitle>
           <p className="text-center text-sm text-slate-500 mt-2">
-            To activate automated shipping, we'll link your store to
-            Shipbubble, the delivery partner.
+            To activate automated shipping, we'll link your store to Shipbubble,
+            the delivery partner.
           </p>
         </DialogHeader>
 
@@ -52,8 +52,7 @@ const ConnectShipbubbleModal = ({
             <li className="flex gap-2">
               <span className="text-slate-400">•</span>
               <span>
-                You authorise Shipbubble to handle delivery for your Bumpa
-                orders
+                You authorise Shipbubble to handle delivery for your Sync orders
               </span>
             </li>
             <li className="flex gap-2">
