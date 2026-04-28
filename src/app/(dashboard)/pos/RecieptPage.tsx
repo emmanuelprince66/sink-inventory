@@ -20,15 +20,27 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/toast/useToast";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
+import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { AddBankForm } from "../settings/bank/AddBankForm";
-import PrintReceiptView from "./PrintReceiptView";
+
+// @react-pdf/renderer is browser-only and breaks under Next.js SSR + tab switches.
+// Lazy-loading on the client only avoids the "Eo is not a function" runtime error.
+const PrintReceiptView = dynamic(() => import("./PrintReceiptView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-10">
+      <Spinner />
+    </div>
+  ),
+});
 
 const ReceiptPage = ({
   cart,
@@ -57,41 +69,85 @@ const ReceiptPage = ({
 }) => {
   console.log("vatInfo in checkout", vatInfo);
 
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    new Date(),
-  );
+  // ---- Per-sale state (lives in active cart slot — isolated per Sale tab) ----
+  const activeCartId = useCartStore((s) => s.activeCartId);
+  const { state: cartState, update: updateCartState } = useActiveCartState();
+  const selectedDate = cartState.selectedDate;
+  const dueDate = cartState.dueDate;
+  const isChecked = cartState.isChecked;
+  const paymentMethod = cartState.paymentMethod;
+  const createSaleResponse = cartState.saleResponse;
+  const selectedBank = cartState.selectedBank;
+  const selectedBankForSplitPayment = cartState.selectedAccount;
+  const partialAmount = cartState.partialAmount;
+  const partialPaymentMethod = cartState.partialPaymentMethod;
+  const splitPayments = cartState.splitPayments as Array<{
+    method: string;
+    amount: number;
+    bank?: string;
+    dueDate?: Date;
+  }>;
+  const tempSplitPayment = cartState.tempSplitPayment;
+  const remainingAmount = cartState.remainingAmount;
+
+  const setSelectedDate = (v: Date | undefined) =>
+    updateCartState({ selectedDate: v });
+  const setDueDate = (v: Date | undefined) => updateCartState({ dueDate: v });
+  const setIsChecked = (v: boolean) => updateCartState({ isChecked: v });
+  const setPaymentMethod = (v: string) =>
+    updateCartState({ paymentMethod: v });
+  const setCreateSaleResponse = (v: any) =>
+    updateCartState({ saleResponse: v });
+  const setSelectedBank = (v: string) => updateCartState({ selectedBank: v });
+  const setSelectedBankForSplitPayment = (v: string) =>
+    updateCartState({ selectedAccount: v });
+  const setPartialAmount = (v: string) =>
+    updateCartState({ partialAmount: v });
+  const setPartialPaymentMethod = (v: string) =>
+    updateCartState({ partialPaymentMethod: v });
+  const setSplitPayments = (
+    v:
+      | Array<{ method: string; amount: number; bank?: string; dueDate?: Date }>
+      | ((
+          prev: Array<{
+            method: string;
+            amount: number;
+            bank?: string;
+            dueDate?: Date;
+          }>,
+        ) => Array<{
+          method: string;
+          amount: number;
+          bank?: string;
+          dueDate?: Date;
+        }>),
+  ) => {
+    const next = typeof v === "function" ? v(splitPayments) : v;
+    updateCartState({ splitPayments: next });
+  };
+  const setTempSplitPayment = (
+    v:
+      | { method: string; amount: string; bank: string }
+      | ((prev: { method: string; amount: string; bank: string }) => {
+          method: string;
+          amount: string;
+          bank: string;
+        }),
+  ) => {
+    const next = typeof v === "function" ? v(tempSplitPayment) : v;
+    updateCartState({ tempSplitPayment: next });
+  };
+  const setRemainingAmount = (v: number) =>
+    updateCartState({ remainingAmount: v });
+  // ---- end per-sale state ----
+
   const { user } = useUserRole();
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const business_id = useBusinessStore((state) => state.business_id);
-  const [isChecked, setIsChecked] = useState(false);
 
   const [payloadData, setPayloadData] = useState({});
   console.log("payloadData", payloadData);
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [createSaleResponse, setCreateSaleResponse] = useState(null);
-
-  const [selectedBank, setSelectedBank] = useState("");
-  const [selectedBankForSplitPayment, setSelectedBankForSplitPayment] =
-    useState("");
-  const [partialAmount, setPartialAmount] = useState("");
-  const [partialPaymentMethod, setPartialPaymentMethod] = useState("");
-  const [splitPayments, setSplitPayments] = useState<
-    Array<{
-      method: string;
-      amount: number;
-      bank?: string;
-      dueDate?: Date;
-    }>
-  >([]);
-  const [tempSplitPayment, setTempSplitPayment] = useState({
-    method: "",
-    amount: "",
-    bank: "",
-  });
 
   const { showToast } = useToast();
-
-  const [remainingAmount, setRemainingAmount] = useState(0);
   const [openAddBankModal, setOpenAddBankModal] = useState(false);
   const openAddBankModalFunc = () => setOpenAddBankModal(true);
   const closeAddBankModal = () => setOpenAddBankModal(false);
@@ -147,7 +203,11 @@ const ReceiptPage = ({
 
   console.log("payload", payloadData);
   const [splitPaymentError, setSplitPaymentError] = useState("");
-  const [showPrintReceiptView, setShowPrintReceiptView] = useState(false);
+  // Per-slot — so completing Sale 1 doesn't keep the print receipt mounted
+  // when user clicks Sale 2 tab.
+  const showPrintReceiptView = cartState.showPrintReceiptView;
+  const setShowPrintReceiptView = (v: boolean) =>
+    updateCartState({ showPrintReceiptView: v });
 
   const isUserSubscribed = useIsUserSubscribeStore(
     (state) => state.is_subscribed,
@@ -437,6 +497,11 @@ const ReceiptPage = ({
     <>
       {showPrintReceiptView ? (
         <PrintReceiptView
+          key={
+            (createSaleResponse as any)?.data?.id ??
+            (createSaleResponse as any)?.id ??
+            activeCartId
+          }
           vatInfo={vatInfo}
           setShowReceipt={setShowReceipt}
           setShowPrintReceiptView={setShowPrintReceiptView}

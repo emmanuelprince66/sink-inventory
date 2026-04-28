@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useComboHook } from "@/hooks/useComboHook";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { compressImage } from "@/utils/compressImage";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowLeft,
@@ -189,17 +190,28 @@ const CreateCombo = ({
 
   const savings = totalOriginalValue - comboSellingTotal;
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       alert("Image must be less than 5MB");
       return;
     }
-    setComboImage(file);
+
+    let outputFile = file;
+    try {
+      outputFile = await compressImage(file, 1200, 0.7);
+    } catch {
+      // fall back to original file if compression fails
+      outputFile = file;
+    }
+
+    setComboImage(outputFile);
     const reader = new FileReader();
     reader.onloadend = () => setComboImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(outputFile);
   };
 
   const removeImage = () => {

@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
+import WorkingHours from "./WorkingHours";
 
 const ErrorMessage = ({ message }: { message?: string }) => {
   if (!message) return null;
@@ -433,6 +434,10 @@ export default function StoreEditForm({ setIsEditing }: any) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Working Hours */}
+          <WorkingHours />
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 sm:justify-end sticky bottom-6 bg-white p-4 rounded-lg border border-gray-200 shadow-lg">
             <Button

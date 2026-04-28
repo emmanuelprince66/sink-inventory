@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useState } from "react";
 import StoreEditForm from "./StoreEditForm";
 import StoreUrlCard from "./StoreUrlCard";
+import WorkingHours from "./WorkingHours";
 
 const SkeletonItem = ({
   lines = 1,
@@ -268,6 +269,9 @@ export default function StoreInfo() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Working Hours (read-only preview) */}
+                  <WorkingHours readOnly />
                 </div>
               </div>
             )}
