@@ -66,21 +66,24 @@ export const useCheckoutHook = ({
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
 
-  const { mutate: createSale, isPending: createSalePending } =
-    useCreateSalesMutation({
-      businessId: business_id, // Convert null to undefined
-      onSuccess: (data: any) => {
-        console.log("data----4", data);
-        showToast("Sale created successfully", "success");
-        setCreateSaleResponse(data);
-        setSaleCompleted(true);
-        queryClient.invalidateQueries({
-          queryKey: [queryKey.transactions.getAllTransactions],
-        });
-        closeSureModal();
-        setShowPrintReceiptView(true);
-      },
-    });
+  const {
+    mutate: createSale,
+    isPending: createSalePending,
+    reset: resetCreateSale,
+  } = useCreateSalesMutation({
+    businessId: business_id, // Convert null to undefined
+    onSuccess: (data: any) => {
+      console.log("data----4", data);
+      showToast("Sale created successfully", "success");
+      setCreateSaleResponse(data);
+      setSaleCompleted(true);
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.transactions.getAllTransactions],
+      });
+      closeSureModal();
+      setShowPrintReceiptView(true);
+    },
+  });
 
   return {
     CustomerData,
@@ -92,6 +95,7 @@ export const useCheckoutHook = ({
     createSalePending,
     BusinessDataLoading,
     createSale,
+    resetCreateSale,
     AttendantsData,
     AttendantsLoading,
   };
