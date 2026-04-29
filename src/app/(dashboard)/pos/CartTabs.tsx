@@ -50,9 +50,13 @@ const CartTabs = () => {
                   e.stopPropagation();
                   closeCart(cartId);
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-200 rounded p-0.5"
+                className={`flex items-center justify-center w-5 h-5 rounded-full transition-colors ${
+                  isActive
+                    ? "bg-red-100 text-red-600 hover:bg-red-200"
+                    : "bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600"
+                }`}
               >
-                <X size={12} />
+                <X size={14} strokeWidth={2.5} />
               </button>
             )}
           </div>
@@ -61,14 +65,13 @@ const CartTabs = () => {
 
       <Button
         type="button"
-        variant="ghost"
         size="sm"
         onClick={() => createCart()}
-        className="ml-1 gap-1 text-gray-600 hover:text-gray-900 hover:bg-white/60 h-8 px-2"
+        className="ml-2 gap-1.5 bg-green-600 hover:bg-green-700 text-white h-9 px-4 font-semibold shadow-sm shadow-green-500/30 shrink-0"
         aria-label="New sale"
       >
-        <Plus size={14} />
-        New sale
+        <Plus size={16} strokeWidth={2.5} />
+        New Sale
       </Button>
     </div>
   );
