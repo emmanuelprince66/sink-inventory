@@ -65,7 +65,7 @@ export const usePosHook = ({
       id: business_id,
       search: searchTerm,
       page,
-      limit: 30,
+      limit: 40,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes

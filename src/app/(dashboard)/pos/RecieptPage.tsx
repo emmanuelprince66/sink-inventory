@@ -159,6 +159,15 @@ const ReceiptPage = ({
   const [sureModal, setSureModal] = useState(false);
 
   const closeSureModal = () => setSureModal(false);
+
+  // Safe close — refuses to close while a mutation is in flight, and clears
+  // any leftover mutation state if it isn't pending. Prevents the "Yes button
+  // stuck disabled" bug after rapid open/close of the confirmation modal.
+  const handleSafeCloseSureModal = () => {
+    if (createSalePending) return;
+    if (resetCreateSale) resetCreateSale();
+    setSureModal(false);
+  };
   const openSureModal = () => {
     if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
       handleOpenNotSubscribeModal?.();
@@ -217,6 +226,7 @@ const ReceiptPage = ({
     BusinessData,
     createSale,
     createSalePending,
+    resetCreateSale,
     BankDataLoading,
     BankData,
     BankError,
@@ -1171,7 +1181,7 @@ const ReceiptPage = ({
 
           <CustomModal
             isOpen={sureModal}
-            onClose={closeSureModal}
+            onClose={handleSafeCloseSureModal}
             trigger={false}
             title=""
           >
@@ -1192,7 +1202,8 @@ const ReceiptPage = ({
                 <Button
                   variant={"outline"}
                   className="border border-primary-green-300 text-black"
-                  onClick={closeSureModal}
+                  onClick={handleSafeCloseSureModal}
+                  disabled={createSalePending}
                 >
                   No
                 </Button>
