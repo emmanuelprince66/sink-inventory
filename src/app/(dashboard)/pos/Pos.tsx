@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
+import CartTabs from "./CartTabs";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -255,6 +256,9 @@ const Pos: React.FC = () => {
           </Button>
         )}
       </header>
+
+      {/* Cart Tabs — supports multiple simultaneous sales */}
+      <CartTabs />
 
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         {/* Products Section */}

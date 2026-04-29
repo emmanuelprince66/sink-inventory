@@ -2,7 +2,7 @@
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useCartStore } from "@/lib/store/cart-store";
+import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -58,9 +58,16 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   businessData,
 }) => {
   console.log("businessData in checkout", businessData);
-  const [customer, setCustomer] = useState<any | null>(null);
-  const [attendant, setAttendant] = useState<any | null>(null);
-  const [showReceipt, setShowReceipt] = useState<boolean>(false);
+
+  // ---- Per-sale state (lives in active cart slot — isolated per Sale tab) ----
+  const { state: cartState, update: updateCartState } = useActiveCartState();
+  const customer = cartState.customer;
+  const attendant = cartState.attendant;
+  const showReceipt = cartState.showReceipt;
+  const setCustomer = (v: any | null) => updateCartState({ customer: v });
+  const setAttendant = (v: any | null) => updateCartState({ attendant: v });
+  const setShowReceipt = (v: boolean) => updateCartState({ showReceipt: v });
+  // ---- end per-sale state ----
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] =
     useState<boolean>(false);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] =

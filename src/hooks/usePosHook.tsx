@@ -1,9 +1,9 @@
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
+import { useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
-import { useCartStore } from "@/lib/store/cart-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
@@ -43,7 +43,6 @@ export const usePosHook = ({
   const { showToast } = useToast();
   const saleCompleted = useCartStore((state) => state.saleCompleted);
 
-  // Use ref to prevent duplicate processing within the same render cycle
   const processingRef = useRef(false);
 
   // Memoize the normalized search term to prevent unnecessary re-renders
@@ -66,7 +65,7 @@ export const usePosHook = ({
       id: business_id,
       search: searchTerm,
       page,
-      limit: 20,
+      limit: 30,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
