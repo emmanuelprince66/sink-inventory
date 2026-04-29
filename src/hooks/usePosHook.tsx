@@ -43,7 +43,6 @@ export const usePosHook = ({
   const { showToast } = useToast();
   const saleCompleted = useCartStore((state) => state.saleCompleted);
 
-  // Use ref to prevent duplicate processing within the same render cycle
   const processingRef = useRef(false);
 
   // Memoize the normalized search term to prevent unnecessary re-renders
