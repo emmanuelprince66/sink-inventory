@@ -195,13 +195,23 @@ export const useCartStore = create<CartStore>()(
           })),
         ),
 
-      updateActiveCartState: (updates) =>
+      updateActiveCartState: (updates) => {
+        // Coerce any date-shaped strings back to Date — defensive in case
+        // a rehydrated value sneaks through before the revive runs.
+        const coerced: Partial<CartSlotState> = { ...updates };
+        if ("selectedDate" in coerced && typeof coerced.selectedDate === "string") {
+          coerced.selectedDate = new Date(coerced.selectedDate);
+        }
+        if ("dueDate" in coerced && typeof coerced.dueDate === "string") {
+          coerced.dueDate = new Date(coerced.dueDate);
+        }
         set((state) =>
           updateSlot(state, state.activeCartId, (slot) => ({
             ...slot,
-            state: { ...(slot.state ?? emptyState()), ...updates },
+            state: { ...(slot.state ?? emptyState()), ...coerced },
           })),
-        ),
+        );
+      },
 
       resetActiveCartState: () =>
         set((state) =>
@@ -401,6 +411,35 @@ export const useCartStore = create<CartStore>()(
           return { ...persistedState, carts };
         }
         return persistedState;
+      },
+      // Revive Date fields that lost their type on JSON serialization.
+      // Without this, `selectedDate.toISOString()` throws because the value
+      // is a string after rehydration.
+      onRehydrateStorage: () => (state) => {
+        if (!state?.carts) return;
+        const reviveDate = (v: unknown): Date | undefined => {
+          if (!v) return undefined;
+          if (v instanceof Date) return v;
+          if (typeof v === "string") {
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? undefined : d;
+          }
+          return undefined;
+        };
+
+        Object.values(state.carts).forEach((slot: CartSlot) => {
+          if (!slot?.state) return;
+          slot.state.selectedDate = reviveDate(slot.state.selectedDate);
+          slot.state.dueDate = reviveDate(slot.state.dueDate);
+          if (Array.isArray(slot.state.splitPayments)) {
+            slot.state.splitPayments = slot.state.splitPayments.map(
+              (p: any) => ({
+                ...p,
+                dueDate: p?.dueDate ? reviveDate(p.dueDate) : p?.dueDate,
+              }),
+            );
+          }
+        });
       },
     },
   ),
