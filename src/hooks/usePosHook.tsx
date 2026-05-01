@@ -113,7 +113,7 @@ export const usePosHook = ({
       const userRole = user?.role;
 
       // ADMIN-ATTENDANT: See everything
-      if (userRole === "ADMIN-ATTENDANT" || userRole === "OWNER") {
+      if (userRole === "ADMIN-ATTENDANT") {
         return visibleProducts;
       }
 
