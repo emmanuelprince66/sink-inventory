@@ -15,6 +15,7 @@ type FetchInventoryProps = {
   page?: number;
   limit?: number;
   allow_tax?: boolean;
+  include_raw_material?: boolean;
   sell_online?: boolean;
   in_house?: boolean;
   raw_material?: boolean;
@@ -31,6 +32,7 @@ export const fetchInventory = async ({
   limit = 20,
   allow_tax,
   sell_online,
+  include_raw_material,
   in_house,
   raw_material,
   watchlist,
@@ -50,6 +52,11 @@ export const fetchInventory = async ({
     url.searchParams.append("raw_material", String(raw_material));
   if (watchlist !== undefined)
     url.searchParams.append("watchlist", String(watchlist));
+  if (include_raw_material !== undefined)
+    url.searchParams.append(
+      "include_raw_material",
+      String(include_raw_material),
+    );
   url.searchParams.append("page", page.toString());
   url.searchParams.append("limit", limit.toString());
 
@@ -99,6 +106,7 @@ export const useGetInventoryQuery = ({
       params.in_house,
       params.raw_material,
       params.watchlist,
+      params.include_raw_material,
     ],
     queryFn: () => fetchInventory(params),
     ...config,

@@ -29,7 +29,7 @@ const Settings = () => {
           "Currency & Localization",
         ]
       : ([
-          "Security & Privacy",
+          // "Security & Privacy",
           "Notifications",
           "Currency & Localization",
         ] as const);

@@ -66,6 +66,7 @@ export const usePosHook = ({
       search: searchTerm,
       page,
       limit: 40,
+      include_raw_material: "false", // Exclude raw materials from regular search results
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -101,51 +102,49 @@ export const usePosHook = ({
   });
 
   // Filter products based on user role, department, and POS visibility
-  const filterProductsByRole = useCallback(
+  const allProductsData = useCallback(
     (products: any[]) => {
       if (!products || products.length === 0) return [];
 
       // First, filter out products hidden from POS
-      const visibleProducts = products.filter(
-        (product) => !product.raw_material,
-      );
+      // const visibleProducts = products.filter(
+      //   (product) => !product.raw_material,
+      // );
 
-      const userRole = user?.role;
+      // const userRole = user?.role;
 
-      // ADMIN-ATTENDANT: See everything
-      if (userRole === "ADMIN-ATTENDANT") {
-        return visibleProducts;
-      }
+      // // ADMIN-ATTENDANT: See everything
+      // if (userRole === "ADMIN-ATTENDANT") {
+      //   return visibleProducts;
+      // }
 
-      // PHARMACIST: See only pharmacy department products
-      if (userRole === "PHARMACIST") {
-        return visibleProducts.filter((product) => {
-          const department = product.department?.toLowerCase();
-          return department === "pharmacy";
-        });
-      }
+      // // PHARMACIST: See only pharmacy department products
+      // if (userRole === "PHARMACIST") {
+      //   return visibleProducts.filter((product) => {
+      //     const department = product.department?.toLowerCase();
+      //     return department === "pharmacy";
+      //   });
+      // }
 
-      // ATTENDANT: See everything EXCEPT pharmacy department products
-      if (userRole === "ATTENDANT") {
-        return visibleProducts.filter((product) => {
-          const department = product.department?.toLowerCase();
-          return department !== "pharmacy";
-        });
-      }
+      // // ATTENDANT: See everything EXCEPT pharmacy department products
+      // if (userRole === "ATTENDANT") {
+      //   return visibleProducts.filter((product) => {
+      //     const department = product.department?.toLowerCase();
+      //     return department !== "pharmacy";
+      //   });
+      // }
 
       // Default: Return all visible products (for OWNER or other roles)
-      return visibleProducts;
+      return products;
     },
-    [user?.role],
+    [ProductData],
   );
 
   // Memoized filtered product data
   const filteredProductData = useMemo(() => {
     if (!ProductData?.data?.results?.data) return ProductData;
 
-    const filteredProducts = filterProductsByRole(
-      ProductData.data.results.data,
-    );
+    const filteredProducts = allProductsData(ProductData.data.results.data);
 
     return {
       ...ProductData,
@@ -157,13 +156,13 @@ export const usePosHook = ({
         },
       },
     };
-  }, [ProductData, filterProductsByRole]);
+  }, [ProductData, allProductsData]);
 
   // Memoized filtered scanned inventory data
   const filteredScannedInventoryData = useMemo(() => {
     if (!scannedInventoryData?.data?.results?.data) return scannedInventoryData;
 
-    const filteredProducts = filterProductsByRole(
+    const filteredProducts = allProductsData(
       scannedInventoryData.data.results.data,
     );
 
@@ -177,7 +176,7 @@ export const usePosHook = ({
         },
       },
     };
-  }, [scannedInventoryData, filterProductsByRole]);
+  }, [scannedInventoryData, allProductsData]);
 
   // Utility function to normalize SKU/Barcode values
   const normalizeCode = useCallback(
