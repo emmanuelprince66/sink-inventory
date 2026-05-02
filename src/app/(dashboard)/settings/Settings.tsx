@@ -30,6 +30,7 @@ const Settings = () => {
         ]
       : ([
           // "Security & Privacy",
+          "HR",
           "Notifications",
           "Currency & Localization",
         ] as const);
@@ -50,7 +51,7 @@ const Settings = () => {
     };
     return (
       tabMapping[urlTab || ""] ||
-      (user?.role === "OWNER" ? "Bank" : "Security & Privacy")
+      (user?.role === "OWNER" ? "Bank" : "notifications")
     );
   };
 
@@ -59,6 +60,8 @@ const Settings = () => {
 
   const [activeTab, setActiveTab] =
     useState<(typeof SettingsOptionsTab)[number]>(initialTab);
+
+  console.log("activeTab", activeTab);
 
   // Update activeTab when URL changes
   useEffect(() => {
@@ -132,13 +135,14 @@ const Settings = () => {
               </TabsContent>
             )}
 
-            {user && user?.role === "OWNER" && (
-              <TabsContent value="HR" className="mt-0">
-                <div className="w-full overflow-hidden">
-                  <VeiwStaff />
-                </div>
-              </TabsContent>
-            )}
+            {user &&
+              (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
+                <TabsContent value="HR" className="mt-0">
+                  <div className="w-full overflow-hidden">
+                    <VeiwStaff />
+                  </div>
+                </TabsContent>
+              )}
 
             {user && user?.role === "OWNER" && (
               <TabsContent value="Tax" className="mt-0">
@@ -148,11 +152,13 @@ const Settings = () => {
               </TabsContent>
             )}
 
-            <TabsContent value="Security & Privacy" className="mt-0">
-              <div className="w-full overflow-hidden">
-                <SecurityPrivacyTabs />
-              </div>
-            </TabsContent>
+            {user && user?.role === "OWNER" && (
+              <TabsContent value="Tax" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <SecurityPrivacyTabs />
+                </div>
+              </TabsContent>
+            )}
 
             {user && user?.role === "OWNER" && (
               <TabsContent value="Subscription" className="mt-0">
