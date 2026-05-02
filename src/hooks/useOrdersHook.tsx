@@ -93,6 +93,7 @@ export const useOrdersHook = ({
       limit: 20,
       id: business_id,
       search: searchInput,
+      include_raw_material: "false",
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5,

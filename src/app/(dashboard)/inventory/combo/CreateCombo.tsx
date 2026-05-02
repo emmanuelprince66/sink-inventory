@@ -114,6 +114,7 @@ const CreateCombo = ({
         search: searchTerm,
         page: sheetPage,
         limit: 20,
+        include_raw_material: "false", // Exclude raw materials from sheet selection
       },
       enabled: !!business_id && isSheetOpen,
     });
@@ -190,9 +191,7 @@ const CreateCombo = ({
 
   const savings = totalOriginalValue - comboSellingTotal;
 
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -322,7 +321,11 @@ const CreateCombo = ({
     setSelectedItems((prev) =>
       prev.map((item) =>
         item.id === id
-          ? { ...item, comboPrice: value === "" ? "" : Math.max(0, parseFloat(value) || 0) }
+          ? {
+              ...item,
+              comboPrice:
+                value === "" ? "" : Math.max(0, parseFloat(value) || 0),
+            }
           : item,
       ),
     );
@@ -797,9 +800,7 @@ const CreateCombo = ({
               <div className="flex-1 overflow-y-auto p-3 space-y-1">
                 {variationPickerProduct.variations?.map((v) => {
                   const isChecked = !!pendingSelections[v.id];
-                  const alreadyAdded = selectedItems.some(
-                    (s) => s.id === v.id,
-                  );
+                  const alreadyAdded = selectedItems.some((s) => s.id === v.id);
                   return (
                     <button
                       key={v.id}
@@ -891,9 +892,7 @@ const CreateCombo = ({
                   </div>
                 ) : filteredProducts.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-sm text-slate-500">
-                      No products found
-                    </p>
+                    <p className="text-sm text-slate-500">No products found</p>
                   </div>
                 ) : (
                   <div className="space-y-1">
