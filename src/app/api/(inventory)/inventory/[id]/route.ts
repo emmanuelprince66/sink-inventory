@@ -14,6 +14,7 @@ interface QueryParams {
   in_house?: boolean;
   raw_material?: boolean;
   watchlist?: boolean;
+  include_raw_material?: boolean;
 }
 
 const parseBool = (val: string | null): boolean | undefined => {
@@ -69,6 +70,7 @@ export async function GET(
     "sell_online",
     "in_house",
     "raw_material",
+    "include_raw_material",
     "watchlist",
   ] as const;
 

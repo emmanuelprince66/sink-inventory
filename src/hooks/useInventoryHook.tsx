@@ -296,6 +296,7 @@ export const useInventoryHook = ({
       ...(productFilters?.inHouse && { in_house: true }),
       ...(productFilters?.rawMaterial && { raw_material: true }),
       ...(productFilters?.watchlist && { watchlist: true }),
+      include_raw_material: "true",
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5,
