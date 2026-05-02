@@ -239,31 +239,34 @@ export function TopBar() {
                     <Settings className="h-4 w-4 text-gray-500" />
                     <span>Account Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setShowConfirmKycModal(true)}
-                    className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md"
-                  >
-                    <Shield className="h-4 w-4 text-gray-500" />
-                    <div className="flex items-center justify-between flex-1">
-                      <span>KYC Verification</span>
-                      {business?.kyc_status && (
-                        <Badge
-                          variant={
-                            business.kyc_status === "verified"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className={`text-xs ml-2 ${
-                            business.kyc_status === "verified"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700"
-                          }`}
-                        >
-                          {business.kyc_status}
-                        </Badge>
-                      )}
-                    </div>
-                  </DropdownMenuItem>
+
+                  {user && user?.role === "OWNER" && (
+                    <DropdownMenuItem
+                      onClick={() => setShowConfirmKycModal(true)}
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md"
+                    >
+                      <Shield className="h-4 w-4 text-gray-500" />
+                      <div className="flex items-center justify-between flex-1">
+                        <span>KYC Verification</span>
+                        {business?.kyc_status && (
+                          <Badge
+                            variant={
+                              business.kyc_status === "verified"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className={`text-xs ml-2 ${
+                              business.kyc_status === "verified"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {business.kyc_status}
+                          </Badge>
+                        )}
+                      </div>
+                    </DropdownMenuItem>
+                  )}
                 </div>
                 <DropdownMenuSeparator className="my-1 bg-gray-100" />
                 <div className="py-1">

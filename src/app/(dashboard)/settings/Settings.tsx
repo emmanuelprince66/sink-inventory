@@ -30,6 +30,7 @@ const Settings = () => {
         ]
       : ([
           // "Security & Privacy",
+          "HR",
           "Notifications",
           "Currency & Localization",
         ] as const);
@@ -134,13 +135,14 @@ const Settings = () => {
               </TabsContent>
             )}
 
-            {user && user?.role === "OWNER" && (
-              <TabsContent value="HR" className="mt-0">
-                <div className="w-full overflow-hidden">
-                  <VeiwStaff />
-                </div>
-              </TabsContent>
-            )}
+            {user &&
+              (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
+                <TabsContent value="HR" className="mt-0">
+                  <div className="w-full overflow-hidden">
+                    <VeiwStaff />
+                  </div>
+                </TabsContent>
+              )}
 
             {user && user?.role === "OWNER" && (
               <TabsContent value="Tax" className="mt-0">

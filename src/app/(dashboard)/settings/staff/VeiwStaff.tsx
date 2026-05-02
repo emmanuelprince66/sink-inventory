@@ -63,9 +63,10 @@ const ViewStaff = () => {
     <>
       <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center">
         <div className="w-full flex justify-end">
-          {user && user?.role === "OWNER" && (
-            <Button onClick={openAddStaffModalFunc}>Add HR</Button>
-          )}
+          {user &&
+            (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
+              <Button onClick={openAddStaffModalFunc}>Add HR</Button>
+            )}
         </div>
 
         {AttendantsLoading ? (
