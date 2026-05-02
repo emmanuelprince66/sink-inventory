@@ -4,8 +4,8 @@ import { useTransferProductMutation } from "@/api/products/transfer-product";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
-import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -58,6 +58,7 @@ export const useTransferProductHook = ({
     useGetInventoryQuery({
       params: {
         id: selectedBusiness || "",
+        include_raw_material: "false",
       },
       enabled: !!selectedBusiness,
     });
@@ -68,7 +69,7 @@ export const useTransferProductHook = ({
       onSuccess: (data) => {
         showToast(
           data.message || "Product transferred successfully",
-          "success"
+          "success",
         );
         queryClient.invalidateQueries({
           queryKey: [queryKey.inventory.getAllInventory],
@@ -88,7 +89,7 @@ export const useTransferProductHook = ({
   useEffect(() => {
     if (AllBusinessData && !AllBusinessLoading) {
       const res = AllBusinessData?.results?.filter(
-        (item: any) => item.id !== business_id
+        (item: any) => item.id !== business_id,
       );
       setOtherBusiness(res);
     }
