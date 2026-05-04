@@ -69,9 +69,15 @@ export const useOrdersHook = ({
   const [shippingFee, setShippingFee] = useState(0);
   const [tax, setTax] = useState(0);
   const [selectedSalesChannel, setSelectedSalesChannel] = useState("");
-  const [shippingDate, setShippingDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [shippingDate, setShippingDate] = useState(() => {
+    // Local-timezone YYYY-MM-DD — toISOString() shifts to UTC and silently
+    // changes the calendar day for users east of GMT.
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  });
   const [paymentStatus, setPaymentStatus] = useState("UNPAID");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [shippingStatus, setShippingStatus] = useState("PENDING");

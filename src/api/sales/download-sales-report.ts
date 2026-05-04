@@ -77,8 +77,11 @@ const generateSalesFilename = (
   type?: "product_sold" | "order_history"
 ): string => {
   const formatDateForFilename = (date?: Date): string => {
-    if (!date) return new Date().toISOString().split("T")[0];
-    return date.toISOString().split("T")[0];
+    const d = date ?? new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   };
 
   const startDate = formatDateForFilename(dateRange?.from);
