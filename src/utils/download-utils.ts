@@ -22,8 +22,13 @@ export const downloadFile = (blob: Blob, filename: string) => {
  * @returns Formatted date string (YYYY-MM-DD)
  */
 export const formatDateForFilename = (date?: Date): string => {
-  if (!date) return new Date().toISOString().split("T")[0];
-  return date.toISOString().split("T")[0];
+  // Use local timezone parts — toISOString() shifts to UTC and shows the
+  // wrong calendar day for users east of GMT.
+  const d = date ?? new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
 
 /**

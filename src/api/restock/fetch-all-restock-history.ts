@@ -88,9 +88,14 @@ export const fetchAllRestockHistory = async ({
   return response.json();
 };
 
-// Helper function to format date to YYYY-MM-DD
+// Helper function to format date to YYYY-MM-DD using local timezone parts.
+// Using toISOString() shifts to UTC, which silently changes the calendar
+// day for users east of GMT (e.g. WAT = UTC+1).
 const formatDate = (date: Date): string => {
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
 
 type QueryFnType = typeof fetchAllRestockHistory;
