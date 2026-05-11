@@ -42,7 +42,7 @@ const CorporateAcct = () => {
     useKycHook();
 
   const [currentTier, setCurrentTier] = useState<1 | 2>(1);
-  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
+  const [completedTiers, setCompletedTiers] = useState<number[]>([1, 2]);
   const [businessType, setBusinessType] = useState("");
 
   const [files, setFiles] = useState({
@@ -329,8 +329,7 @@ const CorporateAcct = () => {
                             onMonthChange={setViewDate}
                             month={viewDate}
                             disabled={(date) =>
-                              date > new Date() ||
-                              date < new Date("1900-01-01")
+                              date > new Date() || date < new Date("1900-01-01")
                             }
                             initialFocus
                             fromYear={1900}
@@ -467,8 +466,7 @@ const CorporateAcct = () => {
                             onMonthChange={setViewDate}
                             month={viewDate}
                             disabled={(date) =>
-                              date > new Date() ||
-                              date < new Date("1900-01-01")
+                              date > new Date() || date < new Date("1900-01-01")
                             }
                             initialFocus
                             fromYear={1900}
@@ -490,10 +488,7 @@ const CorporateAcct = () => {
                   <FormItem>
                     <FormLabel>Business Address</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Enter business address"
-                        {...field}
-                      />
+                      <Input placeholder="Enter business address" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -517,13 +512,43 @@ const CorporateAcct = () => {
                       </FormControl>
                       <SelectContent>
                         {[
-                          "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi",
-                          "Bayelsa", "Benue", "Borno", "Cross River", "Delta",
-                          "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT", "Gombe",
-                          "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi",
-                          "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun",
-                          "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto",
-                          "Taraba", "Yobe", "Zamfara",
+                          "Abia",
+                          "Adamawa",
+                          "Akwa Ibom",
+                          "Anambra",
+                          "Bauchi",
+                          "Bayelsa",
+                          "Benue",
+                          "Borno",
+                          "Cross River",
+                          "Delta",
+                          "Ebonyi",
+                          "Edo",
+                          "Ekiti",
+                          "Enugu",
+                          "FCT",
+                          "Gombe",
+                          "Imo",
+                          "Jigawa",
+                          "Kaduna",
+                          "Kano",
+                          "Katsina",
+                          "Kebbi",
+                          "Kogi",
+                          "Kwara",
+                          "Lagos",
+                          "Nasarawa",
+                          "Niger",
+                          "Ogun",
+                          "Ondo",
+                          "Osun",
+                          "Oyo",
+                          "Plateau",
+                          "Rivers",
+                          "Sokoto",
+                          "Taraba",
+                          "Yobe",
+                          "Zamfara",
                         ].map((state) => (
                           <SelectItem key={state} value={state}>
                             {state}
@@ -551,8 +576,8 @@ const CorporateAcct = () => {
             <div className="text-sm text-blue-800">
               <p className="font-medium mb-1">After Tier 1 completion:</p>
               <p>
-                You can start using your account immediately or upgrade to Tier 2
-                for full document verification.
+                You can start using your account immediately or upgrade to Tier
+                2 for full document verification.
               </p>
             </div>
           </div>
@@ -583,7 +608,9 @@ const CorporateAcct = () => {
             <div className="space-y-4">
               {/* Business Type */}
               <div>
-                <FormLabel>Business Type *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">
+                  Business Type *
+                </label>
                 <Select onValueChange={setBusinessType} value={businessType}>
                   <SelectTrigger className="border w-full border-primary-green-300 mt-2">
                     <SelectValue placeholder="Select business type" />
@@ -599,7 +626,9 @@ const CorporateAcct = () => {
 
               {/* CAC Certificate */}
               <div>
-                <FormLabel>CAC Certificate *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">
+                  CAC Certificate *
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload your Certificate of Incorporation from CAC
                 </p>
@@ -614,7 +643,9 @@ const CorporateAcct = () => {
                         <input
                           type="file"
                           accept=".pdf,.jpg,.jpeg,.png"
-                          onChange={(e) => handleFileUpload(e, "cacCertificate")}
+                          onChange={(e) =>
+                            handleFileUpload(e, "cacCertificate")
+                          }
                           className="hidden"
                         />
                       </label>
@@ -634,9 +665,9 @@ const CorporateAcct = () => {
 
               {/* CAC Memorandum */}
               <div>
-                <FormLabel>
+                <label className="text-sm font-medium text-gray-700">
                   CAC Memorandum & Article of Association *
-                </FormLabel>
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload your company's memorandum and article of association
                 </p>
@@ -671,7 +702,9 @@ const CorporateAcct = () => {
 
               {/* RC Document */}
               <div>
-                <FormLabel>RC/BN Document *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">
+                  RC/BN Document *
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload your company registration document
                 </p>
@@ -706,7 +739,9 @@ const CorporateAcct = () => {
 
               {/* Status Report */}
               <div>
-                <FormLabel>Status Report *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">
+                  Status Report *
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload your company status report
                 </p>
@@ -741,7 +776,9 @@ const CorporateAcct = () => {
 
               {/* Board Resolution */}
               <div>
-                <FormLabel>Board Resolution (Opening Account) *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">
+                  Board Resolution (Opening Account) *
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload board resolution authorizing account opening
                 </p>
@@ -778,7 +815,7 @@ const CorporateAcct = () => {
 
               {/* Company Proof of Address */}
               <div>
-                <FormLabel>Company Proof of Address *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">Company Proof of Address *</label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload proof of company address
                 </p>
@@ -815,7 +852,7 @@ const CorporateAcct = () => {
 
               {/* Utility Bill */}
               <div>
-                <FormLabel>Utility Bill *</FormLabel>
+                <label className="text-sm font-medium text-gray-700">Utility Bill *</label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Recent utility bill not older than 3 months
                 </p>
@@ -867,9 +904,9 @@ const CorporateAcct = () => {
 
               {/* Director ID */}
               <div>
-                <FormLabel>
+                <label className="text-sm font-medium text-gray-700">
                   Director's ID (NIN/Voter's Card/Driver's License) *
-                </FormLabel>
+                </label>
                 <p className="text-xs text-gray-500 mb-3 mt-1">
                   Upload valid government-issued ID
                 </p>
@@ -918,10 +955,7 @@ const CorporateAcct = () => {
       {completedTiers.length > 0 && (
         <div className="w-full bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <CheckCircle
-              className="text-green-600 shrink-0 mt-0.5"
-              size={20}
-            />
+            <CheckCircle className="text-green-600 shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
               <p className="font-medium text-green-800 mb-2">
                 {completedTiers.length === 1 && "Tier 1 completed!"}
