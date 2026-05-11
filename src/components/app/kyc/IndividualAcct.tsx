@@ -8,7 +8,7 @@ import Tier2Form from "./TierTwoForm";
 
 const IndividualTierFlow = () => {
   const [currentTier, setCurrentTier] = useState<1 | 2 | 3>(1);
-  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
+  const [completedTiers, setCompletedTiers] = useState<number[]>([1, 2, 3]);
 
   const handleTierComplete = (tier: number) => {
     if (!completedTiers.includes(tier)) {
@@ -18,10 +18,16 @@ const IndividualTierFlow = () => {
 
   const canAccessTier = (tier: number) => {
     if (tier === 1) return true;
-    if (tier === 2) return completedTiers.includes(1);
-    if (tier === 3) return completedTiers.includes(2);
+    if (tier === 2) return true;
+    if (tier === 3) return true;
     return false;
   };
+  // const canAccessTier = (tier: number) => {
+  //   if (tier === 1) return true;
+  //   if (tier === 2) return completedTiers.includes(1);
+  //   if (tier === 3) return completedTiers.includes(2);
+  //   return false;
+  // };
 
   return (
     <div className="space-y-6">
