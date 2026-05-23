@@ -17,13 +17,20 @@ import {
   AlertCircle,
   ArrowBigLeft,
   BadgePercent,
+  Bike,
   Minus,
   Package,
+  Phone,
   Plus,
+  Star,
   Trash2,
+  Truck,
 } from "lucide-react";
 import { useState } from "react";
 import CustomerDrawer from "../../pos/CustomersDrawer";
+import AssignDeliveryModal, {
+  DeliveryPartner,
+} from "../AssignDeliveryModal";
 import ProductDrawer from "./ProductDrawer";
 import ShippingDrawer from "./ShippingDrawer";
 
@@ -37,6 +44,11 @@ const CreateOrders = () => {
   const [selectedShippingMethod, setSelectedShippingMethod] =
     useState<any>(null);
   const [selectedBank, setSelectedBank] = useState("");
+  // UI-only — not added to submit payload yet.
+  const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
+  const [assignedPartner, setAssignedPartner] = useState<DeliveryPartner | null>(
+    null,
+  );
 
   const {
     InventoryData,
@@ -382,6 +394,16 @@ const CreateOrders = () => {
 
               {/* Order Summary Section */}
               <div className="p-3 sm:p-4 bg-gray-50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Bill Summary
+                  </h3>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wide">
+                    {selectedProducts.length}{" "}
+                    {selectedProducts.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
+
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Subtotal:</span>
                   <span className="text-sm">
@@ -476,12 +498,105 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
+                {/* Delivery Partner row (UI-only) */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Delivery Partner:</span>
+                    <div className="flex items-center gap-2">
+                      {assignedPartner ? (
+                        <>
+                          <span className="text-sm text-gray-700">
+                            {assignedPartner.name}
+                          </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOpenAssignDelivery(true)}
+                            className="border-gray-300 h-6 px-2 text-xs"
+                          >
+                            Change
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setAssignedPartner(null)}
+                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setOpenAssignDelivery(true)}
+                          className="border-green-500 text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
+                        >
+                          <Truck className="w-3 h-3 mr-1" />
+                          Assign Delivery
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
                     ₦{calculateTotal().toLocaleString()}
                   </span>
                 </div>
+
+                {/* Logistics card — visible once a partner is assigned */}
+                {assignedPartner && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                        Logistics
+                      </h4>
+                      <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                        {assignedPartner.rating}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-3 bg-white rounded-md p-3 border border-gray-200">
+                      <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700 flex-shrink-0">
+                        {assignedPartner.logo}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">
+                          {assignedPartner.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {assignedPartner.serviceType}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {assignedPartner.contact}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Bike className="w-3 h-3" />
+                            {assignedPartner.eta}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xs text-gray-400">est. cost</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          ₦{assignedPartner.estimatedCost.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1.5 italic">
+                      Delivery cost not added to total yet — will be wired once
+                      backend supports it.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -773,6 +888,12 @@ const CreateOrders = () => {
           setIsShippingDrawerOpen(false);
           console.log("Navigate to create shipping method");
         }}
+      />
+
+      <AssignDeliveryModal
+        isOpen={openAssignDelivery}
+        onClose={() => setOpenAssignDelivery(false)}
+        onAssigned={(partner) => setAssignedPartner(partner)}
       />
     </div>
   );
