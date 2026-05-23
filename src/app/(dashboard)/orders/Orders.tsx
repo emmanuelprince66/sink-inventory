@@ -1,6 +1,7 @@
 "use client";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
@@ -15,21 +16,23 @@ import {
   ExternalLink,
   Filter as FilterIcon,
   ShoppingCart,
+  Truck,
   TrendingUp,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
-import AllOrdersTable from "./AllOrdersTable";
+import AssignDeliveryModal from "./AssignDeliveryModal";
 import CreateOrders from "./create/CreateOrders";
 import NoOrders from "./NoOrders";
+import OrderCard from "./OrderCard";
 import Payment from "./PaymentModal";
 
 interface CustomOrderCardProps {
   title: string;
   amount: number | string;
-  type: "total" | "completed" | "revenue" | "visits";
+  type: "total" | "completed" | "revenue" | "visits" | "cost";
   className?: string;
   subtitle?: string;
   loading?: boolean;
@@ -39,7 +42,51 @@ interface FilterState {
   order_type: string;
   shipping_status: string;
   payment_status: string;
+  sales_staff: string;
+  delivery_company: string;
 }
+
+type OrderStatusTab =
+  | "ALL"
+  | "PENDING"
+  | "PROCESSING"
+  | "OUT_FOR_DELIVERY"
+  | "COMPLETED"
+  | "DELIVERED"
+  | "CANCELLED";
+
+const INSTORE_STATUS_TABS: { key: OrderStatusTab; label: string }[] = [
+  { key: "ALL", label: "All" },
+  { key: "PENDING", label: "Pending" },
+  { key: "PROCESSING", label: "Processing" },
+  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+  { key: "COMPLETED", label: "Completed" },
+  { key: "CANCELLED", label: "Cancelled" },
+];
+
+const OUTSTORE_STATUS_TABS: { key: OrderStatusTab; label: string }[] = [
+  { key: "ALL", label: "All" },
+  { key: "PENDING", label: "Pending" },
+  { key: "PROCESSING", label: "Processing" },
+  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery" },
+  { key: "DELIVERED", label: "Delivered" },
+  { key: "CANCELLED", label: "Cancelled" },
+];
+
+// Placeholders until the backend returns sales staff / delivery companies.
+const MOCK_SALES_STAFF = [
+  "Adaeze Okoye",
+  "Tunde Bello",
+  "Chiamaka Ibe",
+  "Samuel Ade",
+];
+const MOCK_DELIVERY_COMPANIES = [
+  "Shipbubble",
+  "Kwik Delivery",
+  "GIG Logistics",
+  "DHL Express",
+  "In-house Riders",
+];
 
 const CustomOrderCard = ({
   title,
@@ -85,6 +132,15 @@ const CustomOrderCard = ({
       text: "text-gray-600",
       amountText: "text-gray-900",
       subtitleColor: "text-orange-500",
+    },
+    cost: {
+      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
+      border: "border-amber-200",
+      iconBg: "bg-amber-100",
+      icon: <Truck className="w-5 h-5 text-amber-600" />,
+      text: "text-gray-600",
+      amountText: "text-gray-900",
+      subtitleColor: "text-amber-500",
     },
   };
 
@@ -143,20 +199,29 @@ const Orders = () => {
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">(
     "OUTSTORE",
   );
+  const [activeStatusTab, setActiveStatusTab] = useState<OrderStatusTab>("ALL");
   const [page, setPage] = useState(1);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
+  const [assignTargetOrderId, setAssignTargetOrderId] = useState<
+    string | undefined
+  >();
 
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
     order_type: "",
     shipping_status: "",
     payment_status: "",
+    sales_staff: "",
+    delivery_company: "",
   });
 
   const [tempFilters, setTempFilters] = useState<FilterState>({
     order_type: "",
     shipping_status: "",
     payment_status: "",
+    sales_staff: "",
+    delivery_company: "",
   });
 
   const handleSearchChange = (value: string) => {
@@ -166,10 +231,24 @@ const Orders = () => {
 
   const handleTabChange = (tab: "INSTORE" | "OUTSTORE") => {
     setActiveTab(tab);
+    setActiveStatusTab("ALL");
     setPage(1);
     setSearchInput("");
-    // Update order_type filter when tab changes
-    setFilters((prev) => ({ ...prev, order_type: tab }));
+    setFilters((prev) => ({ ...prev, order_type: tab, shipping_status: "" }));
+  };
+
+  // UI-only for now — don't drive the backend filter until status sub-stages are supported.
+  const handleStatusTabChange = (status: OrderStatusTab) => {
+    setActiveStatusTab(status);
+  };
+
+  const handleDatePreset = (preset: "today" | "week" | "month") => {
+    const now = new Date();
+    const start = new Date();
+    if (preset === "week") start.setDate(now.getDate() - 7);
+    if (preset === "month") start.setMonth(now.getMonth() - 1);
+    setDateRange({ from: start, to: now });
+    setPage(1);
   };
 
   const handleApplyFilters = () => {
@@ -180,12 +259,15 @@ const Orders = () => {
 
   const handleResetFilters = () => {
     const resetFilters = {
-      order_type: activeTab, // Keep the current tab selection
+      order_type: activeTab,
       shipping_status: "",
       payment_status: "",
+      sales_staff: "",
+      delivery_company: "",
     };
     setTempFilters(resetFilters);
     setFilters(resetFilters);
+    setActiveStatusTab("ALL");
     setPage(1);
   };
 
@@ -193,8 +275,13 @@ const Orders = () => {
     let count = 0;
     if (filters.shipping_status) count++;
     if (filters.payment_status) count++;
+    if (filters.sales_staff) count++;
+    if (filters.delivery_company) count++;
     return count;
   };
+
+  const statusTabs =
+    activeTab === "INSTORE" ? INSTORE_STATUS_TABS : OUTSTORE_STATUS_TABS;
 
   // Get store URL based on active tab
   const getStoreUrl = () => {
@@ -221,7 +308,7 @@ const Orders = () => {
   };
 
   // Fetch orders data with filters
-  const { OrderData, OrderDataLoading, findBusiness, handleRowClick } =
+  const { OrderData, OrderDataLoading, findBusiness } =
     useOrdersHook({
       page,
       searchInput: searchInput.length >= 3 ? searchInput : "",
@@ -257,6 +344,12 @@ const Orders = () => {
   const paidInvoices = ordersData?.results?.paid_orders || 0;
   const unpaidInvoices = totalOrders - paidInvoices;
 
+  // Sum shipping fees across the visible orders (until backend returns a dedicated stat).
+  const totalDeliveryCost = (ordersData?.results?.data || []).reduce(
+    (sum: number, o: any) => sum + Number(o?.shipping_fee || 0),
+    0,
+  );
+
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
       {/* Header Section */}
@@ -274,11 +367,22 @@ const Orders = () => {
                 className="w-full sm:w-auto mx-auto sm:mx-auto"
               />
             </div>
-            <Link href="/orders/create" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto">
-                {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Link href="/orders/create" className="w-full sm:w-auto">
+                <Button className="w-full sm:w-auto">
+                  {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
+                </Button>
+              </Link>
+              <Link href="/orders/create" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
+                  <Truck className="w-4 h-4 mr-2" />
+                  Create Shipping
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -299,7 +403,7 @@ const Orders = () => {
           ) : activeTab === "INSTORE" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <CustomOrderCard
-                title="Total Invoice"
+                title="Total Orders"
                 amount={totalOrders}
                 type="total"
                 subtitle="+12% from last month"
@@ -330,7 +434,7 @@ const Orders = () => {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <CustomOrderCard
                 title="Total Orders"
                 amount={totalOrders}
@@ -348,6 +452,12 @@ const Orders = () => {
                 amount={formatToNaira(totalRevenue)}
                 type="revenue"
                 subtitle="+8% from last month"
+              />
+              <CustomOrderCard
+                title="Delivery Cost"
+                amount={formatToNaira(totalDeliveryCost)}
+                type="cost"
+                subtitle="across active deliveries"
               />
               <CustomOrderCard
                 title="Total Link Visits"
@@ -375,7 +485,7 @@ const Orders = () => {
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
                 )}
               >
-                Invoices
+                Instore order
                 <span
                   className={cn(
                     "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
@@ -447,8 +557,53 @@ const Orders = () => {
           </div>
         </div>
 
+        {/* Status sub-tabs (per spec) */}
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <div className="flex min-w-max">
+            {statusTabs.map((tab) => {
+              const isActive = activeStatusTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => handleStatusTabChange(tab.key)}
+                  className={cn(
+                    "px-4 py-2.5 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all whitespace-nowrap",
+                    isActive
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Search and Actions Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200">
+          {/* Quick date presets */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            <button
+              onClick={() => handleDatePreset("today")}
+              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              Today
+            </button>
+            <button
+              onClick={() => handleDatePreset("week")}
+              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              This Week
+            </button>
+            <button
+              onClick={() => handleDatePreset("month")}
+              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              This Month
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <div className="w-full sm:w-1/2">
               <SearchInput
@@ -486,15 +641,19 @@ const Orders = () => {
           </div>
 
           {/* Active Filters Display */}
-          {(filters.shipping_status || filters.payment_status) && (
+          {(filters.shipping_status ||
+            filters.payment_status ||
+            filters.sales_staff ||
+            filters.delivery_company) && (
             <div className="flex flex-wrap gap-2 mt-3">
               {filters.shipping_status && (
                 <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
                   <span>Shipping: {filters.shipping_status}</span>
                   <button
-                    onClick={() =>
-                      setFilters((prev) => ({ ...prev, shipping_status: "" }))
-                    }
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, shipping_status: "" }));
+                      setActiveStatusTab("ALL");
+                    }}
                     className="hover:bg-blue-100 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
@@ -514,6 +673,32 @@ const Orders = () => {
                   </button>
                 </div>
               )}
+              {filters.sales_staff && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Staff: {filters.sales_staff}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, sales_staff: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {filters.delivery_company && (
+                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                  <span>Delivery: {filters.delivery_company}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, delivery_company: "" }))
+                    }
+                    className="hover:bg-blue-100 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
               <button
                 onClick={handleResetFilters}
                 className="text-xs text-blue-600 hover:text-blue-800 underline"
@@ -524,37 +709,45 @@ const Orders = () => {
           )}
         </div>
 
-        {/* Table Content */}
+        {/* Card grid (replaces the previous table layout) */}
         <div className="p-4 sm:p-6">
           {OrderDataLoading ? (
-            <div className="w-full">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-gray-200" />
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton
-                    key={index}
-                    className="h-16 w-full bg-gray-200 mt-2"
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-40 w-full bg-gray-200 rounded-lg"
+                />
+              ))}
+            </div>
+          ) : ordersData?.results?.data?.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                {ordersData.results.data.map((order: any) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    type={activeTab}
+                    onAssignDelivery={(id) => {
+                      setAssignTargetOrderId(id);
+                      setOpenAssignDelivery(true);
+                    }}
                   />
                 ))}
               </div>
-            </div>
-          ) : (
-            <>
-              {ordersData?.results?.data?.length > 0 ? (
-                <AllOrdersTable
-                  setPage={setPage}
-                  page={page}
-                  handleRowClick={handleRowClick}
-                  response={OrderData}
-                  loading={false}
-                  type={activeTab}
-                />
-              ) : (
-                <div className="w-full h-64 flex flex-col justify-center items-center">
-                  <NoOrders />
-                </div>
-              )}
+              <CustomPagination
+                currentPage={page}
+                totalPages={ordersData?.pages || 1}
+                total={ordersData?.total}
+                pageSize={ordersData?.limit}
+                onPageChange={setPage}
+                className="mt-4 border-t border-gray-100"
+              />
             </>
+          ) : (
+            <div className="w-full h-64 flex flex-col justify-center items-center">
+              <NoOrders />
+            </div>
           )}
         </div>
       </div>
@@ -614,6 +807,54 @@ const Orders = () => {
             </select>
           </div>
 
+          {/* Sales Staff Filter (mock list) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Sales Staff
+            </label>
+            <select
+              value={tempFilters.sales_staff}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  sales_staff: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Sales Staff</option>
+              {MOCK_SALES_STAFF.map((staff) => (
+                <option key={staff} value={staff}>
+                  {staff}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Delivery Company Filter (mock list) */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Delivery Company
+            </label>
+            <select
+              value={tempFilters.delivery_company}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  delivery_company: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Delivery Companies</option>
+              {MOCK_DELIVERY_COMPANIES.map((company) => (
+                <option key={company} value={company}>
+                  {company}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <Button
@@ -624,6 +865,8 @@ const Orders = () => {
                   order_type: activeTab,
                   shipping_status: "",
                   payment_status: "",
+                  sales_staff: "",
+                  delivery_company: "",
                 });
               }}
             >
@@ -652,6 +895,12 @@ const Orders = () => {
       >
         <Payment />
       </CustomModal>
+
+      <AssignDeliveryModal
+        isOpen={openAssignDelivery}
+        onClose={() => setOpenAssignDelivery(false)}
+        orderId={assignTargetOrderId}
+      />
     </div>
   );
 };

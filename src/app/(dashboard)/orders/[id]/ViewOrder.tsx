@@ -5,15 +5,54 @@ import { Button } from "@/components/ui/button";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import {
   ArrowLeft,
+  Bike,
   ChevronDown,
+  FileText,
   Mail,
   MessageCircle,
   Phone,
+  Printer,
   Share2,
+  Truck,
+  XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import AssignDeliveryModal, {
+  DeliveryPartner,
+  MOCK_PARTNERS,
+} from "../AssignDeliveryModal";
 import DownloadOrderReceipt from "../DownloadOrderReceipt";
+import OrderFlowTimeline, {
+  stepIndexFromShipping,
+} from "./OrderFlowTimeline";
 import UpdateStatusComp from "./UpdateStatus";
+
+// Mock rider (until backend ships rider fields). Stable per order id.
+const MOCK_RIDERS = [
+  {
+    name: "Emeka Obi",
+    phone: "+234 803 111 2233",
+    plate: "LAG-243-AB",
+    eta: "25 mins",
+  },
+  {
+    name: "Bola Adeyemi",
+    phone: "+234 805 444 5566",
+    plate: "ABJ-118-CD",
+    eta: "40 mins",
+  },
+  {
+    name: "Yusuf Bala",
+    phone: "+234 808 777 8899",
+    plate: "KAN-901-EF",
+    eta: "1 hr 5 mins",
+  },
+];
+const hashSeed = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+};
 
 type PaymentStatus = "PAID" | "PARTIAL" | "UNPAID";
 type ShippingStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
@@ -37,7 +76,32 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   const [selectedShippingStatus, setSelectedShippingStatus] =
     useState<ShippingStatus>("PENDING");
 
+  const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
+  const [assignedPartner, setAssignedPartner] = useState<DeliveryPartner | null>(
+    null,
+  );
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
   const orderData = OrderIdData?.data;
+
+  // Default to first mock partner when none assigned yet — so the UI has data to show.
+  const activePartner =
+    assignedPartner ||
+    (orderData?.id
+      ? MOCK_PARTNERS[hashSeed(orderData.id) % MOCK_PARTNERS.length]
+      : null);
+  const activeRider = orderData?.id
+    ? MOCK_RIDERS[hashSeed(orderData.id) % MOCK_RIDERS.length]
+    : null;
+
+  const handleContactCustomer = () => {
+    const phone = orderData?.customer_info?.phone;
+    if (phone) window.open(`tel:${phone}`);
+  };
+  const handlePrintReceipt = () => window.print();
+  // UI-only for now — wire to backend once PROCESSING/CANCELLED statuses are supported.
+  const handleMarkProcessing = () => {};
+  const handleConfirmCancel = () => setShowCancelConfirm(false);
 
   // Update selectedShippingStatus when orderData loads
   useEffect(() => {
@@ -246,6 +310,63 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Action Bar */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleMarkProcessing}
+                  disabled={editOrderShippingStatusLoading}
+                  className="text-xs"
+                >
+                  Mark as Processing
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setOpenAssignDelivery(true)}
+                  className="text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Truck className="w-3 h-3 mr-1" />
+                  Assign Delivery
+                </Button>
+                <div className="text-xs">
+                  <DownloadOrderReceipt
+                    orderData={orderData}
+                    business={BusinessData}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrintReceipt}
+                  className="text-xs"
+                >
+                  <Printer className="w-3 h-3 mr-1" />
+                  Print Receipt
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleContactCustomer}
+                  className="text-xs"
+                  disabled={!orderData?.customer_info?.phone}
+                >
+                  <Phone className="w-3 h-3 mr-1" />
+                  Contact Customer
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="text-xs text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <XCircle className="w-3 h-3 mr-1" />
+                  Cancel Order
+                </Button>
+              </div>
+            </div>
+
             {/* Order Info */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -428,6 +549,26 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </table>
               </div>
             </div>
+
+            {/* Delivery flow timeline (mock timestamps until backend ships event log) */}
+            <OrderFlowTimeline
+              currentStepIndex={stepIndexFromShipping(
+                orderData?.delivery?.shipping_status ||
+                  orderData?.shipping_status,
+              )}
+              timestamps={{
+                ORDER: orderData?.created_at
+                  ? new Date(orderData.created_at).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })
+                  : undefined,
+                RIDER_ASSIGNED: assignedPartner ? "Just now" : undefined,
+              }}
+            />
 
             {/* Transactions */}
             <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -659,6 +800,85 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </div>
               </div>
             </div>
+
+            {/* Delivery Company (mock until backend ships it) */}
+            {activePartner && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Delivery Company
+                </h3>
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-700 flex-shrink-0">
+                    {activePartner.logo}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="font-medium text-gray-900">
+                      {activePartner.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {activePartner.serviceType}
+                    </p>
+                    <div className="text-sm text-gray-700 space-y-0.5 mt-2">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3 h-3 text-gray-400" />
+                        <span>{activePartner.contact}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-3 h-3 text-gray-400" />
+                        <span>{activePartner.support}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-xs text-amber-600">
+                        ★ {activePartner.rating} rating
+                      </span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        ₦{activePartner.estimatedCost.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rider Information (mock until backend ships it) */}
+            {activeRider && (
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Rider Information
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Bike className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {activeRider.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {activeRider.plate}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Phone</span>
+                      <a
+                        href={`tel:${activeRider.phone}`}
+                        className="text-gray-900 hover:text-blue-600"
+                      >
+                        {activeRider.phone}
+                      </a>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Estimated arrival</span>
+                      <span className="text-gray-900">{activeRider.eta}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -676,6 +896,45 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
           currentAmountPaid={orderData?.amount_paid}
           onClose={() => setOpenUpdateStatusModal(false)}
         />
+      </CustomModal>
+
+      <AssignDeliveryModal
+        isOpen={openAssignDelivery}
+        onClose={() => setOpenAssignDelivery(false)}
+        orderId={orderData?.id}
+        onAssigned={(partner) => {
+          // UI-only: stash partner locally; backend status auto-change comes later.
+          setAssignedPartner(partner);
+        }}
+      />
+
+      <CustomModal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        title="Cancel Order"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Are you sure you want to cancel order #{orderData?.id?.slice(0, 8)}?
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowCancelConfirm(false)}
+            >
+              Keep Order
+            </Button>
+            <Button
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleConfirmCancel}
+              disabled={editOrderShippingStatusLoading}
+            >
+              Yes, Cancel
+            </Button>
+          </div>
+        </div>
       </CustomModal>
     </div>
   );

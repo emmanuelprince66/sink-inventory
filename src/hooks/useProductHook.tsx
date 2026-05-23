@@ -27,12 +27,12 @@ const createProductSchema = (isEditMode: boolean) => {
             .instanceof(File)
             .refine(
               (file) => file.size <= 5 * 1024 * 1024,
-              "File size must be less than 5MB"
+              "File size must be less than 5MB",
             )
             .refine(
               (file) =>
                 ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-              "Only .jpg, .png, and .webp formats are supported"
+              "Only .jpg, .png, and .webp formats are supported",
             )
             .optional(),
           z.string().optional(),
@@ -42,12 +42,12 @@ const createProductSchema = (isEditMode: boolean) => {
             .instanceof(File, { message: "Product image is required" })
             .refine(
               (file) => file.size <= 5 * 1024 * 1024,
-              "File size must be less than 5MB"
+              "File size must be less than 5MB",
             )
             .refine(
               (file) =>
                 ["image/jpeg", "image/png", "image/webp"].includes(file.type),
-              "Only .jpg, .png, and .webp formats are supported"
+              "Only .jpg, .png, and .webp formats are supported",
             )
             .optional(),
           z.string().optional(),
@@ -134,7 +134,7 @@ export const useProductHook = ({
   const business_id = useBusinessStore((state: any) => state.business_id);
   const isEditMode = !!productId;
   const isUserSubscribed = useIsUserSubscribeStore(
-    (state: any) => state.is_subscribed
+    (state: any) => state.is_subscribed,
   );
   const queryClient = useQueryClient();
 
@@ -185,7 +185,7 @@ export const useProductHook = ({
 
   const getCategoryByName = (name: string) => {
     const category = CategoriesData?.data.find(
-      (category: any) => category.name === name
+      (category: any) => category.name === name,
     );
 
     // console.log("category", category);
@@ -194,7 +194,7 @@ export const useProductHook = ({
 
   const getSupplierByName = (name: string) => {
     const supplier = SupplierData?.data?.results?.data?.find(
-      (supplier: any) => supplier.name === name
+      (supplier: any) => supplier.name === name,
     );
 
     return supplier?.id;
@@ -307,7 +307,7 @@ export const useProductHook = ({
     appendIfNotEmpty("category_id", values.category);
     appendIfNotEmpty(
       "expiry_date",
-      values.date ? moment(values.date).format("YYYY-MM-DD") : undefined
+      values.date ? moment(values.date).format("YYYY-MM-DD") : undefined,
     );
     appendIfNotEmpty("supplier_id", values.supplier);
     appendIfNotEmpty("quantity", values.stock_quantity);
@@ -325,7 +325,7 @@ export const useProductHook = ({
     if (values.payment_method === "CREDIT" && values.due_date) {
       appendIfNotEmpty(
         "due_date",
-        moment(values.due_date).format("YYYY-MM-DD")
+        moment(values.due_date).format("YYYY-MM-DD"),
       );
     }
 
@@ -334,7 +334,7 @@ export const useProductHook = ({
       if (values.due_date) {
         appendIfNotEmpty(
           "due_date",
-          moment(values.due_date).format("YYYY-MM-DD")
+          moment(values.due_date).format("YYYY-MM-DD"),
         );
       }
     }
@@ -349,7 +349,7 @@ export const useProductHook = ({
             });
             router.back();
           },
-        }
+        },
       );
     } else {
       // For new products, ensure all required fields are present
@@ -377,7 +377,7 @@ export const useProductHook = ({
       newProductFormData.append("name", values.item_name);
       newProductFormData.append(
         "image",
-        values.image instanceof File ? values.image : ""
+        values.image instanceof File ? values.image : "",
       );
 
       Object.entries(requiredFields).forEach(([key, value]) => {
@@ -388,7 +388,7 @@ export const useProductHook = ({
       if (values.payment_method === "CREDIT" && values.due_date) {
         newProductFormData.append(
           "due_date",
-          moment(values.due_date).format("YYYY-MM-DD")
+          moment(values.due_date).format("YYYY-MM-DD"),
         );
       }
 
@@ -397,7 +397,7 @@ export const useProductHook = ({
         if (values.due_date) {
           newProductFormData.append(
             "due_date",
-            moment(values.due_date).format("YYYY-MM-DD")
+            moment(values.due_date).format("YYYY-MM-DD"),
           );
         }
       }
@@ -411,7 +411,7 @@ export const useProductHook = ({
             });
             router.back();
           },
-        }
+        },
       );
     }
   };
@@ -430,6 +430,10 @@ export const useProductHook = ({
     { label: "Rolls", value: "Roll" },
     { label: "Meters", value: "Meter" },
     { label: "Milliliters", value: "Mil" },
+    { label: "Packs", value: "Pack" },
+    { label: "Kegs", value: "keg" },
+    { label: "Congos", value: "Congo" },
+    { label: "Crates", value: "Crate" },
     { label: "Bottles", value: "Bottle" },
     { label: "Bundles", value: "Bundle" },
     { label: "Milliliters", value: "Ml" },

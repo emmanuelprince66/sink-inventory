@@ -32,6 +32,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -122,6 +123,19 @@ const NewAddProduct = ({
   const [createDepartmentModal, setCreateDepartmentModal] = useState(false);
   const handleCloseDepartmentModal = () => {
     setCreateDepartmentModal(false);
+  };
+
+  // Optional UI-only fields — not added to the submit payload yet.
+  const [productDescription, setProductDescription] = useState("");
+  const [productWeight, setProductWeight] = useState("");
+  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+
+  const handleAddImages = (files: FileList | null) => {
+    if (!files) return;
+    setAdditionalImages((prev) => [...prev, ...Array.from(files)].slice(0, 6));
+  };
+  const removeAdditionalImage = (index: number) => {
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
   };
   console.log("form values", form.getValues());
 
@@ -881,6 +895,99 @@ const NewAddProduct = ({
                       )}
                     />
                   </div> */}
+                </CardContent>
+              </Card>
+
+              {/* Optional fields card — UI only, not in submit payload yet */}
+              <Card className="border-gray-200 shadow-sm bg-white py-5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    Additional Information{" "}
+                    <span className="text-xs font-normal text-gray-400">
+                      (optional)
+                    </span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-1 block">
+                      Description
+                    </label>
+                    <Textarea
+                      value={productDescription}
+                      onChange={(e) => setProductDescription(e.target.value)}
+                      placeholder="Describe the product (materials, features, usage tips...)"
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-1 block">
+                        Product Weight
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={productWeight}
+                          onChange={(e) => setProductWeight(e.target.value)}
+                          placeholder="Enter weight"
+                          step="0.01"
+                          min="0"
+                        />
+                        <span className="text-sm text-gray-500 whitespace-nowrap">
+                          kg
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      Additional Images
+                      <span className="text-xs font-normal text-gray-400 ml-1">
+                        (up to 6)
+                      </span>
+                    </label>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      {additionalImages.map((file, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square rounded-md border border-gray-200 overflow-hidden group"
+                        >
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={`Additional ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeAdditionalImage(index)}
+                            className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3 text-gray-700" />
+                          </button>
+                        </div>
+                      ))}
+                      {additionalImages.length < 6 && (
+                        <label className="aspect-square rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-green-400 hover:text-green-500 cursor-pointer transition-colors">
+                          <Plus className="w-5 h-5" />
+                          <span className="text-[10px] mt-0.5">Add image</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={(e) => {
+                              handleAddImages(e.target.files);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 

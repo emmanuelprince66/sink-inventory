@@ -77,6 +77,13 @@ export const links = [
         roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "ACCOUNTANT"],
         permission: "view_orders", // Required permission
       },
+      // {
+      //   title: "Logistics",
+      //   url: "/logistics",
+      //   icon: Truck,
+      //   roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      //   permission: "view_orders",
+      // },
       {
         title: "Supplier",
         url: "/supply",
