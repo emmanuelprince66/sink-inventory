@@ -2,6 +2,7 @@
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -256,6 +257,10 @@ const Inventory = () => {
 
           {canManageInventory && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
+              <GenerateReportButton
+                reportType="inventory"
+                className="w-full sm:w-auto"
+              />
               {/* Add New dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

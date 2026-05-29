@@ -3,6 +3,7 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -327,6 +328,11 @@ const Sales = () => {
               searchInput={searchInput}
               activeProductFilter={activeProductFilter}
               activeOrderFilter={activeOrderFilter}
+              className="w-full sm:w-auto"
+            />
+
+            <GenerateReportButton
+              reportType="sales"
               className="w-full sm:w-auto"
             />
 

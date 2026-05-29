@@ -1,6 +1,7 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -102,6 +103,11 @@ const Analytics = () => {
             <DownloadReportButton
               business_id={business_id}
               dateRange={dateRange}
+            />
+
+            <GenerateReportButton
+              reportType="analytics"
+              className="w-full sm:w-auto"
             />
             {/* <Button
               variant={"outline"}

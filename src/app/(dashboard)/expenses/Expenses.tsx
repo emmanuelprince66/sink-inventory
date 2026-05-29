@@ -3,6 +3,7 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,10 @@ const Expenses = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <GenerateReportButton
+              reportType="expenses"
+              className="w-full sm:w-auto"
+            />
             <Button
               className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
               onClick={openAddExpensesModal}

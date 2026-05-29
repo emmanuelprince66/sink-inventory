@@ -12,7 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowDownLeft, ArrowUpRight, Landmark, Plus, Wallet } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CreditCard,
+  Landmark,
+  Plus,
+  Wallet,
+} from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -288,6 +295,66 @@ const Transactions = () => {
             </div>
           </CustomCard>
         )}
+
+        {/* BNPL Transactions space (UI-only until backend ships BNPL data) */}
+        <CustomCard className="w-full p-4 border border-violet-100 bg-violet-50/40">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-violet-100 rounded-full">
+                <CreditCard className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">
+                  BNPL Transactions
+                </p>
+                <p className="text-xs text-slate-500">
+                  Akawopay Buy Now, Pay Later activity
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/operations/general-settings"
+              className="text-xs font-medium text-violet-700 hover:underline"
+            >
+              Manage BNPL settings
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="bg-white border border-violet-100 rounded-lg p-3">
+              <p className="text-[11px] text-slate-500 uppercase tracking-wide">
+                Active loans
+              </p>
+              <p className="text-lg font-bold text-slate-900 mt-1">0</p>
+            </div>
+            <div className="bg-white border border-violet-100 rounded-lg p-3">
+              <p className="text-[11px] text-slate-500 uppercase tracking-wide">
+                Outstanding
+              </p>
+              <p className="text-lg font-bold text-slate-900 mt-1">
+                {formatToNaira(0)}
+              </p>
+            </div>
+            <div className="bg-white border border-violet-100 rounded-lg p-3">
+              <p className="text-[11px] text-slate-500 uppercase tracking-wide">
+                Paid out (this month)
+              </p>
+              <p className="text-lg font-bold text-slate-900 mt-1">
+                {formatToNaira(0)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 text-center py-6 border border-dashed border-violet-200 rounded-lg bg-white/60">
+            <p className="text-sm text-slate-600">
+              No BNPL transactions yet
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Once a customer pays with Akawopay at checkout, their instalment
+              plan will appear here.
+            </p>
+          </div>
+        </CustomCard>
 
         {/* Search and Filters */}
         <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
