@@ -37,6 +37,8 @@ interface PaymentHistory {
   amount: string;
   method: string;
   bank: string | null;
+  account_name?: string | null;
+  account_number?: string | null;
   created_at: string;
 }
 
@@ -95,292 +97,307 @@ Font.register({
   ],
 });
 
-// PDF Styles with green theme and tighter spacing
+// Number-to-words helper (Nigeria-friendly Naira suffix)
+const ONES = [
+  "",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+];
+const TENS = [
+  "",
+  "",
+  "Twenty",
+  "Thirty",
+  "Forty",
+  "Fifty",
+  "Sixty",
+  "Seventy",
+  "Eighty",
+  "Ninety",
+];
+const belowThousand = (n: number): string => {
+  if (n === 0) return "";
+  if (n < 20) return ONES[n];
+  if (n < 100)
+    return TENS[Math.floor(n / 10)] + (n % 10 ? " " + ONES[n % 10] : "");
+  const remainder = n % 100;
+  return (
+    ONES[Math.floor(n / 100)] +
+    " Hundred" +
+    (remainder ? " And " + belowThousand(remainder) : "")
+  );
+};
+const numberToNairaWords = (num: number): string => {
+  const n = Math.floor(Math.abs(num));
+  if (n === 0) return "Zero Naira Only";
+  const parts: string[] = [];
+  const billions = Math.floor(n / 1_000_000_000);
+  const millions = Math.floor((n % 1_000_000_000) / 1_000_000);
+  const thousands = Math.floor((n % 1_000_000) / 1000);
+  const remainder = n % 1000;
+  if (billions) parts.push(belowThousand(billions) + " Billion");
+  if (millions) parts.push(belowThousand(millions) + " Million");
+  if (thousands) parts.push(belowThousand(thousands) + " Thousand");
+  if (remainder) parts.push(belowThousand(remainder));
+  return parts.join(" ") + " Naira Only";
+};
+
+// Black & white invoice styles
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 32,
     fontSize: 10,
     fontFamily: "Roboto",
     backgroundColor: "#ffffff",
+    color: "#111111",
   },
-  header: {
+
+  // Header bar (solid black, rounded)
+  headerBar: {
+    backgroundColor: "#000000",
+    borderRadius: 8,
+    paddingVertical: 22,
+    paddingHorizontal: 24,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 25,
-    paddingBottom: 15,
-    borderBottomWidth: 2,
-    borderBottomColor: "#059669",
+    marginBottom: 22,
   },
   invoiceTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "bold",
-    color: "#065f46",
-    letterSpacing: 1,
+    color: "#ffffff",
+    letterSpacing: 1.5,
   },
-  orderInfo: {
-    marginTop: 6,
-  },
-  orderNumber: {
-    fontSize: 10,
-    color: "#6b7280",
-    marginBottom: 3,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    gap: 6,
+  invoiceNumber: {
+    fontSize: 9,
+    color: "#cccccc",
     marginTop: 4,
   },
-  statusBadge: {
+  issueDateLabel: {
     fontSize: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    fontWeight: "bold",
-  },
-  statusPaid: {
-    backgroundColor: "#d1fae5",
-    color: "#065f46",
-  },
-  statusUnpaid: {
-    backgroundColor: "#fef3c7",
-    color: "#92400e",
-  },
-  statusPartial: {
-    backgroundColor: "#fed7aa",
-    color: "#9a3412",
-  },
-  statusPending: {
-    backgroundColor: "#e0f2fe",
-    color: "#075985",
-  },
-  statusShipped: {
-    backgroundColor: "#dbeafe",
-    color: "#1e40af",
-  },
-  statusDelivered: {
-    backgroundColor: "#d1fae5",
-    color: "#065f46",
-  },
-  statusReturned: {
-    backgroundColor: "#fee2e2",
-    color: "#991b1b",
-  },
-  dateInfo: {
-    textAlign: "right",
-  },
-  dateText: {
-    fontSize: 9,
-    color: "#6b7280",
-    marginBottom: 2,
-  },
-  createdBy: {
-    fontSize: 8,
-    color: "#9ca3af",
-    marginTop: 3,
-  },
-  addressSection: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    gap: 20,
-  },
-  addressBlock: {
-    flex: 1,
-    backgroundColor: "#f0fdf4",
-    padding: 12,
-    borderRadius: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: "#10b981",
-  },
-  addressTitle: {
-    fontSize: 10,
-    fontWeight: "bold",
-    marginBottom: 8,
-    color: "#065f46",
+    color: "#cccccc",
     textTransform: "uppercase",
     letterSpacing: 0.5,
+    textAlign: "right",
   },
-  addressText: {
+  issueDateValue: {
+    fontSize: 10,
+    color: "#ffffff",
+    marginTop: 3,
+    textAlign: "right",
+  },
+
+  // Business identity row
+  businessBlock: {
+    marginBottom: 18,
+  },
+  businessLogoPlaceholder: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 6,
+  },
+  businessText: {
     fontSize: 9,
-    color: "#374151",
+    color: "#444444",
     lineHeight: 1.5,
-    marginBottom: 2,
   },
+
+  // Bill To / Pay To
+  addressRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 22,
+  },
+  addressCard: {
+    flex: 1,
+    backgroundColor: "#f4f4f5",
+    borderRadius: 6,
+    padding: 12,
+  },
+  addressTitle: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 6,
+  },
+  addressLine: {
+    fontSize: 9,
+    color: "#333333",
+    lineHeight: 1.6,
+  },
+
+  // Items table
   table: {
     width: "100%",
-    marginBottom: 15,
-    marginTop: 8,
+    marginBottom: 16,
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#ecfdf5",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderBottomWidth: 2,
-    borderBottomColor: "#10b981",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#000000",
   },
   tableHeaderText: {
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "bold",
-    color: "#065f46",
+    color: "#555555",
     textTransform: "uppercase",
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
   },
   tableRow: {
     flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
     paddingVertical: 10,
-    paddingHorizontal: 10,
-    backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eeeeee",
   },
-  tableRowAlt: {
-    backgroundColor: "#fafafa",
-  },
-  cellQty: {
-    width: "8%",
+  colDescription: {
+    width: "55%",
     fontSize: 9,
-    color: "#1f2937",
-  },
-  cellDescription: {
-    width: "52%",
-    fontSize: 9,
-    color: "#1f2937",
+    color: "#111111",
     paddingRight: 8,
   },
-  productName: {
-    fontWeight: "bold",
-    marginBottom: 2,
-  },
-  discountBadge: {
-    fontSize: 7,
-    color: "#059669",
-    marginTop: 2,
-  },
-  cellUnitPrice: {
-    width: "20%",
-    textAlign: "right",
+  colQuantity: {
+    width: "10%",
     fontSize: 9,
-    color: "#4b5563",
+    color: "#111111",
+    textAlign: "center",
   },
-  cellAmount: {
-    width: "20%",
-    textAlign: "right",
+  colUnitPrice: {
+    width: "17%",
     fontSize: 9,
-    color: "#065f46",
+    color: "#111111",
+    textAlign: "right",
+  },
+  colLineTotal: {
+    width: "18%",
+    fontSize: 9,
+    color: "#111111",
+    textAlign: "right",
     fontWeight: "bold",
   },
-  summarySection: {
-    marginTop: 15,
-    alignItems: "flex-end",
+
+  // Totals (right-aligned)
+  totalsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 8,
   },
-  summaryBox: {
-    width: "50%",
-    backgroundColor: "#f0fdf4",
-    padding: 15,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#86efac",
+  totalsBox: {
+    width: "55%",
   },
-  summaryRow: {
+  totalsLine: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#d1fae5",
+    paddingVertical: 4,
   },
-  summaryRowLast: {
-    borderBottomWidth: 0,
-    marginBottom: 0,
-    paddingBottom: 0,
-  },
-  summaryLabel: {
+  totalsLabel: {
     fontSize: 9,
-    color: "#4b5563",
+    color: "#555555",
   },
-  summaryValue: {
-    fontSize: 10,
-    color: "#065f46",
-    fontWeight: "bold",
-    minWidth: 80,
-    textAlign: "right",
+  totalsValue: {
+    fontSize: 9,
+    color: "#111111",
   },
-  totalRow: {
+  totalsValueDiscount: {
+    fontSize: 9,
+    color: "#666666",
+  },
+  grandTotalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 2,
-    borderTopColor: "#059669",
-    backgroundColor: "#ecfdf5",
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    marginHorizontal: -15,
-    marginBottom: -15,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
+    marginTop: 6,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
   },
-  totalLabel: {
+  grandTotalLabel: {
     fontSize: 12,
     fontWeight: "bold",
-    color: "#065f46",
+    color: "#000000",
   },
-  totalValue: {
+  grandTotalValue: {
     fontSize: 13,
     fontWeight: "bold",
-    color: "#059669",
-    minWidth: 80,
-    textAlign: "right",
+    color: "#000000",
   },
+
+  // Amount in words callout
+  amountWordsBox: {
+    marginTop: 22,
+    backgroundColor: "#f4f4f5",
+    borderLeftWidth: 4,
+    borderLeftColor: "#000000",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderTopRightRadius: 4,
+    borderBottomRightRadius: 4,
+  },
+  amountWordsLabel: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 3,
+  },
+  amountWordsText: {
+    fontSize: 9,
+    color: "#444444",
+  },
+
+  // Note section
   noteSection: {
-    marginTop: 20,
-    padding: 12,
-    backgroundColor: "#fffbeb",
-    borderRadius: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: "#f59e0b",
+    marginTop: 18,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eeeeee",
   },
   noteTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    marginBottom: 6,
-    color: "#92400e",
+    color: "#000000",
+    marginBottom: 4,
   },
   noteText: {
-    fontSize: 8,
-    color: "#78350f",
+    fontSize: 9,
+    color: "#444444",
     lineHeight: 1.5,
   },
+
+  // Footer
   footer: {
-    marginTop: 30,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#d1fae5",
+    marginTop: 28,
     alignItems: "center",
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#eeeeee",
   },
-  thankYou: {
+  footerBrand: {
     fontSize: 11,
     fontWeight: "bold",
-    color: "#065f46",
-    marginBottom: 12,
+    color: "#000000",
+    marginBottom: 4,
   },
-  businessInfo: {
-    alignItems: "center",
-  },
-  businessName: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#059669",
-    marginBottom: 6,
-  },
-  contactText: {
+  footerText: {
     fontSize: 8,
-    color: "#6b7280",
-    marginBottom: 2,
+    color: "#888888",
   },
 });
 
@@ -391,17 +408,19 @@ const safeParseFloat = (value: string | number | undefined | null): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
-// Helper function to format currency - improved version with NGN prefix
+// Helper function to format currency
 const formatCurrency = (value: string | number | undefined | null): string => {
   const num = safeParseFloat(value);
-  // Use standard number formatting without locale to avoid symbol issues
-  return num.toFixed(2);
+  return num.toLocaleString("en-NG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 
 // PDF Document Component
 const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
   ({ orderData, business }) => {
-    const businessData = business?.data;
+    const businessData = business?.data || business || {};
 
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -409,9 +428,6 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
         month: "short",
         day: "numeric",
         year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
       });
     };
 
@@ -422,7 +438,6 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
           safeParseFloat(orderData.delivery?.shipping_fee)
         );
       }
-
       return orderData.products.reduce((sum, product) => {
         const price = safeParseFloat(product.price);
         const quantity = safeParseFloat(product.quantity);
@@ -432,139 +447,132 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
 
     const subtotal = calculateSubtotal();
     const shippingFee = safeParseFloat(orderData.delivery?.shipping_fee);
-    const tax = 0; // No tax in current data structure
+    const tax = 0;
     const total = safeParseFloat(orderData.total_price);
+    const totalDiscount = (orderData.products || []).reduce(
+      (sum, p) => sum + safeParseFloat(p.discount),
+      0,
+    );
 
-    // Get payment status badge style
-    const getPaymentStatusStyle = () => {
-      switch (orderData.payment_status) {
-        case "PAID":
-          return styles.statusPaid;
-        case "PARTIAL":
-          return styles.statusPartial;
-        case "UNPAID":
-          return styles.statusUnpaid;
-        default:
-          return styles.statusUnpaid;
-      }
-    };
+    // Pay To details — prefer payment_history, fall back to business bank info.
+    const firstPayment = orderData.payment_history?.[0];
+    const payToBank: string =
+      firstPayment?.bank ||
+      businessData?.bank_name ||
+      businessData?.bank ||
+      "";
+    const payToAccountName: string =
+      firstPayment?.account_name ||
+      businessData?.account_name ||
+      businessData?.name ||
+      "";
+    const payToAccountNumber: string =
+      firstPayment?.account_number || businessData?.account_number || "";
+    const paymentMethod: string =
+      orderData.method || firstPayment?.method || "—";
 
-    // Get shipping status badge style
-    const getShippingStatusStyle = () => {
-      switch (orderData.delivery?.shipping_status) {
-        case "DELIVERED":
-          return styles.statusDelivered;
-        case "SHIPPED":
-          return styles.statusShipped;
-        case "RETURNED":
-          return styles.statusReturned;
-        case "PENDING":
-          return styles.statusPending;
-        default:
-          return styles.statusPending;
-      }
-    };
+    const businessAddressParts = [
+      businessData?.street,
+      businessData?.city,
+      businessData?.state,
+      businessData?.country,
+    ].filter(Boolean);
 
     return (
       <Document>
         <Page size="A4" style={styles.page}>
-          {/* Header */}
-          <View style={styles.header}>
+          {/* Header bar */}
+          <View style={styles.headerBar}>
             <View>
               <Text style={styles.invoiceTitle}>INVOICE</Text>
-              <View style={styles.orderInfo}>
-                <Text style={styles.orderNumber}>
-                  Order #{orderData.id.slice(0, 8).toUpperCase()}
-                </Text>
-                <View style={styles.statusContainer}>
-                  <Text style={[styles.statusBadge, getPaymentStatusStyle()]}>
-                    {orderData.payment_status}
-                  </Text>
-                  <Text style={[styles.statusBadge, getShippingStatusStyle()]}>
-                    {orderData.delivery?.shipping_status || "PENDING"}
-                  </Text>
-                </View>
-              </View>
+              <Text style={styles.invoiceNumber}>
+                #{orderData.id?.slice(0, 8).toUpperCase()}
+              </Text>
             </View>
-            <View style={styles.dateInfo}>
-              <Text style={styles.dateText}>
+            <View>
+              <Text style={styles.issueDateLabel}>Issue Date</Text>
+              <Text style={styles.issueDateValue}>
                 {formatDate(orderData.created_at)}
               </Text>
             </View>
           </View>
 
-          {/* Billing and Shipping Address */}
-          <View style={styles.addressSection}>
-            <View style={styles.addressBlock}>
-              <Text style={styles.addressTitle}>Bill To</Text>
-              <Text style={[styles.addressText, { fontWeight: "bold" }]}>
-                {orderData.customer_info.name}
+          {/* Business identity */}
+          <View style={styles.businessBlock}>
+            {businessData?.name && (
+              <Text style={styles.businessLogoPlaceholder}>
+                {businessData.name}
               </Text>
-              {orderData.customer_info.email && (
-                <Text style={styles.addressText}>
-                  {orderData.customer_info.email}
+            )}
+            {businessAddressParts.length > 0 && (
+              <Text style={styles.businessText}>
+                {businessAddressParts.join(", ")}
+              </Text>
+            )}
+            {businessData?.owner?.phone && (
+              <Text style={styles.businessText}>
+                {businessData.owner.phone}
+              </Text>
+            )}
+          </View>
+
+          {/* Bill To + Pay To */}
+          <View style={styles.addressRow}>
+            <View style={styles.addressCard}>
+              <Text style={styles.addressTitle}>Bill To</Text>
+              <Text style={styles.addressLine}>
+                {orderData.customer_info?.name || "—"}
+              </Text>
+              {orderData.customer_info?.phone && (
+                <Text style={styles.addressLine}>
+                  {orderData.customer_info.phone}
                 </Text>
               )}
-              {orderData.customer_info.phone && (
-                <Text style={styles.addressText}>
-                  {orderData.customer_info.phone}
+              {orderData.customer_info?.email && (
+                <Text style={styles.addressLine}>
+                  {orderData.customer_info.email}
                 </Text>
               )}
             </View>
 
-            <View style={styles.addressBlock}>
-              <Text style={styles.addressTitle}>Ship To</Text>
-              {orderData.delivery?.delivery_address ? (
+            <View style={styles.addressCard}>
+              <Text style={styles.addressTitle}>Pay To</Text>
+              {payToBank ? (
                 <>
-                  <Text style={[styles.addressText, { fontWeight: "bold" }]}>
-                    {orderData.delivery.delivery_address.first_name}{" "}
-                    {orderData.delivery.delivery_address.last_name}
-                  </Text>
-                  {(orderData.delivery.delivery_address.shipping_address ||
-                    orderData.delivery.delivery_address.address) && (
-                    <Text style={styles.addressText}>
-                      {orderData.delivery.delivery_address.shipping_address ||
-                        orderData.delivery.delivery_address.address}
+                  <Text style={styles.addressLine}>Bank: {payToBank}</Text>
+                  {payToAccountName ? (
+                    <Text style={styles.addressLine}>
+                      Account Name: {payToAccountName}
                     </Text>
-                  )}
-                  {orderData.delivery.delivery_address.city && (
-                    <Text style={styles.addressText}>
-                      {orderData.delivery.delivery_address.city}
-                      {orderData.delivery.delivery_address.state &&
-                        `, ${orderData.delivery.delivery_address.state}`}
+                  ) : null}
+                  {payToAccountNumber ? (
+                    <Text style={styles.addressLine}>
+                      Account: {payToAccountNumber}
                     </Text>
-                  )}
-                  {orderData.delivery.delivery_address.country && (
-                    <Text style={styles.addressText}>
-                      {orderData.delivery.delivery_address.country}
-                    </Text>
-                  )}
-                  {orderData.delivery.delivery_address.phone && (
-                    <Text style={styles.addressText}>
-                      {orderData.delivery.delivery_address.phone}
-                    </Text>
-                  )}
+                  ) : null}
                 </>
               ) : (
-                <Text style={[styles.addressText, { fontWeight: "bold" }]}>
-                  {orderData.customer_info.name}
+                <Text style={styles.addressLine}>
+                  Payment Method: {paymentMethod}
                 </Text>
               )}
             </View>
           </View>
 
-          {/* Products Table */}
+          {/* Items table */}
           <View style={styles.table}>
             <View style={styles.tableHeader}>
-              <Text style={[styles.tableHeaderText, styles.cellQty]}>QTY</Text>
-              <Text style={[styles.tableHeaderText, styles.cellDescription]}>
-                PRODUCT NAME
+              <Text style={[styles.tableHeaderText, styles.colDescription]}>
+                Description
               </Text>
-              <Text style={[styles.tableHeaderText, styles.cellUnitPrice]}>
-                UNIT PRICE
+              <Text style={[styles.tableHeaderText, styles.colQuantity]}>
+                Quantity
               </Text>
-              <Text style={[styles.tableHeaderText, styles.cellAmount]}>
-                AMOUNT
+              <Text style={[styles.tableHeaderText, styles.colUnitPrice]}>
+                Unit Price
+              </Text>
+              <Text style={[styles.tableHeaderText, styles.colLineTotal]}>
+                Total
               </Text>
             </View>
 
@@ -573,29 +581,15 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
                 const unitPrice = safeParseFloat(product.unit_price);
                 const quantity = safeParseFloat(product.quantity);
                 const price = safeParseFloat(product.price);
-                const discount = safeParseFloat(product.discount);
                 const lineTotal = price * quantity;
-
-                const rowStyles =
-                  index % 2 === 1
-                    ? [styles.tableRow, styles.tableRowAlt]
-                    : [styles.tableRow];
-
                 return (
-                  <View key={index} style={rowStyles}>
-                    <Text style={styles.cellQty}>{quantity}</Text>
-                    <View style={styles.cellDescription}>
-                      <Text style={styles.productName}>{product.name}</Text>
-                      {discount > 0 && (
-                        <Text style={styles.discountBadge}>
-                          Discount: -NGN {formatCurrency(discount)}
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={styles.cellUnitPrice}>
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={styles.colDescription}>{product.name}</Text>
+                    <Text style={styles.colQuantity}>{quantity}</Text>
+                    <Text style={styles.colUnitPrice}>
                       NGN {formatCurrency(unitPrice)}
                     </Text>
-                    <Text style={styles.cellAmount}>
+                    <Text style={styles.colLineTotal}>
                       NGN {formatCurrency(lineTotal)}
                     </Text>
                   </View>
@@ -603,89 +597,86 @@ const OrderReceiptPDF: React.FC<OrderReceiptPDFProps> = React.memo(
               })
             ) : (
               <View style={styles.tableRow}>
-                <Text style={styles.cellQty}>1</Text>
-                <Text style={styles.cellDescription}>Order Payment</Text>
-                <Text style={styles.cellUnitPrice}>
+                <Text style={styles.colDescription}>Order Payment</Text>
+                <Text style={styles.colQuantity}>1</Text>
+                <Text style={styles.colUnitPrice}>
                   NGN {formatCurrency(subtotal)}
                 </Text>
-                <Text style={styles.cellAmount}>
+                <Text style={styles.colLineTotal}>
                   NGN {formatCurrency(subtotal)}
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Summary */}
-          <View style={styles.summarySection}>
-            <View style={styles.summaryBox}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>
+          {/* Totals — right-aligned */}
+          <View style={styles.totalsRow}>
+            <View style={styles.totalsBox}>
+              <View style={styles.totalsLine}>
+                <Text style={styles.totalsLabel}>Subtotal:</Text>
+                <Text style={styles.totalsValue}>
                   NGN {formatCurrency(subtotal)}
                 </Text>
               </View>
 
+              {totalDiscount > 0 && (
+                <View style={styles.totalsLine}>
+                  <Text style={styles.totalsLabel}>Discount:</Text>
+                  <Text style={styles.totalsValueDiscount}>
+                    - NGN {formatCurrency(totalDiscount)}
+                  </Text>
+                </View>
+              )}
+
               {shippingFee > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Shipping Fee</Text>
-                  <Text style={styles.summaryValue}>
+                <View style={styles.totalsLine}>
+                  <Text style={styles.totalsLabel}>Shipping:</Text>
+                  <Text style={styles.totalsValue}>
                     NGN {formatCurrency(shippingFee)}
                   </Text>
                 </View>
               )}
 
               {tax > 0 && (
-                <View style={[styles.summaryRow, styles.summaryRowLast]}>
-                  <Text style={styles.summaryLabel}>Tax</Text>
-                  <Text style={styles.summaryValue}>
+                <View style={styles.totalsLine}>
+                  <Text style={styles.totalsLabel}>Tax:</Text>
+                  <Text style={styles.totalsValue}>
                     NGN {formatCurrency(tax)}
                   </Text>
                 </View>
               )}
 
-              <View style={styles.totalRow}>
-                <Text style={styles.totalLabel}>TOTAL</Text>
-                <Text style={styles.totalValue}>
+              <View style={styles.grandTotalRow}>
+                <Text style={styles.grandTotalLabel}>Total:</Text>
+                <Text style={styles.grandTotalValue}>
                   NGN {formatCurrency(total)}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Note Section */}
-          {orderData.description && (
+          {/* Amount in words */}
+          <View style={styles.amountWordsBox}>
+            <Text style={styles.amountWordsLabel}>Amount in words:</Text>
+            <Text style={styles.amountWordsText}>
+              {numberToNairaWords(total)}
+            </Text>
+          </View>
+
+          {/* Note */}
+          {orderData.description ? (
             <View style={styles.noteSection}>
               <Text style={styles.noteTitle}>Note</Text>
               <Text style={styles.noteText}>{orderData.description}</Text>
             </View>
-          )}
+          ) : null}
 
-          {/* Footer with Business Info */}
+          {/* Footer */}
           <View style={styles.footer}>
-            <Text style={styles.thankYou}>Thank You For Your Business!</Text>
-            <View style={styles.businessInfo}>
-              {businessData?.name && (
-                <Text style={styles.businessName}>{businessData.name}</Text>
-              )}
-              {businessData?.owner?.email && (
-                <Text style={styles.contactText}>
-                  {businessData.owner.email}
-                </Text>
-              )}
-              {businessData?.street && (
-                <Text style={styles.contactText}>
-                  {businessData.street}
-                  {businessData?.city && `, ${businessData.city}`}
-                  {businessData?.state && `, ${businessData.state}`}
-                  {businessData?.country && `, ${businessData.country}`}
-                </Text>
-              )}
-              {businessData?.owner?.phone && (
-                <Text style={styles.contactText}>
-                  {businessData.owner.phone}
-                </Text>
-              )}
-            </View>
+            <Text style={styles.footerBrand}>Sync360</Text>
+            <Text style={styles.footerText}>
+              Powered by www.sync360.africa
+            </Text>
           </View>
         </Page>
       </Document>
@@ -755,7 +746,7 @@ const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
 
         return (
           <button
-            className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             disabled={loading}
           >
             <Download className="h-4 w-4" />

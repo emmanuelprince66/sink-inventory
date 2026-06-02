@@ -19,7 +19,7 @@ const GeneralSettings = () => {
       <ShippingTab />
 
       {/* Payment Add-ons */}
-      <section className="space-y-4">
+      <section className="space-y-4 mb-9">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold text-slate-900">
             Payment Add-ons

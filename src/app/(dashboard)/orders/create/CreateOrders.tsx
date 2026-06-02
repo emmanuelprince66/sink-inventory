@@ -49,6 +49,30 @@ const CreateOrders = () => {
   const [assignedPartner, setAssignedPartner] = useState<DeliveryPartner | null>(
     null,
   );
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [confirmedDeliveryPrice, setConfirmedDeliveryPrice] = useState<
+    number | null
+  >(null);
+  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
+
+  const resetDeliveryAssignment = () => {
+    setAssignedPartner(null);
+    setDeliveryAddress("");
+    setConfirmedDeliveryPrice(null);
+    setIsCalculatingPrice(false);
+  };
+
+  const handleSaveDeliveryAddress = () => {
+    if (!assignedPartner || !deliveryAddress.trim()) return;
+    setIsCalculatingPrice(true);
+    // Simulated backend round-trip — replace with the real "calculate price" API
+    // call once the endpoint exists. For now we just lock in the partner's
+    // estimated cost as the "calculated" price.
+    setTimeout(() => {
+      setConfirmedDeliveryPrice(assignedPartner.estimatedCost);
+      setIsCalculatingPrice(false);
+    }, 800);
+  };
 
   const {
     InventoryData,
@@ -521,7 +545,7 @@ const CreateOrders = () => {
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => setAssignedPartner(null)}
+                            onClick={resetDeliveryAssignment}
                             className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
@@ -591,6 +615,59 @@ const CreateOrders = () => {
                         </p>
                       </div>
                     </div>
+
+                    {/* Delivery address input — UI-only. On save we simulate
+                        the backend call that returns the calculated price. */}
+                    <div className="mt-3 bg-white rounded-md p-3 border border-gray-200 space-y-2">
+                      <Label className="text-xs font-medium text-gray-700">
+                        Delivery location / address
+                      </Label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Input
+                          value={deliveryAddress}
+                          onChange={(e) => {
+                            setDeliveryAddress(e.target.value);
+                            if (confirmedDeliveryPrice !== null) {
+                              // Address edited after saving — invalidate the
+                              // calculated price so the user re-saves.
+                              setConfirmedDeliveryPrice(null);
+                            }
+                          }}
+                          placeholder="e.g. 12 Allen Avenue, Ikeja, Lagos"
+                          className="flex-1 text-xs sm:text-sm"
+                          disabled={isCalculatingPrice}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleSaveDeliveryAddress}
+                          disabled={
+                            !deliveryAddress.trim() ||
+                            isCalculatingPrice ||
+                            confirmedDeliveryPrice !== null
+                          }
+                          className="bg-green-600 hover:bg-green-700 text-white text-xs h-9 px-3"
+                        >
+                          {isCalculatingPrice
+                            ? "Calculating..."
+                            : confirmedDeliveryPrice !== null
+                              ? "Saved"
+                              : "Save"}
+                        </Button>
+                      </div>
+
+                      {confirmedDeliveryPrice !== null && (
+                        <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                          <span className="text-xs text-gray-600">
+                            Calculated price:
+                          </span>
+                          <span className="text-sm font-semibold text-green-700">
+                            ₦{confirmedDeliveryPrice.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
                     <p className="text-[10px] text-gray-400 mt-1.5 italic">
                       Delivery cost not added to total yet — will be wired once
                       backend supports it.
@@ -893,7 +970,11 @@ const CreateOrders = () => {
       <AssignDeliveryModal
         isOpen={openAssignDelivery}
         onClose={() => setOpenAssignDelivery(false)}
-        onAssigned={(partner) => setAssignedPartner(partner)}
+        onAssigned={(partner) => {
+          setAssignedPartner(partner);
+          // Changing partner invalidates the previous calculated price.
+          setConfirmedDeliveryPrice(null);
+        }}
       />
     </div>
   );

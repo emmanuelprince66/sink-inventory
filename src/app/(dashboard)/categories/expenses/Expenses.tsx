@@ -4,9 +4,10 @@ import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
-import { Edit } from "lucide-react";
+import { Edit, Trash } from "lucide-react";
 import { useState } from "react";
 import AddCategory from "../AddCategory";
+import DeleteCategory from "../DeleteCategory";
 import EditExpensesCategory from "./EditExpensesCategory";
 
 const Expenses = () => {
@@ -20,6 +21,13 @@ const Expenses = () => {
   const closeEditModal = () => setEditModal(false);
   const [categoryObj, setCategoryObj] = useState({});
 
+  // Delete-category state
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    id: string;
+    name: string;
+  }>({ id: "", name: "" });
+
   const { ExpensesCategoriesData, ExpensesCategoriesDataLoading } =
     useGetAllCategories(categoryObj);
 
@@ -30,6 +38,20 @@ const Expenses = () => {
     setEditModal(true);
     setCategoryObj(category);
   };
+
+  const handleDeleteExpenses = (category: any) => {
+    setCategoryToDelete({ id: category.id, name: category.name });
+    setDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteModal(false);
+    setCategoryToDelete({ id: "", name: "" });
+  };
+
+  // Delete mutation invalidates the categories query, so the list refreshes
+  // automatically. Kept as a hook in case we want to add a toast / focus jump.
+  const handleDeleteSuccess = () => {};
 
   return (
     <div className="container mx-auto px-4 ">
@@ -93,12 +115,22 @@ const Expenses = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <button
-                      onClick={() => handleOpenEditModal(category)}
-                      className="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleOpenEditModal(category)}
+                        className="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors"
+                        aria-label="Edit category"
+                      >
+                        <Edit className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteExpenses(category)}
+                        className="cursor-pointer text-red-500 hover:text-red-600 transition-colors"
+                        aria-label="Delete category"
+                      >
+                        <Trash className="w-5 h-5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -106,6 +138,20 @@ const Expenses = () => {
           </table>
         </div>
       )}
+
+      <CustomModal
+        isOpen={deleteModal}
+        onClose={handleCloseDeleteModal}
+        trigger={false}
+        title="Delete Category"
+      >
+        <DeleteCategory
+          categoryId={categoryToDelete.id}
+          categoryName={categoryToDelete.name}
+          closeModal={handleCloseDeleteModal}
+          onDeleteSuccess={handleDeleteSuccess}
+        />
+      </CustomModal>
 
       {/* attendants Modal */}
       <CustomModal

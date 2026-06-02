@@ -21,12 +21,12 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Sink Inventory — Inventory & POS Management",
-    template: "%s | Sink Inventory",
+    default: "Sync360 Inventory — Inventory & POS Management",
+    template: "%s | Sync360 Inventory",
   },
   description:
-    "Sink Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
-  applicationName: "Sink Inventory",
+    "Sync360 Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
+  applicationName: "Sync360 Inventory",
   alternates: {
     canonical: "/",
   },
@@ -42,19 +42,19 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    siteName: "Sink Inventory",
-    title: "Sink Inventory — Inventory & POS Management",
+    siteName: "Sync360 Inventory",
+    title: "Sync360 Inventory — Inventory & POS Management",
     description:
-      "Sink Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
+      "Sync360 Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
     url: SITE_URL,
     locale: "en_US",
     // og image is auto-generated from src/app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sink Inventory — Inventory & POS Management",
+    title: "Sync360 Inventory — Inventory & POS Management",
     description:
-      "Sink Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
+      "Sync360 Inventory by Sync360 helps you manage inventory, point of sale, and stock in real time.",
     // twitter image is also auto-generated from src/app/opengraph-image.tsx
   },
 };

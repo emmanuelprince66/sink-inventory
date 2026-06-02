@@ -16,6 +16,7 @@ import AllCampaigns from "./AllCampaigns";
 import AllGroups from "./AllGroups";
 import CampaignSettings from "./CampaignSettings";
 import FundCampaign from "./FundCampaign";
+import UnitUsage from "./UnitUsage";
 
 const Campaign = () => {
   const [searchInput, setSearchInput] = useState("");
@@ -47,7 +48,7 @@ const Campaign = () => {
   const openFundCampaignModalFunc = () => setOpenFundCampaignModal(true);
 
   const [activeTab, setActiveTab] = useState<
-    "campaigns" | "groups" | "settings"
+    "campaigns" | "groups" | "usage" | "settings"
   >("campaigns");
 
   const [openSenderModal, setOpenSenderModal] = useState(false);
@@ -167,12 +168,14 @@ const Campaign = () => {
       <Tabs
         value={activeTab}
         onValueChange={(value) =>
-          setActiveTab(value as "campaigns" | "groups" | "settings")
+          setActiveTab(
+            value as "campaigns" | "groups" | "usage" | "settings",
+          )
         }
         className="w-full mt-4 sm:mt-6"
       >
         <div className="overflow-x-auto">
-          <TabsList className="w-full min-w-[400px] sm:w-[400px]">
+          <TabsList className="w-full min-w-[520px] sm:w-[520px]">
             <TabsTrigger
               value="campaigns"
               className="flex-1 text-xs sm:text-sm"
@@ -181,6 +184,9 @@ const Campaign = () => {
             </TabsTrigger>
             <TabsTrigger value="groups" className="flex-1 text-xs sm:text-sm">
               Groups
+            </TabsTrigger>
+            <TabsTrigger value="usage" className="flex-1 text-xs sm:text-sm">
+              Usage
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex-1 text-xs sm:text-sm">
               <span className="hidden sm:inline">Marketing Automation</span>
@@ -220,6 +226,10 @@ const Campaign = () => {
               groupLoading={CampaignGroupLoading}
             />
           </div>
+        </TabsContent>
+
+        <TabsContent value="usage" className="mt-4">
+          <UnitUsage />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-4">
