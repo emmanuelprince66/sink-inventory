@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id: businessId } = await params;
   const cookieStore = await cookies();
@@ -13,14 +13,14 @@ export async function POST(
   if (!accessToken) {
     return NextResponse.json(
       { error: "Unauthorized - No access token provided" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
   if (!businessId) {
     return NextResponse.json(
       { error: "Business ID is required" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -41,6 +41,8 @@ export async function POST(
     console.log("formData---33", formData);
 
     const apiUrl = `${BaseUrl}product/business/${businessId}/`;
+
+    console.log("apiUrl", apiUrl);
     const response = await fetch(apiUrl, {
       method: "POST",
       headers,
@@ -53,7 +55,7 @@ export async function POST(
       const errorData = await response.json();
       return NextResponse.json(
         { error: errorData.message || "Failed to create product" },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -62,13 +64,13 @@ export async function POST(
     console.log("responseData", responseData);
     return NextResponse.json(
       { success: true, data: responseData },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Server error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -57,7 +57,7 @@ import { useFieldArray } from "react-hook-form";
 import AddCategory from "../categories/AddCategory";
 import AddDepartments from "../departments/AddDepartments";
 import { ProductFormSkeleton } from "./ProductSkeleton";
-import { ImageUploadWithOptions } from "./[id]/ImageUploadWithOptions";
+import MediaUploader from "./MediaUploader";
 
 interface NewAddProductProps {
   id?: string;
@@ -125,18 +125,9 @@ const NewAddProduct = ({
     setCreateDepartmentModal(false);
   };
 
-  // Optional UI-only fields — not added to the submit payload yet.
+  // Description is still UI-only — backend does not accept it yet.
+  // Weight and media are now real form-bound fields (images/videos/weight).
   const [productDescription, setProductDescription] = useState("");
-  const [productWeight, setProductWeight] = useState("");
-  const [additionalImages, setAdditionalImages] = useState<File[]>([]);
-
-  const handleAddImages = (files: FileList | null) => {
-    if (!files) return;
-    setAdditionalImages((prev) => [...prev, ...Array.from(files)].slice(0, 6));
-  };
-  const removeAdditionalImage = (index: number) => {
-    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
-  };
   console.log("form values", form.getValues());
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -492,28 +483,33 @@ const NewAddProduct = ({
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="image"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                          {field.value instanceof File ? (
-                            <img
-                              src={URL.createObjectURL(field.value)}
-                              alt="Product preview"
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : typeof field.value === "string" && field.value ? (
-                            <img
-                              src={field.value}
-                              alt="Product preview"
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <span className="text-gray-400">Product Image</span>
-                          )}
-                        </div>
-                      </FormItem>
-                    )}
+                    name="images"
+                    render={({ field }) => {
+                      const first = (field.value || [])[0];
+                      const previewUrl =
+                        first instanceof File
+                          ? URL.createObjectURL(first)
+                          : typeof first === "string"
+                            ? first
+                            : null;
+                      return (
+                        <FormItem>
+                          <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            {previewUrl ? (
+                              <img
+                                src={previewUrl}
+                                alt="Product preview"
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <span className="text-gray-400">
+                                Product Image
+                              </span>
+                            )}
+                          </div>
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <div>
@@ -614,22 +610,111 @@ const NewAddProduct = ({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(() => {
+                      // Shared cap across images + videos. Each uploader can
+                      // grow as long as the combined total stays under 4.
+                      const TOTAL_MEDIA_CAP = 4;
+                      const watchedImages = form.watch("images") || [];
+                      const watchedVideos = form.watch("videos") || [];
+                      const imagesRemaining =
+                        TOTAL_MEDIA_CAP - watchedVideos.length;
+                      const videosRemaining =
+                        TOTAL_MEDIA_CAP - watchedImages.length;
+                      const usedTotal =
+                        watchedImages.length + watchedVideos.length;
+                      return (
+                        <>
+                          <div className="md:col-span-2 -mb-2">
+                            <p className="text-xs text-gray-500">
+                              Product Media{" "}
+                              <span className="text-gray-400">
+                                — {usedTotal} of {TOTAL_MEDIA_CAP} used (images +
+                                videos combined)
+                              </span>
+                            </p>
+                          </div>
+
+                          <FormField
+                            control={form.control}
+                            name="images"
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel className="text-sm font-medium text-gray-700">
+                                  Product Images
+                                </FormLabel>
+                                <FormControl>
+                                  <MediaUploader
+                                    kind="image"
+                                    value={field.value || []}
+                                    onChange={field.onChange}
+                                    max={imagesRemaining}
+                                    maxFileSizeMB={5}
+                                    onError={(message) =>
+                                      showToast(message, "error")
+                                    }
+                                    disabled={isLoading}
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-xs" />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="videos"
+                            render={({ field }) => (
+                              <FormItem className="md:col-span-2">
+                                <FormLabel className="text-sm font-medium text-gray-700">
+                                  Product Videos
+                                  <span className="ml-1 text-xs font-normal text-gray-400">
+                                    (max 10MB each)
+                                  </span>
+                                </FormLabel>
+                                <FormControl>
+                                  <MediaUploader
+                                    kind="video"
+                                    value={field.value || []}
+                                    onChange={field.onChange}
+                                    max={videosRemaining}
+                                    maxFileSizeMB={10}
+                                    onError={(message) =>
+                                      showToast(message, "error")
+                                    }
+                                    disabled={isLoading}
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-xs" />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      );
+                    })()}
+
                     <FormField
                       control={form.control}
-                      name="image"
+                      name="weight"
                       render={({ field }) => (
-                        <FormItem className="md:col-span-2">
+                        <FormItem>
                           <FormLabel className="text-sm font-medium text-gray-700">
-                            Product Image
+                            Product Weight
                           </FormLabel>
                           <FormControl>
-                            <ImageUploadWithOptions
-                              value={field.value}
-                              onChange={field.onChange}
-                              onError={(message) => {
-                                showToast(message, "error");
-                              }}
-                            />
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                inputMode="decimal"
+                                step="0.01"
+                                min="0"
+                                placeholder="e.g. 2"
+                                className="mt-1 pr-12"
+                                {...field}
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 mt-0.5">
+                                Kg
+                              </span>
+                            </div>
                           </FormControl>
                           <FormMessage className="text-xs" />
                         </FormItem>
@@ -898,96 +983,24 @@ const NewAddProduct = ({
                 </CardContent>
               </Card>
 
-              {/* Optional fields card — UI only, not in submit payload yet */}
+              {/* Description card — UI only until backend accepts a description field */}
               <Card className="border-gray-200 shadow-sm bg-white py-5">
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold text-gray-900">
-                    Additional Information{" "}
+                    Description{" "}
                     <span className="text-xs font-normal text-gray-400">
                       (optional)
                     </span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-1 block">
-                      Description
-                    </label>
-                    <Textarea
-                      value={productDescription}
-                      onChange={(e) => setProductDescription(e.target.value)}
-                      placeholder="Describe the product (materials, features, usage tips...)"
-                      rows={4}
-                      className="resize-none"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700 mb-1 block">
-                        Product Weight
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={productWeight}
-                          onChange={(e) => setProductWeight(e.target.value)}
-                          placeholder="Enter weight"
-                          step="0.01"
-                          min="0"
-                        />
-                        <span className="text-sm text-gray-500 whitespace-nowrap">
-                          kg
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Additional Images
-                      <span className="text-xs font-normal text-gray-400 ml-1">
-                        (up to 6)
-                      </span>
-                    </label>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                      {additionalImages.map((file, index) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square rounded-md border border-gray-200 overflow-hidden group"
-                        >
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Additional ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeAdditionalImage(index)}
-                            className="absolute top-1 right-1 bg-white/90 hover:bg-white rounded-full p-1 shadow opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3 text-gray-700" />
-                          </button>
-                        </div>
-                      ))}
-                      {additionalImages.length < 6 && (
-                        <label className="aspect-square rounded-md border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-green-400 hover:text-green-500 cursor-pointer transition-colors">
-                          <Plus className="w-5 h-5" />
-                          <span className="text-[10px] mt-0.5">Add image</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={(e) => {
-                              handleAddImages(e.target.files);
-                              e.target.value = "";
-                            }}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
+                <CardContent>
+                  <Textarea
+                    value={productDescription}
+                    onChange={(e) => setProductDescription(e.target.value)}
+                    placeholder="Describe the product (materials, features, usage tips...)"
+                    rows={4}
+                    className="resize-none"
+                  />
                 </CardContent>
               </Card>
 

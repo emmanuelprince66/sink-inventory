@@ -25,6 +25,9 @@ interface StoreData {
   inStoreUrl?: string;
   slugUrl?: string;
   messageSubscription?: boolean;
+  deliveryDays: string[];
+  workingDays: string[];
+  weight: string;
 }
 
 interface FormErrors {
@@ -70,6 +73,17 @@ export const BUSINESS_SECTOR_OPTIONS = [
   "Logistics & Others",
 ] as const;
 
+// Delivery days enum from the PATCH /business/{id}/ schema (7 values).
+export const DELIVERY_DAYS_OPTIONS = [
+  { value: "MONDAY", short: "Mon" },
+  { value: "TUESDAY", short: "Tue" },
+  { value: "WEDNESDAY", short: "Wed" },
+  { value: "THURSDAY", short: "Thu" },
+  { value: "FRIDAY", short: "Fri" },
+  { value: "SATURDAY", short: "Sat" },
+  { value: "SUNDAY", short: "Sun" },
+] as const;
+
 export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
@@ -99,6 +113,9 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     currency: "",
     storeUrl: "",
     messageSubscription: false,
+    deliveryDays: [],
+    workingDays: [],
+    weight: "",
   };
 
   const [storeData, setStoreData] = useState<StoreData>(initialStoreData);
@@ -163,6 +180,13 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         inStoreUrl: inStoreUrl,
         slugUrl: slugUrl,
         messageSubscription: findBusiness.message_subscription || false,
+        deliveryDays: Array.isArray(findBusiness.delivery_days)
+          ? findBusiness.delivery_days
+          : [],
+        workingDays: Array.isArray(findBusiness.working_days)
+          ? findBusiness.working_days
+          : [],
+        weight: findBusiness.weight ? String(findBusiness.weight) : "",
       };
       setStoreData(data);
       setFormData(data);
@@ -261,6 +285,14 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       newErrors.description = "Description must be at least 10 characters";
     }
 
+    // Weight — optional, but must be a positive number when provided.
+    if (formData.weight) {
+      const w = parseFloat(formData.weight);
+      if (Number.isNaN(w) || w <= 0) {
+        newErrors.weight = "Weight must be a positive number (kg)";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -268,7 +300,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
   // Handle input changes
   const handleInputChange = (
     field: keyof StoreData,
-    value: string | boolean
+    value: string | boolean | string[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -278,6 +310,26 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         return newErrors;
       });
     }
+  };
+
+  // Toggle a single delivery day in/out of the selection.
+  const toggleDeliveryDay = (day: string) => {
+    setFormData((prev) => {
+      const set = new Set(prev.deliveryDays);
+      if (set.has(day)) set.delete(day);
+      else set.add(day);
+      return { ...prev, deliveryDays: Array.from(set) };
+    });
+  };
+
+  // Toggle a single working day in/out of the selection.
+  const toggleWorkingDay = (day: string) => {
+    setFormData((prev) => {
+      const set = new Set(prev.workingDays);
+      if (set.has(day)) set.delete(day);
+      else set.add(day);
+      return { ...prev, workingDays: Array.from(set) };
+    });
   };
 
   // Handle logo change
@@ -392,6 +444,21 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         );
       }
 
+      // Delivery days — one entry per day (DRF list serialization).
+      formData.deliveryDays.forEach((day) => {
+        formDataToSend.append("delivery_days", day);
+      });
+
+      // Working days — same enum, sent as repeated form entries.
+      formData.workingDays.forEach((day) => {
+        formDataToSend.append("working_days", day);
+      });
+
+      // Weight (optional). Send as a decimal string.
+      if (formData.weight) {
+        formDataToSend.append("weight", formData.weight);
+      }
+
       // Add image files if provided
       if (logoFile) {
         formDataToSend.append("logo", logoFile);
@@ -463,6 +530,8 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     logoInputRef,
     bannerInputRef,
     handleInputChange,
+    toggleDeliveryDay,
+    toggleWorkingDay,
     handleSubmit,
     handleLogoChange,
     handleBannerChange,
@@ -470,5 +539,6 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     copyStoreUrl,
     CURRENCY_OPTIONS,
     BUSINESS_SECTOR_OPTIONS,
+    DELIVERY_DAYS_OPTIONS,
   };
 };

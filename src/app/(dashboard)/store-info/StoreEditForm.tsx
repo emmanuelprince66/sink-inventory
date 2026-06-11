@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useStoreHook } from "@/hooks/useStoreHook";
+import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
   Image as ImageIconLucide,
   Save,
+  Truck,
   Upload,
   X,
 } from "lucide-react";
@@ -39,6 +41,8 @@ export default function StoreEditForm({ setIsEditing }: any) {
     errors,
     isSubmitting,
     handleInputChange,
+    toggleDeliveryDay,
+    toggleWorkingDay,
     handleSubmit,
     handleLogoChange,
     handleBannerChange,
@@ -49,6 +53,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
     bannerInputRef,
     CURRENCY_OPTIONS,
     BUSINESS_SECTOR_OPTIONS,
+    DELIVERY_DAYS_OPTIONS,
   } = useStoreHook({ setIsEditing });
 
   console.log("StoreEditForm rendered");
@@ -431,6 +436,133 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   />
                   <ErrorMessage message={errors.zipCode} />
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Delivery & Shipping Defaults */}
+          <Card className="border border-gray-200 shadow-lg pt-5">
+            <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-green-600" />
+                Delivery & Shipping Defaults
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Working Days */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Working Days</Label>
+                <p className="text-sm text-muted-foreground">
+                  Select the days your store is open. This drives store hours
+                  shown to customers and dispatch availability.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {DELIVERY_DAYS_OPTIONS.map((day) => {
+                    const isSelected = formData.workingDays.includes(
+                      day.value,
+                    );
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleWorkingDay(day.value)}
+                        disabled={isSubmitting}
+                        className={cn(
+                          "px-4 py-2 rounded-full border text-sm font-medium transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-green-600 border-green-600 text-white hover:bg-green-700"
+                            : "bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50",
+                          isSubmitting && "opacity-60 cursor-not-allowed",
+                        )}
+                        aria-pressed={isSelected}
+                      >
+                        {day.short}
+                      </button>
+                    );
+                  })}
+                </div>
+                {formData.workingDays.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.workingDays.length} day
+                    {formData.workingDays.length === 1 ? "" : "s"} selected
+                  </p>
+                )}
+                <ErrorMessage message={errors.workingDays} />
+              </div>
+
+              {/* Delivery Days */}
+              <div className="space-y-2">
+                <Label className="font-semibold">Delivery Days</Label>
+                <p className="text-sm text-muted-foreground">
+                  Select the days your store delivers orders. Customers will
+                  only be able to choose these days at checkout.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {DELIVERY_DAYS_OPTIONS.map((day) => {
+                    const isSelected = formData.deliveryDays.includes(
+                      day.value,
+                    );
+                    return (
+                      <button
+                        key={day.value}
+                        type="button"
+                        onClick={() => toggleDeliveryDay(day.value)}
+                        disabled={isSubmitting}
+                        className={cn(
+                          "px-4 py-2 rounded-full border text-sm font-medium transition-colors cursor-pointer",
+                          isSelected
+                            ? "bg-green-600 border-green-600 text-white hover:bg-green-700"
+                            : "bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50",
+                          isSubmitting && "opacity-60 cursor-not-allowed",
+                        )}
+                        aria-pressed={isSelected}
+                      >
+                        {day.short}
+                      </button>
+                    );
+                  })}
+                </div>
+                {formData.deliveryDays.length > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.deliveryDays.length} day
+                    {formData.deliveryDays.length === 1 ? "" : "s"} selected
+                  </p>
+                )}
+                <ErrorMessage message={errors.deliveryDays} />
+              </div>
+
+              {/* Default Package Weight */}
+              <div className="space-y-2">
+                <Label htmlFor="weight" className="font-semibold">
+                  Default Package Weight
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Used as a fallback when a product doesn't have its own weight.
+                  Shipping rates are calculated from this value.
+                </p>
+                <div className="relative max-w-xs">
+                  <Input
+                    id="weight"
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={formData.weight}
+                    onChange={(e) =>
+                      handleInputChange("weight", e.target.value)
+                    }
+                    placeholder="2"
+                    className={cn(
+                      "pr-12",
+                      errors.weight ? "border-red-500" : "",
+                    )}
+                    disabled={isSubmitting}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
+                    Kg
+                  </span>
+                </div>
+                <ErrorMessage message={errors.weight} />
               </div>
             </CardContent>
           </Card>

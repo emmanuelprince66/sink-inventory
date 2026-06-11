@@ -43,6 +43,15 @@ const productVariationSchema = z.object({
   expiry_date: z.string().default(""),
 });
 
+// Backend limits (from POST /product/business/{id}/ schema).
+// Total combined media (images + videos) cannot exceed MAX_PRODUCT_MEDIA.
+export const MAX_PRODUCT_MEDIA = 4;
+export const MAX_IMAGE_SIZE_MB = 5;
+export const MAX_VIDEO_SIZE_MB = 10;
+
+// Media item: File for newly added uploads, URL string for existing ones on edit.
+const mediaItemSchema = z.union([z.instanceof(File), z.string().url()]);
+
 const createProductSchema = (isEditMode: boolean) => {
   const baseSchema = z.object({
     allow_tax: z.boolean().default(false),
@@ -52,56 +61,44 @@ const createProductSchema = (isEditMode: boolean) => {
     // hide_from_pos: z.boolean().default(false),
     watchlist: z.boolean().default(false),
     item_name: z.string().min(1, "Item name is required"),
-    image: z
-      .union([
-        z
-          .instanceof(File)
-          .refine((file) => {
-            // Check file size
-            return file.size <= 5 * 1024 * 1024;
-          }, "File size must be less than 5MB")
-          .refine((file) => {
-            console.log("🔍 Validating file:", {
-              name: file.name,
-              type: file.type,
-              size: file.size,
+    // Per-file size validation lives on each array; the combined-count cap
+    // (images.length + videos.length <= MAX_PRODUCT_MEDIA) is enforced in
+    // the top-level superRefine on the object schema below.
+    images: z
+      .array(mediaItemSchema)
+      .default([])
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (
+            item instanceof File &&
+            item.size > MAX_IMAGE_SIZE_MB * 1024 * 1024
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Each image must be ${MAX_IMAGE_SIZE_MB}MB or smaller`,
+              path: [index],
             });
-
-            // If no MIME type provided (common with camera), check extension
-            if (!file.type || file.type === "") {
-              console.log("⚠️ No MIME type, checking extension...");
-              const ext = file.name.toLowerCase().split(".").pop();
-              const validExtensions = [
-                "jpg",
-                "jpeg",
-                "png",
-                "webp",
-                "heic",
-                "heif",
-                "gif",
-              ];
-              const isValidExt = validExtensions.includes(ext || "");
-              console.log(`Extension: ${ext}, Valid: ${isValidExt}`);
-              return isValidExt;
-            }
-
-            // Accept any image MIME type
-            const isImage = file.type.startsWith("image/");
-            console.log(`MIME type: ${file.type}, Is image: ${isImage}`);
-            return isImage;
-          }, "Please select a valid image file"),
-        z.string().url().optional(),
-        z.string().length(0).optional(),
-        z.undefined(),
-      ])
-      .optional()
-      .transform((val) => {
-        // Log what we're getting
-        if (val instanceof File) {
-          console.log("✅ Image validated successfully:", val.name);
-        }
-        return val;
+          }
+        });
       }),
+    videos: z
+      .array(mediaItemSchema)
+      .default([])
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (
+            item instanceof File &&
+            item.size > MAX_VIDEO_SIZE_MB * 1024 * 1024
+          ) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Each video must be ${MAX_VIDEO_SIZE_MB}MB or smaller`,
+              path: [index],
+            });
+          }
+        });
+      }),
+    weight: z.string().default(""),
     sku: z.string().default(""),
     category: z.string().default(""),
     expiry_date: z.string().default(""),
@@ -126,8 +123,22 @@ const createProductSchema = (isEditMode: boolean) => {
   });
 
   return baseSchema.superRefine((data, ctx) => {
-    if (data.variation_type === "single" && !isEditMode) {
-      if (!data.stock_quantity) {
+    // Combined media cap (images + videos).
+    const totalMedia = (data.images?.length || 0) + (data.videos?.length || 0);
+    if (totalMedia > MAX_PRODUCT_MEDIA) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `You can upload at most ${MAX_PRODUCT_MEDIA} media items in total (images + videos).`,
+        path: ["images"],
+      });
+    }
+
+    // Single-product required fields. Enforced for both create AND edit so
+    // a user switching from multiple → single during edit must fill these in.
+    // (stock_quantity is the one exception — backend keeps quantity in edit
+    // mode and won't accept changes here anyway.)
+    if (data.variation_type === "single") {
+      if (!isEditMode && !data.stock_quantity) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: "Stock Quantity is required",
@@ -255,6 +266,41 @@ interface ProductVariation {
   discount_threshold: string;
   expiry_date: string;
 }
+
+// ============================================================
+// MEDIA NORMALIZATION
+// ============================================================
+// The backend returns product media as a single `media` array of
+// { id, file, type } where `type` is "IMAGE" | "VIDEO". Split it into the
+// two arrays the form/MediaUploader expects. Falls back to the legacy
+// single `image` URL when the new shape is absent.
+interface ApiMediaItem {
+  id: string;
+  file: string;
+  type: "IMAGE" | "VIDEO" | string;
+}
+
+const splitMediaFromResponse = (
+  media: unknown,
+  legacySingleImage?: unknown,
+): { images: string[]; videos: string[] } => {
+  if (Array.isArray(media)) {
+    const images: string[] = [];
+    const videos: string[] = [];
+    for (const item of media as ApiMediaItem[]) {
+      const url = typeof item?.file === "string" ? item.file : "";
+      if (!url) continue;
+      if (item.type === "VIDEO") videos.push(url);
+      else images.push(url);
+    }
+    return { images, videos };
+  }
+  // Legacy fallback — single image URL only.
+  if (typeof legacySingleImage === "string" && legacySingleImage.length > 0) {
+    return { images: [legacySingleImage], videos: [] };
+  }
+  return { images: [], videos: [] };
+};
 
 // ============================================================
 // HELPER FUNCTION TO EXTRACT VARIATIONS FROM API DATA
@@ -396,7 +442,9 @@ export const useAddNewProductHook = ({
       sku: "",
       category: "",
       expiry_date: "",
-      image: undefined,
+      images: [],
+      videos: [],
+      weight: "",
       supplier: "",
       stock_quantity: "",
       low_stock_tresh: "",
@@ -463,6 +511,20 @@ export const useAddNewProductHook = ({
     staleTime: 1000 * 60 * 5,
   });
   console.log("DepartmentDatae", DepartmentData);
+
+  // Mirror the category/supplier lookup pattern so the Department select can
+  // be hydrated with the existing department ID on edit.
+  const getDepartmentByName = useCallback(
+    (name: string | null | undefined) => {
+      if (!name || !DepartmentData?.data) return "";
+      const department = DepartmentData.data.find(
+        (d: any) => d.name === name,
+      );
+      console.log(`🏬 [getDepartmentByName] "${name}" -> ID:`, department?.id);
+      return department?.id || "";
+    },
+    [DepartmentData],
+  );
   const generateProductVariations = useCallback(
     (variations: Variation[]): ProductVariation[] => {
       console.log(
@@ -523,14 +585,15 @@ export const useAddNewProductHook = ({
       return;
     }
 
-    // Wait for critical data to load (only category and product data)
-    if (ProductDataLoading || CategoriesDataLoading) {
+    // Wait for critical data to load — including departments so the lookup
+    // can resolve the saved department name to an ID for the Select.
+    if (ProductDataLoading || CategoriesDataLoading || DepartmentDataLoading) {
       console.log("⏳ [useEffect] Waiting for critical data to load...");
       return;
     }
 
     // Ensure critical data exists
-    if (!ProductData?.data || !CategoriesData) {
+    if (!ProductData?.data || !CategoriesData || !DepartmentData) {
       console.log("⚠️ [useEffect] Critical data not available yet");
       return;
     }
@@ -593,17 +656,25 @@ export const useAddNewProductHook = ({
 
       const categoryId = getCategoryByName(itemsData.category);
       const supplierId = getSupplierByName(itemsData.supplier);
+      const departmentId = getDepartmentByName(itemsData.department);
 
       console.log("🏷️ [useEffect] Resolved category ID:", categoryId);
       console.log("🚚 [useEffect] Resolved supplier ID:", supplierId);
+      console.log("🏬 [useEffect] Resolved department ID:", departmentId);
 
       form.reset(
         {
           item_name: itemsData.name || "",
           sku: itemsData.sku || "",
           category: categoryId,
+          department: departmentId,
           expiry_date: itemsData.expiry_date || "",
-          image: itemsData.image || undefined,
+          images: splitMediaFromResponse(
+            itemsData.media,
+            itemsData.image,
+          ).images,
+          videos: splitMediaFromResponse(itemsData.media).videos,
+          weight: itemsData.weight ? String(itemsData.weight) : "",
           supplier: supplierId,
           product_unit: itemsData.unit || "",
           payment_method: "",
@@ -636,17 +707,25 @@ export const useAddNewProductHook = ({
 
       const categoryId = getCategoryByName(itemsData.category);
       const supplierId = getSupplierByName(itemsData.supplier);
+      const departmentId = getDepartmentByName(itemsData.department);
 
       console.log("🏷️ [useEffect] Resolved category ID:", categoryId);
       console.log("🚚 [useEffect] Resolved supplier ID:", supplierId);
+      console.log("🏬 [useEffect] Resolved department ID:", departmentId);
 
       form.reset(
         {
           item_name: itemsData.name || "",
           sku: itemsData.sku || "",
           category: categoryId,
+          department: departmentId,
           expiry_date: itemsData.expiry_date || "",
-          image: itemsData.image || undefined,
+          images: splitMediaFromResponse(
+            itemsData.media,
+            itemsData.image,
+          ).images,
+          videos: splitMediaFromResponse(itemsData.media).videos,
+          weight: itemsData.weight ? String(itemsData.weight) : "",
           supplier: supplierId,
           stock_quantity: itemsData.quantity ? String(itemsData.quantity) : "",
           low_stock_tresh: itemsData.low_stock_threshold
@@ -702,12 +781,15 @@ export const useAddNewProductHook = ({
     ProductData,
     ProductDataLoading,
     CategoriesDataLoading,
+    DepartmentDataLoading,
+    DepartmentData,
     form,
     isEditMode,
     CategoriesData,
     productId,
     getCategoryByName,
     getSupplierByName,
+    getDepartmentByName,
   ]);
 
   // ============================================================
@@ -734,10 +816,40 @@ export const useAddNewProductHook = ({
     // Always append basic product info
     formData.append("name", values.item_name.trim());
 
-    if (values.image instanceof File) {
-      console.log("📷 [onSubmit] Appending image file:", values.image.name);
-      formData.append("image", values.image);
-    }
+    // Media payload — backend rules (POST + PATCH /product/business/{id}/):
+    // - Newly added entries are File objects → append to `images`/`videos`.
+    // - Existing entries are URL strings (already saved on the server). On
+    //   edit we forward the *kept* media IDs as `kept_media_ids` so the
+    //   backend can delete anything the user removed. URL → ID lookup uses
+    //   the original ProductData.media response.
+    const apiMedia: ApiMediaItem[] = Array.isArray(ProductData?.data?.media)
+      ? ProductData.data.media
+      : [];
+    const urlToId = new Map<string, string>(
+      apiMedia.map((m) => [m.file, m.id]),
+    );
+
+    const appendKeptId = (url: string) => {
+      const id = urlToId.get(url);
+      if (id) formData.append("kept_media_ids", id);
+    };
+
+    (values.images || []).forEach((item) => {
+      if (item instanceof File) {
+        formData.append("images", item);
+        console.log("📷 [onSubmit] Appending image file:", item.name);
+      } else if (isEditMode) {
+        appendKeptId(item);
+      }
+    });
+    (values.videos || []).forEach((item) => {
+      if (item instanceof File) {
+        formData.append("videos", item);
+        console.log("🎬 [onSubmit] Appending video file:", item.name);
+      } else if (isEditMode) {
+        appendKeptId(item);
+      }
+    });
 
     const appendIfNotEmpty = (fieldName: string, value: string | undefined) => {
       if (value !== undefined && value !== null && value.trim() !== "") {
@@ -751,6 +863,7 @@ export const useAddNewProductHook = ({
     appendIfNotEmpty("department_id", values.department);
     appendIfNotEmpty("supplier_id", values.supplier);
     appendIfNotEmpty("unit", values.product_unit);
+    appendIfNotEmpty("weight", values.weight);
     appendIfNotEmpty("payment_method", values.payment_method);
     appendIfNotEmpty("discount_type", values.type);
     appendIfNotEmpty("percentage_discount", values.percentage_discount);
@@ -761,6 +874,9 @@ export const useAddNewProductHook = ({
     formData.append("raw_material", String(values.raw_material));
     formData.append("sell_online", String(values.sell_online));
     formData.append("watchlist", String(values.watchlist));
+    // Explicit variation intent so the backend can drop existing variations
+    // when a multi-variation product is switched to single during edit.
+    formData.append("variation_type", values.variation_type);
 
     if (values.expiry_date) {
       const formattedDate = moment(values.expiry_date).format("YYYY-MM-DD");

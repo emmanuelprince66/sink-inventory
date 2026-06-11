@@ -27,6 +27,18 @@ const businessSchema = z.object({
   state: z.string().min(1, "State/Province is required"),
   city: z.string().min(1, "City/Town is required"),
   street: z.string().min(1, "Street is required"),
+  phone: z
+    .string()
+    .max(15, "Phone must not exceed 15 characters")
+    .regex(/^[\d\s+\-()]*$/, "Invalid phone number format")
+    .optional()
+    .or(z.literal("")),
+  email: z
+    .string()
+    .email("Invalid email format")
+    .optional()
+    .or(z.literal("")),
+  delivery_days: z.array(z.string()).optional().default([]),
   logo: z
     .union([
       z
@@ -46,6 +58,17 @@ const businessSchema = z.object({
     .optional()
     .nullable(),
 });
+
+// Delivery days enum (matches PATCH /business/{id}/ schema — 7 values).
+export const DELIVERY_DAYS_OPTIONS = [
+  { value: "MONDAY", short: "Mon" },
+  { value: "TUESDAY", short: "Tue" },
+  { value: "WEDNESDAY", short: "Wed" },
+  { value: "THURSDAY", short: "Thu" },
+  { value: "FRIDAY", short: "Fri" },
+  { value: "SATURDAY", short: "Sat" },
+  { value: "SUNDAY", short: "Sun" },
+] as const;
 
 export type BusinessFormValues = z.infer<typeof businessSchema>;
 
@@ -119,6 +142,9 @@ export const useBusinessHook = ({
       state: "",
       city: "",
       street: "",
+      phone: "",
+      email: "",
+      delivery_days: [],
     },
   });
 
@@ -163,6 +189,11 @@ export const useBusinessHook = ({
     formData.append("state", values.state);
     formData.append("city", values.city);
     formData.append("street", values.street);
+    if (values.phone) formData.append("phone", values.phone);
+    if (values.email) formData.append("email", values.email);
+    (values.delivery_days || []).forEach((day) => {
+      formData.append("delivery_days", day);
+    });
     if (values.logo instanceof File) {
       formData.append("logo", values.logo);
     }
@@ -216,6 +247,10 @@ export const useBusinessHook = ({
         state: d.state ?? "",
         city: d.city ?? "",
         street: d.street ?? "",
+        // Prefer the direct field, fall back to owner.* for backwards compat.
+        phone: d.phone ?? d.owner?.phone ?? "",
+        email: d.email ?? d.owner?.email ?? "",
+        delivery_days: Array.isArray(d.delivery_days) ? d.delivery_days : [],
       });
     }
   }, [EditBusinessData, openEditBusinessModal]);
@@ -244,6 +279,11 @@ export const useBusinessHook = ({
     formData.append("state", values.state);
     formData.append("city", values.city);
     formData.append("street", values.street);
+    if (values.phone) formData.append("phone", values.phone);
+    if (values.email) formData.append("email", values.email);
+    (values.delivery_days || []).forEach((day) => {
+      formData.append("delivery_days", day);
+    });
     // Only append logo if user picked a new file; string URL = unchanged, skip it
     if (values.logo instanceof File) {
       formData.append("logo", values.logo);
