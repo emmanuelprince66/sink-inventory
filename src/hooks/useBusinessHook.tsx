@@ -38,7 +38,11 @@ const businessSchema = z.object({
     .email("Invalid email format")
     .optional()
     .or(z.literal("")),
-  delivery_days: z.array(z.string()).optional().default([]),
+  // Required array — an empty [] means "no days selected", so there's no
+  // semantic reason to allow undefined. Keeping input and output as
+  // string[] avoids the resolver/useForm type mismatch caused by mixing
+  // .optional() with .default([]).
+  delivery_days: z.array(z.string()),
   logo: z
     .union([
       z
