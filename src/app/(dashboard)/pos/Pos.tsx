@@ -12,6 +12,7 @@ import { useCartStore } from "@/lib/store/cart-store";
 import CartTabs from "./CartTabs";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
+import { getFirstProductImage } from "@/utils/productMedia";
 import {
   ChevronLeft,
   ChevronRight,
@@ -332,22 +333,25 @@ const Pos: React.FC = () => {
                       )}
 
                       <div className="relative h-20 md:h-32 mb-2 rounded overflow-hidden bg-gray-100">
-                        {product.image ? (
-                          <Image
-                            src={product.image}
-                            alt={product.name}
-                            fill
-                            className={`object-cover ${
-                              !isOutOfStock &&
-                              "group-hover:scale-105 transition-transform duration-300"
-                            }`}
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            No Image
-                          </div>
-                        )}
+                        {(() => {
+                          const imageSrc = getFirstProductImage(product);
+                          return imageSrc ? (
+                            <Image
+                              src={imageSrc}
+                              alt={product.name}
+                              fill
+                              className={`object-cover ${
+                                !isOutOfStock &&
+                                "group-hover:scale-105 transition-transform duration-300"
+                              }`}
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              No Image
+                            </div>
+                          );
+                        })()}
                       </div>
                       <h3 className="font-medium text-[8px] md:text-[11px] truncate">
                         {product.name}

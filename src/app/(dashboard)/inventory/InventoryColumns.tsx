@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import { getFirstProductImage } from "@/utils/productMedia";
 import { ColumnDef } from "@tanstack/react-table";
 import { EyeOff, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
@@ -39,15 +40,22 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       header: "Product",
       cell: ({ row }) => {
         const inventory = row.original as any;
+        const thumb = getFirstProductImage(inventory);
         return (
           <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-md overflow-hidden">
-              <Image
-                src={inventory.image}
-                alt={`${inventory.name} logo`}
-                fill
-                className="object-cover"
-              />
+            <div className="relative h-10 w-10 rounded-md overflow-hidden bg-gray-100">
+              {thumb ? (
+                <Image
+                  src={thumb}
+                  alt={`${inventory.name} logo`}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
+                  N/A
+                </div>
+              )}
             </div>
             <div className="font-medium flex items-center gap-1.5">
               {inventory.name}

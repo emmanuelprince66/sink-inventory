@@ -610,88 +610,6 @@ const NewAddProduct = ({
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(() => {
-                      // Shared cap across images + videos. Each uploader can
-                      // grow as long as the combined total stays under 4.
-                      const TOTAL_MEDIA_CAP = 4;
-                      const watchedImages = form.watch("images") || [];
-                      const watchedVideos = form.watch("videos") || [];
-                      const imagesRemaining =
-                        TOTAL_MEDIA_CAP - watchedVideos.length;
-                      const videosRemaining =
-                        TOTAL_MEDIA_CAP - watchedImages.length;
-                      const usedTotal =
-                        watchedImages.length + watchedVideos.length;
-                      return (
-                        <>
-                          <div className="md:col-span-2 -mb-2">
-                            <p className="text-xs text-gray-500">
-                              Product Media{" "}
-                              <span className="text-gray-400">
-                                — {usedTotal} of {TOTAL_MEDIA_CAP} used (images +
-                                videos combined)
-                              </span>
-                            </p>
-                          </div>
-
-                          <FormField
-                            control={form.control}
-                            name="images"
-                            render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel className="text-sm font-medium text-gray-700">
-                                  Product Images
-                                </FormLabel>
-                                <FormControl>
-                                  <MediaUploader
-                                    kind="image"
-                                    value={field.value || []}
-                                    onChange={field.onChange}
-                                    max={imagesRemaining}
-                                    maxFileSizeMB={5}
-                                    onError={(message) =>
-                                      showToast(message, "error")
-                                    }
-                                    disabled={isLoading}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="videos"
-                            render={({ field }) => (
-                              <FormItem className="md:col-span-2">
-                                <FormLabel className="text-sm font-medium text-gray-700">
-                                  Product Videos
-                                  <span className="ml-1 text-xs font-normal text-gray-400">
-                                    (max 10MB each)
-                                  </span>
-                                </FormLabel>
-                                <FormControl>
-                                  <MediaUploader
-                                    kind="video"
-                                    value={field.value || []}
-                                    onChange={field.onChange}
-                                    max={videosRemaining}
-                                    maxFileSizeMB={10}
-                                    onError={(message) =>
-                                      showToast(message, "error")
-                                    }
-                                    disabled={isLoading}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                              </FormItem>
-                            )}
-                          />
-                        </>
-                      );
-                    })()}
-
                     <FormField
                       control={form.control}
                       name="weight"
@@ -2191,6 +2109,94 @@ const NewAddProduct = ({
                       />
                     )}
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Card 5: Product Media (placed last so the user finishes
+                  with images & videos after every other detail) */}
+              <Card className="border-gray-200 shadow-sm bg-white py-5">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    Product Media
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    // Shared cap across images + videos. Each uploader can
+                    // grow as long as the combined total stays under 4.
+                    const TOTAL_MEDIA_CAP = 4;
+                    const watchedImages = form.watch("images") || [];
+                    const watchedVideos = form.watch("videos") || [];
+                    const imagesRemaining =
+                      TOTAL_MEDIA_CAP - watchedVideos.length;
+                    const videosRemaining =
+                      TOTAL_MEDIA_CAP - watchedImages.length;
+                    const usedTotal =
+                      watchedImages.length + watchedVideos.length;
+                    return (
+                      <div className="space-y-4">
+                        <p className="text-xs text-gray-500">
+                          {usedTotal} of {TOTAL_MEDIA_CAP} used (images + videos
+                          combined)
+                        </p>
+
+                        <FormField
+                          control={form.control}
+                          name="images"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Product Images
+                              </FormLabel>
+                              <FormControl>
+                                <MediaUploader
+                                  kind="image"
+                                  value={field.value || []}
+                                  onChange={field.onChange}
+                                  max={imagesRemaining}
+                                  maxFileSizeMB={5}
+                                  onError={(message) =>
+                                    showToast(message, "error")
+                                  }
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs" />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="videos"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Product Videos
+                                <span className="ml-1 text-xs font-normal text-gray-400">
+                                  (max 10MB each)
+                                </span>
+                              </FormLabel>
+                              <FormControl>
+                                <MediaUploader
+                                  kind="video"
+                                  value={field.value || []}
+                                  onChange={field.onChange}
+                                  max={videosRemaining}
+                                  maxFileSizeMB={10}
+                                  onError={(message) =>
+                                    showToast(message, "error")
+                                  }
+                                  disabled={isLoading}
+                                />
+                              </FormControl>
+                              <FormMessage className="text-xs" />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </div>

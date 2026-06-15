@@ -168,8 +168,11 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         businessSector: findBusiness.type || "",
         tagline: findBusiness.tag_line || null,
         description: findBusiness.description || null,
-        phone: findBusiness.owner?.phone || "",
-        email: findBusiness.owner?.email || "",
+        // Prefer the direct business-level fields (current schema). Fall
+        // back to owner.* for older API responses where they lived on the
+        // owner relationship.
+        phone: findBusiness.phone || findBusiness.owner?.phone || "",
+        email: findBusiness.email || findBusiness.owner?.email || "",
         address: findBusiness.street || "",
         city: findBusiness.city || "",
         state: findBusiness.state || "",
@@ -426,6 +429,16 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       formDataToSend.append("city", formData.city);
       formDataToSend.append("street", formData.address);
       formDataToSend.append("currency", formData.currency);
+
+      // Phone and email are nullable per the Business schema. Send them only
+      // when the user supplied a value so we don't overwrite a saved value
+      // with an empty string.
+      if (formData.phone) {
+        formDataToSend.append("phone", formData.phone);
+      }
+      if (formData.email) {
+        formDataToSend.append("email", formData.email);
+      }
 
       // Optional fields - only append if they have values
       if (formData.tagline) {
