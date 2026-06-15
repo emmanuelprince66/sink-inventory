@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
-import CartTabs from "./CartTabs";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { getFirstProductImage } from "@/utils/productMedia";
@@ -23,6 +22,7 @@ import {
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
+import CartTabs from "./CartTabs";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
 import LoadPresaleModal from "./LoadPresaleModal";
 import { ScannerButton } from "./ScannerButton";
@@ -109,7 +109,6 @@ const Pos: React.FC = () => {
     cartItems,
   });
 
-  console.log("ProductData", ProductData);
   const { showToast } = useToast();
 
   const statusColors: Record<string, string> = {

@@ -99,6 +99,7 @@ const createProductSchema = (isEditMode: boolean) => {
         });
       }),
     weight: z.string().default(""),
+    description: z.string().default(""),
     sku: z.string().default(""),
     category: z.string().default(""),
     expiry_date: z.string().default(""),
@@ -445,6 +446,7 @@ export const useAddNewProductHook = ({
       images: [],
       videos: [],
       weight: "",
+      description: "",
       supplier: "",
       stock_quantity: "",
       low_stock_tresh: "",
@@ -675,6 +677,7 @@ export const useAddNewProductHook = ({
           ).images,
           videos: splitMediaFromResponse(itemsData.media).videos,
           weight: itemsData.weight ? String(itemsData.weight) : "",
+          description: itemsData.description || "",
           supplier: supplierId,
           product_unit: itemsData.unit || "",
           payment_method: "",
@@ -726,6 +729,7 @@ export const useAddNewProductHook = ({
           ).images,
           videos: splitMediaFromResponse(itemsData.media).videos,
           weight: itemsData.weight ? String(itemsData.weight) : "",
+          description: itemsData.description || "",
           supplier: supplierId,
           stock_quantity: itemsData.quantity ? String(itemsData.quantity) : "",
           low_stock_tresh: itemsData.low_stock_threshold
@@ -864,6 +868,7 @@ export const useAddNewProductHook = ({
     appendIfNotEmpty("supplier_id", values.supplier);
     appendIfNotEmpty("unit", values.product_unit);
     appendIfNotEmpty("weight", values.weight);
+    appendIfNotEmpty("description", values.description);
     appendIfNotEmpty("payment_method", values.payment_method);
     appendIfNotEmpty("discount_type", values.type);
     appendIfNotEmpty("percentage_discount", values.percentage_discount);

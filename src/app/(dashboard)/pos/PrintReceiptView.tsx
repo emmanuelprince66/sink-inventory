@@ -1,6 +1,8 @@
 "use client";
+import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { Button } from "@/components/ui/button";
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -346,17 +348,28 @@ const ReceiptPDFDocument = ({
               {business?.city}, {business?.state}, {business?.country}
             </Text>
 
-            <View style={styles.contactInfo}>
-              {business?.owner?.email && (
-                <Text style={styles.contactText}>{business.owner.email}</Text>
-              )}
-              {business?.owner?.email && business?.owner?.phone && (
-                <Text style={styles.separator}>|</Text>
-              )}
-              {business?.owner?.phone && (
-                <Text style={styles.contactText}>{business.owner.phone}</Text>
-              )}
-            </View>
+            {(() => {
+              // Prefer the direct business email/phone (new schema). Fall
+              // back to owner.* for older payloads that still nest contacts
+              // under the owner object.
+              const contactEmail =
+                business?.email || business?.owner?.email || "";
+              const contactPhone =
+                business?.phone || business?.owner?.phone || "";
+              return (
+                <View style={styles.contactInfo}>
+                  {contactEmail && (
+                    <Text style={styles.contactText}>{contactEmail}</Text>
+                  )}
+                  {contactEmail && contactPhone && (
+                    <Text style={styles.separator}>|</Text>
+                  )}
+                  {contactPhone && (
+                    <Text style={styles.contactText}>{contactPhone}</Text>
+                  )}
+                </View>
+              );
+            })()}
           </View>
 
           {/* Items Table */}
@@ -592,7 +605,7 @@ const PrintReceiptView = ({
   discountAmount,
   discount,
   attendant,
-  business,
+  business: businessProp,
   vatInfo,
 }: {
   setShowReceipt: (show: boolean) => void;
@@ -624,7 +637,18 @@ const PrintReceiptView = ({
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const { user } = useUserRole();
-  const { businessData } = useBusinessDataStore();
+  // Always read the freshest business profile from the API so receipts pick
+  // up edits (email, phone, address, etc.). Precedence: live query > parent
+  // prop > persisted store fallback while the query is still loading.
+  const business_id = useBusinessStore((s) => s.business_id);
+  const { data: liveBusinessQuery } = useFetchBusinessById(business_id, {
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
+  const { businessData: cachedBusinessData } = useBusinessDataStore();
+  const business =
+    liveBusinessQuery?.data || businessProp || cachedBusinessData;
+  const businessData = business;
 
   const multiplePayments = payloadData;
 
@@ -829,14 +853,14 @@ const PrintReceiptView = ({
             {business?.street && `${business.street}, `}
             {business?.city}, {business?.state}, {business?.country}
           </p>
-          {business?.owner?.email && (
+          {(business?.email || business?.owner?.email) && (
             <p className="business-email text-[11px]  receipt-little text-gray-500">
-              {business?.owner?.email}
+              {business?.email || business?.owner?.email}
             </p>
           )}
-          {business?.owner?.phone && (
+          {(business?.phone || business?.owner?.phone) && (
             <p className="business-phone text-[11px]  receipt-little text-gray-500">
-              {business?.owner?.phone}
+              {business?.phone || business?.owner?.phone}
             </p>
           )}
         </div>
