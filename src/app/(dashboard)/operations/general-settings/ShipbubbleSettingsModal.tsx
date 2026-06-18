@@ -1,12 +1,7 @@
 "use client";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -14,8 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronRight, Package } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  ChevronRight,
+  Layers,
+  Package,
+  Save,
+  Settings as SettingsIcon,
+  Truck,
+} from "lucide-react";
 import { useState } from "react";
+import BoxSizePickerModal, { BOX_PRESETS, BoxSize } from "./BoxSizePickerModal";
 
 const ShipbubbleSettingsModal = ({
   open,
@@ -25,34 +29,72 @@ const ShipbubbleSettingsModal = ({
   onClose: () => void;
 }) => {
   const [category, setCategory] = useState("hot-food");
-  const [boxSize, setBoxSize] = useState<
-    "small" | "medium" | "large"
-  >("small");
+  // Default to the first preset so the button always has a populated value.
+  const [boxSize, setBoxSize] = useState<BoxSize>(() => {
+    const first = BOX_PRESETS[0];
+    return {
+      id: first.id,
+      name: first.name,
+      maxWeightKg: first.maxWeightKg,
+      height: first.height,
+      length: first.length,
+      width: first.width,
+    };
+  });
+  const [openBoxPicker, setOpenBoxPicker] = useState(false);
+
+  // Resolve the preset (for the icon / tone) when the chosen box is a preset.
+  const preset = BOX_PRESETS.find((p) => p.id === boxSize.id);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-lg p-0 bg-white">
-        <DialogHeader className="px-5 pt-5 pb-3 border-b border-slate-100">
-          <DialogTitle className="text-xl font-bold text-slate-900">
-            Shipbubble Settings
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="px-5 py-4 space-y-5">
-          {/* Shipping Category */}
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-1">
-              Shipping Category
-            </h4>
-            <p className="text-xs text-slate-500 mb-3">
-              Select the category that best describes your products to ensure
-              accurate shipping rates.
+    <>
+      <CustomModal
+        isOpen={open}
+        onClose={onClose}
+        title="Shipbubble Settings"
+        description="Tune your product category and parcel defaults."
+        size="lg"
+        headerIcon={
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+            <SettingsIcon className="w-4 h-4" />
+          </div>
+        }
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:items-center sm:justify-between">
+            <p className="text-[11px] text-slate-500">
+              Changes are applied to new shipments only.
             </p>
-            <label className="text-xs text-slate-600 block mb-1.5">
-              Select Category
-            </label>
+            <div className="flex gap-2 sm:gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-slate-200 flex-1 sm:flex-none"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={onClose}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex-1 sm:flex-none"
+              >
+                <Save className="w-4 h-4 mr-1.5" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          {/* Step 1 — Shipping Category */}
+          <SettingsTile
+            step={1}
+            icon={<Layers className="w-4 h-4" />}
+            title="Shipping Category"
+            description="Pick the category that best describes your products so Shipbubble can compute accurate rates."
+          >
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+              <SelectTrigger className="mt-3 bg-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -64,78 +106,119 @@ const ShipbubbleSettingsModal = ({
                 <SelectItem value="groceries">Groceries</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </SettingsTile>
 
-          {/* Package Weight & Size */}
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900 mb-1">
-              Package Weight And Size
-            </h4>
-            <p className="text-xs text-slate-500 mb-3">
-              Enter the average weight of your packages. This will be used if a
-              product's weight is not specified.
-            </p>
-            <label className="text-xs text-slate-600 block mb-1.5">
-              Shipping Box Size
-            </label>
+          {/* Step 2 — Box Size */}
+          <SettingsTile
+            step={2}
+            icon={<Package className="w-4 h-4" />}
+            title="Package Weight & Size"
+            description="Used when a product hasn't set its own weight. Tap below to pick from preset boxes or enter a custom size."
+          >
             <button
-              className="w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-green-200 bg-green-50/50 hover:bg-green-50"
-              onClick={() => {
-                // Could cycle sizes — just visual
-                setBoxSize(
-                  boxSize === "small"
-                    ? "medium"
-                    : boxSize === "medium"
-                      ? "large"
-                      : "small",
-                );
-              }}
+              type="button"
+              onClick={() => setOpenBoxPicker(true)}
+              className="mt-3 w-full flex items-center gap-3 sm:gap-4 p-3 rounded-lg border-2 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 transition-colors text-left"
             >
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-md bg-green-100 flex items-center justify-center">
-                  <Package className="h-4 w-4 text-green-600" />
-                </div>
-                <span className="text-sm font-semibold text-slate-900 capitalize">
-                  {boxSize}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {boxSize === "small" &&
-                    "(0.5kg, H:2cm, L:25cm, W:35cm )"}
-                  {boxSize === "medium" && "(2kg, H:10cm, L:35cm, W:45cm )"}
-                  {boxSize === "large" && "(5kg, H:20cm, L:50cm, W:55cm )"}
-                </span>
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-lg flex items-center justify-center border shrink-0",
+                  preset?.tone ||
+                    "bg-emerald-50 text-emerald-700 border-emerald-100",
+                )}
+              >
+                {preset?.icon || <Package className="w-6 h-6" />}
               </div>
-              <ChevronRight className="h-4 w-4 text-slate-400" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-slate-900">
+                  {boxSize.name}
+                </p>
+                <p className="text-xs text-slate-700 mt-0.5">
+                  Max Weight: {boxSize.maxWeightKg} Kg
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  H:{boxSize.height}cm · L:{boxSize.length}cm · W:
+                  {boxSize.width}cm
+                </p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0" />
             </button>
-          </div>
+          </SettingsTile>
 
-          {/* Choose logistics partner */}
-          <button className="w-full flex items-center justify-between gap-3 py-3 border-t border-slate-100 text-left">
-            <div className="flex-1">
-              <h4 className="text-sm font-semibold text-slate-900">
-                Choose logistics partner
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Select your preferred logistics partners from Shipbubble's
-                network. Your customers will see this logistics companies at
-                checkout.
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />
-          </button>
+          {/* Step 3 — Logistics partners */}
+          <SettingsTile
+            step={3}
+            icon={<Truck className="w-4 h-4" />}
+            title="Logistics Partners"
+            description="Choose which couriers in Shipbubble's network are shown to your customers at checkout."
+          >
+            <button
+              type="button"
+              className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border-2 border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors text-left"
+            >
+              <span className="text-sm font-semibold text-slate-800">
+                Manage partner list
+              </span>
+              <ChevronRight className="w-4 h-4 text-slate-500" />
+            </button>
+          </SettingsTile>
         </div>
+      </CustomModal>
 
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-t border-slate-100 bg-slate-50/50 rounded-b-lg">
-          <p className="text-xs text-slate-500">
-            Click the save button to effect changes.
-          </p>
-          <Button className="bg-green-600 hover:bg-green-700 text-white">
-            Save Changes
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <BoxSizePickerModal
+        open={openBoxPicker}
+        onClose={() => setOpenBoxPicker(false)}
+        value={boxSize}
+        onChange={setBoxSize}
+      />
+    </>
   );
 };
+
+// ─── shared visual block (same identity as DeliveryAndPickup) ───────────────
+
+interface SettingsTileProps {
+  step: number;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  children?: React.ReactNode;
+}
+const SettingsTile = ({
+  step,
+  icon,
+  title,
+  description,
+  children,
+}: SettingsTileProps) => (
+  <div className="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-colors">
+    <span className="absolute left-0 top-4 bottom-4 w-1 rounded-r bg-slate-200" />
+    <div className="pl-4 pr-3 sm:pl-5 sm:pr-4 py-4">
+      <div className="flex items-start gap-3">
+        <div className="shrink-0 w-9 h-9 rounded-lg flex flex-col items-center justify-center border bg-slate-50 border-slate-200 text-slate-600">
+          <span className="text-[8px] font-semibold uppercase tracking-wider opacity-80">
+            Step
+          </span>
+          <span className="text-[10px] font-bold leading-none">
+            {String(step).padStart(2, "0")}
+          </span>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2">
+            <span className="text-slate-500 mt-0.5">{icon}</span>
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-slate-900">{title}</h4>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                {description}
+              </p>
+            </div>
+          </div>
+          {children}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 export default ShipbubbleSettingsModal;
