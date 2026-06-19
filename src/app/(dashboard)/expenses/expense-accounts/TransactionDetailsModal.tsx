@@ -47,7 +47,7 @@ const TransactionDetailsModal = ({
   const source = getAccountById(transaction.sourceAccountId);
   const destination = transaction.destinationAccountId
     ? getAccountById(transaction.destinationAccountId)
-    : null;
+    : undefined;
 
   const canActOnPending = transaction.status === "PENDING";
 
