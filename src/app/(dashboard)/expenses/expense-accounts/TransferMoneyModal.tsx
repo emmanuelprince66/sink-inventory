@@ -293,8 +293,14 @@ const TransferMoneyModal = ({
               <p className="text-sm font-bold text-slate-900 truncate">
                 {EXPENSE_ACCOUNT.name}
               </p>
-              <p className="text-[11px] text-slate-500 font-mono">
-                {EXPENSE_ACCOUNT.accountNumber}
+              <p className="text-[11px] text-slate-500">
+                <span className="font-semibold text-slate-700">
+                  {EXPENSE_ACCOUNT.bankName}
+                </span>
+                <span className="mx-1">·</span>
+                <span className="font-mono">
+                  {EXPENSE_ACCOUNT.accountNumber}
+                </span>
               </p>
             </div>
             <div className="text-right shrink-0">

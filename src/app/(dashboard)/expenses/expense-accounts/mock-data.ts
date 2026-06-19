@@ -31,6 +31,8 @@ export interface ExpenseAccount {
   id: string;
   name: string;
   accountNumber: string;
+  /** Bank that holds the float (e.g. "VFD MFB"). */
+  bankName: string;
   balance: number;
   monthlySpend: number;
   /** Users assigned to the account (visible to operators). */
@@ -175,6 +177,7 @@ export const EXPENSE_ACCOUNT: ExpenseAccount = {
   id: "acc-main",
   name: "Main Expense Account",
   accountNumber: "0114-2308-77",
+  bankName: "VFD MFB",
   balance: 5_317_000,
   monthlySpend: 1_140_000,
   assignedUsers: [

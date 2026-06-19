@@ -8,6 +8,7 @@ import { ArrowUpRight, Wallet } from "lucide-react";
 interface AccountBalanceCardProps {
   balance: number;
   accountNumber: string;
+  bankName: string;
   pendingApprovals: number;
   onTransfer: () => void;
   className?: string;
@@ -16,6 +17,7 @@ interface AccountBalanceCardProps {
 const AccountBalanceCard = ({
   balance,
   accountNumber,
+  bankName,
   pendingApprovals,
   onTransfer,
   className,
@@ -42,8 +44,10 @@ const AccountBalanceCard = ({
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
                 Expense Account Balance
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
-                {accountNumber}
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                <span className="font-semibold">{bankName}</span>
+                <span className="text-slate-400 mx-1">·</span>
+                <span className="font-mono">{accountNumber}</span>
               </p>
             </div>
           </div>

@@ -143,9 +143,15 @@ const TransactionDetailsModal = ({
               From account
             </p>
             <p className="text-sm font-semibold text-slate-900 truncate">
-              {EXPENSE_ACCOUNT.name}{" "}
-              <span className="font-mono text-[11px] text-slate-500">
-                · {EXPENSE_ACCOUNT.accountNumber}
+              {EXPENSE_ACCOUNT.name}
+            </p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              <span className="font-semibold text-slate-700">
+                {EXPENSE_ACCOUNT.bankName}
+              </span>
+              <span className="mx-1">·</span>
+              <span className="font-mono">
+                {EXPENSE_ACCOUNT.accountNumber}
               </span>
             </p>
           </div>

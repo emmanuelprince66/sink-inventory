@@ -9,6 +9,7 @@ import {
   Hourglass,
   Wallet,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import moment from "moment";
 import {
   CategoryStats,
@@ -26,17 +27,16 @@ import {
 interface ExpenseAccountsViewProps {
   onTransfer: (defaultCategory?: string) => void;
   onViewTransaction: (txn: ExpenseTransaction) => void;
-  onViewTransactionsTab: (categoryFilter?: string) => void;
-  /** Open the detail modal showing budget + transactions for a category. */
-  onViewCategory: (stats: CategoryStats) => void;
 }
 
 const ExpenseAccountsView = ({
   onTransfer,
   onViewTransaction,
-  onViewTransactionsTab,
-  onViewCategory,
 }: ExpenseAccountsViewProps) => {
+  const router = useRouter();
+  const goToCategory = (category: string) =>
+    router.push(`/expenses/categories/${encodeURIComponent(category)}`);
+
   const pendingApprovals = MOCK_TRANSACTIONS.filter(
     (t) => t.status === "PENDING",
   );
@@ -56,15 +56,15 @@ const ExpenseAccountsView = ({
   );
 
   return (
-    <div className="space-y-5">
+    <div className="w-full space-y-5">
       {/* Dashboard widgets row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <WidgetCard
           label="Account Balance"
           value={formatToNaira(EXPENSE_ACCOUNT.balance)}
           icon={<Wallet className="w-4 h-4 text-emerald-600" />}
           tone="emerald"
-          subtitle={EXPENSE_ACCOUNT.accountNumber}
+          subtitle={`${EXPENSE_ACCOUNT.bankName} · ${EXPENSE_ACCOUNT.accountNumber}`}
         />
         <WidgetCard
           label="Pending Approvals"
@@ -98,12 +98,12 @@ const ExpenseAccountsView = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
           {categoryStats.map((c) => (
             <CategoryCard
               key={c.category}
               stats={c}
-              onViewMore={() => onViewCategory(c)}
+              onViewMore={() => goToCategory(c.category)}
               onTransfer={() => onTransfer(c.category)}
             />
           ))}
@@ -115,7 +115,6 @@ const ExpenseAccountsView = ({
         <RecentActivity
           items={recentActivity}
           onViewItem={onViewTransaction}
-          onViewAll={() => onViewTransactionsTab()}
         />
         <SpendByUser data={userSpend} />
       </div>
@@ -292,11 +291,9 @@ const CategoryCard = ({
 const RecentActivity = ({
   items,
   onViewItem,
-  onViewAll,
 }: {
   items: ExpenseTransaction[];
   onViewItem: (txn: ExpenseTransaction) => void;
-  onViewAll: () => void;
 }) => (
   <div className="rounded-xl border border-slate-200 bg-white">
     <div className="flex items-center justify-between p-4 border-b border-slate-100">
@@ -305,15 +302,9 @@ const RecentActivity = ({
           Recent Activity
         </h4>
         <p className="text-[11px] text-slate-500 mt-0.5">
-          Last transfers and logged expenses.
+          Last transfers and logged expenses across every category.
         </p>
       </div>
-      <button
-        onClick={onViewAll}
-        className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
-      >
-        View all
-      </button>
     </div>
     {items.length === 0 ? (
       <div className="py-10 text-center text-xs text-slate-500">
