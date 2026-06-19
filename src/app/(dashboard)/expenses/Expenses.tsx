@@ -8,22 +8,37 @@ import { SearchInput } from "@/components/app/SearchInput";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
+  Briefcase,
   Calendar,
   ChevronLeft,
   ChevronRight,
   DollarSign,
   Forward,
+  Receipt,
   TrendingDown,
+  Wallet as WalletIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
 import AllExpenses from "./AllExpenses";
+import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
+import CreateSubAccountModal from "./expense-accounts/CreateSubAccountModal";
+import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
+import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
+import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
+import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
+import {
+  ExpenseTransaction,
+  MOCK_TRANSACTIONS,
+  computeTotalBalance,
+} from "./expense-accounts/mock-data";
 
 interface Category {
   id: string;
@@ -112,6 +127,8 @@ const CustomExpenseCard = ({
   );
 };
 
+type ExpenseTab = "expenses" | "accounts" | "transactions";
+
 const Expenses = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -124,6 +141,28 @@ const Expenses = () => {
     from: new Date(),
     to: new Date(),
   });
+
+  // Expense Account Management state (UI-only).
+  const [activeTab, setActiveTab] = useState<ExpenseTab>("expenses");
+  const [openCreateSubAccount, setOpenCreateSubAccount] = useState(false);
+  const [openTransfer, setOpenTransfer] = useState(false);
+  const [transferSourceId, setTransferSourceId] = useState<string | undefined>();
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<ExpenseTransaction | null>(null);
+
+  const totalBalance = computeTotalBalance();
+  const pendingApprovalsCount = MOCK_TRANSACTIONS.filter(
+    (t) => t.status === "PENDING",
+  ).length;
+
+  const handleCreateSubAccount = () => setOpenCreateSubAccount(true);
+  const handleTransfer = (sourceId?: string) => {
+    setTransferSourceId(sourceId);
+    setOpenTransfer(true);
+  };
+  const handleViewTransaction = (txn: ExpenseTransaction) =>
+    setSelectedTransaction(txn);
+  const handleGoToTransactionsTab = () => setActiveTab("transactions");
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -231,15 +270,15 @@ const Expenses = () => {
             </div>
           </div>
         </div>
-        {/* Overview Cards */}
+        {/* Overview row — existing Total Expenses card + new Expense Account Balance card */}
         <div className="mb-4 sm:mb-6">
           <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
 
           {ExpensesLoading || !ExpensesData ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-              {Array.from({ length: 3 }).map((_, index) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+              {Array.from({ length: 2 }).map((_, index) => (
                 <CustomCard key={index} className="w-full border-gray-200">
                   <div className="flex flex-col gap-4 sm:gap-6 items-start">
                     <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
@@ -249,7 +288,7 @@ const Expenses = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               <CustomExpenseCard
                 title="Total Expenses"
                 amount={formatToNaira(
@@ -257,13 +296,50 @@ const Expenses = () => {
                 )}
                 type="total"
               />
+              <AccountBalanceCard
+                totalBalance={totalBalance}
+                accountCount={MOCK_TRANSACTIONS.length > 0 ? 5 : 0}
+                pendingApprovals={pendingApprovalsCount}
+                onCreateSubAccount={handleCreateSubAccount}
+                onTransfer={() => handleTransfer()}
+              />
             </div>
           )}
         </div>
       </div>
 
-      {/* Main Content Section */}
-      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+      {/* Tabs — Expenses / Expense Accounts / Transactions */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as ExpenseTab)}
+        className="w-full"
+      >
+        <div className="overflow-x-auto -mx-2 sm:-mx-4 px-2 sm:px-4">
+          <TabsList className="bg-white border border-slate-200 p-1 h-auto inline-flex">
+            <TabsTrigger
+              value="expenses"
+              className="text-xs sm:text-sm data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-3 sm:px-4 py-1.5"
+            >
+              Expenses
+            </TabsTrigger>
+            <TabsTrigger
+              value="accounts"
+              className="text-xs sm:text-sm data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-3 sm:px-4 py-1.5"
+            >
+              Expense Accounts
+            </TabsTrigger>
+            <TabsTrigger
+              value="transactions"
+              className="text-xs sm:text-sm data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-3 sm:px-4 py-1.5"
+            >
+              Transactions
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Tab 1 — existing Expenses flow */}
+        <TabsContent value="expenses" className="mt-4">
+          <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
         {/* Categories and Search Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -407,6 +483,50 @@ const Expenses = () => {
           )}
         </div>
       </div>
+        </TabsContent>
+
+        {/* Tab 2 — Expense Accounts dashboard */}
+        <TabsContent value="accounts" className="mt-4">
+          <ExpenseAccountsView
+            onCreateSubAccount={handleCreateSubAccount}
+            onTransfer={(sourceId) => handleTransfer(sourceId)}
+            onViewTransaction={handleViewTransaction}
+            onViewTransactionsTab={handleGoToTransactionsTab}
+          />
+        </TabsContent>
+
+        {/* Tab 3 — Transaction history */}
+        <TabsContent value="transactions" className="mt-4">
+          <ExpenseTransactionsView
+            onSelectTransaction={handleViewTransaction}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Expense Account Management modals */}
+      <CreateSubAccountModal
+        isOpen={openCreateSubAccount}
+        onClose={() => setOpenCreateSubAccount(false)}
+      />
+      <TransferMoneyModal
+        isOpen={openTransfer}
+        onClose={() => setOpenTransfer(false)}
+        defaultSourceId={transferSourceId}
+      />
+      <TransactionDetailsModal
+        isOpen={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        transaction={selectedTransaction}
+        onApprove={(id) => {
+          // UI-only — wire to PATCH /expense-transactions/{id}/approve when ready.
+          console.log("approve", id);
+          setSelectedTransaction(null);
+        }}
+        onReject={(id) => {
+          console.log("reject", id);
+          setSelectedTransaction(null);
+        }}
+      />
 
       {/* Add Expenses Modal */}
       <CustomModal
