@@ -14,21 +14,22 @@ import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ChevronRight, FilterX, Inbox, Paperclip } from "lucide-react";
 import moment from "moment";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   EXPENSE_CATEGORIES,
   ExpenseTransaction,
-  MOCK_ACCOUNTS,
   MOCK_TRANSACTIONS,
   MOCK_USERS,
   STATUS_META,
   TransactionStatus,
-  getAccountById,
+  getCategoryMeta,
   getUserById,
 } from "./mock-data";
 
 interface ExpenseTransactionsViewProps {
   onSelectTransaction: (txn: ExpenseTransaction) => void;
+  /** Optional pre-applied category filter from a tile click. */
+  initialCategory?: string;
 }
 
 const PAGE_SIZE = 8;
@@ -36,13 +37,22 @@ const ALL = "__all__";
 
 const ExpenseTransactionsView = ({
   onSelectTransaction,
+  initialCategory,
 }: ExpenseTransactionsViewProps) => {
   const [search, setSearch] = useState("");
-  const [accountId, setAccountId] = useState<string>(ALL);
   const [userId, setUserId] = useState<string>(ALL);
-  const [category, setCategory] = useState<string>(ALL);
+  const [category, setCategory] = useState<string>(initialCategory || ALL);
   const [status, setStatus] = useState<TransactionStatus | typeof ALL>(ALL);
   const [page, setPage] = useState(1);
+
+  // When the caller flips the initial category filter (e.g. tapping a tile),
+  // sync the local state and bounce back to page 1.
+  useEffect(() => {
+    if (initialCategory) {
+      setCategory(initialCategory);
+      setPage(1);
+    }
+  }, [initialCategory]);
 
   const filtered = useMemo(() => {
     return MOCK_TRANSACTIONS.filter((t) => {
@@ -54,33 +64,21 @@ const ExpenseTransactionsView = ({
           t.narration.toLowerCase().includes(q);
         if (!matches) return false;
       }
-      if (
-        accountId !== ALL &&
-        t.sourceAccountId !== accountId &&
-        t.destinationAccountId !== accountId
-      ) {
-        return false;
-      }
       if (userId !== ALL && t.initiatedById !== userId) return false;
       if (category !== ALL && t.category !== category) return false;
       if (status !== ALL && t.status !== status) return false;
       return true;
     });
-  }, [search, accountId, userId, category, status]);
+  }, [search, userId, category, status]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const filtersActive =
-    !!search ||
-    accountId !== ALL ||
-    userId !== ALL ||
-    category !== ALL ||
-    status !== ALL;
+    !!search || userId !== ALL || category !== ALL || status !== ALL;
 
   const resetFilters = () => {
     setSearch("");
-    setAccountId(ALL);
     setUserId(ALL);
     setCategory(ALL);
     setStatus(ALL);
@@ -102,27 +100,7 @@ const ExpenseTransactionsView = ({
               }}
             />
           </div>
-          <div className="grid grid-cols-2 md:flex md:flex-row gap-2 md:gap-3">
-            <Select
-              value={accountId}
-              onValueChange={(v) => {
-                setAccountId(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="md:w-[170px]">
-                <SelectValue placeholder="Account" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>All accounts</SelectItem>
-                {MOCK_ACCOUNTS.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
+          <div className="grid grid-cols-3 md:flex md:flex-row gap-2 md:gap-3">
             <Select
               value={userId}
               onValueChange={(v) => {
@@ -130,7 +108,7 @@ const ExpenseTransactionsView = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="md:w-[160px]">
+              <SelectTrigger className="md:w-[170px]">
                 <SelectValue placeholder="User" />
               </SelectTrigger>
               <SelectContent>
@@ -150,7 +128,7 @@ const ExpenseTransactionsView = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="md:w-[140px]">
+              <SelectTrigger className="md:w-[150px]">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -213,16 +191,13 @@ const ExpenseTransactionsView = ({
                   Reference
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-slate-600">
-                  Account
+                  Category
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-slate-600">
                   Initiated By
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-slate-600">
                   Approved By
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-slate-600">
-                  Category
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-slate-600 text-right">
                   Amount
@@ -237,12 +212,13 @@ const ExpenseTransactionsView = ({
             </thead>
             <tbody>
               {pageItems.map((t) => {
-                const status = STATUS_META[t.status];
+                const statusMeta = STATUS_META[t.status];
+                const catMeta = getCategoryMeta(t.category);
+                const CatIcon = catMeta.icon;
                 const initiator = getUserById(t.initiatedById);
                 const approver = t.approvedById
                   ? getUserById(t.approvedById)
                   : null;
-                const source = getAccountById(t.sourceAccountId);
                 return (
                   <tr
                     key={t.id}
@@ -259,8 +235,20 @@ const ExpenseTransactionsView = ({
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-700">
-                      {source?.name || "—"}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "w-6 h-6 rounded-md flex items-center justify-center border",
+                            catMeta.tone,
+                          )}
+                        >
+                          <CatIcon className="w-3 h-3" />
+                        </span>
+                        <span className="text-sm text-slate-700">
+                          {t.category}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-700">
                       {initiator?.name || "—"}
@@ -270,9 +258,6 @@ const ExpenseTransactionsView = ({
                         <span className="text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-sm text-slate-700">
-                      {t.category}
-                    </td>
                     <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
                       {formatToNaira(t.amount)}
                     </td>
@@ -280,16 +265,16 @@ const ExpenseTransactionsView = ({
                       <span
                         className={cn(
                           "inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                          status.pill,
+                          statusMeta.pill,
                         )}
                       >
                         <span
                           className={cn(
                             "w-1.5 h-1.5 rounded-full",
-                            status.dot,
+                            statusMeta.dot,
                           )}
                         />
-                        {status.label}
+                        {statusMeta.label}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-xs text-slate-500 text-right whitespace-nowrap">
@@ -305,17 +290,23 @@ const ExpenseTransactionsView = ({
         {/* Mobile cards */}
         <ul className="md:hidden divide-y divide-slate-100">
           {pageItems.map((t) => {
-            const status = STATUS_META[t.status];
+            const statusMeta = STATUS_META[t.status];
+            const catMeta = getCategoryMeta(t.category);
+            const CatIcon = catMeta.icon;
             const initiator = getUserById(t.initiatedById);
-            const source = getAccountById(t.sourceAccountId);
             return (
               <li key={t.id}>
                 <button
                   onClick={() => onSelectTransaction(t)}
                   className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
                 >
-                  <div className="w-10 h-10 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
-                    {initiator?.initials || "?"}
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center border shrink-0",
+                      catMeta.tone,
+                    )}
+                  >
+                    <CatIcon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -325,14 +316,14 @@ const ExpenseTransactionsView = ({
                       <span
                         className={cn(
                           "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                          status.pill,
+                          statusMeta.pill,
                         )}
                       >
-                        {status.label}
+                        {statusMeta.label}
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 truncate mt-0.5">
-                      {source?.name || "—"} · {t.category}
+                      {t.category} · {initiator?.name || "—"}
                     </p>
                     <p className="text-[11px] text-slate-500 mt-0.5">
                       {moment(t.createdAt).format("MMM D, YYYY · h:mm A")}

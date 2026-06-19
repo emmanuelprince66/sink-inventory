@@ -1,5 +1,22 @@
 // UI-only mock data for the Expense Account Management module.
-// Replace the constants below with React Query hooks once the backend ships.
+//
+// Model: a SINGLE expense account holds the operational float. Every outgoing
+// movement (whether logged via "Add Expense" or routed through "Transfer
+// Money") is tagged with a CATEGORY. The category is the dimensional axis
+// used for reporting (chart of spend, per-category dashboard tiles, etc.).
+
+import {
+  type LucideIcon,
+  Briefcase,
+  Cog,
+  Flame,
+  Megaphone,
+  ShieldCheck,
+  Truck,
+  Wallet,
+  Wrench,
+  Zap,
+} from "lucide-react";
 
 export type AccountRole = "Owner" | "Manager" | "Staff";
 
@@ -14,17 +31,12 @@ export interface ExpenseAccount {
   id: string;
   name: string;
   accountNumber: string;
-  description?: string;
   balance: number;
   monthlySpend: number;
-  /** Top-level account (only one is "main"). Sub-accounts have parentId set. */
-  isMain: boolean;
-  parentId: string | null;
-  assignedUsers: string[]; // user IDs
+  /** Users assigned to the account (visible to operators). */
+  assignedUsers: string[];
   /** Transfers above this amount require manager approval. */
   approvalThreshold: number;
-  /** Optional monthly spending limit. */
-  spendingLimit?: number;
   createdAt: string;
 }
 
@@ -43,11 +55,9 @@ export interface TransactionAttachment {
 
 export interface ExpenseTransaction {
   id: string;
-  reference: string; // human-readable e.g. EXP-2026-00432
-  sourceAccountId: string;
-  /** `null` when the transaction is an outgoing expense (not a transfer). */
-  destinationAccountId: string | null;
+  reference: string;
   amount: number;
+  /** Always categorised — the user must pick a category at submit time. */
   category: string;
   narration: string;
   initiatedById: string;
@@ -59,17 +69,91 @@ export interface ExpenseTransaction {
 }
 
 // ─── Categories (preset + custom) ───────────────────────────────────────────
+//
+// Each category gets a Lucide icon + tinted background so the dashboard
+// tiles read at a glance.
 
-export const EXPENSE_CATEGORIES = [
-  "Fuel",
-  "Transport",
-  "Salaries",
-  "Marketing",
-  "Logistics",
-  "Operations",
-  "Utilities",
-  "Maintenance",
-] as const;
+export interface CategoryMeta {
+  name: string;
+  icon: LucideIcon;
+  /** Tailwind tile background + foreground tone. */
+  tone: string;
+}
+
+export const CATEGORY_META: Record<string, CategoryMeta> = {
+  Fuel: {
+    name: "Fuel",
+    icon: Flame,
+    tone: "bg-amber-50 text-amber-700 border-amber-100",
+  },
+  Transport: {
+    name: "Transport",
+    icon: Truck,
+    tone: "bg-sky-50 text-sky-700 border-sky-100",
+  },
+  Salaries: {
+    name: "Salaries",
+    icon: Wallet,
+    tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
+  },
+  Marketing: {
+    name: "Marketing",
+    icon: Megaphone,
+    tone: "bg-violet-50 text-violet-700 border-violet-100",
+  },
+  Logistics: {
+    name: "Logistics",
+    icon: Briefcase,
+    tone: "bg-indigo-50 text-indigo-700 border-indigo-100",
+  },
+  Operations: {
+    name: "Operations",
+    icon: Cog,
+    tone: "bg-rose-50 text-rose-700 border-rose-100",
+  },
+  Utilities: {
+    name: "Utilities",
+    icon: Zap,
+    tone: "bg-yellow-50 text-yellow-700 border-yellow-100",
+  },
+  Maintenance: {
+    name: "Maintenance",
+    icon: Wrench,
+    tone: "bg-teal-50 text-teal-700 border-teal-100",
+  },
+};
+
+export const EXPENSE_CATEGORIES = Object.keys(CATEGORY_META) as Array<
+  keyof typeof CATEGORY_META
+>;
+
+// Per-category budgets. UI-only — when the backend ships, fetch from
+// /expense-budgets/business/{business_id}/. Categories without an entry here
+// render as "No budget set" with a "Set Budget" CTA.
+export interface CategoryBudget {
+  /** Total amount allocated for the duration. */
+  budget: number;
+  /** Length of the budget window, in months. */
+  durationMonths: number;
+}
+export const CATEGORY_BUDGETS: Record<string, CategoryBudget> = {
+  Fuel: { budget: 400_000, durationMonths: 6 },
+  Transport: { budget: 200_000, durationMonths: 6 },
+  Salaries: { budget: 2_000_000, durationMonths: 6 },
+  Marketing: { budget: 600_000, durationMonths: 6 },
+  Logistics: { budget: 500_000, durationMonths: 6 },
+  Operations: { budget: 300_000, durationMonths: 6 },
+  Utilities: { budget: 400_000, durationMonths: 6 },
+  Maintenance: { budget: 200_000, durationMonths: 6 },
+};
+
+const FALLBACK_CATEGORY_META: CategoryMeta = {
+  name: "Other",
+  icon: ShieldCheck,
+  tone: "bg-slate-50 text-slate-700 border-slate-200",
+};
+export const getCategoryMeta = (name: string): CategoryMeta =>
+  CATEGORY_META[name] || { ...FALLBACK_CATEGORY_META, name };
 
 // ─── Users ──────────────────────────────────────────────────────────────────
 
@@ -85,95 +169,33 @@ export const MOCK_USERS: AccountUser[] = [
 export const getUserById = (id: string): AccountUser | undefined =>
   MOCK_USERS.find((u) => u.id === id);
 
-// ─── Accounts ───────────────────────────────────────────────────────────────
+// ─── The single Expense Account ─────────────────────────────────────────────
 
-export const MOCK_ACCOUNTS: ExpenseAccount[] = [
-  {
-    id: "acc-main",
-    name: "Main Expense Account",
-    accountNumber: "0114-2308-77",
-    description: "Primary expense pool the business funds from the wallet.",
-    balance: 4_320_000,
-    monthlySpend: 1_140_000,
-    isMain: true,
-    parentId: null,
-    assignedUsers: ["u-owner", "u-mgr-1", "u-mgr-2"],
-    approvalThreshold: 0,
-    createdAt: "2026-01-04T09:00:00Z",
-  },
-  {
-    id: "acc-ops",
-    name: "Operations",
-    accountNumber: "0114-2308-21",
-    description: "Day-to-day operational spending.",
-    balance: 520_000,
-    monthlySpend: 380_000,
-    isMain: false,
-    parentId: "acc-main",
-    assignedUsers: ["u-mgr-1", "u-staff-1", "u-staff-3"],
-    approvalThreshold: 100_000,
-    spendingLimit: 1_000_000,
-    createdAt: "2026-01-12T10:30:00Z",
-  },
-  {
-    id: "acc-marketing",
-    name: "Marketing",
-    accountNumber: "0114-2308-22",
-    description: "Campaigns, ads, brand activations.",
-    balance: 280_000,
-    monthlySpend: 220_000,
-    isMain: false,
-    parentId: "acc-main",
-    assignedUsers: ["u-mgr-2", "u-staff-2"],
-    approvalThreshold: 200_000,
-    spendingLimit: 600_000,
-    createdAt: "2026-02-01T08:15:00Z",
-  },
-  {
-    id: "acc-logistics",
-    name: "Logistics",
-    accountNumber: "0114-2308-23",
-    description: "Dispatch riders, fuel, vehicle maintenance.",
-    balance: 165_000,
-    monthlySpend: 145_000,
-    isMain: false,
-    parentId: "acc-main",
-    assignedUsers: ["u-mgr-1", "u-staff-3"],
-    approvalThreshold: 50_000,
-    spendingLimit: 500_000,
-    createdAt: "2026-02-14T14:00:00Z",
-  },
-  {
-    id: "acc-petty",
-    name: "Petty Cash",
-    accountNumber: "0114-2308-24",
-    description: "Small day-to-day cash purchases.",
-    balance: 32_000,
-    monthlySpend: 84_000,
-    isMain: false,
-    parentId: "acc-main",
-    assignedUsers: ["u-owner", "u-staff-1"],
-    approvalThreshold: 25_000,
-    spendingLimit: 100_000,
-    createdAt: "2026-03-01T11:20:00Z",
-  },
-];
-
-export const getAccountById = (id: string): ExpenseAccount | undefined =>
-  MOCK_ACCOUNTS.find((a) => a.id === id);
-
-// Total balance across every account (including main).
-export const computeTotalBalance = (accounts = MOCK_ACCOUNTS): number =>
-  accounts.reduce((sum, a) => sum + a.balance, 0);
+export const EXPENSE_ACCOUNT: ExpenseAccount = {
+  id: "acc-main",
+  name: "Main Expense Account",
+  accountNumber: "0114-2308-77",
+  balance: 5_317_000,
+  monthlySpend: 1_140_000,
+  assignedUsers: [
+    "u-owner",
+    "u-mgr-1",
+    "u-mgr-2",
+    "u-staff-1",
+    "u-staff-2",
+    "u-staff-3",
+  ],
+  approvalThreshold: 100_000,
+  createdAt: "2026-01-04T09:00:00Z",
+};
 
 // ─── Transactions ───────────────────────────────────────────────────────────
+// All belong to the single account; the discriminator is `category`.
 
 export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-001",
     reference: "EXP-2026-00432",
-    sourceAccountId: "acc-ops",
-    destinationAccountId: null,
     amount: 75_000,
     category: "Fuel",
     narration: "Diesel top-up for the generator (Ikeja branch).",
@@ -189,8 +211,6 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-002",
     reference: "EXP-2026-00433",
-    sourceAccountId: "acc-marketing",
-    destinationAccountId: null,
     amount: 180_000,
     category: "Marketing",
     narration: "Instagram boost for the June campaign.",
@@ -204,9 +224,7 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-003",
     reference: "EXP-2026-00434",
-    sourceAccountId: "acc-main",
-    destinationAccountId: "acc-logistics",
-    amount: 200_000,
+    amount: 320_000,
     category: "Logistics",
     narration: "Top-up logistics float for the weekend run.",
     initiatedById: "u-owner",
@@ -219,8 +237,6 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-004",
     reference: "EXP-2026-00435",
-    sourceAccountId: "acc-logistics",
-    destinationAccountId: null,
     amount: 28_500,
     category: "Transport",
     narration: "Rider settlement for delivery 2026-06-17.",
@@ -236,8 +252,6 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-005",
     reference: "EXP-2026-00436",
-    sourceAccountId: "acc-petty",
-    destinationAccountId: null,
     amount: 12_000,
     category: "Operations",
     narration: "Cleaning supplies — tap soap, mop, refuse bags.",
@@ -249,8 +263,6 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
   {
     id: "txn-006",
     reference: "EXP-2026-00437",
-    sourceAccountId: "acc-ops",
-    destinationAccountId: null,
     amount: 320_000,
     category: "Salaries",
     narration: "June stipend for Ikeja contract staff.",
@@ -268,27 +280,121 @@ export const MOCK_TRANSACTIONS: ExpenseTransaction[] = [
       },
     ],
   },
+  {
+    id: "txn-007",
+    reference: "EXP-2026-00438",
+    amount: 45_000,
+    category: "Utilities",
+    narration: "PHCN prepaid units for the warehouse.",
+    initiatedById: "u-staff-2",
+    approvedById: "u-mgr-2",
+    approvedAt: "2026-06-14T10:08:00Z",
+    status: "COMPLETED",
+    createdAt: "2026-06-14T09:30:00Z",
+    attachments: [
+      { id: "att-5", name: "phcn-recharge.png", size: "84 KB", type: "receipt" },
+    ],
+  },
+  {
+    id: "txn-008",
+    reference: "EXP-2026-00439",
+    amount: 22_000,
+    category: "Maintenance",
+    narration: "Generator service + oil change.",
+    initiatedById: "u-staff-3",
+    approvedById: "u-mgr-1",
+    approvedAt: "2026-06-12T16:15:00Z",
+    status: "COMPLETED",
+    createdAt: "2026-06-12T15:00:00Z",
+    attachments: [],
+  },
 ];
 
-// ─── Dashboard / report derivations ─────────────────────────────────────────
+// ─── Derivations (dashboard + reports) ──────────────────────────────────────
 
-export interface CategorySpend {
+export interface CategoryStats {
   category: string;
-  amount: number;
+  /** Total spent (Completed + Approved). */
+  total: number;
+  /** Number of completed/approved transactions. */
+  count: number;
+  /** Budget config if one is set. */
+  budget?: CategoryBudget;
+  /** Monthly budget — `budget / durationMonths`. Undefined when no budget. */
+  monthlyBudget?: number;
+  /** Remaining budget (budget - total). Undefined when no budget. */
+  remaining?: number;
+  /** Spent as % of budget (0-100+). Undefined when no budget. */
+  spentPct?: number;
 }
-export const computeCategorySpend = (
+export const computeCategoryStats = (
   txns = MOCK_TRANSACTIONS,
-): CategorySpend[] => {
-  const map = new Map<string, number>();
+): CategoryStats[] => {
+  const map = new Map<string, { total: number; count: number }>();
   for (const t of txns) {
     if (t.status === "COMPLETED" || t.status === "APPROVED") {
-      map.set(t.category, (map.get(t.category) || 0) + t.amount);
+      const prev = map.get(t.category) || { total: 0, count: 0 };
+      map.set(t.category, {
+        total: prev.total + t.amount,
+        count: prev.count + 1,
+      });
     }
   }
-  return Array.from(map.entries())
-    .map(([category, amount]) => ({ category, amount }))
-    .sort((a, b) => b.amount - a.amount);
+
+  const buildStats = (category: string): CategoryStats => {
+    const agg = map.get(category) || { total: 0, count: 0 };
+    const budget = CATEGORY_BUDGETS[category];
+    if (!budget) {
+      return { category, total: agg.total, count: agg.count };
+    }
+    const monthlyBudget = budget.budget / budget.durationMonths;
+    const remaining = Math.max(0, budget.budget - agg.total);
+    const spentPct =
+      budget.budget > 0 ? Math.round((agg.total / budget.budget) * 100) : 0;
+    return {
+      category,
+      total: agg.total,
+      count: agg.count,
+      budget,
+      monthlyBudget,
+      remaining,
+      spentPct,
+    };
+  };
+
+  const result: CategoryStats[] = EXPENSE_CATEGORIES.map(buildStats);
+  // Plus any custom categories that turned up in transactions.
+  for (const category of map.keys()) {
+    if (!EXPENSE_CATEGORIES.includes(category as any)) {
+      result.push(buildStats(category));
+    }
+  }
+  return result.sort((a, b) => b.total - a.total);
 };
+
+/** Single-category lookup. */
+export const computeCategoryBudgetStats = (
+  category: string,
+  txns = MOCK_TRANSACTIONS,
+): CategoryStats => {
+  return computeCategoryStats(txns).find((c) => c.category === category) || {
+    category,
+    total: 0,
+    count: 0,
+  };
+};
+
+/** All transactions for a given category (newest first). */
+export const getCategoryTransactions = (
+  category: string,
+  txns = MOCK_TRANSACTIONS,
+): ExpenseTransaction[] =>
+  txns
+    .filter((t) => t.category === category)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
 export interface UserSpend {
   user: AccountUser;
@@ -304,28 +410,6 @@ export const computeUserSpend = (txns = MOCK_TRANSACTIONS): UserSpend[] => {
   return Array.from(map.entries())
     .map(([userId, amount]) => ({ user: getUserById(userId)!, amount }))
     .filter((entry) => entry.user)
-    .sort((a, b) => b.amount - a.amount);
-};
-
-export interface AccountSpend {
-  account: ExpenseAccount;
-  amount: number;
-}
-export const computeAccountSpend = (
-  txns = MOCK_TRANSACTIONS,
-): AccountSpend[] => {
-  const map = new Map<string, number>();
-  for (const t of txns) {
-    if (t.status === "COMPLETED" || t.status === "APPROVED") {
-      map.set(
-        t.sourceAccountId,
-        (map.get(t.sourceAccountId) || 0) + t.amount,
-      );
-    }
-  }
-  return Array.from(map.entries())
-    .map(([accId, amount]) => ({ account: getAccountById(accId)!, amount }))
-    .filter((entry) => entry.account)
     .sort((a, b) => b.amount - a.amount);
 };
 

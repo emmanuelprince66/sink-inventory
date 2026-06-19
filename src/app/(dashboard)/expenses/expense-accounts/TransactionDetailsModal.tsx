@@ -10,15 +10,16 @@ import {
   ClipboardList,
   FileText,
   Image as ImageIcon,
-  Tag,
   User,
+  Wallet,
   XCircle,
 } from "lucide-react";
 import moment from "moment";
 import {
+  EXPENSE_ACCOUNT,
   ExpenseTransaction,
   STATUS_META,
-  getAccountById,
+  getCategoryMeta,
   getUserById,
 } from "./mock-data";
 
@@ -40,14 +41,12 @@ const TransactionDetailsModal = ({
   if (!transaction) return null;
 
   const status = STATUS_META[transaction.status];
+  const catMeta = getCategoryMeta(transaction.category);
+  const CatIcon = catMeta.icon;
   const initiator = getUserById(transaction.initiatedById);
   const approver = transaction.approvedById
     ? getUserById(transaction.approvedById)
     : null;
-  const source = getAccountById(transaction.sourceAccountId);
-  const destination = transaction.destinationAccountId
-    ? getAccountById(transaction.destinationAccountId)
-    : undefined;
 
   const canActOnPending = transaction.status === "PENDING";
 
@@ -100,30 +99,55 @@ const TransactionDetailsModal = ({
       }
     >
       <div className="space-y-5">
-        {/* Hero — amount + status */}
+        {/* Hero — category badge + amount + status */}
         <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-white p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                Amount
-              </p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
-                {formatToNaira(transaction.amount)}
-              </p>
-              <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-600">
-                <Tag className="w-3 h-3" />
-                {transaction.category}
+            <div className="flex items-start gap-3 min-w-0">
+              <div
+                className={cn(
+                  "w-11 h-11 rounded-xl flex items-center justify-center border shrink-0",
+                  catMeta.tone,
+                )}
+              >
+                <CatIcon className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  Category
+                </p>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">
+                  {transaction.category}
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">
+                  {formatToNaira(transaction.amount)}
+                </p>
               </div>
             </div>
             <span
               className={cn(
-                "inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full",
+                "inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full shrink-0",
                 status.pill,
               )}
             >
               <span className={cn("w-1.5 h-1.5 rounded-full", status.dot)} />
               {status.label}
             </span>
+          </div>
+        </div>
+
+        {/* Source account caption — single account, so just a one-line strip */}
+        <div className="flex items-center gap-2.5 p-3 rounded-lg bg-emerald-50/60 border border-emerald-100">
+          <Wallet className="w-4 h-4 text-emerald-600 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
+              From account
+            </p>
+            <p className="text-sm font-semibold text-slate-900 truncate">
+              {EXPENSE_ACCOUNT.name}{" "}
+              <span className="font-mono text-[11px] text-slate-500">
+                · {EXPENSE_ACCOUNT.accountNumber}
+              </span>
+            </p>
           </div>
         </div>
 
@@ -141,7 +165,9 @@ const TransactionDetailsModal = ({
             />
             <PersonRow
               label="Approved by"
-              name={approver?.name || (canActOnPending ? "Awaiting approval" : "—")}
+              name={
+                approver?.name || (canActOnPending ? "Awaiting approval" : "—")
+              }
               role={approver?.role}
               initials={approver?.initials}
               timestamp={
@@ -152,18 +178,6 @@ const TransactionDetailsModal = ({
                   : undefined
               }
               tone={canActOnPending ? "pending" : "default"}
-            />
-          </div>
-        </Section>
-
-        {/* Account info */}
-        <Section title="Account Information">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <AccountRow label="Source" account={source} />
-            <AccountRow
-              label="Destination"
-              account={destination}
-              fallback="External (outgoing expense)"
             />
           </div>
         </Section>
@@ -283,37 +297,6 @@ const PersonRow = ({
     </div>
     {timestamp && (
       <p className="text-[11px] text-slate-500 mt-2">{timestamp}</p>
-    )}
-  </div>
-);
-
-const AccountRow = ({
-  label,
-  account,
-  fallback,
-}: {
-  label: string;
-  account?: { name: string; accountNumber: string; balance: number };
-  fallback?: string;
-}) => (
-  <div className="rounded-lg border border-slate-200 p-3 bg-white">
-    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-      {label}
-    </p>
-    {account ? (
-      <>
-        <p className="text-sm font-semibold text-slate-900 mt-1.5">
-          {account.name}
-        </p>
-        <p className="text-[11px] text-slate-500 mt-0.5">
-          {account.accountNumber}
-        </p>
-        <p className="text-[11px] text-slate-700 font-medium mt-1.5">
-          Balance: {formatToNaira(account.balance)}
-        </p>
-      </>
-    ) : (
-      <p className="text-sm text-slate-600 mt-1.5">{fallback || "—"}</p>
     )}
   </div>
 );

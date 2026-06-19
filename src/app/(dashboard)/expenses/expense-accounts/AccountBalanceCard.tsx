@@ -3,22 +3,20 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowUpRight, Plus, Wallet } from "lucide-react";
+import { ArrowUpRight, Wallet } from "lucide-react";
 
 interface AccountBalanceCardProps {
-  totalBalance: number;
-  accountCount: number;
+  balance: number;
+  accountNumber: string;
   pendingApprovals: number;
-  onCreateSubAccount: () => void;
   onTransfer: () => void;
   className?: string;
 }
 
 const AccountBalanceCard = ({
-  totalBalance,
-  accountCount,
+  balance,
+  accountNumber,
   pendingApprovals,
-  onCreateSubAccount,
   onTransfer,
   className,
 }: AccountBalanceCardProps) => {
@@ -29,7 +27,7 @@ const AccountBalanceCard = ({
         className,
       )}
     >
-      {/* Decorative blurred orbs */}
+      {/* Decorative orbs */}
       <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-emerald-500/10 blur-2xl pointer-events-none" />
       <div className="absolute -left-10 -bottom-12 w-32 h-32 rounded-full bg-teal-500/10 blur-2xl pointer-events-none" />
 
@@ -44,9 +42,8 @@ const AccountBalanceCard = ({
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
                 Expense Account Balance
               </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Across {accountCount}{" "}
-                {accountCount === 1 ? "account" : "accounts"}
+              <p className="text-[11px] text-slate-500 mt-0.5 font-mono">
+                {accountNumber}
               </p>
             </div>
           </div>
@@ -62,31 +59,21 @@ const AccountBalanceCard = ({
         {/* Balance */}
         <div>
           <p className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-            {formatToNaira(totalBalance)}
+            {formatToNaira(balance)}
           </p>
           <p className="text-[11px] text-slate-500 mt-1">
             Funds available for operational spending
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            onClick={onCreateSubAccount}
-            variant="outline"
-            className="flex-1 border-emerald-200 bg-white/70 hover:bg-white text-emerald-700 hover:text-emerald-800"
-          >
-            <Plus className="w-4 h-4 mr-1.5" />
-            Create Sub-Account
-          </Button>
-          <Button
-            onClick={onTransfer}
-            className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
-          >
-            <ArrowUpRight className="w-4 h-4 mr-1.5" />
-            Transfer Money
-          </Button>
-        </div>
+        {/* Action */}
+        <Button
+          onClick={onTransfer}
+          className="w-full sm:w-auto sm:self-start bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+        >
+          <ArrowUpRight className="w-4 h-4 mr-1.5" />
+          Transfer Money
+        </Button>
       </div>
     </div>
   );

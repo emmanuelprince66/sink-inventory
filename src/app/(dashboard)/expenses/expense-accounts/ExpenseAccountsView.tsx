@@ -1,188 +1,124 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
-  ArrowDownLeft,
+  Activity,
   ArrowUpRight,
-  Briefcase,
   ChevronRight,
-  Eye,
-  Plus,
-  Receipt,
-  Users,
+  Hourglass,
   Wallet,
 } from "lucide-react";
 import moment from "moment";
 import {
-  AccountSpend,
-  CategorySpend,
-  ExpenseAccount,
+  CategoryStats,
+  EXPENSE_ACCOUNT,
   ExpenseTransaction,
-  MOCK_ACCOUNTS,
   MOCK_TRANSACTIONS,
   STATUS_META,
   UserSpend,
-  computeAccountSpend,
-  computeCategorySpend,
-  computeTotalBalance,
+  computeCategoryStats,
   computeUserSpend,
-  getAccountById,
+  getCategoryMeta,
   getUserById,
 } from "./mock-data";
 
 interface ExpenseAccountsViewProps {
-  onCreateSubAccount: () => void;
-  onTransfer: (sourceId?: string) => void;
+  onTransfer: (defaultCategory?: string) => void;
   onViewTransaction: (txn: ExpenseTransaction) => void;
-  onViewTransactionsTab: () => void;
+  onViewTransactionsTab: (categoryFilter?: string) => void;
+  /** Open the detail modal showing budget + transactions for a category. */
+  onViewCategory: (stats: CategoryStats) => void;
 }
 
 const ExpenseAccountsView = ({
-  onCreateSubAccount,
   onTransfer,
   onViewTransaction,
   onViewTransactionsTab,
+  onViewCategory,
 }: ExpenseAccountsViewProps) => {
-  const totalBalance = computeTotalBalance();
   const pendingApprovals = MOCK_TRANSACTIONS.filter(
     (t) => t.status === "PENDING",
   );
-  const recentExpenses = MOCK_TRANSACTIONS.filter(
-    (t) => t.destinationAccountId === null,
-  ).slice(0, 4);
-  const recentTransfers = MOCK_TRANSACTIONS.filter(
-    (t) => t.destinationAccountId !== null,
-  ).slice(0, 4);
+  const recentActivity = [...MOCK_TRANSACTIONS]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .slice(0, 6);
 
-  const categorySpend = computeCategorySpend();
+  const categoryStats = computeCategoryStats();
   const userSpend = computeUserSpend();
-  const accountSpend = computeAccountSpend();
+
+  const totalCategorisedSpend = categoryStats.reduce(
+    (sum, c) => sum + c.total,
+    0,
+  );
 
   return (
     <div className="space-y-5">
       {/* Dashboard widgets row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <WidgetCard
-          label="Total Balance"
-          value={formatToNaira(totalBalance)}
+          label="Account Balance"
+          value={formatToNaira(EXPENSE_ACCOUNT.balance)}
           icon={<Wallet className="w-4 h-4 text-emerald-600" />}
           tone="emerald"
-          subtitle={`Across ${MOCK_ACCOUNTS.length} accounts`}
+          subtitle={EXPENSE_ACCOUNT.accountNumber}
         />
         <WidgetCard
           label="Pending Approvals"
           value={pendingApprovals.length.toString()}
-          icon={<Receipt className="w-4 h-4 text-amber-600" />}
+          icon={<Hourglass className="w-4 h-4 text-amber-600" />}
           tone="amber"
           subtitle={`${formatToNaira(
             pendingApprovals.reduce((s, t) => s + t.amount, 0),
           )} awaiting`}
         />
         <WidgetCard
-          label="Recent Transfers"
-          value={recentTransfers.length.toString()}
-          icon={<ArrowUpRight className="w-4 h-4 text-sky-600" />}
+          label="Spent This Month"
+          value={formatToNaira(totalCategorisedSpend)}
+          icon={<Activity className="w-4 h-4 text-sky-600" />}
           tone="sky"
-          subtitle="This week"
+          subtitle={`Across ${categoryStats.filter((c) => c.total > 0).length} categories`}
         />
       </div>
 
-      {/* Account list */}
+      {/* Spend by Category */}
       <section>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-start justify-between gap-3 mb-3">
           <div>
             <h3 className="text-base font-semibold text-slate-900">
-              Your Accounts
+              Spend by Category
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Tap an account to fund, transfer or view its transaction log.
+              Tap a category to view its transactions or transfer money against
+              it.
             </p>
           </div>
-          <Button
-            variant="outline"
-            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-            onClick={onCreateSubAccount}
-            size="sm"
-          >
-            <Plus className="w-4 h-4 mr-1" />
-            New
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-          {MOCK_ACCOUNTS.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              onTransfer={() => onTransfer(account.id)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {categoryStats.map((c) => (
+            <CategoryCard
+              key={c.category}
+              stats={c}
+              onViewMore={() => onViewCategory(c)}
+              onTransfer={() => onTransfer(c.category)}
             />
           ))}
         </div>
       </section>
 
-      {/* Recent activity */}
+      {/* Recent activity + spending breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <RecentList
-          title="Recent Expenses"
-          icon={<ArrowDownLeft className="w-4 h-4 text-rose-600" />}
-          items={recentExpenses}
+        <RecentActivity
+          items={recentActivity}
           onViewItem={onViewTransaction}
-          onViewAll={onViewTransactionsTab}
-          emptyLabel="No recent expenses"
+          onViewAll={() => onViewTransactionsTab()}
         />
-        <RecentList
-          title="Recent Transfers"
-          icon={<ArrowUpRight className="w-4 h-4 text-sky-600" />}
-          items={recentTransfers}
-          onViewItem={onViewTransaction}
-          onViewAll={onViewTransactionsTab}
-          emptyLabel="No recent transfers"
-        />
+        <SpendByUser data={userSpend} />
       </div>
-
-      {/* Spending breakdown */}
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">
-              Spending Breakdown
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Who, what and where the money went this month.
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-          <SpendList
-            title="By Category"
-            data={categorySpend.slice(0, 6).map((c) => ({
-              label: c.category,
-              amount: c.amount,
-            }))}
-            tone="emerald"
-          />
-          <SpendList
-            title="By User"
-            data={userSpend.slice(0, 6).map((u) => ({
-              label: u.user.name,
-              sub: u.user.role,
-              amount: u.amount,
-            }))}
-            tone="sky"
-          />
-          <SpendList
-            title="By Account"
-            data={accountSpend.slice(0, 6).map((a) => ({
-              label: a.account.name,
-              sub: a.account.accountNumber,
-              amount: a.amount,
-            }))}
-            tone="violet"
-          />
-        </div>
-      </section>
     </div>
   );
 };
@@ -225,174 +161,152 @@ const WidgetCard = ({
       <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-2">
         {value}
       </p>
-      <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>
+      <p className="text-[11px] text-slate-500 mt-0.5 font-mono">{subtitle}</p>
     </div>
   );
 };
 
-// ─── Account card (per sub-account) ─────────────────────────────────────────
+// ─── Category card ──────────────────────────────────────────────────────────
 
-const AccountCard = ({
-  account,
+const CategoryCard = ({
+  stats,
+  onViewMore,
   onTransfer,
 }: {
-  account: ExpenseAccount;
+  stats: CategoryStats;
+  onViewMore: () => void;
   onTransfer: () => void;
 }) => {
-  const userObjs = account.assignedUsers
-    .map((id) => getUserById(id))
-    .filter(Boolean);
-  const spentPct = account.spendingLimit
-    ? Math.min(100, Math.round((account.monthlySpend / account.spendingLimit) * 100))
-    : null;
+  const meta = getCategoryMeta(stats.category);
+  const Icon = meta.icon;
+  const hasBudget = Boolean(stats.budget);
+  const pct = stats.spentPct ?? 0;
+  const progressTone =
+    pct >= 100
+      ? "bg-rose-500"
+      : pct >= 80
+        ? "bg-amber-500"
+        : "bg-emerald-500";
 
   return (
-    <div
-      className={cn(
-        "relative rounded-xl border bg-white p-4 hover:shadow-md transition-shadow",
-        account.isMain
-          ? "border-emerald-300 ring-1 ring-emerald-200"
-          : "border-slate-200",
-      )}
-    >
-      {account.isMain && (
-        <span className="absolute top-3 right-3 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
-          Main
-        </span>
-      )}
-
-      <div className="flex items-start gap-3">
-        <div
-          className={cn(
-            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
-            account.isMain
-              ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-              : "bg-slate-100 text-slate-700",
-          )}
-        >
-          <Briefcase className="w-5 h-5" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-slate-900 truncate">
-            {account.name}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-            {account.accountNumber}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-            Balance
-          </p>
-          <p className="text-base font-bold text-slate-900 mt-0.5">
-            {formatToNaira(account.balance)}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] uppercase tracking-wider text-slate-500">
-            This Month
-          </p>
-          <p className="text-base font-bold text-rose-600 mt-0.5">
-            {formatToNaira(account.monthlySpend)}
-          </p>
-        </div>
-      </div>
-
-      {spentPct !== null && (
-        <div className="mt-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-1">
-            <span>Monthly limit</span>
-            <span>{spentPct}%</span>
+    <div className="group relative rounded-xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md transition-all overflow-hidden">
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-3">
+          <div
+            className={cn(
+              "w-11 h-11 rounded-xl flex items-center justify-center border shrink-0",
+              meta.tone,
+            )}
+          >
+            <Icon className="w-5 h-5" />
           </div>
-          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className={cn(
-                "h-full rounded-full transition-all",
-                spentPct > 90
-                  ? "bg-rose-500"
-                  : spentPct > 70
-                    ? "bg-amber-500"
-                    : "bg-emerald-500",
-              )}
-              style={{ width: `${spentPct}%` }}
-            />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-slate-900 truncate">
+              {stats.category}
+            </p>
+            {hasBudget ? (
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                {stats.budget!.durationMonths}-month budget · ~
+                {formatToNaira(stats.monthlyBudget || 0)}/mo
+              </p>
+            ) : (
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                No budget set
+              </p>
+            )}
           </div>
         </div>
-      )}
 
-      <div className="mt-3 flex items-center gap-1.5">
-        <Users className="w-3 h-3 text-slate-400" />
-        <div className="flex -space-x-1.5">
-          {userObjs.slice(0, 3).map((u) => (
-            <div
-              key={u!.id}
-              className="w-5 h-5 rounded-full bg-slate-900 text-white text-[9px] font-bold flex items-center justify-center border-2 border-white"
-              title={u!.name}
-            >
-              {u!.initials}
-            </div>
-          ))}
-          {userObjs.length > 3 && (
-            <div className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 text-[9px] font-semibold flex items-center justify-center border-2 border-white">
-              +{userObjs.length - 3}
-            </div>
+        {/* Spent / Budget */}
+        <div className="flex items-baseline gap-1.5">
+          <p className="text-xl font-bold text-slate-900">
+            {formatToNaira(stats.total)}
+          </p>
+          {hasBudget && (
+            <p className="text-xs text-slate-500">
+              of {formatToNaira(stats.budget!.budget)}
+            </p>
           )}
         </div>
-        <span className="text-[11px] text-slate-500 ml-auto">
-          {userObjs.length} assigned
-        </span>
+        <p className="text-[11px] text-slate-500 mt-0.5">
+          {stats.count} {stats.count === 1 ? "transaction" : "transactions"}
+        </p>
+
+        {/* Progress bar (only when budgeted) */}
+        {hasBudget && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-[11px] mb-1">
+              <span className="text-slate-500">Budget used</span>
+              <span
+                className={cn(
+                  "font-semibold",
+                  pct >= 100
+                    ? "text-rose-600"
+                    : pct >= 80
+                      ? "text-amber-600"
+                      : "text-emerald-700",
+                )}
+              >
+                {pct}%
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  progressTone,
+                )}
+                style={{ width: `${Math.min(100, pct)}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-slate-100 flex gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          className="flex-1 border-slate-200 text-slate-700"
+      {/* Action row */}
+      <div className="border-t border-slate-100 grid grid-cols-2 divide-x divide-slate-100">
+        <button
+          type="button"
           onClick={onTransfer}
+          className="text-[11px] font-semibold text-slate-700 hover:text-emerald-700 hover:bg-emerald-50 flex items-center justify-center gap-1 py-2.5 transition-colors"
         >
-          <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+          <ArrowUpRight className="w-3 h-3" />
           Transfer
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
+        </button>
+        <button
+          type="button"
+          onClick={onViewMore}
+          className="text-[11px] font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center justify-center gap-1 py-2.5 transition-colors"
         >
-          <Eye className="w-3.5 h-3.5 mr-1" />
-          View
-        </Button>
+          View more
+          <ChevronRight className="w-3 h-3" />
+        </button>
       </div>
     </div>
   );
 };
 
-// ─── Recent activity list ───────────────────────────────────────────────────
+// ─── Recent activity ────────────────────────────────────────────────────────
 
-const RecentList = ({
-  title,
-  icon,
+const RecentActivity = ({
   items,
   onViewItem,
   onViewAll,
-  emptyLabel,
 }: {
-  title: string;
-  icon: React.ReactNode;
   items: ExpenseTransaction[];
   onViewItem: (txn: ExpenseTransaction) => void;
   onViewAll: () => void;
-  emptyLabel: string;
 }) => (
   <div className="rounded-xl border border-slate-200 bg-white">
     <div className="flex items-center justify-between p-4 border-b border-slate-100">
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-slate-50 flex items-center justify-center">
-          {icon}
-        </div>
-        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      <div>
+        <h4 className="text-sm font-semibold text-slate-900">
+          Recent Activity
+        </h4>
+        <p className="text-[11px] text-slate-500 mt-0.5">
+          Last transfers and logged expenses.
+        </p>
       </div>
       <button
         onClick={onViewAll}
@@ -403,12 +317,14 @@ const RecentList = ({
     </div>
     {items.length === 0 ? (
       <div className="py-10 text-center text-xs text-slate-500">
-        {emptyLabel}
+        No transactions yet
       </div>
     ) : (
       <ul className="divide-y divide-slate-100">
         {items.map((t) => {
           const status = STATUS_META[t.status];
+          const meta = getCategoryMeta(t.category);
+          const Icon = meta.icon;
           const initiator = getUserById(t.initiatedById);
           return (
             <li key={t.id}>
@@ -416,8 +332,13 @@ const RecentList = ({
                 onClick={() => onViewItem(t)}
                 className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
               >
-                <div className="w-9 h-9 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                  {initiator?.initials || "?"}
+                <div
+                  className={cn(
+                    "w-9 h-9 rounded-md flex items-center justify-center border shrink-0",
+                    meta.tone,
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -435,6 +356,9 @@ const RecentList = ({
                   </div>
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">
                     {t.narration}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    by {initiator?.name || "Unknown"}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -455,74 +379,61 @@ const RecentList = ({
   </div>
 );
 
-// ─── Spend list (category / user / account) ─────────────────────────────────
+// ─── Spend by user list ─────────────────────────────────────────────────────
 
-const SpendList = ({
-  title,
-  data,
-  tone,
-}: {
-  title: string;
-  data: Array<{ label: string; sub?: string; amount: number }>;
-  tone: "emerald" | "sky" | "violet";
-}) => {
-  const toneClasses: Record<typeof tone, string> = {
-    emerald: "bg-emerald-500",
-    sky: "bg-sky-500",
-    violet: "bg-violet-500",
-  };
+const SpendByUser = ({ data }: { data: UserSpend[] }) => {
   const max = Math.max(...data.map((d) => d.amount), 1);
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
-        {title}
-      </p>
-      {data.length === 0 ? (
-        <p className="text-xs text-slate-500 italic py-6 text-center">
-          No data yet.
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="p-4 border-b border-slate-100">
+        <h4 className="text-sm font-semibold text-slate-900">Spend by User</h4>
+        <p className="text-[11px] text-slate-500 mt-0.5">
+          Who initiated outgoing money this month.
         </p>
-      ) : (
-        <ul className="space-y-3">
-          {data.map((d, i) => {
-            const pct = Math.round((d.amount / max) * 100);
-            return (
-              <li key={i}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {d.label}
+      </div>
+      <div className="p-4">
+        {data.length === 0 ? (
+          <p className="text-xs text-slate-500 italic py-6 text-center">
+            No data yet.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {data.map((d) => {
+              const pct = Math.round((d.amount / max) * 100);
+              return (
+                <li key={d.user.id}>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-slate-900 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                        {d.user.initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-slate-900 truncate">
+                          {d.user.name}
+                        </p>
+                        <p className="text-[10px] text-slate-500">
+                          {d.user.role}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900 shrink-0">
+                      {formatToNaira(d.amount)}
                     </p>
-                    {d.sub && (
-                      <p className="text-[10px] text-slate-500 truncate">
-                        {d.sub}
-                      </p>
-                    )}
                   </div>
-                  <p className="text-sm font-semibold text-slate-900 shrink-0">
-                    {formatToNaira(d.amount)}
-                  </p>
-                </div>
-                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full", toneClasses[tone])}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-emerald-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };
 
-// Re-export types used by consumers (so the main page doesn't have to import twice).
-export type {
-  AccountSpend,
-  CategorySpend,
-  ExpenseAccount,
-  ExpenseTransaction,
-  UserSpend,
-};
 export default ExpenseAccountsView;

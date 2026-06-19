@@ -29,15 +29,19 @@ import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
 import AllExpenses from "./AllExpenses";
 import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
-import CreateSubAccountModal from "./expense-accounts/CreateSubAccountModal";
+import CategoryDetailModal from "./expense-accounts/CategoryDetailModal";
 import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
 import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
+import SetCategoryBudgetModal from "./expense-accounts/SetCategoryBudgetModal";
 import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
 import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
 import {
+  CATEGORY_BUDGETS,
+  CategoryStats,
+  EXPENSE_ACCOUNT,
   ExpenseTransaction,
   MOCK_TRANSACTIONS,
-  computeTotalBalance,
+  computeCategoryBudgetStats,
 } from "./expense-accounts/mock-data";
 
 interface Category {
@@ -144,25 +148,36 @@ const Expenses = () => {
 
   // Expense Account Management state (UI-only).
   const [activeTab, setActiveTab] = useState<ExpenseTab>("expenses");
-  const [openCreateSubAccount, setOpenCreateSubAccount] = useState(false);
   const [openTransfer, setOpenTransfer] = useState(false);
-  const [transferSourceId, setTransferSourceId] = useState<string | undefined>();
+  const [transferCategory, setTransferCategory] = useState<
+    string | undefined
+  >();
   const [selectedTransaction, setSelectedTransaction] =
     useState<ExpenseTransaction | null>(null);
+  const [transactionsCategoryFilter, setTransactionsCategoryFilter] = useState<
+    string | undefined
+  >();
+  const [focusedCategory, setFocusedCategory] = useState<CategoryStats | null>(
+    null,
+  );
+  const [budgetEditCategory, setBudgetEditCategory] = useState<string | null>(
+    null,
+  );
 
-  const totalBalance = computeTotalBalance();
   const pendingApprovalsCount = MOCK_TRANSACTIONS.filter(
     (t) => t.status === "PENDING",
   ).length;
 
-  const handleCreateSubAccount = () => setOpenCreateSubAccount(true);
-  const handleTransfer = (sourceId?: string) => {
-    setTransferSourceId(sourceId);
+  const handleTransfer = (category?: string) => {
+    setTransferCategory(category);
     setOpenTransfer(true);
   };
   const handleViewTransaction = (txn: ExpenseTransaction) =>
     setSelectedTransaction(txn);
-  const handleGoToTransactionsTab = () => setActiveTab("transactions");
+  const handleGoToTransactionsTab = (categoryFilter?: string) => {
+    setTransactionsCategoryFilter(categoryFilter);
+    setActiveTab("transactions");
+  };
 
   const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -297,10 +312,9 @@ const Expenses = () => {
                 type="total"
               />
               <AccountBalanceCard
-                totalBalance={totalBalance}
-                accountCount={MOCK_TRANSACTIONS.length > 0 ? 5 : 0}
+                balance={EXPENSE_ACCOUNT.balance}
+                accountNumber={EXPENSE_ACCOUNT.accountNumber}
                 pendingApprovals={pendingApprovalsCount}
-                onCreateSubAccount={handleCreateSubAccount}
                 onTransfer={() => handleTransfer()}
               />
             </div>
@@ -485,13 +499,13 @@ const Expenses = () => {
       </div>
         </TabsContent>
 
-        {/* Tab 2 — Expense Accounts dashboard */}
+        {/* Tab 2 — Expense Account dashboard */}
         <TabsContent value="accounts" className="mt-4">
           <ExpenseAccountsView
-            onCreateSubAccount={handleCreateSubAccount}
-            onTransfer={(sourceId) => handleTransfer(sourceId)}
+            onTransfer={(defaultCategory) => handleTransfer(defaultCategory)}
             onViewTransaction={handleViewTransaction}
             onViewTransactionsTab={handleGoToTransactionsTab}
+            onViewCategory={(stats) => setFocusedCategory(stats)}
           />
         </TabsContent>
 
@@ -499,19 +513,48 @@ const Expenses = () => {
         <TabsContent value="transactions" className="mt-4">
           <ExpenseTransactionsView
             onSelectTransaction={handleViewTransaction}
+            initialCategory={transactionsCategoryFilter}
           />
         </TabsContent>
       </Tabs>
 
       {/* Expense Account Management modals */}
-      <CreateSubAccountModal
-        isOpen={openCreateSubAccount}
-        onClose={() => setOpenCreateSubAccount(false)}
-      />
       <TransferMoneyModal
         isOpen={openTransfer}
         onClose={() => setOpenTransfer(false)}
-        defaultSourceId={transferSourceId}
+        defaultCategory={transferCategory}
+      />
+
+      <CategoryDetailModal
+        isOpen={!!focusedCategory}
+        onClose={() => setFocusedCategory(null)}
+        stats={focusedCategory}
+        onTransfer={(category) => {
+          setFocusedCategory(null);
+          handleTransfer(category);
+        }}
+        onSetBudget={(category) => setBudgetEditCategory(category)}
+        onViewTransaction={(txn) => {
+          setFocusedCategory(null);
+          handleViewTransaction(txn);
+        }}
+      />
+
+      <SetCategoryBudgetModal
+        isOpen={!!budgetEditCategory}
+        onClose={() => {
+          setBudgetEditCategory(null);
+          // Refresh the focused category stats with the latest budget data.
+          if (focusedCategory) {
+            setFocusedCategory(
+              computeCategoryBudgetStats(focusedCategory.category),
+            );
+          }
+        }}
+        category={budgetEditCategory || ""}
+        current={
+          budgetEditCategory ? CATEGORY_BUDGETS[budgetEditCategory] : undefined
+        }
       />
       <TransactionDetailsModal
         isOpen={!!selectedTransaction}
