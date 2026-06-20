@@ -27,11 +27,14 @@ import {
 interface ExpenseAccountsViewProps {
   onTransfer: (defaultCategory?: string) => void;
   onViewTransaction: (txn: ExpenseTransaction) => void;
+  /** Switch the parent page to its Transactions tab. */
+  onViewAllTransactions: () => void;
 }
 
 const ExpenseAccountsView = ({
   onTransfer,
   onViewTransaction,
+  onViewAllTransactions,
 }: ExpenseAccountsViewProps) => {
   const router = useRouter();
   const goToCategory = (category: string) =>
@@ -115,6 +118,7 @@ const ExpenseAccountsView = ({
         <RecentActivity
           items={recentActivity}
           onViewItem={onViewTransaction}
+          onViewAll={onViewAllTransactions}
         />
         <SpendByUser data={userSpend} />
       </div>
@@ -291,9 +295,11 @@ const CategoryCard = ({
 const RecentActivity = ({
   items,
   onViewItem,
+  onViewAll,
 }: {
   items: ExpenseTransaction[];
   onViewItem: (txn: ExpenseTransaction) => void;
+  onViewAll: () => void;
 }) => (
   <div className="rounded-xl border border-slate-200 bg-white">
     <div className="flex items-center justify-between p-4 border-b border-slate-100">
@@ -305,6 +311,12 @@ const RecentActivity = ({
           Last transfers and logged expenses across every category.
         </p>
       </div>
+      <button
+        onClick={onViewAll}
+        className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800"
+      >
+        View all
+      </button>
     </div>
     {items.length === 0 ? (
       <div className="py-10 text-center text-xs text-slate-500">

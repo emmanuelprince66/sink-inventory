@@ -7,6 +7,7 @@ import GenerateReportButton from "@/components/app/GenerateReportButton";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -16,6 +17,7 @@ import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
 import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
 import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
+import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
 import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
 import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
 import {
@@ -103,6 +105,8 @@ const CustomExpenseCard = ({
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
+type ExpenseTab = "accounts" | "transactions";
+
 const Expenses = () => {
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const [addExpensesModal, setAddExpensesModal] = useState(false);
@@ -127,6 +131,7 @@ const Expenses = () => {
   });
 
   // Expense Account Management state (UI-only).
+  const [activeTab, setActiveTab] = useState<ExpenseTab>("accounts");
   const [openTransfer, setOpenTransfer] = useState(false);
   const [transferCategory, setTransferCategory] = useState<
     string | undefined
@@ -213,13 +218,43 @@ const Expenses = () => {
         </div>
       </div>
 
-      {/* Body — category dashboard (was the second tab). Every other tab
-          collapsed into this since each category card + its detail page
-          covers transactions, budgets, and per-user spend. */}
-      <ExpenseAccountsView
-        onTransfer={(defaultCategory) => handleTransfer(defaultCategory)}
-        onViewTransaction={handleViewTransaction}
-      />
+      {/* Body — two tabs: the category dashboard and the global transactions log */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as ExpenseTab)}
+        className="w-full"
+      >
+        <div className="overflow-x-auto -mx-2 sm:-mx-4 px-2 sm:px-4">
+          <TabsList className="bg-white border border-slate-200 p-1 h-auto inline-flex">
+            <TabsTrigger
+              value="accounts"
+              className="text-xs sm:text-sm data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-3 sm:px-4 py-1.5"
+            >
+              Expense Accounts
+            </TabsTrigger>
+            <TabsTrigger
+              value="transactions"
+              className="text-xs sm:text-sm data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-3 sm:px-4 py-1.5"
+            >
+              Transactions
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="accounts" className="mt-4">
+          <ExpenseAccountsView
+            onTransfer={(defaultCategory) => handleTransfer(defaultCategory)}
+            onViewTransaction={handleViewTransaction}
+            onViewAllTransactions={() => setActiveTab("transactions")}
+          />
+        </TabsContent>
+
+        <TabsContent value="transactions" className="mt-4">
+          <ExpenseTransactionsView
+            onSelectTransaction={handleViewTransaction}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Modals */}
       <TransferMoneyModal
