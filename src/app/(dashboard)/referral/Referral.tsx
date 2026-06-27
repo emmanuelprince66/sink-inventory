@@ -1,10 +1,13 @@
 "use client";
 
+import { useReferralDashboardQuery } from "@/api/referral/referral";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
+  AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   ChevronRight,
@@ -16,11 +19,11 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  REFERRAL_BUSINESSES,
-  REFERRAL_SUMMARY,
   STATUS_META,
+  buildReferralLink,
+  normaliseReferralStatus,
 } from "./data";
 import WithdrawModal from "./WithdrawModal";
 
@@ -29,9 +32,26 @@ const Referral = () => {
   const [copied, setCopied] = useState(false);
   const [openWithdraw, setOpenWithdraw] = useState(false);
 
+  const { data, isLoading, isError, refetch } = useReferralDashboardQuery();
+  const dashboard = data?.data;
+
+  const referralCode = dashboard?.code || "";
+  const referralLink = useMemo(
+    () => (referralCode ? buildReferralLink(referralCode) : ""),
+    [referralCode],
+  );
+
+  const summary = dashboard?.summary;
+  const trackingTable = dashboard?.tracking_table ?? [];
+  // Pending balance isn't returned directly — derive from pending_rewards so
+  // the second wallet card still has something meaningful to display.
+  const pendingBalance = summary?.pending_rewards ?? 0;
+  const availableBalance = summary?.available_balance ?? 0;
+
   const handleCopy = async () => {
+    if (!referralLink) return;
     try {
-      await navigator.clipboard.writeText(REFERRAL_SUMMARY.referralLink);
+      await navigator.clipboard.writeText(referralLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     } catch {
@@ -40,10 +60,11 @@ const Referral = () => {
   };
 
   const handleShare = async () => {
+    if (!referralLink) return;
     const shareData = {
       title: "Join Sync360",
       text: `Join Sync360 with my referral link and get started in minutes.`,
-      url: REFERRAL_SUMMARY.referralLink,
+      url: referralLink,
     };
     if (typeof navigator !== "undefined" && (navigator as any).share) {
       try {
@@ -91,23 +112,49 @@ const Referral = () => {
         </div>
       </div>
 
+      {/* Error banner */}
+      {isError && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-rose-900">
+              Couldn't load your referral dashboard
+            </p>
+            <p className="text-xs text-rose-700 mt-0.5">
+              Check your connection and try again.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-rose-300 text-rose-700 hover:bg-rose-100"
+            onClick={() => refetch()}
+          >
+            Retry
+          </Button>
+        </div>
+      )}
+
       {/* Summary cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <SummaryCard
           title="Total Referrals"
-          value={REFERRAL_SUMMARY.totalReferrals.toString()}
+          value={summary ? String(summary.total_referrals) : "—"}
+          loading={isLoading}
           icon={<Users className="w-5 h-5 text-blue-600" />}
           iconBg="bg-blue-50"
         />
         <SummaryCard
           title="Pending Rewards"
-          value={formatToNaira(REFERRAL_SUMMARY.pendingRewards)}
+          value={summary ? formatToNaira(summary.pending_rewards) : "—"}
+          loading={isLoading}
           icon={<Hourglass className="w-5 h-5 text-amber-600" />}
           iconBg="bg-amber-50"
         />
         <SummaryCard
           title="Total Paid Commission"
-          value={formatToNaira(REFERRAL_SUMMARY.totalPaidCommission)}
+          value={summary ? formatToNaira(summary.total_paid_commission) : "—"}
+          loading={isLoading}
           icon={<CheckCircle2 className="w-5 h-5 text-green-600" />}
           iconBg="bg-green-50"
         />
@@ -125,18 +172,23 @@ const Referral = () => {
             </p>
           </div>
           <span className="text-xs font-medium text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full w-fit">
-            Code: {REFERRAL_SUMMARY.referralCode}
+            {isLoading ? "Loading..." : `Code: ${referralCode || "—"}`}
           </span>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 sm:px-4 py-2.5 text-sm font-mono text-gray-700 truncate">
-            {REFERRAL_SUMMARY.referralLink}
+            {isLoading ? (
+              <Skeleton className="h-4 w-3/4 bg-slate-200" />
+            ) : (
+              referralLink || "Sign in to generate your referral link"
+            )}
           </div>
           <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={handleCopy}
+              disabled={!referralLink}
               className={cn(
                 "flex-1 sm:flex-none transition-colors",
                 copied &&
@@ -153,6 +205,7 @@ const Referral = () => {
             <Button
               variant="outline"
               onClick={handleShare}
+              disabled={!referralLink}
               className="flex-1 sm:flex-none"
             >
               <Share2 className="w-4 h-4 mr-1.5" />
@@ -181,13 +234,17 @@ const Referral = () => {
               </div>
             </div>
           </div>
-          <p className="text-3xl sm:text-4xl font-bold text-emerald-900">
-            {formatToNaira(REFERRAL_SUMMARY.availableBalance)}
-          </p>
+          {isLoading ? (
+            <Skeleton className="h-9 w-40 bg-emerald-200/60" />
+          ) : (
+            <p className="text-3xl sm:text-4xl font-bold text-emerald-900">
+              {formatToNaira(availableBalance)}
+            </p>
+          )}
           <Button
             onClick={() => setOpenWithdraw(true)}
             className="mt-4 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white"
-            disabled={REFERRAL_SUMMARY.availableBalance <= 0}
+            disabled={availableBalance <= 0 || isLoading}
           >
             <ArrowUpRight className="w-4 h-4 mr-1.5" />
             Withdraw Funds
@@ -209,9 +266,13 @@ const Referral = () => {
               </p>
             </div>
           </div>
-          <p className="text-3xl sm:text-4xl font-bold text-amber-900">
-            {formatToNaira(REFERRAL_SUMMARY.pendingBalance)}
-          </p>
+          {isLoading ? (
+            <Skeleton className="h-9 w-40 bg-amber-200/60" />
+          ) : (
+            <p className="text-3xl sm:text-4xl font-bold text-amber-900">
+              {formatToNaira(pendingBalance)}
+            </p>
+          )}
           <p className="text-xs text-amber-800/80 mt-3 leading-relaxed">
             Pending rewards unlock as referred businesses subscribe to Sync360
             plans.
@@ -231,142 +292,166 @@ const Referral = () => {
             </p>
           </div>
           <span className="text-xs text-gray-500 hidden sm:inline">
-            {REFERRAL_BUSINESSES.length} businesses
+            {trackingTable.length} businesses
           </span>
         </div>
 
-        {/* Desktop / tablet table */}
-        <div className="hidden sm:block overflow-x-auto">
-          <table className="w-full min-w-[680px]">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-left">
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
-                  Business
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
-                  Status
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
-                  Pending
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
-                  Unlocked
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
-                  Expires
-                </th>
-                <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {REFERRAL_BUSINESSES.map((b) => {
-                const status = STATUS_META[b.status];
-                return (
-                  <tr
-                    key={b.id}
-                    className="border-b border-gray-100 hover:bg-gray-50/60"
-                  >
-                    <td className="py-3 px-4">
-                      <Link
-                        href={`/referral/${b.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-emerald-700"
-                      >
-                        {b.name}
-                      </Link>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full",
-                          status.pillClass,
-                        )}
-                      >
-                        <span
-                          className={cn("w-1.5 h-1.5 rounded-full", status.dotClass)}
-                        />
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-amber-700 font-medium text-right">
-                      {formatToNaira(b.pending)}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-emerald-700 font-medium text-right">
-                      {formatToNaira(b.unlocked)}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-600 text-right whitespace-nowrap">
-                      {b.expiresInDays > 0 ? `${b.expiresInDays} days` : "Expired"}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <Link
-                        href={`/referral/${b.id}`}
-                        className="inline-flex items-center text-xs font-medium text-emerald-700 hover:text-emerald-800"
-                      >
-                        View more
-                        <ChevronRight className="w-3 h-3 ml-0.5" />
-                      </Link>
-                    </td>
+        {isLoading ? (
+          <div className="p-4 sm:p-5 space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full bg-slate-100" />
+            ))}
+          </div>
+        ) : trackingTable.length === 0 ? (
+          <div className="py-10 text-center text-sm text-gray-500">
+            No referred businesses yet. Share your link to start earning.
+          </div>
+        ) : (
+          <>
+            {/* Desktop / tablet table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full min-w-[680px]">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-left">
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
+                      Business
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
+                      Status
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
+                      Pending
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
+                      Unlocked
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
+                      Expires
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
+                      Action
+                    </th>
                   </tr>
+                </thead>
+                <tbody>
+                  {trackingTable.map((b) => {
+                    const statusKey = normaliseReferralStatus(b.status);
+                    const status = STATUS_META[statusKey];
+                    return (
+                      <tr
+                        key={b.business_id}
+                        className="border-b border-gray-100 hover:bg-gray-50/60"
+                      >
+                        <td className="py-3 px-4">
+                          <Link
+                            href={`/referral/${b.business_id}`}
+                            className="text-sm font-medium text-gray-900 hover:text-emerald-700"
+                          >
+                            {b.business_name}
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-0.5 rounded-full",
+                              status.pillClass,
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                status.dotClass,
+                              )}
+                            />
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-amber-700 font-medium text-right">
+                          {formatToNaira(b.pending)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-emerald-700 font-medium text-right">
+                          {formatToNaira(b.unlocked)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600 text-right whitespace-nowrap">
+                          {b.expires_days > 0
+                            ? `${b.expires_days} days`
+                            : "Expired"}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Link
+                            href={`/referral/${b.business_id}`}
+                            className="inline-flex items-center text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                          >
+                            View more
+                            <ChevronRight className="w-3 h-3 ml-0.5" />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile card list */}
+            <ul className="sm:hidden divide-y divide-gray-100">
+              {trackingTable.map((b) => {
+                const statusKey = normaliseReferralStatus(b.status);
+                const status = STATUS_META[statusKey];
+                return (
+                  <li key={b.business_id}>
+                    <Link
+                      href={`/referral/${b.business_id}`}
+                      className="flex items-center gap-3 p-4 active:bg-gray-50"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-gray-900 truncate">
+                            {b.business_name}
+                          </span>
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full",
+                              status.pillClass,
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                status.dotClass,
+                              )}
+                            />
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 flex items-center gap-3 text-xs">
+                          <span className="text-amber-700">
+                            Pending {formatToNaira(b.pending)}
+                          </span>
+                          <span className="text-emerald-700">
+                            Unlocked {formatToNaira(b.unlocked)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          {b.expires_days > 0
+                            ? `${b.expires_days} days left`
+                            : "Expired"}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
+                    </Link>
+                  </li>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile card list */}
-        <ul className="sm:hidden divide-y divide-gray-100">
-          {REFERRAL_BUSINESSES.map((b) => {
-            const status = STATUS_META[b.status];
-            return (
-              <li key={b.id}>
-                <Link
-                  href={`/referral/${b.id}`}
-                  className="flex items-center gap-3 p-4 active:bg-gray-50"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-gray-900 truncate">
-                        {b.name}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full",
-                          status.pillClass,
-                        )}
-                      >
-                        <span
-                          className={cn("w-1.5 h-1.5 rounded-full", status.dotClass)}
-                        />
-                        {status.label}
-                      </span>
-                    </div>
-                    <div className="mt-1.5 flex items-center gap-3 text-xs">
-                      <span className="text-amber-700">
-                        Pending {formatToNaira(b.pending)}
-                      </span>
-                      <span className="text-emerald-700">
-                        Unlocked {formatToNaira(b.unlocked)}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {b.expiresInDays > 0
-                        ? `${b.expiresInDays} days left`
-                        : "Expired"}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400 shrink-0" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+            </ul>
+          </>
+        )}
       </div>
 
       <WithdrawModal
         isOpen={openWithdraw}
         onClose={() => setOpenWithdraw(false)}
-        availableBalance={REFERRAL_SUMMARY.availableBalance}
+        availableBalance={availableBalance}
       />
     </div>
   );
@@ -375,20 +460,36 @@ const Referral = () => {
 interface SummaryCardProps {
   title: string;
   value: string;
+  loading?: boolean;
   icon: React.ReactNode;
   iconBg: string;
 }
-const SummaryCard = ({ title, value, icon, iconBg }: SummaryCardProps) => (
+const SummaryCard = ({
+  title,
+  value,
+  loading,
+  icon,
+  iconBg,
+}: SummaryCardProps) => (
   <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 hover:shadow-sm transition-shadow">
     <div className="flex items-center gap-3">
-      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", iconBg)}>
+      <div
+        className={cn(
+          "w-10 h-10 rounded-full flex items-center justify-center",
+          iconBg,
+        )}
+      >
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-500">{title}</p>
-        <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-          {value}
-        </p>
+        {loading ? (
+          <Skeleton className="h-6 w-24 mt-1 bg-slate-100" />
+        ) : (
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+            {value}
+          </p>
+        )}
       </div>
     </div>
   </div>

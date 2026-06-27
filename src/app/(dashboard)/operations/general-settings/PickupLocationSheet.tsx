@@ -83,12 +83,11 @@ const PickupLocationSheet = ({
             <ArrowLeft className="h-4 w-4 text-slate-700" />
           </button>
           <SheetTitle className="text-2xl font-bold text-slate-900">
-            {showForm ? "Dispatch Pick-up Location" : "Pick-up Location"}
+            {showForm ? "Pickup Location" : "Pickup Locations"}
           </SheetTitle>
         </SheetHeader>
 
         {!showForm ? (
-          // List view
           <>
             <div className="p-5">
               <Button
@@ -134,7 +133,6 @@ const PickupLocationSheet = ({
             </div>
           </>
         ) : (
-          // Form view
           <div className="flex-1 overflow-y-auto">
             <div className="p-5 space-y-5 border-t border-slate-100">
               <div>

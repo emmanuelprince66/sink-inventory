@@ -26,6 +26,8 @@ export const queryKey = {
     getShippingById: "get-shipping-by-id",
     editShipping: "edit-shipping",
     deleteShipping: "delete-shipping",
+    getBoxSizes: "get-shipping-box-sizes",
+    getShippingCategories: "get-shipping-categories",
   },
   premium: {
     getAllSubscriptions: "get-all-subscriptions",
@@ -35,6 +37,10 @@ export const queryKey = {
   },
   kyc: {
     createKycAcct: "create-kyc-acct",
+  },
+  referral: {
+    getDashboard: "get-referral-dashboard",
+    getBusiness: "get-referral-business",
   },
   campaign: {
     getAllCampaigns: "get-all-campaigns",

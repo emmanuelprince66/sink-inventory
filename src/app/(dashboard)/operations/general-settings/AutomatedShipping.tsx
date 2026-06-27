@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
@@ -11,26 +12,43 @@ import {
   Map,
   Package,
   Save,
+  Settings as SettingsIcon,
   Truck,
-  Warehouse,
   Weight,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import ConnectShipbubbleModal from "./ConnectShipbubbleModal";
-import PickupLocationSheet from "./PickupLocationSheet";
+import ShipbubbleAgreementModal from "./ShipbubbleAgreementModal";
 import ShipbubbleSettingsModal from "./ShipbubbleSettingsModal";
 import ShippingLocationSheet from "./ShippingLocationSheet";
 
 const AutomatedShipping = () => {
   const [automated, setAutomated] = useState(true);
-  const [shipbubble, setShipbubble] = useState(false);
-  const [chowdeck, setChowdeck] = useState(false);
   const [defaultWeight, setDefaultWeight] = useState("2");
   const [showShippingLocation, setShowShippingLocation] = useState(false);
-  const [showDispatchPickup, setShowDispatchPickup] = useState(false);
   const [showShipbubbleSettings, setShowShipbubbleSettings] = useState(false);
-  const [showConnectShipbubble, setShowConnectShipbubble] = useState(false);
+  const [showShipbubbleAgreement, setShowShipbubbleAgreement] = useState(false);
+
+  // Local UI state until the backend exposes a dedicated boolean flag for
+  // Shipbubble / Chowdeck activation. The hook is still used so the cards can
+  // show "Connected" once pickup details are saved via the Configure modal.
+  const [shipbubbleOn, setShipbubbleOn] = useState(false);
+  const [chowdeckOn, setChowdeckOn] = useState(false);
+
+  const { isConfigured } = useShipbubbleHook();
+
+  const handleShipbubbleToggle = (next: boolean) => {
+    if (next) {
+      setShowShipbubbleAgreement(true);
+      return;
+    }
+    setShipbubbleOn(false);
+  };
+
+  const handleAgreementAccept = () => {
+    setShipbubbleOn(true);
+    setShowShipbubbleAgreement(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -76,34 +94,9 @@ const AutomatedShipping = () => {
             </button>
           </StepTile>
 
-          {/* Step 3 — Dispatch Pickup */}
+          {/* Step 3 — Default Weight */}
           <StepTile
             step={3}
-            icon={<Warehouse className="w-4 h-4" />}
-            title="Dispatch Pickup"
-            description="Riders pick up orders during your business hours. Set the pickup address here."
-          >
-            <p className="mt-2 text-[11px] text-emerald-700 flex items-start gap-1.5">
-              <span className="shrink-0 inline-block w-1 h-1 rounded-full bg-emerald-500 mt-1.5" />
-              Dispatch riders only come during your store's business hours.{" "}
-              <button className="underline font-semibold">
-                View store hours
-              </button>
-            </p>
-            <button
-              onClick={() => setShowDispatchPickup(true)}
-              className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 transition-colors text-left"
-            >
-              <span className="text-sm font-semibold text-emerald-900">
-                Configure dispatch pickup address
-              </span>
-              <ChevronRight className="w-4 h-4 text-emerald-700" />
-            </button>
-          </StepTile>
-
-          {/* Step 4 — Default Weight */}
-          <StepTile
-            step={4}
             icon={<Weight className="w-4 h-4" />}
             title="Default Package Weight"
             description="Used as a fallback when a product doesn't have its own weight. Shipping rates depend on this."
@@ -134,9 +127,9 @@ const AutomatedShipping = () => {
             </div>
           </StepTile>
 
-          {/* Step 5 — Integrations */}
+          {/* Step 4 — Integrations */}
           <StepTile
-            step={5}
+            step={4}
             icon={<Truck className="w-4 h-4" />}
             title="Logistics Integrations"
             description="Connect a partner network so customers see live shipping rates at checkout."
@@ -147,20 +140,18 @@ const AutomatedShipping = () => {
                 tagline="Nationwide & international delivery with 50+ partners"
                 logoTone="bg-rose-100 text-rose-700"
                 icon={<Truck className="w-5 h-5" />}
-                checked={shipbubble}
-                onToggle={(v) => {
-                  if (v) setShowConnectShipbubble(true);
-                  else setShipbubble(false);
-                }}
-                onLearnMore={() => setShowShipbubbleSettings(true)}
+                checked={shipbubbleOn}
+                onToggle={handleShipbubbleToggle}
+                onConfigure={() => setShowShipbubbleSettings(true)}
+                isConfigured={isConfigured}
               />
               <PartnerCard
                 name="Chowdeck"
                 tagline="Fast, reliable same-day deliveries in select cities"
                 logoTone="bg-amber-100 text-amber-700"
                 icon={<Package className="w-5 h-5" />}
-                checked={chowdeck}
-                onToggle={setChowdeck}
+                checked={chowdeckOn}
+                onToggle={setChowdeckOn}
               />
             </div>
           </StepTile>
@@ -185,21 +176,14 @@ const AutomatedShipping = () => {
         open={showShippingLocation}
         onClose={() => setShowShippingLocation(false)}
       />
-      <PickupLocationSheet
-        open={showDispatchPickup}
-        onClose={() => setShowDispatchPickup(false)}
-      />
       <ShipbubbleSettingsModal
         open={showShipbubbleSettings}
         onClose={() => setShowShipbubbleSettings(false)}
       />
-      <ConnectShipbubbleModal
-        open={showConnectShipbubble}
-        onClose={() => setShowConnectShipbubble(false)}
-        onConnect={() => {
-          setShipbubble(true);
-          setShowConnectShipbubble(false);
-        }}
+      <ShipbubbleAgreementModal
+        open={showShipbubbleAgreement}
+        onClose={() => setShowShipbubbleAgreement(false)}
+        onConnect={handleAgreementAccept}
       />
     </div>
   );
@@ -289,8 +273,10 @@ interface PartnerCardProps {
   logoTone: string;
   icon: React.ReactNode;
   checked: boolean;
+  disabled?: boolean;
   onToggle: (v: boolean) => void;
-  onLearnMore?: () => void;
+  onConfigure?: () => void;
+  isConfigured?: boolean;
 }
 const PartnerCard = ({
   name,
@@ -298,8 +284,10 @@ const PartnerCard = ({
   logoTone,
   icon,
   checked,
+  disabled,
   onToggle,
-  onLearnMore,
+  onConfigure,
+  isConfigured,
 }: PartnerCardProps) => (
   <div
     className={cn(
@@ -318,22 +306,34 @@ const PartnerCard = ({
       >
         {icon}
       </div>
-      <Switch checked={checked} onCheckedChange={onToggle} />
+      <Switch
+        checked={checked}
+        onCheckedChange={onToggle}
+        disabled={disabled}
+      />
     </div>
-    <h5 className="text-sm font-bold text-slate-900">{name}</h5>
+    <h5 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+      {name}
+      {onConfigure && isConfigured && (
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
+          Connected
+        </span>
+      )}
+    </h5>
     <p className="text-xs text-slate-500 mt-1 mb-3 leading-relaxed">
       {tagline}
     </p>
     <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs">
-      {onLearnMore && (
+      {onConfigure && (
         <button
-          onClick={onLearnMore}
-          className="text-emerald-700 hover:text-emerald-800 font-semibold"
+          onClick={onConfigure}
+          className="text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
         >
-          Configure
+          <SettingsIcon className="w-3 h-3" />
+          {isConfigured ? "Configure" : "Set up"}
         </button>
       )}
-      {onLearnMore && <span className="text-slate-300">•</span>}
+      {onConfigure && <span className="text-slate-300">•</span>}
       <button className="text-slate-500 hover:text-slate-700 font-medium">
         Get help
       </button>

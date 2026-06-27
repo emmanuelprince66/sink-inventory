@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Link2, Truck } from "lucide-react";
 import { useState } from "react";
-import ConnectShipbubbleModal from "../general-settings/ConnectShipbubbleModal";
+import ShipbubbleSettingsModal from "../general-settings/ShipbubbleSettingsModal";
 
 const ConnectedApps = () => {
   const [showShipbubbleModal, setShowShipbubbleModal] = useState(false);
@@ -45,7 +45,7 @@ const ConnectedApps = () => {
         </div>
       </div>
 
-      <ConnectShipbubbleModal
+      <ShipbubbleSettingsModal
         open={showShipbubbleModal}
         onClose={() => setShowShipbubbleModal(false)}
       />

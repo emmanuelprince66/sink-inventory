@@ -38,6 +38,12 @@ const formSchema = z
     confirmPassword: z.string().min(8, {
       message: "Please confirm your password.",
     }),
+    // Optional. Backend field name `referal` (sic) per the swagger schema.
+    referal: z
+      .string()
+      .trim()
+      .max(50, "Referral code looks too long.")
+      .optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -78,6 +84,7 @@ export const useSignUpForm = ({
       email: "",
       password: "",
       confirmPassword: "",
+      referal: "",
     },
     mode: "onChange",
   });
@@ -121,12 +128,15 @@ export const useSignUpForm = ({
   };
 
   const onSubmit = (values: SignUpFormValues) => {
+    const referal = values.referal?.trim();
     const payload = {
       firstname: values.firstname,
       lastname: values.lastname,
       phone: values.phone,
       email: values.email,
       password: values.password,
+      // Backend schema has `referal` with minLength:1 — only include when set.
+      ...(referal ? { referal } : {}),
     };
 
     signup(payload, {

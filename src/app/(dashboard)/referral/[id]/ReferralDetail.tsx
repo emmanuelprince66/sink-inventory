@@ -1,43 +1,77 @@
 "use client";
 
+import { useReferralBusinessQuery } from "@/api/referral/referral";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowLeft, CalendarClock, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CalendarClock,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
-import { getReferralBusiness, STATUS_META } from "../data";
+import { STATUS_META, normaliseReferralStatus } from "../data";
 
 interface ReferralDetailProps {
   id: string;
 }
 
 const ReferralDetail = ({ id }: ReferralDetailProps) => {
-  const business = getReferralBusiness(id);
+  const { data, isLoading, isError, refetch } = useReferralBusinessQuery(id);
+  const business = data?.data;
 
-  if (!business) {
+  if (isLoading) {
+    return <ReferralDetailSkeleton />;
+  }
+
+  if (isError || !business) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 gap-3 text-center">
+        <AlertTriangle className="w-10 h-10 text-rose-400" />
         <p className="text-base font-semibold text-gray-900">
-          Referral not found
+          Couldn't load this referral
         </p>
-        <p className="text-sm text-gray-500">
-          We couldn't find this business in your referral list.
+        <p className="text-sm text-gray-500 max-w-sm">
+          {isError
+            ? "We hit an error fetching this business. Check your connection and try again."
+            : "We couldn't find this business in your referral list."}
         </p>
-        <Link href="/referral">
-          <Button variant="outline" className="mt-2">
-            <ArrowLeft className="w-4 h-4 mr-1.5" />
-            Back to referrals
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 mt-2">
+          {isError && (
+            <Button variant="outline" onClick={() => refetch()}>
+              Retry
+            </Button>
+          )}
+          <Link href="/referral">
+            <Button variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Back to referrals
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const status = STATUS_META[business.status];
-  const progressPct = business.totalReward
-    ? Math.min(100, Math.round((business.unlocked / business.totalReward) * 100))
-    : 0;
+  const statusKey = normaliseReferralStatus(business.status);
+  const status = STATUS_META[statusKey];
+  const allocation = business.reward_allocation;
+  // Prefer the backend's percentage_earned; fall back to a derived ratio so
+  // the bar never reads 0% when unlocked > 0 because the field was missing.
+  const progressPct = (() => {
+    if (typeof allocation?.percentage_earned === "number") {
+      return Math.min(100, Math.max(0, Math.round(allocation.percentage_earned)));
+    }
+    if (allocation?.total_reward) {
+      return Math.min(
+        100,
+        Math.round((allocation.unlocked / allocation.total_reward) * 100),
+      );
+    }
+    return 0;
+  })();
 
   return (
     <div className="flex min-h-screen w-full flex-col gap-5 p-4 md:p-6 bg-gray-50">
@@ -53,7 +87,7 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
           </Link>
           <div>
             <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
-              {business.name}
+              {business.business_name}
             </h1>
             <div className="flex items-center gap-2 mt-1">
               <span
@@ -69,8 +103,8 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
               </span>
               <span className="text-xs text-gray-500 flex items-center gap-1">
                 <CalendarClock className="w-3 h-3" />
-                {business.expiresInDays > 0
-                  ? `${business.expiresInDays} days remaining`
+                {business.days_remaining > 0
+                  ? `${business.days_remaining} days remaining`
                   : "Window expired"}
               </span>
             </div>
@@ -86,17 +120,17 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <AllocationTile
             label="Total Reward"
-            value={formatToNaira(business.totalReward)}
+            value={formatToNaira(allocation?.total_reward ?? 0)}
             tone="neutral"
           />
           <AllocationTile
             label="Unlocked"
-            value={formatToNaira(business.unlocked)}
+            value={formatToNaira(allocation?.unlocked ?? 0)}
             tone="green"
           />
           <AllocationTile
             label="Pending"
-            value={formatToNaira(business.pending)}
+            value={formatToNaira(allocation?.pending ?? 0)}
             tone="amber"
           />
         </div>
@@ -106,8 +140,8 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
           <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
             <span className="flex items-center gap-1">
               <Sparkles className="w-3 h-3 text-emerald-600" />
-              Earned {formatToNaira(business.unlocked)} of{" "}
-              {formatToNaira(business.totalReward)} available reward.
+              Earned {formatToNaira(allocation?.unlocked ?? 0)} of{" "}
+              {formatToNaira(allocation?.total_reward ?? 0)} available reward.
             </span>
             <span className="font-semibold text-emerald-700">
               {progressPct}%
@@ -134,7 +168,7 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
           </p>
         </div>
 
-        {business.activity.length === 0 ? (
+        {business.recent_activity.length === 0 ? (
           <div className="py-10 text-center text-sm text-gray-500">
             No subscription activity yet.
           </div>
@@ -157,16 +191,18 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {business.activity.map((act, idx) => (
+                  {business.recent_activity.map((act, idx) => (
                     <tr key={idx} className="border-b border-gray-100">
                       <td className="py-3 px-4 text-sm text-gray-900">
-                        {moment(act.date).format("MMM D, YYYY")}
+                        {act.date
+                          ? moment(act.date).format("MMM D, YYYY")
+                          : "—"}
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-700 text-right">
-                        {formatToNaira(act.subscription)}
+                        {formatToNaira(Number(act.subscription) || 0)}
                       </td>
                       <td className="py-3 px-4 text-sm font-medium text-emerald-700 text-right">
-                        +{formatToNaira(act.reward)}
+                        +{formatToNaira(Number(act.reward) || 0)}
                       </td>
                     </tr>
                   ))}
@@ -176,21 +212,22 @@ const ReferralDetail = ({ id }: ReferralDetailProps) => {
 
             {/* Mobile list */}
             <ul className="sm:hidden divide-y divide-gray-100">
-              {business.activity.map((act, idx) => (
+              {business.recent_activity.map((act, idx) => (
                 <li
                   key={idx}
                   className="flex items-center justify-between gap-3 p-4"
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {moment(act.date).format("MMM D, YYYY")}
+                      {act.date ? moment(act.date).format("MMM D, YYYY") : "—"}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Subscription {formatToNaira(act.subscription)}
+                      Subscription{" "}
+                      {formatToNaira(Number(act.subscription) || 0)}
                     </p>
                   </div>
                   <span className="text-sm font-semibold text-emerald-700">
-                    +{formatToNaira(act.reward)}
+                    +{formatToNaira(Number(act.reward) || 0)}
                   </span>
                 </li>
               ))}
@@ -216,10 +253,83 @@ const AllocationTile = ({ label, value, tone }: AllocationTileProps) => {
         : "bg-gray-50 border-gray-100 text-gray-900";
   return (
     <div className={cn("border rounded-lg p-3", styles)}>
-      <p className="text-[11px] uppercase tracking-wider opacity-70">
-        {label}
-      </p>
+      <p className="text-[11px] uppercase tracking-wider opacity-70">{label}</p>
       <p className="text-lg sm:text-xl font-bold mt-1">{value}</p>
+    </div>
+  );
+};
+
+// Skeleton mirrors the real layout (header + allocation card + activity card)
+// so the page doesn't jump around when data lands. Matches the pattern used
+// on the orders ViewOrder detail screen.
+const ReferralDetailSkeleton = () => {
+  const Bar = ({ className }: { className?: string }) => (
+    <div
+      className={cn(
+        "bg-gray-200 rounded animate-pulse",
+        className,
+      )}
+    />
+  );
+
+  return (
+    <div className="flex min-h-screen w-full flex-col gap-5 p-4 md:p-6 bg-gray-50">
+      {/* Header skeleton */}
+      <div className="flex items-center gap-3">
+        <Bar className="h-7 w-7 rounded-md" />
+        <div className="flex-1 space-y-2">
+          <Bar className="h-6 w-48" />
+          <div className="flex items-center gap-2">
+            <Bar className="h-4 w-28 rounded-full" />
+            <Bar className="h-3 w-24" />
+          </div>
+        </div>
+      </div>
+
+      {/* Reward allocation card skeleton */}
+      <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+        <Bar className="h-4 w-36 mb-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="border border-gray-100 bg-gray-50 rounded-lg p-3 space-y-2"
+            >
+              <Bar className="h-3 w-20" />
+              <Bar className="h-6 w-28" />
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 space-y-2">
+          <div className="flex items-center justify-between">
+            <Bar className="h-3 w-2/3" />
+            <Bar className="h-3 w-10" />
+          </div>
+          <Bar className="h-2.5 w-full rounded-full" />
+        </div>
+      </div>
+
+      {/* Activity card skeleton */}
+      <div className="rounded-xl border border-gray-200 bg-white">
+        <div className="p-4 sm:p-5 border-b border-gray-100 space-y-2">
+          <Bar className="h-4 w-56" />
+          <Bar className="h-3 w-72" />
+        </div>
+        <div className="p-4 sm:p-5 space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between gap-3 py-2"
+            >
+              <div className="space-y-1.5 flex-1">
+                <Bar className="h-3.5 w-32" />
+                <Bar className="h-3 w-40" />
+              </div>
+              <Bar className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

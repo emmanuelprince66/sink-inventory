@@ -1,121 +1,9 @@
-// UI-only mock data for the Referral feature.
-// Swap these constants and the `getReferralBusiness` helper with a real
-// query (e.g. useReferralsQuery) when the backend endpoint ships.
+// Status mapping for the Referral feature.
+// The API returns human-readable status strings ("Active Subscriber",
+// "Not Subscribed", "Lapsed"). This module normalises them to a small enum
+// so the UI can pick a pill style without caring about exact wording.
 
-export type ReferralStatus =
-  | "active"
-  | "not-subscribed"
-  | "lapsed";
-
-export interface ReferralActivity {
-  date: string; // YYYY-MM-DD
-  subscription: number;
-  reward: number;
-}
-
-export interface ReferralBusiness {
-  id: string;
-  name: string;
-  status: ReferralStatus;
-  totalReward: number;
-  unlocked: number;
-  pending: number;
-  /** Number of days remaining before the referral window closes. */
-  expiresInDays: number;
-  activity: ReferralActivity[];
-}
-
-export interface ReferralSummary {
-  totalReferrals: number;
-  pendingRewards: number;
-  totalPaidCommission: number;
-  availableBalance: number;
-  pendingBalance: number;
-  referralCode: string;
-  referralLink: string;
-}
-
-export const REFERRAL_SUMMARY: ReferralSummary = {
-  totalReferrals: 15,
-  pendingRewards: 120_000,
-  totalPaidCommission: 35_000,
-  availableBalance: 35_000,
-  pendingBalance: 120_000,
-  referralCode: "Tobi123",
-  referralLink: "https://sync360.com/r/Tobi123",
-};
-
-export const REFERRAL_BUSINESSES: ReferralBusiness[] = [
-  {
-    id: "abc-store",
-    name: "ABC Store",
-    status: "active",
-    totalReward: 20_000,
-    unlocked: 2_000,
-    pending: 18_000,
-    expiresInDays: 170,
-    activity: [
-      { date: "2026-06-02", subscription: 5_000, reward: 1_000 },
-      { date: "2026-07-02", subscription: 5_000, reward: 1_000 },
-    ],
-  },
-  {
-    id: "fresh-mart",
-    name: "Fresh Mart",
-    status: "active",
-    totalReward: 20_000,
-    unlocked: 8_000,
-    pending: 12_000,
-    expiresInDays: 145,
-    activity: [
-      { date: "2026-04-18", subscription: 5_000, reward: 2_000 },
-      { date: "2026-05-18", subscription: 5_000, reward: 2_000 },
-      { date: "2026-06-18", subscription: 5_000, reward: 2_000 },
-      { date: "2026-07-18", subscription: 5_000, reward: 2_000 },
-    ],
-  },
-  {
-    id: "dee-pharmacy",
-    name: "Dee Pharmacy",
-    status: "not-subscribed",
-    totalReward: 20_000,
-    unlocked: 0,
-    pending: 20_000,
-    expiresInDays: 178,
-    activity: [],
-  },
-  {
-    id: "kano-bakery",
-    name: "Kano Bakery",
-    status: "active",
-    totalReward: 20_000,
-    unlocked: 4_000,
-    pending: 16_000,
-    expiresInDays: 132,
-    activity: [
-      { date: "2026-05-10", subscription: 5_000, reward: 2_000 },
-      { date: "2026-06-10", subscription: 5_000, reward: 2_000 },
-    ],
-  },
-  {
-    id: "lagos-mini-mart",
-    name: "Lagos Mini Mart",
-    status: "lapsed",
-    totalReward: 20_000,
-    unlocked: 6_000,
-    pending: 0,
-    expiresInDays: 0,
-    activity: [
-      { date: "2026-01-08", subscription: 5_000, reward: 3_000 },
-      { date: "2026-02-08", subscription: 5_000, reward: 3_000 },
-    ],
-  },
-];
-
-export const getReferralBusiness = (
-  id: string,
-): ReferralBusiness | undefined =>
-  REFERRAL_BUSINESSES.find((b) => b.id === id);
+export type ReferralStatus = "active" | "not-subscribed" | "lapsed";
 
 export const STATUS_META: Record<
   ReferralStatus,
@@ -136,4 +24,22 @@ export const STATUS_META: Record<
     pillClass: "bg-slate-50 text-slate-600 border border-slate-200",
     dotClass: "bg-slate-400",
   },
+};
+
+// Normalise the free-text status the backend returns into a known key.
+// Defaults to "not-subscribed" — safer than guessing "active" when in doubt.
+export const normaliseReferralStatus = (raw: string | undefined): ReferralStatus => {
+  if (!raw) return "not-subscribed";
+  const key = raw.trim().toLowerCase();
+  if (key.includes("active") || key.includes("subscribed") && !key.includes("not"))
+    return "active";
+  if (key.includes("laps")) return "lapsed";
+  return "not-subscribed";
+};
+
+// Build the share link a merchant gives out. Uses window.location.origin so
+// it points to whatever environment the dashboard is currently running on.
+export const buildReferralLink = (code: string): string => {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}/signup?referal=${encodeURIComponent(code)}`;
 };

@@ -190,6 +190,31 @@ const SignUp = () => {
                 )}
               />
 
+              {/* Referral Code Field (optional) */}
+              <FormField
+                control={form.control}
+                name="referal"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      Referral Code{" "}
+                      <span className="text-gray-400 normal-case tracking-normal">
+                        (optional)
+                      </span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter referral code"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <Button
                 type="submit"
                 className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
