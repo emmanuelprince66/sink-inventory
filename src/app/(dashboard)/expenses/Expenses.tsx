@@ -153,7 +153,7 @@ const Expenses = () => {
   return (
     <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start px-2 sm:px-4 pb-12">
       {/* Header Section */}
-      <div className="w-full bg-white">
+      <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
             Expenses

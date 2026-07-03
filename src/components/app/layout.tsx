@@ -13,7 +13,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <NotificationModalProvider />
       <RouteGuard requiredRole="OWNER">
         <AppSidebar />
-        <main className="w-full bg-primary-green-600">
+        <main className="w-full bg-[#F4F7F4]">
           <TopBar />
           <div className="p-3 min-h-[80vh] w-full md:w-[95%] mx-auto">
             {children}

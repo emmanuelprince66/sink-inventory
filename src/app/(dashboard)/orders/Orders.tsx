@@ -107,36 +107,31 @@ const CustomOrderCard = ({
   const variants = {
     total: {
       bg: "bg-info-2",
-      iconBg: "bg-white/60",
-      icon: <ShoppingCart className="w-5 h-5 text-info-1" />,
+      icon: <ShoppingCart className="w-4 h-4 text-info-1" />,
       text: "text-info-1",
       amountText: "text-grey-1",
     },
     completed: {
       bg: "bg-success-2",
-      iconBg: "bg-white/60",
-      icon: <CheckCircle className="w-5 h-5 text-success-1" />,
+      icon: <CheckCircle className="w-4 h-4 text-success-1" />,
       text: "text-success-1",
       amountText: "text-grey-1",
     },
     revenue: {
       bg: "bg-pink-50",
-      iconBg: "bg-white/60",
-      icon: <TrendingUp className="w-5 h-5 text-pink-600" />,
+      icon: <TrendingUp className="w-4 h-4 text-pink-600" />,
       text: "text-pink-600",
       amountText: "text-grey-1",
     },
     visits: {
       bg: "bg-orange-50",
-      iconBg: "bg-white/60",
-      icon: <ArrowDownLeft className="w-5 h-5 text-orange-500" />,
+      icon: <ArrowDownLeft className="w-4 h-4 text-orange-500" />,
       text: "text-orange-500",
       amountText: "text-grey-1",
     },
     cost: {
       bg: "bg-warning-2",
-      iconBg: "bg-white/60",
-      icon: <Truck className="w-5 h-5 text-warning-1" />,
+      icon: <Truck className="w-4 h-4 text-warning-1" />,
       text: "text-warning-1",
       amountText: "text-grey-1",
     },
@@ -163,15 +158,11 @@ const CustomOrderCard = ({
         className,
       )}
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className={cn("p-1.5 sm:p-2 rounded-xl", variant.iconBg)}>
-            {variant.icon}
-          </div>
-          <span className={cn("text-xs sm:text-sm font-bold", variant.text)}>
-            {title}
-          </span>
-        </div>
+      <div className="flex justify-between items-center gap-2">
+        <span className={cn("text-xs sm:text-sm font-bold", variant.text)}>
+          {title}
+        </span>
+        {variant.icon}
       </div>
       <div className="mt-3 sm:mt-4">
         <span
@@ -354,7 +345,7 @@ const Orders = () => {
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
       {/* Header Section */}
-      <div className="w-full bg-white px-2 sm:px-4">
+      <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
             Invoices and Orders
@@ -536,7 +527,7 @@ const Orders = () => {
                   "text-xs transition-all flex-shrink-0",
                   copiedUrl
                     ? "bg-success-2 border-success-1/30 text-success-1 hover:bg-success-2"
-                    : "",
+                    : "border-primary-green-300 text-primary-green-300 hover:bg-primary-green-300/10 hover:text-primary-green-300",
                 )}
               >
                 {copiedUrl ? (
@@ -621,7 +612,7 @@ const Orders = () => {
               <div className="flex gap-2 w-full sm:w-auto shrink-0">
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm relative"
+                  className="flex-1 sm:flex-none text-xs sm:text-sm relative border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
                   onClick={() => setOpenFilterModal(true)}
                 >
                   <FilterIcon className="w-4 h-4 mr-2" />
@@ -634,7 +625,7 @@ const Orders = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm"
+                  className="flex-1 sm:flex-none text-xs sm:text-sm border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
                 >
                   Export
                 </Button>
@@ -777,7 +768,7 @@ const Orders = () => {
                   shipping_status: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-grey-4"
             >
               <option value="">All Shipping Status</option>
               <option value="PENDING">Pending</option>
@@ -800,7 +791,7 @@ const Orders = () => {
                   payment_status: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-grey-4"
             >
               <option value="">All Payment Status</option>
               <option value="UNPAID">Unpaid</option>
@@ -822,7 +813,7 @@ const Orders = () => {
                   sales_staff: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-grey-4"
             >
               <option value="">All Sales Staff</option>
               {MOCK_SALES_STAFF.map((staff) => (
@@ -846,7 +837,7 @@ const Orders = () => {
                   delivery_company: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-grey-4"
             >
               <option value="">All Delivery Companies</option>
               {MOCK_DELIVERY_COMPANIES.map((company) => (
@@ -861,7 +852,7 @@ const Orders = () => {
           <div className="flex gap-3 pt-4">
             <Button
               variant="outline"
-              className="flex-1"
+              className="flex-1 border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
               onClick={() => {
                 setTempFilters({
                   order_type: activeTab,

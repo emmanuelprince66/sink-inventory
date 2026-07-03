@@ -209,26 +209,22 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   if (OrderIdDataLoading) {
     return (
-      <div className="min-h-screen bg-grey-6">
-        <div className="bg-white border-b border-grey-5 px-4 py-4 md:px-6">
-          <div className="flex items-center space-x-3">
-            <div className="h-5 w-5 bg-grey-6 rounded animate-pulse"></div>
-            <div className="h-6 w-32 bg-grey-6 rounded animate-pulse"></div>
-          </div>
+      <div className="px-4 py-6 w-full">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="h-9 w-20 bg-grey-6 rounded-lg animate-pulse"></div>
+          <div className="h-6 w-32 bg-grey-6 rounded animate-pulse"></div>
         </div>
 
-        <div className="max-w-full mx-auto px-4 py-6 md:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
-            <div className="space-y-6">
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          <div className="space-y-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
           </div>
         </div>
       </div>
@@ -237,7 +233,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   if (!orderData) {
     return (
-      <div className="min-h-screen bg-grey-6 flex items-center justify-center">
+      <div className="px-4 py-6 w-full flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <p className="text-grey-4">Order not found</p>
         </div>
@@ -246,30 +242,28 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-grey-6">
+    <div className="px-4 py-6 w-full flex flex-col gap-6">
       {/* Header */}
-      <div className="bg-white border-b border-grey-5 py-4 ">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.history.back()}
-              className="flex items-center gap-1.5  px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </button>
-            <h1 className="text-xl  font-extrabold text-grey-1">
-              Order Details
-            </h1>
-          </div>
-          <button className="flex items-center space-x-2 px-3 py-2 text-sm font-bold text-grey-3 hover:bg-grey-6 rounded-lg transition-colors">
-            <Share2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Share Order</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-1.5  px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
           </button>
+          <h1 className="text-xl  font-extrabold text-grey-1">
+            Order Details
+          </h1>
         </div>
+        <button className="flex items-center space-x-2 px-3 py-2 text-sm font-bold text-grey-3 hover:bg-grey-6 rounded-lg transition-colors">
+          <Share2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Share Order</span>
+        </button>
       </div>
 
-      <div className="max-w-full mx-auto px-4 py-6 md:px-6">
+      <div className="w-full">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">

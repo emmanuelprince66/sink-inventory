@@ -38,7 +38,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           className={cn(
             "flex w-full rounded-xl bg-white border border-grey-5 px-10 py-2 text-sm transition-all outline-none",
-            "h-10 focus:border-primary-green-300 focus:ring-2 focus:ring-primary-green-300/20",
+            "h-10 focus:border-grey-4 focus:ring-2 focus:ring-grey-4/20",
             "placeholder:text-grey-4 disabled:opacity-50",
             className
           )}

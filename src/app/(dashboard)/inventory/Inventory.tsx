@@ -242,7 +242,7 @@ const Inventory = () => {
   return (
     <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
       {/* Header Section */}
-      <div className="w-full bg-white">
+      <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
             Inventory

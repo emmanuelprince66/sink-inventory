@@ -54,7 +54,7 @@ export function DatePickerWithRange({
               !date && "text-grey-3",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-primary-green-300" />
+            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-grey-4" />
             <span className="truncate">{label}</span>
           </Button>
         </PopoverTrigger>
