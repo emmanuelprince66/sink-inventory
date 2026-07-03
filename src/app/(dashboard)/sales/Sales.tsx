@@ -6,25 +6,34 @@ import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useSalesHook } from "@/hooks/useSalesHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { Switch } from "@/components/ui/switch";
 import {
   AlertCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Settings,
   Users,
   Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import DiscountProduct from "./DiscountProduct";
-import { DownloadSalesButton } from "./DownloadSalesButton";
+// Download Report temporarily disabled — re-enable when ready.
+// import { DownloadSalesButton } from "./DownloadSalesButton";
 import ComboSalesTable from "./ComboSalesTable";
 import OrderHistory from "./OrderHistory";
 import ProductsSold from "./ProductsSold";
@@ -57,6 +66,47 @@ const orderFilterOptions = [
   "Cancelled",
 ] as const;
 
+const SALES_CARD_STYLES: Record<
+  string,
+  { bg: string; iconColor: string; icon: React.ReactNode }
+> = {
+  Revenue: {
+    bg: "bg-info-2",
+    iconColor: "text-info-1",
+    icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+  "Product Cost": {
+    bg: "bg-warning-2",
+    iconColor: "text-warning-1",
+    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+  "Items Sold": {
+    bg: "bg-secondary-6",
+    iconColor: "text-primary-green-300",
+    icon: <Users className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+  "Total Discount": {
+    bg: "bg-error-2",
+    iconColor: "text-error-1",
+    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+  Profit: {
+    bg: "bg-success-2",
+    iconColor: "text-success-1",
+    icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+  VAT: {
+    bg: "bg-warning-2",
+    iconColor: "text-warning-1",
+    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+  },
+};
+const DEFAULT_SALES_CARD_STYLE = {
+  bg: "bg-grey-6",
+  iconColor: "text-grey-3",
+  icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+};
+
 const CustomSalesCard = ({
   title,
   amount,
@@ -68,93 +118,26 @@ const CustomSalesCard = ({
   type?: string;
   func?: any;
 }) => {
-  const isRevenueCard = title === "Revenue";
-  const isCostCard = title === "Product Cost";
-  const isItemsCard = title === "Items Sold";
-  const isDiscountCard = title === "Total Discount";
-  const isProfitCard = title === "Profit";
-  const isVatCard = title === "VAT";
-  const getCardStyle = () => {
-    if (isRevenueCard) {
-      return {
-        bg: "bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200",
-        text: "text-primary-black-100",
-        amount: "text-primary-black-100",
-        badge: "bg-blue-100",
-        icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />,
-      };
-    }
-    if (isCostCard) {
-      return {
-        bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
-        text: "text-primary-black-100",
-        amount: "text-primary-black-100",
-        badge: "bg-amber-100",
-        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
-      };
-    }
-    if (isItemsCard) {
-      return {
-        bg: "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200",
-        text: "text-primary-black-100",
-        amount: "text-primary-black-100",
-        badge: "bg-indigo-100",
-        icon: <Users className="w-4 sm:w-5 h-4 sm:h-5 text-indigo-600" />,
-      };
-    }
-    if (isDiscountCard) {
-      return {
-        bg: "bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200",
-        text: "text-primary-black-1000",
-        amount: "text-primary-black-100",
-        badge: "bg-purple-100",
-        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-purple-600" />,
-      };
-    }
-    if (isVatCard) {
-      return {
-        bg: "bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200",
-        text: "text-primary-black-100",
-        amount: "text-primary-black-100",
-        badge: "bg-amber-100",
-        icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5 text-amber-600" />,
-      };
-    }
-    if (isProfitCard) {
-      return {
-        bg: "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200",
-        text: "text-primary-black-100",
-        amount: "text-primary-black-100",
-        badge: "bg-emerald-100",
-        icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-emerald-600" />,
-      };
-    }
-    return {
-      bg: "bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200",
-      text: "text-primary-black-100",
-      amount: "text-primary-black-100",
-      badge: "bg-gray-100",
-      icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5 text-gray-600" />,
-    };
-  };
-
-  const cardStyle = getCardStyle();
+  const cardStyle = SALES_CARD_STYLES[title] ?? DEFAULT_SALES_CARD_STYLE;
 
   return (
     <CustomCard
       className={cn(
-        "p-3 sm:p-4 rounded-lg border transition-all hover:shadow-md w-full h-full",
+        "p-4 sm:p-5 rounded-2xl border-none transition-all w-full h-full",
         cardStyle.bg,
       )}
     >
       <div className="flex flex-col gap-1 sm:gap-2 h-full justify-between">
         <div className="flex justify-between items-start w-full">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className={cn("p-1 sm:p-2 rounded-full", cardStyle.badge)}>
-              {cardStyle.icon}
+            <div className="p-1 sm:p-2 rounded-xl bg-white/60">
+              <span className={cardStyle.iconColor}>{cardStyle.icon}</span>
             </div>
             <span
-              className={cn("text-xs sm:text-sm font-medium", cardStyle.text)}
+              className={cn(
+                "text-xs sm:text-sm font-bold",
+                cardStyle.iconColor,
+              )}
             >
               {title}
             </span>
@@ -162,13 +145,13 @@ const CustomSalesCard = ({
           {type === "discount" && (
             <p
               onClick={func}
-              className="text-xs hover:underline cursor-pointer text-purple-600"
+              className="text-xs font-bold hover:underline cursor-pointer text-primary-green-300"
             >
               View More
             </p>
           )}
         </div>
-        <p className={cn("text-lg sm:text-2xl font-bold", cardStyle.amount)}>
+        <p className="text-lg sm:text-2xl font-extrabold text-grey-1">
           {amount}
         </p>
       </div>
@@ -177,6 +160,7 @@ const CustomSalesCard = ({
 };
 
 const Sales = () => {
+  // Kept for DownloadSalesButton, currently disabled above.
   const business_id = useBusinessStore((state) => state.business_id);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -305,21 +289,19 @@ const Sales = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const totalProductsItems = SalesData?.data?.results?.data?.length || 0;
-  const totalOrderItems = SalesOrderData?.data?.total || 0;
-
   return (
     <div className="w-0 min-w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
       {/* Header Section */}
-      <div className="w-full bg-white px-2 sm:px-4">
+      <div className="w-full bg-white">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl text-primary-black-100 font-[600]">
+            <h1 className="text-xl sm:text-2xl md:text-3xl text-grey-1 font-extrabold">
               Sales
             </h1>
           </div>
 
           <div className="flex flex-col justify-center sm:flex-row items-center sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            {/* Download Report temporarily disabled — re-enable when ready.
             <DownloadSalesButton
               business_id={business_id}
               dateRange={dateRange}
@@ -330,20 +312,36 @@ const Sales = () => {
               activeOrderFilter={activeOrderFilter}
               className="w-full sm:w-auto"
             />
+            */}
 
-            <GenerateReportButton
-              reportType="sales"
-              className="w-full sm:w-auto"
-            />
-
-            {user && user?.role === "OWNER" && (
-              <Button
-                className="bg-green-500 hover:bg-green-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto"
-                onClick={openAttendantsModal}
-              >
-                Attendants
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                  More Actions
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 p-1.5">
+                <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
+                  <div>
+                    <GenerateReportButton
+                      reportType="sales"
+                      variant="ghost"
+                      className="w-full justify-start rounded-lg py-1.5 font-semibold text-grey-2 hover:bg-secondary-6 hover:text-grey-2"
+                    />
+                  </div>
+                </DropdownMenuItem>
+                {user && user?.role === "OWNER" && (
+                  <DropdownMenuItem
+                    onClick={openAttendantsModal}
+                    className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2"
+                  >
+                    <Users className="w-4 h-4 mr-0.5" />
+                    Attendants
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <div className="w-full">
               <DatePickerWithRange
@@ -357,27 +355,31 @@ const Sales = () => {
 
         {/* Overview Cards - Updated Responsive Version */}
         <div className="mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
+          <p className="text-sm font-bold text-primary-green-300 border-b border-grey-6 pb-2 mb-3 sm:mb-4">
             Overview
-          </h2>
+          </p>
 
           {SalesLoading || !SalesData ? (
             <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
               {Array.from({ length: 6 }).map((_, index) => (
                 <CustomCard
                   key={index}
-                  className="w-full border-gray-200 h-[100px] sm:h-[120px]"
+                  className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
                 >
                   <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
-                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-[#eef4ef]" />
+                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-6" />
+                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-6" />
                   </div>
                 </CustomCard>
               ))}
             </div>
           ) : (
             <>
-              { user && (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT" || user?.role === "ACCOUNTANT" || user?.role === "PRODUCTION-MANAGER") && (
+              {user &&
+                (user?.role === "OWNER" ||
+                  user?.role === "ADMIN-ATTENDANT" ||
+                  user?.role === "ACCOUNTANT" ||
+                  user?.role === "PRODUCTION-MANAGER") && (
                   <>
                     {/* Mobile: 2 columns */}
                     <div className="grid grid-cols-2 gap-2 md:hidden">
@@ -494,27 +496,31 @@ const Sales = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+      <div className="w-full rounded-2xl shadow-sm border border-grey-5 bg-white overflow-hidden">
         {/* Tabs Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100 flex items-center gap-2">
-              {activeTab === "products" ? (
-                <>
-                  Sales Analytics
-                  <span className="text-xs bg-blue-100 px-2 py-1 rounded-full text-blue-600 font-medium">
-                    {totalProductsItems.toLocaleString()}
-                  </span>
-                </>
-              ) : (
-                <>
-                  Order History
-                  <span className="text-xs bg-green-100 px-2 py-1 rounded-full text-green-600 font-medium">
-                    {totalOrderItems.toLocaleString()}
-                  </span>
-                </>
-              )}
-            </h2>
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+              <h2 className="text-base sm:text-lg font-extrabold text-grey-1 flex items-center gap-2">
+                {activeTab === "products" ? "Sales Analytics" : "Order History"}
+                <Settings className="w-3.5 h-3.5 text-grey-4" />
+              </h2>
+
+              {/* Combo Sales Toggle */}
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="combo-toggle"
+                  checked={showComboSales}
+                  onCheckedChange={setShowComboSales}
+                />
+                <label
+                  htmlFor="combo-toggle"
+                  className="text-sm font-bold text-grey-2 cursor-pointer"
+                >
+                  View Combo Sales
+                </label>
+              </div>
+            </div>
 
             <div className="w-full sm:w-80">
               <SearchInput
@@ -525,24 +531,6 @@ const Sales = () => {
             </div>
           </div>
 
-          {/* Combo Sales Toggle */}
-          <div className="flex items-center gap-2 mb-4">
-            <Switch
-              id="combo-toggle"
-              checked={showComboSales}
-              onCheckedChange={setShowComboSales}
-            />
-            <label
-              htmlFor="combo-toggle"
-              className="text-sm font-medium text-slate-700 cursor-pointer"
-            >
-              View Combo Sales
-            </label>
-          </div>
-
-          {/* Combo Sales View */}
-          {showComboSales && <ComboSalesTable />}
-
           {/* Tabs Navigation */}
           <div className={showComboSales ? "hidden" : "w-full"}>
             <Tabs
@@ -552,23 +540,33 @@ const Sales = () => {
               }
               className="w-full"
             >
-              <TabsList className="w-full sm:w-[400px] bg-primary-green-50 border-b border-gray-200">
-                <TabsTrigger
-                  value="products"
-                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white text-xs sm:text-sm"
+              <div className="flex items-center gap-4 w-full border-b border-grey-5">
+                <button
+                  onClick={() => setActiveTab("products")}
+                  className={cn(
+                    "pb-2 border-b-2 font-bold text-xs sm:text-sm cursor-pointer transition-colors",
+                    activeTab === "products"
+                      ? "border-primary-green-300 text-primary-green-300"
+                      : "border-transparent text-grey-3 hover:text-grey-2",
+                  )}
                 >
                   Products Sold
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="data-[state=active]:bg-primary-green-300 data-[state=active]:text-white text-xs sm:text-sm"
+                </button>
+                <button
+                  onClick={() => setActiveTab("history")}
+                  className={cn(
+                    "pb-2 border-b-2 font-bold text-xs sm:text-sm cursor-pointer transition-colors",
+                    activeTab === "history"
+                      ? "border-primary-green-300 text-primary-green-300"
+                      : "border-transparent text-grey-3 hover:text-grey-2",
+                  )}
                 >
                   Order History
-                </TabsTrigger>
-              </TabsList>
+                </button>
+              </div>
 
               {searchInput.length > 0 && searchInput.length < 3 && (
-                <div className="mt-2 text-xs sm:text-sm text-gray-500">
+                <div className="mt-2 text-xs sm:text-sm font-medium text-grey-3">
                   Type at least 3 characters to search
                 </div>
               )}
@@ -576,24 +574,22 @@ const Sales = () => {
               {/* Products Tab Content */}
               <TabsContent value="products" className="mt-4 sm:mt-6">
                 {/* Product Filter Options */}
-                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-2">
+                <div className="flex gap-2 sm:gap-3  sm:mb-4 overflow-x-auto pb-2 border-b border-grey-5 pb-4">
                   {productFilterOptions.map((filter) => (
-                    <Button
+                    <button
                       key={filter}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-primary-black-100 font-medium transition-colors whitespace-nowrap ${
+                      className={cn(
+                        "px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap cursor-pointer",
                         activeProductFilter === filter
-                          ? "bg-primary-green-300 text-white shadow-sm"
-                          : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-250"
-                      }`}
+                          ? "bg-primary-green-300 text-white"
+                          : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
+                      )}
                       onClick={() => setActiveProductFilter(filter)}
                     >
                       {filter}
-                    </Button>
+                    </button>
                   ))}
                 </div>
-
-                {/* Subtle demarcation line */}
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4 sm:my-6"></div>
 
                 {/* Categories Tabs */}
                 {CategoriesDataLoading || !CategoriesData ? (
@@ -601,7 +597,7 @@ const Sales = () => {
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
+                        className="h-8 sm:h-10 w-16 sm:w-20 bg-grey-6 rounded-full flex-shrink-0"
                       />
                     ))}
                   </div>
@@ -614,10 +610,10 @@ const Sales = () => {
                           onClick={() => scrollCategories("left")}
                           disabled={!canScrollLeft}
                           className={cn(
-                            "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
+                            "p-1 sm:p-2 rounded-full transition-all mr-1 sm:mr-2 flex-shrink-0",
                             canScrollLeft
-                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed",
+                              ? "text-grey-3 hover:text-primary-green-300 hover:bg-secondary-6"
+                              : "text-grey-5 cursor-not-allowed",
                           )}
                         >
                           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -636,10 +632,10 @@ const Sales = () => {
                         {/* All Tab */}
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
-                              ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50",
+                              ? "bg-primary-green-300 text-white"
+                              : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                           )}
                           onClick={handleAllClick}
                         >
@@ -651,10 +647,10 @@ const Sales = () => {
                           <button
                             key={category.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                              "px-3 sm:px-4 py-1.5 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0",
                               selectedCategoryId === category.id
-                                ? "bg-[#52b661] text-white shadow-sm"
-                                : "text-gray-600 hover:text-green-500 hover:bg-green-50",
+                                ? "bg-primary-green-300 text-white"
+                                : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                             )}
                             onClick={() => handleCategoryClick(category.id)}
                           >
@@ -669,10 +665,10 @@ const Sales = () => {
                           onClick={() => scrollCategories("right")}
                           disabled={!canScrollRight}
                           className={cn(
-                            "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
+                            "p-1 sm:p-2 rounded-full transition-all ml-1 sm:ml-2 flex-shrink-0",
                             canScrollRight
-                              ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
-                              : "text-gray-300 cursor-not-allowed",
+                              ? "text-grey-3 hover:text-primary-green-300 hover:bg-secondary-6"
+                              : "text-grey-5 cursor-not-allowed",
                           )}
                         >
                           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -685,31 +681,32 @@ const Sales = () => {
 
               {/* Order History Tab Content */}
               <TabsContent value="history" className="mt-4 sm:mt-6">
-                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto pb-2">
+                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto  border-b border-grey-5 pb-4">
                   {orderFilterOptions.map((filter) => (
-                    <Button
+                    <button
                       key={filter}
-                      className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-md h-8 sm:h-10 min-w-[70px] text-xs sm:text-sm hover:text-white font-medium transition-colors whitespace-nowrap ${
+                      className={cn(
+                        "px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap cursor-pointer",
                         activeOrderFilter === filter
-                          ? "bg-primary-green-300 text-white shadow-sm"
-                          : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-250"
-                      }`}
+                          ? "bg-primary-green-300 text-white"
+                          : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
+                      )}
                       onClick={() => setActiveOrderFilter(filter)}
                     >
                       {filter}
-                    </Button>
+                    </button>
                   ))}
                 </div>
-
-                {/* Subtle demarcation line for order history too */}
-                <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4 sm:my-6"></div>
               </TabsContent>
             </Tabs>
           </div>
         </div>
 
         {/* Table Content */}
-        <div className={showComboSales ? "hidden" : "p-4 sm:p-6"}>
+        <div className="pb-4 sm:pb-6">
+          {showComboSales ? (
+            <ComboSalesTable />
+          ) : (
           <Tabs
             value={activeTab}
             onValueChange={(value) =>
@@ -720,12 +717,12 @@ const Sales = () => {
             <TabsContent value="products">
               {SalesLoading || !SalesData ? (
                 <div className="w-full">
-                  <div className="space-y-3 sm:space-y-4">
-                    <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
+                  <div className="sm:space-y-4">
+                    <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
+                        className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
                       />
                     ))}
                   </div>
@@ -748,11 +745,11 @@ const Sales = () => {
               {SalesOrderLoading || !SalesOrderData ? (
                 <div className="w-full">
                   <div className="space-y-3 sm:space-y-4">
-                    <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
+                    <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
                     {Array.from({ length: 5 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
+                        className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
                       />
                     ))}
                   </div>
@@ -770,6 +767,7 @@ const Sales = () => {
               )}
             </TabsContent>
           </Tabs>
+          )}
         </div>
       </div>
 

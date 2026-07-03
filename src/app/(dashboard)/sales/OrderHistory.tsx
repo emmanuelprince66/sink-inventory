@@ -24,7 +24,7 @@ const OrderHistory = ({
 }: OrderHistoryProps) => {
   return (
     <div className="w-full">
-      <div className="w-full mt-3">
+      <div className="w-full">
         {loading ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-full bg-[#eef4ef]" />

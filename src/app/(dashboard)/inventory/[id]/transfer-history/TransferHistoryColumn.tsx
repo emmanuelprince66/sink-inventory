@@ -10,7 +10,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {moment(transfer.created_at).format("MMM D, YYYY h:mm A")}
             </p>
           </div>
@@ -24,7 +24,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.transferred_by}</p>
+            <p className="text-sm text-grey-3">{transfer.transferred_by}</p>
           </div>
         );
       },
@@ -36,7 +36,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {transfer.destination_business}
             </p>
           </div>
@@ -50,7 +50,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {transfer.destination_product}
             </p>
           </div>
@@ -64,7 +64,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.direction}</p>
+            <p className="text-sm text-grey-3">{transfer.direction}</p>
           </div>
         );
       },
@@ -76,7 +76,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.quantity}</p>
+            <p className="text-sm text-grey-3">{transfer.quantity}</p>
           </div>
         );
       },
@@ -88,7 +88,7 @@ export const useTransferHistoryColumns = () => {
         const transfer = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.source_business}</p>
+            <p className="text-sm text-grey-3">{transfer.source_business}</p>
           </div>
         );
       },

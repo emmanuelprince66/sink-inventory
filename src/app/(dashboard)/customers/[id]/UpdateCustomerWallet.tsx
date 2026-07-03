@@ -43,9 +43,9 @@ const UpdateCustomerWallet = ({
 
   return (
     <div className="flex w-full flex-col items-start gap-3">
-      <div className="border bg-white    border-green-300 rounded w-full p-4 flex flex-col justify-between items-center">
-        <div className="flex justify-between items-start w-full">
-          <p className="text-primary-black-100 font-bold capitalize">
+      <div className="border bg-white border-grey-5 rounded-xl w-full p-4 flex flex-col justify-between items-center gap-3">
+        <div className="flex justify-between items-center w-full">
+          <p className="text-grey-1 font-bold capitalize">
             {selectedOption?.toLocaleLowerCase()}
           </p>
 
@@ -54,16 +54,16 @@ const UpdateCustomerWallet = ({
               <DropdownMenuTrigger asChild>
                 <Button variant={"outline"}>Select an option</Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-primary-green-200 border-none">
+              <DropdownMenuContent className="w-56 bg-white border border-grey-5">
                 <DropdownMenuGroup>
                   <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white"
+                    className="cursor-pointer hover:bg-primary-green-300/10 hover:text-primary-green-300"
                     onSelect={() => handleSelectOption("DEPOSIT")}
                   >
                     Deposit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="cursor-pointer hover:bg-white"
+                    className="cursor-pointer hover:bg-primary-green-300/10 hover:text-primary-green-300"
                     onSelect={() => handleSelectOption("WITHDRAWAL")}
                   >
                     Withdrawal
@@ -76,8 +76,8 @@ const UpdateCustomerWallet = ({
         </div>
 
         <span className="flex gap-2 items-center w-full">
-          <p>Balance : </p>
-          <p className="text-bold text-primary-green-300">{wallet}</p>
+          <p className="text-sm font-medium text-grey-3">Balance:</p>
+          <p className="font-bold text-primary-green-300">{wallet}</p>
         </span>
       </div>
 
@@ -107,33 +107,24 @@ const UpdateCustomerWallet = ({
               name="payment_method"
               render={({ field }) => (
                 <FormItem className="flex-1 w-full bg-white">
-                  <FormLabel>Payment Method</FormLabel> {/* Updated label */}
+                  <FormLabel>Payment Method</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a payment method" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
-                      <SelectItem
-                        value="MYCLIQ"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
-                      >
+                    <SelectContent className="bg-white cursor-pointer">
+                      <SelectItem value="MYCLIQ" className="cursor-pointer">
                         Mycliq
                       </SelectItem>
-                      <SelectItem
-                        value="CASH"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
-                      >
+                      <SelectItem value="CASH" className="cursor-pointer">
                         Cash
                       </SelectItem>
-                      <SelectItem
-                        value="BANK"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
-                      >
+                      <SelectItem value="BANK" className="cursor-pointer">
                         Bank Transfer
                       </SelectItem>
                     </SelectContent>

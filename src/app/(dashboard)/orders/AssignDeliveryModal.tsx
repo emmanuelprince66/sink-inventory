@@ -105,7 +105,7 @@ const AssignDeliveryModal = ({ isOpen, onClose, orderId, onAssigned }: Props) =>
     <CustomModal isOpen={isOpen} onClose={onClose} title="Assign Delivery">
       <div className="space-y-4">
         {orderId && (
-          <p className="text-xs text-gray-500">
+          <p className="text-xs font-medium text-grey-4">
             Assigning a delivery partner for order #{orderId.slice(0, 8)}
           </p>
         )}
@@ -118,31 +118,31 @@ const AssignDeliveryModal = ({ isOpen, onClose, orderId, onAssigned }: Props) =>
                 key={partner.id}
                 onClick={() => setSelected(partner.id)}
                 className={cn(
-                  "w-full text-left border rounded-lg p-3 transition-all cursor-pointer",
+                  "w-full text-left border rounded-xl p-3 transition-all cursor-pointer",
                   isSelected
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50",
+                    ? "border-primary-green-300 bg-secondary-6"
+                    : "border-grey-5 hover:border-grey-4 hover:bg-grey-6",
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700 flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary-green-100 flex items-center justify-center text-xs font-extrabold text-white flex-shrink-0">
                       {partner.logo}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900 text-sm">
+                        <span className="font-bold text-grey-1 text-sm">
                           {partner.name}
                         </span>
-                        <span className="flex items-center gap-1 text-xs text-amber-600">
-                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                        <span className="flex items-center gap-1 text-xs font-bold text-warning-1">
+                          <Star className="w-3 h-3 fill-warning-1 text-warning-1" />
                           {partner.rating}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs font-medium text-grey-4 mt-0.5">
                         {partner.serviceType}
                       </p>
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-600">
+                      <div className="flex items-center gap-3 mt-1.5 text-xs font-medium text-grey-3">
                         <span className="flex items-center gap-1">
                           <Phone className="w-3 h-3" />
                           {partner.contact}
@@ -155,10 +155,10 @@ const AssignDeliveryModal = ({ isOpen, onClose, orderId, onAssigned }: Props) =>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-extrabold text-grey-1">
                       ₦{partner.estimatedCost.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500">est. cost</div>
+                    <div className="text-xs font-medium text-grey-4">est. cost</div>
                   </div>
                 </div>
               </button>
@@ -166,7 +166,7 @@ const AssignDeliveryModal = ({ isOpen, onClose, orderId, onAssigned }: Props) =>
           })}
         </div>
 
-        <div className="flex gap-3 pt-2 border-t border-gray-100">
+        <div className="flex gap-3 pt-2 border-t border-grey-6">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Cancel
           </Button>

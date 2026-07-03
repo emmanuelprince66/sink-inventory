@@ -51,7 +51,7 @@ import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, ChevronDown, Edit, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, CalendarIcon, ChevronDown, Edit, Plus, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import AddCategory from "../categories/AddCategory";
@@ -462,7 +462,16 @@ const NewAddProduct = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-grey-6 p-4">
+      <div className="max-w-7xl mx-auto mb-4">
+        <button
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-white hover:border-grey-4 cursor-pointer transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back</span>
+        </button>
+      </div>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -471,9 +480,9 @@ const NewAddProduct = ({
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
             {/* Product Summary */}
             <div className="order-1 lg:order-2 lg:col-span-3">
-              <Card className="border-gray-200 shadow-sm bg-white sticky top-4 py-5">
+              <Card className="border-grey-5 shadow-sm bg-white sticky top-4 py-5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
+                  <CardTitle className="text-lg font-semibold text-grey-1">
                     Product Summary
                   </CardTitle>
                 </CardHeader>
@@ -491,7 +500,7 @@ const NewAddProduct = ({
                             : null;
                       return (
                         <FormItem>
-                          <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          <div className="aspect-square bg-grey-6 rounded-lg flex items-center justify-center overflow-hidden">
                             {previewUrl ? (
                               <img
                                 src={previewUrl}
@@ -499,7 +508,7 @@ const NewAddProduct = ({
                                 className="w-full h-full object-cover rounded-lg"
                               />
                             ) : (
-                              <span className="text-gray-400">
+                              <span className="text-grey-4">
                                 Product Image
                               </span>
                             )}
@@ -510,32 +519,32 @@ const NewAddProduct = ({
                   />
 
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-grey-1">
                       {form.watch("item_name") || "Product Name"}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-grey-4">
                       SKU: {form.watch("sku") || "Not set"}
                     </p>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Category:</span>
-                      <span className="text-gray-900">
+                      <span className="text-grey-3">Category:</span>
+                      <span className="text-grey-1">
                         {CategoriesData?.data?.find(
                           (cat: any) => cat.id === form.watch("category"),
                         )?.name || "Not selected"}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Unit:</span>
-                      <span className="text-gray-900">
+                      <span className="text-grey-3">Unit:</span>
+                      <span className="text-grey-1">
                         {form.watch("product_unit") || "Not set"}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Variations:</span>
-                      <span className="text-gray-900">
+                      <span className="text-grey-3">Variations:</span>
+                      <span className="text-grey-1">
                         {variations.length > 0
                           ? `${variations.length} types`
                           : "Single type"}
@@ -543,8 +552,8 @@ const NewAddProduct = ({
                     </div>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Expiry Date:</span>
-                    <span className="text-gray-900">
+                    <span className="text-grey-3">Expiry Date:</span>
+                    <span className="text-grey-1">
                       {form.watch("expiry_date")
                         ? format(
                             new Date(form.watch("expiry_date")),
@@ -556,15 +565,15 @@ const NewAddProduct = ({
 
                   {variations.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-grey-1">
                         Available Variations:
                       </h4>
                       {variations.map((variation) => (
                         <div key={variation.id} className="text-sm">
-                          <span className="text-gray-600">
+                          <span className="text-grey-3">
                             {variation.name}:{" "}
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-grey-1">
                             {variation.values.join(", ")}
                           </span>
                         </div>
@@ -572,10 +581,10 @@ const NewAddProduct = ({
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-gray-200">
+                  <div className="pt-4 border-t border-grey-5">
                     <div className="flex justify-between text-sm font-medium">
-                      <span className="text-gray-600">Total Variants:</span>
-                      <span className="text-green-600">
+                      <span className="text-grey-3">Total Variants:</span>
+                      <span className="text-primary-green-300 font-bold">
                         {productVariations.length || 1}
                       </span>
                     </div>
@@ -583,7 +592,7 @@ const NewAddProduct = ({
 
                   <Button
                     type="submit"
-                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    className="w-full text-white"
                     disabled={isLoading}
                   >
                     {isLoading
@@ -599,9 +608,9 @@ const NewAddProduct = ({
             {/* Main Content */}
             <div className="order-2 lg:order-1 lg:col-span-7 space-y-6">
               {/* Card 1: Product Information */}
-              <Card className="border-gray-200 shadow-sm bg-white py-5">
+              <Card className="border-grey-5 shadow-sm bg-white py-5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
+                  <CardTitle className="text-lg font-semibold text-grey-1">
                     Product Information
                   </CardTitle>
                 </CardHeader>
@@ -622,9 +631,9 @@ const NewAddProduct = ({
                       return (
                         <>
                           <div className="md:col-span-2 -mb-2">
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-grey-4">
                               Product Media{" "}
-                              <span className="text-gray-400">
+                              <span className="text-grey-4">
                                 — {usedTotal} of {TOTAL_MEDIA_CAP} used (images +
                                 videos combined)
                               </span>
@@ -636,7 +645,7 @@ const NewAddProduct = ({
                             name="images"
                             render={({ field }) => (
                               <FormItem className="md:col-span-2">
-                                <FormLabel className="text-sm font-medium text-gray-700">
+                                <FormLabel className="text-sm font-medium text-grey-2">
                                   Product Images
                                 </FormLabel>
                                 <FormControl>
@@ -662,9 +671,9 @@ const NewAddProduct = ({
                             name="videos"
                             render={({ field }) => (
                               <FormItem className="md:col-span-2">
-                                <FormLabel className="text-sm font-medium text-gray-700">
+                                <FormLabel className="text-sm font-medium text-grey-2">
                                   Product Videos
-                                  <span className="ml-1 text-xs font-normal text-gray-400">
+                                  <span className="ml-1 text-xs font-normal text-grey-4">
                                     (max 10MB each)
                                   </span>
                                 </FormLabel>
@@ -694,7 +703,7 @@ const NewAddProduct = ({
                       name="item_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Product Name
                           </FormLabel>
                           <FormControl>
@@ -714,7 +723,7 @@ const NewAddProduct = ({
                       name="sku"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             SKU
                           </FormLabel>
                           <FormControl>
@@ -734,7 +743,7 @@ const NewAddProduct = ({
                       name="product_unit"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Product Unit
                           </FormLabel>
                           <FormControl>
@@ -767,7 +776,7 @@ const NewAddProduct = ({
                       name="expiry_date"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Expiry Date
                           </FormLabel>
                           <Popover>
@@ -776,7 +785,7 @@ const NewAddProduct = ({
                                 <Button
                                   variant={"outline"}
                                   className={cn(
-                                    "w-full pl-3 text-left font-normal py-6 border border-gray-300",
+                                    "w-full pl-3 text-left font-normal py-6 border border-grey-5",
                                     !field.value && "text-muted-foreground",
                                   )}
                                 >
@@ -825,7 +834,7 @@ const NewAddProduct = ({
                       name="weight"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Product Weight
                           </FormLabel>
                           <FormControl>
@@ -839,7 +848,7 @@ const NewAddProduct = ({
                                 className="mt-1 pr-12"
                                 {...field}
                               />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 mt-0.5">
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-grey-4 mt-0.5">
                                 Kg
                               </span>
                             </div>
@@ -857,7 +866,7 @@ const NewAddProduct = ({
                       name="department"
                       render={({ field }) => (
                         <FormItem className="w-full">
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Department
                           </FormLabel>
                           <div className="flex items-center gap-2">
@@ -888,7 +897,7 @@ const NewAddProduct = ({
                               type="button"
                               variant="outline"
                               size="icon"
-                              className="text-green-600 border-green-600 hover:bg-green-50 mt-1 h-10 w-10"
+                              className="mt-1 h-10 w-10"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
@@ -903,7 +912,7 @@ const NewAddProduct = ({
                       name="category"
                       render={({ field }) => (
                         <FormItem className="w-full mt-4">
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Category
                           </FormLabel>
                           <div className="flex items-center gap-2">
@@ -934,7 +943,7 @@ const NewAddProduct = ({
                               type="button"
                               variant="outline"
                               size="icon"
-                              className="text-green-600 border-green-600 hover:bg-green-50 mt-1 h-10 w-10"
+                              className="mt-1 h-10 w-10"
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
@@ -950,7 +959,7 @@ const NewAddProduct = ({
                       name="category"
                       render={({ field }) => (
                         <FormItem className="w-full">
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Category
                           </FormLabel>
                           <FormControl>
@@ -982,11 +991,11 @@ const NewAddProduct = ({
               </Card>
 
               {/* Description card — bound to the form so it ships in the payload */}
-              <Card className="border-gray-200 shadow-sm bg-white py-5">
+              <Card className="border-grey-5 shadow-sm bg-white py-5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
+                  <CardTitle className="text-lg font-semibold text-grey-1">
                     Description{" "}
-                    <span className="text-xs font-normal text-gray-400">
+                    <span className="text-xs font-normal text-grey-4">
                       (optional)
                     </span>
                   </CardTitle>
@@ -1013,9 +1022,9 @@ const NewAddProduct = ({
               </Card>
 
               {/* Card 2: Product Variations */}
-              <Card className="border-gray-200 shadow-sm bg-white py-5">
+              <Card className="border-grey-5 shadow-sm bg-white py-5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
+                  <CardTitle className="text-lg font-semibold text-grey-1">
                     Product Variations
                   </CardTitle>
                 </CardHeader>
@@ -1047,7 +1056,7 @@ const NewAddProduct = ({
                                 name="cost_price"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Cost Price
                                     </FormLabel>
                                     <FormControl>
@@ -1066,7 +1075,7 @@ const NewAddProduct = ({
                                 name="selling_price"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Selling Price
                                     </FormLabel>
                                     <FormControl>
@@ -1085,7 +1094,7 @@ const NewAddProduct = ({
                                 name="stock_quantity"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Quantity
                                     </FormLabel>
                                     <FormControl>
@@ -1097,7 +1106,7 @@ const NewAddProduct = ({
                                       />
                                     </FormControl>
                                     {isEditMode && (
-                                      <p className="text-xs text-gray-500 mt-1">
+                                      <p className="text-xs text-grey-4 mt-1">
                                         Quantity can only be updated via
                                         restock
                                       </p>
@@ -1112,7 +1121,7 @@ const NewAddProduct = ({
                                 name="discount_threshold"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Discount Threshold
                                     </FormLabel>
                                     <FormControl>
@@ -1132,7 +1141,7 @@ const NewAddProduct = ({
                                 name="discount_value"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Discount (%)
                                     </FormLabel>
                                     <FormControl>
@@ -1151,7 +1160,7 @@ const NewAddProduct = ({
                                 name="low_stock_tresh"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Low Stock Threshold
                                     </FormLabel>
                                     <FormControl>
@@ -1172,7 +1181,7 @@ const NewAddProduct = ({
                                 name="stock_status"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                    <FormLabel className="text-sm font-medium text-grey-2">
                                       Status
                                     </FormLabel>
                                     <FormControl>
@@ -1205,14 +1214,14 @@ const NewAddProduct = ({
                           <TabsContent value="multiple" className="space-y-4">
                             {variations.length === 0 ? (
                               <div className="text-center py-8">
-                                <p className="text-gray-500 mb-4">
+                                <p className="text-grey-4 mb-4">
                                   Add different colours, sizes etc
                                 </p>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button
                                       variant="outline"
-                                      className="text-green-600 border-green-600 hover:bg-green-50 bg-transparent"
+                                      className="bg-transparent"
                                     >
                                       <Plus className="w-4 h-4 mr-2" />
                                       Add
@@ -1239,10 +1248,10 @@ const NewAddProduct = ({
                                 {variations.map((variation, index) => (
                                   <div
                                     key={variation.id}
-                                    className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                                    className="flex items-center justify-between p-3 border border-grey-5 rounded-lg"
                                   >
                                     <div>
-                                      <span className="font-medium text-gray-900">
+                                      <span className="font-medium text-grey-1">
                                         {variation.name}:{" "}
                                       </span>
                                       <div className="flex flex-wrap gap-1 mt-1">
@@ -1251,7 +1260,7 @@ const NewAddProduct = ({
                                             <Badge
                                               key={vIndex}
                                               variant="secondary"
-                                              className="bg-green-100 text-green-800"
+                                              className="bg-secondary-6 text-primary-green-100"
                                             >
                                               {value}
                                             </Badge>
@@ -1262,7 +1271,6 @@ const NewAddProduct = ({
                                     <div className="flex gap-2">
                                       <Button
                                         variant="ghost"
-                                        className="text-green-600 hover:bg-green-50"
                                         size="sm"
                                         type="button"
                                         onClick={() =>
@@ -1273,7 +1281,7 @@ const NewAddProduct = ({
                                       </Button>
                                       <Button
                                         variant="ghost"
-                                        className="text-red-600 hover:bg-red-50"
+                                        className="text-error-1 hover:bg-error-2 hover:text-error-1"
                                         size="sm"
                                         type="button"
                                         onClick={() =>
@@ -1290,7 +1298,7 @@ const NewAddProduct = ({
                                   <DropdownMenuTrigger asChild>
                                     <Button
                                       variant="outline"
-                                      className="w-full text-green-600 border-green-600 hover:bg-green-50 bg-transparent"
+                                      className="w-full bg-transparent"
                                     >
                                       <Plus className="w-4 h-4 mr-2" />
                                       Add More
@@ -1330,9 +1338,9 @@ const NewAddProduct = ({
 
               {/* Card 3: Manage Products */}
               {variationType === "multiple" && productVariations.length > 0 && (
-                <Card className="border-gray-200 shadow-sm bg-white py-5">
+                <Card className="border-grey-5 shadow-sm bg-white py-5">
                   <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-lg font-semibold text-gray-900">
+                    <CardTitle className="text-lg font-semibold text-grey-1">
                       Manage Products
                     </CardTitle>
                     <Button
@@ -1340,14 +1348,13 @@ const NewAddProduct = ({
                       size="sm"
                       type="button"
                       onClick={() => setIsBulkEditMode(!isBulkEditMode)}
-                      className="text-green-600 border-green-600 hover:bg-green-50"
                     >
                       {isBulkEditMode ? "Exit Bulk Edit" : "Bulk Edit"}
                     </Button>
                   </CardHeader>
                   <CardContent>
                     {isBulkEditMode && (
-                      <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div className="mb-4 p-3 bg-secondary-6 rounded-xl border border-secondary-4">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <Checkbox
@@ -1366,7 +1373,7 @@ const NewAddProduct = ({
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   size="sm"
-                                  className="bg-green-600 hover:bg-green-700 cursor-pointer"
+                                  className="cursor-pointer"
                                 >
                                   Edit Selected{" "}
                                   <ChevronDown className="w-4 h-4 ml-1 cursor-pointer" />
@@ -1430,7 +1437,7 @@ const NewAddProduct = ({
                         </div>
 
                         {showBulkEditInput && (
-                          <div className="flex justify-between items-start gap-2 mt-3 p-3 bg-white rounded border border-gray-200">
+                          <div className="flex justify-between items-start gap-2 mt-3 p-3 bg-white rounded border border-grey-5">
                             <div className="flex flex-col items-start gap-1 flex-1">
                               <div className="flex items-center gap-2 w-full">
                                 <label className="text-sm font-medium whitespace-nowrap">
@@ -1465,7 +1472,7 @@ const NewAddProduct = ({
                                       <Button
                                         variant={"outline"}
                                         className={cn(
-                                          "w-full pl-3 text-left py-5 max-w-[200px] font-normal border border-gray-300",
+                                          "w-full pl-3 text-left py-5 max-w-[200px] font-normal border border-grey-5",
                                           !bulkEditValue &&
                                             "text-muted-foreground",
                                         )}
@@ -1527,7 +1534,7 @@ const NewAddProduct = ({
                                 )}
                               </div>
                               {bulkEditError && (
-                                <p className="text-[10px] text-red-600">
+                                <p className="text-[10px] text-error-1">
                                   {bulkEditError}
                                 </p>
                               )}
@@ -1538,14 +1545,13 @@ const NewAddProduct = ({
                                 size="sm"
                                 type="button"
                                 onClick={applyBulkEdit}
-                                className="bg-green-600 hover:bg-green-700"
                               >
                                 Apply All
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                                className="border-grey-5 text-grey-2 hover:bg-grey-6"
                                 type="button"
                                 onClick={() => {
                                   setShowBulkEditInput(false);
@@ -1565,7 +1571,7 @@ const NewAddProduct = ({
                         <AccordionItem
                           key={variation.id}
                           value={variation.id}
-                          className="border border-gray-200 rounded-lg"
+                          className="border border-grey-5 rounded-lg"
                         >
                           <AccordionTrigger className="px-4 py-3 hover:no-underline">
                             <div className="flex items-center gap-3 w-full">
@@ -1583,7 +1589,7 @@ const NewAddProduct = ({
                                   onClick={(e) => e.stopPropagation()}
                                 />
                               )}
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-grey-1">
                                 {variation.combination}
                               </span>
                             </div>
@@ -1595,7 +1601,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.cost_price`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Cost Price
                                     </FormLabel>
                                     <FormControl>
@@ -1621,7 +1627,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.selling_price`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Selling Price
                                     </FormLabel>
                                     <FormControl>
@@ -1647,7 +1653,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.quantity`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Quantity
                                     </FormLabel>
                                     <FormControl>
@@ -1674,7 +1680,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.discount_threshold`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Discount Threshold
                                     </FormLabel>
                                     <FormControl>
@@ -1700,7 +1706,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.status`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Status
                                     </FormLabel>
                                     <FormControl>
@@ -1732,7 +1738,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.discount`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Discount
                                     </FormLabel>
                                     <FormControl>
@@ -1758,7 +1764,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.low_stock_threshold`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Low Stock Threshold
                                     </FormLabel>
                                     <FormControl>
@@ -1784,7 +1790,7 @@ const NewAddProduct = ({
                                 name={`product_variations.${index}.expiry_date`}
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-xs font-medium text-gray-700">
+                                    <FormLabel className="text-xs font-medium text-grey-2">
                                       Expiry Date
                                     </FormLabel>
                                     <Popover>
@@ -1793,7 +1799,7 @@ const NewAddProduct = ({
                                           <Button
                                             variant={"outline"}
                                             className={cn(
-                                              "w-full h-8 pl-3 text-left py-5 font-normal border border-gray-300 text-xs",
+                                              "w-full h-8 pl-3 text-left py-5 font-normal border border-grey-5 text-xs",
                                               !field.value &&
                                                 "text-muted-foreground",
                                             )}
@@ -1869,7 +1875,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="allow-tax"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Allow tax calculation
                         </label>
@@ -1889,7 +1895,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="hide-from-pos"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Hide product from POS
                         </label>
@@ -1910,7 +1916,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="sell-online"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Sell this product online
                         </label>
@@ -1931,7 +1937,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="in-house"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Produces in-house
                         </label>
@@ -1952,7 +1958,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="watchlist"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Add to watchlist
                         </label>
@@ -1973,7 +1979,7 @@ const NewAddProduct = ({
                         />
                         <label
                           htmlFor="raw-material"
-                          className="text-sm font-medium text-gray-700 cursor-pointer leading-none"
+                          className="text-sm font-medium text-grey-2 cursor-pointer leading-none"
                         >
                           Make raw material
                         </label>
@@ -1986,9 +1992,9 @@ const NewAddProduct = ({
               {/* Card 5: Supplies & Payment */}
 
               {/* Card 4: Supplies & Payment */}
-              <Card className="border-gray-200 shadow-sm bg-white py-5">
+              <Card className="border-grey-5 shadow-sm bg-white py-5">
                 <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
+                  <CardTitle className="text-lg font-semibold text-grey-1">
                     Supplies & Payment
                   </CardTitle>
                 </CardHeader>
@@ -1999,7 +2005,7 @@ const NewAddProduct = ({
                       name="supplier"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Supplier
                           </FormLabel>
                           <FormControl>
@@ -2034,7 +2040,7 @@ const NewAddProduct = ({
                       name="payment_method"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Payment Method
                           </FormLabel>
                           <FormControl>
@@ -2123,7 +2129,7 @@ const NewAddProduct = ({
                         name="amount_paid"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
+                            <FormLabel className="text-sm font-medium text-grey-2">
                               Amount Paid
                             </FormLabel>
                             <FormControl>
@@ -2147,7 +2153,7 @@ const NewAddProduct = ({
                       name="type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-sm font-medium text-gray-700">
+                          <FormLabel className="text-sm font-medium text-grey-2">
                             Discount Type
                           </FormLabel>
                           <FormControl>
@@ -2179,7 +2185,7 @@ const NewAddProduct = ({
                         name="percentage_discount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium text-gray-700">
+                            <FormLabel className="text-sm font-medium text-grey-2">
                               Percentage Discount
                             </FormLabel>
                             <FormControl>
@@ -2221,7 +2227,7 @@ const NewAddProduct = ({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Cost Price
               </label>
               <Input
@@ -2237,7 +2243,7 @@ const NewAddProduct = ({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Selling Price
               </label>
               <Input
@@ -2254,7 +2260,7 @@ const NewAddProduct = ({
             </div>
             {!isEditMode && (
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">
+                <label className="text-sm font-medium text-grey-2 mb-1 block">
                   Quantity
                 </label>
                 <Input
@@ -2272,7 +2278,7 @@ const NewAddProduct = ({
             )}
 
             <div className="w-full">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Status
               </label>
               <Select
@@ -2296,7 +2302,7 @@ const NewAddProduct = ({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Discount Threshold
               </label>
               <Input
@@ -2312,7 +2318,7 @@ const NewAddProduct = ({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Discount
               </label>
               <Input
@@ -2325,7 +2331,7 @@ const NewAddProduct = ({
               />
             </div>
             <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Low Stock Threshold
               </label>
               <Input
@@ -2341,7 +2347,7 @@ const NewAddProduct = ({
               />
             </div>
             <div className="col-span-2">
-              <label className="text-sm font-medium text-gray-700 mb-1 block">
+              <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Expiry Date
               </label>
               <Popover>
@@ -2349,7 +2355,7 @@ const NewAddProduct = ({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full pl-3 text-left py-5 font-normal border border-gray-300",
+                      "w-full pl-3 text-left py-5 font-normal border border-grey-5",
                       !editAllData.expiry_date && "text-muted-foreground",
                     )}
                   >
@@ -2388,7 +2394,7 @@ const NewAddProduct = ({
           </div>
 
           {bulkEditError && (
-            <p className="text-xs text-red-600 mt-2">{bulkEditError}</p>
+            <p className="text-xs text-error-1 mt-2">{bulkEditError}</p>
           )}
 
           <div className="flex gap-3 mt-6">
@@ -2404,7 +2410,7 @@ const NewAddProduct = ({
             </Button>
             <Button
               onClick={applyEditAll}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1"
             >
               Apply to All
             </Button>
@@ -2418,23 +2424,23 @@ const NewAddProduct = ({
           side="right"
           className="w-[300px] md:w-[500px] bg-white shadow-xl p-5 overflow-y-auto"
         >
-          <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b border-green-200">
-            <SheetTitle className="text-lg font-semibold">Add types</SheetTitle>
+          <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b border-grey-6">
+            <SheetTitle className="text-lg font-extrabold text-grey-1">Add types</SheetTitle>
           </SheetHeader>
 
           <div className="py-6 space-y-6">
             {selectedVariationType && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <h3 className="font-medium">{selectedVariationType}</h3>
+                  <div className="w-2 h-2 bg-primary-green-300 rounded-full"></div>
+                  <h3 className="font-bold text-grey-1">{selectedVariationType}</h3>
                 </div>
 
                 <div className="ml-4 space-y-3">
                   {newVariationValues.map((value, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-sm text-green-600 font-medium">
+                        <label className="text-sm text-primary-green-300 font-bold">
                           {selectedVariationType} {index + 1}
                         </label>
                         {newVariationValues.length > 1 && (
@@ -2443,7 +2449,7 @@ const NewAddProduct = ({
                             size="sm"
                             type="button"
                             onClick={() => removeVariationValue(index)}
-                            className="h-6 w-6 p-0 text-red-500 hover:bg-red-50"
+                            className="h-6 w-6 p-0 text-error-1 hover:bg-error-2 hover:text-error-1"
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -2455,7 +2461,7 @@ const NewAddProduct = ({
                           updateVariationValue(index, e.target.value)
                         }
                         placeholder={`Enter ${selectedVariationType.toLowerCase()}`}
-                        className="text-sm bg-white border-green-200 focus:border-green-400 focus:ring-green-400"
+                        className="text-sm"
                       />
                     </div>
                   ))}
@@ -2465,7 +2471,7 @@ const NewAddProduct = ({
                     size="sm"
                     type="button"
                     onClick={addVariationValue}
-                    className="text-green-600 hover:text-green-700 hover:bg-green-100 p-1 h-auto font-medium"
+                    className="p-1 h-auto font-bold"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add {selectedVariationType}
@@ -2475,12 +2481,12 @@ const NewAddProduct = ({
             )}
           </div>
 
-          <div className="flex gap-3 pt-6 border-t border-green-200">
+          <div className="flex gap-3 pt-6 border-t border-grey-6">
             <Button
               variant="outline"
               type="button"
               onClick={() => setIsSheetOpen(false)}
-              className="flex-1 border-green-300 text-green-700 hover:bg-green-50"
+              className="flex-1"
             >
               Cancel
             </Button>
@@ -2488,7 +2494,7 @@ const NewAddProduct = ({
               type="button"
               onClick={handleSaveVariation}
               disabled={isSaveDisabled}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:bg-green-300"
+              className="flex-1"
             >
               Save types
             </Button>

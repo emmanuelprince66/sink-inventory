@@ -19,7 +19,7 @@ const Pin = ({ onSuccess }: { onSuccess?: () => void }) => {
           onSubmit={pinForm.handleSubmit(onSubmitPinForm)}
           className="space-y-4 flex flex-col items-center justify-center"
         >
-          <p className="text-2xl font-bold">Create Pin</p>
+          <p className="text-2xl font-extrabold text-grey-1">Create Pin</p>
 
           <FormField
             control={pinForm.control}
@@ -60,7 +60,7 @@ const Pin = ({ onSuccess }: { onSuccess?: () => void }) => {
           <Button
             disabled={CreatePinLoading}
             type="submit"
-            className="w-[220px] mt-9  hover:bg-primary-green-700"
+            className="w-[220px] mt-9"
           >
             {CreatePinLoading ? <Spinner /> : "Save Pin"}
           </Button>

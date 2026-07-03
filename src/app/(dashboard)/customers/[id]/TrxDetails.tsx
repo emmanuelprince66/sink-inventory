@@ -1,6 +1,6 @@
 import React from "react";
 
-import { X, User, Wallet } from "lucide-react";
+import { User, Wallet } from "lucide-react";
 import moment from "moment";
 
 import { CustomerWalletTrxData } from "../types";
@@ -25,62 +25,62 @@ const TrxDetails = ({
 
         <div className="overflow-y-auto flex-1">
           {/* Transaction ID and date section */}
-          <div className="m-4 p-4 bg-green-50 rounded-lg">
+          <div className="m-4 p-4 bg-success-2 rounded-xl">
             <div className="mb-2">
-              <p className="text-sm text-gray-500">Transaction ID</p>
-              <p className="font-medium">#{shortTrxId}</p>
+              <p className="text-sm text-grey-3">Transaction ID</p>
+              <p className="font-bold text-grey-1">#{shortTrxId}</p>
             </div>
-            <p className="text-sm text-gray-500">{formattedDate}</p>
+            <p className="text-sm text-grey-3">{formattedDate}</p>
           </div>
 
           {/* Transaction details section */}
-          <div className="m-4 p-4 bg-green-50 rounded-lg">
+          <div className="m-4 p-4 bg-grey-6 rounded-xl">
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-500">Initial Balance</p>
-                <p className="font-medium">
+                <p className="text-sm text-grey-3">Initial Balance</p>
+                <p className="font-bold text-grey-1">
                   {walletTrxDetails.initial.toLocaleString()}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Amount Added</p>
-                <p className="font-medium text-green-600">
+                <p className="text-sm text-grey-3">Amount Added</p>
+                <p className="font-bold text-success-1">
                   {walletTrxDetails.amount.toLocaleString()}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Balance After</p>
-                <p className="font-medium">
+                <p className="text-sm text-grey-3">Balance After</p>
+                <p className="font-bold text-grey-1">
                   {walletTrxDetails.balance.toLocaleString()}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">Note</p>
-                <p className="font-medium">{walletTrxDetails.note || "-"}</p>
+                <p className="text-sm text-grey-3">Note</p>
+                <p className="font-medium text-grey-2">{walletTrxDetails.note || "-"}</p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Attendant</p>
-                  <p className="font-medium">{walletTrxDetails.attendance}</p>
+                  <p className="text-sm text-grey-3">Attendant</p>
+                  <p className="font-bold text-grey-1">{walletTrxDetails.attendance}</p>
                 </div>
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <User size={16} className="text-green-600" />
+                <div className="w-8 h-8 bg-primary-green-300/10 rounded-full flex items-center justify-center">
+                  <User size={16} className="text-primary-green-300" />
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Payment Method</p>
-                  <p className="font-medium capitalize">
+                  <p className="text-sm text-grey-3">Payment Method</p>
+                  <p className="font-bold text-grey-1 capitalize">
                     {walletTrxDetails.payment_method.toLowerCase()}
                   </p>
                 </div>
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <Wallet size={16} className="text-green-600" />
+                <div className="w-8 h-8 bg-primary-green-300/10 rounded-full flex items-center justify-center">
+                  <Wallet size={16} className="text-primary-green-300" />
                 </div>
               </div>
             </div>

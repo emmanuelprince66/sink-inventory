@@ -16,10 +16,10 @@ import EditService from "./EditService";
 import { InventoryItem } from "./type";
 
 const statusColors = {
-  "IN-STOCK": "bg-green-100 text-green-800",
-  LOW: "bg-yellow-100 text-yellow-800",
-  "OUT-OF-STOCK": "bg-red-100 text-red-800",
-  DEFAULT: "bg-gray-100 text-gray-800",
+  "IN-STOCK": "bg-success-2 text-success-1",
+  LOW: "bg-warning-2 text-warning-1",
+  "OUT-OF-STOCK": "bg-error-2 text-error-1",
+  DEFAULT: "bg-grey-6 text-grey-2",
 };
 
 export const columns: ColumnDef<InventoryItem>[] = [
@@ -30,7 +30,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
       const inventory = row.original;
       return (
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 rounded-md overflow-hidden">
+          <div className="relative h-10 w-10 rounded-lg overflow-hidden">
             <Image
               src={inventory.image}
               alt={`${inventory.name} logo`}
@@ -119,39 +119,39 @@ export const columns: ColumnDef<InventoryItem>[] = [
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+              <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
+              className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
             >
               <DropdownMenuItem
                 onClick={openEditPriceModalFunc}
-                className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 capitalize hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
               </DropdownMenuItem>
 
               <DropdownMenuItem
                 onClick={() => setOpenEditServiceModal(true)}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 Edit Service
               </DropdownMenuItem>
 
               <DropdownMenuItem
                 onClick={() => setOpenDeleteServiceModal(true)}
-                className="cursor-pointer px-4 py-2 text-red-600  hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
               >
                 Delete Service
               </DropdownMenuItem>
               {/* {isProduct && (
                 <DropdownMenuItem
                   onClick={handleOpenSetDiscountModal}
-                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
                 >
                   Set Discount
                 </DropdownMenuItem>
@@ -159,7 +159,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               {isProduct && (
                 <DropdownMenuItem
                   onClick={openReturnedProductModalFunc}
-                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
                 >
                   Add Returned Product
                 </DropdownMenuItem>
@@ -167,14 +167,14 @@ export const columns: ColumnDef<InventoryItem>[] = [
               {isProduct && (
                 <DropdownMenuItem
                   onClick={openDamagedProductModalFunc}
-                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
                 >
                   Add Damaged Product
                 </DropdownMenuItem>
               )} */}
               {/* <DropdownMenuItem
                 onClick={openViewDetailsFunc}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 <span className="">View more details</span>
               </DropdownMenuItem> */}
@@ -183,8 +183,8 @@ export const columns: ColumnDef<InventoryItem>[] = [
                 className={cn(
                   "cursor-pointer px-4 py-2 transition-colors",
                   isProduct
-                    ? "hover:bg-green-50 hover:text-green-600"
-                    : "text-red-500 opacity-50 cursor-not-allowed"
+                    ? "hover:bg-primary-green-300/10 hover:text-primary-green-300"
+                    : "text-error-1 opacity-50 cursor-not-allowed"
                 )}
                 disabled={!isProduct}
               >
@@ -192,7 +192,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
               </DropdownMenuItem> */}
               {/* <DropdownMenuItem
                 onClick={() => setTransferProductModal(true)}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 Transfer Product
               </DropdownMenuItem> */}

@@ -37,9 +37,9 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           type="search"
           value={value}
           className={cn(
-            "flex w-full rounded-md bg-[#EEF4EF] px-10 py-3 text-base shadow-xs transition-all outline-none",
-            "h-12 border-0 focus:border-0 focus:outline-none focus:ring-2 focus:ring-[#52b661]",
-            "placeholder:text-muted-foreground disabled:opacity-50",
+            "flex w-full rounded-xl bg-white border border-grey-5 px-10 py-2 text-sm transition-all outline-none",
+            "h-10 focus:border-primary-green-300 focus:ring-2 focus:ring-primary-green-300/20",
+            "placeholder:text-grey-4 disabled:opacity-50",
             className
           )}
           onChange={(e) => onValueChange(e.target.value)}

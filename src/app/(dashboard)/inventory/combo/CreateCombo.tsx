@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 interface InventoryProduct {
@@ -75,6 +76,7 @@ const CreateCombo = ({
   isEditMode?: boolean;
   comboId?: string;
 }) => {
+  const router = useRouter();
   const business_id = useBusinessStore((state) => state.business_id);
   const { handleCreateCombo, handleEditCombo, creatingCombo, editingCombo } =
     useComboHook({ comboId });
@@ -370,39 +372,36 @@ const CreateCombo = ({
   const pendingCount = Object.keys(pendingSelections).length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12">
+    <div className="min-h-screen bg-grey-6/30 pb-12">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200">
+      <div className="bg-white border-b border-grey-5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-4">
-            <Link href="/inventory">
-              <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
-              </button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {isEditMode ? "Edit Combo" : "Create Combo Product"}
-              </h1>
-              <p className="text-slate-500 text-sm mt-0.5">
-                Bundle multiple products into a single sellable combo
-              </p>
-            </div>
+            <button
+              onClick={() => router.push("/inventory")}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
+            <h1 className="text-2xl font-extrabold text-grey-1">
+              {isEditMode ? "Edit Combo" : "Create Combo Product"}
+            </h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Combo Details */}
-        <Card className="shadow-sm border-0 ring-1 ring-slate-200/60">
+        <Card className="shadow-sm border-0 ring-1 ring-grey-5">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-800">
+            <CardTitle className="text-base font-semibold text-grey-1">
               Combo Details
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+              <label className="text-sm font-medium text-grey-2 block mb-1.5">
                 Combo Name
               </label>
               <Input
@@ -413,7 +412,7 @@ const CreateCombo = ({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+              <label className="text-sm font-medium text-grey-2 block mb-1.5">
                 Description
               </label>
               <Textarea
@@ -431,11 +430,11 @@ const CreateCombo = ({
                 type="checkbox"
                 checked={sellOnline}
                 onChange={(e) => setSellOnline(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                className="w-4 h-4 rounded border-grey-5 text-primary-green-300 focus:ring-primary-green-300"
               />
               <label
                 htmlFor="sellOnline"
-                className="text-sm text-gray-700 cursor-pointer"
+                className="text-sm text-grey-2 cursor-pointer"
               >
                 Available to sell online
               </label>
@@ -443,12 +442,12 @@ const CreateCombo = ({
 
             {/* Image Upload */}
             <div>
-              <label className="text-sm font-medium text-gray-700 block mb-1.5">
+              <label className="text-sm font-medium text-grey-2 block mb-1.5">
                 Combo Image
               </label>
               {comboImagePreview ? (
                 <div className="relative w-full max-w-xs">
-                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-slate-200">
+                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-grey-5">
                     <Image
                       src={comboImagePreview}
                       alt="Combo preview"
@@ -458,7 +457,7 @@ const CreateCombo = ({
                   </div>
                   <div className="flex gap-2 mt-2">
                     <label className="flex-1 cursor-pointer">
-                      <span className="inline-flex items-center justify-center w-full h-9 rounded-lg border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                      <span className="inline-flex items-center justify-center w-full h-9 rounded-lg border border-grey-5 text-sm font-medium text-grey-3 hover:bg-grey-6 transition-colors">
                         Change
                       </span>
                       <input
@@ -470,7 +469,7 @@ const CreateCombo = ({
                     </label>
                     <button
                       onClick={removeImage}
-                      className="flex items-center justify-center h-9 px-3 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
+                      className="flex items-center justify-center h-9 px-3 rounded-lg border border-error-1/30 text-error-1 hover:bg-error-2 transition-colors"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -478,14 +477,14 @@ const CreateCombo = ({
                 </div>
               ) : (
                 <label className="cursor-pointer block">
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-green-400 transition-colors text-center">
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
-                      <Plus className="h-5 w-5 text-slate-400" />
+                  <div className="border-2 border-dashed border-grey-5 rounded-xl p-6 hover:border-primary-green-300 transition-colors text-center">
+                    <div className="w-12 h-12 rounded-full bg-grey-6 flex items-center justify-center mx-auto mb-3">
+                      <Plus className="h-5 w-5 text-grey-4" />
                     </div>
-                    <p className="text-sm font-medium text-green-600">
+                    <p className="text-sm font-medium text-primary-green-300">
                       Upload image
                     </p>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-grey-3 mt-1">
                       JPG, PNG or WebP (max 5MB)
                     </p>
                   </div>
@@ -502,13 +501,13 @@ const CreateCombo = ({
         </Card>
 
         {/* Selected Items */}
-        <Card className="shadow-sm border-0 ring-1 ring-slate-200/60">
+        <Card className="shadow-sm border-0 ring-1 ring-grey-5">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-base font-semibold text-grey-1 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-primary-green-300" />
               Combo Items
               {selectedItems.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-green-300/10 text-primary-green-300">
                   {selectedItems.length}
                 </span>
               )}
@@ -517,19 +516,19 @@ const CreateCombo = ({
           <CardContent>
             {selectedItems.length === 0 ? (
               <div className="py-12 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="h-8 w-8 text-slate-400" />
+                <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="h-8 w-8 text-grey-4" />
                 </div>
-                <h3 className="text-base font-medium text-slate-900 mb-1">
+                <h3 className="text-base font-medium text-grey-1 mb-1">
                   No items added yet
                 </h3>
-                <p className="text-sm text-slate-500 mb-4">
+                <p className="text-sm text-grey-3 mb-4">
                   Add at least 2 products to create a combo
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => setIsSheetOpen(true)}
-                  className="text-green-600 border-green-200 hover:bg-green-50"
+                  className="text-primary-green-300 border-primary-green-300/20 hover:bg-primary-green-300/10"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Products
@@ -540,10 +539,10 @@ const CreateCombo = ({
                 {selectedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-slate-200 bg-white"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-grey-5 bg-white"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-grey-6 flex items-center justify-center overflow-hidden shrink-0">
                         {item.image ? (
                           <Image
                             src={item.image}
@@ -553,23 +552,23 @@ const CreateCombo = ({
                             className="object-cover w-full h-full"
                           />
                         ) : (
-                          <Package className="h-5 w-5 text-slate-400" />
+                          <Package className="h-5 w-5 text-grey-4" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
+                        <p className="text-sm font-medium text-grey-1 truncate">
                           {item.name}
                         </p>
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-grey-4">
                             Original: {formatToNaira(item.selling_price)}
                           </p>
-                          <span className="text-xs text-slate-300">·</span>
-                          <p className="text-xs text-slate-400">
+                          <span className="text-xs text-grey-5">·</span>
+                          <p className="text-xs text-grey-4">
                             Cost: {formatToNaira(item.cost_price)}
                           </p>
-                          <span className="text-xs text-slate-300">·</span>
-                          <p className="text-xs text-slate-500">
+                          <span className="text-xs text-grey-5">·</span>
+                          <p className="text-xs text-grey-3">
                             Stock: {item.stock}
                           </p>
                         </div>
@@ -578,7 +577,7 @@ const CreateCombo = ({
 
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div className="shrink-0">
-                        <label className="text-[10px] text-slate-400 block mb-0.5">
+                        <label className="text-[10px] text-grey-4 block mb-0.5">
                           Price
                         </label>
                         <input
@@ -587,13 +586,13 @@ const CreateCombo = ({
                           onChange={(e) =>
                             updateItemPrice(item.id, e.target.value)
                           }
-                          className="w-20 h-8 text-center text-sm font-medium border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                          className="w-20 h-8 text-center text-sm font-medium border border-grey-5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300/20 focus:border-primary-green-300"
                           min={0}
                         />
                       </div>
 
                       <div>
-                        <label className="text-[10px] text-slate-400 block mb-0.5">
+                        <label className="text-[10px] text-grey-4 block mb-0.5">
                           Qty
                         </label>
                         <div className="flex items-center gap-1">
@@ -601,9 +600,9 @@ const CreateCombo = ({
                             onClick={() =>
                               updateItemQty(item.id, item.comboQty - 1)
                             }
-                            className="w-7 h-8 rounded-md border border-slate-200 flex items-center justify-center hover:bg-slate-50"
+                            className="w-7 h-8 rounded-md border border-grey-5 flex items-center justify-center hover:bg-grey-6"
                           >
-                            <Minus className="h-3 w-3 text-slate-600" />
+                            <Minus className="h-3 w-3 text-grey-3" />
                           </button>
                           <input
                             type="number"
@@ -614,23 +613,23 @@ const CreateCombo = ({
                                 parseInt(e.target.value) || 1,
                               )
                             }
-                            className="w-12 h-8 text-center text-sm font-medium border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                            className="w-12 h-8 text-center text-sm font-medium border border-grey-5 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-green-300/20 focus:border-primary-green-300"
                             min={1}
                           />
                           <button
                             onClick={() =>
                               updateItemQty(item.id, item.comboQty + 1)
                             }
-                            className="w-7 h-8 rounded-md border border-slate-200 flex items-center justify-center hover:bg-slate-50"
+                            className="w-7 h-8 rounded-md border border-grey-5 flex items-center justify-center hover:bg-grey-6"
                           >
-                            <Plus className="h-3 w-3 text-slate-600" />
+                            <Plus className="h-3 w-3 text-grey-3" />
                           </button>
                         </div>
                       </div>
 
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 rounded-md hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors shrink-0 self-end sm:self-center"
+                        className="p-1.5 rounded-md hover:bg-error-2 text-grey-4 hover:text-error-1 transition-colors shrink-0 self-end sm:self-center"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -641,7 +640,7 @@ const CreateCombo = ({
                 <Button
                   variant="outline"
                   onClick={() => setIsSheetOpen(true)}
-                  className="w-full mt-2 text-green-600 border-green-200 border-dashed hover:bg-green-50"
+                  className="w-full mt-2 text-primary-green-300 border-primary-green-300/20 border-dashed hover:bg-primary-green-300/10"
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Products
@@ -653,62 +652,62 @@ const CreateCombo = ({
 
         {/* Pricing Summary */}
         {selectedItems.length > 0 && (
-          <Card className="shadow-sm border-0 ring-1 ring-slate-200/60">
+          <Card className="shadow-sm border-0 ring-1 ring-grey-5">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold text-slate-800">
+              <CardTitle className="text-base font-semibold text-grey-1">
                 Pricing Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+              <div className="bg-grey-6 rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">
+                  <span className="text-grey-3">
                     Original Total ({selectedItems.length} items)
                   </span>
-                  <span className="font-medium text-slate-500">
+                  <span className="font-medium text-grey-3">
                     {formatToNaira(totalOriginalValue)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Total Cost Price</span>
-                  <span className="font-medium text-slate-500">
+                  <span className="text-grey-3">Total Cost Price</span>
+                  <span className="font-medium text-grey-3">
                     {formatToNaira(totalCostValue)}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm pt-2 border-t border-slate-200">
-                  <span className="text-slate-900 font-semibold">
+                <div className="flex justify-between text-sm pt-2 border-t border-grey-5">
+                  <span className="text-grey-1 font-semibold">
                     Combo Selling Price
                   </span>
-                  <span className="font-bold text-green-700 text-base">
+                  <span className="font-bold text-primary-green-300 text-base">
                     {formatToNaira(comboSellingTotal)}
                   </span>
                 </div>
                 {savings > 0 && (
                   <div className="flex items-center gap-2 text-sm pt-1">
-                    <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                    <span className="px-2 py-0.5 rounded-full bg-primary-green-300/10 text-primary-green-300 text-xs font-medium">
                       Customer saves {formatToNaira(savings)}
                     </span>
-                    <span className="text-slate-500">
+                    <span className="text-grey-3">
                       ({Math.round((savings / totalOriginalValue) * 100)}% off)
                     </span>
                   </div>
                 )}
                 {comboSellingTotal <= totalCostValue &&
                   comboSellingTotal > 0 && (
-                    <p className="text-xs text-red-600 font-medium pt-1">
+                    <p className="text-xs text-error-1 font-medium pt-1">
                       Warning: Combo price is at or below cost price
                     </p>
                   )}
                 {comboSellingTotal > totalCostValue && (
                   <div className="flex justify-between text-sm pt-1">
-                    <span className="text-slate-600">Profit per combo</span>
-                    <span className="font-semibold text-green-700">
+                    <span className="text-grey-3">Profit per combo</span>
+                    <span className="font-semibold text-primary-green-300">
                       {formatToNaira(comboSellingTotal - totalCostValue)}
                     </span>
                   </div>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-3">
+              <p className="text-xs text-grey-3 mt-3">
                 Edit individual item prices above to adjust the combo selling
                 price.
               </p>
@@ -718,12 +717,12 @@ const CreateCombo = ({
 
         {/* Inventory Impact */}
         {selectedItems.length > 0 && comboSellingTotal > 0 && (
-          <Card className="shadow-sm border border-blue-100 bg-blue-50/50">
+          <Card className="shadow-sm border border-info-1/20 bg-info-2/50">
             <CardContent className="p-4">
-              <h4 className="text-sm font-semibold text-blue-800 mb-3">
+              <h4 className="text-sm font-semibold text-info-1 mb-3">
                 Inventory Impact per Sale
               </h4>
-              <p className="text-xs text-blue-600 mb-3">
+              <p className="text-xs text-info-1 mb-3">
                 When 1 combo is sold, the following stock will be deducted:
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -732,10 +731,10 @@ const CreateCombo = ({
                     key={item.id}
                     className="flex items-center justify-between bg-white/70 rounded-md px-3 py-2 text-sm"
                   >
-                    <span className="text-slate-700 truncate pr-2">
+                    <span className="text-grey-2 truncate pr-2">
                       {item.name}
                     </span>
-                    <span className="font-medium text-blue-700 shrink-0">
+                    <span className="font-medium text-info-1 shrink-0">
                       -{item.comboQty}
                     </span>
                   </div>
@@ -750,7 +749,7 @@ const CreateCombo = ({
           <Button
             onClick={handleSubmit}
             disabled={!isValid || isSubmitting}
-            className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white font-medium text-base"
+            className="flex-1 h-12 bg-primary-green-300 hover:bg-primary-green-300/90 text-white font-medium text-base"
           >
             {isSubmitting ? (
               <Spinner />
@@ -763,7 +762,7 @@ const CreateCombo = ({
           <Link href="/inventory">
             <Button
               variant="outline"
-              className="w-full sm:w-auto h-12 px-8 border-slate-200"
+              className="w-full sm:w-auto h-12 px-8 border-grey-5"
             >
               Cancel
             </Button>
@@ -786,12 +785,12 @@ const CreateCombo = ({
           {variationPickerProduct ? (
             // Variation picker view
             <>
-              <SheetHeader className="p-5 border-b border-slate-200 flex flex-row items-center gap-3 space-y-0">
+              <SheetHeader className="p-5 border-b border-grey-5 flex flex-row items-center gap-3 space-y-0">
                 <button
                   onClick={() => setVariationPickerProduct(null)}
-                  className="p-1.5 rounded-full hover:bg-slate-100"
+                  className="p-1.5 rounded-full hover:bg-grey-6"
                 >
-                  <ArrowLeft className="h-5 w-5 text-slate-600" />
+                  <ArrowLeft className="h-5 w-5 text-grey-3" />
                 </button>
                 <SheetTitle className="text-base font-semibold">
                   {variationPickerProduct.name} - Variations
@@ -812,15 +811,15 @@ const CreateCombo = ({
                         alreadyAdded
                           ? "opacity-50 cursor-not-allowed"
                           : isChecked
-                            ? "bg-green-50 ring-1 ring-green-200"
-                            : "hover:bg-slate-50"
+                            ? "bg-primary-green-300/10 ring-1 ring-primary-green-300/20"
+                            : "hover:bg-grey-6"
                       }`}
                     >
                       <div
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
                           isChecked
-                            ? "bg-green-600 border-green-600"
-                            : "border-slate-300"
+                            ? "bg-primary-green-300 border-primary-green-300"
+                            : "border-grey-5"
                         }`}
                       >
                         {isChecked && (
@@ -840,16 +839,16 @@ const CreateCombo = ({
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
+                        <p className="text-sm font-medium text-grey-1 truncate">
                           {v.name}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-grey-3">
                           Stock: {v.quantity}
                           {alreadyAdded && " · Added"}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-grey-1">
                           {formatToNaira(v.selling_price)}
                         </p>
                       </div>
@@ -861,20 +860,20 @@ const CreateCombo = ({
           ) : (
             // Product list view
             <>
-              <SheetHeader className="p-5 border-b border-slate-200 space-y-0">
+              <SheetHeader className="p-5 border-b border-grey-5 space-y-0">
                 <div className="flex items-center justify-between">
                   <SheetTitle className="text-lg font-semibold">
                     Select Products
                   </SheetTitle>
                   {pendingCount > 0 && (
-                    <span className="text-xs font-medium text-green-600">
+                    <span className="text-xs font-medium text-primary-green-300">
                       {pendingCount} selected
                     </span>
                   )}
                 </div>
               </SheetHeader>
 
-              <div className="p-4 border-b border-slate-100">
+              <div className="p-4 border-b border-grey-6">
                 <SearchInput
                   placeholder="Search products..."
                   value={searchQuery}
@@ -892,7 +891,7 @@ const CreateCombo = ({
                   </div>
                 ) : filteredProducts.length === 0 ? (
                   <div className="py-12 text-center">
-                    <p className="text-sm text-slate-500">No products found</p>
+                    <p className="text-sm text-grey-3">No products found</p>
                   </div>
                 ) : (
                   <div className="space-y-1">
@@ -906,16 +905,16 @@ const CreateCombo = ({
                           onClick={() => togglePendingProduct(product)}
                           className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left ${
                             isChecked
-                              ? "bg-green-50 ring-1 ring-green-200"
-                              : "hover:bg-slate-50"
+                              ? "bg-primary-green-300/10 ring-1 ring-primary-green-300/20"
+                              : "hover:bg-grey-6"
                           }`}
                         >
                           {!hasVariations && (
                             <div
                               className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 ${
                                 isChecked
-                                  ? "bg-green-600 border-green-600"
-                                  : "border-slate-300"
+                                  ? "bg-primary-green-300 border-primary-green-300"
+                                  : "border-grey-5"
                               }`}
                             >
                               {isChecked && (
@@ -935,7 +934,7 @@ const CreateCombo = ({
                               )}
                             </div>
                           )}
-                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+                          <div className="w-10 h-10 rounded-lg bg-grey-6 flex items-center justify-center shrink-0 overflow-hidden">
                             {product.image ? (
                               <Image
                                 src={product.image}
@@ -945,14 +944,14 @@ const CreateCombo = ({
                                 className="object-cover w-full h-full"
                               />
                             ) : (
-                              <Package className="h-4 w-4 text-slate-400" />
+                              <Package className="h-4 w-4 text-grey-4" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">
+                            <p className="text-sm font-medium text-grey-1 truncate">
                               {product.name}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-grey-3">
                               {hasVariations
                                 ? `${product.variations?.length} variations`
                                 : `Stock: ${product.quantity || 0}`}
@@ -960,14 +959,14 @@ const CreateCombo = ({
                           </div>
                           <div className="text-right shrink-0 flex items-center gap-2">
                             {!hasVariations && (
-                              <p className="text-sm font-semibold text-slate-900">
+                              <p className="text-sm font-semibold text-grey-1">
                                 {formatToNaira(
                                   Number(product.selling_price) || 0,
                                 )}
                               </p>
                             )}
                             {hasVariations && (
-                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                              <ChevronRight className="h-4 w-4 text-grey-4" />
                             )}
                           </div>
                         </button>
@@ -977,7 +976,7 @@ const CreateCombo = ({
                 )}
 
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between gap-2 px-2 py-3 border-t border-slate-100 mt-2">
+                  <div className="flex items-center justify-between gap-2 px-2 py-3 border-t border-grey-6 mt-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -986,7 +985,7 @@ const CreateCombo = ({
                     >
                       Previous
                     </Button>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-grey-3">
                       Page {sheetPage} of {totalPages}
                     </span>
                     <Button
@@ -1005,11 +1004,11 @@ const CreateCombo = ({
             </>
           )}
 
-          <div className="p-4 border-t border-slate-200">
+          <div className="p-4 border-t border-grey-5">
             <Button
               onClick={addPendingItems}
               disabled={pendingCount === 0}
-              className="w-full h-11 bg-green-600 hover:bg-green-700 text-white font-medium"
+              className="w-full h-11 bg-primary-green-300 hover:bg-primary-green-300/90 text-white font-medium"
             >
               Add{" "}
               {pendingCount > 0

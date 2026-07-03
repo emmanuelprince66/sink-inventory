@@ -26,7 +26,7 @@ const ChangePin = ({
           onSubmit={changePinForm.handleSubmit(onSubmitChangePinForm)}
           className="space-y-4 flex flex-col items-center justify-center"
         >
-          <p className="text-2xl font-bold">Change Pin</p>
+          <p className="text-2xl font-extrabold text-grey-1">Change Pin</p>
           <FormField
             control={changePinForm.control}
             name="old_pin"
@@ -66,7 +66,7 @@ const ChangePin = ({
           <Button
             disabled={ChangePinLoading}
             type="submit"
-            className="w-[220px] mt-9  hover:bg-primary-green-700"
+            className="w-[220px] mt-9"
           >
             {ChangePinLoading ? <Spinner /> : "Update Pin"}
           </Button>
@@ -74,7 +74,7 @@ const ChangePin = ({
           <div className="w-full flex items-center justify-center">
             <Button
               variant="link"
-              className="text-sm text-red-600 hover:underline"
+              className="text-sm text-error-1 hover:text-error-1 hover:underline"
               onClick={onForgetPin}
             >
               Forgot Pin?

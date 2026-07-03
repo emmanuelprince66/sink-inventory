@@ -28,7 +28,7 @@ export const createProductionHistoryColumns = ({
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Product Name
@@ -38,7 +38,7 @@ export const createProductionHistoryColumns = ({
     },
     cell: ({ row }) => {
       const item = row.original;
-      return <div className="font-medium text-gray-900">{item.product}</div>;
+      return <div className="font-medium text-grey-1">{item.product}</div>;
     },
   },
   {
@@ -46,7 +46,7 @@ export const createProductionHistoryColumns = ({
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Units Moved
@@ -58,7 +58,7 @@ export const createProductionHistoryColumns = ({
       const item = row.original;
       const quantity = parseFloat(item.quantity);
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-2 text-info-1">
           {quantity} units
         </span>
       );
@@ -69,7 +69,7 @@ export const createProductionHistoryColumns = ({
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
@@ -81,9 +81,9 @@ export const createProductionHistoryColumns = ({
       const item = row.original;
       const date = new Date(item.created_at);
       return (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-grey-3">
           <div className="font-medium">{format(date, "MMM dd, yyyy")}</div>
-          <div className="text-xs text-gray-400">{format(date, "HH:mm")}</div>
+          <div className="text-xs text-grey-4">{format(date, "HH:mm")}</div>
         </div>
       );
     },
@@ -95,10 +95,10 @@ export const createProductionHistoryColumns = ({
       const item = row.original;
       return (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-semibold text-sm">
+          <div className="w-8 h-8 rounded-full bg-primary-green-300/10 flex items-center justify-center text-primary-green-300 font-semibold text-sm">
             {item.id?.charAt(0)?.toUpperCase() || "?"}
           </div>
-          <span className="text-sm text-gray-700">{item.moved_by || "-"}</span>
+          <span className="text-sm text-grey-2">{item.moved_by || "-"}</span>
         </div>
       );
     },
@@ -110,13 +110,13 @@ export const createProductionHistoryColumns = ({
       const item = row.original;
       return item.received_by ? (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold text-sm">
+          <div className="w-8 h-8 rounded-full bg-secondary-1/10 flex items-center justify-center text-secondary-1 font-semibold text-sm">
             {item.received_by.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm text-gray-700">{item.received_by}</span>
+          <span className="text-sm text-grey-2">{item.received_by}</span>
         </div>
       ) : (
-        <span className="text-gray-400 text-sm">-</span>
+        <span className="text-grey-4 text-sm">-</span>
       );
     },
   },
@@ -127,7 +127,7 @@ export const createProductionHistoryColumns = ({
       const item = row.original;
       return (
         <div
-          className="text-sm text-gray-600 max-w-xs truncate"
+          className="text-sm text-grey-3 max-w-xs truncate"
           title={item.note || ""}
         >
           {item.note || "-"}
@@ -147,7 +147,6 @@ export const createProductionHistoryColumns = ({
             size="sm"
             onClick={() => onReceive(item.id)}
             disabled={isAccepting}
-            className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
           >
             {isAccepting ? "Receiving..." : "Receive"}
           </Button>
@@ -159,8 +158,8 @@ export const createProductionHistoryColumns = ({
           className={cn(
             "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
             item.status === "RECEIVED"
-              ? "bg-green-100 text-green-800"
-              : "bg-amber-100 text-amber-800",
+              ? "bg-success-2 text-success-1"
+              : "bg-warning-2 text-warning-1",
           )}
         >
           {item.status === "RECEIVED" ? "Received" : "Moved"}

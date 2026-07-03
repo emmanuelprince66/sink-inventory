@@ -11,7 +11,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {moment(restock.created_at).format("MMM D, YYYY h:mm A")}
             </p>
           </div>
@@ -25,7 +25,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{restock.quantity}</p>
+            <p className="text-sm text-grey-3">{restock.quantity}</p>
           </div>
         );
       },
@@ -37,7 +37,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {formatToNaira(restock.restock_amount)}
             </p>
           </div>
@@ -51,7 +51,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {formatToNaira(restock.amount_paid)}
             </p>
           </div>
@@ -65,7 +65,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-grey-3">
               {formatToNaira(restock.selling_price)}
             </p>
           </div>
@@ -80,7 +80,7 @@ export const useRestockHistoryColumns = () => {
         const restock = row.original;
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{restock.payment_method}</p>
+            <p className="text-sm text-grey-3">{restock.payment_method}</p>
           </div>
         );
       },

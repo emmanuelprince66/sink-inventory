@@ -86,25 +86,25 @@ const SetDiscountModal = ({
 
           {/* Profit Warning */}
           {showWarning && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="bg-error-2 border border-error-1/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-error-1 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-red-800 mb-1">
+                <h4 className="text-sm font-bold text-error-1 mb-1">
                   Warning: Negative Profit
                 </h4>
-                <p className="text-sm text-red-700 mb-2">
+                <p className="text-sm font-medium text-error-1 mb-2">
                   This discount will result in a negative profit for this item.
                 </p>
-                <div className="text-xs text-red-600 space-y-1">
+                <div className="text-xs font-medium text-error-1 space-y-1">
                   <div>Cost Price: ₦{costPrice.toLocaleString()}</div>
                   <div>Selling Price: ₦{sellingPrice.toLocaleString()}</div>
                   <div>Current Profit: ₦{currentProfit.toLocaleString()}</div>
                   <div>Discount: ₦{priceDiscount.toLocaleString()}</div>
-                  <div className="font-medium">
+                  <div className="font-bold">
                     Profit After Discount: ₦
                     {profitAfterDiscount.toLocaleString()}
                   </div>
-                  <div className="pt-1 border-t border-red-200">
+                  <div className="pt-1 border-t border-error-1/30">
                     Maximum recommended discount: ₦
                     {maxDiscount.toLocaleString()}
                   </div>

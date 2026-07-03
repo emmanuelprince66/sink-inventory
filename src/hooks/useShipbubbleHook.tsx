@@ -26,6 +26,8 @@ export interface ShipbubbleSettings {
   landmark: string;
   category: ShippingCategoryOption | null;
   packageSize: BoxSizeOption | null;
+  /** Backend's `shipbubble_settings.is_active`. Drives the AutomatedShipping toggle. */
+  isActive: boolean;
 }
 
 const EMPTY_SETTINGS: ShipbubbleSettings = {
@@ -36,6 +38,7 @@ const EMPTY_SETTINGS: ShipbubbleSettings = {
   landmark: "",
   category: null,
   packageSize: null,
+  isActive: false,
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -88,6 +91,7 @@ const hydrateFromBusiness = (
       landmark: sb.landmark || "",
       category,
       packageSize,
+      isActive: Boolean(sb.is_active),
     },
     companies,
   };
@@ -130,6 +134,7 @@ const buildPatchPayload = (
         length: settings.packageSize.length,
         max_weight: settings.packageSize.max_weight,
       },
+      is_active: settings.isActive,
     };
   }
 
@@ -259,6 +264,20 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
     });
   };
 
+  // ─── Quick toggle for shipbubble_settings.is_active ──────────────────────
+  // The backend only accepts a full shipbubble_settings object on PATCH (all
+  // nested fields are required), so flipping is_active means re-sending the
+  // current saved values + the new flag. Caller is expected to have already
+  // configured Shipbubble (isConfigured === true) before flipping ON.
+  const setActive = (
+    next: boolean,
+    callbacks?: { onSuccess?: () => void; onError?: () => void },
+  ) => {
+    // Local update first so the switch animates immediately.
+    setSettings((prev) => ({ ...prev, isActive: next }));
+    save({ settingsPatch: { isActive: next } }, callbacks);
+  };
+
   // ─── Derived flags ───────────────────────────────────────────────────────
   const isShipbubbleEnabled = companies.includes("SHIPBUBBLE");
   const isChowdeckEnabled = companies.includes("CHOWDECK");
@@ -268,6 +287,9 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
   const isConfigured = Boolean(
     business?.shipbubble?.street && business?.shipbubble?.category,
   );
+  // Backend flag — drives the AutomatedShipping toggle. Source of truth is
+  // the server response; local `settings.isActive` is just the optimistic copy.
+  const isShipbubbleActive = Boolean(business?.shipbubble?.is_active);
 
   return {
     // Reference data
@@ -291,12 +313,14 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
 
     // Mutation
     save,
+    setActive,
     validateAddress,
     validateSettings,
     isSaving,
 
     // Derived
     isShipbubbleEnabled,
+    isShipbubbleActive,
     isChowdeckEnabled,
     hasPickup,
     isConfigured,

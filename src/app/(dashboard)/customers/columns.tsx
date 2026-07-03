@@ -39,7 +39,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.name}</p>
+          <p className="text-sm text-grey-2">{customer.name}</p>
         </div>
       );
     },
@@ -51,7 +51,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.phone}</p>
+          <p className="text-sm text-grey-3">{customer.phone}</p>
         </div>
       );
     },
@@ -63,7 +63,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer?.total_sales}</p>
+          <p className="text-sm text-grey-3">{customer?.total_sales}</p>
         </div>
       );
     },
@@ -73,7 +73,7 @@ export const columns: ColumnDef<CustomerType>[] = [
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-1"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Total Transactions
@@ -85,7 +85,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer?.sales_count}</p>
+          <p className="text-sm text-grey-3">{customer?.sales_count}</p>
         </div>
       );
     },
@@ -103,8 +103,8 @@ export const columns: ColumnDef<CustomerType>[] = [
       return (
         <div className="font-medium">
           <p
-            className={`text-sm ${
-              isNegative ? "text-red-500" : "text-gray-500"
+            className={`text-sm font-medium ${
+              isNegative ? "text-error-1" : "text-grey-2"
             }`}
           >
             {formatToNaira(customer.wallet)}
@@ -123,27 +123,27 @@ export const columns: ColumnDef<CustomerType>[] = [
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+              <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
+              className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
             >
               <DropdownMenuItem
                 onClick={() => router.push(`/customers/${row.original.id}`)}
-                className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 View more
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={row.original.wallet < 0}
                 onClick={() => setDeleteCustomerModal(true)}
-                className="cursor-pointer px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
               >
-                <span className=" text-red-500">Delete Customer</span>
+                Delete Customer
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

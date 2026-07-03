@@ -1,27 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Bike, Clock, Phone, Star, Truck } from "lucide-react";
+import { InitialsAvatar } from "@/components/app/InitialsAvatar";
+import { StatusBadge } from "@/components/app/StatusBadge";
+import { Clock, Phone, Star, UserCheck } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
 import { MOCK_PARTNERS } from "./AssignDeliveryModal";
 import { OrderInfo } from "./type";
-
-const paymentStyles: Record<string, string> = {
-  PAID: "bg-green-100 text-green-800",
-  PARTIAL: "bg-yellow-100 text-yellow-800",
-  UNPAID: "bg-red-100 text-red-800",
-  DEFAULT: "bg-gray-100 text-gray-800",
-};
-
-const shippingStyles: Record<string, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  SHIPPED: "bg-blue-100 text-blue-800",
-  DELIVERED: "bg-green-100 text-green-800",
-  RETURNED: "bg-red-100 text-red-800",
-  DEFAULT: "bg-gray-100 text-gray-800",
-};
 
 // Mock rider list — stable per order id until backend ships rider fields.
 const MOCK_RIDERS = [
@@ -49,56 +35,40 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
   const partner = isOutstore ? MOCK_PARTNERS[seed % MOCK_PARTNERS.length] : null;
   const rider = isOutstore ? MOCK_RIDERS[seed % MOCK_RIDERS.length] : null;
 
-  const paymentStyle =
-    paymentStyles[order.payment_status] || paymentStyles.DEFAULT;
-  const shippingStyle =
-    shippingStyles[order.shipping_status] || shippingStyles.DEFAULT;
-
   const amount = order.amount || order.total_price || "0";
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
+    <div className="border border-grey-5 rounded-2xl p-4 bg-white hover:shadow-md transition-shadow">
       {/* Top row: order id + status + amount */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-gray-900 text-sm">
+            <span className="font-extrabold text-grey-1 text-sm">
               #{order.id?.slice(0, 8) || "—"}
             </span>
-            <span
-              className={cn(
-                "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                paymentStyle,
-              )}
-            >
-              {order.payment_status || "—"}
-            </span>
+            <StatusBadge status={order.payment_status} type="payment" />
             {isOutstore && (
-              <span
-                className={cn(
-                  "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                  shippingStyle,
-                )}
-              >
-                {order.shipping_status || "PENDING"}
-              </span>
+              <StatusBadge
+                status={order.shipping_status || "PENDING"}
+                type="shipping"
+              />
             )}
           </div>
-          <p className="text-sm text-gray-700 mt-1 truncate">
+          <p className="text-sm font-bold text-grey-1 mt-1 truncate">
             {order.customer_info?.name || "Walk-in customer"}
           </p>
           {order.customer_info?.phone && (
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+            <p className="text-xs font-medium text-grey-3 flex items-center gap-1 mt-0.5">
               <Phone className="w-3 h-3" />
               {order.customer_info.phone}
             </p>
           )}
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-extrabold text-grey-1">
             ₦{Number(amount).toLocaleString()}
           </p>
-          <p className="text-xs text-gray-500 flex items-center gap-1 justify-end mt-0.5">
+          <p className="text-xs font-medium text-grey-4 flex items-center gap-1 justify-end mt-0.5">
             <Clock className="w-3 h-3" />
             {order.created_at
               ? moment(order.created_at).format("MMM DD, h:mm A")
@@ -109,39 +79,35 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
 
       {/* Delivery partner + rider (outstore only) */}
       {isOutstore && partner && rider && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-grey-6">
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-grey-4 mb-1">
               Partner
             </p>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center text-[10px] font-semibold text-gray-700 flex-shrink-0">
-                {partner.logo}
-              </div>
+              <InitialsAvatar initials={partner.logo} tone="dark" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-900 leading-tight truncate">
+                <p className="text-xs font-bold text-grey-1 leading-tight truncate">
                   {partner.name}
                 </p>
-                <p className="text-[10px] text-amber-600 flex items-center gap-0.5">
-                  <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                <p className="text-[10px] font-bold text-warning-1 flex items-center gap-0.5">
+                  <Star className="w-2.5 h-2.5 fill-warning-1 text-warning-1" />
                   {partner.rating}
                 </p>
               </div>
             </div>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wide text-gray-400 mb-1">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-grey-4 mb-1">
               Rider
             </p>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                <Bike className="w-3.5 h-3.5 text-blue-600" />
-              </div>
+              <InitialsAvatar name={rider.name} tone="green" />
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-900 leading-tight truncate">
+                <p className="text-xs font-bold text-grey-1 leading-tight truncate">
                   {rider.name}
                 </p>
-                <p className="text-[10px] text-gray-500 truncate">
+                <p className="text-[10px] font-medium text-grey-4 truncate">
                   {rider.phone}
                 </p>
               </div>
@@ -151,8 +117,8 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
       )}
 
       {/* Action row */}
-      <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-gray-100 flex-wrap">
-        <span className="text-[10px] text-gray-400 uppercase tracking-wide">
+      <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-grey-6">
+        <span className="text-[10px] font-bold text-grey-4 uppercase tracking-wide">
           {isOutstore ? "Out-store" : "In-store"}
         </span>
         <div className="flex gap-2">
@@ -161,14 +127,14 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
               variant="outline"
               size="sm"
               onClick={() => onAssignDelivery(order.id)}
-              className="text-xs"
+              className="text-xs flex-1"
             >
-              <Truck className="w-3 h-3 mr-1" />
+              <UserCheck className="w-3 h-3 mr-1" />
               Assign
             </Button>
           )}
-          <Link href={`/orders/${order.id}`}>
-            <Button size="sm" className="text-xs">
+          <Link href={`/orders/${order.id}`} className="flex-1">
+            <Button size="sm" className="text-xs w-full">
               View More
             </Button>
           </Link>

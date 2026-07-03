@@ -14,12 +14,12 @@ export const useSalesColumns = () => {
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product.name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold text-primary-green-300">{product.name}</p>
 
             {product?.watchlist && (
               <EyeOff
-                className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                className="w-3.5 h-3.5 text-error-1 flex-shrink-0"
                 // title="On watchlist"
               />
             )}
@@ -33,9 +33,7 @@ export const useSalesColumns = () => {
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product.unit_sold}</p>
-          </div>
+          <p className="text-sm font-bold text-primary-green-300">{product.unit_sold}</p>
         );
       },
     },
@@ -58,11 +56,9 @@ export const useSalesColumns = () => {
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">
-              {formatToNaira(product.revenue)}
-            </p>
-          </div>
+          <p className="text-sm font-bold text-primary-green-300">
+            {formatToNaira(product.revenue)}
+          </p>
         );
       },
     },
@@ -71,12 +67,7 @@ export const useSalesColumns = () => {
       header: "VAT",
       cell: ({ row }) => {
         const product = row.original;
-        console.log("VAT value for product:", product); // Debug log
-        return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product?.tax}</p>
-          </div>
-        );
+        return <p className="text-sm font-medium text-grey-3">{product?.tax}</p>;
       },
     },
     // Conditionally include profit column
@@ -90,15 +81,13 @@ export const useSalesColumns = () => {
               const profit = product.profit;
               const isPositive = profit >= 0;
               return (
-                <div className="font-medium">
-                  <p
-                    className={`text-sm ${
-                      isPositive ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {formatToNaira(profit)}
-                  </p>
-                </div>
+                <p
+                  className={`text-sm font-bold ${
+                    isPositive ? "text-primary-green-300" : "text-error-1"
+                  }`}
+                >
+                  {formatToNaira(profit)}
+                </p>
               );
             },
           },
@@ -109,11 +98,7 @@ export const useSalesColumns = () => {
       header: "SKU",
       cell: ({ row }) => {
         const product = row.original;
-        return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product?.sku}</p>
-          </div>
-        );
+        return <p className="text-sm font-medium text-grey-3">{product?.sku}</p>;
       },
     },
 
@@ -126,9 +111,7 @@ export const useSalesColumns = () => {
               const product = row.original;
 
               return (
-                <div className="font-medium">
-                  <p className="text-sm text-gray-500">{product.discount}</p>
-                </div>
+                <p className="text-sm font-medium text-grey-3">{product.discount}</p>
               );
             },
           },

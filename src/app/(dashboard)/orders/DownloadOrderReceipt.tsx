@@ -78,6 +78,8 @@ interface OrderReceiptPDFProps {
 interface DownloadOrderReceiptProps {
   orderData: OrderData;
   business: any;
+  /** "button" renders the standalone black download button. "menu-item" renders a plain row for use inside a dropdown menu. */
+  variant?: "button" | "menu-item";
 }
 
 // Register fonts
@@ -690,6 +692,7 @@ OrderReceiptPDF.displayName = "OrderReceiptPDF";
 const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
   orderData,
   business,
+  variant = "button",
 }) => {
   console.log("orderData in the receipt", orderData);
   const receiptNumber = orderData?.id?.slice(0, 8).toUpperCase() || "INVOICE";
@@ -731,11 +734,16 @@ const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
       fileName={`Invoice-${receiptNumber}.pdf`}
     >
       {({ loading, error }) => {
+        const menuItemClass =
+          "flex w-full items-center gap-2.5 px-2 py-1.5 text-sm font-semibold text-grey-2 hover:bg-secondary-6 rounded-lg cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+        const buttonClass =
+          "flex items-center cursor-pointer space-x-2 px-3 py-2 bg-primary-green-100 text-white text-sm font-bold rounded-lg hover:bg-primary-green-100/90 disabled:bg-grey-4 disabled:cursor-not-allowed transition-colors";
+
         if (error) {
           console.error("PDF generation error:", error);
           return (
             <button
-              className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-gray-400 text-white text-sm font-medium rounded-md"
+              className={variant === "menu-item" ? menuItemClass : buttonClass}
               disabled
             >
               <Download className="h-4 w-4" />
@@ -746,7 +754,7 @@ const DownloadOrderReceipt: React.FC<DownloadOrderReceiptProps> = ({
 
         return (
           <button
-            className="flex items-center cursor-pointer space-x-2 px-3 py-2 bg-black text-white text-sm font-medium rounded-md hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            className={variant === "menu-item" ? menuItemClass : buttonClass}
             disabled={loading}
           >
             <Download className="h-4 w-4" />

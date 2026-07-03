@@ -10,20 +10,20 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#52B661] text-white hover:bg-[#52B661]/90 shadow-xs border border-[#52B661]",
+          "bg-primary-green-300 text-white hover:bg-primary-green-300/90 shadow-xs border border-primary-green-300",
         destructive:
-          "bg-[#dc2626] text-white hover:bg-[#dc2626]/90 focus-visible:ring-[#dc2626]/20 dark:focus-visible:ring-[#dc2626]/40 dark:bg-[#dc2626]/60 border border-[#dc2626]",
+          "bg-error-1 text-white hover:bg-error-1/90 focus-visible:ring-error-1/20 dark:focus-visible:ring-error-1/40 dark:bg-error-1/60 border border-error-1",
         outline:
-          "border border-[#52B661] bg-transparent text-[#52B661] shadow-xs hover:bg-[#52B661]/10 hover:text-[#52B661] dark:border-[#52B661] dark:hover:bg-[#52B661]/20",
+          "border border-primary-green-300 bg-transparent text-primary-green-300 shadow-xs hover:bg-primary-green-300/10 hover:text-primary-green-300 dark:border-primary-green-300 dark:hover:bg-primary-green-300/20",
         secondary:
-          "bg-[#E8F5E9] text-[#2e7d32] hover:bg-[#E8F5E9]/80 border border-[#E8F5E9]",
+          "bg-secondary-6 text-primary-green-100 hover:bg-secondary-6/80 border border-secondary-6",
         ghost:
-          "hover:bg-[#52B661]/10 hover:text-[#52B661] dark:hover:bg-[#52B661]/20",
-        link: "text-[#52B661] underline-offset-4 hover:underline hover:text-[#52B661]/80",
+          "hover:bg-primary-green-300/10 hover:text-primary-green-300 dark:hover:bg-primary-green-300/20",
+        link: "text-primary-green-300 underline-offset-4 hover:underline hover:text-primary-green-300/80",
         success:
-          "bg-[#2e7d32] text-white hover:bg-[#2e7d32]/90 border border-[#2e7d32] shadow-xs",
+          "bg-success-1 text-white hover:bg-success-1/90 border border-success-1 shadow-xs",
         light:
-          "bg-[#f1f8e9] text-[#33691e] hover:bg-[#e8f5e9] border border-[#f1f8e9]",
+          "bg-secondary-6 text-primary-green-100 hover:bg-secondary-5 border border-secondary-6",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

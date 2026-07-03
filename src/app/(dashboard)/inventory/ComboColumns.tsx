@@ -23,7 +23,7 @@ export const comboColumns: ColumnDef<Combo>[] = [
       const combo = row.original;
       return (
         <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 rounded-md overflow-hidden bg-slate-100 flex items-center justify-center shrink-0">
+          <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-grey-6 flex items-center justify-center shrink-0">
             {combo.image_url || combo.image ? (
               <Image
                 src={combo.image_url || combo.image || ""}
@@ -32,13 +32,13 @@ export const comboColumns: ColumnDef<Combo>[] = [
                 className="object-cover"
               />
             ) : (
-              <Package className="h-4 w-4 text-slate-400" />
+              <Package className="h-4 w-4 text-grey-4" />
             )}
           </div>
           <div className="min-w-0">
             <div className="font-medium truncate">{combo.name}</div>
             {combo.description && (
-              <div className="text-xs text-slate-500 truncate max-w-[200px]">
+              <div className="text-xs text-grey-3 truncate max-w-[200px]">
                 {combo.description}
               </div>
             )}
@@ -53,7 +53,7 @@ export const comboColumns: ColumnDef<Combo>[] = [
     cell: ({ row }) => {
       const combo = row.original;
       return (
-        <span className="text-sm text-slate-700">
+        <span className="text-sm text-grey-2">
           {combo.items?.length || 0} items
         </span>
       );
@@ -63,7 +63,7 @@ export const comboColumns: ColumnDef<Combo>[] = [
     accessorKey: "original_total",
     header: "Original Total",
     cell: ({ row }) => (
-      <span className="text-sm text-slate-500">
+      <span className="text-sm text-grey-3">
         {formatToNaira(row.original.original_total || 0)}
       </span>
     ),
@@ -72,7 +72,7 @@ export const comboColumns: ColumnDef<Combo>[] = [
     accessorKey: "combo_selling_price",
     header: "Selling Price",
     cell: ({ row }) => (
-      <span className="text-sm font-semibold text-green-700">
+      <span className="text-sm font-semibold text-primary-green-300">
         {formatToNaira(row.original.combo_selling_price || 0)}
       </span>
     ),
@@ -86,8 +86,8 @@ export const comboColumns: ColumnDef<Combo>[] = [
         <span
           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
             online
-              ? "bg-green-100 text-green-700"
-              : "bg-slate-100 text-slate-600"
+              ? "bg-success-2 text-success-1"
+              : "bg-grey-6 text-grey-3"
           }`}
         >
           {online ? "Yes" : "No"}
@@ -100,11 +100,11 @@ export const comboColumns: ColumnDef<Combo>[] = [
     header: "Created",
     cell: ({ row }) => {
       const date = row.original.created_at;
-      if (!date) return <span className="text-sm text-slate-400">-</span>;
+      if (!date) return <span className="text-sm text-grey-4">-</span>;
       return (
-        <div className="text-sm text-slate-600">
+        <div className="text-sm text-grey-3">
           <div>{moment(date).format("MMM DD, YYYY")}</div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-grey-4">
             {moment(date).format("h:mm A")}
           </div>
         </div>
@@ -125,18 +125,18 @@ const ComboActions = ({ combo }: { combo: Combo }) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+          <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
             <span className="sr-only">Open menu</span>
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
+          className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
         >
           <DropdownMenuItem
             asChild
-            className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+            className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
           >
             <Link href={`/inventory/combo/${combo.id}`}>
               Edit Combo
@@ -144,7 +144,7 @@ const ComboActions = ({ combo }: { combo: Combo }) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setOpenDeleteModal(true)}
-            className="cursor-pointer text-red-500 px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
           >
             Delete Combo
           </DropdownMenuItem>

@@ -5,6 +5,12 @@ import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { cn } from "@/lib/utils";
@@ -12,8 +18,10 @@ import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowDownLeft,
   CheckCircle,
+  ChevronDown,
   Copy,
   ExternalLink,
+  FileText,
   Filter as FilterIcon,
   ShoppingCart,
   Truck,
@@ -98,49 +106,39 @@ const CustomOrderCard = ({
 }: CustomOrderCardProps) => {
   const variants = {
     total: {
-      bg: "bg-gradient-to-br from-blue-50 to-blue-100",
-      border: "border-blue-200",
-      iconBg: "bg-blue-100",
-      icon: <ShoppingCart className="w-5 h-5 text-blue-600" />,
-      text: "text-gray-600",
-      amountText: "text-gray-900",
-      subtitleColor: "text-blue-500",
+      bg: "bg-info-2",
+      iconBg: "bg-white/60",
+      icon: <ShoppingCart className="w-5 h-5 text-info-1" />,
+      text: "text-info-1",
+      amountText: "text-grey-1",
     },
     completed: {
-      bg: "bg-gradient-to-br from-green-50 to-green-100",
-      border: "border-green-200",
-      iconBg: "bg-green-100",
-      icon: <CheckCircle className="w-5 h-5 text-green-600" />,
-      text: "text-gray-600",
-      amountText: "text-gray-900",
-      subtitleColor: "text-green-500",
+      bg: "bg-success-2",
+      iconBg: "bg-white/60",
+      icon: <CheckCircle className="w-5 h-5 text-success-1" />,
+      text: "text-success-1",
+      amountText: "text-grey-1",
     },
     revenue: {
-      bg: "bg-gradient-to-br from-purple-50 to-purple-100",
-      border: "border-purple-200",
-      iconBg: "bg-purple-100",
-      icon: <TrendingUp className="w-5 h-5 text-purple-600" />,
-      text: "text-gray-600",
-      amountText: "text-gray-900",
-      subtitleColor: "text-purple-500",
+      bg: "bg-pink-50",
+      iconBg: "bg-white/60",
+      icon: <TrendingUp className="w-5 h-5 text-pink-600" />,
+      text: "text-pink-600",
+      amountText: "text-grey-1",
     },
     visits: {
-      bg: "bg-gradient-to-br from-orange-50 to-orange-100",
-      border: "border-orange-200",
-      iconBg: "bg-orange-100",
-      icon: <ArrowDownLeft className="w-5 h-5 text-orange-600" />,
-      text: "text-gray-600",
-      amountText: "text-gray-900",
-      subtitleColor: "text-orange-500",
+      bg: "bg-orange-50",
+      iconBg: "bg-white/60",
+      icon: <ArrowDownLeft className="w-5 h-5 text-orange-500" />,
+      text: "text-orange-500",
+      amountText: "text-grey-1",
     },
     cost: {
-      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
-      border: "border-amber-200",
-      iconBg: "bg-amber-100",
-      icon: <Truck className="w-5 h-5 text-amber-600" />,
-      text: "text-gray-600",
-      amountText: "text-gray-900",
-      subtitleColor: "text-amber-500",
+      bg: "bg-warning-2",
+      iconBg: "bg-white/60",
+      icon: <Truck className="w-5 h-5 text-warning-1" />,
+      text: "text-warning-1",
+      amountText: "text-grey-1",
     },
   };
 
@@ -148,10 +146,10 @@ const CustomOrderCard = ({
 
   if (loading) {
     return (
-      <CustomCard className={cn("p-4 w-full border-gray-200", className)}>
+      <CustomCard className={cn("p-4 w-full border-grey-5", className)}>
         <div className="flex flex-col gap-4 sm:gap-6 items-start">
-          <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-gray-200" />
-          <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-gray-200" />
+          <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-5" />
+          <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
         </div>
       </CustomCard>
     );
@@ -161,24 +159,23 @@ const CustomOrderCard = ({
     <CustomCard
       className={cn(
         variant.bg,
-        variant.border,
-        "p-3 sm:p-4 w-full rounded-lg border transition-all hover:shadow-md",
+        "p-4 sm:p-5 w-full rounded-2xl border-none transition-all",
         className,
       )}
     >
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 sm:gap-3">
-          <div className={cn("p-1.5 sm:p-2 rounded-full", variant.iconBg)}>
+          <div className={cn("p-1.5 sm:p-2 rounded-xl", variant.iconBg)}>
             {variant.icon}
           </div>
-          <span className={cn("text-xs sm:text-sm font-medium", variant.text)}>
+          <span className={cn("text-xs sm:text-sm font-bold", variant.text)}>
             {title}
           </span>
         </div>
       </div>
       <div className="mt-3 sm:mt-4">
         <span
-          className={cn("text-xl sm:text-2xl font-bold", variant.amountText)}
+          className={cn("text-xl sm:text-2xl font-extrabold", variant.amountText)}
         >
           {amount}
         </span>
@@ -192,6 +189,9 @@ const Orders = () => {
     from: new Date(),
     to: new Date(),
   });
+  const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | null>(
+    "today",
+  );
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
   const [openSubscriptionModal, setOpenSubscriptionModal] = useState(false);
@@ -248,6 +248,7 @@ const Orders = () => {
     if (preset === "week") start.setDate(now.getDate() - 7);
     if (preset === "month") start.setMonth(now.getMonth() - 1);
     setDateRange({ from: start, to: now });
+    setDatePreset(preset);
     setPage(1);
   };
 
@@ -355,7 +356,7 @@ const Orders = () => {
       {/* Header Section */}
       <div className="w-full bg-white px-2 sm:px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+          <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
             Invoices and Orders
           </p>
 
@@ -363,26 +364,35 @@ const Orders = () => {
             <div className="w-full">
               <DatePickerWithRange
                 date={dateRange}
-                onDateChange={setDateRange}
+                onDateChange={(range) => {
+                  setDateRange(range);
+                  setDatePreset(null);
+                }}
                 className="w-full sm:w-auto mx-auto sm:mx-auto"
               />
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Link href="/orders/create" className="w-full sm:w-auto">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button className="w-full sm:w-auto">
-                  {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
+                  Create
+                  <ChevronDown className="w-4 h-4 ml-1" />
                 </Button>
-              </Link>
-              <Link href="/orders/create" className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                >
-                  <Truck className="w-4 h-4 mr-2" />
-                  Create Shipping
-                </Button>
-              </Link>
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52 p-1.5">
+                <DropdownMenuItem asChild className="py-1.5">
+                  <Link href="/orders/create" className="flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5" />
+                    {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="py-1.5">
+                  <Link href="/orders/create" className="flex items-center gap-2">
+                    <Truck className="w-3.5 h-3.5" />
+                    Create Shipping
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -471,94 +481,82 @@ const Orders = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
-        {/* Tabs Header */}
-        <div className="border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-            <div className="flex">
-              <button
-                onClick={() => handleTabChange("INSTORE")}
-                className={cn(
-                  "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm cursor-pointer font-medium border-b-2 transition-all",
-                  activeTab === "INSTORE"
-                    ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
-                )}
-              >
-                Instore order
-                <span
-                  className={cn(
-                    "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
-                    activeTab === "INSTORE"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-600",
-                  )}
-                >
-                  {activeTab === "INSTORE" && instoreCount}
+      <div className="w-full flex flex-col gap-5 px-2 sm:px-4">
+        {/* Tabs Header — standalone segmented control, not part of the table */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white rounded-xl border border-grey-5 px-3 py-2.5">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleTabChange("INSTORE")}
+              className={cn(
+                "flex items-center px-4 py-2 rounded-lg text-xs sm:text-sm cursor-pointer font-bold transition-all",
+                activeTab === "INSTORE"
+                  ? "bg-secondary-6 text-primary-green-300"
+                  : "text-grey-3 hover:text-grey-2",
+              )}
+            >
+              Instore order
+              {activeTab === "INSTORE" && (
+                <span className="ml-2 text-[10px] px-2 py-1 rounded-full font-extrabold bg-primary-green-300 text-white">
+                  {instoreCount}
                 </span>
-              </button>
-              <button
-                onClick={() => handleTabChange("OUTSTORE")}
-                className={cn(
-                  "px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all",
-                  activeTab === "OUTSTORE"
-                    ? "border-blue-500 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
-                )}
-              >
-                Out-store Orders
-                <span
-                  className={cn(
-                    "ml-2 text-[10px] px-2 py-1 rounded-full font-medium",
-                    activeTab === "OUTSTORE"
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-600",
-                  )}
-                >
-                  {activeTab === "OUTSTORE" && outstoreCount}
+              )}
+            </button>
+            <button
+              onClick={() => handleTabChange("OUTSTORE")}
+              className={cn(
+                "flex items-center px-4 py-2 rounded-lg text-xs sm:text-sm font-bold cursor-pointer transition-all",
+                activeTab === "OUTSTORE"
+                  ? "bg-secondary-6 text-primary-green-300"
+                  : "text-grey-3 hover:text-grey-2",
+              )}
+            >
+              Out-store Orders
+              {activeTab === "OUTSTORE" && (
+                <span className="ml-2 text-[10px] px-2 py-1 rounded-full font-extrabold bg-primary-green-300 text-white">
+                  {outstoreCount}
                 </span>
-              </button>
-            </div>
-
-            {/* Store URL Copy Section */}
-            {findBusiness?.store_url && (
-              <div className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 w-full sm:w-auto border-t sm:border-t-0 sm:border-l border-gray-200">
-                <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 flex-1 sm:flex-none">
-                  <ExternalLink className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="text-xs text-gray-600 truncate max-w-[200px] sm:max-w-[250px]">
-                    {getStoreUrl()}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyUrl}
-                  className={cn(
-                    "text-xs transition-all flex-shrink-0",
-                    copiedUrl
-                      ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-                      : "hover:bg-blue-50 hover:border-blue-200",
-                  )}
-                >
-                  {copiedUrl ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy URL
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+              )}
+            </button>
           </div>
+
+          {/* Store URL Copy Section */}
+          {findBusiness?.store_url && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="flex items-center gap-2 bg-grey-6 rounded-lg px-3 py-2 flex-1 sm:flex-none">
+                <ExternalLink className="w-4 h-4 text-grey-4 flex-shrink-0" />
+                <span className="text-xs font-medium text-grey-3 truncate max-w-[200px] sm:max-w-[250px]">
+                  {getStoreUrl()}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyUrl}
+                className={cn(
+                  "text-xs transition-all flex-shrink-0",
+                  copiedUrl
+                    ? "bg-success-2 border-success-1/30 text-success-1 hover:bg-success-2"
+                    : "",
+                )}
+              >
+                {copiedUrl ? (
+                  <>
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 mr-1" />
+                    Copy URL
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Status sub-tabs (per spec) */}
-        <div className="border-b border-gray-200 overflow-x-auto">
+        <div className="border-b border-grey-5 overflow-x-auto">
           <div className="flex min-w-max">
             {statusTabs.map((tab) => {
               const isActive = activeStatusTab === tab.key;
@@ -567,10 +565,10 @@ const Orders = () => {
                   key={tab.key}
                   onClick={() => handleStatusTabChange(tab.key)}
                   className={cn(
-                    "px-4 py-2.5 text-xs sm:text-sm font-medium cursor-pointer border-b-2 transition-all whitespace-nowrap",
+                    "px-4 py-2.5 text-xs sm:text-sm font-bold cursor-pointer border-b-2 transition-all whitespace-nowrap",
                     isActive
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+                      ? "border-primary-green-300 text-primary-green-300"
+                      : "border-transparent text-grey-3 hover:text-grey-2 hover:border-grey-5",
                   )}
                 >
                   {tab.label}
@@ -581,62 +579,66 @@ const Orders = () => {
         </div>
 
         {/* Search and Actions Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          {/* Quick date presets */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            <button
-              onClick={() => handleDatePreset("today")}
-              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
-            >
-              Today
-            </button>
-            <button
-              onClick={() => handleDatePreset("week")}
-              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
-            >
-              This Week
-            </button>
-            <button
-              onClick={() => handleDatePreset("month")}
-              className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer"
-            >
-              This Month
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-            <div className="w-full sm:w-1/2">
-              <SearchInput
-                placeholder="Search by customer name, order ID..."
-                value={searchInput}
-                onValueChange={handleSearchChange}
-              />
-              {searchInput.length > 0 && searchInput.length < 3 && (
-                <div className="mt-1 text-xs sm:text-sm text-gray-500">
-                  Type at least 3 characters to search
-                </div>
-              )}
+        <div>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            {/* Quick date presets */}
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { key: "today", label: "Today" },
+                  { key: "week", label: "This Week" },
+                  { key: "month", label: "This Month" },
+                ] as const
+              ).map((preset) => (
+                <button
+                  key={preset.key}
+                  onClick={() => handleDatePreset(preset.key)}
+                  className={cn(
+                    "text-xs font-bold px-4 py-1.5 rounded-full border transition-colors cursor-pointer",
+                    datePreset === preset.key
+                      ? "bg-primary-green-300 border-primary-green-300 text-white"
+                      : "border-grey-5 text-grey-2 hover:bg-secondary-6",
+                  )}
+                >
+                  {preset.label}
+                </button>
+              ))}
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button
-                variant="outline"
-                className="flex-1 sm:flex-none text-xs sm:text-sm relative"
-                onClick={() => setOpenFilterModal(true)}
-              >
-                <FilterIcon className="w-4 h-4 mr-2" />
-                Filter
-                {getActiveFilterCount() > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
-                    {getActiveFilterCount()}
-                  </span>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full lg:w-auto">
+              <div className="w-full sm:w-72">
+                <SearchInput
+                  placeholder="Search by customer name, order ID..."
+                  value={searchInput}
+                  onValueChange={handleSearchChange}
+                />
+                {searchInput.length > 0 && searchInput.length < 3 && (
+                  <div className="mt-1 text-xs sm:text-sm font-medium text-grey-3">
+                    Type at least 3 characters to search
+                  </div>
                 )}
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 sm:flex-none text-xs sm:text-sm"
-              >
-                Export
-              </Button>
+              </div>
+              <div className="flex gap-2 w-full sm:w-auto shrink-0">
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none text-xs sm:text-sm relative"
+                  onClick={() => setOpenFilterModal(true)}
+                >
+                  <FilterIcon className="w-4 h-4 mr-2" />
+                  Filter
+                  {getActiveFilterCount() > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-primary-green-300 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
+                      {getActiveFilterCount()}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 sm:flex-none text-xs sm:text-sm"
+                >
+                  Export
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -647,53 +649,53 @@ const Orders = () => {
             filters.delivery_company) && (
             <div className="flex flex-wrap gap-2 mt-3">
               {filters.shipping_status && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                <div className="flex items-center gap-2 bg-secondary-6 border border-secondary-3 text-primary-green-100 px-3 py-1 rounded-full text-xs font-bold">
                   <span>Shipping: {filters.shipping_status}</span>
                   <button
                     onClick={() => {
                       setFilters((prev) => ({ ...prev, shipping_status: "" }));
                       setActiveStatusTab("ALL");
                     }}
-                    className="hover:bg-blue-100 rounded-full p-0.5"
+                    className="hover:bg-secondary-5 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {filters.payment_status && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                <div className="flex items-center gap-2 bg-secondary-6 border border-secondary-3 text-primary-green-100 px-3 py-1 rounded-full text-xs font-bold">
                   <span>Payment: {filters.payment_status}</span>
                   <button
                     onClick={() =>
                       setFilters((prev) => ({ ...prev, payment_status: "" }))
                     }
-                    className="hover:bg-blue-100 rounded-full p-0.5"
+                    className="hover:bg-secondary-5 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {filters.sales_staff && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                <div className="flex items-center gap-2 bg-secondary-6 border border-secondary-3 text-primary-green-100 px-3 py-1 rounded-full text-xs font-bold">
                   <span>Staff: {filters.sales_staff}</span>
                   <button
                     onClick={() =>
                       setFilters((prev) => ({ ...prev, sales_staff: "" }))
                     }
-                    className="hover:bg-blue-100 rounded-full p-0.5"
+                    className="hover:bg-secondary-5 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
                 </div>
               )}
               {filters.delivery_company && (
-                <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-xs">
+                <div className="flex items-center gap-2 bg-secondary-6 border border-secondary-3 text-primary-green-100 px-3 py-1 rounded-full text-xs font-bold">
                   <span>Delivery: {filters.delivery_company}</span>
                   <button
                     onClick={() =>
                       setFilters((prev) => ({ ...prev, delivery_company: "" }))
                     }
-                    className="hover:bg-blue-100 rounded-full p-0.5"
+                    className="hover:bg-secondary-5 rounded-full p-0.5"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -701,7 +703,7 @@ const Orders = () => {
               )}
               <button
                 onClick={handleResetFilters}
-                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                className="text-xs font-bold text-primary-green-300 hover:text-primary-green-100 underline"
               >
                 Clear all filters
               </button>
@@ -710,13 +712,13 @@ const Orders = () => {
         </div>
 
         {/* Card grid (replaces the previous table layout) */}
-        <div className="p-4 sm:p-6">
+        <div>
           {OrderDataLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton
                   key={index}
-                  className="h-40 w-full bg-gray-200 rounded-lg"
+                  className="h-40 w-full bg-grey-6 rounded-2xl"
                 />
               ))}
             </div>
@@ -741,7 +743,7 @@ const Orders = () => {
                 total={ordersData?.total}
                 pageSize={ordersData?.limit}
                 onPageChange={setPage}
-                className="mt-4 border-t border-gray-100"
+                className="mt-4 border-t border-grey-6"
               />
             </>
           ) : (
@@ -764,7 +766,7 @@ const Orders = () => {
         <div className="space-y-6">
           {/* Shipping Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-grey-2 mb-2">
               Shipping Status
             </label>
             <select
@@ -775,7 +777,7 @@ const Orders = () => {
                   shipping_status: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
             >
               <option value="">All Shipping Status</option>
               <option value="PENDING">Pending</option>
@@ -787,7 +789,7 @@ const Orders = () => {
 
           {/* Payment Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-grey-2 mb-2">
               Payment Status
             </label>
             <select
@@ -798,7 +800,7 @@ const Orders = () => {
                   payment_status: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
             >
               <option value="">All Payment Status</option>
               <option value="UNPAID">Unpaid</option>
@@ -809,7 +811,7 @@ const Orders = () => {
 
           {/* Sales Staff Filter (mock list) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-grey-2 mb-2">
               Sales Staff
             </label>
             <select
@@ -820,7 +822,7 @@ const Orders = () => {
                   sales_staff: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
             >
               <option value="">All Sales Staff</option>
               {MOCK_SALES_STAFF.map((staff) => (
@@ -833,7 +835,7 @@ const Orders = () => {
 
           {/* Delivery Company Filter (mock list) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-grey-2 mb-2">
               Delivery Company
             </label>
             <select
@@ -844,7 +846,7 @@ const Orders = () => {
                   delivery_company: e.target.value,
                 }))
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-green-300"
             >
               <option value="">All Delivery Companies</option>
               {MOCK_DELIVERY_COMPANIES.map((company) => (

@@ -25,11 +25,35 @@ import { InventoryItem } from "./type";
 import ViewDetails from "./ViewDetails";
 
 const statusColors = {
-  "IN-STOCK": "bg-green-100 text-green-800",
-  LOW: "bg-yellow-100 text-yellow-800",
-  "OUT-OF-STOCK": "bg-red-100 text-red-800",
-  DEFAULT: "bg-gray-100 text-gray-800",
+  "IN-STOCK": "bg-success-2 text-success-1",
+  LOW: "bg-warning-2 text-warning-1",
+  "OUT-OF-STOCK": "bg-error-2 text-error-1",
+  DEFAULT: "bg-grey-6 text-grey-2",
 };
+
+// Deterministic pastel palette for products without a real thumbnail —
+// matches the initials-avatar convention used for order/delivery partners.
+const AVATAR_PALETTE = [
+  "#fde68a",
+  "#fca5a5",
+  "#86efac",
+  "#6ee7b7",
+  "#93c5fd",
+  "#c4b5fd",
+  "#fdba74",
+  "#a5f3fc",
+  "#fecdd3",
+  "#d9f99d",
+];
+
+const hashSeed = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+};
+
+const getAvatarColor = (id: string) =>
+  AVATAR_PALETTE[hashSeed(id || "fallback") % AVATAR_PALETTE.length];
 
 export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
   console.log("User role in columns:", role);
@@ -41,9 +65,10 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       cell: ({ row }) => {
         const inventory = row.original as any;
         const thumb = getFirstProductImage(inventory);
+        const initials = (inventory.name || "??").slice(0, 2).toUpperCase();
         return (
           <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-md overflow-hidden bg-gray-100">
+            <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0">
               {thumb ? (
                 <Image
                   src={thumb}
@@ -52,23 +77,23 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">
-                  N/A
+                <div
+                  className="w-full h-full flex items-center justify-center text-xs font-extrabold text-grey-1"
+                  style={{ backgroundColor: getAvatarColor(inventory.id) }}
+                >
+                  {initials}
                 </div>
               )}
             </div>
-            <div className="font-medium flex items-center gap-1.5">
+            <div className="font-bold text-grey-1 flex items-center gap-1.5">
               {inventory.name}
               {inventory?.variations?.length > 0 && (
-                <span className="ml-2 text-xs text-gray-500">
+                <span className="ml-2 text-xs font-medium text-grey-4">
                   ({inventory?.variations.length} variants)
                 </span>
               )}
               {inventory?.watchlist && (
-                <EyeOff
-                  className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
-                  // title="On watchlist"
-                />
+                <EyeOff className="w-3.5 h-3.5 text-error-1 flex-shrink-0" />
               )}
             </div>
           </div>
@@ -85,8 +110,8 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
 
         return (
           <div
-            className={cn("font-medium", {
-              "text-red-500": isOutOfStock,
+            className={cn("font-bold text-grey-1", {
+              "text-error-1": isOutOfStock,
             })}
           >
             {isOutOfStock ? "0 (Out of stock)" : inventory.quantity}
@@ -100,7 +125,9 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       cell: ({ row }) => {
         const inventory = row.original;
         return (
-          <div className={cn("font-medium")}>{inventory.department ?? "-"}</div>
+          <div className="font-medium text-grey-3">
+            {inventory.department ?? "-"}
+          </div>
         );
       },
     },
@@ -109,7 +136,9 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       header: "Sku",
       cell: ({ row }) => {
         const inventory = row.original;
-        return <div className="font-medium">{inventory.sku ?? "-"}</div>;
+        return (
+          <div className="font-medium text-grey-3">{inventory.sku ?? "-"}</div>
+        );
       },
     },
     {
@@ -124,7 +153,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
         return (
           <span
             className={cn(
-              "px-2 py-1 rounded-full text-xs font-medium",
+              "px-2 py-1 rounded-full text-xs font-extrabold uppercase",
               statusClass,
             )}
           >
@@ -145,13 +174,17 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
           const maxPrice = Math.max(...prices);
 
           if (minPrice === maxPrice) {
-            return <div className="font-medium">{formatToNaira(minPrice)}</div>;
+            return (
+              <div className="font-bold text-grey-1">
+                {formatToNaira(minPrice)}
+              </div>
+            );
           }
 
           return (
-            <div className="font-medium">
+            <div className="font-bold text-grey-1">
               {formatToNaira(minPrice)} - {formatToNaira(maxPrice)}
-              <div className="text-xs text-gray-500">
+              <div className="text-xs font-medium text-grey-4">
                 {inventory.variations.length} variants
               </div>
             </div>
@@ -159,7 +192,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
         }
 
         return (
-          <div className="font-medium">
+          <div className="font-bold text-grey-1">
             {formatToNaira(inventory.selling_price || inventory.amount || 0)}
           </div>
         );
@@ -224,31 +257,31 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+                <button className="h-8 w-8 p-0 hover:bg-grey-6 text-grey-3 rounded-full flex items-center justify-center cursor-pointer">
                   <span className="sr-only">Open menu</span>
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
+                className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
               >
                 <DropdownMenuItem
                   onClick={openEditPriceModalFunc}
-                  className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="cursor-pointer px-4 py-2 capitalize hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                 >
                   Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={openViewDetailsFunc}
-                  className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                  className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                 >
                   <span>View more details</span>
                 </DropdownMenuItem>
                 {isProduct && (
                   <DropdownMenuItem
                     onClick={handleOpenSetDiscountModal}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     Set Discount
                   </DropdownMenuItem>
@@ -256,7 +289,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 {isProduct && (
                   <DropdownMenuItem
                     onClick={handleOpenWasteModal}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     Add Waste/Left Over
                   </DropdownMenuItem>
@@ -264,7 +297,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 {isProduct && can("return_items") && (
                   <DropdownMenuItem
                     onClick={openReturnedProductModalFunc}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     Add Returned Product
                   </DropdownMenuItem>
@@ -272,7 +305,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 {isProduct && can("damage_items") && (
                   <DropdownMenuItem
                     onClick={openDamagedProductModalFunc}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     Add Damaged Product
                   </DropdownMenuItem>
@@ -282,7 +315,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                   inventory?.raw_material && (
                     <DropdownMenuItem
                       onClick={openMoveProdModalFunc}
-                      className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                      className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                     >
                       Move to production
                     </DropdownMenuItem>
@@ -294,8 +327,8 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                     className={cn(
                       "cursor-pointer px-4 py-2 transition-colors",
                       isProduct
-                        ? "hover:bg-green-50 hover:text-green-600"
-                        : "text-red-500 opacity-50 cursor-not-allowed",
+                        ? "hover:bg-secondary-6 hover:text-primary-green-300"
+                        : "text-error-1 opacity-50 cursor-not-allowed",
                     )}
                     disabled={!isProduct}
                   >
@@ -306,7 +339,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 {can("transfer_items") && (
                   <DropdownMenuItem
                     onClick={() => setTransferProductModal(true)}
-                    className="cursor-pointer px-4 py-2 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     Transfer Product
                   </DropdownMenuItem>
@@ -314,7 +347,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
 
                 <DropdownMenuItem
                   onClick={() => setOpenDeleteProductModal(true)}
-                  className="cursor-pointer text-red-500 px-4 py-2 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
                 >
                   Delete Product
                 </DropdownMenuItem>

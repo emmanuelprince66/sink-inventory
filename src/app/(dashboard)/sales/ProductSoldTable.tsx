@@ -21,6 +21,7 @@ const ProductSoldTable = ({
         noDataText="No customers found"
         columns={columns}
         data={response?.data?.results?.data || []}
+        bordered={false}
       />
     </>
   );

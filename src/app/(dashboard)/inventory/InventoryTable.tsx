@@ -42,6 +42,7 @@ const InventoryTable = ({
   return (
     <CustomTable
       loading={loading}
+      bordered={false}
       noDataText="No Inventory found"
       columns={columns(role, can)}
       data={tableData}

@@ -29,25 +29,43 @@ const AutomatedShipping = () => {
   const [showShipbubbleSettings, setShowShipbubbleSettings] = useState(false);
   const [showShipbubbleAgreement, setShowShipbubbleAgreement] = useState(false);
 
-  // Local UI state until the backend exposes a dedicated boolean flag for
-  // Shipbubble / Chowdeck activation. The hook is still used so the cards can
-  // show "Connected" once pickup details are saved via the Configure modal.
-  const [shipbubbleOn, setShipbubbleOn] = useState(false);
+  // Chowdeck has no backend flag yet — leave it as local UI state.
   const [chowdeckOn, setChowdeckOn] = useState(false);
 
-  const { isConfigured } = useShipbubbleHook();
+  const {
+    isConfigured,
+    isShipbubbleActive,
+    setActive,
+    isSaving: isSavingShipbubble,
+  } = useShipbubbleHook();
 
+  // Toggle is the backend flag `shipbubble_settings.is_active`:
+  //  • OFF (any state) → PATCH is_active=false
+  //  • ON + not configured → open agreement → after accept, prompt the user to
+  //    set up Shipbubble in the Configure modal (we can't activate without
+  //    a complete payload)
+  //  • ON + configured → PATCH is_active=true straight away
   const handleShipbubbleToggle = (next: boolean) => {
-    if (next) {
+    if (!next) {
+      setActive(false);
+      return;
+    }
+    if (!isConfigured) {
       setShowShipbubbleAgreement(true);
       return;
     }
-    setShipbubbleOn(false);
+    setActive(true);
   };
 
   const handleAgreementAccept = () => {
-    setShipbubbleOn(true);
     setShowShipbubbleAgreement(false);
+    if (isConfigured) {
+      setActive(true);
+    } else {
+      // Need the merchant to enter pickup / category / box-size before we can
+      // send a valid shipbubble_settings payload — open the Configure modal.
+      setShowShipbubbleSettings(true);
+    }
   };
 
   return (
@@ -140,7 +158,8 @@ const AutomatedShipping = () => {
                 tagline="Nationwide & international delivery with 50+ partners"
                 logoTone="bg-rose-100 text-rose-700"
                 icon={<Truck className="w-5 h-5" />}
-                checked={shipbubbleOn}
+                checked={isShipbubbleActive}
+                disabled={isSavingShipbubble}
                 onToggle={handleShipbubbleToggle}
                 onConfigure={() => setShowShipbubbleSettings(true)}
                 isConfigured={isConfigured}
@@ -184,6 +203,7 @@ const AutomatedShipping = () => {
         open={showShipbubbleAgreement}
         onClose={() => setShowShipbubbleAgreement(false)}
         onConnect={handleAgreementAccept}
+        loading={isSavingShipbubble}
       />
     </div>
   );

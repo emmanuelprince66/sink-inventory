@@ -9,11 +9,9 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">
-              {moment(transfer.created_at).format("MMM D, YYYY h:mm A")}
-            </p>
-          </div>
+          <p className="text-sm font-medium text-grey-3">
+            {moment(transfer.created_at).format("MMM D, YYYY h:mm A")}
+          </p>
         );
       },
     },
@@ -23,9 +21,7 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.type || "-"}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3">{transfer.type || "-"}</p>
         );
       },
     },
@@ -34,14 +30,15 @@ export const useProductSoldHistoryColumns = () => {
       header: "Direction",
       cell: ({ row }) => {
         const transfer = row.original;
-        const colorClass =
-          transfer.direction === "in" ? "text-green-500" : "text-red-500";
+        const isIn = transfer.direction === "in";
         return (
-          <div className="font-medium">
-            <p className={`text-sm ${colorClass}`}>
-              {transfer.direction.toUpperCase()}
-            </p>
-          </div>
+          <span
+            className={`text-xs font-extrabold uppercase px-2 py-0.5 rounded-full ${
+              isIn ? "bg-success-2 text-success-1" : "bg-error-2 text-error-1"
+            }`}
+          >
+            {transfer.direction.toUpperCase()}
+          </span>
         );
       },
     },
@@ -51,9 +48,7 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.quantity_change}</p>
-          </div>
+          <p className="text-sm font-bold text-grey-1">{transfer.quantity_change}</p>
         );
       },
     },
@@ -63,11 +58,9 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">
-              {transfer.new_quantity || 0}
-            </p>
-          </div>
+          <p className="text-sm font-bold text-grey-1">
+            {transfer.new_quantity || 0}
+          </p>
         );
       },
     },
@@ -77,9 +70,7 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.processor || "-"}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3">{transfer.processor || "-"}</p>
         );
       },
     },
@@ -89,9 +80,7 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.moved_by || "-"}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3">{transfer.moved_by || "-"}</p>
         );
       },
     },
@@ -101,9 +90,7 @@ export const useProductSoldHistoryColumns = () => {
       cell: ({ row }) => {
         const transfer = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{transfer.pre_sale || "-"}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3">{transfer.pre_sale || "-"}</p>
         );
       },
     },

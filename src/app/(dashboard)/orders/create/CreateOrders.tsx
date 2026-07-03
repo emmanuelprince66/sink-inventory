@@ -1,5 +1,6 @@
 "use client";
 
+import { DatePicker } from "@/components/app/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,9 +29,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import CustomerDrawer from "../../pos/CustomersDrawer";
-import AssignDeliveryModal, {
-  DeliveryPartner,
-} from "../AssignDeliveryModal";
+import AssignDeliveryModal, { DeliveryPartner } from "../AssignDeliveryModal";
 import ProductDrawer from "./ProductDrawer";
 import ShippingDrawer from "./ShippingDrawer";
 
@@ -46,9 +45,8 @@ const CreateOrders = () => {
   const [selectedBank, setSelectedBank] = useState("");
   // UI-only — not added to submit payload yet.
   const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
-  const [assignedPartner, setAssignedPartner] = useState<DeliveryPartner | null>(
-    null,
-  );
+  const [assignedPartner, setAssignedPartner] =
+    useState<DeliveryPartner | null>(null);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [confirmedDeliveryPrice, setConfirmedDeliveryPrice] = useState<
     number | null
@@ -131,19 +129,27 @@ const CreateOrders = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6 mx-auto max-w-4xl px-4 sm:px-6 py-4 sm:py-6">
-      <ArrowBigLeft
-        className="cursor-pointer w-6 h-6 sm:w-8 sm:h-8"
-        onClick={() => window.history.back()}
-      />
-      <h2 className="text-lg sm:text-xl font-semibold">Order Details</h2>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 mr-4 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+        >
+          <ArrowBigLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+          Order Details
+        </h2>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-[4fr_1fr] gap-4 sm:gap-6 w-full">
           {/* Customer Dropdown */}
           <div className="space-y-2 w-full">
             <Label>Customer *</Label>
             <div
-              className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white px-3 sm:px-4 h-10 flex items-center"
+              className="hover:border-primary-green-300 cursor-pointer rounded-xl border border-grey-5 bg-white px-3 sm:px-4 h-10 flex items-center"
               onClick={() => setIsCustomerDrawerOpen(true)}
             >
               <div className="flex justify-between items-center w-full">
@@ -154,13 +160,13 @@ const CreateOrders = () => {
                 {customer?.name && (
                   <button
                     type="button"
-                    className="cursor-pointer rounded-full bg-gray-100 hover:bg-gray-200 p-1 flex-shrink-0"
+                    className="cursor-pointer rounded-full bg-grey-6 hover:bg-grey-5 p-1 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       setCustomer(null);
                     }}
                   >
-                    <Trash2 className="w-3 h-3 text-red-500 hover:text-red-900" />
+                    <Trash2 className="w-3 h-3 text-error-1 hover:text-error-1" />
                   </button>
                 )}
               </div>
@@ -170,15 +176,12 @@ const CreateOrders = () => {
           {/* Shipping Date */}
           <div className="space-y-2 w-full">
             <Label htmlFor="shippingDate">Shipping Date *</Label>
-            <div className="relative">
-              <Input
-                className="bg-white border border-gray-200 h-10 text-sm cursor-pointer"
-                type="date"
-                id="shippingDate"
-                value={shippingDate}
-                onChange={(e) => setShippingDate(e.target.value)}
-              />
-            </div>
+            <DatePicker
+              id="shippingDate"
+              value={shippingDate}
+              onChange={setShippingDate}
+              className="h-10 rounded-xl text-sm"
+            />
           </div>
         </div>
 
@@ -210,10 +213,10 @@ const CreateOrders = () => {
         <div className="space-y-4 w-full">
           <Label>Products *</Label>
           <div
-            className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-3 sm:p-4"
+            className="hover:border-primary-green-300 cursor-pointer rounded-xl border border-grey-5 bg-white p-3 sm:p-4"
             onClick={() => setIsSelectProductDrawerOpen(true)}
           >
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-grey-3">
               {selectedProducts.length > 0
                 ? `${selectedProducts.length} product(s) selected`
                 : "Click to select products"}
@@ -221,7 +224,7 @@ const CreateOrders = () => {
           </div>
 
           {selectedProducts.length > 0 && (
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+            <div className="border border-grey-5 rounded-xl divide-y divide-grey-6 overflow-hidden">
               {selectedProducts.map((product) => (
                 <div key={product.id} className="p-3 sm:p-4 space-y-3">
                   {/* Product Header with Variation Badge */}
@@ -241,14 +244,14 @@ const CreateOrders = () => {
                               {product.name}
                             </h4>
                             {hasVariations(product) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-6 text-primary-green-100 border border-secondary-4 flex-shrink-0">
                                 <Package className="w-3 h-3" />
                                 Has Variations
                               </span>
                             )}
                           </div>
                           {!hasVariations(product) && (
-                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                            <p className="text-xs sm:text-sm text-grey-4 mt-0.5">
                               ₦{getProductPrice(product).toLocaleString()} per
                               unit
                             </p>
@@ -257,23 +260,23 @@ const CreateOrders = () => {
                       </div>
                       <Button
                         type="button"
-                        className="border border-red-500 hover:bg-red-50 flex-shrink-0"
+                        className="border border-error-1 hover:bg-error-2 flex-shrink-0"
                         variant="outline"
                         size="sm"
                         onClick={() => removeProduct(product.id)}
                       >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-error-1" />
                       </Button>
                     </div>
 
                     {/* Variation Selection Section */}
                     {hasVariations(product) && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
+                      <div className="bg-secondary-6 border border-secondary-4 rounded-xl p-3 space-y-3">
                         <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-green-600" />
-                          <Label className="text-sm font-medium text-green-900">
+                          <Package className="w-4 h-4 text-primary-green-300" />
+                          <Label className="text-sm font-medium text-primary-green-100">
                             Select Variation{" "}
-                            <span className="text-red-500">*</span>
+                            <span className="text-error-1">*</span>
                           </Label>
                         </div>
                         <Select
@@ -282,7 +285,7 @@ const CreateOrders = () => {
                             handleVariationSelect(product.id, value)
                           }
                         >
-                          <SelectTrigger className="w-full bg-white border-green-300">
+                          <SelectTrigger className="w-full bg-white border-primary-green-300">
                             <SelectValue placeholder="Choose a variation..." />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -290,16 +293,16 @@ const CreateOrders = () => {
                               <SelectItem
                                 key={variation.id}
                                 value={variation.id}
-                                className="cursor-pointer hover:bg-green-50"
+                                className="cursor-pointer hover:bg-secondary-6"
                               >
                                 <div className="flex items-center justify-between w-full gap-4">
                                   <span className="font-medium">
                                     {variation.name}
                                   </span>
-                                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                                  <div className="flex items-center gap-3 text-xs text-grey-3">
                                     <span>Stock: {variation.quantity}</span>
                                     <span>•</span>
-                                    <span className="font-semibold text-green-600">
+                                    <span className="font-semibold text-primary-green-300">
                                       ₦
                                       {variation.selling_price?.toLocaleString()}
                                     </span>
@@ -310,7 +313,7 @@ const CreateOrders = () => {
                           </SelectContent>
                         </Select>
                         {selectedVariations[product.id] && (
-                          <div className="text-xs mt-2 text-green-700 bg-green-100 p-2 rounded border border-green-200">
+                          <div className="text-xs mt-2 text-primary-green-100 bg-secondary-5 p-2 rounded border border-secondary-4">
                             Selected: {getSelectedVariation(product)?.name} - ₦
                             {getProductPrice(product).toLocaleString()} per unit
                           </div>
@@ -323,7 +326,7 @@ const CreateOrders = () => {
                       selectedVariations[product.id]) && (
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <Label className="text-xs text-gray-600 mb-1 block">
+                          <Label className="text-xs text-grey-3 mb-1 block">
                             Quantity
                           </Label>
                           <Input
@@ -332,7 +335,7 @@ const CreateOrders = () => {
                             value={product.quantity || 1}
                             className={`w-full text-sm ${
                               productErrors[product.id]
-                                ? "border-red-500 focus-visible:ring-red-500"
+                                ? "border-error-1 focus-visible:ring-error-1"
                                 : ""
                             }`}
                             onChange={(e) => {
@@ -345,7 +348,7 @@ const CreateOrders = () => {
                             }
                           />
                           {productErrors[product.id] && (
-                            <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                            <p className="text-xs text-error-1 flex items-center gap-1 mt-1">
                               <AlertCircle className="w-3 h-3" />
                               {productErrors[product.id]}
                             </p>
@@ -358,18 +361,18 @@ const CreateOrders = () => {
                   {/* Discount Information */}
                   {selectedVariations[product.id] &&
                     isDiscountApplied(product) && (
-                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
-                        <BadgePercent className="w-4 h-4 text-green-600" />
+                      <div className="flex items-center gap-2 bg-secondary-6 p-2 rounded-xl border border-secondary-4">
+                        <BadgePercent className="w-4 h-4 text-primary-green-300" />
                         <div className="flex-1">
-                          <p className="text-xs text-green-700 font-medium">
+                          <p className="text-xs text-primary-green-100 font-medium">
                             Discount Applied!
                           </p>
-                          <p className="text-xs text-green-600">
+                          <p className="text-xs text-primary-green-300">
                             ₦{getProductDiscount(product).toLocaleString()} off
                             per unit
                             {getSelectedVariation(product)
                               ?.discount_threshold && (
-                              <span className="text-gray-600">
+                              <span className="text-grey-3">
                                 {" "}
                                 (Buy{" "}
                                 {
@@ -382,8 +385,8 @@ const CreateOrders = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Total saved:</p>
-                          <p className="text-sm font-semibold text-green-600">
+                          <p className="text-xs text-grey-4">Total saved:</p>
+                          <p className="text-sm font-semibold text-primary-green-300">
                             ₦
                             {(
                               getProductDiscount(product) *
@@ -399,9 +402,9 @@ const CreateOrders = () => {
                     !isDiscountApplied(product) &&
                     getSelectedVariation(product)?.discount_threshold &&
                     getSelectedVariation(product)?.discount > 0 && (
-                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
-                        <BadgePercent className="w-4 h-4 text-green-600" />
-                        <p className="text-xs text-green-700">
+                      <div className="flex items-center gap-2 bg-secondary-6 p-2 rounded-xl border border-secondary-4">
+                        <BadgePercent className="w-4 h-4 text-primary-green-300" />
+                        <p className="text-xs text-primary-green-100">
                           Buy{" "}
                           {getSelectedVariation(product).discount_threshold -
                             (product.quantity || 1)}{" "}
@@ -417,12 +420,12 @@ const CreateOrders = () => {
               ))}
 
               {/* Order Summary Section */}
-              <div className="p-3 sm:p-4 bg-gray-50 space-y-3">
+              <div className="p-3 sm:p-4 bg-grey-6 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-sm font-semibold text-grey-1">
                     Bill Summary
                   </h3>
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wide">
+                  <span className="text-[10px] text-grey-4 uppercase tracking-wide">
                     {selectedProducts.length}{" "}
                     {selectedProducts.length === 1 ? "item" : "items"}
                   </span>
@@ -438,7 +441,7 @@ const CreateOrders = () => {
                 {calculateTotalDiscount() > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Discount:</span>
-                    <span className="text-sm text-green-600">
+                    <span className="text-sm text-primary-green-300">
                       -₦{calculateTotalDiscount().toLocaleString()}
                     </span>
                   </div>
@@ -458,7 +461,7 @@ const CreateOrders = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => setTax(0)}
-                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -489,7 +492,7 @@ const CreateOrders = () => {
                               ₦{shippingFee.toLocaleString()}
                             </span>
                             {selectedShippingMethod?.location && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-grey-4">
                                 {selectedShippingMethod.location}
                               </span>
                             )}
@@ -502,7 +505,7 @@ const CreateOrders = () => {
                               setShippingFee(0);
                               setSelectedShippingMethod(null);
                             }}
-                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -513,7 +516,7 @@ const CreateOrders = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setIsShippingDrawerOpen(true)}
-                          className="border-green-500 text-green-500 hover:bg-green-50 h-6 w-6 p-0"
+                          className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-6 w-6 p-0"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -525,11 +528,13 @@ const CreateOrders = () => {
                 {/* Delivery Partner row (UI-only) */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Delivery Partner:</span>
+                    <span className="text-sm font-medium">
+                      Delivery Partner:
+                    </span>
                     <div className="flex items-center gap-2">
                       {assignedPartner ? (
                         <>
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-grey-2">
                             {assignedPartner.name}
                           </span>
                           <Button
@@ -537,7 +542,7 @@ const CreateOrders = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => setOpenAssignDelivery(true)}
-                            className="border-gray-300 h-6 px-2 text-xs"
+                            className="border-grey-5 h-6 px-2 text-xs"
                           >
                             Change
                           </Button>
@@ -546,7 +551,7 @@ const CreateOrders = () => {
                             variant="outline"
                             size="sm"
                             onClick={resetDeliveryAssignment}
-                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -557,7 +562,7 @@ const CreateOrders = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setOpenAssignDelivery(true)}
-                          className="border-green-500 text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
+                          className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-7 px-2 text-xs"
                         >
                           <Truck className="w-3 h-3 mr-1" />
                           Assign Delivery
@@ -567,7 +572,7 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <div className="flex justify-between items-center pt-2 border-t border-grey-5">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
                     ₦{calculateTotal().toLocaleString()}
@@ -576,28 +581,28 @@ const CreateOrders = () => {
 
                 {/* Logistics card — visible once a partner is assigned */}
                 {assignedPartner && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="mt-3 pt-3 border-t border-grey-5">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                      <h4 className="text-xs font-extrabold text-grey-2 uppercase tracking-wide">
                         Logistics
                       </h4>
-                      <span className="text-[10px] text-amber-600 flex items-center gap-0.5">
-                        <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
+                      <span className="text-[10px] font-bold text-warning-1 flex items-center gap-0.5">
+                        <Star className="w-2.5 h-2.5 fill-warning-1 text-warning-1" />
                         {assignedPartner.rating}
                       </span>
                     </div>
-                    <div className="flex items-start gap-3 bg-white rounded-md p-3 border border-gray-200">
-                      <div className="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700 flex-shrink-0">
+                    <div className="flex items-start gap-3 bg-white rounded-xl p-3 border border-grey-5">
+                      <div className="w-10 h-10 rounded-full bg-primary-green-100 flex items-center justify-center text-xs font-extrabold text-white flex-shrink-0">
                         {assignedPartner.logo}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-bold text-grey-1">
                           {assignedPartner.name}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs font-medium text-grey-4">
                           {assignedPartner.serviceType}
                         </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs text-gray-600">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs font-medium text-grey-3">
                           <span className="flex items-center gap-1">
                             <Phone className="w-3 h-3" />
                             {assignedPartner.contact}
@@ -609,8 +614,10 @@ const CreateOrders = () => {
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-gray-400">est. cost</p>
-                        <p className="text-sm font-semibold text-gray-900">
+                        <p className="text-xs font-medium text-grey-4">
+                          est. cost
+                        </p>
+                        <p className="text-sm font-extrabold text-grey-1">
                           ₦{assignedPartner.estimatedCost.toLocaleString()}
                         </p>
                       </div>
@@ -618,8 +625,8 @@ const CreateOrders = () => {
 
                     {/* Delivery address input — UI-only. On save we simulate
                         the backend call that returns the calculated price. */}
-                    <div className="mt-3 bg-white rounded-md p-3 border border-gray-200 space-y-2">
-                      <Label className="text-xs font-medium text-gray-700">
+                    <div className="mt-3 bg-white rounded-xl p-3 border border-grey-5 space-y-2">
+                      <Label className="text-xs font-bold text-grey-2">
                         Delivery location / address
                       </Label>
                       <div className="flex flex-col sm:flex-row gap-2">
@@ -646,7 +653,7 @@ const CreateOrders = () => {
                             isCalculatingPrice ||
                             confirmedDeliveryPrice !== null
                           }
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs h-9 px-3"
+                          className="text-xs h-9 px-3"
                         >
                           {isCalculatingPrice
                             ? "Calculating..."
@@ -657,18 +664,18 @@ const CreateOrders = () => {
                       </div>
 
                       {confirmedDeliveryPrice !== null && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
-                          <span className="text-xs text-gray-600">
+                        <div className="mt-2 pt-2 border-t border-grey-6 flex items-center justify-between">
+                          <span className="text-xs text-grey-3">
                             Calculated price:
                           </span>
-                          <span className="text-sm font-semibold text-green-700">
+                          <span className="text-sm font-semibold text-primary-green-100">
                             ₦{confirmedDeliveryPrice.toLocaleString()}
                           </span>
                         </div>
                       )}
                     </div>
 
-                    <p className="text-[10px] text-gray-400 mt-1.5 italic">
+                    <p className="text-[10px] text-grey-4 mt-1.5 italic">
                       Delivery cost not added to total yet — will be wired once
                       backend supports it.
                     </p>
@@ -751,8 +758,8 @@ const CreateOrders = () => {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-500 text-center">
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-grey-5 rounded-xl bg-grey-6">
+                        <p className="text-sm text-grey-4 text-center">
                           No bank accounts available. Please add a bank account
                           in settings.
                         </p>
@@ -774,19 +781,21 @@ const CreateOrders = () => {
             </TabsContent>
 
             <TabsContent value="partial" className="pt-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="bg-secondary-6 border border-secondary-4 rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-900">
+                  <span className="text-sm font-medium text-primary-green-100">
                     Total Amount:
                   </span>
-                  <span className="text-lg font-bold text-green-900">
+                  <span className="text-lg font-bold text-primary-green-100">
                     ₦{calculateTotal().toLocaleString()}
                   </span>
                 </div>
                 {amountPaid > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-700">Remaining Balance:</span>
-                    <span className="font-semibold text-green-700">
+                    <span className="text-primary-green-100">
+                      Remaining Balance:
+                    </span>
+                    <span className="font-semibold text-primary-green-100">
                       ₦{(calculateTotal() - amountPaid).toLocaleString()}
                     </span>
                   </div>
@@ -812,7 +821,7 @@ const CreateOrders = () => {
                     className="w-full"
                   />
                   {amountPaid > 0 && amountPaid >= calculateTotal() && (
-                    <p className="text-xs text-red-500">
+                    <p className="text-xs text-error-1">
                       Partial amount must be less than total amount
                     </p>
                   )}
@@ -863,8 +872,8 @@ const CreateOrders = () => {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-500 text-center">
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-grey-5 rounded-xl bg-grey-6">
+                        <p className="text-sm text-grey-4 text-center">
                           No bank accounts available. Please add a bank account
                           in settings.
                         </p>
@@ -900,11 +909,11 @@ const CreateOrders = () => {
         </div>
 
         {hasQuantityErrors() && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-error-2 border border-error-1/30 rounded-xl p-4 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-error-1 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-800">Quantity Error</p>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-sm font-medium text-error-1">Quantity Error</p>
+              <p className="text-xs text-error-1 mt-1">
                 Please adjust product quantities to available stock levels
                 before submitting.
               </p>

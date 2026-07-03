@@ -16,7 +16,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Product Name
@@ -26,7 +26,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
     },
     cell: ({ row }) => {
       const item = row.original;
-      return <div className="font-medium text-gray-900">{item.name}</div>;
+      return <div className="font-medium text-grey-1">{item.name}</div>;
     },
   },
   {
@@ -35,7 +35,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
     cell: ({ row }) => {
       const item = row.original;
       return (
-        <div className="text-sm text-gray-600 font-mono">{item.sku || "-"}</div>
+        <div className="text-sm text-grey-3 font-mono">{item.sku || "-"}</div>
       );
     },
   },
@@ -44,7 +44,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Quantity
@@ -56,7 +56,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
       const item = row.original;
       const quantity = parseFloat(item.quantity);
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-2 text-info-1">
           {quantity} units
         </span>
       );
@@ -67,7 +67,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
@@ -79,9 +79,9 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
       const item = row.original;
       const date = new Date(item.date);
       return (
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-grey-3">
           <div className="font-medium">{format(date, "MMM dd, yyyy")}</div>
-          <div className="text-xs text-gray-400">{format(date, "HH:mm")}</div>
+          <div className="text-xs text-grey-4">{format(date, "HH:mm")}</div>
         </div>
       );
     },
@@ -93,10 +93,10 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
       const item = row.original;
       return (
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-semibold text-sm">
+          <div className="w-8 h-8 rounded-full bg-primary-green-300/10 flex items-center justify-center text-primary-green-300 font-semibold text-sm">
             {item.user.name.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm text-gray-700">{item.user.name}</span>
+          <span className="text-sm text-grey-2">{item.user.name}</span>
         </div>
       );
     },
@@ -108,7 +108,7 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
       const item = row.original;
       return (
         <div
-          className="text-sm text-gray-600 max-w-xs truncate"
+          className="text-sm text-grey-3 max-w-xs truncate"
           title={item.remark || ""}
         >
           {item.remark || "-"}
