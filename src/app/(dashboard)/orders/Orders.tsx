@@ -24,8 +24,8 @@ import {
   FileText,
   Filter as FilterIcon,
   ShoppingCart,
-  Truck,
   TrendingUp,
+  Truck,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -141,7 +141,7 @@ const CustomOrderCard = ({
 
   if (loading) {
     return (
-      <CustomCard className={cn("p-4 w-full border-grey-5", className)}>
+      <CustomCard className={cn("p-4 w-full border-none", className)}>
         <div className="flex flex-col gap-4 sm:gap-6 items-start">
           <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-5" />
           <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
@@ -166,7 +166,10 @@ const CustomOrderCard = ({
       </div>
       <div className="mt-3 sm:mt-4">
         <span
-          className={cn("text-xl sm:text-2xl font-extrabold", variant.amountText)}
+          className={cn(
+            "text-xl sm:text-2xl font-extrabold",
+            variant.amountText,
+          )}
         >
           {amount}
         </span>
@@ -180,9 +183,9 @@ const Orders = () => {
     from: new Date(),
     to: new Date(),
   });
-  const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | null>(
-    "today",
-  );
+  const [datePreset, setDatePreset] = useState<
+    "today" | "week" | "month" | null
+  >("today");
   const [searchInput, setSearchInput] = useState("");
   const [openCreateOrderModal, setOpenCreateOrderModal] = useState(false);
   const [openSubscriptionModal, setOpenSubscriptionModal] = useState(false);
@@ -300,15 +303,14 @@ const Orders = () => {
   };
 
   // Fetch orders data with filters
-  const { OrderData, OrderDataLoading, findBusiness } =
-    useOrdersHook({
-      page,
-      searchInput: searchInput.length >= 3 ? searchInput : "",
-      order_type: activeTab, // Use active tab for order_type
-      shipping_status: filters.shipping_status,
-      payment_status: filters.payment_status,
-      dateRange,
-    });
+  const { OrderData, OrderDataLoading, findBusiness } = useOrdersHook({
+    page,
+    searchInput: searchInput.length >= 3 ? searchInput : "",
+    order_type: activeTab, // Use active tab for order_type
+    shipping_status: filters.shipping_status,
+    payment_status: filters.payment_status,
+    dateRange,
+  });
 
   console.log("findBusiness", findBusiness);
 
@@ -371,13 +373,21 @@ const Orders = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52 p-1.5">
                 <DropdownMenuItem asChild className="py-1.5">
-                  <Link href="/orders/create" className="flex items-center gap-2">
+                  <Link
+                    href="/orders/create"
+                    className="flex items-center gap-2"
+                  >
                     <FileText className="w-3.5 h-3.5" />
-                    {activeTab === "INSTORE" ? "Create Invoice" : "Create Order"}
+                    {activeTab === "INSTORE"
+                      ? "Create Invoice"
+                      : "Create Order"}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="py-1.5">
-                  <Link href="/orders/create" className="flex items-center gap-2">
+                  <Link
+                    href="/orders/create"
+                    className="flex items-center gap-2"
+                  >
                     <Truck className="w-3.5 h-3.5" />
                     Create Shipping
                   </Link>
@@ -709,7 +719,7 @@ const Orders = () => {
               {Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton
                   key={index}
-                  className="h-40 w-full bg-grey-6 rounded-2xl"
+                  className="h-40 w-full bg-grey-5 rounded-2xl"
                 />
               ))}
             </div>
