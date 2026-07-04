@@ -1,5 +1,5 @@
 "use client";
-import { AlertCircle, Megaphone, Plus, Users, Wallet } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -14,7 +14,7 @@ import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { formatToNaira } from "@/utils/formatMoney";
 import Link from "next/link";
-import { ReactNode, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
 
@@ -24,50 +24,29 @@ interface CustomerCardData {
   type: "wallet" | "debt" | "customers";
 }
 
-const CUSTOMER_CARD_STYLES: Record<
-  CustomerCardData["type"],
-  { bg: string; iconColor: string; icon: ReactNode }
-> = {
-  wallet: {
-    bg: "bg-info-2",
-    iconColor: "text-info-1",
-    icon: <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />,
-  },
-  debt: {
-    bg: "bg-error-2",
-    iconColor: "text-error-1",
-    icon: <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />,
-  },
-  customers: {
-    bg: "bg-success-2",
-    iconColor: "text-success-1",
-    icon: <Users className="w-4 h-4 sm:w-5 sm:h-5" />,
-  },
+// Plain white bordered cards, no icons — matches the Figma reference exactly
+// (Convert Mobile Screens to Desktop/src/app/App.tsx CustomersScreen).
+const CUSTOMER_CARD_VALUE_COLOR: Record<CustomerCardData["type"], string> = {
+  wallet: "text-primary-green-100",
+  debt: "text-error-1",
+  customers: "text-grey-1",
 };
 
 const CustomCustomerCard = ({ title, amount, type }: CustomerCardData) => {
-  const variant = CUSTOMER_CARD_STYLES[type];
-
   return (
     <CustomCard
-      className={cn(
-        variant.bg,
-        "p-4 sm:p-5 w-full rounded-2xl border-none transition-all",
-      )}
+      className="w-full rounded-2xl border border-border-tint bg-white p-0"
+      contentClassName="p-5"
     >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="p-1.5 sm:p-2 rounded-xl bg-white/60">
-          <span className={variant.iconColor}>{variant.icon}</span>
-        </div>
-        <span className={cn("text-xs sm:text-sm font-bold", variant.iconColor)}>
-          {title}
-        </span>
-      </div>
-      <div className="mt-3 sm:mt-4">
-        <span className="text-xl sm:text-2xl font-extrabold text-grey-1">
-          {amount}
-        </span>
-      </div>
+      <p className="text-sm font-semibold text-grey-3">{title}</p>
+      <p
+        className={cn(
+          "text-2xl font-extrabold mt-1",
+          CUSTOMER_CARD_VALUE_COLOR[type],
+        )}
+      >
+        {amount}
+      </p>
     </CustomCard>
   );
 };
@@ -103,7 +82,7 @@ const Customers = () => {
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-grey-1">

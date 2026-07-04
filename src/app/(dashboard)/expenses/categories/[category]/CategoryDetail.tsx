@@ -173,7 +173,7 @@ const CategoryDetail = ({ categoryParam }: CategoryDetailProps) => {
         : "bg-emerald-500";
 
   return (
-    <div className="w-full h-full flex flex-col gap-5 px-2 sm:px-4 pb-12">
+    <div className="w-full h-full flex flex-col gap-5 pb-12">
       {/* Header — back + title + actions */}
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">

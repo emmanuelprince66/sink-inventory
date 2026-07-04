@@ -69,19 +69,19 @@ const INVENTORY_CARD_STYLES: Record<
   { bg: string; iconColor: string; icon: ReactNode }
 > = {
   value: {
-    bg: "bg-info-2",
+    bg: "bg-[#e0e7ff]",
     iconColor: "text-info-1",
-    icon: <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />,
+    icon: <TrendingUp className="w-4 h-4" />,
   },
   profit: {
     bg: "bg-success-2",
     iconColor: "text-success-1",
-    icon: <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />,
+    icon: <DollarSign className="w-4 h-4" />,
   },
   other: {
     bg: "bg-warning-2",
     iconColor: "text-warning-1",
-    icon: <Tag className="w-4 h-4 sm:w-5 sm:h-5" />,
+    icon: <Tag className="w-4 h-4" />,
   },
 };
 
@@ -97,23 +97,18 @@ const CustomInventoryCard = ({
     <CustomCard
       className={cn(
         variant.bg,
-        "p-4 sm:p-5 w-full rounded-2xl border-none transition-all",
+        "w-full rounded-2xl border-none transition-all p-0",
         className,
       )}
+      contentClassName="p-4 sm:p-5 flex flex-col gap-3"
     >
-      <div className="flex items-center gap-2 sm:gap-3">
-        <div className="p-1.5 sm:p-2 rounded-xl bg-white/60">
-          <span className={variant.iconColor}>{variant.icon}</span>
-        </div>
-        <span className={cn("text-xs sm:text-sm font-bold", variant.iconColor)}>
+      <div className="flex items-center gap-2">
+        <span className={variant.iconColor}>{variant.icon}</span>
+        <span className={cn("text-xs font-bold", variant.iconColor)}>
           {title}
         </span>
       </div>
-      <div className="mt-3 sm:mt-4">
-        <span className="text-xl sm:text-2xl font-extrabold text-grey-1">
-          {amount}
-        </span>
-      </div>
+      <span className="text-2xl font-extrabold text-grey-1">{amount}</span>
     </CustomCard>
   );
 };
@@ -259,16 +254,13 @@ const Inventory = () => {
               {/* Add New dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="flex-1 sm:flex-none bg-primary-green-300 hover:bg-primary-green-300/90 text-white px-4 py-2 text-sm font-medium gap-1.5">
+                  <Button className="flex-1 sm:flex-none bg-primary-green-300 hover:bg-primary-green-300/90 text-white px-4 py-2 text-sm gap-1.5">
                     <Plus className="w-4 h-4" />
                     Add New
                     <ChevronDown className="w-4 h-4 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-white border border-grey-5 shadow-lg min-w-[200px]"
-                >
+                <DropdownMenuContent align="end" className="min-w-[200px]">
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -302,7 +294,7 @@ const Inventory = () => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-grey-5 text-grey-2 hover:bg-grey-6 px-3 py-2 text-sm font-medium gap-1.5"
+                    className="border-grey-5 text-grey-2 hover:bg-grey-6 px-3 py-2 text-sm gap-1.5"
                   >
                     <MoreHorizontal className="w-4 h-4" />
                     <span className="hidden sm:inline">More</span>
@@ -310,7 +302,7 @@ const Inventory = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="bg-white border border-grey-5 shadow-lg min-w-[200px] p-0"
+                  className="min-w-[200px] p-0"
                 >
                   {/* Download Report temporarily disabled — re-enable when ready.
                   <div className="px-2 py-1.5">
@@ -376,9 +368,9 @@ const Inventory = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-2xl shadow-sm border border-grey-5 bg-white overflow-hidden">
+      <div className="w-full  overflow-hidden">
         {/* Tabs Header */}
-        <div className="border-b border-grey-5 px-4 sm:px-6">
+        <div className="border-b border-grey-5">
           <div className="flex items-center gap-6">
             <button
               onClick={() => handleTabChange("PRODUCT")}
@@ -432,7 +424,7 @@ const Inventory = () => {
         </div>
 
         {/* Categories and Search Header */}
-        <div className="p-4 sm:p-6 border-b border-grey-5 bg-white w-full overflow-hidden">
+        <div className="py-4 sm:py-6 border-b border-grey-5 w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
             <h2 className="text-base sm:text-lg font-extrabold text-grey-1">
               {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
@@ -457,18 +449,18 @@ const Inventory = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="text-grey-2 border-grey-5 hover:bg-grey-6 w-full sm:w-auto relative"
+                      className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 rounded-xl text-sm w-full sm:w-auto relative"
                     >
                       <Filter className="w-4 h-4 mr-2" />
                       <span className="whitespace-nowrap">Filters</span>
                       {getActiveFiltersCount() > 0 && (
-                        <span className="ml-2 bg-primary-green-300 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                        <span className="absolute -top-2 -right-2 bg-primary-green-300 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
                           {getActiveFiltersCount()}
                         </span>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="text-sm font-semibold">
                       Product Settings
                     </DropdownMenuLabel>
@@ -558,7 +550,7 @@ const Inventory = () => {
                   <Link href={"/categories"} className="w-full sm:w-auto">
                     <Button
                       variant="outline"
-                      className="text-primary-green-300 border-secondary-4 hover:bg-secondary-6 w-full sm:w-auto"
+                      className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 w-full sm:w-auto"
                     >
                       Manage Category
                     </Button>
@@ -621,7 +613,7 @@ const Inventory = () => {
                       >
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedDepartmentId === null
                               ? "bg-primary-green-300 text-white shadow-sm"
                               : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -634,7 +626,7 @@ const Inventory = () => {
                           <button
                             key={department.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-full transition-all whitespace-nowrap flex-shrink-0 capitalize",
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0 capitalize",
                               selectedDepartmentId === department.id
                                 ? "bg-primary-green-300 text-white shadow-sm"
                                 : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -673,7 +665,7 @@ const Inventory = () => {
                       >
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
                               ? "bg-primary-green-300 text-white shadow-sm"
                               : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -686,7 +678,7 @@ const Inventory = () => {
                           <button
                             key={category.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0 capitalize",
                               selectedCategoryId === category.id
                                 ? "bg-primary-green-300 text-white shadow-sm"
                                 : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",

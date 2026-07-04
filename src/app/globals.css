@@ -127,6 +127,10 @@
   --color-grey-4: #9ca3af;
   --color-grey-5: #d1d5db;
   --color-grey-6: #f3f4f6;
+
+  /* Translucent card/tab border used throughout the Figma reference (App.tsx / theme.css --border),
+     softer than the solid grey-5 border we'd been using on cards. */
+  --color-border-tint: rgba(27, 50, 40, 0.08);
 }
 
 :root {

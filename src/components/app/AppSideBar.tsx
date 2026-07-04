@@ -77,7 +77,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsStoreOpen(!isStoreOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
                           <Store className="mr-3 h-4 w-4" />
@@ -145,13 +145,11 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsInventoryOpen(!isInventoryOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
                           <Package className="mr-3 h-4 w-4" />
-                          <span className="text-sm font-semibold">
-                            Stock Management
-                          </span>
+                          <span className="text-sm font-semibold">Stock</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -215,7 +213,7 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsOperationsOpen(!isOperationsOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
                           <Settings className="mr-3 h-4 w-4" />

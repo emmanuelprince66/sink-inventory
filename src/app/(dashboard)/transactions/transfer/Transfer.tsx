@@ -129,7 +129,7 @@ const Transfer = () => {
   }
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6 items-center">
+    <div className="w-full flex flex-col gap-6 items-center">
       <div className="w-full md:w-[60%]">
         <button
           onClick={() => history.back()}

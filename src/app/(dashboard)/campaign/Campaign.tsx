@@ -65,7 +65,7 @@ const Campaign = () => {
   console.log("businessData", businessData);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-0">
         <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">

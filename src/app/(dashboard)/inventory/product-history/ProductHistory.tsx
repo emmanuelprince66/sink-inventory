@@ -91,7 +91,7 @@ const ProductHistory = () => {
   const formatCurrency = (value: number) => formatToNaira(value);
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
       <div>
         <h1 className="text-xl sm:text-2xl font-extrabold text-grey-1">
           Product History

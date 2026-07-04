@@ -90,7 +90,7 @@ const Analytics = () => {
   // };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-2 sm:px-2 lg:px-0">
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
       <div className="w-full">
         {/* Header Section */}
         <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">

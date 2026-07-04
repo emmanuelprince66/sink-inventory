@@ -220,7 +220,7 @@ const Logistics = () => {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col gap-5 px-2 sm:px-4">
+    <div className="w-full h-full flex flex-col gap-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>

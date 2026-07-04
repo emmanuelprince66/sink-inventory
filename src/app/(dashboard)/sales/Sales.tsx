@@ -21,11 +21,15 @@ import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
-  AlertCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
+  Percent,
+  Receipt,
   Settings,
+  Tag,
+  TrendingUp,
   Users,
   Wallet,
 } from "lucide-react";
@@ -71,40 +75,40 @@ const SALES_CARD_STYLES: Record<
   { bg: string; iconColor: string; icon: React.ReactNode }
 > = {
   Revenue: {
-    bg: "bg-info-2",
+    bg: "bg-[#eff6ff]",
     iconColor: "text-info-1",
-    icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+    icon: <CreditCard className="w-[15px] h-[15px]" />,
   },
   "Product Cost": {
     bg: "bg-warning-2",
     iconColor: "text-warning-1",
-    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+    icon: <Tag className="w-[15px] h-[15px]" />,
   },
   "Items Sold": {
-    bg: "bg-secondary-6",
-    iconColor: "text-primary-green-300",
-    icon: <Users className="w-4 sm:w-5 h-4 sm:h-5" />,
+    bg: "bg-[#f5f3ff]",
+    iconColor: "text-[#7c3aed]",
+    icon: <Users className="w-[15px] h-[15px]" />,
   },
   "Total Discount": {
-    bg: "bg-error-2",
-    iconColor: "text-error-1",
-    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+    bg: "bg-[#f5f3ff]",
+    iconColor: "text-[#7c3aed]",
+    icon: <Percent className="w-[15px] h-[15px]" />,
   },
   Profit: {
     bg: "bg-success-2",
     iconColor: "text-success-1",
-    icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+    icon: <TrendingUp className="w-[15px] h-[15px]" />,
   },
   VAT: {
     bg: "bg-warning-2",
     iconColor: "text-warning-1",
-    icon: <AlertCircle className="w-4 sm:w-5 h-4 sm:h-5" />,
+    icon: <Receipt className="w-[15px] h-[15px]" />,
   },
 };
 const DEFAULT_SALES_CARD_STYLE = {
   bg: "bg-grey-6",
   iconColor: "text-grey-3",
-  icon: <Wallet className="w-4 sm:w-5 h-4 sm:h-5" />,
+  icon: <Wallet className="w-[15px] h-[15px]" />,
 };
 
 const CustomSalesCard = ({
@@ -123,38 +127,26 @@ const CustomSalesCard = ({
   return (
     <CustomCard
       className={cn(
-        "p-4 sm:p-5 rounded-2xl border-none transition-all w-full h-full",
+        "rounded-2xl border-none transition-all w-full h-full p-0 relative",
         cardStyle.bg,
       )}
+      contentClassName="p-4 sm:p-5 flex flex-col gap-3 h-full"
     >
-      <div className="flex flex-col gap-1 sm:gap-2 h-full justify-between">
-        <div className="flex justify-between items-start w-full">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1 sm:p-2 rounded-xl bg-white/60">
-              <span className={cardStyle.iconColor}>{cardStyle.icon}</span>
-            </div>
-            <span
-              className={cn(
-                "text-xs sm:text-sm font-bold",
-                cardStyle.iconColor,
-              )}
-            >
-              {title}
-            </span>
-          </div>
-          {type === "discount" && (
-            <p
-              onClick={func}
-              className="text-xs font-bold hover:underline cursor-pointer text-primary-green-300"
-            >
-              View More
-            </p>
-          )}
-        </div>
-        <p className="text-lg sm:text-2xl font-extrabold text-grey-1">
-          {amount}
-        </p>
+      <div className="flex items-center gap-2">
+        <span className={cardStyle.iconColor}>{cardStyle.icon}</span>
+        <span className={cn("text-xs font-bold", cardStyle.iconColor)}>
+          {title}
+        </span>
       </div>
+      <p className="text-2xl font-extrabold text-grey-1">{amount}</p>
+      {type === "discount" && (
+        <p
+          onClick={func}
+          className="absolute top-4 sm:top-5 right-4 sm:right-5 text-xs font-bold hover:underline cursor-pointer text-primary-green-300"
+        >
+          View More
+        </p>
+      )}
     </CustomCard>
   );
 };
@@ -355,7 +347,7 @@ const Sales = () => {
 
         {/* Overview Cards - Updated Responsive Version */}
         <div className="mb-4 sm:mb-6">
-          <p className="text-sm font-bold text-primary-green-300 border-b border-grey-6 pb-2 mb-3 sm:mb-4">
+          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-2 mb-3 sm:mb-4">
             Overview
           </p>
 
@@ -496,18 +488,23 @@ const Sales = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-2xl shadow-sm border border-grey-5 bg-white overflow-hidden">
+      <div className="w-full rounded-2xl shadow-sm border border-border-tint bg-white overflow-hidden">
         {/* Tabs Header */}
-        <div className="px-4 sm:px-6 pt-4 sm:pt-6 w-full">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
-            <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-              <h2 className="text-base sm:text-lg font-extrabold text-grey-1 flex items-center gap-2">
+        <div className="pt-4 sm:pt-6 w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 px-4 sm:px-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-sm font-extrabold text-grey-1">
                 {activeTab === "products" ? "Sales Analytics" : "Order History"}
-                <Settings className="w-3.5 h-3.5 text-grey-4" />
-              </h2>
+              </p>
+              <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-grey-6 text-grey-4 transition-colors cursor-pointer"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
 
               {/* Combo Sales Toggle */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 ml-2">
                 <Switch
                   id="combo-toggle"
                   checked={showComboSales}
@@ -515,7 +512,7 @@ const Sales = () => {
                 />
                 <label
                   htmlFor="combo-toggle"
-                  className="text-sm font-bold text-grey-2 cursor-pointer"
+                  className="text-xs font-semibold text-grey-3 cursor-pointer"
                 >
                   View Combo Sales
                 </label>
@@ -540,11 +537,11 @@ const Sales = () => {
               }
               className="w-full"
             >
-              <div className="flex items-center gap-4 w-full border-b border-grey-5">
+              <div className="flex items-center border-b border-border-tint px-4 sm:px-6">
                 <button
                   onClick={() => setActiveTab("products")}
                   className={cn(
-                    "pb-2 border-b-2 font-bold text-xs sm:text-sm cursor-pointer transition-colors",
+                    "px-4 py-3 text-sm font-bold border-b-2 cursor-pointer transition-colors mr-2",
                     activeTab === "products"
                       ? "border-primary-green-300 text-primary-green-300"
                       : "border-transparent text-grey-3 hover:text-grey-2",
@@ -555,7 +552,7 @@ const Sales = () => {
                 <button
                   onClick={() => setActiveTab("history")}
                   className={cn(
-                    "pb-2 border-b-2 font-bold text-xs sm:text-sm cursor-pointer transition-colors",
+                    "px-4 py-3 text-sm font-bold border-b-2 cursor-pointer transition-colors",
                     activeTab === "history"
                       ? "border-primary-green-300 text-primary-green-300"
                       : "border-transparent text-grey-3 hover:text-grey-2",
@@ -566,7 +563,7 @@ const Sales = () => {
               </div>
 
               {searchInput.length > 0 && searchInput.length < 3 && (
-                <div className="mt-2 text-xs sm:text-sm font-medium text-grey-3">
+                <div className="mt-2 text-xs font-medium text-grey-3 px-4 sm:px-6">
                   Type at least 3 characters to search
                 </div>
               )}
@@ -574,12 +571,12 @@ const Sales = () => {
               {/* Products Tab Content */}
               <TabsContent value="products" className="mt-4 sm:mt-6">
                 {/* Product Filter Options */}
-                <div className="flex gap-2 sm:gap-3  sm:mb-4 overflow-x-auto pb-2 border-b border-grey-5 pb-4">
+                <div className="flex gap-2 sm:gap-3 flex-wrap px-4 sm:px-6 pb-4 border-b border-border-tint">
                   {productFilterOptions.map((filter) => (
                     <button
                       key={filter}
                       className={cn(
-                        "px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap cursor-pointer",
+                        "px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer",
                         activeProductFilter === filter
                           ? "bg-primary-green-300 text-white"
                           : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -593,7 +590,7 @@ const Sales = () => {
 
                 {/* Categories Tabs */}
                 {CategoriesDataLoading || !CategoriesData ? (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+                  <div className="flex gap-2 overflow-x-auto pb-2 px-4 sm:px-6 pt-4">
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton
                         key={index}
@@ -602,7 +599,7 @@ const Sales = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="w-full mb-3 sm:mb-4">
+                  <div className="w-full mb-3 sm:mb-4 px-4 sm:px-6 pt-4">
                     <div className="flex items-center w-full">
                       {/* Left Navigation Button */}
                       {canScrollLeft && (
@@ -632,7 +629,7 @@ const Sales = () => {
                         {/* All Tab */}
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 text-xs font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
                               ? "bg-primary-green-300 text-white"
                               : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -647,7 +644,7 @@ const Sales = () => {
                           <button
                             key={category.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                              "px-3 sm:px-4 py-1.5 text-xs cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0",
                               selectedCategoryId === category.id
                                 ? "bg-primary-green-300 text-white"
                                 : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -681,12 +678,12 @@ const Sales = () => {
 
               {/* Order History Tab Content */}
               <TabsContent value="history" className="mt-4 sm:mt-6">
-                <div className="flex gap-2 sm:gap-3 mb-3 sm:mb-4 overflow-x-auto  border-b border-grey-5 pb-4">
+                <div className="flex gap-2 sm:gap-3 flex-wrap px-4 sm:px-6 pb-4">
                   {orderFilterOptions.map((filter) => (
                     <button
                       key={filter}
                       className={cn(
-                        "px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-colors whitespace-nowrap cursor-pointer",
+                        "px-3 sm:px-4 py-1.5 rounded-full text-xs font-bold transition-colors whitespace-nowrap cursor-pointer",
                         activeOrderFilter === filter
                           ? "bg-primary-green-300 text-white"
                           : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",

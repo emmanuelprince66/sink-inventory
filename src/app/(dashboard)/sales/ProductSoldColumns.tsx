@@ -29,11 +29,13 @@ export const useSalesColumns = () => {
     },
     {
       accessorKey: "unit_sold",
-      header: "Unit Sold",
+      header: () => <div className="w-full text-right">Unit Sold</div>,
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <p className="text-sm font-bold text-primary-green-300">{product.unit_sold}</p>
+          <p className="text-sm font-bold text-primary-green-300 text-right">
+            {product.unit_sold}
+          </p>
         );
       },
     },
@@ -52,11 +54,11 @@ export const useSalesColumns = () => {
     // },
     {
       accessorKey: "revenue",
-      header: "Revenue",
+      header: () => <div className="w-full text-right">Revenue</div>,
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <p className="text-sm font-bold text-primary-green-300">
+          <p className="text-sm font-bold text-primary-green-300 text-right">
             {formatToNaira(product.revenue)}
           </p>
         );
@@ -64,10 +66,14 @@ export const useSalesColumns = () => {
     },
     {
       accessorKey: "vat",
-      header: "VAT",
+      header: () => <div className="w-full text-right">VAT</div>,
       cell: ({ row }) => {
         const product = row.original;
-        return <p className="text-sm font-medium text-grey-3">{product?.tax}</p>;
+        return (
+          <p className="text-sm font-medium text-grey-3 text-right">
+            {product?.tax}
+          </p>
+        );
       },
     },
     // Conditionally include profit column
@@ -75,14 +81,14 @@ export const useSalesColumns = () => {
       ? [
           {
             accessorKey: "profit",
-            header: "Profit",
+            header: () => <div className="w-full text-right">Profit</div>,
             cell: ({ row }: { row: { original: SalesDataItem } }) => {
               const product = row.original;
               const profit = product.profit;
               const isPositive = profit >= 0;
               return (
                 <p
-                  className={`text-sm font-bold ${
+                  className={`text-sm font-bold text-right ${
                     isPositive ? "text-primary-green-300" : "text-error-1"
                   }`}
                 >
@@ -95,10 +101,14 @@ export const useSalesColumns = () => {
       : []),
     {
       accessorKey: "sku",
-      header: "SKU",
+      header: () => <div className="w-full text-right">SKU</div>,
       cell: ({ row }) => {
         const product = row.original;
-        return <p className="text-sm font-medium text-grey-3">{product?.sku}</p>;
+        return (
+          <p className="text-sm font-medium text-grey-3 text-right">
+            {product?.sku}
+          </p>
+        );
       },
     },
 
@@ -106,12 +116,14 @@ export const useSalesColumns = () => {
       ? [
           {
             accessorKey: "Discount",
-            header: "Discount",
+            header: () => <div className="w-full text-right">Discount</div>,
             cell: ({ row }: { row: { original: SalesDataItem } }) => {
               const product = row.original;
 
               return (
-                <p className="text-sm font-medium text-grey-3">{product.discount}</p>
+                <p className="text-sm font-medium text-grey-3 text-right">
+                  {product.discount}
+                </p>
               );
             },
           },

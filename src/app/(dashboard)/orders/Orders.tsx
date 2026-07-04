@@ -106,32 +106,32 @@ const CustomOrderCard = ({
 }: CustomOrderCardProps) => {
   const variants = {
     total: {
-      bg: "bg-info-2",
-      icon: <ShoppingCart className="w-4 h-4 text-info-1" />,
+      bg: "bg-[#eff6ff]",
+      icon: <ShoppingCart className="w-[18px] h-[18px] text-info-1" />,
       text: "text-info-1",
       amountText: "text-grey-1",
     },
     completed: {
       bg: "bg-success-2",
-      icon: <CheckCircle className="w-4 h-4 text-success-1" />,
+      icon: <CheckCircle className="w-[18px] h-[18px] text-success-1" />,
       text: "text-success-1",
       amountText: "text-grey-1",
     },
     revenue: {
       bg: "bg-pink-50",
-      icon: <TrendingUp className="w-4 h-4 text-pink-600" />,
+      icon: <TrendingUp className="w-[18px] h-[18px] text-pink-600" />,
       text: "text-pink-600",
       amountText: "text-grey-1",
     },
     visits: {
       bg: "bg-orange-50",
-      icon: <ArrowDownLeft className="w-4 h-4 text-orange-500" />,
+      icon: <ArrowDownLeft className="w-[18px] h-[18px] text-orange-500" />,
       text: "text-orange-500",
       amountText: "text-grey-1",
     },
     cost: {
       bg: "bg-warning-2",
-      icon: <Truck className="w-4 h-4 text-warning-1" />,
+      icon: <Truck className="w-[18px] h-[18px] text-warning-1" />,
       text: "text-warning-1",
       amountText: "text-grey-1",
     },
@@ -141,11 +141,12 @@ const CustomOrderCard = ({
 
   if (loading) {
     return (
-      <CustomCard className={cn("p-4 w-full border-none", className)}>
-        <div className="flex flex-col gap-4 sm:gap-6 items-start">
-          <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-5" />
-          <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
-        </div>
+      <CustomCard
+        className={cn("w-full rounded-2xl border-none p-0", className)}
+        contentClassName="p-4 flex flex-col gap-3 items-start"
+      >
+        <Skeleton className="h-4 w-[100px] bg-grey-5" />
+        <Skeleton className="h-6 w-[70px] bg-grey-5" />
       </CustomCard>
     );
   }
@@ -154,26 +155,18 @@ const CustomOrderCard = ({
     <CustomCard
       className={cn(
         variant.bg,
-        "p-4 sm:p-5 w-full rounded-2xl border-none transition-all",
+        "w-full rounded-2xl border-none transition-all p-0",
         className,
       )}
+      contentClassName="p-4 flex flex-col gap-3"
     >
-      <div className="flex justify-between items-center gap-2">
-        <span className={cn("text-xs sm:text-sm font-bold", variant.text)}>
-          {title}
-        </span>
+      <div className="flex items-center justify-between">
+        <p className={cn("text-xs font-bold", variant.text)}>{title}</p>
         {variant.icon}
       </div>
-      <div className="mt-3 sm:mt-4">
-        <span
-          className={cn(
-            "text-xl sm:text-2xl font-extrabold",
-            variant.amountText,
-          )}
-        >
-          {amount}
-        </span>
-      </div>
+      <p className={cn("text-2xl font-extrabold", variant.amountText)}>
+        {amount}
+      </p>
     </CustomCard>
   );
 };
@@ -484,7 +477,7 @@ const Orders = () => {
       {/* Main Content Section */}
       <div className="w-full flex flex-col gap-5">
         {/* Tabs Header — standalone segmented control, not part of the table */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white rounded-xl border border-grey-5 px-3 py-2.5">
+        <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white rounded-xl border border-border-tint px-3 py-2.5">
           <div className="flex items-center gap-1">
             <button
               onClick={() => handleTabChange("INSTORE")}
@@ -557,7 +550,7 @@ const Orders = () => {
         </div>
 
         {/* Status sub-tabs (per spec) */}
-        <div className="border-b border-grey-5 overflow-x-auto">
+        <div className="w-full border-b border-border-tint overflow-x-auto">
           <div className="flex min-w-max">
             {statusTabs.map((tab) => {
               const isActive = activeStatusTab === tab.key;
@@ -580,7 +573,7 @@ const Orders = () => {
         </div>
 
         {/* Search and Actions Header */}
-        <div>
+        <div className="w-full">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
             {/* Quick date presets */}
             <div className="flex flex-wrap gap-2">
@@ -595,7 +588,7 @@ const Orders = () => {
                   key={preset.key}
                   onClick={() => handleDatePreset(preset.key)}
                   className={cn(
-                    "text-xs font-bold px-4 py-1.5 rounded-full border transition-colors cursor-pointer",
+                    "text-sm font-bold px-4 py-1.5 rounded-full border transition-colors cursor-pointer",
                     datePreset === preset.key
                       ? "bg-primary-green-300 border-primary-green-300 text-white"
                       : "border-grey-5 text-grey-2 hover:bg-secondary-6",
@@ -622,7 +615,7 @@ const Orders = () => {
               <div className="flex gap-2 w-full sm:w-auto shrink-0">
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm relative border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
+                  className="flex-1 sm:flex-none text-sm rounded-xl relative border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
                   onClick={() => setOpenFilterModal(true)}
                 >
                   <FilterIcon className="w-4 h-4 mr-2" />
@@ -635,7 +628,7 @@ const Orders = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
+                  className="flex-1 sm:flex-none text-sm rounded-xl border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2"
                 >
                   Export
                 </Button>
@@ -713,7 +706,7 @@ const Orders = () => {
         </div>
 
         {/* Card grid (replaces the previous table layout) */}
-        <div>
+        <div className="w-full">
           {OrderDataLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
               {Array.from({ length: 6 }).map((_, index) => (

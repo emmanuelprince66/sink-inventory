@@ -25,7 +25,7 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
   const productData = ProductTransactionData?.data?.results;
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
       <div className="flex items-center gap-2 sm:gap-4">
         <button
           onClick={() => window.history.back()}

@@ -57,7 +57,7 @@ const Contact = ({ id }: { id: string }) => {
   const isWalletNegative = Number(customer?.wallet) < 0;
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 sm:gap-4">

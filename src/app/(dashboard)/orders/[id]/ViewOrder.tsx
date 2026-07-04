@@ -209,7 +209,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   if (OrderIdDataLoading) {
     return (
-      <div className="px-4 py-6 w-full">
+      <div className="w-full">
         <div className="flex items-center space-x-3 mb-6">
           <div className="h-9 w-20 bg-grey-6 rounded-lg animate-pulse"></div>
           <div className="h-6 w-32 bg-grey-6 rounded animate-pulse"></div>
@@ -233,7 +233,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
   if (!orderData) {
     return (
-      <div className="px-4 py-6 w-full flex items-center justify-center min-h-[60vh]">
+      <div className="w-full flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <p className="text-grey-4">Order not found</p>
         </div>
@@ -242,7 +242,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   }
 
   return (
-    <div className="px-4 py-6 w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">

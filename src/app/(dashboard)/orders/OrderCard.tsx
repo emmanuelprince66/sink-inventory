@@ -38,7 +38,7 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
   const amount = order.amount || order.total_price || "0";
 
   return (
-    <div className="border border-grey-5 rounded-2xl p-4 bg-white hover:shadow-md transition-shadow">
+    <div className="border border-border-tint rounded-2xl p-4 bg-white hover:shadow-md transition-shadow">
       {/* Top row: order id + status + amount */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
