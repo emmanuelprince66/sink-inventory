@@ -80,8 +80,8 @@ export function AppSidebar() {
                         className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Store className="mr-3 h-4 w-4" />
-                          <span className="text-sm font-semibold">Store</span>
+                          <Store className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">Store</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -114,10 +114,10 @@ export function AppSidebar() {
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-semibold pl-8 text-sm"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -148,8 +148,8 @@ export function AppSidebar() {
                         className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Package className="mr-3 h-4 w-4" />
-                          <span className="text-sm font-semibold">Stock</span>
+                          <Package className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">Stock</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -182,10 +182,10 @@ export function AppSidebar() {
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-semibold pl-8 text-sm"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -216,8 +216,8 @@ export function AppSidebar() {
                         className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Settings className="mr-3 h-4 w-4" />
-                          <span className="text-sm font-semibold">
+                          <Settings className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">
                             Operations
                           </span>
                         </div>
@@ -252,10 +252,10 @@ export function AppSidebar() {
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-semibold pl-8 text-sm"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -276,7 +276,7 @@ export function AppSidebar() {
 
             return (
               <SidebarGroup key={group.title}>
-                <SidebarGroupLabel className="text-xs font-semibold text-grey-4 uppercase tracking-wider px-4 py-2">
+                <SidebarGroupLabel className="text-[10px] font-extrabold text-grey-4 uppercase tracking-widest px-4 py-2">
                   {group.title}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -297,9 +297,9 @@ export function AppSidebar() {
                           <SidebarMenuButton asChild>
                             <Link
                               href={item.url}
-                              className="flex items-center font-semibold text-sm px-4"
+                              className="flex items-center font-bold text-sm px-4"
                             >
-                              <item.icon className="mr-3 h-4 w-4" />
+                              <item.icon className="mr-3 h-[17px] w-[17px]" />
                               <span>{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -319,11 +319,11 @@ export function AppSidebar() {
           onClick={handleLogOut}
           disabled={isPending}
           className={cn(
-            "text-error-1 cursor-pointer py-2.5 px-3 flex items-center font-semibold rounded-xl text-sm",
+            "text-error-1 cursor-pointer py-2.5 px-3 flex items-center font-bold rounded-xl text-sm",
             "hover:bg-error-2/40 transition-colors duration-200",
           )}
         >
-          <LogOut className="mr-3 h-4 w-4" />
+          <LogOut className="mr-3 h-[17px] w-[17px]" />
           <span>{isPending ? "Logging out..." : "Logout"}</span>
         </SidebarMenuButton>
       </SidebarFooter>
