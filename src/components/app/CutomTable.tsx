@@ -73,7 +73,7 @@ export function CustomTable<TData>({
                   row.index +
                   1
                 : row.index + 1;
-              return baseNumber;
+              return <span className="font-medium text-grey-3">{baseNumber}</span>;
             },
           } as ColumnDef<TData>,
         ]

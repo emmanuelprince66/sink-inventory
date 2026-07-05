@@ -346,7 +346,7 @@ const Sales = () => {
         </div>
 
         {/* Overview Cards - Updated Responsive Version */}
-        <div className="mb-4 sm:mb-6">
+        <div>
           <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-2 mb-3 sm:mb-4">
             Overview
           </p>
@@ -488,7 +488,7 @@ const Sales = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-2xl shadow-sm border border-border-tint bg-white overflow-hidden">
+      <div className="w-full rounded-2xl border border-border-tint bg-white overflow-hidden">
         {/* Tabs Header */}
         <div className="pt-4 sm:pt-6 w-full">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 px-4 sm:px-6">
@@ -569,7 +569,7 @@ const Sales = () => {
               )}
 
               {/* Products Tab Content */}
-              <TabsContent value="products" className="mt-4 sm:mt-6">
+              <TabsContent value="products" className=" sm:mt-3">
                 {/* Product Filter Options */}
                 <div className="flex gap-2 sm:gap-3 flex-wrap px-4 sm:px-6 pb-4 border-b border-border-tint">
                   {productFilterOptions.map((filter) => (
@@ -677,7 +677,7 @@ const Sales = () => {
               </TabsContent>
 
               {/* Order History Tab Content */}
-              <TabsContent value="history" className="mt-4 sm:mt-6">
+              <TabsContent value="history" className=" sm:mt-3">
                 <div className="flex gap-2 sm:gap-3 flex-wrap px-4 sm:px-6 pb-4">
                   {orderFilterOptions.map((filter) => (
                     <button
@@ -704,66 +704,66 @@ const Sales = () => {
           {showComboSales ? (
             <ComboSalesTable />
           ) : (
-          <Tabs
-            value={activeTab}
-            onValueChange={(value) =>
-              setActiveTab(value as "products" | "history")
-            }
-            className="w-full"
-          >
-            <TabsContent value="products">
-              {SalesLoading || !SalesData ? (
-                <div className="w-full">
-                  <div className="sm:space-y-4">
-                    <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Skeleton
-                        key={index}
-                        className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
-                      />
-                    ))}
+            <Tabs
+              value={activeTab}
+              onValueChange={(value) =>
+                setActiveTab(value as "products" | "history")
+              }
+              className="w-full"
+            >
+              <TabsContent value="products">
+                {SalesLoading || !SalesData ? (
+                  <div className="w-full">
+                    <div className="sm:space-y-4">
+                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <Skeleton
+                          key={index}
+                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <ProductsSold
-                  SalesData={SalesData}
-                  SalesLoading={SalesLoading}
-                  activeFilter={activeProductFilter}
-                  setActiveFilter={setActiveProductFilter}
-                  filterOptions={productFilterOptions}
-                  searchInput={searchInput}
-                  handleProductsRowClick={handleProductsRowClick}
-                  handleSearchChange={handleSearchChange}
-                />
-              )}
-            </TabsContent>
+                ) : (
+                  <ProductsSold
+                    SalesData={SalesData}
+                    SalesLoading={SalesLoading}
+                    activeFilter={activeProductFilter}
+                    setActiveFilter={setActiveProductFilter}
+                    filterOptions={productFilterOptions}
+                    searchInput={searchInput}
+                    handleProductsRowClick={handleProductsRowClick}
+                    handleSearchChange={handleSearchChange}
+                  />
+                )}
+              </TabsContent>
 
-            <TabsContent value="history">
-              {SalesOrderLoading || !SalesOrderData ? (
-                <div className="w-full">
-                  <div className="space-y-3 sm:space-y-4">
-                    <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Skeleton
-                        key={index}
-                        className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
-                      />
-                    ))}
+              <TabsContent value="history">
+                {SalesOrderLoading || !SalesOrderData ? (
+                  <div className="w-full">
+                    <div className="space-y-3 sm:space-y-4">
+                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
+                      {Array.from({ length: 5 }).map((_, index) => (
+                        <Skeleton
+                          key={index}
+                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <OrderHistory
-                  SalesOrderData={SalesOrderData}
-                  loading={SalesOrderLoading}
-                  activeFilter={activeOrderFilter}
-                  setActiveFilter={setActiveOrderFilter}
-                  filterOptions={orderFilterOptions}
-                  setPage={setPage}
-                  page={page}
-                />
-              )}
-            </TabsContent>
-          </Tabs>
+                ) : (
+                  <OrderHistory
+                    SalesOrderData={SalesOrderData}
+                    loading={SalesOrderLoading}
+                    activeFilter={activeOrderFilter}
+                    setActiveFilter={setActiveOrderFilter}
+                    filterOptions={orderFilterOptions}
+                    setPage={setPage}
+                    page={page}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </div>

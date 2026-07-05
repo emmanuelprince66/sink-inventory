@@ -11,7 +11,7 @@ import "./globals.css";
 
 const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: "variable",
   display: "swap",
 });
 
