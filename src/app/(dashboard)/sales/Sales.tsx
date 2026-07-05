@@ -111,6 +111,9 @@ const DEFAULT_SALES_CARD_STYLE = {
   icon: <Wallet className="w-[15px] h-[15px]" />,
 };
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen
+// (KPI card grid, ~line 869) — rounded-2xl, p-5, icon LEFT of label, icon 15px, label 12px/700,
+// value 24px/800 #111827. See sink/docs/FIGMA_VS_CODE_COMPARISON.md for the full breakdown.
 const CustomSalesCard = ({
   title,
   amount,
@@ -488,6 +491,9 @@ const Sales = () => {
       </div>
 
       {/* Main Content Section */}
+      {/* Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen
+          "Sales Analytics section" (~line 900) — no shadow on this container, border-tint only.
+          shadow-sm was removed here to match the spec exactly (was an unintentional extra). */}
       <div className="w-full rounded-2xl border border-border-tint bg-white overflow-hidden">
         {/* Tabs Header */}
         <div className="pt-4 sm:pt-6 w-full">

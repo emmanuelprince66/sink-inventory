@@ -96,6 +96,9 @@ const MOCK_DELIVERY_COMPANIES = [
   "In-house Riders",
 ];
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, OrdersScreen
+// (KPI card grid, ~line 1176) — rounded-2xl, p-4, gap-3, label 12px/700, value 24px/800 #111827,
+// icon 18px. See sink/docs/FIGMA_VS_CODE_COMPARISON.md for the full checked breakdown.
 const CustomOrderCard = ({
   title,
   amount,
@@ -338,7 +341,7 @@ const Orders = () => {
   );
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
+    <div className="w-full h-full flex flex-col justify-start gap-3 items-start">
       {/* Header Section */}
       <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
@@ -391,7 +394,7 @@ const Orders = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-1 sm:mb-2">
           {OrderDataLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {Array.from({ length: 4 }).map((_, index) => (

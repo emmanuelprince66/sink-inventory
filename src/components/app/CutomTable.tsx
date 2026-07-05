@@ -59,6 +59,8 @@ export function CustomTable<TData>({
 }: CustomTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // S/N styled 14px/500 #6b7280 to match Figma reference: Convert Mobile Screens to Desktop/
+  // src/app/App.tsx, SalesScreen (~line 973) — was previously unstyled (browser-default weight/color).
   // Add serial number column if enabled
   const tableColumns = [
     ...(showSerialNumber
@@ -118,6 +120,8 @@ export function CustomTable<TData>({
     >
       {tableHeader}
 
+      {/* Header row matches Figma reference: uppercase, tracking-wide, 12px/800, #329661 —
+          Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen (~line 962). */}
       <Table>
         <TableHeader className="bg-grey-6">
           {table.getHeaderGroups().map((headerGroup) => (

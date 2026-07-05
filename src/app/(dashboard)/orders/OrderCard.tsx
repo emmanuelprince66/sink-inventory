@@ -29,6 +29,10 @@ interface OrderCardProps {
   onAssignDelivery?: (orderId: string) => void;
 }
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, OrdersScreen
+// (order card grid, ~line 1186) — rounded-2xl, border rgba(27,50,40,.08), p-4, hover:shadow-md.
+// ID 14px/800, customer 14px/700, phone/date 12px/500, Partner/Rider label 10px/800 uppercase.
+// See sink/docs/FIGMA_VS_CODE_COMPARISON.md for the full checked breakdown.
 const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
   const isOutstore = type === "OUTSTORE";
   const seed = hashSeed(order.id || "fallback");

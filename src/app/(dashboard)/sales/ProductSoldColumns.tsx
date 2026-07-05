@@ -4,6 +4,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { EyeOff } from "lucide-react";
 import { SalesDataItem } from "./types";
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen
+// (Sales table, ~line 957) — Name/Unit Sold/Revenue/Profit are 14px/700 #329661 (right-aligned
+// from Unit Sold on); VAT/SKU/Discount are 14px/500 #6b7280.
 export const useSalesColumns = () => {
   const { user } = useUserRole();
 

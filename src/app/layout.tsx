@@ -9,6 +9,11 @@ import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import "./globals.css";
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx uses
+// fontFamily: "Nunito, sans-serif" (NUN constant, ~line 28) app-wide.
+// weight: "variable" loads the full Nunito weight range (200-1000) — previously only
+// 400/600/700 were loaded, so font-medium (500) and font-extrabold (800) were being
+// browser-faked instead of rendering the real type file.
 const nunito = Nunito({
   subsets: ["latin"],
   weight: "variable",

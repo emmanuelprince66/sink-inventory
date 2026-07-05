@@ -1,3 +1,5 @@
+/* Fallback loader for contexts outside layout.tsx's next/font/google (e.g. print/PDF views).
+   Widened to the full variable range to match sink/src/app/layout.tsx's weight: "variable". */
 @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@200..1000&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
