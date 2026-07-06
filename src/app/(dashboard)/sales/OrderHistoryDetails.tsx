@@ -56,10 +56,10 @@ const styles = StyleSheet.create({
     fontSize: 14, // Reduced from 20
     fontWeight: "bold",
     marginBottom: 4, // Reduced from 8
-    color: "#16a34a",
+    color: "#329661",
   },
   subtitle: {
-    color: "#16a34a",
+    color: "#329661",
     marginBottom: 6, // Reduced from 12
     fontWeight: "bold",
     fontSize: 10, // Reduced from 14
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#eef7e0",
     paddingVertical: 4, // Reduced from 8
     paddingHorizontal: 2, // Reduced from 4
   },
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     marginTop: 8, // Reduced from 16
     paddingTop: 6, // Reduced from 12
     borderTopWidth: 1, // Reduced from 2
-    borderTopColor: "#16a34a",
+    borderTopColor: "#329661",
     fontSize: 14, // Reduced from 16
     fontWeight: "bold",
   },
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontWeight: "bold",
     fontSize: 14, // Reduced from 16
-    color: "#16a34a",
+    color: "#329661",
   },
   transactionDetails: {
     backgroundColor: "#f9fafb",
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     padding: 2, // Reduced from 4
     flexDirection: "row", // Keep as row for single line or header
     justifyContent: "space-between",
-    backgroundColor: "#f0fdf4",
+    backgroundColor: "#eef7e0",
     borderRadius: 4, // Reduced from 6
   },
   paymentMethodEntry: {
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     paddingHorizontal: 2,
     fontSize: 9, // Slightly smaller for multiple entries
-    color: "#16a34a",
+    color: "#329661",
   },
   paymentMethodTitle: {
     fontSize: 10, // Reduced from 10
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   paymentMethodValue: {
     fontSize: 8, // Kept same
     fontWeight: "bold",
-    color: "#16a34a",
+    color: "#329661",
   },
   footer: {
     marginTop: 2, // Reduced from 5
@@ -420,23 +420,23 @@ const OrderHistoryDetails = ({
         body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
         .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
         table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
-        th { padding:  1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4; }
+        th { padding:  1px; font-size: 10px; font-weight: bold; background-color: #eef7e0; }
         td { padding: 1px; font-size: 10px; border-bottom: 0.5px solid #f3f4f6; }
-        .text-green-600 { color: #16a34a !important; }
+        .text-green-600 { color: #329661 !important; }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
         .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
         .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
         .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
-          .payment-method {width: 98%; background-color: #f0fdf4; display: flex; justify-content: space-between; padding: 1px; border-radius: 6px; margin: 1px 0; }
-          .total-row { font-weight: bold; font-size: 10px; border-top: 2px solid #16a34a; padding-top: 1px; margin-top: 1px; }
+          .payment-method {width: 98%; background-color: #eef7e0; display: flex; justify-content: space-between; padding: 1px; border-radius: 6px; margin: 1px 0; }
+          .total-row { font-weight: bold; font-size: 10px; border-top: 2px solid #329661; padding-top: 1px; margin-top: 1px; }
            .item-name { font-weight: bold; font-size: 10px; }
           .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; }
           .detail-label { color: #6b7280; font-size: 10px; }
           .detail-value { font-weight: bold; font-size: 10px; }
           .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 1px; }
-          .receipt-title { font-size: 13px; font-weight: bold; color: #16a34a; }
+          .receipt-title { font-size: 13px; font-weight: bold; color: #329661; }
         `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
@@ -466,79 +466,50 @@ const OrderHistoryDetails = ({
               className="receipt-container w-full  bg-white p-1 mx-auto"
             >
               {/* Receipt header */}
-              <div className="receipt-header text-center mb-4 pb-3 border-b border-gray-200">
-                <p className="text-xl receipt-title font-bold mb-2 text-green-600">
+              <div className="receipt-header text-center mb-4 pb-3 border-b border-grey-5">
+                <p className="text-xl receipt-title font-extrabold mb-2 text-primary-green-300">
                   ORDER RECEIPT
                 </p>
-                {/* <p className="text-green-600 font-semibold text-sm mb-3">
-                  ORDER DETAILS
-                </p> */}
-
-                {/* <div className="w-full flex flex-col items-center gap-3">
-                  <div className="flex flex-col items-center w-full">
-                    <p className="font-semibold text-base">
-                      {business?.name || "STORE"}
-                    </p>
-                    {business?.street && (
-                      <p className="text-xs text-gray-500">
-                        {business.street}, {business.city}, {business.state},{" "}
-                        {business.country}
-                      </p>
-                    )}
-
-                    {(business?.owner?.email || business?.owner?.phone) && (
-                      <div className="contact-info flex items-center gap-2 mt-1">
-                        {business?.owner?.email && (
-                          <p className="text-xs text-gray-500">
-                            {business.owner.email}
-                          </p>
-                        )}
-                        {business?.owner?.email && business?.owner?.phone && (
-                          <p className="text-gray-500">|</p>
-                        )}
-                        {business?.owner?.phone && (
-                          <p className="text-xs text-gray-500">
-                            {business.owner.phone}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div> */}
               </div>
 
               {/* Items table */}
               <div className="my-2">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left bg-green-50">
-                      <th className="py-2 px-1 rounded-tl-md">ITEM</th>
-                      <th className="py-2 px-1 text-center">QTY</th>
-                      <th className="py-2 px-1 text-right">PRICE</th>
-                      <th className="py-2 px-1 text-right rounded-tr-md">
+                    <tr className="text-left bg-grey-6">
+                      <th className="py-2 px-1 rounded-tl-md text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
+                        ITEM
+                      </th>
+                      <th className="py-2 px-1 text-center text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
+                        QTY
+                      </th>
+                      <th className="py-2 px-1 text-right text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
+                        PRICE
+                      </th>
+                      <th className="py-2 px-1 text-right rounded-tr-md text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
                         TOTAL
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {orderDetails.products.map((product, index) => (
-                      <tr key={index} className="border-b border-gray-100">
+                      <tr key={index} className="border-b border-grey-6">
                         <td className="py-3 px-1">
                           <div className="flex items-center gap-2">
                             <div>
-                              <p className="item-name font-medium">
+                              <p className="item-name font-bold text-grey-1">
                                 {product.name}
                               </p>
                             </div>
                           </div>
                         </td>
-                        <td className="text-center py-3 px-1">
+                        <td className="text-center py-3 px-1 font-medium text-grey-3">
                           {product.quantity}
                         </td>
-                        <td className="text-right py-3 px-1">
+                        <td className="text-right py-3 px-1 font-medium text-grey-3">
                           {formatToNaira(parseFloat(product.unit_price))}
                         </td>
-                        <td className="text-right py-3 px-1 font-medium">
+                        <td className="text-right py-3 px-1 font-bold text-grey-1">
                           {parseFloat(product.price)}
                         </td>
                       </tr>
@@ -548,77 +519,63 @@ const OrderHistoryDetails = ({
               </div>
 
               {/* Payment summary */}
-              <div className="total-row flex justify-between font-bold mt-4 pt-3 border-t-2 border-green-600 text-base">
-                <span>TOTAL:</span>
-                <span className="text-green-600 detail-value">
+              <div className="total-row flex justify-between font-extrabold mt-4 pt-3 border-t-2 border-primary-green-300 text-base">
+                <span className="text-grey-1">TOTAL:</span>
+                <span className="text-primary-green-300 detail-value">
                   {orderDetails?.total_price}
                 </span>
               </div>
 
               {/* Transaction details */}
-              <div className="transaction-details bg-gray-50 rounded-md p-3 my-4">
+              <div className="transaction-details bg-grey-6 rounded-xl p-3 my-4">
                 <div className="space-y-1 text-sm">
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">Date:</span>
-                    <span className="detail-value font-medium">
+                    <span className="detail-label text-grey-4">Date:</span>
+                    <span className="detail-value font-bold text-grey-1">
                       {formattedDate}
                     </span>
                   </div>
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">
+                    <span className="detail-label text-grey-4">
                       Order ID:
                     </span>
-                    <span className="detail-value font-medium">
+                    <span className="detail-value font-bold text-grey-1">
                       {receiptNumber}
                     </span>
                   </div>
-                  {/* <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">
-                      Sale Type:
-                    </span>
-                    <span className="detail-value font-medium">Presale</span>
-                  </div> */}
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">
+                    <span className="detail-label text-grey-4">
                       Presaled By:
                     </span>
-                    <span className="detail-value font-medium">
+                    <span className="detail-value font-bold text-grey-1">
                       {orderDetails?.pre_sale || "N/A"}
                     </span>
                   </div>
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">Status:</span>
-                    <span className="detail-value font-medium">
+                    <span className="detail-label text-grey-4">Status:</span>
+                    <span className="detail-value font-bold text-grey-1">
                       {orderDetails.payment_status}
                     </span>
                   </div>
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">
+                    <span className="detail-label text-grey-4">
                       Attendant:
                     </span>
-                    <span className="detail-value font-medium">
+                    <span className="detail-value font-bold text-grey-1">
                       {orderDetails.attendant}
                     </span>
                   </div>
                   <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">VAT:</span>
-                    <span className="detail-value font-medium">{0}</span>
+                    <span className="detail-label text-grey-4">VAT:</span>
+                    <span className="detail-value font-bold text-grey-1">{0}</span>
                   </div>
-                  {/* <div className="detail-row flex justify-between">
-                    <span className="detail-label text-gray-500">
-                      Transaction ID:
-                    </span>
-                    <span className="detail-value font-medium">
-                      #{transactionId}
-                    </span>
-                  </div> */}
                 </div>
               </div>
 
               {/* Payment method */}
-              <div className="payment-method mt-2 flex justify-between bg-green-50 p-3 rounded-md">
-                <p className="text-xs text-gray-500">PAYMENT METHOD:</p>
-                <p className="capitalize font-semibold text-green-600">
+              <div className="payment-method mt-2 flex justify-between bg-secondary-6 p-3 rounded-xl">
+                <p className="text-xs font-medium text-grey-4">PAYMENT METHOD:</p>
+                <p className="capitalize font-extrabold text-primary-green-300">
                   {orderDetails.method.toUpperCase()}
                 </p>
               </div>
@@ -626,7 +583,7 @@ const OrderHistoryDetails = ({
               {/* Reverse Sale Button */}
               <div
                 onClick={() => handleReverseSale(orderDetails?.id)}
-                className="w-full bg-yellow-50 rounded-lg gap-2 p-3 flex items-center justify-center border border-yellow-100 cursor-pointer no-print mt-4"
+                className="w-full bg-warning-2 text-warning-1 font-bold rounded-xl gap-2 p-3 flex items-center justify-center border border-warning-1/30 cursor-pointer no-print mt-4 hover:bg-warning-2/70 transition-colors"
               >
                 {ReverseSalePending || loading ? (
                   <Spinner />
@@ -637,12 +594,6 @@ const OrderHistoryDetails = ({
                   </>
                 )}
               </div>
-
-              {/* Footer */}
-              {/* <div className="receipt-footer mt-6 pt-4 border-t border-gray-200 text-center">
-                <p className="font-bold text-base">THANK YOU!</p>
-                <p className="mt-1 text-xs text-gray-400">Powered by Sync360</p>
-              </div> */}
             </div>
 
             {/* Action buttons - Print and Download */}
@@ -650,15 +601,15 @@ const OrderHistoryDetails = ({
               <Button
                 onClick={handlePrint}
                 variant="outline"
-                className="gap-2 flex-1 hover:bg-gray-50 border-green-200"
+                className="gap-2 flex-1"
                 disabled={isPrinting}
               >
                 {isPrinting ? (
                   "Printing..."
                 ) : (
                   <>
-                    <Printer size={18} className="text-green-600" />
-                    <span className="text-green-600">Print Order</span>
+                    <Printer size={18} />
+                    <span>Print Order</span>
                   </>
                 )}
               </Button>
@@ -678,11 +629,7 @@ const OrderHistoryDetails = ({
                   if (error) {
                     console.error("PDF generation error:", error);
                     return (
-                      <Button
-                        variant="outline"
-                        className="gap-2 w-full hover:bg-gray-50"
-                        disabled
-                      >
+                      <Button variant="outline" className="gap-2 w-full" disabled>
                         <Download size={18} />
                         Error generating PDF
                       </Button>
@@ -692,15 +639,15 @@ const OrderHistoryDetails = ({
                   return (
                     <Button
                       variant="outline"
-                      className="gap-2 w-full hover:bg-gray-50 border-green-200"
+                      className="gap-2 w-full"
                       disabled={loading}
                     >
                       {loading ? (
                         "Generating PDF..."
                       ) : (
                         <>
-                          <Download size={18} className="text-green-600" />
-                          <span className="text-green-600">Save as PDF</span>
+                          <Download size={18} />
+                          <span>Save as PDF</span>
                         </>
                       )}
                     </Button>

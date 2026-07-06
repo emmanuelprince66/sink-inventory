@@ -1,5 +1,5 @@
 "use client";
-import { AlertCircle, Plus, Users, Wallet } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -21,87 +21,40 @@ import AllCustomers from "./AllCustomers";
 interface CustomerCardData {
   title: string;
   amount: number | string;
+  type: "wallet" | "debt" | "customers";
 }
 
-const CustomCustomerCard = ({ title, amount }: CustomerCardData) => {
-  const isDebtCard = title === "Total Debt";
-  const isWalletCard = title === "Total Wallet";
+// Plain white bordered cards, no icons — matches the Figma reference exactly
+// (Convert Mobile Screens to Desktop/src/app/App.tsx CustomersScreen).
+const CUSTOMER_CARD_VALUE_COLOR: Record<CustomerCardData["type"], string> = {
+  wallet: "text-primary-green-100",
+  debt: "text-error-1",
+  customers: "text-grey-1",
+};
 
-  const getIcon = () => {
-    switch (title) {
-      case "Total Customers":
-        return <Users className="w-5 h-5 text-indigo-600" />;
-      case "Total Debt":
-        return <AlertCircle className="w-5 h-5 text-red-600" />;
-      case "Total Wallet":
-        return <Wallet className="w-5 h-5 text-emerald-600" />;
-      default:
-        return <Wallet className="w-5 h-5 text-emerald-600" />;
-    }
-  };
-
+const CustomCustomerCard = ({ title, amount, type }: CustomerCardData) => {
   return (
     <CustomCard
-      className={cn(
-        "p-4 rounded-lg border transition-all hover:shadow-md",
-        isDebtCard
-          ? "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
-          : isWalletCard
-            ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
-            : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200",
-      )}
+      className="w-full rounded-2xl border border-border-tint bg-white p-0"
+      contentClassName="p-5"
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "p-2 rounded-full",
-              isDebtCard
-                ? "bg-red-100"
-                : isWalletCard
-                  ? "bg-emerald-100"
-                  : "bg-indigo-100",
-            )}
-          >
-            {getIcon()}
-          </div>
-          <span
-            className={cn(
-              "text-sm font-medium",
-              isDebtCard
-                ? "text-primary-black-100"
-                : isWalletCard
-                  ? "text-primary-black-100"
-                  : "text-primary-black-100",
-            )}
-          >
-            {title}
-          </span>
-        </div>
-      </div>
-      <div className="mt-4">
-        <span
-          className={cn(
-            "text-2xl font-bold",
-            isDebtCard
-              ? "text-primary-black-100"
-              : isWalletCard
-                ? "text-primary-black-100"
-                : "text-primary-black-100",
-          )}
-        >
-          {amount}
-        </span>
-      </div>
+      <p className="text-sm font-semibold text-grey-3">{title}</p>
+      <p
+        className={cn(
+          "text-2xl font-extrabold mt-1",
+          CUSTOMER_CARD_VALUE_COLOR[type],
+        )}
+      >
+        {amount}
+      </p>
     </CustomCard>
   );
 };
 
 const Customers = () => {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
-  });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    undefined,
+  );
   const [page, setPage] = useState(1);
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
@@ -128,153 +81,183 @@ const Customers = () => {
     handleSearchChange,
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
-  console.log("CustomerData:", CustomerData);
-
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start px-2 ">
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between w-full gap-4">
-        <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+    <div className="w-full flex flex-col gap-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-grey-1">
           Customers
-        </p>
+        </h1>
 
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full lg:w-auto">
-          {/* Date Picker */}
-          <div className="w-full sm:w-auto min-w-[280px]">
-            <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
-          </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <Button
+            className="flex-1 sm:flex-none gap-1.5"
+            onClick={openCustomerModalFunc}
+          >
+            <Plus className="w-4 h-4" />
+            Add Customer
+          </Button>
 
-          {/* Buttons Container */}
-          <div className="flex gap-3 w-full sm:w-auto">
-            <Button
-              className="flex items-center justify-center px-4 py-2 text-sm font-medium flex-1 sm:flex-none min-h-[44px] min-w-[140px]"
-              onClick={openCustomerModalFunc}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Customer
+          <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full">
+              Upload CSV
             </Button>
-
-            <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
-              <Button
-                variant="outline"
-                className="border-primary-green-300 text-primary-green-300 hover:bg-primary-green-50 w-full px-4 py-2 text-sm font-medium min-h-[44px] min-w-[120px]"
-              >
-                Upload CSV
-              </Button>
-            </Link>
-          </div>
+          </Link>
         </div>
       </div>
 
       {CustomerLoading || !CustomerData ? (
         <>
           {/* Skeleton for cards */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             {Array.from({ length: 3 }).map((_, index) => (
-              <CustomCard key={index} className="w-full border-gray-200">
-                <div className="flex flex-col gap-6 items-start">
-                  <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                  <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
-                </div>
-              </CustomCard>
-            ))}
-          </div>
-
-          {/* Skeleton for filters */}
-          <div className="flex gap-3 mt-4 mb-3">
-            {Array.from({ length: filterOptions.length }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="h-14 w-[70px] rounded-md bg-[#eef4ef]"
+                className="h-24 w-full rounded-2xl bg-grey-6"
               />
             ))}
           </div>
 
-          {/* Skeleton for search */}
-          <div className="w-full md:w-1/2">
-            <Skeleton className="h-10 w-full bg-[#eef4ef]" />
-          </div>
+          {/* Skeleton for banner */}
+          <Skeleton className="h-32 w-full rounded-2xl bg-grey-6" />
 
-          {/* Skeleton for AllCustomers table */}
-          <div className="w-full">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+          {/* Skeleton for main card */}
+          <div className="bg-white rounded-2xl border border-grey-5 overflow-hidden">
+            <div className="p-4 sm:p-6 space-y-4">
+              <div className="flex gap-2">
+                {Array.from({ length: filterOptions.length }).map(
+                  (_, index) => (
+                    <Skeleton
+                      key={index}
+                      className="h-9 w-20 rounded-full bg-grey-6"
+                    />
+                  ),
+                )}
+              </div>
+              <Skeleton className="h-10 w-full bg-grey-6" />
               {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-16 w-full bg-[#eef4ef] mt-2"
-                />
+                <Skeleton key={index} className="h-14 w-full bg-grey-6" />
               ))}
             </div>
           </div>
         </>
       ) : (
         <>
-          {/* cards container */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* KPI Cards */}
+          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <CustomCustomerCard
-              title={"Total Customers"}
-              amount={CustomerData?.data?.results?.customer_count}
-            />
-
-            <CustomCustomerCard
-              title={"Total Debt"}
-              amount={formatToNaira(CustomerData?.data?.results?.total_debt)}
-            />
-
-            <CustomCustomerCard
-              title={"Total Wallet"}
+              title="Total Wallet Balance"
               amount={formatToNaira(CustomerData?.data?.results?.total_wallet)}
+              type="wallet"
+            />
+
+            <CustomCustomerCard
+              title="Total Debt"
+              amount={formatToNaira(CustomerData?.data?.results?.total_debt)}
+              type="debt"
+            />
+
+            <CustomCustomerCard
+              title="Total Customers"
+              amount={CustomerData?.data?.results?.customer_count}
+              type="customers"
             />
           </div>
-          {/* cards container content */}
 
-          {/* Second filter */}
-          <div className="mt-4 mb-3 w-full">
-            <div className="flex gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 w-full">
-              {filterOptions.map((filter) => (
-                <Button
-                  key={filter}
-                  className={`px-4 py-2 rounded-md h-12 md:h-14 min-w-fit whitespace-nowrap text-sm font-medium transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow-md ${
-                    activeFilter === filter
-                      ? "bg-primary-green-300 text-white hover:bg-primary-green-400"
-                      : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-300 hover:text-white"
-                  }`}
-                  onClick={() => handleFilterChange(filter)}
-                >
-                  {filter}
-                </Button>
-              ))}
+          {/* Engage Your Customers Banner */}
+          <div className="bg-secondary-6 border border-primary-green-300/20 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Megaphone className="h-5 w-5 text-primary-green-300" />
+              <h2 className="text-base font-extrabold text-grey-1">
+                Engage Your Customers
+              </h2>
             </div>
+            <p className="text-sm text-grey-2">
+              Send personalized promotions, offers, and reminders to keep your
+              customers coming back
+            </p>
+            <Link href="/campaign" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto gap-1.5">
+                <Plus className="w-4 h-4" />
+                Create a Campaign
+              </Button>
+            </Link>
           </div>
-          {/* Second filter end */}
 
-          {/* search input */}
-          <div className="w-full md:w-1/2">
-            <SearchInput
-              placeholder="Search customers..."
-              value={searchInput}
-              onValueChange={handleSearchChange}
+          {/* Main Content Card */}
+          <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
+            {/* Tabs */}
+            <div className="border-b border-grey-5 px-4 sm:px-6">
+              <div className="flex items-center gap-6">
+                <button
+                  className="py-4 text-sm cursor-pointer font-bold border-b-2 border-primary-green-300 text-primary-green-300 transition-colors"
+                >
+                  Customers
+                </button>
+                <Link
+                  href="/campaign"
+                  className="py-4 text-sm font-bold border-b-2 border-transparent text-grey-3 hover:text-grey-2 transition-colors"
+                >
+                  Campaigns
+                </Link>
+              </div>
+            </div>
+
+            {/* Toolbar */}
+            <div className="p-4 sm:p-6 border-b border-grey-5">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                  {filterOptions.map((filter) => (
+                    <button
+                      key={filter}
+                      onClick={() => handleFilterChange(filter)}
+                      className={cn(
+                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                        activeFilter === filter
+                          ? "bg-primary-green-300 text-white shadow-sm"
+                          : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
+                      )}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+                  <div className="w-full sm:w-44">
+                    <DatePickerWithRange
+                      date={dateRange}
+                      onDateChange={setDateRange}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="w-full sm:w-56">
+                    <SearchInput
+                      placeholder="Search customers..."
+                      value={searchInput}
+                      onValueChange={handleSearchChange}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {searchInput.length > 0 && searchInput.length < 3 && (
+                <div className="mt-2 text-xs text-grey-4">
+                  Type at least 3 characters to search
+                </div>
+              )}
+            </div>
+
+            {/* Customers Table */}
+            <AllCustomers
+              customersData={CustomerData}
+              handleRowClick={handleRowClick}
+              customerLoading={CustomerLoading}
+              setPage={setPage}
+              page={page}
             />
-            {CustomerLoading && (
-              <div className="mt-1 text-sm text-muted-foreground">
-                Searching...
-              </div>
-            )}
-            {searchInput.length > 0 && searchInput.length < 3 && (
-              <div className="mt-1 text-sm text-muted-foreground">
-                Type at least 3 characters to search
-              </div>
-            )}
           </div>
-
-          {/* all customers */}
-          <AllCustomers
-            customersData={CustomerData}
-            handleRowClick={handleRowClick}
-            customerLoading={CustomerLoading}
-            setPage={setPage}
-            page={page}
-          />
         </>
       )}
 

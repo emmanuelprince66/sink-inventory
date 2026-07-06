@@ -28,7 +28,8 @@ import { cn } from "@/lib/utils";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
+// 15rem = 240px, matches the Figma reference sidebar (w-60 in Convert Mobile Screens to Desktop/App.tsx)
+const SIDEBAR_WIDTH = "15rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -274,7 +275,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <Menu color="#52b661" />
+      <Menu color="#329661" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );

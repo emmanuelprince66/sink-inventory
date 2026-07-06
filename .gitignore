@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 certificates
+
+# docs
+/docs
+
+# figma export reference (not part of the app)
+/Convert Mobile Screens to Desktop

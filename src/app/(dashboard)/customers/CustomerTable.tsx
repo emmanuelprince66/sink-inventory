@@ -48,6 +48,7 @@ const CustomerTable = ({
     <>
       <CustomTable
         // onRowClick={handleRowClick}
+        bordered={false}
         columns={columns}
         data={response?.data?.results?.data}
         loading={loading}

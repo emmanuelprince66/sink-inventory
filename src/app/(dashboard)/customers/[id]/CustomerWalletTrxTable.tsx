@@ -25,11 +25,12 @@ const CustomerWalletTrxTable = ({
     <>
       <>
         <CustomTable
+          bordered={false}
           onRowClick={handleWalletTrxRowClick}
           columns={columns}
           data={data.data}
           loading={loading}
-          noDataText="No wallet transactions found" // Updated text
+          noDataText="No wallet transactions found"
         />
       </>
 

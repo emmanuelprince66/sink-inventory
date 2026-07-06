@@ -30,8 +30,32 @@ const updateBusiness = async (body: FormData) => {
   return response.json();
 };
 
+// JSON-only update path for nested writable fields — multipart can't carry a
+// nested object cleanly, so DRF reads it as a string and silently drops it.
+// The write field is `shipbubble_settings` per swagger; reads come back under
+// `shipbubble`.
+interface ShipbubbleUpdatePayload {
+  business_id: string;
+  shipbubble_settings?: Record<string, unknown> | null;
+  shipping_companies?: string[];
+}
+const updateBusinessShipbubble = async (body: ShipbubbleUpdatePayload) => {
+  const response = await fetch(`/api/businesses/update-shipbubble`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw errorData;
+  }
+  return response.json();
+};
+
 type QueryFnType = typeof createBusiness;
 type QueryFnTypeTwo = typeof updateBusiness;
+type QueryFnTypeThree = typeof updateBusinessShipbubble;
 
 interface CreateBusinessProps extends MutationConfig<QueryFnType> {
   onSuccess?: (data: any, variables: any, context: any) => void;
@@ -39,6 +63,11 @@ interface CreateBusinessProps extends MutationConfig<QueryFnType> {
 }
 
 interface UpdateBusinessProps extends MutationConfig<QueryFnTypeTwo> {
+  onSuccess?: (data: any, variables: any, context: any) => void;
+  onError?: (error: any, variables: any, context: any) => void;
+}
+
+interface UpdateShipbubbleProps extends MutationConfig<QueryFnTypeThree> {
   onSuccess?: (data: any, variables: any, context: any) => void;
   onError?: (error: any, variables: any, context: any) => void;
 }
@@ -98,6 +127,39 @@ export const useUpdateBusinessMutation = (config?: UpdateBusinessProps) => {
         queryKey: [queryKey.business.getBusinessById],
       });
 
+      config?.onSuccess?.(data, variables, context);
+    },
+    ...config,
+  });
+};
+
+export const useUpdateBusinessShipbubbleMutation = (
+  config?: UpdateShipbubbleProps,
+) => {
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [queryKey.business.updateBusiness, "shipbubble"],
+    mutationFn: updateBusinessShipbubble,
+    retry: false,
+    onError: (error: any, variables: any, context: any) => {
+      console.log("Error updating Shipbubble settings:", error);
+
+      const errorMessage =
+        error?.details?.message ||
+        error?.error ||
+        error?.message ||
+        "Error updating Shipbubble settings";
+
+      showToast(errorMessage, "error");
+      config?.onError?.(error, variables, context);
+    },
+    onSuccess: (data: any, variables: any, context: any) => {
+      showToast("Shipbubble settings updated successfully.", "success");
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.business.getBusinessById],
+      });
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

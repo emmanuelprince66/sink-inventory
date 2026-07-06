@@ -24,11 +24,12 @@ const CustomerHistoryTable = ({
   return (
     <>
       <CustomTable
+        bordered={false}
         onRowClick={handleHistoryRowClick}
         columns={columns}
         data={data.data}
         loading={loading}
-        noDataText="No customers history found" // Updated text
+        noDataText="No purchase history found"
       />
 
       {/* modal to add supply */}

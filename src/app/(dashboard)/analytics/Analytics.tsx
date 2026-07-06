@@ -1,6 +1,7 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -89,7 +90,7 @@ const Analytics = () => {
   // };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-2 sm:px-2 lg:px-0">
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
       <div className="w-full">
         {/* Header Section */}
         <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
@@ -102,6 +103,11 @@ const Analytics = () => {
             <DownloadReportButton
               business_id={business_id}
               dateRange={dateRange}
+            />
+
+            <GenerateReportButton
+              reportType="analytics"
+              className="w-full sm:w-auto"
             />
             {/* <Button
               variant={"outline"}

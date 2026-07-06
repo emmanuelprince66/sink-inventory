@@ -80,7 +80,7 @@ const ProductDrawer = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-white w-full border border-gray-200 flex flex-col">
+      <SheetContent className="bg-white w-full border border-grey-5 flex flex-col">
         <SheetHeader>
           <SheetTitle>Select Products</SheetTitle>
           <SheetDescription>
@@ -99,8 +99,8 @@ const ProductDrawer = ({
             // Show skeleton loading states
             Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="p-3 space-y-2">
-                <Skeleton className="bg-[#eef4ef] h-6 w-3/4" />
-                <Skeleton className="bg-[#eef4ef] h-4 w-1/2" />
+                <Skeleton className="bg-grey-6 h-6 w-3/4" />
+                <Skeleton className="bg-grey-6 h-4 w-1/2" />
               </div>
             ))
           ) : filteredInventoryData?.length > 0 ? (
@@ -108,7 +108,7 @@ const ProductDrawer = ({
             filteredInventoryData.map((product: any) => (
               <div
                 key={product.id}
-                className="m-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 border-gray-200 hover:border-[#52b661] transition-colors flex items-center justify-between"
+                className="m-2 p-3 border rounded-xl cursor-pointer hover:bg-grey-6 border-grey-5 hover:border-primary-green-300 transition-colors flex items-center justify-between"
               >
                 <div
                   className="flex-grow"
@@ -119,20 +119,17 @@ const ProductDrawer = ({
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-10 h-10 object-cover rounded"
+                        className="w-10 h-10 object-cover rounded-lg"
                       />
                     )}
                     <div>
-                      <h3 className="font-medium">{product.name}</h3>
+                      <h3 className="font-bold text-grey-1">{product.name}</h3>
                       <div className="flex items-center gap-2">
-                        {/* <p className="text-sm text-gray-500">
-                          {product.sku || "No SKU"}
-                        </p> */}
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm font-medium text-grey-4">
                           {product.quantity} in stock
                         </p>
-                        <p className="text-sm text-gray-500">-</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm font-medium text-grey-4">-</p>
+                        <p className="text-sm font-bold text-primary-green-300">
                           ₦{product.selling_price ?? product.amount}
                         </p>
                       </div>
@@ -147,15 +144,15 @@ const ProductDrawer = ({
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-500 p-4">
+            <div className="text-center text-grey-4 p-4">
               No products found
             </div>
           )}
         </div>
 
         {/* Selected products count and add button */}
-        <div className="flex justify-between items-center p-2 border-t border-gray-200">
-          <div className="text-sm text-gray-600">
+        <div className="flex justify-between items-center p-2 border-t border-grey-5">
+          <div className="text-sm text-grey-3">
             {selectedProducts.length} product(s) selected
           </div>
           <Button
@@ -168,7 +165,7 @@ const ProductDrawer = ({
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center p-2 border-t border-gray-200">
+          <div className="flex justify-between items-center p-2 border-t border-grey-5">
             <Button
               variant="outline"
               onClick={() => handlePageChange(currentPage - 1)}
@@ -176,7 +173,7 @@ const ProductDrawer = ({
             >
               Previous
             </Button>
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-grey-3">
               Page {currentPage} of {totalPages}
             </span>
             <Button

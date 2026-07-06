@@ -1,5 +1,6 @@
 "use client";
 
+import { DatePicker } from "@/components/app/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +13,9 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useOrderDeliveryHook } from "@/hooks/useOrderDeliveryHook";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import {
   AlertCircle,
   ArrowBigLeft,
@@ -25,6 +28,7 @@ import {
 import { useState } from "react";
 import CustomerDrawer from "../../pos/CustomersDrawer";
 import ProductDrawer from "./ProductDrawer";
+import ShipbubbleCourierDrawer from "./ShipbubbleCourierDrawer";
 import ShippingDrawer from "./ShippingDrawer";
 
 const CreateOrders = () => {
@@ -38,12 +42,11 @@ const CreateOrders = () => {
     useState<any>(null);
   const [selectedBank, setSelectedBank] = useState("");
 
+  const business_id = useBusinessStore((state: any) => state.business_id);
+
   const {
     InventoryData,
     InventoryDataLoading,
-    salesChannelOptions,
-    onSubmit,
-    CreateOrderLoading,
     customer,
     setCustomer,
     selectedProducts,
@@ -54,10 +57,9 @@ const CreateOrders = () => {
     tax,
     setTax,
     filteredInventoryData,
-    selectedSalesChannel,
+    findBusiness,
     ShippingData,
     allShippingDataLoading,
-    setSelectedSalesChannel,
     shippingDate,
     setShippingDate,
     paymentStatus,
@@ -77,6 +79,7 @@ const CreateOrders = () => {
     calculateTotalDiscount,
     calculateTotal,
     hasQuantityErrors,
+    validateForm,
     BankData,
     BankDataLoading,
     selectedVariations,
@@ -88,26 +91,100 @@ const CreateOrders = () => {
     searchInput,
   });
 
+  const {
+    address,
+    updateAddressField,
+    stateList,
+    cityList,
+    isAddressComplete,
+    isPhoneLocked,
+    isEmailLocked,
+    isShipbubbleActive,
+    shipmentRates,
+    isFetchingRates,
+    ratesError,
+    fetchRates,
+    resetShipmentRates,
+    selectedCourier,
+    setSelectedCourier,
+    submitOrder,
+    isSubmittingOrder,
+  } = useOrderDeliveryHook({
+    businessId: business_id,
+    findBusiness,
+    customerName: customer?.name,
+    customerPhone: customer?.phone,
+    customerEmail: customer?.email,
+  });
+
+  const handleAddressFieldChange = (field: any, value: string) => {
+    updateAddressField(field, value);
+    if (selectedCourier) {
+      resetShipmentRates();
+      setShippingFee(0);
+    }
+  };
+
+  const buildOrderProducts = () =>
+    selectedProducts.map((p) => ({
+      product_id: selectedVariations[p.id] || p.id,
+      quantity: p.quantity || 1,
+    }));
+
+  const handleOpenDeliveryOptions = () => {
+    fetchRates(buildOrderProducts(), notes || undefined);
+    setIsShippingDrawerOpen(true);
+  };
+
+  const handleSelectCourier = (courier: any) => {
+    setSelectedCourier(courier);
+    setShippingFee(Number(courier.amount) || 0);
+    setSelectedShippingMethod({
+      id: courier.id,
+      location: courier.location,
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(selectedBank);
+    if (!validateForm(selectedBank)) return;
+
+    submitOrder({
+      products: buildOrderProducts(),
+      customerId: customer.id,
+      paymentStatus: paymentStatus as "UNPAID" | "PARTIAL" | "PAID",
+      paymentMethod: selectedPaymentMethod,
+      bank: selectedBank,
+      amountPaid: paymentStatus === "PAID" ? calculateTotal() : amountPaid,
+      notes,
+      shippingDate,
+      shippingId: isShipbubbleActive ? undefined : selectedShippingMethod?.id,
+    });
   };
 
   return (
     <div className="space-y-4 sm:space-y-6 mx-auto max-w-4xl px-4 sm:px-6 py-4 sm:py-6">
-      <ArrowBigLeft
-        className="cursor-pointer w-6 h-6 sm:w-8 sm:h-8"
-        onClick={() => window.history.back()}
-      />
-      <h2 className="text-lg sm:text-xl font-semibold">Order Details</h2>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-1.5 mr-4 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+        >
+          <ArrowBigLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
+        <h2 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+          Order Details
+        </h2>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-[4fr_1fr] gap-4 sm:gap-6 w-full">
           {/* Customer Dropdown */}
           <div className="space-y-2 w-full">
             <Label>Customer *</Label>
             <div
-              className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white px-3 sm:px-4 h-10 flex items-center"
+              className="hover:border-primary-green-300 cursor-pointer rounded-xl border border-grey-5 bg-white px-3 sm:px-4 h-10 flex items-center"
               onClick={() => setIsCustomerDrawerOpen(true)}
             >
               <div className="flex justify-between items-center w-full">
@@ -118,13 +195,13 @@ const CreateOrders = () => {
                 {customer?.name && (
                   <button
                     type="button"
-                    className="cursor-pointer rounded-full bg-gray-100 hover:bg-gray-200 p-1 flex-shrink-0"
+                    className="cursor-pointer rounded-full bg-grey-6 hover:bg-grey-5 p-1 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
                       setCustomer(null);
                     }}
                   >
-                    <Trash2 className="w-3 h-3 text-red-500 hover:text-red-900" />
+                    <Trash2 className="w-3 h-3 text-error-1 hover:text-error-1" />
                   </button>
                 )}
               </div>
@@ -134,50 +211,168 @@ const CreateOrders = () => {
           {/* Shipping Date */}
           <div className="space-y-2 w-full">
             <Label htmlFor="shippingDate">Shipping Date *</Label>
-            <div className="relative">
-              <Input
-                className="bg-white border border-gray-200 h-10 text-sm cursor-pointer"
-                type="date"
-                id="shippingDate"
-                value={shippingDate}
-                onChange={(e) => setShippingDate(e.target.value)}
-              />
-            </div>
+            <DatePicker
+              id="shippingDate"
+              value={shippingDate}
+              onChange={setShippingDate}
+              className="h-10 rounded-xl text-sm"
+            />
           </div>
         </div>
 
-        {/* Sales Channel */}
-        <div className="space-y-2 w-full">
-          <Label htmlFor="salesChannel">Sales Channel *</Label>
-          <Select
-            value={selectedSalesChannel}
-            onValueChange={setSelectedSalesChannel}
-          >
-            <SelectTrigger className="w-full h-10">
-              <SelectValue placeholder="Select a sales channel" />
-            </SelectTrigger>
-            <SelectContent className="cursor-pointer">
-              {salesChannelOptions.map((channel: any) => (
-                <SelectItem
-                  className="cursor-pointer"
-                  key={channel.value}
-                  value={channel.value}
+        {/* Delivery Address */}
+        <div className="space-y-3 w-full">
+          <Label>Delivery Address *</Label>
+          <div className="border border-grey-5 rounded-xl bg-white p-3 sm:p-4 space-y-4">
+            {!customer && (
+              <p className="text-xs text-grey-4 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Select a customer above — their name is used on the delivery
+                address.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">Phone *</Label>
+                <Input
+                  type="tel"
+                  value={address.phone}
+                  onChange={(e) =>
+                    handleAddressFieldChange("phone", e.target.value)
+                  }
+                  placeholder="Phone number"
+                  className="h-10 disabled:opacity-100 disabled:bg-grey-6"
+                  disabled={isPhoneLocked}
+                />
+                {isPhoneLocked && (
+                  <p className="text-[11px] text-grey-4">
+                    From customer profile
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">
+                  Alt. Phone
+                </Label>
+                <Input
+                  type="tel"
+                  value={address.altPhone}
+                  onChange={(e) =>
+                    handleAddressFieldChange("altPhone", e.target.value)
+                  }
+                  placeholder="Alternative phone"
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-grey-3">Email *</Label>
+              <Input
+                type="email"
+                value={address.email}
+                onChange={(e) =>
+                  handleAddressFieldChange("email", e.target.value)
+                }
+                placeholder="Email address"
+                className="h-10 disabled:opacity-100 disabled:bg-grey-6"
+                disabled={isEmailLocked}
+              />
+              {isEmailLocked && (
+                <p className="text-[11px] text-grey-4">
+                  From customer profile
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">State *</Label>
+                <Select
+                  value={address.state}
+                  onValueChange={(v) => handleAddressFieldChange("state", v)}
                 >
-                  {channel.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent className="cursor-pointer">
+                    {stateList.map((s) => (
+                      <SelectItem
+                        className="cursor-pointer"
+                        key={s.isoCode}
+                        value={s.isoCode}
+                      >
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">City</Label>
+                {address.state && cityList.length === 0 ? (
+                  <Input
+                    value={address.city}
+                    onChange={(e) =>
+                      handleAddressFieldChange("city", e.target.value)
+                    }
+                    placeholder="Enter city"
+                    className="h-10"
+                  />
+                ) : (
+                  <Select
+                    value={address.city}
+                    onValueChange={(v) => handleAddressFieldChange("city", v)}
+                    disabled={!address.state}
+                  >
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue
+                        placeholder={
+                          address.state ? "Select city" : "Select state first"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="cursor-pointer">
+                      {cityList.map((c) => (
+                        <SelectItem
+                          className="cursor-pointer"
+                          key={c.name}
+                          value={c.name}
+                        >
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-grey-3">
+                Shipping Address *
+              </Label>
+              <Textarea
+                value={address.shippingAddress}
+                onChange={(e) =>
+                  handleAddressFieldChange("shippingAddress", e.target.value)
+                }
+                placeholder="Full delivery address"
+                rows={2}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Products Section */}
         <div className="space-y-4 w-full">
           <Label>Products *</Label>
           <div
-            className="hover:border-green-300 cursor-pointer rounded-md border border-gray-200 bg-white p-3 sm:p-4"
+            className="hover:border-primary-green-300 cursor-pointer rounded-xl border border-grey-5 bg-white p-3 sm:p-4"
             onClick={() => setIsSelectProductDrawerOpen(true)}
           >
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-grey-3">
               {selectedProducts.length > 0
                 ? `${selectedProducts.length} product(s) selected`
                 : "Click to select products"}
@@ -185,7 +380,7 @@ const CreateOrders = () => {
           </div>
 
           {selectedProducts.length > 0 && (
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-200">
+            <div className="border border-grey-5 rounded-xl divide-y divide-grey-6 overflow-hidden">
               {selectedProducts.map((product) => (
                 <div key={product.id} className="p-3 sm:p-4 space-y-3">
                   {/* Product Header with Variation Badge */}
@@ -205,14 +400,14 @@ const CreateOrders = () => {
                               {product.name}
                             </h4>
                             {hasVariations(product) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 flex-shrink-0">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-secondary-6 text-primary-green-100 border border-secondary-4 flex-shrink-0">
                                 <Package className="w-3 h-3" />
                                 Has Variations
                               </span>
                             )}
                           </div>
                           {!hasVariations(product) && (
-                            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                            <p className="text-xs sm:text-sm text-grey-4 mt-0.5">
                               ₦{getProductPrice(product).toLocaleString()} per
                               unit
                             </p>
@@ -221,23 +416,23 @@ const CreateOrders = () => {
                       </div>
                       <Button
                         type="button"
-                        className="border border-red-500 hover:bg-red-50 flex-shrink-0"
+                        className="border border-error-1 hover:bg-error-2 flex-shrink-0"
                         variant="outline"
                         size="sm"
                         onClick={() => removeProduct(product.id)}
                       >
-                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-error-1" />
                       </Button>
                     </div>
 
                     {/* Variation Selection Section */}
                     {hasVariations(product) && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
+                      <div className="bg-secondary-6 border border-secondary-4 rounded-xl p-3 space-y-3">
                         <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-green-600" />
-                          <Label className="text-sm font-medium text-green-900">
+                          <Package className="w-4 h-4 text-primary-green-300" />
+                          <Label className="text-sm font-medium text-primary-green-100">
                             Select Variation{" "}
-                            <span className="text-red-500">*</span>
+                            <span className="text-error-1">*</span>
                           </Label>
                         </div>
                         <Select
@@ -246,7 +441,7 @@ const CreateOrders = () => {
                             handleVariationSelect(product.id, value)
                           }
                         >
-                          <SelectTrigger className="w-full bg-white border-green-300">
+                          <SelectTrigger className="w-full bg-white border-primary-green-300">
                             <SelectValue placeholder="Choose a variation..." />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -254,16 +449,16 @@ const CreateOrders = () => {
                               <SelectItem
                                 key={variation.id}
                                 value={variation.id}
-                                className="cursor-pointer hover:bg-green-50"
+                                className="cursor-pointer hover:bg-secondary-6"
                               >
                                 <div className="flex items-center justify-between w-full gap-4">
                                   <span className="font-medium">
                                     {variation.name}
                                   </span>
-                                  <div className="flex items-center gap-3 text-xs text-gray-600">
+                                  <div className="flex items-center gap-3 text-xs text-grey-3">
                                     <span>Stock: {variation.quantity}</span>
                                     <span>•</span>
-                                    <span className="font-semibold text-green-600">
+                                    <span className="font-semibold text-primary-green-300">
                                       ₦
                                       {variation.selling_price?.toLocaleString()}
                                     </span>
@@ -274,7 +469,7 @@ const CreateOrders = () => {
                           </SelectContent>
                         </Select>
                         {selectedVariations[product.id] && (
-                          <div className="text-xs mt-2 text-green-700 bg-green-100 p-2 rounded border border-green-200">
+                          <div className="text-xs mt-2 text-primary-green-100 bg-secondary-5 p-2 rounded border border-secondary-4">
                             Selected: {getSelectedVariation(product)?.name} - ₦
                             {getProductPrice(product).toLocaleString()} per unit
                           </div>
@@ -287,7 +482,7 @@ const CreateOrders = () => {
                       selectedVariations[product.id]) && (
                       <div className="flex items-center gap-3">
                         <div className="flex-1">
-                          <Label className="text-xs text-gray-600 mb-1 block">
+                          <Label className="text-xs text-grey-3 mb-1 block">
                             Quantity
                           </Label>
                           <Input
@@ -296,7 +491,7 @@ const CreateOrders = () => {
                             value={product.quantity || 1}
                             className={`w-full text-sm ${
                               productErrors[product.id]
-                                ? "border-red-500 focus-visible:ring-red-500"
+                                ? "border-error-1 focus-visible:ring-error-1"
                                 : ""
                             }`}
                             onChange={(e) => {
@@ -309,7 +504,7 @@ const CreateOrders = () => {
                             }
                           />
                           {productErrors[product.id] && (
-                            <p className="text-xs text-red-500 flex items-center gap-1 mt-1">
+                            <p className="text-xs text-error-1 flex items-center gap-1 mt-1">
                               <AlertCircle className="w-3 h-3" />
                               {productErrors[product.id]}
                             </p>
@@ -322,18 +517,18 @@ const CreateOrders = () => {
                   {/* Discount Information */}
                   {selectedVariations[product.id] &&
                     isDiscountApplied(product) && (
-                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
-                        <BadgePercent className="w-4 h-4 text-green-600" />
+                      <div className="flex items-center gap-2 bg-secondary-6 p-2 rounded-xl border border-secondary-4">
+                        <BadgePercent className="w-4 h-4 text-primary-green-300" />
                         <div className="flex-1">
-                          <p className="text-xs text-green-700 font-medium">
+                          <p className="text-xs text-primary-green-100 font-medium">
                             Discount Applied!
                           </p>
-                          <p className="text-xs text-green-600">
+                          <p className="text-xs text-primary-green-300">
                             ₦{getProductDiscount(product).toLocaleString()} off
                             per unit
                             {getSelectedVariation(product)
                               ?.discount_threshold && (
-                              <span className="text-gray-600">
+                              <span className="text-grey-3">
                                 {" "}
                                 (Buy{" "}
                                 {
@@ -346,8 +541,8 @@ const CreateOrders = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Total saved:</p>
-                          <p className="text-sm font-semibold text-green-600">
+                          <p className="text-xs text-grey-4">Total saved:</p>
+                          <p className="text-sm font-semibold text-primary-green-300">
                             ₦
                             {(
                               getProductDiscount(product) *
@@ -363,9 +558,9 @@ const CreateOrders = () => {
                     !isDiscountApplied(product) &&
                     getSelectedVariation(product)?.discount_threshold &&
                     getSelectedVariation(product)?.discount > 0 && (
-                      <div className="flex items-center gap-2 bg-green-50 p-2 rounded-md border border-green-200">
-                        <BadgePercent className="w-4 h-4 text-green-600" />
-                        <p className="text-xs text-green-700">
+                      <div className="flex items-center gap-2 bg-secondary-6 p-2 rounded-xl border border-secondary-4">
+                        <BadgePercent className="w-4 h-4 text-primary-green-300" />
+                        <p className="text-xs text-primary-green-100">
                           Buy{" "}
                           {getSelectedVariation(product).discount_threshold -
                             (product.quantity || 1)}{" "}
@@ -381,7 +576,17 @@ const CreateOrders = () => {
               ))}
 
               {/* Order Summary Section */}
-              <div className="p-3 sm:p-4 bg-gray-50 space-y-3">
+              <div className="p-3 sm:p-4 bg-grey-6 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-grey-1">
+                    Bill Summary
+                  </h3>
+                  <span className="text-[10px] text-grey-4 uppercase tracking-wide">
+                    {selectedProducts.length}{" "}
+                    {selectedProducts.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
+
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Subtotal:</span>
                   <span className="text-sm">
@@ -392,7 +597,7 @@ const CreateOrders = () => {
                 {calculateTotalDiscount() > 0 && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Discount:</span>
-                    <span className="text-sm text-green-600">
+                    <span className="text-sm text-primary-green-300">
                       -₦{calculateTotalDiscount().toLocaleString()}
                     </span>
                   </div>
@@ -412,7 +617,7 @@ const CreateOrders = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => setTax(0)}
-                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -430,20 +635,71 @@ const CreateOrders = () => {
                       )}
                     </div>
                   </div>
+                  <p className="text-[10px] text-grey-4">
+                    Tax is for your records only — it isn&apos;t sent with the
+                    order.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Shipping:</span>
+                    <span className="text-sm font-medium">
+                      {isShipbubbleActive ? "Delivery:" : "Shipping:"}
+                    </span>
                     <div className="flex items-center gap-2">
-                      {shippingFee > 0 ? (
+                      {isShipbubbleActive ? (
+                        selectedCourier ? (
+                          <>
+                            <div className="flex flex-col items-end">
+                              <span className="text-sm font-semibold">
+                                ₦{shippingFee.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-grey-4">
+                                {selectedCourier.location}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                resetShipmentRates();
+                                setShippingFee(0);
+                                setSelectedShippingMethod(null);
+                              }}
+                              className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleOpenDeliveryOptions}
+                            disabled={
+                              !isAddressComplete ||
+                              selectedProducts.length === 0
+                            }
+                            title={
+                              !isAddressComplete
+                                ? "Complete the delivery address first"
+                                : undefined
+                            }
+                            className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-6 w-6 p-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        )
+                      ) : shippingFee > 0 ? (
                         <>
                           <div className="flex flex-col items-end">
                             <span className="text-sm font-semibold">
                               ₦{shippingFee.toLocaleString()}
                             </span>
                             {selectedShippingMethod?.location && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-grey-4">
                                 {selectedShippingMethod.location}
                               </span>
                             )}
@@ -456,7 +712,7 @@ const CreateOrders = () => {
                               setShippingFee(0);
                               setSelectedShippingMethod(null);
                             }}
-                            className="border-red-500 text-red-500 hover:bg-red-50 h-6 w-6 p-0"
+                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
@@ -467,7 +723,7 @@ const CreateOrders = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setIsShippingDrawerOpen(true)}
-                          className="border-green-500 text-green-500 hover:bg-green-50 h-6 w-6 p-0"
+                          className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-6 w-6 p-0"
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -476,7 +732,7 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <div className="flex justify-between items-center pt-2 border-t border-grey-5">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
                     ₦{calculateTotal().toLocaleString()}
@@ -559,8 +815,8 @@ const CreateOrders = () => {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-500 text-center">
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-grey-5 rounded-xl bg-grey-6">
+                        <p className="text-sm text-grey-4 text-center">
                           No bank accounts available. Please add a bank account
                           in settings.
                         </p>
@@ -582,19 +838,21 @@ const CreateOrders = () => {
             </TabsContent>
 
             <TabsContent value="partial" className="pt-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="bg-secondary-6 border border-secondary-4 rounded-xl p-4 mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-900">
+                  <span className="text-sm font-medium text-primary-green-100">
                     Total Amount:
                   </span>
-                  <span className="text-lg font-bold text-green-900">
+                  <span className="text-lg font-bold text-primary-green-100">
                     ₦{calculateTotal().toLocaleString()}
                   </span>
                 </div>
                 {amountPaid > 0 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-700">Remaining Balance:</span>
-                    <span className="font-semibold text-green-700">
+                    <span className="text-primary-green-100">
+                      Remaining Balance:
+                    </span>
+                    <span className="font-semibold text-primary-green-100">
                       ₦{(calculateTotal() - amountPaid).toLocaleString()}
                     </span>
                   </div>
@@ -620,7 +878,7 @@ const CreateOrders = () => {
                     className="w-full"
                   />
                   {amountPaid > 0 && amountPaid >= calculateTotal() && (
-                    <p className="text-xs text-red-500">
+                    <p className="text-xs text-error-1">
                       Partial amount must be less than total amount
                     </p>
                   )}
@@ -671,8 +929,8 @@ const CreateOrders = () => {
                         </SelectContent>
                       </Select>
                     ) : (
-                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                        <p className="text-sm text-gray-500 text-center">
+                      <div className="flex flex-col items-center justify-center p-4 border border-dashed border-grey-5 rounded-xl bg-grey-6">
+                        <p className="text-sm text-grey-4 text-center">
                           No bank accounts available. Please add a bank account
                           in settings.
                         </p>
@@ -708,11 +966,11 @@ const CreateOrders = () => {
         </div>
 
         {hasQuantityErrors() && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-2">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-error-2 border border-error-1/30 rounded-xl p-4 flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-error-1 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-red-800">Quantity Error</p>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-sm font-medium text-error-1">Quantity Error</p>
+              <p className="text-xs text-error-1 mt-1">
                 Please adjust product quantities to available stock levels
                 before submitting.
               </p>
@@ -724,9 +982,9 @@ const CreateOrders = () => {
           <Button
             type="submit"
             className="w-full sm:w-[200px] h-10 sm:h-12"
-            disabled={CreateOrderLoading || hasQuantityErrors()}
+            disabled={isSubmittingOrder || hasQuantityErrors()}
           >
-            {CreateOrderLoading ? "Creating..." : "Create Order"}
+            {isSubmittingOrder ? "Creating..." : "Create Order"}
           </Button>
         </div>
       </form>
@@ -758,22 +1016,35 @@ const CreateOrders = () => {
         }}
       />
 
-      <ShippingDrawer
-        open={isShippingDrawerOpen}
-        onOpenChange={setIsShippingDrawerOpen}
-        onShippingSelect={(selectedShipping: any) => {
-          if (selectedShipping?.cost) {
-            setShippingFee(selectedShipping.cost);
-            setSelectedShippingMethod(selectedShipping);
-          }
-        }}
-        shippingData={ShippingData?.data || []}
-        isLoading={allShippingDataLoading}
-        onAddShipping={() => {
-          setIsShippingDrawerOpen(false);
-          console.log("Navigate to create shipping method");
-        }}
-      />
+      {isShipbubbleActive ? (
+        <ShipbubbleCourierDrawer
+          open={isShippingDrawerOpen}
+          onOpenChange={setIsShippingDrawerOpen}
+          couriers={shipmentRates}
+          selectedCourier={selectedCourier}
+          onSelect={handleSelectCourier}
+          isFetchingRates={isFetchingRates}
+          ratesError={ratesError}
+          onRetry={() => fetchRates(buildOrderProducts(), notes || undefined)}
+        />
+      ) : (
+        <ShippingDrawer
+          open={isShippingDrawerOpen}
+          onOpenChange={setIsShippingDrawerOpen}
+          onShippingSelect={(selectedShipping: any) => {
+            if (selectedShipping?.cost) {
+              setShippingFee(selectedShipping.cost);
+              setSelectedShippingMethod(selectedShipping);
+            }
+          }}
+          shippingData={ShippingData?.data || []}
+          isLoading={allShippingDataLoading}
+          onAddShipping={() => {
+            setIsShippingDrawerOpen(false);
+            console.log("Navigate to create shipping method");
+          }}
+        />
+      )}
     </div>
   );
 };

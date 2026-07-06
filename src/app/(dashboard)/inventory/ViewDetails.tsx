@@ -37,7 +37,7 @@ const ViewDetails = ({
   }
 
   return (
-    <div className="bg-[#FEFFFE] p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 max-w-4xl mx-auto">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-grey-5 max-w-4xl mx-auto">
       <div className="flex flex-col gap-4 sm:gap-6">
         {/* Image Header */}
         <div className="flex justify-start">
@@ -45,7 +45,7 @@ const ViewDetails = ({
             <img
               src={data.image}
               alt={data.name}
-              className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-gray-200 p-1 sm:p-2"
+              className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-grey-5 p-1 sm:p-2"
             />
           )}
         </div>
@@ -114,29 +114,29 @@ const ViewDetails = ({
               href={`/inventory/${data?.id}/restock`}
               className="w-full sm:w-auto"
             >
-              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-grey-6 hover:bg-grey-5 rounded-lg border border-grey-5 transition-colors">
                 <span className="font-medium text-xs">Restock History</span>
-                <ArrowUpRight size={16} className="text-gray-500" />
+                <ArrowUpRight size={16} className="text-grey-3" />
               </button>
             </Link>
             <Link
               href={`/inventory/${data?.id}/transfer-history`}
               className="w-full sm:w-auto"
             >
-              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-grey-6 hover:bg-grey-5 rounded-lg border border-grey-5 transition-colors">
                 <span className="font-medium text-xs">Transfer History</span>
-                <ArrowUpRight size={16} className="text-gray-500" />
+                <ArrowUpRight size={16} className="text-grey-3" />
               </button>
             </Link>
             <Link
               href={`/inventory/${data?.id}/product-sold-history`}
               className="w-full sm:w-auto"
             >
-              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors">
+              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-grey-6 hover:bg-grey-5 rounded-lg border border-grey-5 transition-colors">
                 <span className="font-medium text-xs">
                   Product Sold History
                 </span>
-                <ArrowUpRight size={16} className="text-gray-500" />
+                <ArrowUpRight size={16} className="text-grey-3" />
               </button>
             </Link>
           </div>
@@ -148,7 +148,7 @@ const ViewDetails = ({
             href={`/new-add-product/${data?.id}/edit-product`}
             className="w-full sm:w-auto"
           >
-            <Button className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
+            <Button className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-info-2 text-info-1 rounded-lg hover:bg-info-2/70 transition-colors">
               <Edit2 size={14} className="sm:size-4" />
               <span className="text-sm sm:text-base">Edit Details</span>
             </Button>
@@ -157,7 +157,7 @@ const ViewDetails = ({
           <Button
             disabled={deleting}
             onClick={() => handleDeleteProduct(data?.id, data?.type)}
-            className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors"
+            className="w-full sm:w-auto flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-error-2 text-error-1 rounded-lg hover:bg-error-2/70 transition-colors"
           >
             <Trash2 size={14} className="sm:size-4" />
             <span className="text-sm sm:text-base">
@@ -181,7 +181,7 @@ const DetailItem = ({
   spanFull?: boolean;
 }) => (
   <div className={spanFull ? "col-span-2" : ""}>
-    <p className="text-xs sm:text-sm text-gray-500">{label}</p>
+    <p className="text-xs sm:text-sm text-grey-3">{label}</p>
     <p className="font-medium text-sm sm:text-base mt-0.5 sm:mt-1">{value}</p>
   </div>
 );

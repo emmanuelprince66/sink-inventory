@@ -4,17 +4,14 @@ import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useUpdateOrderPaymentStatusMutation } from "@/api/orders/edit-status";
 import {
-  UseCreateOrderMutation,
   useFetchAllOrdersQuery,
   useFetchOrderByIdQuery,
   useUpdateOrderShippingStatusMutation,
 } from "@/api/orders/orders";
 import { useFetchAllShippingQuery } from "@/api/shipping/shipping";
-import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
-import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -58,7 +55,6 @@ export const useOrdersHook = ({
   const isUserSubscribed = useIsUserSubscribeStore(
     (state: any) => state.is_subscribed,
   );
-  const queryClient = useQueryClient();
 
   // Component States
   const [customer, setCustomer] = useState<any | null>(null);
@@ -68,7 +64,6 @@ export const useOrdersHook = ({
   );
   const [shippingFee, setShippingFee] = useState(0);
   const [tax, setTax] = useState(0);
-  const [selectedSalesChannel, setSelectedSalesChannel] = useState("");
   const [shippingDate, setShippingDate] = useState(() => {
     // Local-timezone YYYY-MM-DD — toISOString() shifts to UTC and silently
     // changes the calendar day for users east of GMT.
@@ -185,20 +180,6 @@ export const useOrdersHook = ({
       params: { id: business_id },
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5,
-    });
-
-  // Mutation for creating order
-  const { mutate: CreateOrder, isPending: CreateOrderLoading } =
-    UseCreateOrderMutation({
-      businessId: business_id,
-      onSuccess: (data) => {
-        showToast(data.message, "success");
-
-        queryClient.invalidateQueries({
-          queryKey: [queryKey.orders.getAllOrders],
-        });
-        router.push(`/orders`);
-      },
     });
 
   // ========== VARIATION FUNCTIONS ==========
@@ -378,11 +359,6 @@ export const useOrdersHook = ({
     }
 
     // Validate required fields
-    if (!selectedSalesChannel || selectedSalesChannel.trim() === "") {
-      showToast("Channel is required", "error");
-      return false;
-    }
-
     if (!customer || !customer.id) {
       showToast("Customer is required", "error");
       return false;
@@ -465,75 +441,6 @@ export const useOrdersHook = ({
     return true;
   };
 
-  // Form submission
-  const onSubmit = async (selectedBank?: string) => {
-    console.log("onSubmit called");
-
-    // Run validation
-    if (!validateForm(selectedBank)) {
-      return;
-    }
-
-    // Prepare products array with variation_id
-    const products = selectedProducts.map((p) => ({
-      id: p.id,
-      unit_price: getProductPrice(p),
-      discount: getProductDiscount(p),
-      quantity: p.quantity || 1,
-      type: p.type || "",
-      ...(selectedVariations[p.id] && {
-        variation_id: selectedVariations[p.id],
-      }),
-    }));
-
-    // Build payload
-    const payload: any = {
-      channel: selectedSalesChannel,
-      customer: customer.id,
-      payment_status: paymentStatus,
-      shipping_date: shippingDate,
-      products: products,
-      shipping_fee: shippingFee,
-      tax: tax,
-    };
-
-    // Add payment method and amount_paid for PAID status
-    if (paymentStatus === "PAID") {
-      payload.payment_method = selectedPaymentMethod;
-      payload.amount_paid = calculateTotal(); // Set amount_paid to total for PAID status
-
-      // Add bank if BANK payment method is selected
-      if (selectedPaymentMethod === "BANK" && selectedBank) {
-        payload.bank = selectedBank;
-      }
-    }
-
-    // Add payment fields for PARTIAL status
-    if (paymentStatus === "PARTIAL") {
-      payload.payment_method = selectedPaymentMethod;
-      payload.amount_paid = amountPaid;
-
-      // Add bank if BANK payment method is selected
-      if (selectedPaymentMethod === "BANK" && selectedBank) {
-        payload.bank = selectedBank;
-      }
-    }
-
-    // Don't add payment_method or amount_paid for UNPAID status
-
-    if (shippingStatus) {
-      payload.shipping_status = shippingStatus;
-    }
-
-    if (notes && notes.trim() !== "") {
-      payload.note = notes;
-    }
-
-    console.log("payload", payload);
-
-    CreateOrder({ payload, businessId: business_id });
-  };
-
   // shipping
   const {
     data: ShippingData,
@@ -547,14 +454,6 @@ export const useOrdersHook = ({
   });
 
   // Options for select inputs
-  const salesChannelOptions = [
-    { label: "Online", value: "ONLINE" },
-    { label: "Retail", value: "RETAIL" },
-    { label: "Wholesale", value: "WHOLESALE" },
-    { label: "Phone", value: "PHONE" },
-    { label: "Whatsapp", value: "WHATSAPP" },
-  ];
-
   const shippingStatusOptions = [
     { label: "Pending", value: "PENDING" },
     { label: "Shipped", value: "SHIPPED" },
@@ -573,7 +472,6 @@ export const useOrdersHook = ({
       OrderDataLoading || isRefetchingOrderData || BusinessDataLoading,
     InventoryDataLoading: InventoryDataLoading || isRefetchingInventory,
     CustomersLoading,
-    CreateOrderLoading,
     BankDataLoading,
 
     // States
@@ -587,8 +485,6 @@ export const useOrdersHook = ({
     setShippingFee,
     tax,
     setTax,
-    selectedSalesChannel,
-    setSelectedSalesChannel,
     shippingDate,
     setShippingDate,
     paymentStatus,
@@ -634,11 +530,7 @@ export const useOrdersHook = ({
     ShippingData,
     allShippingDataLoading,
 
-    // Form
-    onSubmit,
-
     // Options
-    salesChannelOptions,
     shippingStatusOptions,
     updateOrderPaymentStatusSuccess,
     updateOrderPaymentStatus,

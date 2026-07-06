@@ -28,7 +28,7 @@ export const columns: ColumnDef<CustomerHistoryData>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.method}</p>
+          <p className="text-sm text-grey-3">{customer.method}</p>
         </div>
       );
     },
@@ -40,7 +40,7 @@ export const columns: ColumnDef<CustomerHistoryData>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.created_at}</p>
+          <p className="text-sm text-grey-3">{customer.created_at}</p>
         </div>
       );
     },
@@ -54,7 +54,7 @@ export const columns: ColumnDef<CustomerHistoryData>[] = [
 
       return (
         <div className="font-medium">
-          <p>{customer.total_price}</p>
+          <p className="text-sm text-grey-1">{customer.total_price}</p>
         </div>
       );
     },
@@ -66,7 +66,7 @@ export const columns: ColumnDef<CustomerHistoryData>[] = [
     cell: ({ row }) => {
       return (
         <div className="font-medium">
-          <ArrowRightIcon />
+          <ArrowRightIcon className="h-4 w-4 text-grey-4" />
         </div>
       );
     },

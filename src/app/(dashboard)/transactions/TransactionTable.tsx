@@ -41,6 +41,7 @@ const TransactionTable = ({
     <>
       <>
         <CustomTable
+          bordered={false}
           loading={loading}
           noDataText="No Transactions found"
           columns={columns}

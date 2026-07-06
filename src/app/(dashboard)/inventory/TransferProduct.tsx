@@ -60,7 +60,7 @@ const TransferProductForm = ({
                     <SelectValue placeholder="Select a business" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="w-full border border-gray-300 bg-white">
+                <SelectContent className="w-full border border-grey-5 bg-white">
                   {otherBusiness?.map((business: any) => (
                     <SelectItem key={business.id} value={business.id}>
                       {business.name}
@@ -90,7 +90,7 @@ const TransferProductForm = ({
                       <SelectValue placeholder="Select a product to merge with" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="w-full border border-gray-300 bg-white">
+                  <SelectContent className="w-full border border-grey-5 bg-white">
                     {targetProducts?.map((product: any) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name} (Current: {product.quantity})
@@ -99,7 +99,7 @@ const TransferProductForm = ({
                   </SelectContent>
                 </Select>
                 <FormMessage />
-                <p className="text-sm text-muted -foreground mt-2">
+                <p className="text-sm text-grey-3 mt-2">
                   Leave empty to create a new product in the target business
                 </p>
               </FormItem>
@@ -108,8 +108,8 @@ const TransferProductForm = ({
         )}
 
         {!hasProducts && form.watch("target_business_id") && (
-          <Alert className="bg-yellow-50 border-yellow-200">
-            <AlertDescription>
+          <Alert className="bg-warning-2 border-warning-1/30">
+            <AlertDescription className="text-warning-1 font-medium">
               No products found in target business. A new product will be
               created.
             </AlertDescription>
@@ -132,7 +132,7 @@ const TransferProductForm = ({
                 />
               </FormControl>
               <FormMessage />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-grey-3">
                 Available: {inventory?.quantity}
               </p>
             </FormItem>

@@ -19,7 +19,7 @@ export const useOrderHistoryColumn = () => {
           : "N/A";
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500" title={order.id}>
+            <p className="text-sm font-medium text-grey-3" title={order.id}>
               {shortId}
             </p>
           </div>
@@ -35,7 +35,7 @@ export const useOrderHistoryColumn = () => {
 
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{order.attendant}</p>
+            <p className="text-sm font-medium text-grey-3">{order.attendant}</p>
           </div>
         );
       },
@@ -49,7 +49,7 @@ export const useOrderHistoryColumn = () => {
 
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{order.pre_sale}</p>
+            <p className="text-sm font-medium text-grey-3">{order.pre_sale}</p>
           </div>
         );
       },
@@ -65,7 +65,7 @@ export const useOrderHistoryColumn = () => {
           : "N/A";
         return (
           <div className="font-medium">
-            <p className="text-sm text-gray-500">{formattedDate}</p>
+            <p className="text-sm font-medium text-grey-3">{formattedDate}</p>
           </div>
         );
       },
@@ -75,7 +75,7 @@ export const useOrderHistoryColumn = () => {
       ? [
           {
             accessorKey: "total_price",
-            header: "Amount",
+            header: () => <div className="w-full text-right">Amount</div>,
             cell: ({ row }: { row: any }) => {
               const order = row.original;
               // Format currency with proper symbols
@@ -86,7 +86,9 @@ export const useOrderHistoryColumn = () => {
                 : "₦0.00";
               return (
                 <div className="font-medium">
-                  <p className="text-sm text-gray-500">{formattedAmount}</p>
+                  <p className="text-sm font-bold text-grey-1 text-right">
+                    {formattedAmount}
+                  </p>
                 </div>
               );
             },
@@ -101,14 +103,14 @@ export const useOrderHistoryColumn = () => {
         // Add color coding based on status
         const statusColor =
           order.payment_status === "PAID"
-            ? "text-green-500"
+            ? "text-success-1"
             : order.payment_status === "PENDING"
-              ? "text-yellow-500"
-              : "text-red-500";
+              ? "text-warning-1"
+              : "text-error-1";
 
         return (
           <div className="font-medium">
-            <p className={`text-sm capitalize ${statusColor}`}>
+            <p className={`text-sm font-bold capitalize ${statusColor}`}>
               {order.payment_status || "unknown"}
             </p>
           </div>
@@ -120,7 +122,7 @@ export const useOrderHistoryColumn = () => {
       header: "",
       cell: () => {
         return (
-          <button className="text-sm font-medium text-green-500 hover:text-green-700 transition-colors">
+          <button className="text-sm font-bold text-primary-green-300 hover:text-primary-green-300/80 transition-colors cursor-pointer">
             View →
           </button>
         );

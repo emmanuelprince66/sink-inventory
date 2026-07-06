@@ -14,7 +14,7 @@ export const createProductHistoryColumns =
       accessorKey: "product",
       header: ({ column }) => (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Product
@@ -25,10 +25,10 @@ export const createProductHistoryColumns =
         const item = row.original;
         return (
           <div>
-            <div className="font-medium text-gray-900">
+            <div className="font-medium text-grey-1">
               {item.product?.name}
             </div>
-            <div className="text-xs text-gray-400">{item.product?.unit}</div>
+            <div className="text-xs text-grey-4">{item.product?.unit}</div>
           </div>
         );
       },
@@ -39,7 +39,7 @@ export const createProductHistoryColumns =
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-green-300/10 text-primary-green-300 border border-primary-green-300/20">
             {item.category}
           </span>
         );
@@ -49,7 +49,7 @@ export const createProductHistoryColumns =
       accessorKey: "quantity",
       header: ({ column }) => (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Quantity
@@ -60,7 +60,7 @@ export const createProductHistoryColumns =
         const item = row.original;
         const qty = parseFloat(item.quantity);
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-2 text-info-1">
             {qty} {item.product?.unit}
           </span>
         );
@@ -72,7 +72,7 @@ export const createProductHistoryColumns =
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-grey-3">
             {parseFloat(item.quantity_after)}
           </span>
         );
@@ -82,7 +82,7 @@ export const createProductHistoryColumns =
       accessorKey: "value",
       header: ({ column }) => (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Value
@@ -92,7 +92,7 @@ export const createProductHistoryColumns =
       cell: ({ row }) => {
         const item = row.original;
         return (
-          <span className="font-semibold text-green-700">
+          <span className="font-semibold text-primary-green-300">
             {formatCurrency(item.value)}
           </span>
         );
@@ -105,10 +105,10 @@ export const createProductHistoryColumns =
         const item = row.original;
         return (
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-semibold text-xs">
+            <div className="w-7 h-7 rounded-full bg-primary-green-300/10 flex items-center justify-center text-primary-green-300 font-semibold text-xs">
               {item.recorded_by?.charAt(0)?.toUpperCase() || "?"}
             </div>
-            <span className="text-sm text-gray-700">{item.recorded_by}</span>
+            <span className="text-sm text-grey-2">{item.recorded_by}</span>
           </div>
         );
       },
@@ -120,7 +120,7 @@ export const createProductHistoryColumns =
         const item = row.original;
         return (
           <div
-            className="text-sm text-gray-600 max-w-[150px] truncate"
+            className="text-sm text-grey-3 max-w-[150px] truncate"
             title={item.note || ""}
           >
             {item.note || "-"}
@@ -132,7 +132,7 @@ export const createProductHistoryColumns =
       accessorKey: "created_at",
       header: ({ column }) => (
         <button
-          className="flex items-center gap-1 hover:text-gray-900 transition-colors font-semibold"
+          className="flex items-center gap-1 hover:text-grey-1 transition-colors font-semibold"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Date
@@ -143,9 +143,9 @@ export const createProductHistoryColumns =
         const item = row.original;
         const date = new Date(item.created_at);
         return (
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-grey-3">
             <div className="font-medium">{format(date, "MMM dd, yyyy")}</div>
-            <div className="text-xs text-gray-400">{format(date, "HH:mm")}</div>
+            <div className="text-xs text-grey-4">{format(date, "HH:mm")}</div>
           </div>
         );
       },

@@ -15,16 +15,11 @@ const AllCustomers = ({
   setPage: (page: number) => void;
   page: number;
 }) => {
-  if (!customersData && !customerLoading) {
-    return (
-      <div className="w-full h-full flex flex-col justify-center items-center mt-8">
-        <NoCustomer />
-      </div>
-    );
-  }
+  const hasCustomers = (customersData?.data?.results?.data?.length ?? 0) > 0;
+
   return (
     <div className="w-full">
-      {customersData?.data?.results?.data?.length > 0 && !customerLoading && (
+      {hasCustomers && !customerLoading ? (
         <CustomerTable
           response={customersData}
           loading={false}
@@ -32,6 +27,10 @@ const AllCustomers = ({
           page={page}
           handleRowClick={handleRowClick}
         />
+      ) : (
+        <div className="w-full h-full flex flex-col justify-center items-center">
+          <NoCustomer />
+        </div>
       )}
     </div>
   );

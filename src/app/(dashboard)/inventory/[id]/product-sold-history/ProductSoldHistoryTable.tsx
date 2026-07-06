@@ -28,6 +28,7 @@ const ProductSoldHistoryTable = ({
         noDataText="No Product Sold History found"
         columns={columns}
         data={response?.data?.results?.data || []}
+        bordered={false}
         pagination={{
           currentPage,
           totalPages,

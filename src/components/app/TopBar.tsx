@@ -76,7 +76,7 @@ export function TopBar() {
       }
       variant="ghost"
       size="sm"
-      className={`relative h-9 w-9 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 ${className}`}
+      className={`relative h-9 w-9 p-0 rounded-xl bg-secondary-6 text-primary-green-100 hover:bg-secondary-5 hover:text-primary-green-100 ${className}`}
     >
       <Bell className="h-4 w-4" />
       {notificationCount > 0 && (
@@ -92,19 +92,19 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-gray-200/80 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <header className="sticky top-0 z-50 w-full border-b border-grey-5 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
           {/* Left Section - Welcome Message */}
           <div className="flex items-center gap-4 flex-1">
             <div className="flex items-center justify-between w-full">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <p className="text-lg font-semibold text-gray-900 md:text-xl">
+                  <p className="text-lg font-extrabold text-grey-1 md:text-xl">
                     Welcome back,
                     {BusinessDataLoading ? (
-                      <span className="ml-2 inline-block h-4 w-24 animate-pulse rounded bg-gray-200" />
+                      <span className="ml-2 inline-block h-4 w-24 animate-pulse rounded bg-grey-5" />
                     ) : userName ? (
-                      <span className="ml-1 bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                      <span className="ml-1 text-primary-green-300">
                         {firstName}
                       </span>
                     ) : null}
@@ -118,8 +118,8 @@ export function TopBar() {
                       }
                       className={`text-xs ${
                         business.verification_status === "verified"
-                          ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
-                          : "bg-amber-100 text-amber-700 hover:bg-amber-100"
+                          ? "bg-success-2 text-success-1 hover:bg-success-2"
+                          : "bg-warning-2 text-warning-1 hover:bg-warning-2"
                       }`}
                     >
                       {business.verification_status === "verified"
@@ -128,7 +128,7 @@ export function TopBar() {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 hidden sm:block">
+                <p className="text-sm font-medium text-grey-3 hidden sm:block">
                   {business?.name
                     ? `Managing ${business.name}`
                     : "Dashboard Overview"}
@@ -153,7 +153,7 @@ export function TopBar() {
             <Button
               variant="ghost"
               size="sm"
-              className="hidden lg:flex h-9 w-9 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              className="hidden lg:flex h-9 w-9 p-0 rounded-xl bg-grey-6 text-grey-3 hover:bg-secondary-6 hover:text-primary-green-100"
             >
               <Search className="h-4 w-4" />
               <span className="sr-only">Search</span>
@@ -164,57 +164,57 @@ export function TopBar() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex items-center gap-2 h-9 px-2 hover:bg-gray-100 data-[state=open]:bg-gray-100"
+                  className="flex items-center gap-2 h-9 px-2 rounded-xl hover:bg-secondary-6 data-[state=open]:bg-secondary-6"
                 >
                   <Avatar className="h-7 w-7">
                     <AvatarImage
                       src={business?.owner?.avatar || "/placeholder.svg"}
                       alt={userName}
                     />
-                    <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xs font-medium">
+                    <AvatarFallback className="bg-primary-green-300 text-white text-xs font-bold">
                       {BusinessDataLoading ? "..." : getInitials(userName)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start">
-                    <span className="text-sm font-medium text-gray-900 max-w-[120px] truncate">
+                    <span className="text-sm font-bold text-grey-1 max-w-[120px] truncate">
                       {BusinessDataLoading ? "Loading..." : firstName || "User"}
                     </span>
-                    <span className="text-xs text-gray-500 capitalize">
+                    <span className="text-xs font-medium text-grey-3 capitalize">
                       {user?.role?.toLowerCase() || "Member"}
                     </span>
                   </div>
-                  <ChevronDown className="h-4 w-4 text-gray-400 hidden md:block" />
+                  <ChevronDown className="h-4 w-4 text-grey-4 hidden md:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-64 bg-white border border-gray-200 shadow-lg rounded-lg p-1"
+                className="w-64 bg-white border border-grey-5 shadow-lg rounded-xl p-1"
                 sideOffset={8}
               >
                 {/* User Info Header */}
-                <div className="px-3 py-2 border-b border-gray-100">
+                <div className="px-3 py-2 border-b border-grey-6">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage
                         src={business?.owner?.avatar || "/placeholder.svg"}
                         alt={userName}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-medium">
+                      <AvatarFallback className="bg-primary-green-300 text-white font-bold">
                         {getInitials(userName)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-bold text-grey-1 truncate">
                         {userName || "User"}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs font-medium text-grey-3 truncate">
                         {userEmail ||
                           business?.owner?.email ||
                           "user@example.com"}
                       </p>
                       <Badge
                         variant="secondary"
-                        className="mt-1 text-xs bg-gray-100 text-gray-600 hover:bg-gray-100"
+                        className="mt-1 text-xs bg-grey-6 text-grey-2 hover:bg-grey-6"
                       >
                         {user?.role?.toLowerCase() || "member"}
                       </Badge>
@@ -223,29 +223,29 @@ export function TopBar() {
                 </div>
                 {/* Menu Items */}
                 <div className="py-1">
-                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
-                    <UserCircle className="h-4 w-4 text-gray-500" />
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg">
+                    <UserCircle className="h-4 w-4 text-grey-3" />
                     <span>View Profile</span>
                   </DropdownMenuItem>
                   {user && user?.role === "OWNER" && (
                     <Link href="/business">
-                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
-                        <Building2 className="h-4 w-4 text-gray-500" />
+                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg">
+                        <Building2 className="h-4 w-4 text-grey-3" />
                         <span>Business Settings</span>
                       </DropdownMenuItem>
                     </Link>
                   )}
-                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
-                    <Settings className="h-4 w-4 text-gray-500" />
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg">
+                    <Settings className="h-4 w-4 text-grey-3" />
                     <span>Account Settings</span>
                   </DropdownMenuItem>
 
                   {user && user?.role === "OWNER" && (
                     <DropdownMenuItem
                       onClick={() => setShowConfirmKycModal(true)}
-                      className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md"
+                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg"
                     >
-                      <Shield className="h-4 w-4 text-gray-500" />
+                      <Shield className="h-4 w-4 text-grey-3" />
                       <div className="flex items-center justify-between flex-1">
                         <span>KYC Verification</span>
                         {business?.kyc_status && (
@@ -257,8 +257,8 @@ export function TopBar() {
                             }
                             className={`text-xs ml-2 ${
                               business.kyc_status === "verified"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-100 text-amber-700"
+                                ? "bg-success-2 text-success-1"
+                                : "bg-warning-2 text-warning-1"
                             }`}
                           >
                             {business.kyc_status}
@@ -268,14 +268,14 @@ export function TopBar() {
                     </DropdownMenuItem>
                   )}
                 </div>
-                <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                <DropdownMenuSeparator className="my-1 bg-grey-6" />
                 <div className="py-1">
-                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer rounded-md">
-                    <HelpCircle className="h-4 w-4 text-gray-500" />
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg">
+                    <HelpCircle className="h-4 w-4 text-grey-3" />
                     <span>Help & Support</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer rounded-md">
-                    <LogOut className="h-4 w-4 text-red-500" />
+                  <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-error-1 hover:bg-error-2/40 cursor-pointer rounded-lg">
+                    <LogOut className="h-4 w-4 text-error-1" />
                     <span>Sign Out</span>
                   </DropdownMenuItem>
                 </div>

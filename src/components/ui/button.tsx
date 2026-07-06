@@ -4,26 +4,29 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// font-bold matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx,
+// DSButton (~line 151) — every variant (primary/secondary/outline/ghost/danger) is font-bold (700)
+// with no exceptions. This used to default to font-medium (500) — fixed to match.
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+  "inline-flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap rounded-md text-sm font-bold transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
   {
     variants: {
       variant: {
         default:
-          "bg-[#52B661] text-white hover:bg-[#52B661]/90 shadow-xs border border-[#52B661]",
+          "bg-primary-green-300 text-white hover:bg-primary-green-300/90 shadow-xs border border-primary-green-300",
         destructive:
-          "bg-[#dc2626] text-white hover:bg-[#dc2626]/90 focus-visible:ring-[#dc2626]/20 dark:focus-visible:ring-[#dc2626]/40 dark:bg-[#dc2626]/60 border border-[#dc2626]",
+          "bg-error-1 text-white hover:bg-error-1/90 focus-visible:ring-error-1/20 dark:focus-visible:ring-error-1/40 dark:bg-error-1/60 border border-error-1",
         outline:
-          "border border-[#52B661] bg-transparent text-[#52B661] shadow-xs hover:bg-[#52B661]/10 hover:text-[#52B661] dark:border-[#52B661] dark:hover:bg-[#52B661]/20",
+          "border border-grey-5 bg-transparent text-grey-2 shadow-xs hover:bg-grey-6 hover:text-grey-2 dark:border-grey-5 dark:hover:bg-grey-6",
         secondary:
-          "bg-[#E8F5E9] text-[#2e7d32] hover:bg-[#E8F5E9]/80 border border-[#E8F5E9]",
+          "bg-secondary-6 text-primary-green-100 hover:bg-secondary-6/80 border border-secondary-6",
         ghost:
-          "hover:bg-[#52B661]/10 hover:text-[#52B661] dark:hover:bg-[#52B661]/20",
-        link: "text-[#52B661] underline-offset-4 hover:underline hover:text-[#52B661]/80",
+          "hover:bg-primary-green-300/10 hover:text-primary-green-300 dark:hover:bg-primary-green-300/20",
+        link: "text-primary-green-300 underline-offset-4 hover:underline hover:text-primary-green-300/80",
         success:
-          "bg-[#2e7d32] text-white hover:bg-[#2e7d32]/90 border border-[#2e7d32] shadow-xs",
+          "bg-success-1 text-white hover:bg-success-1/90 border border-success-1 shadow-xs",
         light:
-          "bg-[#f1f8e9] text-[#33691e] hover:bg-[#e8f5e9] border border-[#f1f8e9]",
+          "bg-secondary-6 text-primary-green-100 hover:bg-secondary-5 border border-secondary-6",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",

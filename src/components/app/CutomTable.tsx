@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 import { Pagination } from "./Pagination";
 
@@ -40,6 +41,8 @@ interface CustomTableProps<TData> {
     onPageSizeChange: (size: number) => void;
   };
   showSerialNumber?: boolean; // Add this prop
+  /** Set to false when the table already sits inside a bordered/rounded parent card, to avoid a nested double border. */
+  bordered?: boolean;
 }
 
 export function CustomTable<TData>({
@@ -52,9 +55,12 @@ export function CustomTable<TData>({
   rowClassName,
   pagination,
   showSerialNumber = true, // Default to true
+  bordered = true,
 }: CustomTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  // S/N styled 14px/500 #6b7280 to match Figma reference: Convert Mobile Screens to Desktop/
+  // src/app/App.tsx, SalesScreen (~line 973) — was previously unstyled (browser-default weight/color).
   // Add serial number column if enabled
   const tableColumns = [
     ...(showSerialNumber
@@ -69,7 +75,7 @@ export function CustomTable<TData>({
                   row.index +
                   1
                 : row.index + 1;
-              return baseNumber;
+              return <span className="font-medium text-grey-3">{baseNumber}</span>;
             },
           } as ColumnDef<TData>,
         ]
@@ -95,7 +101,8 @@ export function CustomTable<TData>({
   };
 
   const getRowClass = (row: Row<TData>) => {
-    const baseClass = "border-b border-gray-200 hover:bg-gray-50";
+    // Matches the TableRow side (border-b) so tailwind-merge dedupes instead of stacking two lines.
+    const baseClass = "border-b border-grey-6 hover:bg-grey-6";
     const additionalClass =
       typeof rowClassName === "function" ? rowClassName(row) : rowClassName;
 
@@ -105,18 +112,25 @@ export function CustomTable<TData>({
   };
 
   return (
-    <div className="bg-white shadow-sm mb-9">
+    <div
+      className={cn(
+        "bg-white overflow-hidden mb-4",
+        bordered && "rounded-xl border border-grey-5",
+      )}
+    >
       {tableHeader}
 
+      {/* Header row matches Figma reference: uppercase, tracking-wide, 12px/800, #329661 —
+          Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen (~line 962). */}
       <Table>
-        <TableHeader className="bg-gray-50">
+        <TableHeader className="bg-grey-6">
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="hover:bg-gray-50">
+            <TableRow key={headerGroup.id} className="hover:bg-grey-6 border-grey-6">
               {headerGroup.headers.map((header) => {
                 return (
                   <TableHead
                     key={header.id}
-                    className="capitalize font-semibold text-gray-900 px-6 py-3"
+                    className="uppercase tracking-wide font-extrabold text-xs text-primary-green-300 px-6 py-3.5"
                   >
                     {header.isPlaceholder ? null : (
                       <div
@@ -152,11 +166,11 @@ export function CustomTable<TData>({
                 <div className="flex items-center justify-center h-[300px]">
                   <div className="flex flex-col items-center gap-4">
                     <div className="flex space-x-2">
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-500 [animation-delay:-0.3s]" />
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-500 [animation-delay:-0.15s]" />
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-gray-500" />
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary-green-300 [animation-delay:-0.3s]" />
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary-green-300 [animation-delay:-0.15s]" />
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-primary-green-300" />
                     </div>
-                    <span className="text-gray-500">Loading data...</span>
+                    <span className="text-sm font-medium text-grey-3">Loading data...</span>
                   </div>
                 </div>
               </TableCell>
@@ -184,7 +198,7 @@ export function CustomTable<TData>({
               >
                 <div className="flex items-center justify-center h-[300px]">
                   {typeof noDataText === "string" ? (
-                    <span className="text-gray-500">{noDataText}</span>
+                    <span className="text-sm font-medium text-grey-4">{noDataText}</span>
                   ) : (
                     noDataText
                   )}

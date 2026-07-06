@@ -12,6 +12,7 @@ const TransferHistoryTable = ({
     <>
       <>
         <CustomTable
+          bordered={false}
           loading={loading}
           noDataText="No Transfer History found"
           columns={columns}

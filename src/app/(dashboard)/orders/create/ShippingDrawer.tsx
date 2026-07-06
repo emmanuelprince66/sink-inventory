@@ -64,7 +64,7 @@ const ShippingDrawer = ({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="bg-white border border-gray-200 flex flex-col w-full sm:max-w-md">
+        <SheetContent className="bg-white border border-grey-5 flex flex-col w-full sm:max-w-md">
           <SheetHeader className="border-b pb-4">
             <SheetTitle className="text-xl font-semibold">
               Select Shipping Method
@@ -89,18 +89,18 @@ const ShippingDrawer = ({
           <div className="flex-grow overflow-y-auto space-y-3 p-5">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-grey-4">
                   Loading shipping methods...
                 </div>
               </div>
             ) : visibleShippingMethods.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                <Truck className="w-12 h-12 text-gray-300" />
+                <Truck className="w-12 h-12 text-grey-5" />
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-grey-1">
                     No shipping methods available
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-grey-4 mt-1">
                     Create a shipping method to get started
                   </p>
                 </div>
@@ -111,24 +111,23 @@ const ShippingDrawer = ({
                   key={shipping.id}
                   onClick={() => handleShippingSelect(shipping)}
                   className={`
-                  p-4 rounded-lg border border-gray-200 cursor-pointer transition-all
-                  hover:border-green-300 hover:bg-green-50/50
-            
+                  p-4 rounded-xl border border-grey-5 cursor-pointer transition-all
+                  hover:border-primary-green-300 hover:bg-secondary-6
                 `}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-base text-gray-900">
+                        <h4 className="font-semibold text-base text-grey-1">
                           {shipping.location}
                         </h4>
-                        <span className="text-base font-bold text-green-600">
+                        <span className="text-base font-bold text-primary-green-300">
                           ₦{parseFloat(shipping.amount).toLocaleString()}
                         </span>
                       </div>
 
                       {shipping.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className="text-sm text-grey-3 line-clamp-2">
                           {shipping.description}
                         </p>
                       )}
@@ -142,7 +141,7 @@ const ShippingDrawer = ({
           {/* Footer Info */}
           {visibleShippingMethods.length > 0 && (
             <div className="border-t pt-4 mt-auto">
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-grey-4 text-center">
                 {visibleShippingMethods.length} shipping method
                 {visibleShippingMethods.length !== 1 ? "s" : ""} available
               </p>

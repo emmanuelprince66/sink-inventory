@@ -7,6 +7,7 @@ import {
   CreditCard,
   DollarSign,
   FlaskConical,
+  Gift,
   History,
   LayoutDashboard,
   Megaphone,
@@ -77,6 +78,13 @@ export const links = [
         roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "ACCOUNTANT"],
         permission: "view_orders", // Required permission
       },
+      // {
+      //   title: "Logistics",
+      //   url: "/logistics",
+      //   icon: Truck,
+      //   roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT"],
+      //   permission: "view_orders",
+      // },
       {
         title: "Supplier",
         url: "/supply",
@@ -199,6 +207,13 @@ export const links = [
         title: "Campaign",
         url: "/campaign",
         icon: Megaphone,
+        roles: ["OWNER"],
+        permission: null,
+      },
+      {
+        title: "Refer & Earn",
+        url: "/referral",
+        icon: Gift,
         roles: ["OWNER"],
         permission: null,
       },

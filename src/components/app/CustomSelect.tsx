@@ -40,56 +40,61 @@ const CustomSelect = React.forwardRef<any, CustomSelectProps>(
       control: (base: any) => ({
         ...base,
         minHeight: "42px",
-        borderColor: "#d1d5db",
-        cursor: "pointer", // Added cursor pointer
+        borderColor: "#d1d5db", // grey-5
+        borderRadius: "12px",
+        cursor: "pointer",
         "&:hover": {
-          borderColor: "#059669",
+          borderColor: "#329661", // primary-green-300
         },
         "&:focus-within": {
-          borderColor: "#059669",
-          boxShadow: "0 0 0 1px #059669",
+          borderColor: "#329661",
+          boxShadow: "0 0 0 1px #329661",
         },
       }),
       option: (base: any, { isFocused, isSelected }: any) => ({
         ...base,
-        cursor: "pointer", // Added cursor pointer
+        cursor: "pointer",
+        borderRadius: "8px",
+        fontWeight: isSelected ? 700 : 500,
         backgroundColor: isSelected
-          ? "#059669" // emerald-600
+          ? "#329661" // primary-green-300
           : isFocused
-          ? "#d1fae5" // emerald-100
+          ? "#eef7e0" // secondary-6
           : "white",
-        color: isSelected ? "white" : "#1f2937", // gray-800
+        color: isSelected ? "white" : "#374151", // grey-2
         ":active": {
-          backgroundColor: "#059669",
+          backgroundColor: "#329661",
           color: "white",
         },
       }),
       dropdownIndicator: (base: any) => ({
         ...base,
-        color: "#9ca3af", // gray-400
-        cursor: "pointer", // Added cursor pointer
+        color: "#9ca3af", // grey-4
+        cursor: "pointer",
         ":hover": {
-          color: "#6b7280", // gray-500
+          color: "#6b7280", // grey-3
         },
       }),
       clearIndicator: (base: any) => ({
         ...base,
-        color: "#9ca3af", // gray-400
-        cursor: "pointer", // Added cursor pointer
+        color: "#9ca3af", // grey-4
+        cursor: "pointer",
         ":hover": {
-          color: "#6b7280", // gray-500
+          color: "#6b7280", // grey-3
         },
       }),
       menu: (base: any) => ({
         ...base,
-        marginTop: "2px", // Reduced space between input and menu
-        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
-        border: "1px solid #e5e7eb", // gray-200
+        marginTop: "2px",
+        boxShadow: "0 4px 12px 0 rgba(27, 50, 40, 0.08)",
+        border: "1px solid #d1d5db", // grey-5
+        borderRadius: "12px",
+        overflow: "hidden",
         zIndex: 9999,
       }),
       menuList: (base: any) => ({
         ...base,
-        padding: 0,
+        padding: "6px",
       }),
     };
 
@@ -105,9 +110,7 @@ const CustomSelect = React.forwardRef<any, CustomSelectProps>(
     return (
       <div className={`w-full ${containerClassName}`}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1 cursor-pointer">
-            {" "}
-            {/* Added cursor-pointer */}
+          <label className="block text-sm font-bold text-grey-2 mb-1 cursor-pointer">
             {label}
           </label>
         )}
@@ -130,7 +133,7 @@ const CustomSelect = React.forwardRef<any, CustomSelectProps>(
           styles={customStyles}
           {...props}
         />
-        {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-sm font-medium text-error-1">{error}</p>}
       </div>
     );
   }

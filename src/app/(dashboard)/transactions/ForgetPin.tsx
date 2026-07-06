@@ -46,8 +46,8 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         })}
         className="space-y-4 flex flex-col items-center justify-center"
       >
-        <p className="text-2xl font-bold">Verify Reset Code</p>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-2xl font-extrabold text-grey-1">Verify Reset Code</p>
+        <p className="text-sm text-grey-3 text-center">
           Enter the verification code sent to your email
         </p>
         <FormField
@@ -73,7 +73,7 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         <Button
           disabled={verifyPinResetLoading}
           type="submit"
-          className="w-[220px] mt-6 hover:bg-primary-green-700"
+          className="w-[220px] mt-6 "
         >
           {verifyPinResetLoading ? <Spinner /> : "Verify Code"}
         </Button>
@@ -93,8 +93,8 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         })}
         className="space-y-4 flex flex-col items-center justify-center"
       >
-        <p className="text-2xl font-bold">Reset Pin</p>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-2xl font-extrabold text-grey-1">Reset Pin</p>
+        <p className="text-sm text-grey-3 text-center">
           Enter your new 4-digit pin
         </p>
         <FormField
@@ -117,7 +117,7 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         <Button
           disabled={resetPinLoading}
           type="submit"
-          className="w-[220px] mt-6 hover:bg-primary-green-700"
+          className="w-[220px] mt-6 "
         >
           {resetPinLoading ? <Spinner /> : "Reset Pin"}
         </Button>
@@ -137,14 +137,14 @@ const ForgetPin = ({ onSuccess }: { onSuccess?: () => void }) => {
         })}
         className="space-y-4 flex flex-col items-center justify-center"
       >
-        <p className="text-2xl font-bold">Forgot Pin</p>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-2xl font-extrabold text-grey-1">Forgot Pin</p>
+        <p className="text-sm text-grey-3 text-center">
           Click below to receive a verification code to your email
         </p>
         <Button
           disabled={requestPinResetLoading}
           type="submit"
-          className="w-[220px] mt-6 hover:bg-primary-green-700"
+          className="w-[220px] mt-6 "
         >
           {requestPinResetLoading ? <Spinner /> : "Send Verification Code"}
         </Button>

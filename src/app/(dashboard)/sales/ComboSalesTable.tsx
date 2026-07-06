@@ -122,8 +122,8 @@ const ComboDetailsModal = ({
 }) => {
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-3 pb-3 border-b border-grey-6">
+        <div className="w-10 h-10 rounded-lg bg-grey-6 flex items-center justify-center shrink-0">
           {combo.combo_image ? (
             <Image
               src={combo.combo_image}
@@ -133,12 +133,12 @@ const ComboDetailsModal = ({
               className="object-cover w-full h-full rounded-lg"
             />
           ) : (
-            <Package className="h-4 w-4 text-slate-400" />
+            <Package className="h-4 w-4 text-grey-4" />
           )}
         </div>
         <div>
-          <p className="font-semibold text-slate-900">{combo.combo_name}</p>
-          <p className="text-xs text-slate-500">
+          <p className="font-bold text-grey-1">{combo.combo_name}</p>
+          <p className="text-xs font-medium text-grey-4">
             Qty sold: {combo.quantity} · Total:{" "}
             {formatToNaira(combo.selling_price * combo.quantity)}
           </p>
@@ -146,17 +146,17 @@ const ComboDetailsModal = ({
       </div>
 
       <div>
-        <h4 className="text-sm font-medium text-slate-700 mb-2">
+        <h4 className="text-sm font-bold text-grey-2 mb-2">
           Products in this combo
         </h4>
         <div className="space-y-2">
           {combo.items.map((item, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100"
+              className="flex items-center justify-between p-3 rounded-lg bg-grey-6 border border-grey-6"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-md bg-white border border-grey-5 flex items-center justify-center shrink-0">
                   {item.product_image ? (
                     <Image
                       src={item.product_image}
@@ -166,19 +166,19 @@ const ComboDetailsModal = ({
                       className="object-cover w-full h-full rounded-md"
                     />
                   ) : (
-                    <Package className="h-3.5 w-3.5 text-slate-400" />
+                    <Package className="h-3.5 w-3.5 text-grey-4" />
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-slate-800">
+                  <p className="text-sm font-bold text-grey-1">
                     {item.product_name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs font-medium text-grey-4">
                     {formatToNaira(item.price)} x {item.quantity}
                   </p>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-bold text-grey-1">
                 {formatToNaira(item.price * item.quantity)}
               </p>
             </div>
@@ -186,11 +186,11 @@ const ComboDetailsModal = ({
         </div>
       </div>
 
-      <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-        <span className="text-sm font-medium text-slate-600">
+      <div className="flex justify-between items-center pt-3 border-t border-grey-6">
+        <span className="text-sm font-bold text-grey-2">
           Combo Selling Price
         </span>
-        <span className="text-base font-bold text-green-700">
+        <span className="text-base font-extrabold text-primary-green-300">
           {formatToNaira(combo.selling_price)}
         </span>
       </div>
@@ -205,7 +205,7 @@ const ComboSaleActions = ({ combo }: { combo: ComboSale }) => {
     <>
       <button
         onClick={() => setShowDetails(true)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-green-300 bg-secondary-6 rounded-lg hover:bg-secondary-5 transition-colors cursor-pointer"
       >
         <Eye className="h-3.5 w-3.5" />
         View
@@ -234,7 +234,7 @@ const comboSalesColumns: ColumnDef<ComboSale>[] = [
       const combo = row.original;
       return (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-9 h-9 rounded-lg bg-grey-6 flex items-center justify-center shrink-0 overflow-hidden">
             {combo.combo_image ? (
               <Image
                 src={combo.combo_image}
@@ -244,10 +244,10 @@ const comboSalesColumns: ColumnDef<ComboSale>[] = [
                 className="object-cover w-full h-full"
               />
             ) : (
-              <Package className="h-4 w-4 text-slate-400" />
+              <Package className="h-4 w-4 text-grey-4" />
             )}
           </div>
-          <span className="font-medium text-slate-900">
+          <span className="font-bold text-primary-green-300">
             {combo.combo_name}
           </span>
         </div>
@@ -258,7 +258,7 @@ const comboSalesColumns: ColumnDef<ComboSale>[] = [
     accessorKey: "quantity",
     header: "Qty Sold",
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-slate-700">
+      <span className="text-sm font-bold text-primary-green-300">
         {row.original.quantity}
       </span>
     ),
@@ -267,7 +267,7 @@ const comboSalesColumns: ColumnDef<ComboSale>[] = [
     accessorKey: "selling_price",
     header: "Price",
     cell: ({ row }) => (
-      <span className="text-sm font-semibold text-green-700">
+      <span className="text-sm font-bold text-primary-green-300">
         {formatToNaira(row.original.selling_price)}
       </span>
     ),
@@ -286,15 +286,16 @@ const ComboSalesTable = () => {
         columns={comboSalesColumns}
         data={DUMMY_COMBO_SALES}
         loading={false}
+        bordered={false}
         noDataText={
           <div className="py-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="h-8 w-8 text-slate-400" />
+            <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="h-8 w-8 text-grey-4" />
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">
+            <h3 className="text-lg font-extrabold text-grey-1 mb-1">
               No combo sales yet
             </h3>
-            <p className="text-slate-500 text-sm">
+            <p className="text-grey-4 text-sm font-medium">
               Combo sales will appear here once products are sold
             </p>
           </div>

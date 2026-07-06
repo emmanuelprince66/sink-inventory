@@ -36,7 +36,7 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{trx.id?.slice(0, 10)}</p>
+          <p className="text-sm font-medium text-primary-green-300">{trx.id?.slice(0, 10)}</p>
         </div>
       );
     },
@@ -48,7 +48,7 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{trx?.account_name}</p>
+          <p className="text-sm text-grey-2">{trx?.account_name}</p>
         </div>
       );
     },
@@ -64,8 +64,8 @@ export const columns: ColumnDef<any>[] = [
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 trx.type === "CREDIT"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
+                  ? "bg-success-2 text-success-1"
+                  : "bg-error-2 text-error-1"
               }`}
             >
               {trx.type}
@@ -82,7 +82,7 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{trx?.amount}</p>
+          <p className="text-sm font-bold text-grey-1">{trx?.amount}</p>
         </div>
       );
     },
@@ -94,7 +94,7 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{trx?.account_number}</p>
+          <p className="text-sm text-grey-3">{trx?.account_number}</p>
         </div>
       );
     },
@@ -106,7 +106,7 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-grey-3">
             {moment(trx.created_at).format("MMM D, YYYY h:mm A")}
           </p>
         </div>
@@ -125,10 +125,10 @@ export const columns: ColumnDef<any>[] = [
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 trx.status === "SUCCESS"
-                  ? "bg-green-100 text-green-800"
+                  ? "bg-success-2 text-success-1"
                   : trx.status === "PENDING"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-red-100 text-red-800"
+                  ? "bg-warning-2 text-warning-1"
+                  : "bg-error-2 text-error-1"
               }`}
             >
               {trx.status}
@@ -150,18 +150,18 @@ export const columns: ColumnDef<any>[] = [
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full flex items-center justify-center cursor-pointer">
+              <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="bg-white border border-gray-200 shadow-lg min-w-[180px]"
+              className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
             >
               <DropdownMenuItem
                 onClick={() => setShowTrxDetails(true)}
-                className="cursor-pointer px-4 py-2 capitalize hover:bg-green-50 hover:text-green-600 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 View More
               </DropdownMenuItem>

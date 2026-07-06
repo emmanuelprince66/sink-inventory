@@ -3,7 +3,6 @@
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -19,14 +18,11 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import {
   AlertTriangle,
-  CalendarDays,
   Banknote,
   Package,
   RotateCcw,
-  SlidersHorizontal,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
 import { formatToNaira } from "@/utils/formatMoney";
 import { createProductHistoryColumns } from "./ProductHistoryColumns";
 import { ProductHistorySkeleton } from "./ProductHistorySkeleton";
@@ -39,28 +35,23 @@ const tabIcons = {
 
 const tabColors = {
   WASTE: {
-    bg: "bg-red-50",
-    border: "border-red-100",
-    icon: "text-red-500",
-    value: "text-red-700",
+    bg: "bg-error-2",
+    icon: "text-error-1",
+    value: "text-error-1",
   },
   RETURN: {
-    bg: "bg-blue-50",
-    border: "border-blue-100",
-    icon: "text-blue-500",
-    value: "text-blue-700",
+    bg: "bg-info-2",
+    icon: "text-info-1",
+    value: "text-info-1",
   },
   DAMAGE: {
-    bg: "bg-amber-50",
-    border: "border-amber-100",
-    icon: "text-amber-500",
-    value: "text-amber-700",
+    bg: "bg-warning-2",
+    icon: "text-warning-1",
+    value: "text-warning-1",
   },
 };
 
 const ProductHistory = () => {
-  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
-
   const {
     activeTab,
     setActiveTab,
@@ -100,247 +91,184 @@ const ProductHistory = () => {
   const formatCurrency = (value: number) => formatToNaira(value);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12">
-      {/* Header Section */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                Product History
-              </h1>
-              <p className="text-slate-500 mt-1 text-sm sm:text-base">
-                Track waste, returns, and damaged product records
-              </p>
-            </div>
-            <div className="flex items-center gap-3" />
+    <div className="w-full flex flex-col gap-6">
+      <div>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+          Product History
+        </h1>
+        <p className="text-grey-3 mt-1 text-sm">
+          Track waste, returns, and damaged product records
+        </p>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+        <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
+          <div className="p-2.5 rounded-full bg-white/60">
+            <ActiveIcon className={cn("h-5 w-5", colors.icon)} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-grey-3">Total Records</p>
+            <p className={cn("text-2xl font-extrabold", colors.value)}>
+              {total}
+            </p>
+          </div>
+        </div>
+
+        <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
+          <div className="p-2.5 rounded-full bg-white/60">
+            <Banknote className={cn("h-5 w-5", colors.icon)} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-grey-3">Total Value</p>
+            <p className={cn("text-2xl font-extrabold", colors.value)}>
+              {formatCurrency(totalValue)}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+      {/* Main Content Card */}
+      <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
         {/* Tabs */}
-        <div className="flex gap-2 flex-wrap">
-          {PRODUCT_HISTORY_TABS.map((tab) => {
-            const Icon = tabIcons[tab.value];
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={cn(
-                  "inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                  activeTab === tab.value
-                    ? "bg-green-600 text-white shadow-sm shadow-green-500/20"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="border-b border-grey-5 px-4 sm:px-6">
+          <div className="flex items-center gap-6">
+            {PRODUCT_HISTORY_TABS.map((tab) => {
+              const Icon = tabIcons[tab.value];
+              const isActive = activeTab === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={cn(
+                    "flex items-center gap-1.5 py-4 text-sm cursor-pointer font-bold border-b-2 transition-colors",
+                    isActive
+                      ? "border-primary-green-300 text-primary-green-300"
+                      : "border-transparent text-grey-3 hover:text-grey-2",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          <Card className={cn("shadow-sm border", colors.border, colors.bg)}>
-            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
-              <div className={cn("p-2.5 rounded-full bg-white/80")}>
-                <ActiveIcon className={cn("h-5 w-5", colors.icon)} />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Records</p>
-                <p className={cn("text-2xl font-bold", colors.value)}>
-                  {total}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className={cn("shadow-sm border", colors.border, colors.bg)}>
-            <CardContent className="p-4 sm:p-5 flex items-center gap-4">
-              <div className={cn("p-2.5 rounded-full bg-white/80")}>
-                <Banknote className={cn("h-5 w-5", colors.icon)} />
-              </div>
-              <div>
-                <p className="text-sm text-slate-500">Total Value</p>
-                <p className={cn("text-2xl font-bold", colors.value)}>
-                  {formatCurrency(totalValue)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters Section */}
-        <Card className="shadow-sm border-0 ring-1 ring-slate-200/60 overflow-hidden max-w-full">
-          <CardHeader className="bg-gradient-to-r from-slate-50/80 to-white border-b border-slate-100 py-4 px-5">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-800 flex items-center gap-2">
-                <div className="p-1.5 bg-green-50 rounded-lg">
-                  <SlidersHorizontal className="h-4 w-4 text-green-600" />
-                </div>
-                <span>Filters</span>
-              </CardTitle>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="sm:hidden text-slate-600"
-                onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
-              >
-                {isFiltersExpanded ? "Hide" : "Show"}
-              </Button>
-            </div>
-          </CardHeader>
-
-          <CardContent
-            className={cn(
-              "p-5 transition-all duration-300 ease-in-out max-w-4xl",
-              !isFiltersExpanded && "hidden sm:block",
-            )}
-          >
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Date Range Picker */}
-                <div className="relative">
-                  <DatePickerWithRange
-                    date={dateRange}
-                    onDateChange={setDateRange}
-                    className="w-full"
-                  />
-                </div>
-
-                {/* Department Filter */}
-                <div>
-                  <Select
-                    value={departmentFilter}
-                    onValueChange={setDepartmentFilter}
-                  >
-                    <SelectTrigger className="min-h-[14px] w-full bg-slate-50/50 border-slate-200 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/20 rounded-lg">
-                      <SelectValue placeholder="All Departments" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-lg w-full border-slate-200 shadow-lg">
-                      <SelectItem value="all" className="rounded-md w-full">
-                        All Departments
-                      </SelectItem>
-                      {DepartmentData?.data?.map((dept: any) => (
-                        <SelectItem
-                          key={dept.id}
-                          value={dept.id}
-                          className="rounded-md"
-                        >
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-slate-100">
-                <div className="flex gap-2 flex-1">
-                  <Button
-                    onClick={handleApplyFilters}
-                    className="flex-1 sm:flex-none h-10 px-6 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-sm shadow-green-500/20 transition-all active:scale-[0.98]"
-                    disabled={isFetching}
-                  >
-                    {isFetching ? "Applying..." : "Apply Filters"}
-                  </Button>
-
-                  <Button
-                    onClick={handleResetFilters}
-                    variant="outline"
-                    className={cn(
-                      "h-10 px-4 rounded-lg border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all",
-                      !hasActiveFilters && "opacity-50 cursor-not-allowed",
-                    )}
-                    disabled={!hasActiveFilters}
-                  >
-                    Reset
-                  </Button>
-                </div>
-
-                {/* Active Filters Pills */}
-                {hasActiveFilters && (
-                  <div className="flex flex-wrap gap-2 items-center sm:justify-end">
-                    <span className="text-xs text-slate-500 font-medium uppercase tracking-wider hidden sm:inline">
-                      Active:
-                    </span>
-
-                    {dateRange?.from && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                        <CalendarDays className="h-3 w-3" />
-                        {format(dateRange.from, "MMM dd")}
-                        {dateRange.to && ` - ${format(dateRange.to, "MMM dd")}`}
-                      </span>
-                    )}
-
-                    {departmentFilter && departmentFilter !== "all" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700">
-                        {DepartmentData?.data?.find(
-                          (d: any) => d.id === departmentFilter,
-                        )?.name || departmentFilter}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Table Card */}
-        <Card className="shadow-sm border-0 ring-1 ring-slate-200/60 overflow-hidden">
-          <CardHeader className="bg-white border-b border-slate-100 py-4 px-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-base font-semibold text-slate-800">
-                  {activeTabLabel}
-                </CardTitle>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                  {total}
-                </span>
-              </div>
-
+        {/* Toolbar */}
+        <div className="p-4 sm:p-6 border-b border-grey-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-extrabold text-grey-1">
+                {activeTabLabel}
+              </h2>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-grey-6 text-grey-3">
+                {total}
+              </span>
               {isFetching && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <div className="flex items-center gap-2 text-xs text-grey-3">
+                  <div className="w-1.5 h-1.5 bg-primary-green-300 rounded-full animate-pulse" />
                   Updating...
                 </div>
               )}
             </div>
-          </CardHeader>
 
-          <div className="overflow-x-auto">
-            <CustomTable
-              columns={columns}
-              data={results}
-              loading={isFetching}
-              noDataText={
-                <div className="py-12 text-center">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="h-8 w-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-slate-900 mb-1">
-                    No records found
-                  </h3>
-                  <p className="text-slate-500">
-                    No {activeTab.toLowerCase()} history records available
-                  </p>
-                </div>
-              }
-              pagination={{
-                currentPage: page,
-                totalPages,
-                pageSize,
-                onPageChange: handlePageChange,
-                onPageSizeChange: handlePageSizeChange,
-              }}
-            />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+              <div className="w-full sm:w-48">
+                <DatePickerWithRange
+                  date={dateRange}
+                  onDateChange={setDateRange}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-full sm:w-40">
+                <Select
+                  value={departmentFilter}
+                  onValueChange={setDepartmentFilter}
+                >
+                  <SelectTrigger className="w-full h-9 min-h-9">
+                    <SelectValue placeholder="All Departments" />
+                  </SelectTrigger>
+                  <SelectContent className="w-full">
+                    <SelectItem value="all" className="w-full">
+                      All Departments
+                    </SelectItem>
+                    {DepartmentData?.data?.map((dept: any) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleApplyFilters}
+                className="h-9 px-4 shrink-0"
+                disabled={isFetching}
+              >
+                {isFetching ? "Applying..." : "Apply"}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetFilters}
+                  title="Reset filters"
+                  className="text-grey-3 hover:text-error-1 shrink-0"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
-        </Card>
+
+          {/* Active Filters Pills */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap gap-2 items-center mt-3">
+              {dateRange?.from && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-success-2 text-success-1">
+                  {format(dateRange.from, "MMM dd")}
+                  {dateRange.to && ` - ${format(dateRange.to, "MMM dd")}`}
+                </span>
+              )}
+
+              {departmentFilter && departmentFilter !== "all" && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-secondary-1 text-white">
+                  {DepartmentData?.data?.find(
+                    (d: any) => d.id === departmentFilter,
+                  )?.name || departmentFilter}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        <CustomTable
+          bordered={false}
+          columns={columns}
+          data={results}
+          loading={isFetching}
+          noDataText={
+            <div className="py-12 text-center">
+              <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="h-8 w-8 text-grey-4" />
+              </div>
+              <h3 className="text-lg font-bold text-grey-1 mb-1">
+                No records found
+              </h3>
+              <p className="text-grey-3">
+                No {activeTab.toLowerCase()} history records available
+              </p>
+            </div>
+          }
+          pagination={{
+            currentPage: page,
+            totalPages,
+            pageSize,
+            onPageChange: handlePageChange,
+            onPageSizeChange: handlePageSizeChange,
+          }}
+        />
       </div>
     </div>
   );

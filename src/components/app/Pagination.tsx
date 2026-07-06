@@ -35,20 +35,23 @@ export function Pagination({
   const canGoNext = currentPage < totalPages;
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-2 py-4">
+      <div className="text-sm text-grey-3 order-2 sm:order-1">
         Page {currentPage} of {totalPages}
       </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+
+      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto order-1 sm:order-2">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-grey-2 hidden sm:inline whitespace-nowrap">
+            Rows per page
+          </p>
           <Select
             value={`${pageSize}`}
             onValueChange={(value) => {
               onPageSizeChange(Number(value));
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className="h-8 min-h-8 w-[70px]">
               <SelectValue placeholder={pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
@@ -60,7 +63,8 @@ export function Pagination({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center space-x-6 gap-3">
+
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             className="hidden h-8 w-8 p-0 lg:flex"

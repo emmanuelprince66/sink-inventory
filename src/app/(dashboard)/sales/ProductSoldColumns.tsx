@@ -4,6 +4,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { EyeOff } from "lucide-react";
 import { SalesDataItem } from "./types";
 
+// Matches Figma reference: Convert Mobile Screens to Desktop/src/app/App.tsx, SalesScreen
+// (Sales table, ~line 957) — Name/Unit Sold/Revenue/Profit are 14px/700 #329661 (right-aligned
+// from Unit Sold on); VAT/SKU/Discount are 14px/500 #6b7280.
 export const useSalesColumns = () => {
   const { user } = useUserRole();
 
@@ -14,12 +17,12 @@ export const useSalesColumns = () => {
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product.name}</p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold text-primary-green-300">{product.name}</p>
 
             {product?.watchlist && (
               <EyeOff
-                className="w-3.5 h-3.5 text-red-500 flex-shrink-0"
+                className="w-3.5 h-3.5 text-error-1 flex-shrink-0"
                 // title="On watchlist"
               />
             )}
@@ -29,13 +32,13 @@ export const useSalesColumns = () => {
     },
     {
       accessorKey: "unit_sold",
-      header: "Unit Sold",
+      header: () => <div className="w-full text-right">Unit Sold</div>,
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product.unit_sold}</p>
-          </div>
+          <p className="text-sm font-bold text-primary-green-300 text-right">
+            {product.unit_sold}
+          </p>
         );
       },
     },
@@ -54,28 +57,25 @@ export const useSalesColumns = () => {
     // },
     {
       accessorKey: "revenue",
-      header: "Revenue",
+      header: () => <div className="w-full text-right">Revenue</div>,
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">
-              {formatToNaira(product.revenue)}
-            </p>
-          </div>
+          <p className="text-sm font-bold text-primary-green-300 text-right">
+            {formatToNaira(product.revenue)}
+          </p>
         );
       },
     },
     {
       accessorKey: "vat",
-      header: "VAT",
+      header: () => <div className="w-full text-right">VAT</div>,
       cell: ({ row }) => {
         const product = row.original;
-        console.log("VAT value for product:", product); // Debug log
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product?.tax}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3 text-right">
+            {product?.tax}
+          </p>
         );
       },
     },
@@ -84,21 +84,19 @@ export const useSalesColumns = () => {
       ? [
           {
             accessorKey: "profit",
-            header: "Profit",
+            header: () => <div className="w-full text-right">Profit</div>,
             cell: ({ row }: { row: { original: SalesDataItem } }) => {
               const product = row.original;
               const profit = product.profit;
               const isPositive = profit >= 0;
               return (
-                <div className="font-medium">
-                  <p
-                    className={`text-sm ${
-                      isPositive ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {formatToNaira(profit)}
-                  </p>
-                </div>
+                <p
+                  className={`text-sm font-bold text-right ${
+                    isPositive ? "text-primary-green-300" : "text-error-1"
+                  }`}
+                >
+                  {formatToNaira(profit)}
+                </p>
               );
             },
           },
@@ -106,13 +104,13 @@ export const useSalesColumns = () => {
       : []),
     {
       accessorKey: "sku",
-      header: "SKU",
+      header: () => <div className="w-full text-right">SKU</div>,
       cell: ({ row }) => {
         const product = row.original;
         return (
-          <div className="font-medium">
-            <p className="text-sm text-gray-500">{product?.sku}</p>
-          </div>
+          <p className="text-sm font-medium text-grey-3 text-right">
+            {product?.sku}
+          </p>
         );
       },
     },
@@ -121,14 +119,14 @@ export const useSalesColumns = () => {
       ? [
           {
             accessorKey: "Discount",
-            header: "Discount",
+            header: () => <div className="w-full text-right">Discount</div>,
             cell: ({ row }: { row: { original: SalesDataItem } }) => {
               const product = row.original;
 
               return (
-                <div className="font-medium">
-                  <p className="text-sm text-gray-500">{product.discount}</p>
-                </div>
+                <p className="text-sm font-medium text-grey-3 text-right">
+                  {product.discount}
+                </p>
               );
             },
           },

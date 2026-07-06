@@ -48,7 +48,7 @@ export function AppSidebar() {
   });
 
   return (
-    <Sidebar className="z-10 bg-white border-gray-200">
+    <Sidebar className="z-10 bg-white border-grey-5">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="py-6 mb-4">
@@ -77,11 +77,11 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsStoreOpen(!isStoreOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2 hover:bg-gray-50 rounded transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Store className="mr-3 h-4 w-4" />
-                          <span className="text-xs font-medium">Store</span>
+                          <Store className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">Store</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -105,19 +105,19 @@ export function AppSidebar() {
                           <SidebarMenuItem
                             key={item.title}
                             className={cn(
-                              "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                              "transition-colors duration-200 my-1 py-1.5 rounded-xl mx-2",
                               isActive
                                 ? "bg-primary-green-300 text-white"
-                                : "hover:bg-gray-100 text-gray-700",
+                                : "hover:bg-secondary-6 text-grey-2",
                             )}
                           >
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-medium pl-8 text-xs"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -145,13 +145,11 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsInventoryOpen(!isInventoryOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2 hover:bg-gray-50 rounded transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Package className="mr-3 h-4 w-4" />
-                          <span className="text-xs font-medium">
-                            Stock Management
-                          </span>
+                          <Package className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">Stock</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -175,19 +173,19 @@ export function AppSidebar() {
                           <SidebarMenuItem
                             key={item.title}
                             className={cn(
-                              "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                              "transition-colors duration-200 my-1 py-1.5 rounded-xl mx-2",
                               isActive
                                 ? "bg-primary-green-300 text-white"
-                                : "hover:bg-gray-100 text-gray-700",
+                                : "hover:bg-secondary-6 text-grey-2",
                             )}
                           >
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-medium pl-8 text-xs"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -215,11 +213,11 @@ export function AppSidebar() {
                     <SidebarMenuItem>
                       <SidebarMenuButton
                         onClick={() => setIsOperationsOpen(!isOperationsOpen)}
-                        className="flex items-center justify-between cursor-pointer px-4 py-2 hover:bg-gray-50 rounded transition-colors duration-200"
+                        className="flex items-center justify-between cursor-pointer h-auto px-4 py-2.5 hover:bg-secondary-6 rounded-xl transition-colors duration-200"
                       >
                         <div className="flex items-center">
-                          <Settings className="mr-3 h-4 w-4" />
-                          <span className="text-xs font-medium">
+                          <Settings className="mr-3 h-[17px] w-[17px]" />
+                          <span className="text-sm font-bold">
                             Operations
                           </span>
                         </div>
@@ -245,19 +243,19 @@ export function AppSidebar() {
                           <SidebarMenuItem
                             key={item.title}
                             className={cn(
-                              "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                              "transition-colors duration-200 my-1 py-1.5 rounded-xl mx-2",
                               isActive
                                 ? "bg-primary-green-300 text-white"
-                                : "hover:bg-gray-100 text-gray-700",
+                                : "hover:bg-secondary-6 text-grey-2",
                             )}
                           >
                             <SidebarMenuButton asChild>
                               <Link
                                 href={item.url}
-                                className="flex items-center font-medium pl-8 text-xs"
+                                className="flex items-center font-bold pl-8 text-sm"
                               >
                                 {item.icon && (
-                                  <item.icon className="mr-3 h-4 w-4" />
+                                  <item.icon className="mr-3 h-[17px] w-[17px]" />
                                 )}
                                 <span>{item.title}</span>
                               </Link>
@@ -278,7 +276,7 @@ export function AppSidebar() {
 
             return (
               <SidebarGroup key={group.title}>
-                <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 py-2">
+                <SidebarGroupLabel className="text-[10px] font-extrabold text-grey-4 uppercase tracking-widest px-4 py-2">
                   {group.title}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -290,18 +288,18 @@ export function AppSidebar() {
                         <SidebarMenuItem
                           key={item.title}
                           className={cn(
-                            "transition-colors duration-200 my-1 py-1 rounded mx-2",
+                            "transition-colors duration-200 my-1 py-1.5 rounded-xl mx-2",
                             isActive
                               ? "bg-primary-green-300 text-white"
-                              : "hover:bg-gray-100 text-gray-700",
+                              : "hover:bg-secondary-6 text-grey-2",
                           )}
                         >
                           <SidebarMenuButton asChild>
                             <Link
                               href={item.url}
-                              className="flex items-center font-medium text-xs px-4"
+                              className="flex items-center font-bold text-sm px-4"
                             >
-                              <item.icon className="mr-3 h-4 w-4" />
+                              <item.icon className="mr-3 h-[17px] w-[17px]" />
                               <span>{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -316,16 +314,16 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-3 border-t border-gray-200">
+      <SidebarFooter className="px-4 py-3 border-t border-grey-5">
         <SidebarMenuButton
           onClick={handleLogOut}
           disabled={isPending}
           className={cn(
-            "text-red-600 cursor-pointer py-2 px-3 flex items-center font-medium rounded text-xs",
-            "hover:bg-red-50 transition-colors duration-200",
+            "text-error-1 cursor-pointer py-2.5 px-3 flex items-center font-bold rounded-xl text-sm",
+            "hover:bg-error-2/40 transition-colors duration-200",
           )}
         >
-          <LogOut className="mr-3 h-4 w-4" />
+          <LogOut className="mr-3 h-[17px] w-[17px]" />
           <span>{isPending ? "Logging out..." : "Logout"}</span>
         </SidebarMenuButton>
       </SidebarFooter>

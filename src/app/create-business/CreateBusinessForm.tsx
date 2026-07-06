@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DELIVERY_DAYS_OPTIONS } from "@/hooks/useBusinessHook";
+import { cn } from "@/lib/utils";
 
 interface OptionType {
   label: string;
@@ -267,6 +269,90 @@ const CreateBusinessForm = ({
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            {/* ── Phone ── */}
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone Number</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="tel"
+                      placeholder="+234 800 000 0000"
+                      maxLength={15}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* ── Email ── */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="business@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* ── Delivery Days ── */}
+            <FormField
+              control={form.control}
+              name="delivery_days"
+              render={({ field }) => {
+                const selected: string[] = field.value || [];
+                const toggle = (day: string) => {
+                  const set = new Set(selected);
+                  if (set.has(day)) set.delete(day);
+                  else set.add(day);
+                  field.onChange(Array.from(set));
+                };
+                return (
+                  <FormItem>
+                    <FormLabel>Delivery Days</FormLabel>
+                    <p className="text-xs text-gray-500 -mt-1">
+                      Days this business delivers orders.
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {DELIVERY_DAYS_OPTIONS.map((day) => {
+                        const isSelected = selected.includes(day.value);
+                        return (
+                          <button
+                            key={day.value}
+                            type="button"
+                            onClick={() => toggle(day.value)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full border text-xs font-medium transition-colors cursor-pointer",
+                              isSelected
+                                ? "bg-green-600 border-green-600 text-white hover:bg-green-700"
+                                : "bg-white border-gray-200 text-gray-700 hover:border-green-300 hover:bg-green-50",
+                            )}
+                            aria-pressed={isSelected}
+                          >
+                            {day.short}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             {/* ── Submit ── */}

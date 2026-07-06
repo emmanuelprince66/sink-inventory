@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+/* Fallback loader for contexts outside layout.tsx's next/font/google (e.g. print/PDF views).
+   Widened to the full variable range to match sink/src/app/layout.tsx's weight: "variable". */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@200..1000&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -97,14 +99,40 @@
 @theme {
   --color-primary-green-100: #0d261c;
   --color-primary-green-200: #eef4ef;
-  --color-primary-green-300: #52b661;
+  --color-primary-green-300: #329661;
   --color-primary-green-500: #edf8ee;
   --color-primary-green-600: #fefffe;
   --color-primary-black-100: #1e1e1e;
   --color-primary-gray-100: #535353;
   --color-primary-red-100: #d23838;
   --border-primary-gray-100: #e3e3e3;
-  --bg-primary-green-100: #52b661;
+  --bg-primary-green-100: #329661;
+
+  /* Design system ramp (matches Figma "Convert Mobile Screens to Desktop" doc) */
+  --color-secondary-1: #329661;
+  --color-secondary-2: #7bbe5e;
+  --color-secondary-3: #a8d87b;
+  --color-secondary-4: #c8e9a8;
+  --color-secondary-5: #dff0c5;
+  --color-secondary-6: #eef7e0;
+  --color-info-1: #3182ce;
+  --color-info-2: #bee3f8;
+  --color-warning-1: #d97706;
+  --color-warning-2: #fef3c7;
+  --color-error-1: #e53e3e;
+  --color-error-2: #fed7d7;
+  --color-success-1: #38a169;
+  --color-success-2: #c6f6d5;
+  --color-grey-1: #111827;
+  --color-grey-2: #374151;
+  --color-grey-3: #6b7280;
+  --color-grey-4: #9ca3af;
+  --color-grey-5: #d1d5db;
+  --color-grey-6: #f3f4f6;
+
+  /* Translucent card/tab border used throughout the Figma reference (App.tsx / theme.css --border),
+     softer than the solid grey-5 border we'd been using on cards. */
+  --color-border-tint: rgba(27, 50, 40, 0.08);
 }
 
 :root {

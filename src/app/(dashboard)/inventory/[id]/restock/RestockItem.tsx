@@ -84,18 +84,18 @@ const RestockItem = ({
               render={({ field }) => (
                 <FormItem className="flex-1 w-full bg-white">
                   <FormLabel>
-                    Select Variation <span className="text-red-500">*</span>
+                    Select Variation <span className="text-error-1">*</span>
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a variation" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    <SelectContent className="bg-white cursor-pointer">
                       {variations.map((variation: any) => (
                         <SelectItem
                           key={variation.id}
@@ -146,7 +146,7 @@ const RestockItem = ({
                         variant={"outline"}
                         className={cn(
                           "w-full pl-3 text-left font-normal border border-primary-green-300",
-                          !field.value && "text-muted-foreground",
+                          !field.value && "text-grey-3",
                         )}
                       >
                         {field.value ? (
@@ -159,7 +159,7 @@ const RestockItem = ({
                     </FormControl>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-auto p-0 border border-gray-200"
+                    className="w-auto p-0 border border-grey-5"
                     align="start"
                   >
                     <Calendar
@@ -179,7 +179,7 @@ const RestockItem = ({
                       fromYear={new Date().getFullYear()}
                       toYear={new Date().getFullYear() + 10}
                       defaultMonth={new Date()}
-                      className="rounded-md border border-gray-200 bg-white"
+                      className="rounded-md border border-grey-5 bg-white"
                     />
                   </PopoverContent>
                 </Popover>
@@ -238,11 +238,11 @@ const RestockItem = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="w-full border border-green-300">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a Supplier" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white cursor-pointer border border-green-100">
+                  <SelectContent className="bg-white cursor-pointer">
                     {!SupplierLoading
                       ? SupplierData?.data?.results?.data?.map((s: any) => (
                           <SelectItem
@@ -273,11 +273,11 @@ const RestockItem = ({
                   defaultValue={field.value}
                 >
                   <FormControl>
-                    <SelectTrigger className="w-full border border-green-300">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a payment method" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white cursor-pointer border border-green-100">
+                  <SelectContent className="bg-white cursor-pointer">
                     {paymentMethodOptions.map((option) => (
                       <SelectItem
                         key={option.value}
@@ -309,7 +309,7 @@ const RestockItem = ({
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal border border-primary-green-300",
-                            !field.value && "text-muted-foreground",
+                            !field.value && "text-grey-3",
                           )}
                         >
                           {field.value ? (
@@ -370,7 +370,7 @@ const RestockItem = ({
                             variant={"outline"}
                             className={cn(
                               "w-full pl-3 text-left font-normal border border-primary-green-300",
-                              !field.value && "text-muted-foreground",
+                              !field.value && "text-grey-3",
                             )}
                           >
                             {field.value ? (
@@ -414,7 +414,7 @@ const RestockItem = ({
                 <FormControl>
                   <Textarea
                     placeholder="Enter any additional remarks..."
-                    className="resize-none border border-green-300"
+                    className="resize-none"
                     rows={3}
                     {...field}
                   />

@@ -94,7 +94,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start px-3 sm:px-4 lg:px-0">
+    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
       <div className="w-full">
         {/* Header */}
         <p className="text-xl mb-3 sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">

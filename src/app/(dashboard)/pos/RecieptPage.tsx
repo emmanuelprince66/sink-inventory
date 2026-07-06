@@ -94,15 +94,13 @@ const ReceiptPage = ({
     updateCartState({ selectedDate: v });
   const setDueDate = (v: Date | undefined) => updateCartState({ dueDate: v });
   const setIsChecked = (v: boolean) => updateCartState({ isChecked: v });
-  const setPaymentMethod = (v: string) =>
-    updateCartState({ paymentMethod: v });
+  const setPaymentMethod = (v: string) => updateCartState({ paymentMethod: v });
   const setCreateSaleResponse = (v: any) =>
     updateCartState({ saleResponse: v });
   const setSelectedBank = (v: string) => updateCartState({ selectedBank: v });
   const setSelectedBankForSplitPayment = (v: string) =>
     updateCartState({ selectedAccount: v });
-  const setPartialAmount = (v: string) =>
-    updateCartState({ partialAmount: v });
+  const setPartialAmount = (v: string) => updateCartState({ partialAmount: v });
   const setPartialPaymentMethod = (v: string) =>
     updateCartState({ partialPaymentMethod: v });
   const setSplitPayments = (
@@ -241,6 +239,8 @@ const ReceiptPage = ({
 
   // Get the first business from the array
   const business = BusinessData?.data || {};
+
+  console.log("BusinessData----3", BusinessData);
 
   console.log("createSaleResponse", createSaleResponse);
 
@@ -581,11 +581,15 @@ const ReceiptPage = ({
                   Address: {business?.city}, {business?.state},{" "}
                   {business?.country}
                 </p>
-                {business?.owner?.phone && (
-                  <p className=" text-xs">Phone: {business.owner.phone}</p>
+                {(business?.phone || business?.owner?.phone) && (
+                  <p className=" text-xs">
+                    Phone: {business?.phone || business?.owner?.phone}
+                  </p>
                 )}
-                {business?.owner?.email && (
-                  <p className=" text-xs">Email: {business.owner.email}</p>
+                {(business?.email || business?.owner?.email) && (
+                  <p className=" text-xs">
+                    Email: {business?.email || business?.owner?.email}
+                  </p>
                 )}
               </div>
             </div>

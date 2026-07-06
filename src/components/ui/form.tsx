@@ -149,7 +149,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-[#d23838] text-sm", className)} // Changed to use #d23838
+      className={cn("text-error-1 text-sm font-medium", className)}
       {...props}
     >
       {body}

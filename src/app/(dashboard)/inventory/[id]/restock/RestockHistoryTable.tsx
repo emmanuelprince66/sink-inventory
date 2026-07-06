@@ -13,6 +13,7 @@ const RestockHistoryTable = ({
     <>
       <>
         <CustomTable
+          bordered={false}
           loading={loading}
           noDataText="No Restock History found"
           columns={columns}

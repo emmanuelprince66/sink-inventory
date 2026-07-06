@@ -2,6 +2,8 @@
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+// Generate Report temporarily disabled — re-enable when ready.
+// import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,9 +37,10 @@ import {
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
-import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
+// Download Report temporarily disabled — re-enable when ready.
+// import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
 import ComboTable from "./ComboTable";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
@@ -61,65 +64,51 @@ interface CustomInventoryCardProps {
   className?: string;
 }
 
+const INVENTORY_CARD_STYLES: Record<
+  CustomInventoryCardProps["type"],
+  { bg: string; iconColor: string; icon: ReactNode }
+> = {
+  value: {
+    bg: "bg-[#e0e7ff]",
+    iconColor: "text-info-1",
+    icon: <TrendingUp className="w-4 h-4" />,
+  },
+  profit: {
+    bg: "bg-success-2",
+    iconColor: "text-success-1",
+    icon: <DollarSign className="w-4 h-4" />,
+  },
+  other: {
+    bg: "bg-warning-2",
+    iconColor: "text-warning-1",
+    icon: <Tag className="w-4 h-4" />,
+  },
+};
+
 const CustomInventoryCard = ({
   title,
   amount,
   type,
   className,
 }: CustomInventoryCardProps) => {
-  const variants = {
-    value: {
-      bg: "bg-gradient-to-br from-indigo-50 to-indigo-100",
-      border: "border-indigo-200",
-      iconBg: "bg-indigo-100",
-      icon: <TrendingUp className="w-5 h-5 text-indigo-600" />,
-      text: "text-primary-black-100",
-      amountText: "text-primary-black-100",
-    },
-    profit: {
-      bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
-      border: "border-emerald-200",
-      iconBg: "bg-emerald-100",
-      icon: <DollarSign className="w-5 h-5 text-emerald-600" />,
-      text: "text-primary-black-100",
-      amountText: "text-primary-black-100",
-    },
-    other: {
-      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
-      border: "border-amber-200",
-      iconBg: "bg-amber-100",
-      icon: <Tag className="w-5 h-5 text-amber-600" />,
-      text: "text-primary-black-100",
-      amountText: "text-primary-black-100",
-    },
-  };
-
-  const variant = variants[type] || variants.other;
+  const variant = INVENTORY_CARD_STYLES[type] ?? INVENTORY_CARD_STYLES.other;
 
   return (
     <CustomCard
       className={cn(
         variant.bg,
-        variant.border,
-        "p-4 w-full rounded-lg border transition-all hover:shadow-md",
+        "w-full rounded-2xl border-none transition-all p-0",
         className,
       )}
+      contentClassName="p-4 sm:p-5 flex flex-col gap-3"
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className={cn("p-2 rounded-full", variant.iconBg)}>
-            {variant.icon}
-          </div>
-          <span className={cn("text-sm font-medium", variant.text)}>
-            {title}
-          </span>
-        </div>
-      </div>
-      <div className="mt-4">
-        <span className={cn("text-2xl font-bold", variant.amountText)}>
-          {amount}
+      <div className="flex items-center gap-2">
+        <span className={variant.iconColor}>{variant.icon}</span>
+        <span className={cn("text-xs font-bold", variant.iconColor)}>
+          {title}
         </span>
       </div>
+      <span className="text-2xl font-extrabold text-grey-1">{amount}</span>
     </CustomCard>
   );
 };
@@ -248,30 +237,33 @@ const Inventory = () => {
   return (
     <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
       {/* Header Section */}
-      <div className="w-full bg-white px-2 sm:px-4">
+      <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+          <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
             Inventory
           </p>
 
           {canManageInventory && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
+              {/* Generate Report temporarily disabled — re-enable when ready.
+              <GenerateReportButton
+                reportType="inventory"
+                className="w-full sm:w-auto"
+              />
+              */}
               {/* Add New dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="flex-1 sm:flex-none bg-green-500 hover:bg-green-600 text-white px-4 py-2 text-sm font-medium gap-1.5">
+                  <Button className="flex-1 sm:flex-none bg-primary-green-300 hover:bg-primary-green-300/90 text-white px-4 py-2 text-sm gap-1.5">
                     <Plus className="w-4 h-4" />
                     Add New
                     <ChevronDown className="w-4 h-4 ml-0.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-white border border-gray-200 shadow-lg min-w-[200px]"
-                >
+                <DropdownMenuContent align="end" className="min-w-[200px]">
                   <DropdownMenuItem
                     asChild
-                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     <Link href={"/new-add-product"}>
                       <Package className="w-4 h-4 mr-2" />
@@ -280,14 +272,14 @@ const Inventory = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={openddServiceModal}
-                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     <Wrench className="w-4 h-4 mr-2" />
                     New Service
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     asChild
-                    className="cursor-pointer px-4 py-2.5 hover:bg-green-50 hover:text-green-600 transition-colors"
+                    className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                   >
                     <Link href={"/inventory/combo"}>
                       <Layers className="w-4 h-4 mr-2" />
@@ -302,7 +294,7 @@ const Inventory = () => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-gray-200 text-gray-700 hover:bg-gray-50 px-3 py-2 text-sm font-medium gap-1.5"
+                    className="border-grey-5 text-grey-2 hover:bg-grey-6 px-3 py-2 text-sm gap-1.5"
                   >
                     <MoreHorizontal className="w-4 h-4" />
                     <span className="hidden sm:inline">More</span>
@@ -310,14 +302,16 @@ const Inventory = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="bg-white border border-gray-200 shadow-lg min-w-[200px] p-0"
+                  className="min-w-[200px] p-0"
                 >
+                  {/* Download Report temporarily disabled — re-enable when ready.
                   <div className="px-2 py-1.5">
                     <DownloadInventoryButton business_id={business_id} />
                   </div>
+                  */}
                   <DropdownMenuItem
                     asChild
-                    className="cursor-pointer px-4 py-2.5 hover:bg-gray-50 transition-colors"
+                    className="cursor-pointer px-4 py-2.5 hover:bg-grey-6 transition-colors"
                   >
                     <Link href={"/product/upload-product"}>
                       <Cloud className="w-4 h-4 mr-2" />
@@ -332,17 +326,17 @@ const Inventory = () => {
 
         {/* Overview Cards */}
         <div className="mb-4 sm:mb-6">
-          <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
+          <p className="text-sm font-bold text-primary-green-300 border-b border-grey-6 pb-2 mb-3 sm:mb-4">
             Overview
-          </h2>
+          </p>
 
           {InventoryDataLoading || !InventoryData ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {Array.from({ length: 3 }).map((_, index) => (
-                <CustomCard key={index} className="w-full border-gray-200">
+                <CustomCard key={index} className="w-full border-grey-5">
                   <div className="flex flex-col gap-4 sm:gap-6 items-start">
-                    <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
-                    <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-[#eef4ef]" />
+                    <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-6" />
+                    <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-6" />
                   </div>
                 </CustomCard>
               ))}
@@ -374,22 +368,22 @@ const Inventory = () => {
       </div>
 
       {/* Main Content Section */}
-      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+      <div className="w-full  overflow-hidden">
         {/* Tabs Header */}
-        <div className="border-b border-gray-200">
-          <div className="flex">
+        <div className="border-b border-grey-5">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => handleTabChange("PRODUCT")}
               className={cn(
-                "px-6 py-4 text-sm cursor-pointer font-medium border-b-2 transition-all",
+                "py-4 text-sm cursor-pointer font-bold border-b-2 transition-colors",
                 activeTab === "PRODUCT"
-                  ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
+                  ? "border-primary-green-300 text-primary-green-300"
+                  : "border-transparent text-grey-3 hover:text-grey-2",
               )}
             >
               Products
               {activeTab === "PRODUCT" && (
-                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                <span className="ml-2 text-[10px] bg-secondary-6 px-2 py-1 rounded-full text-primary-green-300 font-extrabold">
                   {totalItems.toLocaleString()}
                 </span>
               )}
@@ -397,15 +391,15 @@ const Inventory = () => {
             <button
               onClick={() => handleTabChange("SERVICE")}
               className={cn(
-                "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
+                "py-4 text-sm font-bold cursor-pointer border-b-2 transition-colors",
                 activeTab === "SERVICE"
-                  ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
+                  ? "border-primary-green-300 text-primary-green-300"
+                  : "border-transparent text-grey-3 hover:text-grey-2",
               )}
             >
               Services
               {activeTab === "SERVICE" && (
-                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                <span className="ml-2 text-[10px] bg-secondary-6 px-2 py-1 rounded-full text-primary-green-300 font-extrabold">
                   {totalItems.toLocaleString()}
                 </span>
               )}
@@ -413,15 +407,15 @@ const Inventory = () => {
             <button
               onClick={() => handleTabChange("COMBO")}
               className={cn(
-                "px-6 py-4 text-sm font-medium cursor-pointer border-b-2 transition-all",
+                "py-4 text-sm font-bold cursor-pointer border-b-2 transition-colors",
                 activeTab === "COMBO"
-                  ? "border-green-500 text-green-600 bg-green-50"
-                  : "border-transparent text-gray-600 hover:text-green-600 hover:border-green-300",
+                  ? "border-primary-green-300 text-primary-green-300"
+                  : "border-transparent text-grey-3 hover:text-grey-2",
               )}
             >
               Combos
               {activeTab === "COMBO" && (
-                <span className="ml-2 text-[10px] bg-green-100 px-2 py-1 rounded-full text-green-500 font-medium">
+                <span className="ml-2 text-[10px] bg-secondary-6 px-2 py-1 rounded-full text-primary-green-300 font-extrabold">
                   {totalItems.toLocaleString()}
                 </span>
               )}
@@ -430,9 +424,9 @@ const Inventory = () => {
         </div>
 
         {/* Categories and Search Header */}
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white w-full overflow-hidden">
+        <div className="py-4 sm:py-6 border-b border-grey-5 w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100">
+            <h2 className="text-base sm:text-lg font-extrabold text-grey-1">
               {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
             </h2>
 
@@ -455,18 +449,18 @@ const Inventory = () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
-                      className="text-gray-700 border-gray-200 hover:bg-gray-50 w-full sm:w-auto relative"
+                      className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 rounded-xl text-sm w-full sm:w-auto relative"
                     >
                       <Filter className="w-4 h-4 mr-2" />
                       <span className="whitespace-nowrap">Filters</span>
                       {getActiveFiltersCount() > 0 && (
-                        <span className="ml-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+                        <span className="absolute -top-2 -right-2 bg-primary-green-300 text-white text-[10px] rounded-full w-5 h-5 flex items-center justify-center">
                           {getActiveFiltersCount()}
                         </span>
                       )}
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="text-sm font-semibold">
                       Product Settings
                     </DropdownMenuLabel>
@@ -539,7 +533,7 @@ const Inventory = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="w-full text-xs text-error-1 hover:text-error-1 hover:bg-error-2"
                             onClick={() => setProductFilters(DEFAULT_FILTERS)}
                           >
                             Clear all filters
@@ -556,7 +550,7 @@ const Inventory = () => {
                   <Link href={"/categories"} className="w-full sm:w-auto">
                     <Button
                       variant="outline"
-                      className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
+                      className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 w-full sm:w-auto"
                     >
                       Manage Category
                     </Button>
@@ -571,23 +565,23 @@ const Inventory = () => {
               {CategoriesDataLoading || !CategoriesData ? (
                 <div className="space-y-4">
                   <div>
-                    <Skeleton className="h-4 w-24 mb-2 bg-gray-200" />
+                    <Skeleton className="h-4 w-24 mb-2 bg-grey-6" />
                     <div className="flex gap-2">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton
                           key={i}
-                          className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                          className="h-8 w-24 rounded-full bg-grey-6 flex-shrink-0"
                         />
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Skeleton className="h-4 w-20 mb-2 bg-gray-200" />
+                    <Skeleton className="h-4 w-20 mb-2 bg-grey-6" />
                     <div className="flex gap-2">
                       {Array.from({ length: 6 }).map((_, i) => (
                         <Skeleton
                           key={i}
-                          className="h-8 w-20 rounded-md bg-gray-200 flex-shrink-0"
+                          className="h-8 w-20 rounded-full bg-grey-6 flex-shrink-0"
                         />
                       ))}
                     </div>
@@ -597,7 +591,7 @@ const Inventory = () => {
                 <div className="w-full min-w-0 space-y-4">
                   {/* Departments Filter */}
                   <div className="min-w-0 w-full">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    <h3 className="text-xs font-bold text-grey-3 uppercase tracking-wide mb-2">
                       Department
                     </h3>
                     {DepartmentDataLoading ? (
@@ -605,7 +599,7 @@ const Inventory = () => {
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Skeleton
                             key={i}
-                            className="h-8 w-24 rounded-md bg-gray-200 flex-shrink-0"
+                            className="h-8 w-24 rounded-full bg-grey-6 flex-shrink-0"
                           />
                         ))}
                       </div>
@@ -619,10 +613,10 @@ const Inventory = () => {
                       >
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedDepartmentId === null
-                              ? "bg-green-500 text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                              ? "bg-primary-green-300 text-white shadow-sm"
+                              : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                           )}
                           onClick={handleAllDepartmentsClick}
                         >
@@ -632,10 +626,10 @@ const Inventory = () => {
                           <button
                             key={department.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0 capitalize",
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0 capitalize",
                               selectedDepartmentId === department.id
-                                ? "bg-green-500 text-white shadow-sm"
-                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                                ? "bg-primary-green-300 text-white shadow-sm"
+                                : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                             )}
                             onClick={() => handleDepartmentClick(department.id)}
                           >
@@ -648,14 +642,14 @@ const Inventory = () => {
 
                   {/* Categories Filter */}
                   <div className="w-full overflow-hidden">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                    <h3 className="text-xs font-bold text-grey-3 uppercase tracking-wide mb-2">
                       Category
                     </h3>
                     <div className="flex items-center gap-1 sm:gap-2">
                       {canScrollLeft && (
                         <button
                           onClick={() => scrollCategories("left")}
-                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
+                          className="p-1 sm:p-2 rounded-full flex-shrink-0 text-grey-3 hover:text-primary-green-300 hover:bg-secondary-6 transition-all"
                         >
                           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
@@ -671,10 +665,10 @@ const Inventory = () => {
                       >
                         <button
                           className={cn(
-                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                            "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                             selectedCategoryId === null
-                              ? "bg-[#52b661] text-white shadow-sm"
-                              : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                              ? "bg-primary-green-300 text-white shadow-sm"
+                              : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                           )}
                           onClick={handleAllClick}
                         >
@@ -684,10 +678,10 @@ const Inventory = () => {
                           <button
                             key={category.id}
                             className={cn(
-                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                              "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-bold rounded-full transition-all whitespace-nowrap flex-shrink-0 capitalize",
                               selectedCategoryId === category.id
-                                ? "bg-[#52b661] text-white shadow-sm"
-                                : "text-gray-600 hover:text-green-500 hover:bg-green-50 border border-gray-200",
+                                ? "bg-primary-green-300 text-white shadow-sm"
+                                : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
                             )}
                             onClick={() => handleCategoryClick(category.id)}
                           >
@@ -698,7 +692,7 @@ const Inventory = () => {
                       {canScrollRight && (
                         <button
                           onClick={() => scrollCategories("right")}
-                          className="p-1 sm:p-2 rounded-md flex-shrink-0 text-gray-600 hover:text-green-500 hover:bg-green-50 transition-all"
+                          className="p-1 sm:p-2 rounded-full flex-shrink-0 text-grey-3 hover:text-primary-green-300 hover:bg-secondary-6 transition-all"
                         >
                           <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
@@ -711,22 +705,22 @@ const Inventory = () => {
           )}
 
           {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-2 text-xs sm:text-sm text-gray-500">
+            <div className="mt-2 text-xs sm:text-sm text-grey-4">
               Type at least 3 characters to search
             </div>
           )}
         </div>
 
-        <div className="p-6">
+        <div className="pb-6">
           {activeTab === "COMBO" ? (
             InventoryDataLoading || !InventoryData ? (
-              <div className="w-full">
+              <div className="w-full px-6">
                 <div className="space-y-4">
-                  <Skeleton className="h-10 w-full bg-gray-200" />
+                  <Skeleton className="h-10 w-full bg-grey-6" />
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Skeleton
                       key={index}
-                      className="h-16 w-full bg-gray-200 mt-2"
+                      className="h-16 w-full bg-grey-6 mt-2"
                     />
                   ))}
                 </div>
@@ -741,13 +735,13 @@ const Inventory = () => {
             )
           ) : activeTab === "PRODUCT" ? (
             InventoryDataLoading || !InventoryData ? (
-              <div className="w-full">
+              <div className="w-full px-6">
                 <div className="space-y-4">
-                  <Skeleton className="h-10 w-full bg-gray-200" />
+                  <Skeleton className="h-10 w-full bg-grey-6" />
                   {Array.from({ length: 5 }).map((_, index) => (
                     <Skeleton
                       key={index}
-                      className="h-16 w-full bg-gray-200 mt-2"
+                      className="h-16 w-full bg-grey-6 mt-2"
                     />
                   ))}
                 </div>
@@ -771,13 +765,13 @@ const Inventory = () => {
               </>
             )
           ) : InventoryDataLoading || !InventoryData ? (
-            <div className="w-full">
+            <div className="w-full px-6">
               <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-gray-200" />
+                <Skeleton className="h-10 w-full bg-grey-6" />
                 {Array.from({ length: 5 }).map((_, index) => (
                   <Skeleton
                     key={index}
-                    className="h-16 w-full bg-gray-200 mt-2"
+                    className="h-16 w-full bg-grey-6 mt-2"
                   />
                 ))}
               </div>

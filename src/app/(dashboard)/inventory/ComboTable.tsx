@@ -50,17 +50,18 @@ const ComboTable = ({
   return (
     <CustomTable
       loading={loading}
+      bordered={false}
       columns={comboColumns}
       data={combos}
       noDataText={
         <div className="py-12 text-center">
-          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Package className="h-8 w-8 text-slate-400" />
+          <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Package className="h-8 w-8 text-grey-4" />
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-1">
+          <h3 className="text-lg font-bold text-grey-1 mb-1">
             No combos yet
           </h3>
-          <p className="text-slate-500 text-sm">
+          <p className="text-grey-3 text-sm">
             Create a combo to bundle multiple products together
           </p>
         </div>

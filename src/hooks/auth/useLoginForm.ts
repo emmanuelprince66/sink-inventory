@@ -1,9 +1,10 @@
 import { useLoginMutation } from "@/api/auth/login-user";
+import { useNotification } from "@/components/providers/notification-provider";
 import { useToast } from "@/hooks/toast/useToast";
 import { useUserStore } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -37,39 +38,37 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
   const [showOtpModal, setShowOtpModal] = useState(false);
   const closeOtpPhoneModal = () => setShowOtpModal(false);
   const [verifyOtpPhone, setVerifyOtpPhone] = useState<any>("");
-  // const { isSupported, permission, token, requestPermission, getToken } =
-  //   useNotification();
+  const { permission, token, requestPermission, getToken } = useNotification();
+  // Socket / realtime notification context — keep commented until reinstated.
   // const { connectWithToken } = useNotificationContext();
 
-  // const handleGetToken = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     console.log("token", token);
+  const handleGetToken = async () => {
+    setIsLoading(true);
+    try {
+      const newToken = await getToken();
+      if (newToken) {
+        setFcmToken(newToken);
+      } else {
+        showToast("Failed to retrieve notification token.", "error");
+      }
+    } catch (error) {
+      console.error("Error getting token:", error);
+      showToast("Failed to retrieve token. Please try again.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  //     const newToken = await getToken();
-  //     if (newToken) {
-  //       setFcmToken(newToken);
-  //       // toast.success("Token retrieved successfully!");
-  //     } else {
-  //       toast.error("Failed to retrieve token.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error getting token:", error);
-  //     toast.error("Failed to retrieve token. Please try again.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (token && permission === "granted") {
-  //     setFcmToken(token);
-  //     console.log("🔑 FCM Token from context:", token);
-  //   } else {
-  //     console.log("🔑 No token found, trying to get a new token...");
-  //     handleGetToken();
-  //   }
-  // }, [token, permission]);
+  useEffect(() => {
+    if (token && permission === "granted") {
+      setFcmToken(token);
+      console.log("🔑 FCM Token from context:", token);
+    } else if (permission === "granted") {
+      console.log("🔑 No token found, trying to get a new token...");
+      handleGetToken();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, permission]);
 
   const [showLogin, setShowLogin] = useState(true);
 
@@ -141,28 +140,26 @@ export const useLoginForm = (options?: { redirectTo?: string }) => {
         try {
           setIsLoading(true);
           console.log("🔑 Requesting notification permission...");
-          // const granted = await requestPermission();
-          // console.log("🔑 Permission granted:", granted);
-          // if (granted) {
-          //   console.log("✅ Permission granted, getting token...");
-          //   try {
-          //     setIsLoading(true);
-          //     // currentFcmToken = await getToken();
-          //     console.log("🔑 FCM token obtained:", currentFcmToken || "null");
-          //   } catch (tokenError) {
-          //     setIsLoading(false);
-          //     console.error("❌ Failed to get FCM token:", tokenError);
-          //   }
-          // } else {
-          //   setIsLoading(false);
-          //   console.log("❌ Permission denied by user");
-          // }
+          const granted = await requestPermission();
+          console.log("🔑 Permission granted:", granted);
+          if (granted) {
+            console.log("✅ Permission granted, getting token...");
+            try {
+              currentFcmToken = await getToken();
+              console.log("🔑 FCM token obtained:", currentFcmToken || "null");
+            } catch (tokenError) {
+              console.error("❌ Failed to get FCM token:", tokenError);
+            }
+          } else {
+            console.log("❌ Permission denied by user");
+          }
         } catch (error) {
-          setIsLoading(false);
           console.error(
             "❌ Error during permission or token retrieval:",
             error,
           );
+        } finally {
+          setIsLoading(false);
         }
       }
 

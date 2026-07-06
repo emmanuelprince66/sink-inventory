@@ -9,21 +9,6 @@ import {
   useQueryClient,
 } from "@/lib/react-query";
 
-interface CreateOrderPayload {
-  sales_channel: string;
-  products: string[];
-  quantities: number[];
-  customer: string;
-  payment_status: "UNPAID" | "PARTIAL" | "PAID";
-  payment_method?: string;
-  delivery_location?: string;
-  description?: string;
-  created_at?: string;
-  discount_type?: "percentage" | "fixed";
-  discount_value?: number;
-  shipping_cost?: number;
-}
-
 interface FetchOrdersParams {
   page?: number;
   limit?: number;
@@ -36,28 +21,6 @@ interface FetchOrdersParams {
   shipping_status?: string;
   payment_status?: string;
 }
-
-const createOrder = async ({
-  businessId,
-  payload,
-}: {
-  businessId: string;
-  payload: CreateOrderPayload;
-}) => {
-  const response = await fetch(`/api/orders/${businessId}/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw errorData;
-  }
-  return response.json();
-};
 
 export const fetchAllOrders = async ({
   page = 1,
@@ -86,15 +49,7 @@ export const fetchAllOrders = async ({
   return response.json();
 };
 
-type CreateOrderQueryFnType = typeof createOrder;
 type FetchOrdersQueryFnType = typeof fetchAllOrders;
-
-interface UseCreateOrderMutationOptions
-  extends MutationConfig<CreateOrderQueryFnType> {
-  businessId: string | null;
-  onSuccess?: (data: any, variables: any, context: any) => void;
-  onError?: (error: any, variables: any, context: any) => void;
-}
 
 interface UseFetchAllOrdersOptions
   extends QueryConfigType<FetchOrdersQueryFnType> {
@@ -102,34 +57,6 @@ interface UseFetchAllOrdersOptions
   enabled?: boolean;
   staleTime?: number;
 }
-
-export const UseCreateOrderMutation = ({
-  businessId,
-  ...config
-}: UseCreateOrderMutationOptions) => {
-  const { showToast } = useToast();
-
-  return useMutation({
-    mutationKey: [queryKey.orders.createOrder, businessId],
-    mutationFn: (payload: any) =>
-      createOrder({ businessId: businessId!, payload }),
-    retry: false,
-    onError: (error: any, variables: any, context: any) => {
-      console.log("Error creating Order:", error);
-
-      const errorMessage =
-        error?.message || error?.error || "Error creating order";
-
-      showToast(errorMessage, "error");
-      config?.onError?.(error, variables, context);
-    },
-    onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Order created successfully", "success");
-      config?.onSuccess?.(data, variables, context);
-    },
-    ...config,
-  });
-};
 
 export const useFetchAllOrdersQuery = ({
   params,

@@ -85,7 +85,7 @@ const EditService = ({
                   <FormItem className="flex flex-col items-center gap-2">
                     <FormLabel>Service Image</FormLabel>
                     <div
-                      className="relative w-32 h-32 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden cursor-pointer"
+                      className="relative w-32 h-32 rounded-full border-2 border-dashed border-grey-5 hover:border-primary-green-300 flex items-center justify-center overflow-hidden cursor-pointer transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {displaySrc ? (
@@ -97,7 +97,7 @@ const EditService = ({
                           />
                           <button
                             type="button"
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                            className="absolute top-1 right-1 bg-error-1 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation();
                               field.onChange(undefined);
@@ -113,7 +113,7 @@ const EditService = ({
                       ) : (
                         <div className="text-center p-4">
                           <svg
-                            className="mx-auto h-12 w-12 text-gray-400"
+                            className="mx-auto h-12 w-12 text-grey-4"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -125,7 +125,7 @@ const EditService = ({
                               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs font-medium text-grey-4">
                             Click to upload
                           </span>
                         </div>
@@ -193,11 +193,11 @@ const EditService = ({
                   <FormLabel>Category</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    <SelectContent className="bg-white cursor-pointer">
                       {CategoriesData?.data?.map((category: any) => (
                         <SelectItem
                           key={category.id}
@@ -239,7 +239,7 @@ const EditService = ({
               control={form.control}
               name="vat"
               render={({ field }) => (
-                <FormItem className="flex items-center gap-3 rounded-lg border border-gray-200 p-4">
+                <FormItem className="flex items-center gap-3 rounded-xl border border-grey-5 p-4">
                   <FormControl>
                     <Checkbox
                       checked={field.value}

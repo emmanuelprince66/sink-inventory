@@ -82,14 +82,10 @@ const AddCustomer = ({
         </form>
       </Form>
 
-      <div
-        className={
-          "flex w-full border border-blue-600 mt-4 rounded-sm  items-start gap-3 bg-blue-200 text-blue-600 p-3"
-        }
-      >
-        <CircleAlert />
+      <div className="flex w-full border border-info-1/30 mt-4 rounded-xl items-start gap-3 bg-info-2 text-info-1 p-3">
+        <CircleAlert className="h-5 w-5 shrink-0 mt-0.5" />
 
-        <p className="text-blue-600 text-sm">
+        <p className="text-info-1 text-sm font-medium">
           You should ask your customers for permission before you subscribe them
           to your marketing emails or SMS
         </p>

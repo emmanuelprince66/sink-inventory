@@ -62,6 +62,7 @@ const OrderHistoryTable = ({
         columns={columns}
         data={response?.data?.results || []}
         onRowClick={handleOrderHistoryRowClick}
+        bordered={false}
         pagination={{
           currentPage,
           totalPages,

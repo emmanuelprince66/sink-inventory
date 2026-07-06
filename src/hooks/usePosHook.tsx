@@ -22,11 +22,17 @@ export const usePosHook = ({
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
+  // POS must always show the latest business profile (email, phone, address,
+  // tax_rate, etc.) so receipts and the sales summary reflect recent edits.
+  // Override the default 30s staleTime and force a refetch on every mount.
   const {
     data: BusinessData,
     isLoading: BusinessDataLoading,
     refetch,
-  } = useFetchBusinessById(business_id);
+  } = useFetchBusinessById(business_id, {
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
 
   const findBusiness = BusinessData?.data;
 

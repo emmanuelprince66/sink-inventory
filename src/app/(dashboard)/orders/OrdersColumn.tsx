@@ -41,6 +41,35 @@ const shippingTextMap = {
   DEFAULT: "Unknown",
 } as const;
 
+// Mock rider/delivery data — stable per order id until backend ships these fields.
+const MOCK_DELIVERY_COMPANIES = [
+  "Shipbubble",
+  "Kwik Delivery",
+  "GIG Logistics",
+  "DHL Express",
+  "In-house Riders",
+];
+const MOCK_RIDERS = [
+  { name: "Emeka Obi", phone: "+234 803 111 2233" },
+  { name: "Bola Adeyemi", phone: "+234 805 444 5566" },
+  { name: "Yusuf Bala", phone: "+234 808 777 8899" },
+  { name: "Chinwe Eze", phone: "+234 814 222 3344" },
+  { name: "Ifeanyi Okeke", phone: "+234 816 555 6677" },
+];
+
+const hashSeed = (id: string) => {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return h;
+};
+const mockDeliveryFor = (id: string) => {
+  const seed = hashSeed(id || "fallback");
+  return {
+    company: MOCK_DELIVERY_COMPANIES[seed % MOCK_DELIVERY_COMPANIES.length],
+    rider: MOCK_RIDERS[seed % MOCK_RIDERS.length],
+  };
+};
+
 export const useOrdersColumn = (type: string) => {
   const columns: ColumnDef<OrderInfo>[] = [
     {
@@ -165,7 +194,39 @@ export const useOrdersColumn = (type: string) => {
       },
     };
 
-    columns.push(shippingStatusColumn, shippingFeeColumn);
+    const deliveryCompanyColumn: ColumnDef<OrderInfo> = {
+      id: "delivery_company",
+      header: "Delivery Company",
+      cell: ({ row }) => {
+        const order = row.original;
+        const mock = mockDeliveryFor(order.id || "");
+        return <span className="text-sm text-gray-700">{mock.company}</span>;
+      },
+    };
+
+    const riderColumn: ColumnDef<OrderInfo> = {
+      id: "rider",
+      header: "Rider",
+      cell: ({ row }) => {
+        const order = row.original;
+        const mock = mockDeliveryFor(order.id || "");
+        return (
+          <div className="leading-tight">
+            <div className="text-sm font-medium text-gray-900">
+              {mock.rider.name}
+            </div>
+            <div className="text-xs text-gray-500">{mock.rider.phone}</div>
+          </div>
+        );
+      },
+    };
+
+    columns.push(
+      shippingStatusColumn,
+      shippingFeeColumn,
+      deliveryCompanyColumn,
+      riderColumn,
+    );
   }
 
   // Actions column

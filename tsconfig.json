@@ -32,5 +32,5 @@
     ".next/types/**/*.ts",
     "src/app/api/products/[id]/edit"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "Convert Mobile Screens to Desktop"]
 }

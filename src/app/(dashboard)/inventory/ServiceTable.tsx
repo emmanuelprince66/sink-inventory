@@ -42,6 +42,7 @@ const ServiceTable = ({
     <>
       <CustomTable
         loading={loading}
+        bordered={false}
         noDataText="No Inventory found"
         columns={columns}
         data={response?.data?.results?.data}

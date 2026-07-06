@@ -28,7 +28,7 @@ export const columns: ColumnDef<CustomerWalletTrxData>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.amount}</p>
+          <p className="text-sm text-grey-3">{customer.amount}</p>
         </div>
       );
     },
@@ -40,7 +40,7 @@ export const columns: ColumnDef<CustomerWalletTrxData>[] = [
       const customer = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{customer.created_at}</p>
+          <p className="text-sm text-grey-3">{customer.created_at}</p>
         </div>
       );
     },
@@ -53,7 +53,7 @@ export const columns: ColumnDef<CustomerWalletTrxData>[] = [
     cell: ({ row }) => {
       return (
         <div className="font-medium">
-          <ArrowRightIcon />
+          <ArrowRightIcon className="h-4 w-4 text-grey-4" />
         </div>
       );
     },
