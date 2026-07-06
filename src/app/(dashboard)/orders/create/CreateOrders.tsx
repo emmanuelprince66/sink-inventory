@@ -13,24 +13,22 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { useOrderDeliveryHook } from "@/hooks/useOrderDeliveryHook";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import {
   AlertCircle,
   ArrowBigLeft,
   BadgePercent,
-  Bike,
   Minus,
   Package,
-  Phone,
   Plus,
-  Star,
   Trash2,
-  Truck,
 } from "lucide-react";
 import { useState } from "react";
 import CustomerDrawer from "../../pos/CustomersDrawer";
-import AssignDeliveryModal, { DeliveryPartner } from "../AssignDeliveryModal";
 import ProductDrawer from "./ProductDrawer";
+import ShipbubbleCourierDrawer from "./ShipbubbleCourierDrawer";
 import ShippingDrawer from "./ShippingDrawer";
 
 const CreateOrders = () => {
@@ -43,41 +41,12 @@ const CreateOrders = () => {
   const [selectedShippingMethod, setSelectedShippingMethod] =
     useState<any>(null);
   const [selectedBank, setSelectedBank] = useState("");
-  // UI-only — not added to submit payload yet.
-  const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
-  const [assignedPartner, setAssignedPartner] =
-    useState<DeliveryPartner | null>(null);
-  const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [confirmedDeliveryPrice, setConfirmedDeliveryPrice] = useState<
-    number | null
-  >(null);
-  const [isCalculatingPrice, setIsCalculatingPrice] = useState(false);
 
-  const resetDeliveryAssignment = () => {
-    setAssignedPartner(null);
-    setDeliveryAddress("");
-    setConfirmedDeliveryPrice(null);
-    setIsCalculatingPrice(false);
-  };
-
-  const handleSaveDeliveryAddress = () => {
-    if (!assignedPartner || !deliveryAddress.trim()) return;
-    setIsCalculatingPrice(true);
-    // Simulated backend round-trip — replace with the real "calculate price" API
-    // call once the endpoint exists. For now we just lock in the partner's
-    // estimated cost as the "calculated" price.
-    setTimeout(() => {
-      setConfirmedDeliveryPrice(assignedPartner.estimatedCost);
-      setIsCalculatingPrice(false);
-    }, 800);
-  };
+  const business_id = useBusinessStore((state: any) => state.business_id);
 
   const {
     InventoryData,
     InventoryDataLoading,
-    salesChannelOptions,
-    onSubmit,
-    CreateOrderLoading,
     customer,
     setCustomer,
     selectedProducts,
@@ -88,10 +57,9 @@ const CreateOrders = () => {
     tax,
     setTax,
     filteredInventoryData,
-    selectedSalesChannel,
+    findBusiness,
     ShippingData,
     allShippingDataLoading,
-    setSelectedSalesChannel,
     shippingDate,
     setShippingDate,
     paymentStatus,
@@ -111,6 +79,7 @@ const CreateOrders = () => {
     calculateTotalDiscount,
     calculateTotal,
     hasQuantityErrors,
+    validateForm,
     BankData,
     BankDataLoading,
     selectedVariations,
@@ -122,9 +91,75 @@ const CreateOrders = () => {
     searchInput,
   });
 
+  const {
+    address,
+    updateAddressField,
+    stateList,
+    cityList,
+    isAddressComplete,
+    isPhoneLocked,
+    isEmailLocked,
+    isShipbubbleActive,
+    shipmentRates,
+    isFetchingRates,
+    ratesError,
+    fetchRates,
+    resetShipmentRates,
+    selectedCourier,
+    setSelectedCourier,
+    submitOrder,
+    isSubmittingOrder,
+  } = useOrderDeliveryHook({
+    businessId: business_id,
+    findBusiness,
+    customerName: customer?.name,
+    customerPhone: customer?.phone,
+    customerEmail: customer?.email,
+  });
+
+  const handleAddressFieldChange = (field: any, value: string) => {
+    updateAddressField(field, value);
+    if (selectedCourier) {
+      resetShipmentRates();
+      setShippingFee(0);
+    }
+  };
+
+  const buildOrderProducts = () =>
+    selectedProducts.map((p) => ({
+      product_id: selectedVariations[p.id] || p.id,
+      quantity: p.quantity || 1,
+    }));
+
+  const handleOpenDeliveryOptions = () => {
+    fetchRates(buildOrderProducts(), notes || undefined);
+    setIsShippingDrawerOpen(true);
+  };
+
+  const handleSelectCourier = (courier: any) => {
+    setSelectedCourier(courier);
+    setShippingFee(Number(courier.amount) || 0);
+    setSelectedShippingMethod({
+      id: courier.id,
+      location: courier.location,
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(selectedBank);
+    if (!validateForm(selectedBank)) return;
+
+    submitOrder({
+      products: buildOrderProducts(),
+      customerId: customer.id,
+      paymentStatus: paymentStatus as "UNPAID" | "PARTIAL" | "PAID",
+      paymentMethod: selectedPaymentMethod,
+      bank: selectedBank,
+      amountPaid: paymentStatus === "PAID" ? calculateTotal() : amountPaid,
+      notes,
+      shippingDate,
+      shippingId: isShipbubbleActive ? undefined : selectedShippingMethod?.id,
+    });
   };
 
   return (
@@ -185,28 +220,149 @@ const CreateOrders = () => {
           </div>
         </div>
 
-        {/* Sales Channel */}
-        <div className="space-y-2 w-full">
-          <Label htmlFor="salesChannel">Sales Channel *</Label>
-          <Select
-            value={selectedSalesChannel}
-            onValueChange={setSelectedSalesChannel}
-          >
-            <SelectTrigger className="w-full h-10">
-              <SelectValue placeholder="Select a sales channel" />
-            </SelectTrigger>
-            <SelectContent className="cursor-pointer">
-              {salesChannelOptions.map((channel: any) => (
-                <SelectItem
-                  className="cursor-pointer"
-                  key={channel.value}
-                  value={channel.value}
+        {/* Delivery Address */}
+        <div className="space-y-3 w-full">
+          <Label>Delivery Address *</Label>
+          <div className="border border-grey-5 rounded-xl bg-white p-3 sm:p-4 space-y-4">
+            {!customer && (
+              <p className="text-xs text-grey-4 flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Select a customer above — their name is used on the delivery
+                address.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">Phone *</Label>
+                <Input
+                  type="tel"
+                  value={address.phone}
+                  onChange={(e) =>
+                    handleAddressFieldChange("phone", e.target.value)
+                  }
+                  placeholder="Phone number"
+                  className="h-10 disabled:opacity-100 disabled:bg-grey-6"
+                  disabled={isPhoneLocked}
+                />
+                {isPhoneLocked && (
+                  <p className="text-[11px] text-grey-4">
+                    From customer profile
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">
+                  Alt. Phone
+                </Label>
+                <Input
+                  type="tel"
+                  value={address.altPhone}
+                  onChange={(e) =>
+                    handleAddressFieldChange("altPhone", e.target.value)
+                  }
+                  placeholder="Alternative phone"
+                  className="h-10"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-grey-3">Email *</Label>
+              <Input
+                type="email"
+                value={address.email}
+                onChange={(e) =>
+                  handleAddressFieldChange("email", e.target.value)
+                }
+                placeholder="Email address"
+                className="h-10 disabled:opacity-100 disabled:bg-grey-6"
+                disabled={isEmailLocked}
+              />
+              {isEmailLocked && (
+                <p className="text-[11px] text-grey-4">
+                  From customer profile
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">State *</Label>
+                <Select
+                  value={address.state}
+                  onValueChange={(v) => handleAddressFieldChange("state", v)}
                 >
-                  {channel.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                  <SelectTrigger className="w-full h-10">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent className="cursor-pointer">
+                    {stateList.map((s) => (
+                      <SelectItem
+                        className="cursor-pointer"
+                        key={s.isoCode}
+                        value={s.isoCode}
+                      >
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-grey-3">City</Label>
+                {address.state && cityList.length === 0 ? (
+                  <Input
+                    value={address.city}
+                    onChange={(e) =>
+                      handleAddressFieldChange("city", e.target.value)
+                    }
+                    placeholder="Enter city"
+                    className="h-10"
+                  />
+                ) : (
+                  <Select
+                    value={address.city}
+                    onValueChange={(v) => handleAddressFieldChange("city", v)}
+                    disabled={!address.state}
+                  >
+                    <SelectTrigger className="w-full h-10">
+                      <SelectValue
+                        placeholder={
+                          address.state ? "Select city" : "Select state first"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="cursor-pointer">
+                      {cityList.map((c) => (
+                        <SelectItem
+                          className="cursor-pointer"
+                          key={c.name}
+                          value={c.name}
+                        >
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs text-grey-3">
+                Shipping Address *
+              </Label>
+              <Textarea
+                value={address.shippingAddress}
+                onChange={(e) =>
+                  handleAddressFieldChange("shippingAddress", e.target.value)
+                }
+                placeholder="Full delivery address"
+                rows={2}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Products Section */}
@@ -479,13 +635,64 @@ const CreateOrders = () => {
                       )}
                     </div>
                   </div>
+                  <p className="text-[10px] text-grey-4">
+                    Tax is for your records only — it isn&apos;t sent with the
+                    order.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Shipping:</span>
+                    <span className="text-sm font-medium">
+                      {isShipbubbleActive ? "Delivery:" : "Shipping:"}
+                    </span>
                     <div className="flex items-center gap-2">
-                      {shippingFee > 0 ? (
+                      {isShipbubbleActive ? (
+                        selectedCourier ? (
+                          <>
+                            <div className="flex flex-col items-end">
+                              <span className="text-sm font-semibold">
+                                ₦{shippingFee.toLocaleString()}
+                              </span>
+                              <span className="text-xs text-grey-4">
+                                {selectedCourier.location}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                resetShipmentRates();
+                                setShippingFee(0);
+                                setSelectedShippingMethod(null);
+                              }}
+                              className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={handleOpenDeliveryOptions}
+                            disabled={
+                              !isAddressComplete ||
+                              selectedProducts.length === 0
+                            }
+                            title={
+                              !isAddressComplete
+                                ? "Complete the delivery address first"
+                                : undefined
+                            }
+                            className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-6 w-6 p-0"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        )
+                      ) : shippingFee > 0 ? (
                         <>
                           <div className="flex flex-col items-end">
                             <span className="text-sm font-semibold">
@@ -525,162 +732,12 @@ const CreateOrders = () => {
                   </div>
                 </div>
 
-                {/* Delivery Partner row (UI-only) */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">
-                      Delivery Partner:
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {assignedPartner ? (
-                        <>
-                          <span className="text-sm text-grey-2">
-                            {assignedPartner.name}
-                          </span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setOpenAssignDelivery(true)}
-                            className="border-grey-5 h-6 px-2 text-xs"
-                          >
-                            Change
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={resetDeliveryAssignment}
-                            className="border-error-1 text-error-1 hover:bg-error-2 h-6 w-6 p-0"
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setOpenAssignDelivery(true)}
-                          className="border-primary-green-300 text-primary-green-300 hover:bg-secondary-6 h-7 px-2 text-xs"
-                        >
-                          <Truck className="w-3 h-3 mr-1" />
-                          Assign Delivery
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
                 <div className="flex justify-between items-center pt-2 border-t border-grey-5">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
                     ₦{calculateTotal().toLocaleString()}
                   </span>
                 </div>
-
-                {/* Logistics card — visible once a partner is assigned */}
-                {assignedPartner && (
-                  <div className="mt-3 pt-3 border-t border-grey-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-xs font-extrabold text-grey-2 uppercase tracking-wide">
-                        Logistics
-                      </h4>
-                      <span className="text-[10px] font-bold text-warning-1 flex items-center gap-0.5">
-                        <Star className="w-2.5 h-2.5 fill-warning-1 text-warning-1" />
-                        {assignedPartner.rating}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-3 bg-white rounded-xl p-3 border border-grey-5">
-                      <div className="w-10 h-10 rounded-full bg-primary-green-100 flex items-center justify-center text-xs font-extrabold text-white flex-shrink-0">
-                        {assignedPartner.logo}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-grey-1">
-                          {assignedPartner.name}
-                        </p>
-                        <p className="text-xs font-medium text-grey-4">
-                          {assignedPartner.serviceType}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-xs font-medium text-grey-3">
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {assignedPartner.contact}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Bike className="w-3 h-3" />
-                            {assignedPartner.eta}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs font-medium text-grey-4">
-                          est. cost
-                        </p>
-                        <p className="text-sm font-extrabold text-grey-1">
-                          ₦{assignedPartner.estimatedCost.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Delivery address input — UI-only. On save we simulate
-                        the backend call that returns the calculated price. */}
-                    <div className="mt-3 bg-white rounded-xl p-3 border border-grey-5 space-y-2">
-                      <Label className="text-xs font-bold text-grey-2">
-                        Delivery location / address
-                      </Label>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Input
-                          value={deliveryAddress}
-                          onChange={(e) => {
-                            setDeliveryAddress(e.target.value);
-                            if (confirmedDeliveryPrice !== null) {
-                              // Address edited after saving — invalidate the
-                              // calculated price so the user re-saves.
-                              setConfirmedDeliveryPrice(null);
-                            }
-                          }}
-                          placeholder="e.g. 12 Allen Avenue, Ikeja, Lagos"
-                          className="flex-1 text-xs sm:text-sm"
-                          disabled={isCalculatingPrice}
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={handleSaveDeliveryAddress}
-                          disabled={
-                            !deliveryAddress.trim() ||
-                            isCalculatingPrice ||
-                            confirmedDeliveryPrice !== null
-                          }
-                          className="text-xs h-9 px-3"
-                        >
-                          {isCalculatingPrice
-                            ? "Calculating..."
-                            : confirmedDeliveryPrice !== null
-                              ? "Saved"
-                              : "Save"}
-                        </Button>
-                      </div>
-
-                      {confirmedDeliveryPrice !== null && (
-                        <div className="mt-2 pt-2 border-t border-grey-6 flex items-center justify-between">
-                          <span className="text-xs text-grey-3">
-                            Calculated price:
-                          </span>
-                          <span className="text-sm font-semibold text-primary-green-100">
-                            ₦{confirmedDeliveryPrice.toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <p className="text-[10px] text-grey-4 mt-1.5 italic">
-                      Delivery cost not added to total yet — will be wired once
-                      backend supports it.
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -925,9 +982,9 @@ const CreateOrders = () => {
           <Button
             type="submit"
             className="w-full sm:w-[200px] h-10 sm:h-12"
-            disabled={CreateOrderLoading || hasQuantityErrors()}
+            disabled={isSubmittingOrder || hasQuantityErrors()}
           >
-            {CreateOrderLoading ? "Creating..." : "Create Order"}
+            {isSubmittingOrder ? "Creating..." : "Create Order"}
           </Button>
         </div>
       </form>
@@ -959,32 +1016,35 @@ const CreateOrders = () => {
         }}
       />
 
-      <ShippingDrawer
-        open={isShippingDrawerOpen}
-        onOpenChange={setIsShippingDrawerOpen}
-        onShippingSelect={(selectedShipping: any) => {
-          if (selectedShipping?.cost) {
-            setShippingFee(selectedShipping.cost);
-            setSelectedShippingMethod(selectedShipping);
-          }
-        }}
-        shippingData={ShippingData?.data || []}
-        isLoading={allShippingDataLoading}
-        onAddShipping={() => {
-          setIsShippingDrawerOpen(false);
-          console.log("Navigate to create shipping method");
-        }}
-      />
-
-      <AssignDeliveryModal
-        isOpen={openAssignDelivery}
-        onClose={() => setOpenAssignDelivery(false)}
-        onAssigned={(partner) => {
-          setAssignedPartner(partner);
-          // Changing partner invalidates the previous calculated price.
-          setConfirmedDeliveryPrice(null);
-        }}
-      />
+      {isShipbubbleActive ? (
+        <ShipbubbleCourierDrawer
+          open={isShippingDrawerOpen}
+          onOpenChange={setIsShippingDrawerOpen}
+          couriers={shipmentRates}
+          selectedCourier={selectedCourier}
+          onSelect={handleSelectCourier}
+          isFetchingRates={isFetchingRates}
+          ratesError={ratesError}
+          onRetry={() => fetchRates(buildOrderProducts(), notes || undefined)}
+        />
+      ) : (
+        <ShippingDrawer
+          open={isShippingDrawerOpen}
+          onOpenChange={setIsShippingDrawerOpen}
+          onShippingSelect={(selectedShipping: any) => {
+            if (selectedShipping?.cost) {
+              setShippingFee(selectedShipping.cost);
+              setSelectedShippingMethod(selectedShipping);
+            }
+          }}
+          shippingData={ShippingData?.data || []}
+          isLoading={allShippingDataLoading}
+          onAddShipping={() => {
+            setIsShippingDrawerOpen(false);
+            console.log("Navigate to create shipping method");
+          }}
+        />
+      )}
     </div>
   );
 };

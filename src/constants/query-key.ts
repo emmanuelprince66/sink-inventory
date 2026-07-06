@@ -91,10 +91,12 @@ export const queryKey = {
   },
   orders: {
     getAllOrders: "get-all-orders",
-    createOrder: "create-order",
     getOrderById: "get-order-by-id",
     updateOrderStatus: "update-order-status",
     updateOrderPaymentStatus: "update-order-payment-status",
+    fetchShipmentRate: "fetch-shipment-rate",
+    createOrderInhouse: "create-order-inhouse",
+    createOrderShipbubble: "create-order-shipbubble",
   },
   analytics: {
     getSalesAnalytics: "get-sales-analytics",
