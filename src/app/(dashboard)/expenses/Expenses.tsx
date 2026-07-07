@@ -4,29 +4,58 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import GenerateReportButton from "@/components/app/GenerateReportButton";
+import { SearchInput } from "@/components/app/SearchInput";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { Calendar, DollarSign, Forward, TrendingDown } from "lucide-react";
-import { useState } from "react";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Forward,
+  TrendingDown,
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
-import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
-import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
-import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
-import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
-import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
-import {
-  EXPENSE_ACCOUNT,
-  ExpenseTransaction,
-  MOCK_TRANSACTIONS,
-} from "./expense-accounts/mock-data";
+import AllExpenses from "./AllExpenses";
 
-// ─── Overview card ──────────────────────────────────────────────────────────
+// ─── Expense Account Management (dummy/mock-data build) ────────────────────
+// Disabled for prod push — this UI runs entirely on mock-data.ts and has no
+// real API wired up yet. Re-enable by:
+//   1. Uncommenting the imports below
+//   2. Swapping the "Main Content Section" block for the commented-out
+//      Tabs block further down
+//   3. Uncommenting the related state (activeTab, openTransfer, etc.) and
+//      the Transfer/TransactionDetails modals at the bottom
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
+// import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
+// import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
+// import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
+// import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
+// import {
+//   EXPENSE_ACCOUNT,
+//   ExpenseTransaction,
+//   MOCK_TRANSACTIONS,
+// } from "./expense-accounts/mock-data";
+
+interface Category {
+  id: string;
+  name: string;
+  type: string;
+}
+
+interface CategoriesResponse {
+  success: boolean;
+  message: string;
+  data: Category[];
+}
 
 interface CustomExpenseCardProps {
   title: string;
@@ -103,57 +132,120 @@ const CustomExpenseCard = ({
   );
 };
 
-// ─── Page ───────────────────────────────────────────────────────────────────
-
-type ExpenseTab = "accounts" | "transactions";
-
 const Expenses = () => {
+  const [searchInput, setSearchInput] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const [addExpensesModal, setAddExpensesModal] = useState(false);
+  const [page, setPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
   });
+
+  const categoriesContainerRef = useRef<HTMLDivElement>(null);
 
   const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
   const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
   const closeAddExpensesModal = () => setAddExpensesModal(false);
   const openAddExpensesModal = () => setAddExpensesModal(true);
 
-  // Existing hook still drives the Total Expenses amount on the overview card.
-  // Other state it used to need (search, category, pagination) is gone now.
-  const { ExpensesData, ExpensesLoading } = useExpensesHook({
-    searchInput: "",
-    selectedCategory: null,
+  const {
+    ExpensesData,
+    ExpensesLoading,
+    CategoriesDataLoading,
+    CategoriesData,
+  } = useExpensesHook({
+    searchInput,
+    selectedCategory,
     dateRange,
-    page: 1,
+    page,
     handleOpenNotSubscribeModal,
   });
 
-  // Expense Account Management state (UI-only).
-  const [activeTab, setActiveTab] = useState<ExpenseTab>("accounts");
-  const [openTransfer, setOpenTransfer] = useState(false);
-  const [transferCategory, setTransferCategory] = useState<
-    string | undefined
-  >();
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<ExpenseTransaction | null>(null);
-
-  const pendingApprovalsCount = MOCK_TRANSACTIONS.filter(
-    (t) => t.status === "PENDING",
-  ).length;
-
-  const handleTransfer = (category?: string) => {
-    setTransferCategory(category);
-    setOpenTransfer(true);
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
   };
-  const handleViewTransaction = (txn: ExpenseTransaction) =>
-    setSelectedTransaction(txn);
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+  };
+
+  const handleAllClick = () => {
+    setSelectedCategory(null);
+  };
+
+  const checkScrollAvailability = () => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      setCanScrollLeft(container.scrollLeft > 0);
+      setCanScrollRight(
+        container.scrollLeft < container.scrollWidth - container.clientWidth,
+      );
+    }
+  };
+
+  const scrollCategories = (direction: "left" | "right") => {
+    const container = categoriesContainerRef.current;
+    if (container) {
+      const scrollAmount = 200;
+      const currentScroll = container.scrollLeft;
+      const newScroll =
+        direction === "left"
+          ? currentScroll - scrollAmount
+          : currentScroll + scrollAmount;
+
+      container.scrollTo({
+        left: newScroll,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  useEffect(() => {
+    checkScrollAvailability();
+    const container = categoriesContainerRef.current;
+    if (container) {
+      container.addEventListener("scroll", checkScrollAvailability);
+      return () =>
+        container.removeEventListener("scroll", checkScrollAvailability);
+    }
+  }, [CategoriesData]);
+
+  useEffect(() => {
+    const handleResize = () => checkScrollAvailability();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const totalExpenses = ExpensesData?.data?.results?.total_expenses || 0;
+
+  // ─── Expense Account Management state (mock-data build, disabled) ────────
+  // const [activeTab, setActiveTab] = useState<ExpenseTab>("accounts");
+  // const [openTransfer, setOpenTransfer] = useState(false);
+  // const [transferCategory, setTransferCategory] = useState<
+  //   string | undefined
+  // >();
+  // const [selectedTransaction, setSelectedTransaction] =
+  //   useState<ExpenseTransaction | null>(null);
+  //
+  // const pendingApprovalsCount = MOCK_TRANSACTIONS.filter(
+  //   (t) => t.status === "PENDING",
+  // ).length;
+  //
+  // const handleTransfer = (category?: string) => {
+  //   setTransferCategory(category);
+  //   setOpenTransfer(true);
+  // };
+  // const handleViewTransaction = (txn: ExpenseTransaction) =>
+  //   setSelectedTransaction(txn);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start pb-12">
+    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start px-2 sm:px-4">
       {/* Header Section */}
-      <div className="w-full">
+      <div className="w-full bg-white p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
           <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
             Expenses
@@ -179,16 +271,15 @@ const Expenses = () => {
             </div>
           </div>
         </div>
-
-        {/* Overview row — Total Expenses + Expense Account Balance */}
+        {/* Overview Cards */}
         <div className="mb-4 sm:mb-6">
           <h2 className="text-base sm:text-lg font-medium text-primary-black-100 mb-3 sm:mb-4">
             Overview
           </h2>
 
           {ExpensesLoading || !ExpensesData ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-              {Array.from({ length: 2 }).map((_, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
                 <CustomCard key={index} className="w-full border-gray-200">
                   <div className="flex flex-col gap-4 sm:gap-6 items-start">
                     <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-[#eef4ef]" />
@@ -198,7 +289,7 @@ const Expenses = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <CustomExpenseCard
                 title="Total Expenses"
                 amount={formatToNaira(
@@ -206,19 +297,165 @@ const Expenses = () => {
                 )}
                 type="total"
               />
-              <AccountBalanceCard
+              {/* <AccountBalanceCard
                 balance={EXPENSE_ACCOUNT.balance}
                 accountNumber={EXPENSE_ACCOUNT.accountNumber}
                 bankName={EXPENSE_ACCOUNT.bankName}
                 pendingApprovals={pendingApprovalsCount}
                 onTransfer={() => handleTransfer()}
-              />
+              /> */}
             </div>
           )}
         </div>
       </div>
 
-      {/* Body — two tabs: the category dashboard and the global transactions log */}
+      {/* Main Content Section — original table view */}
+      <div className="w-full rounded-lg shadow-sm border border-gray-200 bg-white">
+        {/* Categories and Search Header */}
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-white rounded-t-lg w-full">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-primary-black-100 flex items-center gap-2">
+              Manage Expenses
+              <span className="text-xs bg-red-100 px-2 py-1 rounded-full text-red-600 font-medium">
+                {ExpensesData?.data?.total?.toLocaleString() || "0"}
+              </span>
+            </h2>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <div className="w-full sm:w-60 md:w-80">
+                <SearchInput
+                  placeholder="Search by expense name..."
+                  value={searchInput}
+                  onValueChange={handleSearchChange}
+                />
+              </div>
+
+              <Link href="/categories/expenses" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  className="text-green-500 border-green-200 hover:bg-green-50 w-full sm:w-auto"
+                >
+                  View More
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Categories Tabs */}
+          {CategoriesDataLoading || !CategoriesData ? (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  className="h-8 sm:h-10 w-16 sm:w-20 bg-gray-200 rounded-md flex-shrink-0"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full">
+              <div className="flex items-center w-full">
+                {canScrollLeft && (
+                  <button
+                    onClick={() => scrollCategories("left")}
+                    disabled={!canScrollLeft}
+                    className={cn(
+                      "p-1 sm:p-2 rounded-md transition-all mr-1 sm:mr-2 flex-shrink-0",
+                      canScrollLeft
+                        ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                        : "text-gray-300 cursor-not-allowed",
+                    )}
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
+
+                <div
+                  ref={categoriesContainerRef}
+                  className="flex gap-1 sm:gap-2 overflow-x-auto flex-1 scrollbar-hide py-1"
+                  style={{
+                    scrollbarWidth: "none",
+                    msOverflowStyle: "none",
+                  }}
+                >
+                  <button
+                    className={cn(
+                      "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                      selectedCategory === null
+                        ? "bg-[#52b661] text-white shadow-sm"
+                        : "text-gray-600 hover:text-green-500 hover:bg-green-50",
+                    )}
+                    onClick={handleAllClick}
+                  >
+                    All
+                  </button>
+
+                  {CategoriesData?.data?.map((category: Category) => (
+                    <button
+                      key={category.id}
+                      className={cn(
+                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm cursor-pointer font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0",
+                        selectedCategory === category.id
+                          ? "bg-[#52b661] text-white shadow-sm"
+                          : "text-gray-600 hover:text-green-500 hover:bg-green-50",
+                      )}
+                      onClick={() => handleCategoryClick(category.id)}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+
+                {canScrollRight && (
+                  <button
+                    onClick={() => scrollCategories("right")}
+                    disabled={!canScrollRight}
+                    className={cn(
+                      "p-1 sm:p-2 rounded-md transition-all ml-1 sm:ml-2 flex-shrink-0",
+                      canScrollRight
+                        ? "text-gray-600 hover:text-green-500 hover:bg-green-50"
+                        : "text-gray-300 cursor-not-allowed",
+                    )}
+                  >
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {searchInput.length > 0 && searchInput.length < 3 && (
+            <div className="mt-2 text-xs sm:text-sm text-gray-500">
+              Type at least 3 characters to search
+            </div>
+          )}
+        </div>
+
+        {/* Table Content */}
+        <div className="p-4 sm:p-6">
+          {ExpensesLoading || !ExpensesData ? (
+            <div className="w-full">
+              <div className="space-y-3 sm:space-y-4">
+                <Skeleton className="h-8 sm:h-10 w-full bg-gray-200" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Skeleton
+                    key={index}
+                    className="h-12 sm:h-16 w-full bg-gray-200 mt-1 sm:mt-2"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <AllExpenses
+              expensesData={ExpensesData}
+              expensesLoading={ExpensesLoading}
+              setPage={setPage}
+              page={page}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* ─── Expense Account Management tabs (mock-data build, disabled) ───
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as ExpenseTab)}
@@ -255,30 +492,9 @@ const Expenses = () => {
           />
         </TabsContent>
       </Tabs>
+      */}
 
-      {/* Modals */}
-      <TransferMoneyModal
-        isOpen={openTransfer}
-        onClose={() => setOpenTransfer(false)}
-        defaultCategory={transferCategory}
-      />
-
-      <TransactionDetailsModal
-        isOpen={!!selectedTransaction}
-        onClose={() => setSelectedTransaction(null)}
-        transaction={selectedTransaction}
-        onApprove={(id) => {
-          // UI-only — wire to PATCH /expense-transactions/{id}/approve when ready.
-          console.log("approve", id);
-          setSelectedTransaction(null);
-        }}
-        onReject={(id) => {
-          console.log("reject", id);
-          setSelectedTransaction(null);
-        }}
-      />
-
-      {/* Add Expenses Modal (existing flow — unchanged) */}
+      {/* Add Expenses Modal */}
       <CustomModal
         isOpen={addExpensesModal}
         onClose={closeAddExpensesModal}
@@ -302,6 +518,28 @@ const Expenses = () => {
           <UserNotSubscribe />
         </div>
       </CustomModal>
+
+      {/* ─── Expense Account Management modals (mock-data build, disabled) ───
+      <TransferMoneyModal
+        isOpen={openTransfer}
+        onClose={() => setOpenTransfer(false)}
+        defaultCategory={transferCategory}
+      />
+
+      <TransactionDetailsModal
+        isOpen={!!selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        transaction={selectedTransaction}
+        onApprove={(id) => {
+          console.log("approve", id);
+          setSelectedTransaction(null);
+        }}
+        onReject={(id) => {
+          console.log("reject", id);
+          setSelectedTransaction(null);
+        }}
+      />
+      */}
     </div>
   );
 };

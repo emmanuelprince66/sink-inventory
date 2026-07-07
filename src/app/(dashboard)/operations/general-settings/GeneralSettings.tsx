@@ -2,16 +2,19 @@
 
 import { cn } from "@/lib/utils";
 import {
-  CreditCard,
+  // CreditCard,
   Settings as SettingsIcon,
   Sparkles,
   Truck,
 } from "lucide-react";
 import { useState } from "react";
-import BnplCard from "./BnplCard";
+// import BnplCard from "./BnplCard";
 import ShippingTab from "./ShippingTab";
 
-type SectionKey = "shipping" | "addons";
+// Payment Add-ons section disabled for prod push — re-enable by restoring
+// the "addons" entries below (SectionKey, SECTIONS, and the render block
+// further down) plus the BnplCard import above.
+type SectionKey = "shipping"; // | "addons";
 
 const SECTIONS: {
   key: SectionKey;
@@ -25,12 +28,12 @@ const SECTIONS: {
     description: "Pickup, dispatch and automated logistics",
     icon: <Truck className="w-5 h-5" />,
   },
-  {
-    key: "addons",
-    label: "Payment Add-ons",
-    description: "Optional checkout features",
-    icon: <CreditCard className="w-5 h-5" />,
-  },
+  // {
+  //   key: "addons",
+  //   label: "Payment Add-ons",
+  //   description: "Optional checkout features",
+  //   icon: <CreditCard className="w-5 h-5" />,
+  // },
 ];
 
 const GeneralSettings = () => {
@@ -124,7 +127,7 @@ const GeneralSettings = () => {
             </SectionShell>
           )}
 
-          {active === "addons" && (
+          {/* {active === "addons" && (
             <SectionShell
               title="Payment Add-ons"
               subtitle="Optional payment products you can offer your customers at checkout."
@@ -133,7 +136,7 @@ const GeneralSettings = () => {
                 <BnplCard />
               </div>
             </SectionShell>
-          )}
+          )} */}
         </div>
       </div>
     </div>
