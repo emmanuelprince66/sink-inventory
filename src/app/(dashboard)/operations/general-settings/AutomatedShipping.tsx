@@ -29,9 +29,6 @@ const AutomatedShipping = () => {
   const [showShipbubbleSettings, setShowShipbubbleSettings] = useState(false);
   const [showShipbubbleAgreement, setShowShipbubbleAgreement] = useState(false);
 
-  // Chowdeck has no backend flag yet — leave it as local UI state.
-  const [chowdeckOn, setChowdeckOn] = useState(false);
-
   const {
     isConfigured,
     isShipbubbleActive,
@@ -169,8 +166,9 @@ const AutomatedShipping = () => {
                 tagline="Fast, reliable same-day deliveries in select cities"
                 logoTone="bg-amber-100 text-amber-700"
                 icon={<Package className="w-5 h-5" />}
-                checked={chowdeckOn}
-                onToggle={setChowdeckOn}
+                checked={false}
+                onToggle={() => {}}
+                comingSoon
               />
             </div>
           </StepTile>
@@ -297,6 +295,7 @@ interface PartnerCardProps {
   onToggle: (v: boolean) => void;
   onConfigure?: () => void;
   isConfigured?: boolean;
+  comingSoon?: boolean;
 }
 const PartnerCard = ({
   name,
@@ -308,31 +307,46 @@ const PartnerCard = ({
   onToggle,
   onConfigure,
   isConfigured,
+  comingSoon,
 }: PartnerCardProps) => (
   <div
     className={cn(
-      "rounded-xl border transition-all p-4 bg-white",
-      checked
-        ? "border-emerald-300 shadow-sm shadow-emerald-100/70"
-        : "border-slate-200 hover:border-slate-300",
+      "relative rounded-xl border transition-all p-4",
+      comingSoon
+        ? "bg-slate-50/60 border-slate-200"
+        : checked
+          ? "bg-white border-emerald-300 shadow-sm shadow-emerald-100/70"
+          : "bg-white border-slate-200 hover:border-slate-300",
     )}
   >
-    <div className="flex items-start justify-between mb-3">
+    {comingSoon && (
+      <span className="absolute top-3 right-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">
+        Coming soon
+      </span>
+    )}
+    <div className={cn("flex items-start justify-between mb-3", comingSoon && "opacity-50")}>
       <div
         className={cn(
           "w-11 h-11 rounded-xl flex items-center justify-center",
-          logoTone,
+          comingSoon ? "bg-slate-200 text-slate-400" : logoTone,
         )}
       >
         {icon}
       </div>
-      <Switch
-        checked={checked}
-        onCheckedChange={onToggle}
-        disabled={disabled}
-      />
+      {!comingSoon && (
+        <Switch
+          checked={checked}
+          onCheckedChange={onToggle}
+          disabled={disabled}
+        />
+      )}
     </div>
-    <h5 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+    <h5
+      className={cn(
+        "text-sm font-bold flex items-center gap-1.5",
+        comingSoon ? "text-slate-500" : "text-slate-900",
+      )}
+    >
       {name}
       {onConfigure && isConfigured && (
         <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
@@ -340,24 +354,31 @@ const PartnerCard = ({
         </span>
       )}
     </h5>
-    <p className="text-xs text-slate-500 mt-1 mb-3 leading-relaxed">
+    <p
+      className={cn(
+        "text-xs mt-1 mb-3 leading-relaxed",
+        comingSoon ? "text-slate-400" : "text-slate-500",
+      )}
+    >
       {tagline}
     </p>
-    <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs">
-      {onConfigure && (
-        <button
-          onClick={onConfigure}
-          className="text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
-        >
-          <SettingsIcon className="w-3 h-3" />
-          {isConfigured ? "Configure" : "Set up"}
+    {!comingSoon && (
+      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs">
+        {onConfigure && (
+          <button
+            onClick={onConfigure}
+            className="text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
+          >
+            <SettingsIcon className="w-3 h-3" />
+            {isConfigured ? "Configure" : "Set up"}
+          </button>
+        )}
+        {onConfigure && <span className="text-slate-300">•</span>}
+        <button className="text-slate-500 hover:text-slate-700 font-medium">
+          Get help
         </button>
-      )}
-      {onConfigure && <span className="text-slate-300">•</span>}
-      <button className="text-slate-500 hover:text-slate-700 font-medium">
-        Get help
-      </button>
-    </div>
+      </div>
+    )}
   </div>
 );
 
