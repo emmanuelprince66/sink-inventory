@@ -37,49 +37,44 @@ const ShippingTab = () => {
 
   return (
     <div className="space-y-5">
-      {/* Segmented control — green underline accent, distinct from pill tabs */}
-      <div className="relative">
-        <div className="flex items-stretch gap-1 border-b border-slate-200">
-          {VIEWS.map((v) => {
-            const isActive = view === v.key;
-            return (
-              <button
-                key={v.key}
-                onClick={() => setView(v.key)}
+      {/* Underline tabs — matches the app's established sub-tab pattern */}
+      <div className="flex items-center gap-1 border-b border-grey-5 overflow-x-auto">
+        {VIEWS.map((v) => {
+          const isActive = view === v.key;
+          return (
+            <button
+              key={v.key}
+              onClick={() => setView(v.key)}
+              className={cn(
+                "flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 cursor-pointer whitespace-nowrap transition-colors",
+                isActive
+                  ? "border-primary-green-300 text-primary-green-300"
+                  : "border-transparent text-grey-3 hover:text-grey-2",
+              )}
+            >
+              <span
                 className={cn(
-                  "relative flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-colors",
+                  "flex items-center justify-center w-6 h-6 rounded-md transition-colors",
                   isActive
-                    ? "text-emerald-700"
-                    : "text-slate-500 hover:text-slate-800",
+                    ? "bg-secondary-6 text-primary-green-300"
+                    : "bg-grey-6 text-grey-3",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex items-center justify-center w-6 h-6 rounded-md transition-colors",
-                    isActive
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-slate-100 text-slate-500",
-                  )}
-                >
-                  {v.icon}
-                </span>
-                <span className="hidden sm:inline">{v.label}</span>
-                <span className="sm:hidden">{v.shortLabel}</span>
-                {isActive && (
-                  <span className="absolute left-2 right-2 -bottom-px h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+                {v.icon}
+              </span>
+              <span className="hidden sm:inline">{v.label}</span>
+              <span className="sm:hidden">{v.shortLabel}</span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Side-quote style alert — left bar, soft tone, not the typical amber box */}
-      <div className="relative pl-4 py-3 pr-4 bg-emerald-50/50 rounded-r-lg overflow-hidden">
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-l" />
+      {/* Tip banner */}
+      <div className="relative pl-4 py-3 pr-4 bg-secondary-6 rounded-r-lg overflow-hidden">
+        <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary-green-300 rounded-l" />
         <div className="flex items-start gap-2.5">
-          <Lightbulb className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-emerald-900/80 leading-relaxed">
+          <Lightbulb className="w-4 h-4 text-primary-green-300 mt-0.5 shrink-0" />
+          <p className="text-sm text-primary-green-100 leading-relaxed">
             {activeView.tip}
           </p>
         </div>

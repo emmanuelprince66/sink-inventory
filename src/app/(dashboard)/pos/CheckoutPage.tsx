@@ -303,13 +303,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           businessData={businessData}
         />
       ) : (
-        <div className="flex flex-col h-full bg-gray-50 rounded-lg space-y-4">
-          <div className="flex flex-col space-y-3">
-            <p className="text-2xl font-bold text-gray-800">Checkout</p>
+        <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
+          {/* Sticky top — Checkout title + Add Customer/Attendant */}
+          <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex flex-col gap-3">
+            <p className="text-xl font-extrabold text-grey-1">Checkout</p>
             <div className="grid grid-cols-1 gap-2">
               <Button
                 variant="outline"
-                className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
+                className="flex items-center border-grey-5 justify-start gap-2 h-12 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
                 onClick={() => setIsCustomerDrawerOpen(true)}
               >
                 <UserPlus size={16} />
@@ -321,7 +322,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <Button
                   onClick={() => setIsAttendantDrawerOpen(true)}
                   variant="outline"
-                  className="flex items-center border-gray-200 justify-start gap-2 h-12 hover:border-[#52b661] hover:bg-[#52b661]/10 transition-colors"
+                  className="flex items-center border-grey-5 justify-start gap-2 h-12 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
                 >
                   <Users size={16} />
                   <p className="text-xs">
@@ -330,29 +331,31 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </Button>
               )}
             </div>
-          </div>
 
-          <div className="flex flex-col flex-grow">
-            <div className="flex justify-between items-center w-full mb-1">
-              <h2 className="text-sm font-semibold text-gray-800 mb-3">
+            <div className="flex justify-between items-center w-full">
+              <h2 className="text-sm font-bold text-grey-1">
                 Cart Items ({cartItems.length})
               </h2>
               <Button
                 variant="outline"
-                className="flex items-center justify-start border border-red-600 gap-2"
+                size="sm"
+                className="flex items-center justify-start border-error-1/30 text-error-1 hover:bg-error-2 gap-2"
                 onClick={clearCartFunc}
               >
-                <p className="text-red-600 text-xs">Clear Cart</p>
+                <p className="text-xs">Clear Cart</p>
               </Button>
             </div>
+          </div>
 
-            <div className="flex-grow border rounded-md bg-white overflow-y-auto max-h-[400px] border-[#52b661]/30">
+          {/* Scrollable middle — Cart items */}
+          <div className="h-full min-h-0 overflow-y-auto p-4">
+            <div className="border rounded-xl bg-white overflow-hidden border-grey-5">
               {cartItems.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
+                <div className="p-6 text-center text-grey-4 text-sm">
                   Your cart is empty
                 </div>
               ) : (
-                <div className="divide-y divide-[#52b661]/10">
+                <div className="divide-y divide-grey-6">
                   {cartItems.map((item: any) => {
                     const discountInfo = getItemDiscountDisplay(item);
                     const bulkError = bulkQuantityErrors[item.id];
@@ -362,8 +365,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     const hasVariations = item.parentProductId;
 
                     return (
-                      <div key={item.id} className="p-1 flex items-start">
-                        <div className="h-8 w-8 rounded-md overflow-hidden mr-2 bg-gray-100 flex-shrink-0 border border-[#52b661]/20">
+                      <div
+                        key={item.id}
+                        className="p-3 flex items-start hover:bg-grey-6/60 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-lg overflow-hidden mr-3 bg-grey-6 flex-shrink-0 border border-grey-5">
                           {item.image && (
                             <img
                               src={item.image}
@@ -375,29 +381,29 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                         <div className="flex-grow">
                           <div className="flex items-center gap-1">
-                            <h3 className="font-sm text-gray-800">
+                            <h3 className="font-sm text-grey-1">
                               {item.name}
                             </h3>
                             {hasVariations && (
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-4 px-1 text-[8px] hover:bg-green-50"
+                                className="h-4 px-1 text-[8px] hover:bg-secondary-6"
                                 onClick={() => openVariationChanger(item)}
                               >
                                 <RefreshCw
                                   size={10}
-                                  className="text-green-600"
+                                  className="text-success-1"
                                 />
                               </Button>
                             )}
                             {item.allow_tax && vatCalculation.enabled && (
-                              <span className="text-[8px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">
+                              <span className="text-[8px] px-1.5 py-0.5 bg-info-2 text-info-1 rounded-full font-medium">
                                 +VAT
                               </span>
                             )}
                           </div>
-                          <p className="text-[10px] text-gray-500">
+                          <p className="text-[10px] text-grey-4">
                             SKU: {item.sku}
                           </p>
 
@@ -417,15 +423,15 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                   }
                                   className={`w-20 text-center text-xs border rounded-md py-1 ${
                                     priceError
-                                      ? "border-red-500"
-                                      : "border-gray-200"
+                                      ? "border-error-1"
+                                      : "border-grey-5"
                                   }`}
                                   autoFocus
                                 />
                                 <div className="flex gap-1 mb-[4px]">
                                   <Button
                                     variant="outline"
-                                    className="h-4 px-1 text-[8px] border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                    className="h-4 px-1 text-[8px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                                     onClick={() => applyPriceEdit(item.id)}
                                     disabled={
                                       !priceEditInputs[item.id] || !!priceError
@@ -436,7 +442,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="h-4 px-1 text-[8px] border-gray-200 hover:border-red-500 hover:bg-red-50"
+                                    className="h-4 px-1 text-[8px] border-grey-5 hover:border-error-1 hover:bg-error-2"
                                     onClick={() => cancelPriceEdit(item.id)}
                                   >
                                     <p className="text-[9px]">Cancel</p>
@@ -445,41 +451,41 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               </div>
                             ) : (
                               <div className="flex items-center gap-1">
-                                <p className="text-[10px] font-semibold text-[#52b661]">
+                                <p className="text-[10px] font-semibold text-primary-green-300">
                                   {formatToNaira(currentPrice)}
                                 </p>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-4 w-4 p-0 hover:bg-gray-100"
+                                  className="h-4 w-4 p-0 hover:bg-grey-6"
                                   onClick={() =>
                                     startPriceEdit(item.id, currentPrice)
                                   }
                                 >
-                                  <Edit3 size={10} className="text-gray-400" />
+                                  <Edit3 size={10} className="text-grey-4" />
                                 </Button>
                               </div>
                             )}
                           </div>
 
                           {priceError && (
-                            <p className="text-[8px] text-red-500">
+                            <p className="text-[8px] text-error-1">
                               {priceError}
                             </p>
                           )}
 
                           {item.quantity !== undefined && (
-                            <p className="text-[8px] text-gray-500">
+                            <p className="text-[8px] text-grey-4">
                               Available: {item.quantity}
                             </p>
                           )}
                           {item.discount_threshold && (
-                            <p className="text-[8px] text-blue-500">
+                            <p className="text-[8px] text-info-1">
                               Discount threshold: {item.discount_threshold}
                             </p>
                           )}
                           {discountInfo && (
-                            <div className="text-[8px] text-green-600 font-semibold">
+                            <div className="text-[8px] text-success-1 font-semibold">
                               <p>
                                 Discount:{" "}
                                 {formatToNaira(discountInfo.perUnitDiscount)}{" "}
@@ -498,36 +504,36 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              className="h-8 w-8 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => decrementQuantity(item.id)}
                               disabled={(item.cartQuantity || 1) <= 1}
                             >
                               <MinusCircle
                                 size={3}
-                                className="text-[#52b661]"
+                                className="text-primary-green-300"
                               />
                             </Button>
 
-                            <span className="w-8 text-center text-gray-700">
+                            <span className="w-8 text-center text-grey-2">
                               {Math.floor(item.cartQuantity || 1)}
                             </span>
 
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              className="h-8 w-8 border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => incrementQuantity(item.id)}
                               disabled={
                                 (item.cartQuantity || 1) >=
                                 (item.quantity ?? Infinity)
                               }
                             >
-                              <PlusCircle size={3} className="text-[#52b661]" />
+                              <PlusCircle size={3} className="text-primary-green-300" />
                             </Button>
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <span className="text-[8px] text-gray-500">
+                            <span className="text-[8px] text-grey-4">
                               Bulk Qty:
                             </span>
                             <input
@@ -542,13 +548,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 )
                               }
                               className={`w-16 text-center text-xs border rounded-md py-1 ${
-                                bulkError ? "border-red-500" : "border-gray-200"
+                                bulkError ? "border-error-1" : "border-grey-5"
                               }`}
                             />
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 px-2 text-[8px] border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                              className="h-6 px-2 text-[8px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => applyBulkQuantity(item.id)}
                               disabled={
                                 !bulkQuantityInputs[item.id] || !!bulkError
@@ -558,20 +564,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             </Button>
                           </div>
                           {bulkError && (
-                            <p className="text-[8px] text-red-500">
+                            <p className="text-[8px] text-error-1">
                               {bulkError}
                             </p>
                           )}
 
                           {item?.type?.toLocaleLowerCase() === "product" && (
                             <div className="flex items-center gap-1">
-                              <span className="text-[8px] text-gray-500">
+                              <span className="text-[8px] text-grey-4">
                                 Decimal Qty:
                               </span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-6 w-6 cursor-pointer border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                className="h-6 w-6 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
                                   decrementDecimalQuantity(item.id)
                                 }
@@ -579,7 +585,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               >
                                 <MinusCircle
                                   size={2}
-                                  className="text-[#52b661]"
+                                  className="text-primary-green-300"
                                 />
                               </Button>
                               <input
@@ -590,7 +596,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 onChange={(e) =>
                                   handleCustomQuantity(item.id, e.target.value)
                                 }
-                                className="w-12 text-center text-xs border border-gray-200 rounded-md py-1"
+                                className="w-12 text-center text-xs border border-grey-5 rounded-md py-1"
                                 onBlur={(e) => {
                                   if (
                                     e.target.value === "" ||
@@ -603,7 +609,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-6 w-6 border-gray-200 hover:border-[#52b661] hover:bg-[#52b661]/10"
+                                className="h-6 w-6 border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
                                   incrementDecimalQuantity(item.id)
                                 }
@@ -614,14 +620,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               >
                                 <PlusCircle
                                   size={2}
-                                  className="text-[#52b661]"
+                                  className="text-primary-green-300"
                                 />
                               </Button>
                             </div>
                           )}
 
                           <div
-                            className="text-red-500 p-1 rounded-full cursor-pointer hover:bg-red-50"
+                            className="text-error-1 p-1 rounded-full cursor-pointer hover:bg-error-2"
                             onClick={() => removeFromCart(item.id)}
                           >
                             <Trash2 size={1} className="w-3 h-3" />
@@ -635,16 +641,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-1 border border-[#52b661]/20">
-            <h2 className="text-sm font-semibold text-gray-800 mb-3">
+          {/* Sticky bottom — Order Summary */}
+          <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5">
+            <h2 className="text-sm font-bold text-grey-1 mb-3">
               Order Summary
             </h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600 text-xs">
+                <span className="text-grey-3 text-xs">
                   Subtotal ({cartItems.length} items)
                 </span>
-                <span className="font-medium text-xs">
+                <span className="font-bold text-xs text-grey-1">
                   {formatToNaira(subtotal)}
                 </span>
               </div>
@@ -652,11 +659,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {automaticDiscountAmount > 0 && (
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="text-gray-600 text-xs">
+                    <span className="text-grey-3 text-xs">
                       Discount Applied
                     </span>
                     {eligibleItems.length > 0 && (
-                      <div className="text-[10px] text-gray-500">
+                      <div className="text-[10px] text-grey-4">
                         {eligibleItems.map((item: any) => {
                           const discountInfo = getItemDiscountDisplay(item);
                           return discountInfo ? (
@@ -670,7 +677,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       </div>
                     )}
                   </div>
-                  <span className="font-medium text-xs text-green-600">
+                  <span className="font-bold text-xs text-success-1">
                     -{formatToNaira(automaticDiscountAmount)}
                   </span>
                 </div>
@@ -680,20 +687,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {vatCalculation.enabled && vatCalculation.amount > 0 && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 text-xs">
+                    <span className="text-grey-3 text-xs">
                       Subtotal (before VAT)
                     </span>
-                    <span className="font-medium text-xs">
+                    <span className="font-bold text-xs text-grey-1">
                       {formatToNaira(totalBeforeTax)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-gray-600 text-xs">
+                      <span className="text-grey-3 text-xs">
                         VAT ({vatCalculation.rate}%)
                       </span>
                       {vatCalculation.itemsBreakdown.length > 0 && (
-                        <div className="text-[10px] text-gray-500">
+                        <div className="text-[10px] text-grey-4">
                           {vatCalculation.itemsBreakdown.map((item: any) => (
                             <div key={item.id}>
                               {item.name}: {formatToNaira(item.itemVat)}
@@ -702,17 +709,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         </div>
                       )}
                     </div>
-                    <span className="font-medium text-xs text-blue-600">
+                    <span className="font-bold text-xs text-info-1">
                       +{formatToNaira(vatCalculation.amount)}
                     </span>
                   </div>
                 </>
               )}
 
-              <Separator className="my-2 bg-[#52b661]/30" />
+              <Separator className="my-2 bg-grey-5" />
               <div className="flex justify-between">
-                <span className="font-bold text-sm text-gray-800">Total</span>
-                <span className="font-bold text-sm text-[#52b661]">
+                <span className="font-bold text-sm text-grey-1">Total</span>
+                <span className="font-extrabold text-base text-primary-green-300">
                   {formatToNaira(
                     vatCalculation.enabled
                       ? vatCalculation.totalWithVat
@@ -721,7 +728,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </span>
               </div>
               <Button
-                className="w-full mt-3 py-3 text-base font-semibold bg-[#52b661] hover:bg-[#52b661]/90"
+                className="w-full mt-1 py-3 text-base font-bold"
                 onClick={() => setShowReceipt(true)}
                 disabled={
                   cartItems.length === 0 ||
@@ -729,7 +736,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                   hasPriceEditErrors
                 }
               >
-                <p className="text-sm">Complete Order</p>
+                Complete Order
               </Button>
             </div>
           </div>

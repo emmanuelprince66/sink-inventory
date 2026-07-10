@@ -362,8 +362,8 @@ const Sales = () => {
                   className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
                 >
                   <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-6" />
-                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-6" />
+                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-5" />
+                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
                   </div>
                 </CustomCard>
               ))}
@@ -600,7 +600,7 @@ const Sales = () => {
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-8 sm:h-10 w-16 sm:w-20 bg-grey-6 rounded-full flex-shrink-0"
+                        className="h-8 sm:h-10 w-16 sm:w-20 bg-grey-5 rounded-full flex-shrink-0"
                       />
                     ))}
                   </div>
@@ -721,11 +721,11 @@ const Sales = () => {
                 {SalesLoading || !SalesData ? (
                   <div className="w-full">
                     <div className="sm:space-y-4">
-                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
+                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-5" />
                       {Array.from({ length: 5 }).map((_, index) => (
                         <Skeleton
                           key={index}
-                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
+                          className="h-12 sm:h-16 w-full bg-grey-5 mt-1 sm:mt-2"
                         />
                       ))}
                     </div>
@@ -748,11 +748,11 @@ const Sales = () => {
                 {SalesOrderLoading || !SalesOrderData ? (
                   <div className="w-full">
                     <div className="space-y-3 sm:space-y-4">
-                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
+                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-5" />
                       {Array.from({ length: 5 }).map((_, index) => (
                         <Skeleton
                           key={index}
-                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
+                          className="h-12 sm:h-16 w-full bg-grey-5 mt-1 sm:mt-2"
                         />
                       ))}
                     </div>

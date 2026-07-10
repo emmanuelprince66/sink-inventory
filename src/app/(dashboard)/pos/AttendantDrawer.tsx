@@ -33,8 +33,8 @@ const AttendantDrawer = ({ open, onOpenChange, onAttendantSelect }: any) => {
               // Show skeleton loading states
               Array.from({ length: 5 }).map((_, index) => (
                 <div key={index} className="p-3 space-y-2">
-                  <Skeleton className="bg-[#eef4ef] h-6 w-3/4" />
-                  <Skeleton className="bg-[#eef4ef] h-4 w-1/2" />
+                  <Skeleton className="bg-grey-5 h-6 w-3/4" />
+                  <Skeleton className="bg-grey-5 h-4 w-1/2" />
                 </div>
               ))
             ) : AttendantsData?.data?.length > 0 ? (

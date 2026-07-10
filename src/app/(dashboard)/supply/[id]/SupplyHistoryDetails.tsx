@@ -1,6 +1,7 @@
-import { CheckCircle, PersonStandingIcon } from "lucide-react";
+import { PersonStandingIcon } from "lucide-react";
 import moment from "moment";
 
+import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -26,18 +27,18 @@ const SupplyHistoryDetails = ({
   return (
     <>
       <div className=" flex items-center justify-center">
-        <div className="bg-white w-full max-w-full r overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="bg-white w-full max-w-full overflow-hidden max-h-[90vh] flex flex-col">
           <div className="overflow-y-auto flex-1">
-            {/* Order ID and date section */}
-            <Card className="m-4 bg-green-50 border-0">
+            {/* Supply ID and date section */}
+            <Card className="m-4 bg-secondary-6 border-0">
               <CardContent className="p-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="text-sm text-gray-500">Suuply ID</p>
-                    <p className="font-medium">#{shortOrderId}</p>
+                    <p className="text-sm text-grey-3">Supply ID</p>
+                    <p className="font-bold text-grey-1">#{shortOrderId}</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-2">{formattedDate}</p>
+                <p className="text-sm text-grey-3 mt-2">{formattedDate}</p>
               </CardContent>
             </Card>
 
@@ -45,7 +46,7 @@ const SupplyHistoryDetails = ({
             <Card className="m-4 border-0">
               <CardContent className="p-4">
                 <div className="space-y-4">
-                  <div className="grid grid-cols-8 gap-2 text-sm text-gray-500">
+                  <div className="grid grid-cols-8 gap-2 text-sm text-grey-3">
                     <div className="col-span-4">Item(s)</div>
                     <div className="col-span-1 text-center">Qty</div>
                     <div className="col-span-1 text-right">Price</div>
@@ -55,37 +56,29 @@ const SupplyHistoryDetails = ({
                   <div>
                     <div className="grid grid-cols-8 gap-2 items-center py-2">
                       <div className="col-span-4 flex items-center gap-2">
-                        {/* <div className="w-5 h-5 relative">
-                          <Image
-                            src={"/api/placeholder/32/32"}
-                            alt={""}
-                            width={22}
-                            height={22}
-                            className="rounded object-cover"
-                          />
-                        </div> */}
-                        <span className="text-sm">{supplierDetails.name}</span>
+                        <span className="text-sm text-grey-2">
+                          {supplierDetails.name}
+                        </span>
                       </div>
-                      <div className="col-span-1 text-center">
+                      <div className="col-span-1 text-center text-grey-2">
                         {supplierDetails.quantity}
                       </div>
-                      <div className="col-span-1 text-right">
+                      <div className="col-span-1 text-right text-grey-2">
                         {formatToNaira(supplierDetails.cost_price)}
                       </div>
-                      <div className="col-span-2 text-right font-medium">
+                      <div className="col-span-2 text-right font-bold text-grey-1">
                         {(
                           supplierDetails.cost_price * supplierDetails.quantity
                         ).toLocaleString()}
                       </div>
                     </div>
-                    {/* {index < historyDetailsData.products.length - 1 && (
-                      <Separator className="my-2" />
-                    )} */}
                   </div>
 
-                  <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t">
-                    <div className="col-span-6 font-medium">Total</div>
-                    <div className="col-span-2 text-right font-medium">
+                  <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t border-grey-5">
+                    <div className="col-span-6 font-bold text-grey-1">
+                      Total
+                    </div>
+                    <div className="col-span-2 text-right font-extrabold text-primary-green-300">
                       {formatToNaira(Number(supplierDetails.cost_price))}
                     </div>
                   </div>
@@ -97,26 +90,26 @@ const SupplyHistoryDetails = ({
             <Card className="m-4 border-0">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-6 h-6 flex items-center justify-center bg-green-100 rounded-md">
-                    <span className="text-green-600 text-xs">
-                      <PersonStandingIcon />
+                  <div className="w-6 h-6 flex items-center justify-center bg-secondary-6 rounded-md">
+                    <span className="text-primary-green-300 text-xs">
+                      <PersonStandingIcon size={14} />
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Supplier</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm text-grey-3">Supplier</p>
+                    <p className="text-sm font-bold text-grey-1">
                       {supplierDetails.supplier}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 flex items-center justify-center bg-green-100 rounded-md">
-                    <span className="text-green-600 text-xs">👤</span>
+                  <div className="w-6 h-6 flex items-center justify-center bg-secondary-6 rounded-md">
+                    <span className="text-primary-green-300 text-xs">👤</span>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Attendant</p>
-                    <p className="text-sm font-medium">
+                    <p className="text-sm text-grey-3">Attendant</p>
+                    <p className="text-sm font-bold text-grey-1">
                       {supplierDetails.supplier}
                     </p>
                   </div>
@@ -130,25 +123,10 @@ const SupplyHistoryDetails = ({
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">
+                      <p className="text-sm text-grey-3 mb-1">
                         Payment Status
                       </p>
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
-                          supplierDetails?.status === "PAID"
-                            ? "bg-green-100 text-green-700"
-                            : supplierDetails?.status === "UNPAID"
-                              ? "bg-red-100 text-red-700"
-                              : supplierDetails?.status === "PART"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {supplierDetails?.status === "PAID" && (
-                          <CheckCircle size={12} />
-                        )}
-                        {supplierDetails?.status?.toUpperCase() || "N/A"}
-                      </span>
+                      <StatusBadge status={supplierDetails?.status} type="payment" />
                     </div>
                     {supplierDetails?.status !== "PAID" && (
                       <Button size="sm">Confirm Payment</Button>
@@ -156,8 +134,10 @@ const SupplyHistoryDetails = ({
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-500">Transaction ID</p>
-                    <p className="text-sm font-medium">#{transactionId}</p>
+                    <p className="text-sm text-grey-3">Transaction ID</p>
+                    <p className="text-sm font-bold text-grey-1">
+                      #{transactionId}
+                    </p>
                   </div>
                 </div>
               </CardContent>

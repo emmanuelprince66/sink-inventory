@@ -1,12 +1,13 @@
 import { CustomModal } from "@/components/app/CustomModal";
+import { CustomTable } from "@/components/app/CutomTable";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAttendantsHook } from "@/hooks/useAttendantsHook";
 import { useUserRole } from "@/lib/store/user-store";
-import { Building2, Edit2Icon, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import AddStaff from "./AddStaff";
+import { getStaffColumns } from "./column";
 import EditStaff from "./EditStaff";
 import { ManageAttendantBusinessesModal } from "./ManageAttendantsBusinessModal";
 
@@ -59,100 +60,38 @@ const ViewStaff = () => {
 
   const { user } = useUserRole();
 
+  const columns = getStaffColumns({
+    onManageBusinesses: handleManageBusinesses,
+    onEdit: handleEditStaff,
+    onDelete: handleDeleteStaffModal,
+  });
+
   return (
     <>
-      <div className="flex h-full w-full mt-4 flex-col gap-3 items-center justify-center">
+      <div className="flex h-full w-full flex-col gap-3 items-start">
         <div className="w-full flex justify-end">
           {user &&
             (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
-              <Button onClick={openAddStaffModalFunc}>Add HR</Button>
+              <Button
+                onClick={openAddStaffModalFunc}
+                className="flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                Add HR
+              </Button>
             )}
         </div>
 
-        {AttendantsLoading ? (
-          <div className="w-full space-y-2">
-            {[1, 2].map((item) => (
-              <Skeleton key={item} className="h-12 w-full bg-[#eef4ef]" />
-            ))}
-          </div>
-        ) : (
-          <div className="w-full overflow-hidden rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Staff Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Businesses
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white w-full">
-                {AttendantsData?.data?.map((staff: any) => (
-                  <tr key={staff?.id}>
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {staff?.name}
-                      </div>
-                    </td>
-
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <span className="text-xs font-medium bg-gray-100 text-gray-700 rounded-full px-2 py-1">
-                        {staff?.role}
-                      </span>
-                    </td>
-
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="text-sm text-gray-500">
-                        {staff?.businesses?.length > 0
-                          ? staff.businesses.map((b: any) => b.name).join(", ")
-                          : "—"}
-                      </div>
-                    </td>
-
-                    <td className="whitespace-nowrap px-6 py-4">
-                      <div className="flex gap-2 items-center">
-                        {/* Manage businesses */}
-                        <button
-                          onClick={() => handleManageBusinesses(staff)}
-                          title="Manage Businesses"
-                          className="rounded p-1 cursor-pointer text-blue-500 hover:bg-blue-50 hover:text-blue-700"
-                        >
-                          <Building2 className="h-5 w-5" />
-                        </button>
-
-                        {/* Edit */}
-                        <button
-                          onClick={() => handleEditStaff(staff)}
-                          title="Edit Staff"
-                          className="rounded p-1 cursor-pointer text-green-500 hover:bg-green-50 hover:text-green-700"
-                        >
-                          <Edit2Icon className="h-5 w-5" />
-                        </button>
-
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDeleteStaffModal(staff)}
-                          title="Delete Staff"
-                          className="rounded p-1 cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-700"
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <div className="w-full">
+          <CustomTable
+            columns={columns}
+            data={AttendantsData?.data ?? []}
+            loading={AttendantsLoading}
+            noDataText="No staff found"
+            showSerialNumber={false}
+            bordered={false}
+          />
+        </div>
       </div>
 
       {/* Add Staff Modal */}
@@ -173,11 +112,12 @@ const ViewStaff = () => {
         title=""
       >
         <div className="w-full flex-col items-center justify-center gap-3">
-          <p className="text-center text-gray-700">
+          <p className="text-center text-sm font-medium text-grey-2">
             Are you sure you want to delete this staff?
           </p>
           <div className="flex gap-4 mx-auto justify-center w-full mt-3">
             <Button
+              variant="destructive"
               disabled={deleteAttendantLoading}
               onClick={deleteStaff}
               className="w-[100px]"

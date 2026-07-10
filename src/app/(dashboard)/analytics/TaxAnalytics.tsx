@@ -77,15 +77,15 @@ const YEARS = Array.from(
 // ─── skeleton ─────────────────────────────────────────────────────────────────
 
 const CardSkeleton = () => (
-  <div className="p-4 border border-gray-200 bg-white rounded-xl animate-pulse">
-    <div className="h-4 w-24 bg-gray-200 rounded mb-3" />
-    <div className="h-8 w-32 bg-gray-200 rounded mb-2" />
-    <div className="h-3 w-20 bg-gray-100 rounded" />
+  <div className="p-4 border border-border-tint bg-white rounded-xl animate-pulse">
+    <div className="h-4 w-24 bg-grey-5 rounded mb-3" />
+    <div className="h-8 w-32 bg-grey-5 rounded mb-2" />
+    <div className="h-3 w-20 bg-grey-6 rounded" />
   </div>
 );
 
 const ChartSkeleton = () => (
-  <div className="h-[250px] sm:h-[300px] bg-gray-100 animate-pulse rounded-lg" />
+  <div className="h-[250px] sm:h-[300px] bg-grey-6 animate-pulse rounded-lg" />
 );
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -200,16 +200,16 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
   const vatPaidPct = Math.round((vatPaidInput / maxVal) * 100);
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6 p-3 sm:p-6">
+    <div className="w-full space-y-4 sm:space-y-6 pb-3 sm:pb-6">
       {/* ── Year filter header ──────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-gray-700">Year:</label>
+          <label className="text-sm font-medium text-grey-3">Year:</label>
           <select
             value={taxYear}
             onChange={(e) => setTaxYear(Number(e.target.value))}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white
-                       focus:outline-none focus:ring-2 focus:ring-green-400"
+            className="border border-grey-5 rounded-lg px-3 py-2 text-sm bg-white
+                       focus:outline-none focus:ring-2 focus:ring-primary-green-300/30"
           >
             {YEARS.map((y) => (
               <option key={y} value={y}>
@@ -218,10 +218,10 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
             ))}
           </select>
         </div>
-        <div className="text-sm text-gray-500 italic">
+        <div className="text-sm text-grey-4 italic">
           Showing tax data for {currentMonth} {currentYear}
           {taxRate > 0 && (
-            <span className="ml-2 bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
+            <span className="ml-2 bg-info-2 text-info-1 text-xs px-2 py-0.5 rounded">
               Rate: {taxRate}%
             </span>
           )}
@@ -240,69 +240,69 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         ) : (
           <>
             {/* Total Sales — real */}
-            <CustomCard className="p-4 border border-gray-200 bg-white hover:shadow-md transition-shadow">
+            <CustomCard className="p-4 border border-border-tint bg-white hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-gray-600" />
-                <span className="text-xs sm:text-sm text-gray-600">
+                <FileText className="w-4 h-4 text-grey-3" />
+                <span className="text-xs sm:text-sm text-grey-3">
                   Total Sales
                 </span>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-grey-1">
                 {formatToNaira(totalSales)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">For {apiYear}</p>
+              <p className="text-xs text-grey-4 mt-1">For {apiYear}</p>
             </CustomCard>
 
             {/* Total Tax — real */}
-            <CustomCard className="p-4 border border-gray-200 bg-white hover:shadow-md transition-shadow">
+            <CustomCard className="p-4 border border-border-tint bg-white hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-green-600" />
-                <span className="text-xs sm:text-sm text-gray-600">
+                <TrendingUp className="w-4 h-4 text-success-1" />
+                <span className="text-xs sm:text-sm text-grey-3">
                   Total Tax
                 </span>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-grey-1">
                 {formatToNaira(totalTax)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-grey-4 mt-1">
                 {taxRate}% tax rate applied
               </p>
             </CustomCard>
 
             {/* Net VAT Position — derived from real */}
-            <CustomCard className="p-4 border border-gray-200 bg-white hover:shadow-md transition-shadow">
+            <CustomCard className="p-4 border border-border-tint bg-white hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-red-600" />
-                <span className="text-xs sm:text-sm text-gray-600">
+                <TrendingUp className="w-4 h-4 text-error-1" />
+                <span className="text-xs sm:text-sm text-grey-3">
                   Net VAT Position
                 </span>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-grey-1">
                 {formatToNaira(netVatPosition)}
               </p>
               {netVatPosition > 0 ? (
-                <span className="inline-block mt-1 bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                <span className="inline-block mt-1 bg-error-1 text-white text-xs px-2 py-0.5 rounded">
                   Payable
                 </span>
               ) : (
-                <span className="inline-block mt-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                <span className="inline-block mt-1 bg-success-1 text-white text-xs px-2 py-0.5 rounded">
                   Nil
                 </span>
               )}
             </CustomCard>
 
             {/* Development Levy — dummy (not in API) */}
-            <CustomCard className="p-4 border border-gray-200 bg-white hover:shadow-md transition-shadow">
+            <CustomCard className="p-4 border border-border-tint bg-white hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="text-xs sm:text-sm text-gray-600">
+                <FileText className="w-4 h-4 text-info-1" />
+                <span className="text-xs sm:text-sm text-grey-3">
                   Development Levy
                 </span>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-grey-1">
                 {formatToNaira(developmentLevy)}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-grey-4 mt-1">
                 Exempt (Small Company)
               </p>
             </CustomCard>
@@ -313,13 +313,13 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
       {/* ── Charts row ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Monthly Tax Trend — real monthly_tax data */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200">
+        <CustomCard className="p-4 sm:p-6 border border-border-tint">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-sm sm:text-base">
               Monthly Tax Trend — {currentYear}
             </h3>
             {taxRate > 0 && (
-              <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
+              <div className="bg-info-1 text-white text-xs px-2 py-1 rounded">
                 {taxRate}% rate
               </div>
             )}
@@ -334,12 +334,12 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         </CustomCard>
 
         {/* VAT Breakdown — derived from real data */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200">
+        <CustomCard className="p-4 sm:p-6 border border-border-tint">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-sm sm:text-base">
               VAT Breakdown
             </h3>
-            <span className="text-xs text-gray-600">Rate: {taxRate}%</span>
+            <span className="text-xs text-grey-3">Rate: {taxRate}%</span>
           </div>
 
           <div className="space-y-4">
@@ -347,42 +347,42 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
+                  <TrendingUp className="w-4 h-4 text-success-1" />
                   <span className="text-sm font-medium">Tax Collected</span>
                 </div>
                 <span className="font-bold">{formatToNaira(vatCollected)}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+              <div className="w-full bg-grey-5 rounded-full h-2 mb-1">
                 <div
-                  className="bg-green-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-success-1 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${vatCollectedPct}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-600">From sales to customers</p>
+              <p className="text-xs text-grey-3">From sales to customers</p>
             </div>
 
             {/* VAT Paid Input — kept as dummy */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-blue-600 rotate-180" />
+                  <TrendingUp className="w-4 h-4 text-info-1 rotate-180" />
                   <span className="text-sm font-medium">Tax Paid (Input)</span>
                 </div>
                 <span className="font-bold">{formatToNaira(vatPaidInput)}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+              <div className="w-full bg-grey-5 rounded-full h-2 mb-1">
                 <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                  className="bg-info-1 h-2 rounded-full transition-all duration-500"
                   style={{ width: `${vatPaidPct}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-grey-3">
                 On business purchases & expenses
               </p>
             </div>
 
             {/* Net VAT */}
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t border-border-tint">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Net VAT Position</span>
                 <div className="flex items-center gap-2">
@@ -390,11 +390,11 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
                     {formatToNaira(netVatPosition)}
                   </span>
                   {netVatPosition > 0 ? (
-                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded">
+                    <span className="bg-error-1 text-white text-xs px-2 py-0.5 rounded">
                       Payable
                     </span>
                   ) : (
-                    <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                    <span className="bg-success-1 text-white text-xs px-2 py-0.5 rounded">
                       Nil
                     </span>
                   )}
@@ -404,16 +404,16 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
 
             {/* Action required — only show when there's a real payable */}
             {netVatPosition > 0 && (
-              <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+              <div className="bg-error-2 p-3 rounded-lg border border-error-1/20">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full border-2 border-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <div className="w-2 h-2 bg-red-500 rounded-full" />
+                  <div className="w-5 h-5 rounded-full border-2 border-error-1 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 bg-error-1 rounded-full" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-red-900">
+                    <p className="text-sm font-medium text-error-1">
                       Action Required
                     </p>
-                    <p className="text-xs text-red-700 mt-1">
+                    <p className="text-xs text-error-1 mt-1">
                       Tax payment of {formatToNaira(netVatPosition)} is due by{" "}
                       {filingDueDate}
                     </p>
@@ -428,27 +428,27 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
       {/* ── Bottom 3 cards ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
         {/* Tax Calendar */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+        <CustomCard className="p-4 sm:p-6 border border-border-tint hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-gray-600" />
+              <Calendar className="w-5 h-5 text-grey-3" />
               <h3 className="font-semibold text-sm sm:text-base">
                 Tax Calendar
               </h3>
             </div>
           </div>
           <div className="space-y-3">
-            <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="bg-info-2 p-3 rounded-lg">
               <div className="flex items-start gap-2 mb-2">
-                <Clock className="w-4 h-4 text-blue-600 mt-0.5" />
+                <Clock className="w-4 h-4 text-info-1 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-grey-1">
                     VAT Return Filing Due
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-grey-3 mt-1">
                     VAT return for {currentMonth} {currentYear} is due
                   </p>
-                  <p className="text-xs text-gray-600">Due: {filingDueDate}</p>
+                  <p className="text-xs text-grey-3">Due: {filingDueDate}</p>
                 </div>
               </div>
               <div className="inline-block bg-black text-white text-xs px-2 py-1 rounded">
@@ -459,10 +459,10 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         </CustomCard>
 
         {/* Filing Status */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+        <CustomCard className="p-4 sm:p-6 border border-border-tint hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-600" />
+              <FileText className="w-5 h-5 text-grey-3" />
               <h3 className="font-semibold text-sm sm:text-base">
                 Filing Status
               </h3>
@@ -470,36 +470,36 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">
+              <span className="text-grey-3">
                 {currentMonth} {currentYear}
               </span>
-              <span className="text-gray-900 font-medium">
+              <span className="text-grey-1 font-medium">
                 {netVatPosition > 0 ? "Filing Required" : "No Filing Required"}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-grey-5 rounded-full h-2">
               <div
                 className={`h-2 rounded-full w-full ${
-                  netVatPosition > 0 ? "bg-red-500" : "bg-black"
+                  netVatPosition > 0 ? "bg-error-1" : "bg-black"
                 }`}
               />
             </div>
             <div
-              className={`p-3 rounded-lg ${netVatPosition > 0 ? "bg-red-50" : "bg-gray-50"}`}
+              className={`p-3 rounded-lg ${netVatPosition > 0 ? "bg-error-2" : "bg-grey-6"}`}
             >
               <div className="flex items-start gap-2">
                 <CheckCircle
                   className={`w-4 h-4 mt-0.5 ${
-                    netVatPosition > 0 ? "text-red-500" : "text-gray-600"
+                    netVatPosition > 0 ? "text-error-1" : "text-grey-3"
                   }`}
                 />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-grey-1">
                     {netVatPosition > 0
                       ? "Tax Payment Due"
                       : "No Filing Required"}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1">
+                  <p className="text-xs text-grey-3 mt-1">
                     {netVatPosition > 0
                       ? `Pay ${formatToNaira(netVatPosition)} by ${filingDueDate}`
                       : "No tax obligations for this period"}
@@ -515,10 +515,10 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         </CustomCard>
 
         {/* Export & Reports */}
-        <CustomCard className="p-4 sm:p-6 border border-gray-200 hover:shadow-md transition-shadow">
+        <CustomCard className="p-4 sm:p-6 border border-border-tint hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-gray-600" />
+              <TrendingUp className="w-5 h-5 text-grey-3" />
               <h3 className="font-semibold text-sm sm:text-base">
                 Export & Reports
               </h3>
@@ -537,31 +537,31 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
                   key={index}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-gray-600 text-xs">{item.name}</span>
+                  <span className="text-grey-3 text-xs">{item.name}</span>
                   {item.completed ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <CheckCircle className="w-4 h-4 text-success-1" />
                   ) : (
-                    <div className="w-4 h-4 border border-gray-300 rounded-full" />
+                    <div className="w-4 h-4 border border-grey-5 rounded-full" />
                   )}
                 </div>
               ))}
             </div>
-            <div className="pt-2 border-t">
+            <div className="pt-2 border-t border-border-tint">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600">Total Sales</span>
+                <span className="text-grey-3">Total Sales</span>
                 <span className="font-medium">{formatToNaira(totalSales)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Total Tax</span>
+                <span className="text-grey-3">Total Tax</span>
                 <span
-                  className={`font-medium ${netVatPosition > 0 ? "text-red-600" : "text-gray-900"}`}
+                  className={`font-medium ${netVatPosition > 0 ? "text-error-1" : "text-grey-1"}`}
                 >
                   {formatToNaira(totalTax)}
                 </span>
               </div>
               <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-600">Tax Rate</span>
-                <span className="font-medium text-blue-600">{taxRate}%</span>
+                <span className="text-grey-3">Tax Rate</span>
+                <span className="font-medium text-info-1">{taxRate}%</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">

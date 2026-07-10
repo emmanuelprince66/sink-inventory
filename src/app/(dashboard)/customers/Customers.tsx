@@ -1,5 +1,5 @@
 "use client";
-import { Megaphone, Plus } from "lucide-react";
+import { AlertCircle, Megaphone, Plus, Users, Wallet } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -11,12 +11,23 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import { Spinner } from "@/components/app/Spinner";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { formatToNaira } from "@/utils/formatMoney";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
+
+const Campaign = dynamic(() => import("../campaign/Campaign"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full flex justify-center py-16">
+      <Spinner className="text-primary-green-300" />
+    </div>
+  ),
+});
 
 interface CustomerCardData {
   title: string;
@@ -24,34 +35,52 @@ interface CustomerCardData {
   type: "wallet" | "debt" | "customers";
 }
 
-// Plain white bordered cards, no icons — matches the Figma reference exactly
-// (Convert Mobile Screens to Desktop/src/app/App.tsx CustomersScreen).
-const CUSTOMER_CARD_VALUE_COLOR: Record<CustomerCardData["type"], string> = {
-  wallet: "text-primary-green-100",
-  debt: "text-error-1",
-  customers: "text-grey-1",
+// Colored KPI cards — same pattern as Orders/Sales/Overview/Referral:
+// tinted card background per type, icon in a white circle.
+const CUSTOMER_CARD_STYLES: Record<
+  CustomerCardData["type"],
+  { cardBg: string; iconColor: string; icon: React.ReactNode }
+> = {
+  wallet: {
+    cardBg: "bg-success-2",
+    iconColor: "text-success-1",
+    icon: <Wallet className="w-4 h-4" />,
+  },
+  debt: {
+    cardBg: "bg-error-2",
+    iconColor: "text-error-1",
+    icon: <AlertCircle className="w-4 h-4" />,
+  },
+  customers: {
+    cardBg: "bg-info-2",
+    iconColor: "text-info-1",
+    icon: <Users className="w-4 h-4" />,
+  },
 };
 
 const CustomCustomerCard = ({ title, amount, type }: CustomerCardData) => {
+  const variant = CUSTOMER_CARD_STYLES[type];
   return (
     <CustomCard
-      className="w-full rounded-2xl border border-border-tint bg-white p-0"
+      className={cn(
+        "w-full rounded-2xl border border-border-tint p-0",
+        variant.cardBg,
+      )}
       contentClassName="p-5"
     >
-      <p className="text-sm font-semibold text-grey-3">{title}</p>
-      <p
-        className={cn(
-          "text-2xl font-extrabold mt-1",
-          CUSTOMER_CARD_VALUE_COLOR[type],
-        )}
-      >
-        {amount}
-      </p>
+      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center mb-3">
+        <span className={variant.iconColor}>{variant.icon}</span>
+      </div>
+      <p className="text-xs font-bold text-grey-2">{title}</p>
+      <p className="text-2xl font-extrabold text-grey-1 mt-1">{amount}</p>
     </CustomCard>
   );
 };
 
 const Customers = () => {
+  const [activeTopTab, setActiveTopTab] = useState<"customers" | "campaigns">(
+    "customers",
+  );
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     undefined,
   );
@@ -83,6 +112,38 @@ const Customers = () => {
 
   return (
     <div className="w-full flex flex-col gap-6">
+      {/* Page-level tabs — Customers content vs. Campaigns, rendered inline */}
+      <div className="border-b border-grey-5">
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setActiveTopTab("customers")}
+            className={cn(
+              "py-4 text-sm cursor-pointer font-bold border-b-2 transition-colors",
+              activeTopTab === "customers"
+                ? "border-primary-green-300 text-primary-green-300"
+                : "border-transparent text-grey-3 hover:text-grey-2",
+            )}
+          >
+            Customers
+          </button>
+          <button
+            onClick={() => setActiveTopTab("campaigns")}
+            className={cn(
+              "py-4 text-sm cursor-pointer font-bold border-b-2 transition-colors",
+              activeTopTab === "campaigns"
+                ? "border-primary-green-300 text-primary-green-300"
+                : "border-transparent text-grey-3 hover:text-grey-2",
+            )}
+          >
+            Campaigns
+          </button>
+        </div>
+      </div>
+
+      {activeTopTab === "campaigns" ? (
+        <Campaign />
+      ) : (
+        <>
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-grey-1">
@@ -113,13 +174,13 @@ const Customers = () => {
             {Array.from({ length: 3 }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="h-24 w-full rounded-2xl bg-grey-6"
+                className="h-24 w-full rounded-2xl bg-grey-5"
               />
             ))}
           </div>
 
           {/* Skeleton for banner */}
-          <Skeleton className="h-32 w-full rounded-2xl bg-grey-6" />
+          <Skeleton className="h-32 w-full rounded-2xl bg-grey-5" />
 
           {/* Skeleton for main card */}
           <div className="bg-white rounded-2xl border border-grey-5 overflow-hidden">
@@ -129,14 +190,14 @@ const Customers = () => {
                   (_, index) => (
                     <Skeleton
                       key={index}
-                      className="h-9 w-20 rounded-full bg-grey-6"
+                      className="h-9 w-20 rounded-full bg-grey-5"
                     />
                   ),
                 )}
               </div>
-              <Skeleton className="h-10 w-full bg-grey-6" />
+              <Skeleton className="h-10 w-full bg-grey-5" />
               {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-14 w-full bg-grey-6" />
+                <Skeleton key={index} className="h-14 w-full bg-grey-5" />
               ))}
             </div>
           </div>
@@ -176,33 +237,17 @@ const Customers = () => {
               Send personalized promotions, offers, and reminders to keep your
               customers coming back
             </p>
-            <Link href="/campaign" className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto gap-1.5">
-                <Plus className="w-4 h-4" />
-                Create a Campaign
-              </Button>
-            </Link>
+            <Button
+              className="self-start gap-1.5"
+              onClick={() => setActiveTopTab("campaigns")}
+            >
+              <Plus className="w-4 h-4" />
+              Create a Campaign
+            </Button>
           </div>
 
           {/* Main Content Card */}
           <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
-            {/* Tabs */}
-            <div className="border-b border-grey-5 px-4 sm:px-6">
-              <div className="flex items-center gap-6">
-                <button
-                  className="py-4 text-sm cursor-pointer font-bold border-b-2 border-primary-green-300 text-primary-green-300 transition-colors"
-                >
-                  Customers
-                </button>
-                <Link
-                  href="/campaign"
-                  className="py-4 text-sm font-bold border-b-2 border-transparent text-grey-3 hover:text-grey-2 transition-colors"
-                >
-                  Campaigns
-                </Link>
-              </div>
-            </div>
-
             {/* Toolbar */}
             <div className="p-4 sm:p-6 border-b border-grey-5">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -212,7 +257,7 @@ const Customers = () => {
                       key={filter}
                       onClick={() => handleFilterChange(filter)}
                       className={cn(
-                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
+                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
                         activeFilter === filter
                           ? "bg-primary-green-300 text-white shadow-sm"
                           : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -258,6 +303,8 @@ const Customers = () => {
               page={page}
             />
           </div>
+        </>
+      )}
         </>
       )}
 

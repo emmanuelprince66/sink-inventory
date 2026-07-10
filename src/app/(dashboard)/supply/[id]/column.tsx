@@ -1,61 +1,55 @@
 import { ColumnDef } from "@tanstack/react-table";
+import moment from "moment";
 
+import { StatusBadge } from "@/components/app/StatusBadge";
 import { formatToNaira } from "@/utils/formatMoney";
 import { SupplyHistory } from "../types";
 
 export const columns: ColumnDef<SupplyHistory>[] = [
-  //   {
-  //     accessorKey: "logo",
-  //     header: "",
-  //     cell: ({ row }) => {
-  //       const supplier = row.original;
-  //       return (
-  //         <div className="relative h-10 w-10 rounded-md overflow-hidden">
-  //           <Image
-  //             src={customer.profile_pic}
-  //             alt={`${customer.name} logo`}
-  //             fill
-  //             className="object-cover"
-  //           />
-  //         </div>
-  //       );
-  //     },
-  //   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Item",
     cell: ({ row }) => {
-      const supplier = row.original;
+      const supply = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{supplier.created_at}</p>
+          <p className="text-sm text-grey-2">{supply.name}</p>
         </div>
       );
     },
   },
   {
-    accessorKey: "phone",
-    header: "Phone Number",
+    accessorKey: "created_at",
+    header: "Date",
     cell: ({ row }) => {
-      const supplier = row.original;
+      const supply = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">{supplier.status}</p>
+          <p className="text-sm text-grey-3">
+            {moment(supply.created_at).format("MMM DD, YYYY")}
+          </p>
         </div>
       );
     },
   },
-
   {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
+    accessorKey: "status",
+    header: "Status",
     cell: ({ row }) => {
-      const supplier = row.original;
+      const supply = row.original;
+      return <StatusBadge status={supply.status} type="payment" />;
+    },
+  },
+  {
+    accessorKey: "cost_price",
+    header: "Cost Price",
+    cell: ({ row }) => {
+      const supply = row.original;
 
       return (
         <div className="font-medium">
-          <p className="text-sm text-gray-500">
-            {formatToNaira(supplier.cost_price)}
+          <p className="text-sm font-bold text-grey-2">
+            {formatToNaira(supply.cost_price)}
           </p>
         </div>
       );
@@ -67,7 +61,9 @@ export const columns: ColumnDef<SupplyHistory>[] = [
     cell: () => {
       return (
         <div className="font-medium">
-          <p className="text-sm text-green-500">View more</p>
+          <p className="text-sm font-bold text-primary-green-300">
+            View more
+          </p>
         </div>
       );
     },

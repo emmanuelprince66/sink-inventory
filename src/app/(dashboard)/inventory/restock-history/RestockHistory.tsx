@@ -5,6 +5,7 @@ import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { SummaryCardSkeleton } from "@/components/app/SummaryCardSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -20,7 +21,6 @@ import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { formatToNaira } from "@/utils/formatMoney";
 import { allRestockHistoryColumns } from "./AllRestockColunm";
-import { RestockHistorySkeleton } from "./AllRestockSkeleton";
 
 const RestockHistoryPage = () => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -122,10 +122,6 @@ const RestockHistoryPage = () => {
     (departmentFilter && departmentFilter !== "all")
   );
 
-  if (isLoading) {
-    return <RestockHistorySkeleton />;
-  }
-
   return (
     <div className="w-full flex flex-col gap-6">
       <div>
@@ -139,29 +135,38 @@ const RestockHistoryPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-        <div className="bg-success-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
-          <div className="p-2.5 rounded-full bg-white/60">
-            <Package className="h-5 w-5 text-success-1" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Total Records</p>
-            <p className="text-2xl font-extrabold text-success-1">
-              {data?.results?.count || 0}
-            </p>
-          </div>
-        </div>
+        {isLoading || isFetching ? (
+          <>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </>
+        ) : (
+          <>
+            <div className="bg-success-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/60">
+                <Package className="h-5 w-5 text-success-1" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Total Records</p>
+                <p className="text-2xl font-extrabold text-success-1">
+                  {data?.results?.count || 0}
+                </p>
+              </div>
+            </div>
 
-        <div className="bg-info-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
-          <div className="p-2.5 rounded-full bg-white/60">
-            <Banknote className="h-5 w-5 text-info-1" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Total Value</p>
-            <p className="text-2xl font-extrabold text-info-1">
-              {formatToNaira(data?.results?.value || 0)}
-            </p>
-          </div>
-        </div>
+            <div className="bg-info-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/60">
+                <Banknote className="h-5 w-5 text-info-1" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Total Value</p>
+                <p className="text-2xl font-extrabold text-info-1">
+                  {formatToNaira(data?.results?.value || 0)}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Main Content Card */}
@@ -312,7 +317,7 @@ const RestockHistoryPage = () => {
           bordered={false}
           columns={allRestockHistoryColumns}
           data={restockResults}
-          loading={isFetching}
+          loading={isLoading || isFetching}
           noDataText={
             <div className="py-12 text-center">
               <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">

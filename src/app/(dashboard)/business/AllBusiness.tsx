@@ -63,12 +63,12 @@ const AllBusiness = ({ section }: { section?: string }) => {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center mt-8 space-y-6">
         <div className="flex items-center justify-between w-full">
-          <Skeleton className="h-8 w-48 bg-[#eef4ef]" />
-          <Skeleton className="h-10 w-32 bg-[#eef4ef]" />
+          <Skeleton className="h-8 w-48 bg-grey-5" />
+          <Skeleton className="h-10 w-32 bg-grey-5" />
         </div>
         <div className="w-full space-y-4">
           {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="w-full h-12 bg-[#eef4ef]" />
+            <Skeleton key={i} className="w-full h-12 bg-grey-5" />
           ))}
         </div>
       </div>
@@ -161,17 +161,17 @@ const AllBusiness = ({ section }: { section?: string }) => {
             // Skeleton while fetching the business to edit
             <div className="w-full max-w-xl bg-white p-4 rounded shadow-md space-y-4 mx-auto">
               <div className="flex flex-col items-center gap-2">
-                <Skeleton className="h-4 w-24 bg-[#eef4ef]" />
-                <Skeleton className="h-32 w-32 rounded-full bg-[#eef4ef]" />
-                <Skeleton className="h-9 w-28 bg-[#eef4ef]" />
+                <Skeleton className="h-4 w-24 bg-grey-5" />
+                <Skeleton className="h-32 w-32 rounded-full bg-grey-5" />
+                <Skeleton className="h-9 w-28 bg-grey-5" />
               </div>
               {[...Array(7)].map((_, i) => (
                 <div key={i} className="space-y-1.5">
-                  <Skeleton className="h-4 w-24 bg-[#eef4ef]" />
-                  <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+                  <Skeleton className="h-4 w-24 bg-grey-5" />
+                  <Skeleton className="h-10 w-full bg-grey-5" />
                 </div>
               ))}
-              <Skeleton className="h-12 w-full bg-[#eef4ef]" />
+              <Skeleton className="h-12 w-full bg-grey-5" />
             </div>
           ) : (
             // Pass the same shared form + edit handler

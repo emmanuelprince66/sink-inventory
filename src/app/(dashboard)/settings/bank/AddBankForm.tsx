@@ -19,8 +19,8 @@ export const AddBankForm = ({ closeModal }: { closeModal?: () => void }) => {
   // const { isSubmitting } = form.formState;
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="w-full max-w-xl bg-white p-4 rounded shadow-md">
+    <div className="w-full">
+      <div className="w-full">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Bank Name */}

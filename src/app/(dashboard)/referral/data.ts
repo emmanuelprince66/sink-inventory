@@ -11,18 +11,18 @@ export const STATUS_META: Record<
 > = {
   active: {
     label: "Active Subscriber",
-    pillClass: "bg-green-50 text-green-700 border border-green-100",
-    dotClass: "bg-green-500",
+    pillClass: "bg-success-2 text-success-1",
+    dotClass: "bg-success-1",
   },
   "not-subscribed": {
     label: "Not Subscribed",
-    pillClass: "bg-amber-50 text-amber-700 border border-amber-100",
-    dotClass: "bg-amber-500",
+    pillClass: "bg-warning-2 text-warning-1",
+    dotClass: "bg-warning-1",
   },
   lapsed: {
     label: "Lapsed",
-    pillClass: "bg-slate-50 text-slate-600 border border-slate-200",
-    dotClass: "bg-slate-400",
+    pillClass: "bg-grey-6 text-grey-3",
+    dotClass: "bg-grey-4",
   },
 };
 

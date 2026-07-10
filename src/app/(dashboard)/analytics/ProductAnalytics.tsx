@@ -18,19 +18,12 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 const CustomCard = ({
   children,
   className = "",
-  shadow = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  shadow?: boolean;
 }) => {
   return (
-    <div
-      className={`p-6 rounded-xl border ${className} ${
-        shadow ? "shadow-sm" : ""
-      }`}
-      style={{ backgroundColor: "#FEFFFE" }}
-    >
+    <div className={`p-6 rounded-2xl border border-border-tint bg-white ${className}`}>
       {children}
     </div>
   );
@@ -47,11 +40,13 @@ const CustomProductCard = ({
   description?: any;
 }) => {
   return (
-    <CustomCard className="border-gray-200 w-full" shadow>
+    <CustomCard className="w-full">
       <div className="flex flex-col gap-2 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p className="font-[600] text-xl text-primary-black-100">{value}</p>
-        {description && <p className="text-xs text-gray-600">{description}</p>}
+        <p className="text-sm font-bold text-grey-3">{title}</p>
+        <p className="text-xl font-extrabold text-grey-1">{value}</p>
+        {description && (
+          <div className="text-xs text-grey-3 w-full">{description}</div>
+        )}
       </div>
     </CustomCard>
   );
@@ -62,23 +57,23 @@ const ProductAnalytics = ({
 }: {
   ProductAnalyticData: any;
 }) => {
+  const fastMoving = ProductAnalyticData?.data?.fast_moving_product;
+
   // Bar chart data
   const chartData = {
     labels: ["Stock Level vs Units Sold"],
     datasets: [
       {
         label: "Current Stock",
-        data: [
-          ProductAnalyticData?.data?.fast_moving_product?.quantity_sold * 2,
-        ], // Example calculation
-        backgroundColor: "#4CAF50",
+        data: [(fastMoving?.quantity_sold ?? 0) * 2], // Example calculation
+        backgroundColor: "#329661",
         borderRadius: { topLeft: 8, topRight: 8 },
         barPercentage: 0.4,
       },
       {
         label: "Units Sold",
-        data: [ProductAnalyticData?.data?.fast_moving_product?.quantity_sold],
-        backgroundColor: "#2196F3",
+        data: [fastMoving?.quantity_sold ?? 0],
+        backgroundColor: "#3182ce",
         borderRadius: { topLeft: 8, topRight: 8 },
         barPercentage: 0.4,
       },
@@ -105,6 +100,10 @@ const ProductAnalytics = ({
     plugins: {
       legend: {
         position: "top",
+        labels: {
+          color: "#374151",
+          font: { weight: "bold", size: 12 },
+        },
       },
       tooltip: {
         callbacks: {
@@ -117,7 +116,7 @@ const ProductAnalytics = ({
   };
 
   return (
-    <div className="w-full py-8">
+    <div className="w-full pb-4 sm:pb-8">
       {/* First Row - 4 cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomProductCard
@@ -139,38 +138,27 @@ const ProductAnalytics = ({
           value={""}
           description={
             <div className="flex items-center gap-3">
-              {/* Product Image - add a default if image doesn't exist */}
-              <div className="w-10 h-10 rounded-md bg-gray-100 overflow-hidden">
-                {ProductAnalyticData.data.fast_moving_product.product__image ? (
+              <div className="w-10 h-10 rounded-md bg-grey-6 overflow-hidden flex-shrink-0">
+                {fastMoving?.product__image ? (
                   <img
-                    src={
-                      ProductAnalyticData?.data?.fast_moving_product
-                        .product__image
-                    }
-                    alt={
-                      ProductAnalyticData?.data?.fast_moving_product
-                        ?.product__name
-                    }
+                    src={fastMoving.product__image}
+                    alt={fastMoving?.product__name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-[10px] text-grey-4">
                     No Image
                   </div>
                 )}
               </div>
 
-              <div>
-                <p className="font-semibold text-sm">
-                  {
-                    ProductAnalyticData?.data?.fast_moving_product
-                      ?.product__name
-                  }
+              <div className="min-w-0">
+                <p className="font-bold text-sm text-grey-1 truncate">
+                  {fastMoving?.product__name || "No data"}
                 </p>
-                <p className="text-xs text-gray-500">
-                  <span className="font-medium text-primary-black-100">
-                    {ProductAnalyticData.data.fast_moving_product.quantity_sold}{" "}
-                    units
+                <p className="text-xs text-grey-4">
+                  <span className="font-bold text-grey-2">
+                    {fastMoving?.quantity_sold ?? 0} units
                   </span>{" "}
                   sold • Top product
                 </p>
@@ -182,11 +170,8 @@ const ProductAnalytics = ({
 
       {/* Second Row - Single card */}
       <div className="grid grid-cols-1 gap-4">
-        <CustomCard className="border-gray-200" shadow>
+        <CustomCard>
           <div className="h-full flex flex-col">
-            {/* <h3 className="font-[600] text-lg mb-4">
-              Stock vs Sales Performance
-            </h3> */}
             <div className="flex-grow h-[300px]">
               <Bar data={chartData} options={chartOptions} />
             </div>

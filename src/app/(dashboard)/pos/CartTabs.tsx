@@ -13,7 +13,7 @@ const CartTabs = () => {
   const setActiveCart = useCartStore((s) => s.setActiveCart);
 
   return (
-    <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-b border-gray-200 overflow-x-auto">
+    <div className="shrink-0 flex items-center gap-1 px-3 py-2 bg-grey-6 border-b border-grey-5 overflow-x-auto">
       {cartOrder.map((cartId, idx) => {
         const slot = carts[cartId];
         const itemCount = slot?.items?.length ?? 0;
@@ -23,20 +23,20 @@ const CartTabs = () => {
         return (
           <div
             key={cartId}
-            className={`group flex items-center gap-2 px-3 py-1.5 rounded-md text-sm cursor-pointer transition-colors shrink-0 ${
+            className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm cursor-pointer transition-colors shrink-0 ${
               isActive
-                ? "bg-white border border-gray-300 text-gray-900 font-medium shadow-sm"
-                : "text-gray-600 hover:bg-white/60"
+                ? "bg-primary-green-300 text-white font-bold shadow-sm"
+                : "bg-white border border-grey-5 text-grey-2 font-bold hover:bg-grey-6"
             }`}
             onClick={() => setActiveCart(cartId)}
           >
             <span>{label}</span>
             {itemCount > 0 && (
               <span
-                className={`text-xs px-1.5 py-0.5 rounded-full ${
+                className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                   isActive
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-200 text-gray-600"
+                    ? "bg-white/20 text-white"
+                    : "bg-grey-6 text-grey-3"
                 }`}
               >
                 {itemCount}
@@ -50,10 +50,10 @@ const CartTabs = () => {
                   e.stopPropagation();
                   closeCart(cartId);
                 }}
-                className={`flex items-center justify-center w-5 h-5 rounded-full transition-colors ${
+                className={`flex items-center justify-center w-5 h-5 rounded-full transition-colors cursor-pointer ${
                   isActive
-                    ? "bg-red-100 text-red-600 hover:bg-red-200"
-                    : "bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600"
+                    ? "bg-white/20 text-white hover:bg-error-1 hover:text-white"
+                    : "bg-grey-6 text-grey-3 hover:bg-error-2 hover:text-error-1"
                 }`}
               >
                 <X size={14} strokeWidth={2.5} />
@@ -67,7 +67,7 @@ const CartTabs = () => {
         type="button"
         size="sm"
         onClick={() => createCart()}
-        className="ml-2 gap-1.5 bg-green-600 hover:bg-green-700 text-white h-9 px-4 font-semibold shadow-sm shadow-green-500/30 shrink-0"
+        className="ml-2 gap-1.5 h-9 px-4 shrink-0"
         aria-label="New sale"
       >
         <Plus size={16} strokeWidth={2.5} />

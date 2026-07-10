@@ -1,5 +1,6 @@
 "use client";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { useUserRole } from "@/lib/store/user-store";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -51,7 +52,7 @@ const Settings = () => {
     };
     return (
       tabMapping[urlTab || ""] ||
-      (user?.role === "OWNER" ? "Bank" : "notifications")
+      (user?.role === "OWNER" ? "Bank" : "HR")
     );
   };
 
@@ -94,39 +95,39 @@ const Settings = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
-      <div className="w-full">
-        {/* Header */}
-        <p className="text-xl mb-3 sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
-          Settings
-        </p>
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="w-full"
-        >
-          {/* Mobile Tabs - Horizontally Scrollable */}
-          <div className="w-full overflow-x-auto pb-2">
-            <TabsList className="w-full min-w-max inline-flex gap-1 sm:gap-2 h-auto p-1 bg-transparent">
-              {SettingsOptionsTab.map((tab) => (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  className={`flex-shrink-0 px-2 sm:px-4 py-2 rounded-md h-10 sm:h-12 text-xs sm:text-sm hover:text-black font-medium transition-all duration-200 whitespace-nowrap min-w-fit ${
-                    activeTab === tab
-                      ? "bg-primary-green-300 text-white shadow-md"
-                      : "bg-primary-green-200 text-primary-black-100 hover:bg-primary-green-300 hover:text-white"
-                  }`}
-                >
-                  <span className="hidden sm:inline">{tab}</span>
-                  <span className="sm:hidden">{getShortTabName(tab)}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+    <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
+      {/* Header */}
+      <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
+        Settings
+      </p>
+
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <div className="w-full rounded-2xl border border-border-tint bg-white overflow-hidden">
+          {/* Tabs Header — same plain-button underline pattern as Sales' Products Sold / Order History tabs */}
+          <div className="flex items-center overflow-x-auto border-b border-border-tint px-4 sm:px-6">
+            {SettingsOptionsTab.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabChange(tab)}
+                className={cn(
+                  "px-4 py-3 text-sm font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap mr-2",
+                  activeTab === tab
+                    ? "border-primary-green-300 text-primary-green-300"
+                    : "border-transparent text-grey-3 hover:text-grey-2",
+                )}
+              >
+                <span className="hidden sm:inline">{tab}</span>
+                <span className="sm:hidden">{getShortTabName(tab)}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Tab Content */}
-          <div className="w-full">
+          {/* Tab Content — full width, no extra centering */}
+          <div className="w-full p-4 sm:p-6">
             {user && user?.role === "OWNER" && (
               <TabsContent value="Bank" className="mt-0">
                 <div className="w-full overflow-hidden">
@@ -153,7 +154,7 @@ const Settings = () => {
             )}
 
             {user && user?.role === "OWNER" && (
-              <TabsContent value="Tax" className="mt-0">
+              <TabsContent value="Security & Privacy" className="mt-0">
                 <div className="w-full overflow-hidden">
                   <SecurityPrivacyTabs />
                 </div>
@@ -169,31 +170,27 @@ const Settings = () => {
             )}
 
             <TabsContent value="Notifications" className="mt-0">
-              <div className="p-3 sm:p-4">
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-                  Notification Settings
-                </h2>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Customize your notification preferences.
-                </p>
-                {/* Add notification settings components here */}
-              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-grey-1 mb-3 sm:mb-4">
+                Notification Settings
+              </h2>
+              <p className="text-sm sm:text-base text-grey-3">
+                Customize your notification preferences.
+              </p>
+              {/* Add notification settings components here */}
             </TabsContent>
 
             <TabsContent value="Currency & Localization" className="mt-0">
-              <div className="p-3 sm:p-4">
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-                  Currency & Localization
-                </h2>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Set your preferred currency and language settings.
-                </p>
-                {/* Add currency and localization components here */}
-              </div>
+              <h2 className="text-lg sm:text-xl font-extrabold text-grey-1 mb-3 sm:mb-4">
+                Currency & Localization
+              </h2>
+              <p className="text-sm sm:text-base text-grey-3">
+                Set your preferred currency and language settings.
+              </p>
+              {/* Add currency and localization components here */}
             </TabsContent>
           </div>
-        </Tabs>
-      </div>
+        </div>
+      </Tabs>
     </div>
   );
 };
@@ -212,55 +209,46 @@ const getShortTabName = (tabName: string): string => {
   return shortNames[tabName] || tabName;
 };
 
+const SECURITY_TABS = [
+  { value: "Password", label: "Password", shortLabel: "Password" },
+  { value: "Transaction Pin", label: "Transaction Pin", shortLabel: "Pin" },
+] as const;
+
 const SecurityPrivacyTabs = () => {
-  const [activeSubTab, setActiveSubTab] = useState("Password");
+  const [activeSubTab, setActiveSubTab] = useState<string>("Password");
 
   return (
     <div className="w-full">
-      <Tabs
-        value={activeSubTab}
-        onValueChange={setActiveSubTab}
-        className="mt-3 sm:mt-4"
-      >
-        <div className="w-full overflow-x-auto pb-2">
-          <TabsList className="w-full sm:w-fit grid grid-cols-2 h-auto sm:h-9 items-center justify-center rounded-lg bg-green-100  text-green-700">
-            <TabsTrigger
-              value="Password"
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                activeSubTab === "Password"
-                  ? "bg-green-500 text-white shadow"
-                  : "bg-transparent text-green-700 hover:bg-green-200"
-              }`}
-            >
-              Password
-            </TabsTrigger>
-            <TabsTrigger
-              value="Transaction Pin"
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-2 sm:py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-                activeSubTab === "Transaction Pin"
-                  ? "bg-green-500 text-white shadow"
-                  : "bg-transparent text-green-700 hover:bg-green-200"
-              }`}
-            >
-              <span className="hidden sm:inline">Transaction Pin</span>
-              <span className="sm:hidden">Pin</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <div className="flex items-center border-b border-border-tint mb-4">
+        {SECURITY_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setActiveSubTab(tab.value)}
+            className={cn(
+              "px-4 py-2.5 text-sm font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap mr-2",
+              activeSubTab === tab.value
+                ? "border-primary-green-300 text-primary-green-300"
+                : "border-transparent text-grey-3 hover:text-grey-2",
+            )}
+          >
+            <span className="hidden sm:inline">{tab.label}</span>
+            <span className="sm:hidden">{tab.shortLabel}</span>
+          </button>
+        ))}
+      </div>
 
-        <div className="w-full ">
-          <TabsContent value="Password" className="mt-0">
-            <div className="w-full overflow-hidden">
-              <ChangePassword />
-            </div>
-          </TabsContent>
+      <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
+        <TabsContent value="Password" className="mt-0">
+          <div className="w-full overflow-hidden">
+            <ChangePassword />
+          </div>
+        </TabsContent>
 
-          <TabsContent value="Transaction Pin" className="mt-0">
-            <div className="w-full overflow-hidden">
-              <PinComp />
-            </div>
-          </TabsContent>
-        </div>
+        <TabsContent value="Transaction Pin" className="mt-0">
+          <div className="w-full overflow-hidden">
+            <PinComp />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );

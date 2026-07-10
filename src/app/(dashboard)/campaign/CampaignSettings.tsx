@@ -372,27 +372,27 @@ const CampaignSettings = () => {
               className="bg-white w-full rounded-lg shadow-sm h-[300px] overflow-hidden"
             >
               <div className="flex h-full">
-                <Skeleton className="w-[30%] h-full bg-[#eef4ef]" />
+                <Skeleton className="w-[30%] h-full bg-grey-5" />
                 <div className="w-[70%] p-6 space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="space-y-2 w-[70%]">
-                      <Skeleton className="h-6 w-full bg-[#eef4ef]" />
-                      <Skeleton className="h-4 w-3/4 bg-[#eef4ef]" />
+                      <Skeleton className="h-6 w-full bg-grey-5" />
+                      <Skeleton className="h-4 w-3/4 bg-grey-5" />
                     </div>
-                    <Skeleton className="h-6 w-12 rounded-full bg-[#eef4ef]" />
+                    <Skeleton className="h-6 w-12 rounded-full bg-grey-5" />
                   </div>
-                  <Skeleton className="h-32 w-full bg-[#eef4ef]" />
+                  <Skeleton className="h-32 w-full bg-grey-5" />
                   <div className="space-y-2">
-                    <Skeleton className="h-4 w-1/4 bg-[#eef4ef]" />
+                    <Skeleton className="h-4 w-1/4 bg-grey-5" />
                     <div className="flex gap-2">
                       {[...Array(3)].map((_, i) => (
-                        <Skeleton key={i} className="h-8 w-20 bg-[#eef4ef]" />
+                        <Skeleton key={i} className="h-8 w-20 bg-grey-5" />
                       ))}
                     </div>
                   </div>
                   <div className="pt-4 space-y-2">
-                    <Skeleton className="h-4 w-1/3 bg-[#eef4ef]" />
-                    <Skeleton className="h-4 w-full bg-[#eef4ef]" />
+                    <Skeleton className="h-4 w-1/3 bg-grey-5" />
+                    <Skeleton className="h-4 w-full bg-grey-5" />
                   </div>
                 </div>
               </div>

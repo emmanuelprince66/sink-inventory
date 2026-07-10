@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Copy, ExternalLink, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, Copy, Globe } from "lucide-react";
 import { useState } from "react";
 
 interface StoreUrlCardProps {
@@ -12,118 +11,99 @@ interface StoreUrlCardProps {
 }
 
 export default function StoreUrlCard({ storeData }: any) {
-  const [copySuccess, setCopySuccess] = useState<"out" | "in" | null>(null);
+  const [activeTab, setActiveTab] = useState<"out" | "in">("out");
+  const [copySuccess, setCopySuccess] = useState(false);
 
-  const copyStoreUrl = async (url: string, type: "out" | "in") => {
+  const activeUrl =
+    activeTab === "out" ? storeData.storeUrl : storeData.inStoreUrl;
+
+  const copyStoreUrl = async () => {
     try {
-      await navigator.clipboard.writeText(url);
-      setCopySuccess(type);
-      setTimeout(() => setCopySuccess(null), 2000);
+      await navigator.clipboard.writeText(activeUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }
   };
 
   return (
-    <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 pt-5">
-        <CardTitle className="flex items-center gap-2 text-green-900">
-          <Globe className="w-5 h-5" />
-          Store URLs
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-6">
-        <Tabs defaultValue="outstore" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="outstore">Out-Store</TabsTrigger>
-            <TabsTrigger value="instore">In-Store</TabsTrigger>
-          </TabsList>
+    <div className="bg-white rounded-2xl border border-border-tint p-5">
+      <h3 className="font-extrabold text-grey-1 text-base mb-4">
+        Store URLs
+      </h3>
 
-          <TabsContent value="outstore" className="space-y-3">
-            <p className="text-sm text-gray-600">
-              Share this link with your customers to visit your online store
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
-                {storeData.storeUrl}
-              </div>
-              <Button
-                onClick={() => copyStoreUrl(storeData.storeUrl, "out")}
-                variant="outline"
-                size="sm"
-                className={`shrink-0 ${
-                  copySuccess === "out"
-                    ? "bg-green-50 border-green-300 text-green-700"
-                    : "hover:bg-gray-50"
-                } transition-all duration-200`}
-              >
-                {copySuccess === "out" ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-green-600 hover:text-green-700 hover:bg-green-50"
-              onClick={() => window.open(storeData.storeUrl, "_blank")}
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Visit Out-Store
-            </Button>
-          </TabsContent>
+      {/* Big pill toggle */}
+      <div className="flex gap-2 mb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("out")}
+          className={cn(
+            "flex-1 py-3 rounded-full text-sm font-bold transition-colors cursor-pointer",
+            activeTab === "out"
+              ? "bg-primary-green-300 text-white"
+              : "bg-grey-6 text-grey-3 hover:text-grey-2",
+          )}
+        >
+          Out Store
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("in")}
+          className={cn(
+            "flex-1 py-3 rounded-full text-sm font-bold transition-colors cursor-pointer",
+            activeTab === "in"
+              ? "bg-primary-green-300 text-white"
+              : "bg-grey-6 text-grey-3 hover:text-grey-2",
+          )}
+        >
+          In Store
+        </button>
+      </div>
 
-          <TabsContent value="instore" className="space-y-3">
-            <p className="text-sm text-gray-600">
-              Share this link for customers to browse in your physical store
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 font-mono text-sm text-gray-700 overflow-hidden text-ellipsis whitespace-nowrap">
-                {storeData.inStoreUrl}
-              </div>
-              <Button
-                onClick={() => copyStoreUrl(storeData.inStoreUrl, "in")}
-                variant="outline"
-                size="sm"
-                className={`shrink-0 ${
-                  copySuccess === "in"
-                    ? "bg-green-50 border-green-300 text-green-700"
-                    : "hover:bg-gray-50"
-                } transition-all duration-200`}
-              >
-                {copySuccess === "in" ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy
-                  </>
-                )}
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full text-green-600 hover:text-green-700 hover:bg-green-50"
-              onClick={() => window.open(storeData.inStoreUrl, "_blank")}
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Visit In-Store
-            </Button>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+      <p className="text-xs text-grey-3 mb-3">
+        {activeTab === "out"
+          ? "Share this link with your customers to visit your online store."
+          : "Share this link for customers to browse in your physical store."}
+      </p>
+
+      <div className="flex items-center gap-2 mb-4">
+        <div className="flex-1 bg-grey-6 border border-grey-5 rounded-full px-4 py-2.5 font-mono text-sm text-grey-2 overflow-hidden text-ellipsis whitespace-nowrap">
+          {activeUrl}
+        </div>
+        <Button
+          onClick={copyStoreUrl}
+          variant="outline"
+          size="sm"
+          className={cn(
+            "shrink-0 rounded-full transition-all duration-200",
+            copySuccess
+              ? "bg-success-2 border-success-1/30 text-success-1"
+              : "hover:bg-grey-6",
+          )}
+        >
+          {copySuccess ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4 mr-1.5" />
+              Copy
+            </>
+          )}
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        className="flex items-center gap-1.5 text-primary-green-300 text-sm font-bold hover:text-primary-green-300/80 cursor-pointer"
+        onClick={() => window.open(activeUrl, "_blank")}
+      >
+        <Globe className="w-4 h-4" />
+        Visit Link Store
+      </button>
+    </div>
   );
 }

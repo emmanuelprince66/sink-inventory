@@ -41,8 +41,8 @@ const KPI_STYLES: Record<
     icon: <ArrowDownLeft className="w-5 h-5" />,
   },
   outflow: {
-    bg: "bg-warning-2",
-    iconColor: "text-warning-1",
+    bg: "bg-error-2",
+    iconColor: "text-error-1",
     icon: <ArrowUpRight className="w-5 h-5" />,
   },
 };
@@ -160,7 +160,7 @@ const Transactions = () => {
             {Array.from({ length: 3 }).map((_, index) => (
               <Skeleton
                 key={index}
-                className="h-24 w-full rounded-2xl bg-grey-6"
+                className="h-24 w-full rounded-2xl bg-grey-5"
               />
             ))}
           </div>
@@ -194,7 +194,7 @@ const Transactions = () => {
 
         {/* Main Account Card */}
         {TrxDataLoading || !TrxData ? (
-          <Skeleton className="h-36 w-full rounded-2xl bg-grey-6" />
+          <Skeleton className="h-36 w-full rounded-2xl bg-grey-5" />
         ) : (
           <div className="w-full p-4 sm:p-5 bg-primary-green-100 text-white rounded-2xl">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -221,37 +221,38 @@ const Transactions = () => {
                       "Nil"
                     }`}</span>
                   </p>
+                  {user?.role === "OWNER" && (
+                    <p className="text-xs text-white/70 mt-0.5">
+                      Available Balance:{" "}
+                      <span className="font-bold text-white">
+                        {formatToNaira(
+                          TrxData?.data?.results?.wallet_details?.balance ||
+                            0,
+                        )}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
 
               {user?.role === "OWNER" && (
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-                  <div className="text-left sm:text-right">
-                    <p className="text-xs text-white/70">Available Balance</p>
-                    <p className="text-lg font-bold">
-                      {formatToNaira(
-                        TrxData?.data?.results?.wallet_details?.balance || 0,
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                    <Link href="transactions/transfer" className="flex-1 sm:flex-none">
-                      <Button
-                        variant="outline"
-                        className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                      >
-                        Transfer
-                      </Button>
-                    </Link>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Link href="transactions/transfer" className="flex-1 sm:flex-none">
                     <Button
-                      className="flex-1 sm:flex-none bg-white text-primary-green-100 hover:bg-white/90 whitespace-nowrap"
-                      disabled={hasAccountNumber}
-                      onClick={() => setShowSubAccountModal(true)}
+                      variant="outline"
+                      className="w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
                     >
-                      <Plus className="w-4 h-4 mr-1 shrink-0" />
-                      Create Sub Account
+                      Transfer
                     </Button>
-                  </div>
+                  </Link>
+                  <Button
+                    className="flex-1 sm:flex-none bg-white text-primary-green-100 hover:bg-white/90 whitespace-nowrap"
+                    disabled={hasAccountNumber}
+                    onClick={() => setShowSubAccountModal(true)}
+                  >
+                    <Plus className="w-4 h-4 mr-1 shrink-0" />
+                    Create Sub Account
+                  </Button>
                 </div>
               )}
             </div>
@@ -322,13 +323,22 @@ const Transactions = () => {
         <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
           <div className="p-4 sm:p-6 border-b border-grey-5">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="w-full sm:w-72">
+                <SearchInput
+                  placeholder="Search transactions..."
+                  value={searchInput}
+                  onValueChange={handleSearchChange}
+                  className="h-9"
+                />
+              </div>
+
               <div className="flex gap-2">
                 {filterOptions.map((filter) => (
                   <button
                     key={filter}
                     onClick={() => handleFilterChange(filter)}
                     className={cn(
-                      "px-4 py-1.5 h-9 text-sm font-medium cursor-pointer rounded-full transition-all whitespace-nowrap",
+                      "px-4 py-1.5 h-9 text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap",
                       activeFilter === filter
                         ? "bg-primary-green-300 text-white shadow-sm"
                         : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
@@ -337,15 +347,6 @@ const Transactions = () => {
                     {filter}
                   </button>
                 ))}
-              </div>
-
-              <div className="w-full sm:w-64">
-                <SearchInput
-                  placeholder="Search..."
-                  value={searchInput}
-                  onValueChange={handleSearchChange}
-                  className="h-9"
-                />
               </div>
             </div>
 
@@ -359,9 +360,9 @@ const Transactions = () => {
           {!TrxData || TrxDataLoading ? (
             <div className="w-full p-4 sm:p-6">
               <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-grey-6" />
+                <Skeleton className="h-10 w-full bg-grey-5" />
                 {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton key={index} className="h-16 w-full bg-grey-6 mt-2" />
+                  <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
                 ))}
               </div>
             </div>

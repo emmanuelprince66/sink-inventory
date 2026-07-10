@@ -85,27 +85,27 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
   // Read-only summary view — used on the storefront preview
   if (readOnly) {
     return (
-      <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 pt-5">
-        <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
-          <CardTitle className="text-gray-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-600" />
+      <Card className="rounded-2xl border-border-tint py-0">
+        <CardHeader className="border-b border-border-tint py-4">
+          <CardTitle className="text-grey-1 text-base font-extrabold flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary-green-300" />
             Working Hours
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-100">
-            <p className="text-xs font-medium text-gray-600 mb-1">Schedule</p>
-            <p className="text-base font-semibold text-gray-900">
+          <div className="bg-secondary-6 rounded-lg p-4">
+            <p className="text-xs font-bold text-grey-3 mb-1">Schedule</p>
+            <p className="text-base font-bold text-grey-1">
               {activeOption?.title}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-grey-3 mt-0.5">
               {activeOption?.subtitle}
             </p>
           </div>
 
           {mode !== "247" && (
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-2">
+              <p className="text-xs font-bold text-grey-3 mb-2">
                 Active Days
               </p>
               <div className="flex items-center gap-2 flex-wrap">
@@ -115,10 +115,10 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
                     <div
                       key={`${day.key}-${idx}`}
                       className={cn(
-                        "w-9 h-9 rounded-full text-sm font-medium border flex items-center justify-center",
+                        "w-9 h-9 rounded-full text-sm font-bold border flex items-center justify-center",
                         isSelected
-                          ? "bg-green-600 text-white border-green-600"
-                          : "bg-slate-50 text-slate-400 border-slate-200",
+                          ? "bg-primary-green-300 text-white border-primary-green-300"
+                          : "bg-grey-6 text-grey-4 border-border-tint",
                       )}
                     >
                       {day.label}
@@ -134,28 +134,28 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
   }
 
   return (
-    <Card className="border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300 pt-5">
-      <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
-        <CardTitle className="text-gray-900 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-green-600" />
+    <Card className="rounded-2xl border-border-tint py-0">
+      <CardHeader className="border-b border-border-tint py-4">
+        <CardTitle className="text-grey-1 text-base font-extrabold flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-primary-green-300" />
           Working Hours
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5 p-6">
         {/* Info banner */}
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
-          <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-700">
+        <div className="flex items-start gap-2 bg-info-2 border border-info-1/20 rounded-lg p-3">
+          <Info className="h-4 w-4 text-info-1 shrink-0 mt-0.5" />
+          <p className="text-xs text-grey-2">
             When Automated Shipping is on, dispatch riders will only come for
             pickups during your business hours.
           </p>
         </div>
 
         <div>
-          <h4 className="text-base font-semibold text-slate-900">
+          <h4 className="text-base font-bold text-grey-1">
             Choose Business Hours
           </h4>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-grey-3 mt-0.5">
             Your business hours will be used for automated shipping
           </p>
         </div>
@@ -170,25 +170,25 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
                 type="button"
                 onClick={() => handleModeChange(option.key)}
                 className={cn(
-                  "relative text-left p-4 rounded-xl border-2 transition-all",
+                  "relative text-left p-4 rounded-xl border-2 transition-all cursor-pointer",
                   isSelected
-                    ? "border-green-500 bg-green-50/50"
-                    : "border-slate-200 hover:border-slate-300 bg-white",
+                    ? "border-primary-green-300 bg-secondary-6"
+                    : "border-border-tint hover:border-grey-5 bg-white",
                 )}
               >
                 {isSelected && (
-                  <CheckCircle2 className="absolute top-3 right-3 h-5 w-5 text-green-600 fill-green-100" />
+                  <CheckCircle2 className="absolute top-3 right-3 h-5 w-5 text-primary-green-300 fill-secondary-6" />
                 )}
                 <Calendar
                   className={cn(
                     "h-4 w-4 mb-2",
-                    isSelected ? "text-green-600" : "text-slate-400",
+                    isSelected ? "text-primary-green-300" : "text-grey-4",
                   )}
                 />
-                <p className="text-sm font-semibold text-slate-900">
+                <p className="text-sm font-bold text-grey-1">
                   {option.title}
                 </p>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-grey-3 mt-0.5">
                   {option.subtitle}
                 </p>
               </button>
@@ -199,7 +199,7 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
         {/* Day picker — only for custom mode */}
         {mode === "custom" && (
           <div className="pt-2">
-            <p className="text-sm text-slate-600 mb-3">
+            <p className="text-sm text-grey-3 mb-3">
               Select days of the week
             </p>
             <div className="flex items-center gap-2 flex-wrap">
@@ -211,10 +211,10 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
                     type="button"
                     onClick={() => toggleDay(day.key)}
                     className={cn(
-                      "w-9 h-9 rounded-full text-sm font-medium border transition-all",
+                      "w-9 h-9 rounded-full text-sm font-bold border transition-all cursor-pointer",
                       isSelected
-                        ? "bg-green-600 text-white border-green-600 shadow-sm"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300",
+                        ? "bg-primary-green-300 text-white border-primary-green-300 shadow-sm"
+                        : "bg-white text-grey-3 border-border-tint hover:border-grey-5",
                     )}
                   >
                     {day.label}
@@ -226,22 +226,17 @@ const WorkingHours = ({ readOnly = false }: { readOnly?: boolean }) => {
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-border-tint">
           <Button
             variant="outline"
             size="sm"
             disabled={!isDirty}
             onClick={handleDiscard}
-            className="border-slate-200 text-slate-600 hover:bg-slate-50"
+            className="border-grey-5 text-grey-2 hover:bg-grey-6"
           >
             Discard
           </Button>
-          <Button
-            size="sm"
-            disabled={!isDirty}
-            onClick={handleSave}
-            className="bg-green-600 hover:bg-green-700 text-white"
-          >
+          <Button size="sm" disabled={!isDirty} onClick={handleSave}>
             Save
           </Button>
         </div>

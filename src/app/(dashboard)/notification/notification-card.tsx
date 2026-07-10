@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { CustomCard } from "@/components/app/CustomCard";
 import moment from "moment";
 
 interface NotificationCardProps {
@@ -35,13 +35,14 @@ export function NotificationCard({
   };
 
   return (
-    <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-      <CardContent className="p-4">
-        <div className="space-y-2">
-          <p className="text-gray-900 text-sm leading-relaxed">{message}</p>
-          <p className="text-gray-500 text-xs">{formatDate(created_at)}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <CustomCard
+      className="rounded-2xl border-grey-5 hover:shadow-md transition-shadow duration-200"
+      contentClassName="p-4"
+    >
+      <div className="space-y-2">
+        <p className="text-grey-1 text-sm leading-relaxed">{message}</p>
+        <p className="text-grey-4 text-xs">{formatDate(created_at)}</p>
+      </div>
+    </CustomCard>
   );
 }

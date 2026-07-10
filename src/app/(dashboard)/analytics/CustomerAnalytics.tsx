@@ -17,19 +17,12 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const CustomCard = ({
   children,
   className = "",
-  shadow = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  shadow?: boolean;
 }) => {
   return (
-    <div
-      className={`p-6 rounded-xl border ${className} ${
-        shadow ? "shadow-sm" : ""
-      }`}
-      style={{ backgroundColor: "#FEFFFE" }}
-    >
+    <div className={`p-6 rounded-2xl border border-border-tint bg-white ${className}`}>
       {children}
     </div>
   );
@@ -46,11 +39,13 @@ const CustomCustomerCard = ({
   description?: React.ReactNode;
 }) => {
   return (
-    <CustomCard className="border-gray-200 w-full" shadow>
+    <CustomCard className="w-full">
       <div className="flex flex-col gap-2 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p className="font-[600] text-xl text-primary-black-100">{value}</p>
-        {description && <p className="text-xs text-gray-600">{description}</p>}
+        <p className="text-sm font-bold text-grey-3">{title}</p>
+        <p className="text-xl font-extrabold text-grey-1">{value}</p>
+        {description && (
+          <div className="text-xs text-grey-3 w-full">{description}</div>
+        )}
       </div>
     </CustomCard>
   );
@@ -70,8 +65,8 @@ const CustomerAnalytics = ({
           CustomerAnalyticData?.data?.new_customers || 0,
           CustomerAnalyticData?.data?.returning_customers || 0,
         ],
-        backgroundColor: ["#FF6384", "#36A2EB"],
-        borderColor: ["#FF6384", "#36A2EB"],
+        backgroundColor: ["#329661", "#3182ce"],
+        borderColor: ["#329661", "#3182ce"],
         borderWidth: 1,
       },
     ],
@@ -83,6 +78,14 @@ const CustomerAnalytics = ({
     plugins: {
       legend: {
         position: "right",
+        labels: {
+          color: "#374151",
+          font: { weight: "bold", size: 12 },
+          boxWidth: 10,
+          boxHeight: 10,
+          usePointStyle: true,
+          pointStyle: "circle",
+        },
       },
       tooltip: {
         callbacks: {
@@ -94,8 +97,10 @@ const CustomerAnalytics = ({
     },
   };
 
+  const topCustomerName = CustomerAnalyticData?.data?.top_customer?.name;
+
   return (
-    <div className="w-full  py-8">
+    <div className="w-full pb-4 sm:pb-8">
       {/* First Row - 4 cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <CustomCustomerCard
@@ -117,23 +122,20 @@ const CustomerAnalytics = ({
           value={""}
           description={
             <div className="flex items-center gap-3">
-              {/* Placeholder for customer image - replace with actual image if available */}
-              <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden flex items-center justify-center">
-                <span className="text-xs text-gray-400">
-                  {CustomerAnalyticData?.data?.top_customer.name
-                    ? CustomerAnalyticData?.data?.top_customer?.name.charAt(0)
-                    : "?"}
+              <div className="w-10 h-10 rounded-full bg-secondary-6 overflow-hidden flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-primary-green-300">
+                  {topCustomerName ? topCustomerName.charAt(0) : "?"}
                 </span>
               </div>
-              <div>
-                <p className="font-semibold text-sm">
-                  {CustomerAnalyticData?.data?.top_customer?.name || "No data"}
+              <div className="min-w-0">
+                <p className="font-bold text-sm text-grey-1 truncate">
+                  {topCustomerName || "No data"}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-grey-4">
                   Last purchase{" "}
                   {formatToNaira(
                     CustomerAnalyticData?.data?.top_customer?.last_amount,
-                  ) || "N/A"}{" "}
+                  ) || "N/A"}
                 </p>
               </div>
             </div>
@@ -143,9 +145,11 @@ const CustomerAnalytics = ({
 
       {/* Second Row - Single card */}
       <div className="grid grid-cols-1 gap-4">
-        <CustomCard className="border-gray-200" shadow>
+        <CustomCard>
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-lg mb-4">Customer Distribution</h3>
+            <h3 className="text-lg font-extrabold text-grey-1 mb-4">
+              Customer Distribution
+            </h3>
             <div className="flex-grow h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
             </div>

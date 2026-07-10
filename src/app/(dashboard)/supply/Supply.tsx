@@ -19,77 +19,46 @@ interface SupplierCardData {
   amount: number | string;
 }
 
-const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
-  const isDebtCard = title === "Total Debt";
-  const isWalletCard = title === "Total Wallet Balance";
-  const isSupplierCard = title === "Total suppliers";
+// Matches the tinted flat-card KPI pattern established on Orders/Sales/Inventory
+// (rounded-2xl, border-none, bare icon, extrabold value) — Supplier has no Figma
+// screen of its own, so it follows our own calibrated design system instead.
+const SUPPLY_CARD_STYLES: Record<
+  string,
+  { bg: string; iconColor: string; icon: React.ReactNode }
+> = {
+  "Total Wallet Balance": {
+    bg: "bg-success-2",
+    iconColor: "text-success-1",
+    icon: <Wallet className="w-[18px] h-[18px]" />,
+  },
+  "Total Debt": {
+    bg: "bg-error-2",
+    iconColor: "text-error-1",
+    icon: <AlertCircle className="w-[18px] h-[18px]" />,
+  },
+  "Total suppliers": {
+    bg: "bg-[#e0e7ff]",
+    iconColor: "text-info-1",
+    icon: <Users className="w-[18px] h-[18px]" />,
+  },
+};
 
-  const getIcon = () => {
-    switch (title) {
-      case "Total suppliers":
-        return <Users className="w-5 h-5 text-indigo-600" />;
-      case "Total Debt":
-        return <AlertCircle className="w-5 h-5 text-red-600" />;
-      case "Total Wallet Balance":
-        return <Wallet className="w-5 h-5 text-emerald-600" />;
-      default:
-        return <Wallet className="w-5 h-5 text-emerald-600" />;
-    }
-  };
+const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
+  const variant = SUPPLY_CARD_STYLES[title] ?? SUPPLY_CARD_STYLES["Total suppliers"];
 
   return (
     <CustomCard
       className={cn(
-        "p-4 rounded-lg border transition-all hover:shadow-md",
-        isDebtCard
-          ? "bg-gradient-to-br from-red-50 to-red-100 border-red-200"
-          : isWalletCard
-          ? "bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200"
-          : "bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200"
+        variant.bg,
+        "w-full rounded-2xl border-none transition-all p-0",
       )}
+      contentClassName="p-4 sm:p-5 flex flex-col gap-3"
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "p-2 rounded-full",
-              isDebtCard
-                ? "bg-red-100"
-                : isWalletCard
-                ? "bg-emerald-100"
-                : "bg-indigo-100"
-            )}
-          >
-            {getIcon()}
-          </div>
-          <span
-            className={cn(
-              "text-sm font-medium",
-              isDebtCard
-                ? "text-primary-black-100"
-                : isWalletCard
-                ? "text-primary-black-100"
-                : "text-primary-black-100"
-            )}
-          >
-            {title}
-          </span>
-        </div>
+      <div className="flex items-center justify-between">
+        <p className={cn("text-xs font-bold", variant.iconColor)}>{title}</p>
+        <span className={variant.iconColor}>{variant.icon}</span>
       </div>
-      <div className="mt-4">
-        <span
-          className={cn(
-            "text-2xl font-bold",
-            isDebtCard
-              ? "text-primary-black-100"
-              : isWalletCard
-              ? "text-primary-black-100"
-              : "text-primary-black-100"
-          )}
-        >
-          {amount}
-        </span>
-      </div>
+      <p className="text-2xl font-extrabold text-grey-1">{amount}</p>
     </CustomCard>
   );
 };
@@ -103,81 +72,83 @@ const Supply = () => {
   const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
 
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex justify-between items-center w-full">
-          <p className="text-2xl md:text-3xl text-primary-black-100 font-[500]">
+    <div className="w-full h-full flex flex-col justify-start gap-6 items-start">
+      {/* Header Section */}
+      <div className="w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
             Supplier
           </p>
 
-          {(role === "OWNER" || role === "ADMIN-ATTENDANT" || role === "ACCOUNTANT") && (
-            <div
-              className="text-[14px] md:text-[20px]"
+          {(role === "OWNER" ||
+            role === "ADMIN-ATTENDANT" ||
+            role === "ACCOUNTANT") && (
+            <Button
               onClick={openSupplyModalFunc}
+              className="flex items-center gap-1.5 w-full sm:w-auto"
             >
-              <Button className="flex items-center py-0 md:py-[25px]">
-                <Plus />
-                Add Supplier
-              </Button>
+              <Plus className="w-4 h-4" />
+              Add Supplier
+            </Button>
+          )}
+        </div>
+
+        {/* Overview Cards */}
+        <div>
+          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-2 mb-3 sm:mb-4">
+            Overview
+          </p>
+
+          {SupplierLoading ? (
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <CustomCard
+                  key={index}
+                  className="w-full rounded-2xl border-none p-0"
+                  contentClassName="p-4 sm:p-5 flex flex-col gap-3"
+                >
+                  <Skeleton className="h-4 w-[100px] bg-grey-5" />
+                  <Skeleton className="h-6 w-[70px] bg-grey-5" />
+                </CustomCard>
+              ))}
+            </div>
+          ) : (
+            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              <CustomSupplyCard
+                title={"Total Wallet Balance"}
+                amount={formatToNaira(
+                  SupplierData?.data?.results?.wallet_balance,
+                )}
+              />
+              <CustomSupplyCard
+                title={"Total Debt"}
+                amount={formatToNaira(SupplierData?.data?.results?.debt)}
+              />
+              <CustomSupplyCard
+                title={"Total suppliers"}
+                amount={SupplierData?.data?.results?.supplier_count}
+              />
             </div>
           )}
         </div>
       </div>
 
+      {/* Main Content Section */}
       {SupplierLoading ? (
-        <>
-          {/* Skeleton for cards */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <CustomCard key={index} className="w-full border-gray-200">
-                <div className="flex flex-col gap-6 items-start">
-                  <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                  <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
-                </div>
-              </CustomCard>
+        <div className="w-full">
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full bg-grey-5" />
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
             ))}
           </div>
-
-          {/* Skeleton for AllSupply table */}
-          <div className="w-full">
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-16 w-full bg-[#eef4ef] mt-2"
-                />
-              ))}
-            </div>
-          </div>
-        </>
+        </div>
       ) : (
-        <>
-          {/* Cards container */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-4">
-            <CustomSupplyCard
-              title={"Total Wallet Balance"}
-              amount={formatToNaira(
-                SupplierData?.data?.results?.wallet_balance
-              )}
-            />
-            <CustomSupplyCard
-              title={"Total Debt"}
-              amount={formatToNaira(SupplierData?.data?.results?.debt)}
-            />
-            <CustomSupplyCard
-              title={"Total suppliers"}
-              amount={SupplierData?.data?.results?.supplier_count}
-            />
-          </div>
-
-          {/* content */}
-          <AllSupply
-            SupplierData={SupplierData}
-            SupplierLoading={SupplierLoading}
-            handleRowClick={handleRowClick}
-          />
-        </>
+        <AllSupply
+          SupplierData={SupplierData}
+          SupplierLoading={SupplierLoading}
+          handleRowClick={handleRowClick}
+        />
       )}
 
       {/* modal to add supply */}

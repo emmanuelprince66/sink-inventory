@@ -18,20 +18,18 @@ const DeleteSupplier = ({
     <>
       <>
         <div className="w-full flex-col flex items-center justify-center gap-3">
-          <p className="text-sm">
+          <p className="text-sm font-medium text-grey-2 text-center">
             Are you sure you want to delete this supplier?
           </p>
           <div className="flex gap-3 items-center">
-            <Button
-              className="bg-red-500 cursor-pointer text-white py-2 px-4 rounded-md"
-              onClick={closeModal}
-            >
+            <Button variant="outline" className="cursor-pointer py-2 px-4" onClick={closeModal}>
               Cancel
             </Button>
             <Button
+              variant="destructive"
               onClick={() => handleDeleteSupplier(supplier)}
               disabled={deleteSupplierLoading}
-              className="bg-primary-green-300 text-white cursor-pointer py-2 px-4 rounded-md"
+              className="cursor-pointer py-2 px-4"
             >
               {deleteSupplierLoading ? <Spinner /> : "Confirm"}
             </Button>

@@ -30,14 +30,14 @@ const Tax = () => {
   } = useTaxHook();
 
   return (
-    <div className="w-full h-full flex flex-col gap-6 p-4 sm:p-6">
+    <div className="w-full h-full flex flex-col gap-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-grey-1">
             Tax Configuration
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-grey-3 mt-1">
             Manage your business tax rate settings
           </p>
         </div>
@@ -46,12 +46,12 @@ const Tax = () => {
       {/* Tax Rate Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Tax Rate</h2>
+          <h2 className="text-lg font-extrabold text-grey-1">Tax Rate</h2>
           <Button
             onClick={handleOpenEditModal}
             variant="outline"
             size="sm"
-            className="text-green-600 border-green-600 hover:bg-green-50"
+            className="text-primary-green-300 border-primary-green-300 hover:bg-secondary-6"
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
@@ -59,21 +59,21 @@ const Tax = () => {
         </div>
 
         {!taxRate && taxRate !== 0 && !BusinessDataLoading ? (
-          <Skeleton className="h-32 w-full bg-[#eef4ef]" />
+          <Skeleton className="h-32 w-full bg-grey-5" />
         ) : (
-          <CustomCard className="border-green-200 bg-gradient-to-br from-green-50 to-green-100">
+          <CustomCard className="w-full rounded-2xl border-none bg-success-2 p-0" contentClassName="p-4 sm:p-5">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-full">
-                  <Percent className="w-6 h-6 text-green-600" />
+                <div className="p-3 bg-white/60 rounded-full">
+                  <Percent className="w-6 h-6 text-success-1" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Current Tax Rate</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">
+                  <p className="text-sm text-success-1">Current Tax Rate</p>
+                  <p className="text-3xl font-extrabold text-grey-1 mt-1">
                     {taxRate}%
                   </p>
                   {lastUpdated ? (
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-grey-4 mt-2">
                       Last updated:{" "}
                       {new Date(lastUpdated).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -82,7 +82,7 @@ const Tax = () => {
                       })}
                     </p>
                   ) : (
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-grey-4 mt-2">
                       Not yet configured
                     </p>
                   )}
@@ -137,11 +137,7 @@ const Tax = () => {
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-green-600 hover:bg-green-700"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="flex-1" disabled={isLoading}>
                 {isLoading ? "Updating..." : "Update Tax Rate"}
               </Button>
             </div>

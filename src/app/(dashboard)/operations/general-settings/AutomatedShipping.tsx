@@ -67,12 +67,12 @@ const AutomatedShipping = () => {
 
   return (
     <div className="space-y-4">
-      {/* Lead alert — side-quote style (matches the rest of the redesign) */}
-      <div className="relative pl-4 py-3 pr-4 bg-emerald-50/50 rounded-r-lg">
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 rounded-l" />
+      {/* Lead alert */}
+      <div className="relative pl-4 py-3 pr-4 bg-secondary-6 rounded-r-lg">
+        <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary-green-300 rounded-l" />
         <div className="flex items-start gap-2.5">
-          <Lightbulb className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-          <p className="text-sm text-emerald-900/80 leading-relaxed">
+          <Lightbulb className="w-4 h-4 text-primary-green-300 mt-0.5 shrink-0" />
+          <p className="text-sm text-primary-green-100 leading-relaxed">
             Make sure every product has a weight set. You can still keep manual
             shipping methods as a fallback.
           </p>
@@ -100,12 +100,12 @@ const AutomatedShipping = () => {
           >
             <button
               onClick={() => setShowShippingLocation(true)}
-              className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 transition-colors text-left"
+              className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-primary-green-300/30 bg-secondary-6 hover:bg-secondary-6/70 transition-colors text-left cursor-pointer"
             >
-              <span className="text-sm font-semibold text-emerald-900">
+              <span className="text-sm font-bold text-primary-green-100">
                 Choose shipping locations
               </span>
-              <ChevronRight className="w-4 h-4 text-emerald-700" />
+              <ChevronRight className="w-4 h-4 text-primary-green-300" />
             </button>
           </StepTile>
 
@@ -116,29 +116,29 @@ const AutomatedShipping = () => {
             title="Default Package Weight"
             description="Used as a fallback when a product doesn't have its own weight. Shipping rates depend on this."
           >
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-3 items-end">
-              <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block mb-1.5">
-                  Default Weight
-                </label>
-                <div className="relative">
+            <div className="mt-3">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-grey-3 block mb-1.5">
+                Default Weight
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <div className="relative w-full sm:w-[160px] shrink-0">
                   <Input
                     type="number"
                     value={defaultWeight}
                     onChange={(e) => setDefaultWeight(e.target.value)}
                     className="pr-12"
                   />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-emerald-700 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-primary-green-300 px-2 py-0.5 bg-secondary-6 border border-primary-green-300/20 rounded">
                     Kg
                   </span>
                 </div>
+                <Button
+                  variant="outline"
+                  className="h-12 w-full sm:w-auto border-primary-green-300/30 text-primary-green-300 hover:bg-secondary-6 hover:border-primary-green-300/50 cursor-pointer"
+                >
+                  Apply weight to all products
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300"
-              >
-                Apply weight to all products
-              </Button>
             </div>
           </StepTile>
 
@@ -153,7 +153,7 @@ const AutomatedShipping = () => {
               <PartnerCard
                 name="Shipbubble"
                 tagline="Nationwide & international delivery with 50+ partners"
-                logoTone="bg-rose-100 text-rose-700"
+                logoTone="bg-info-2 text-info-1"
                 icon={<Truck className="w-5 h-5" />}
                 checked={isShipbubbleActive}
                 disabled={isSavingShipbubble}
@@ -164,7 +164,7 @@ const AutomatedShipping = () => {
               <PartnerCard
                 name="Chowdeck"
                 tagline="Fast, reliable same-day deliveries in select cities"
-                logoTone="bg-amber-100 text-amber-700"
+                logoTone="bg-warning-2 text-warning-1"
                 icon={<Package className="w-5 h-5" />}
                 checked={false}
                 onToggle={() => {}}
@@ -177,13 +177,13 @@ const AutomatedShipping = () => {
 
       {/* Sticky save bar */}
       <div className="sticky bottom-3 sm:bottom-4 z-10">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-lg shadow-slate-200/60">
-          <p className="text-xs text-slate-500 flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-grey-5 shadow-lg">
+          <p className="text-xs text-grey-3 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-primary-green-300" />
             Changes are saved per section. Tap save to publish.
           </p>
-          <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-            <Save className="w-4 h-4 mr-1.5" />
+          <Button className="gap-1.5">
+            <Save className="w-4 h-4" />
             Save Changes
           </Button>
         </div>
@@ -230,15 +230,13 @@ const StepTile = ({
   <div
     className={cn(
       "relative bg-white rounded-xl border transition-all",
-      active
-        ? "border-emerald-300 shadow-md shadow-emerald-100/60"
-        : "border-slate-200 hover:border-slate-300",
+      active ? "border-primary-green-300/40" : "border-grey-5",
     )}
   >
     <span
       className={cn(
         "absolute left-0 top-4 bottom-4 w-1 rounded-r transition-colors",
-        active ? "bg-emerald-500" : "bg-slate-200",
+        active ? "bg-primary-green-300" : "bg-grey-5",
       )}
     />
     <div className="pl-5 pr-4 sm:pl-6 sm:pr-5 py-4 sm:py-5">
@@ -247,11 +245,11 @@ const StepTile = ({
           className={cn(
             "shrink-0 w-10 h-10 rounded-xl flex flex-col items-center justify-center border",
             active
-              ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-transparent text-white"
-              : "bg-slate-50 border-slate-200 text-slate-600",
+              ? "bg-primary-green-300 border-transparent text-white"
+              : "bg-grey-6 border-grey-5 text-grey-3",
           )}
         >
-          <span className="text-[8px] font-semibold uppercase tracking-wider opacity-80">
+          <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
             Step
           </span>
           <span className="text-xs font-bold leading-none">
@@ -264,14 +262,14 @@ const StepTile = ({
             <span
               className={cn(
                 "mt-0.5",
-                active ? "text-emerald-600" : "text-slate-500",
+                active ? "text-primary-green-300" : "text-grey-3",
               )}
             >
               {icon}
             </span>
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <h4 className="text-sm font-bold text-grey-1">{title}</h4>
+              <p className="text-xs text-grey-3 mt-1 leading-relaxed">
                 {description}
               </p>
             </div>
@@ -313,14 +311,14 @@ const PartnerCard = ({
     className={cn(
       "relative rounded-xl border transition-all p-4",
       comingSoon
-        ? "bg-slate-50/60 border-slate-200"
+        ? "bg-grey-6/60 border-grey-5"
         : checked
-          ? "bg-white border-emerald-300 shadow-sm shadow-emerald-100/70"
-          : "bg-white border-slate-200 hover:border-slate-300",
+          ? "bg-white border-primary-green-300/40"
+          : "bg-white border-grey-5 hover:border-grey-4",
     )}
   >
     {comingSoon && (
-      <span className="absolute top-3 right-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-sm">
+      <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-grey-3 bg-white border border-grey-5 px-2 py-0.5 rounded-full">
         Coming soon
       </span>
     )}
@@ -328,7 +326,7 @@ const PartnerCard = ({
       <div
         className={cn(
           "w-11 h-11 rounded-xl flex items-center justify-center",
-          comingSoon ? "bg-slate-200 text-slate-400" : logoTone,
+          comingSoon ? "bg-grey-5 text-grey-4" : logoTone,
         )}
       >
         {icon}
@@ -344,12 +342,12 @@ const PartnerCard = ({
     <h5
       className={cn(
         "text-sm font-bold flex items-center gap-1.5",
-        comingSoon ? "text-slate-500" : "text-slate-900",
+        comingSoon ? "text-grey-3" : "text-grey-1",
       )}
     >
       {name}
       {onConfigure && isConfigured && (
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-primary-green-100 bg-secondary-6 border border-primary-green-300/20 px-1.5 py-0.5 rounded">
           Connected
         </span>
       )}
@@ -357,24 +355,24 @@ const PartnerCard = ({
     <p
       className={cn(
         "text-xs mt-1 mb-3 leading-relaxed",
-        comingSoon ? "text-slate-400" : "text-slate-500",
+        comingSoon ? "text-grey-4" : "text-grey-3",
       )}
     >
       {tagline}
     </p>
     {!comingSoon && (
-      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs">
+      <div className="flex items-center gap-2 pt-3 border-t border-grey-5 text-xs">
         {onConfigure && (
           <button
             onClick={onConfigure}
-            className="text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
+            className="text-primary-green-300 hover:text-primary-green-100 font-bold inline-flex items-center gap-1 cursor-pointer"
           >
             <SettingsIcon className="w-3 h-3" />
             {isConfigured ? "Configure" : "Set up"}
           </button>
         )}
-        {onConfigure && <span className="text-slate-300">•</span>}
-        <button className="text-slate-500 hover:text-slate-700 font-medium">
+        {onConfigure && <span className="text-grey-4">•</span>}
+        <button className="text-grey-3 hover:text-grey-2 font-bold cursor-pointer">
           Get help
         </button>
       </div>

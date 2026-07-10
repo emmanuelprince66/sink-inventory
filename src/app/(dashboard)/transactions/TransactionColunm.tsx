@@ -150,7 +150,7 @@ export const columns: ColumnDef<any>[] = [
         <>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
+              <button className="h-8 w-8 p-0 hover:bg-grey-6 text-grey-3 rounded-full flex items-center justify-center cursor-pointer">
                 <span className="sr-only">Open menu</span>
                 <MoreHorizontal className="h-4 w-4" />
               </button>
@@ -161,7 +161,7 @@ export const columns: ColumnDef<any>[] = [
             >
               <DropdownMenuItem
                 onClick={() => setShowTrxDetails(true)}
-                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
+                className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
               >
                 View More
               </DropdownMenuItem>

@@ -80,7 +80,7 @@ const Expenses = () => {
         <div className="space-y-1">
           {[...Array(5)].map((_, index) => (
             <div key={index} className="p-2 ">
-              <Skeleton className="h-14 w-full   bg-[#eef4ef]" />
+              <Skeleton className="h-14 w-full   bg-grey-5" />
             </div>
           ))}
         </div>

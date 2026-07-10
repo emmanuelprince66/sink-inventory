@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 
-import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,37 +14,8 @@ import { formatToNaira } from "@/utils/formatMoney";
 import SupplyHistory from "./SupplyHistory";
 import UpdateBalance from "./UpdateBalance";
 
-interface SupplierCardData {
-  title: string;
-  amount: any;
-}
-
-const CustomSupplyCard = ({ title, amount }: SupplierCardData) => {
-  const isDebtCard = amount < 0;
-  return (
-    <CustomCard
-      className={cn(
-        "w-full",
-        isDebtCard
-          ? "bg-red-100 border-red-300"
-          : "bg-primary-green-200 border-primary-green-300"
-      )}
-    >
-      <div className="flex flex-col gap-6 items-start">
-        <p className="font-[500] text-sm text-primary-black-100">{title}</p>
-        <p
-          className={`font-[600] text-xl ${
-            isDebtCard ? "text-red-600" : "text-primary-black-10"
-          } `}
-        >
-          {amount}
-        </p>
-      </div>
-    </CustomCard>
-  );
-};
-
 const SupplierById = ({ id }: { id: string }) => {
+  const router = useRouter();
   const {
     SupplierByIdData,
     SupplierByIdLoading,
@@ -72,104 +43,127 @@ const SupplierById = ({ id }: { id: string }) => {
       console.log("Total Purchase Value:", totalPurchaseValue);
     }
   }, [SupplierByIdData]);
+  const supplier = SupplierByIdData?.data;
+  const initial = supplier?.name?.charAt(0)?.toUpperCase() || "?";
+  const isWalletNegative = Number(supplier?.wallet) < 0;
+
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
+    <div className="w-full flex flex-col gap-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1.5 mr-1 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+            Supplier Profile
+          </h1>
+        </div>
+
+        <Button
+          onClick={openUpdateSupplyModalFunc}
+          className="flex items-center gap-1.5 w-full sm:w-auto"
+        >
+          <Plus className="w-4 h-4" />
+          Update Balance
+        </Button>
+      </div>
+
       {SupplierByIdLoading || !SupplierByIdData ? (
         <>
-          {/* Skeleton for cards */}
-          <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <CustomCard key={index} className="w-full border-gray-200">
-                <div className="flex flex-col gap-6 items-start">
-                  <Skeleton className="h-4 w-[100px] bg-[#eef4ef]" />
-                  <Skeleton className="h-6 w-[70px] bg-[#eef4ef]" />
-                </div>
-              </CustomCard>
-            ))}
-          </div>
+          {/* Skeleton for info card */}
+          <Skeleton className="h-28 w-full rounded-2xl bg-grey-5" />
 
-          {/* Skeleton for search */}
-          <div className="w-1/2">
-            <Skeleton className="h-40 w-full bg-[#eef4ef]" />
-          </div>
-
-          {/* Skeleton for AllCustomers table */}
+          {/* Skeleton for history table */}
           <div className="w-full">
             <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-[#eef4ef]" />
+              <Skeleton className="h-10 w-full bg-grey-5" />
               {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-16 w-full bg-[#eef4ef] mt-2"
-                />
+                <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
               ))}
             </div>
           </div>
         </>
       ) : (
         <>
-          {/* cards container */}
-          <div className="flex justify-between items-start w-full">
-            <div className="w-1/2 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <CustomSupplyCard
-                title={"Purchase Value"}
-                amount={formatToNaira(purchaseValue)}
-              />
-              <CustomSupplyCard
-                title={"Wallet Balance"}
-                amount={formatToNaira(SupplierByIdData?.data?.wallet)}
-              />
-              <CustomSupplyCard
-                title={"Total Supplies"}
-                amount={SupplierByIdData?.data?.supply_history?.length}
-              />
+          {/* Supplier info card */}
+          <div className="w-full bg-white rounded-2xl border border-grey-5 p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 shrink-0 rounded-full bg-primary-green-300/10 flex items-center justify-center text-primary-green-300 font-extrabold text-xl">
+                  {initial}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-lg font-extrabold text-grey-1">
+                    {supplier?.name}
+                  </p>
+                  <p className="text-sm text-grey-3">{supplier?.phone}</p>
+                  <p className="text-xs text-grey-4">ID: {supplier?.id}</p>
+                </div>
+              </div>
 
-              <SupplyHistory
-                SupplierByIdData={SupplierByIdData}
-                SupplierByIdLoading={SupplierByIdLoading}
-              />
+              <div className="flex-1" />
+
+              <div className="grid grid-cols-3 gap-3 w-full sm:w-auto">
+                <div className="bg-info-2 rounded-xl px-4 py-3 min-w-[140px]">
+                  <p className="text-xs font-bold text-info-1">
+                    Purchase Value
+                  </p>
+                  <p className="text-lg font-extrabold text-info-1 mt-1">
+                    {formatToNaira(purchaseValue)}
+                  </p>
+                </div>
+                <div
+                  className={cn(
+                    "rounded-xl px-4 py-3 min-w-[140px]",
+                    isWalletNegative ? "bg-error-2" : "bg-success-2",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-xs font-bold",
+                      isWalletNegative ? "text-error-1" : "text-success-1",
+                    )}
+                  >
+                    Wallet Balance
+                  </p>
+                  <p
+                    className={cn(
+                      "text-lg font-extrabold mt-1",
+                      isWalletNegative ? "text-error-1" : "text-success-1",
+                    )}
+                  >
+                    {formatToNaira(supplier?.wallet)}
+                  </p>
+                </div>
+                <div className="bg-[#e0e7ff] rounded-xl px-4 py-3 min-w-[140px]">
+                  <p className="text-xs font-bold text-info-1">
+                    Total Supplies
+                  </p>
+                  <p className="text-lg font-extrabold text-info-1 mt-1">
+                    {supplier?.supply_history?.length ?? 0}
+                  </p>
+                </div>
+              </div>
             </div>
-
-            <Button
-              className="flex items-center py-0 md:py-[25px]"
-              onClick={openUpdateSupplyModalFunc}
-            >
-              <Plus />
-              Update Balance
-            </Button>
           </div>
-          <div className="w-1/2 flex flex-col items-start gap-3 bg-primary-green-200 border rounded-md border-primary-green-300 h-25 p-3">
-            <p className="font-[500] text-md text-primary-black-100">
-              Name: {SupplierByIdData?.data?.name}
-            </p>
-            <div className="flex gap-2 items-center">
-              <p className="font-[500] text-md text-primary-black-100">
-                Wallet Balance :
-              </p>
-              <p
-                className={`font-[500] text-md ${
-                  SupplierByIdData?.data?.wallet < 0
-                    ? "text-red-600"
-                    : "text-primary-black-100"
-                } `}
-              >
-                {formatToNaira(SupplierByIdData?.data?.wallet)}
+
+          {/* Supply history */}
+          <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
+            <div className="border-b border-grey-5 px-4 sm:px-6 py-4">
+              <p className="text-sm font-extrabold text-grey-1">
+                Supply History
               </p>
             </div>
-            <p className="font-[300] text-xs  text-gray-500">
-              ID: {SupplierByIdData?.data?.id}
-            </p>
-          </div>
-          {/* supply histoy */}
-
-          <div className="w-full">
             <SupplyHistory
-              SupplierByIdData={SupplierByIdData?.data}
+              SupplierByIdData={supplier}
               SupplierByIdLoading={SupplierByIdLoading}
             />
           </div>
-
-          {/* cards container content */}
         </>
       )}
 
@@ -182,7 +176,7 @@ const SupplierById = ({ id }: { id: string }) => {
         <div className="w-full ">
           <UpdateBalance
             closeModal={closeUpdateSupplyWalletModal}
-            wallet={SupplierByIdData?.data?.wallet}
+            wallet={supplier?.wallet}
           />
         </div>
       </CustomModal>
