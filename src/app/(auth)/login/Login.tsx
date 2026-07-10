@@ -53,14 +53,14 @@ const Login = () => {
       {/* Login Form (Right Side) */}
       {showLogin ? (
         <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-2 md:p-6 lg:p-12 bg-[#F4F7F4]">
-          <Card className="w-full md:max-w-[75%] p-2 md:p-8 border border-grey-5 bg-white rounded-2xl">
+          <Card className="w-full md:max-w-[75%] p-2 md:p-6 border border-grey-5 bg-white rounded-2xl">
             {/* Logo */}
 
-            <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
+            <Image src="/asset/sink2.png" alt="Logo" width={90} height={90} />
 
             {/* Welcome Message */}
-            <div className="mb-8 mt-4">
-              <h1 className="text-2xl font-bold text-grey-1">
+            <div className="mb-4 mt-2">
+              <h1 className="text-xl font-bold text-grey-1">
                 Welcome to Sync360 Admin
               </h1>
             </div>
@@ -69,20 +69,20 @@ const Login = () => {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-5"
+                className="space-y-3"
               >
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-bold text-grey-2">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         Email
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter your email"
-                          className="rounded-full bg-[#EEF4EF]"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
                         />
                       </FormControl>
@@ -95,7 +95,7 @@ const Login = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-bold text-grey-2">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         Password
                       </FormLabel>
                       <FormControl>
@@ -103,7 +103,7 @@ const Login = () => {
                           type="password"
                           showPasswordToggle
                           placeholder="Enter your password"
-                          className="rounded-full bg-[#EEF4EF]"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
                         />
                       </FormControl>
@@ -113,7 +113,7 @@ const Login = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full h-12 rounded-full"
+                  className="w-full h-10 rounded-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? <Spinner /> : "Continue"}
@@ -122,19 +122,19 @@ const Login = () => {
             </Form>
 
             {/* Additional Links */}
-            <div className="mt-6 space-y-4 text-center">
+            <div className="mt-3 space-y-2 text-center">
               <div className="flex justify-center items-center gap-2">
-                <p className="text-sm text-grey-3">
+                <p className="text-xs text-grey-3">
                   Don't have an account yet?
                 </p>
                 <Link href="/signup">
-                  <p className="text-sm text-primary-green-300 hover:text-primary-green-100 font-bold transition-colors">
+                  <p className="text-xs text-primary-green-300 hover:text-primary-green-100 font-bold transition-colors">
                     Sign Up
                   </p>
                 </Link>
               </div>
               <Link href="/forget-password">
-                <p className="text-sm text-grey-3 hover:text-grey-2 transition-colors">
+                <p className="text-xs text-grey-3 hover:text-grey-2 transition-colors">
                   Forget Password
                 </p>
               </Link>
