@@ -31,53 +31,50 @@ const ChangePass = () => {
     setOtp,
   } = useForgetPasswordHook({});
   return (
-    <>
-      <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-        <div className="w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-8 text-center">
-            Enter your new password
-          </h1>
-          <Form {...resetPasswordForm}>
-            <form
-              onSubmit={resetPasswordForm.handleSubmit(onSubmitPassword)}
-              className="space-y-6"
-            >
-              <FormField
-                control={resetPasswordForm.control}
-                name="password"
-                render={({ field: passwordField }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter New Password"
-                        {...passwordField}
-                        onChange={(e) => {
-                          passwordField.onChange(e); // Ensure onChange is properly handled
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+    <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-[#F4F7F4]">
+      <div className="w-full max-w-md p-6 md:p-8 border border-grey-5 bg-white rounded-2xl">
+        <h1 className="text-2xl font-bold text-grey-1 mb-8 text-center">
+          Enter your new password
+        </h1>
+        <Form {...resetPasswordForm}>
+          <form
+            onSubmit={resetPasswordForm.handleSubmit(onSubmitPassword)}
+            className="space-y-5"
+          >
+            <FormField
+              control={resetPasswordForm.control}
+              name="password"
+              render={({ field: passwordField }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-bold text-grey-2">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      showPasswordToggle
+                      placeholder="Enter New Password"
+                      {...passwordField}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <Button
-                type="submit"
-                className="w-full h-[48px]"
-                disabled={isResetting}
-              >
-                {isResetting ? <Spinner /> : "Reset"}
-              </Button>
-            </form>
-          </Form>
-        </div>
-
-        <Link href="/login">
-          <p className="text-[14px] text-blue-500 mt-2">Login</p>
-        </Link>
+            <Button type="submit" className="w-full h-12" disabled={isResetting}>
+              {isResetting ? <Spinner /> : "Reset"}
+            </Button>
+          </form>
+        </Form>
       </div>
-    </>
+
+      <Link href="/login">
+        <p className="text-sm text-primary-green-300 hover:text-primary-green-100 font-bold mt-4 transition-colors">
+          Login
+        </p>
+      </Link>
+    </div>
   );
 };
 

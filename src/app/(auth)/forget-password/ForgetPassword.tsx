@@ -45,56 +45,47 @@ const ForgetPassword = () => {
 
       {/* Login Form (Right Side) */}
       {!showChangePassword ? (
-        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-          <div className="w-full md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
+        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-[#F4F7F4]">
+          <div className="w-full md:max-w-[75%] p-6 md:p-8 border border-grey-5 bg-white rounded-2xl">
             <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
 
             {/* Welcome Message */}
-            <div className="mb-8">
-              <h1 className="text-2xl font-light text-gray-600 mb-2">
+            <div className="mb-8 mt-4">
+              <h1 className="text-2xl font-bold text-grey-1">
                 Enter your email to reset your password
               </h1>
             </div>
             <Form {...sendform}>
               <form
                 onSubmit={sendform.handleSubmit(onSubmitEmail)}
-                className="space-y-6"
+                className="space-y-5"
               >
                 <FormField
                   control={sendform.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      <FormLabel className="text-sm font-bold text-grey-2">
                         Email
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter email"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                          }}
-                        />
+                        <Input placeholder="Enter email" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <Button
-                  type="submit"
-                  className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
-                  disabled={isSubmitting}
-                >
+                <Button type="submit" className="w-full h-12" disabled={isSubmitting}>
                   {isSubmitting ? <Spinner /> : "Send"}
                 </Button>
               </form>
             </Form>
             <div className="w-full flex items-center justify-center">
               <Link href="/login">
-                <p className="text-[14px] text-blue-500 mt-2">Login</p>
+                <p className="text-sm text-primary-green-300 hover:text-primary-green-100 font-bold mt-2 transition-colors">
+                  Login
+                </p>
               </Link>
             </div>
           </div>

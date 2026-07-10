@@ -530,47 +530,47 @@ export default function Overview() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Sales overview line chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4">
+          {/* Row 1 — headers (grid stretches both to the same height,
+              so both charts below start at the same Y regardless of
+              how much header text either side has) */}
           <div>
             <p className="text-sm font-bold text-grey-1">Sales Overview</p>
             <p className="text-xs text-grey-4 mt-3">Total Sales</p>
-            <p className="text-2xl font-extrabold text-grey-1 mb-3">
+            <p className="text-2xl font-extrabold text-grey-1">
               {formatNumber(totalOrders)}
             </p>
-            <div className="h-[220px] sm:h-[260px]">
-              {SalesDashboardLoading ? (
-                <Skeleton className="h-full w-full bg-grey-5" />
-              ) : (
-                <Line data={lineData} options={lineOptions} />
-              )}
-            </div>
+          </div>
+          <div className="flex items-start justify-between">
+            <p className="text-sm font-bold text-grey-1">
+              Top Selling Products
+            </p>
+            <button
+              onClick={() => handleViewMore("top")}
+              className="text-xs text-primary-green-300 hover:text-primary-green-300/80 font-bold cursor-pointer"
+            >
+              View All
+            </button>
           </div>
 
-          {/* Top selling bar chart */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-bold text-grey-1">
-                Top Selling Products
-              </p>
-              <button
-                onClick={() => handleViewMore("top")}
-                className="text-xs text-primary-green-300 hover:text-primary-green-300/80 font-bold"
-              >
-                View All
-              </button>
-            </div>
-            <div className="h-[220px] sm:h-[260px]">
-              {SalesDashboardLoading ? (
-                <Skeleton className="h-full w-full bg-grey-5" />
-              ) : topSelling.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-sm text-grey-4">
-                  No sales data yet.
-                </div>
-              ) : (
-                <Bar data={topSellingData} options={topSellingOptions} />
-              )}
-            </div>
+          {/* Row 2 — charts, same fixed height on both sides */}
+          <div className="h-[220px] sm:h-[260px] mt-3">
+            {SalesDashboardLoading ? (
+              <Skeleton className="h-full w-full bg-grey-5" />
+            ) : (
+              <Line data={lineData} options={lineOptions} />
+            )}
+          </div>
+          <div className="h-[220px] sm:h-[260px] mt-3">
+            {SalesDashboardLoading ? (
+              <Skeleton className="h-full w-full bg-grey-5" />
+            ) : topSelling.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-grey-4">
+                No sales data yet.
+              </div>
+            ) : (
+              <Bar data={topSellingData} options={topSellingOptions} />
+            )}
           </div>
         </div>
       </section>

@@ -8,9 +8,9 @@ function Textarea({ className, ...props }: React.ComponentProps<"textarea">) {
       className={cn(
         "file:text-foreground p-3 placeholder:text-grey-4 selection:bg-primary-green-300 selection:text-white",
         "flex w-full min-w-0 rounded-xl bg-white border border-grey-5 text-sm shadow-xs transition-all outline-none",
-        "min-h-[100px] focus:border-primary-green-300 focus:ring-2 focus:ring-primary-green-300/20",
+        "min-h-[100px] focus:border-primary-green-300 focus:outline-none",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+        "aria-invalid:border-destructive",
         className
       )}
       {...props}
