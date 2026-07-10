@@ -87,8 +87,8 @@ const ExpenseTransactionsView = ({
   return (
     <div className="w-full space-y-4">
       {/* Filter bar */}
-      <div className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
-        <div className="flex flex-col md:flex-row gap-3">
+      <div className="rounded-xl border border-grey-5 bg-white p-3 sm:p-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3">
           <div className="flex-1 min-w-0">
             <SearchInput
               placeholder="Search by reference, category, or narration..."
@@ -99,7 +99,7 @@ const ExpenseTransactionsView = ({
               }}
             />
           </div>
-          <div className="grid grid-cols-3 md:flex md:flex-row gap-2 md:gap-3">
+          <div className="grid grid-cols-3 md:flex md:flex-row md:items-center gap-2 md:gap-3">
             <Select
               value={userId}
               onValueChange={(v) => {
@@ -107,7 +107,7 @@ const ExpenseTransactionsView = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="md:w-[170px]">
+              <SelectTrigger className="h-10 min-h-0 font-bold text-grey-2 md:w-[170px]">
                 <SelectValue placeholder="User" />
               </SelectTrigger>
               <SelectContent>
@@ -127,7 +127,7 @@ const ExpenseTransactionsView = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="md:w-[150px]">
+              <SelectTrigger className="h-10 min-h-0 font-bold text-grey-2 md:w-[150px]">
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
@@ -147,7 +147,7 @@ const ExpenseTransactionsView = ({
                 setPage(1);
               }}
             >
-              <SelectTrigger className="md:w-[140px]">
+              <SelectTrigger className="h-10 min-h-0 font-bold text-grey-2 md:w-[140px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +162,7 @@ const ExpenseTransactionsView = ({
         </div>
 
         <div className="mt-3 flex items-center justify-between flex-wrap gap-2">
-          <span className="text-[11px] text-slate-500">
+          <span className="text-xs font-bold text-grey-3">
             {filtered.length} {filtered.length === 1 ? "result" : "results"} ·{" "}
             {formatToNaira(filteredTotal)}
           </span>
@@ -171,7 +171,7 @@ const ExpenseTransactionsView = ({
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="text-xs text-slate-600 hover:bg-slate-100"
+              className="text-xs font-bold text-grey-2 hover:bg-secondary-6 hover:text-primary-green-300"
             >
               <FilterX className="w-3 h-3 mr-1" />
               Clear filters
