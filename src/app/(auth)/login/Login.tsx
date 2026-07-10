@@ -52,8 +52,8 @@ const Login = () => {
 
       {/* Login Form (Right Side) */}
       {showLogin ? (
-        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-6 lg:p-12 bg-[#F4F7F4]">
-          <Card className="w-full md:max-w-[75%] p-6 md:p-8 border border-grey-5 bg-white rounded-2xl">
+        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-2 md:p-6 lg:p-12 bg-[#F4F7F4]">
+          <Card className="w-full md:max-w-[75%] p-2 md:p-8 border border-grey-5 bg-white rounded-2xl">
             {/* Logo */}
 
             <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
@@ -80,7 +80,11 @@ const Login = () => {
                         Email
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your email" {...field} />
+                        <Input
+                          placeholder="Enter your email"
+                          className="rounded-full bg-[#EEF4EF]"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -99,6 +103,7 @@ const Login = () => {
                           type="password"
                           showPasswordToggle
                           placeholder="Enter your password"
+                          className="rounded-full bg-[#EEF4EF]"
                           {...field}
                         />
                       </FormControl>
@@ -108,7 +113,7 @@ const Login = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full h-12"
+                  className="w-full h-12 rounded-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? <Spinner /> : "Continue"}
@@ -160,6 +165,7 @@ const Login = () => {
                   value={verifyOtpPhone}
                   onChange={(value) => setVerifyOtpPhone(value)}
                   placeholder="Enter phone number"
+                  className="rounded-full bg-[#EEF4EF]"
                 />
                 <p className="text-xs text-warning-1 mt-1.5 mb-2">
                   Please enter the phone number you used in signing up.
@@ -168,7 +174,7 @@ const Login = () => {
 
               <div className="flex flex-col gap-2 mt-4">
                 <Button
-                  className="w-full h-[48px]"
+                  className="w-full h-[48px] rounded-full"
                   onClick={handleVerifyOtp}
                   disabled={isVerifying || otp.length !== 6 || !verifyOtpPhone}
                 >
@@ -177,7 +183,7 @@ const Login = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full h-[48px]"
+                  className="w-full h-[48px] rounded-full"
                   onClick={handleResendOtp}
                   disabled={isVerifying || !verifyOtpPhone}
                 >

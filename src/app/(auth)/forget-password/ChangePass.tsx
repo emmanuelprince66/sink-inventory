@@ -32,7 +32,7 @@ const ChangePass = () => {
   } = useForgetPasswordHook({});
   return (
     <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-[#F4F7F4]">
-      <div className="w-full max-w-md p-6 md:p-8 border border-grey-5 bg-white rounded-2xl">
+      <div className="w-full max-w-md p-2 md:p-8 border border-grey-5 bg-white rounded-2xl">
         <h1 className="text-2xl font-bold text-grey-1 mb-8 text-center">
           Enter your new password
         </h1>
@@ -54,6 +54,7 @@ const ChangePass = () => {
                       type="password"
                       showPasswordToggle
                       placeholder="Enter New Password"
+                      className="rounded-full bg-[#EEF4EF]"
                       {...passwordField}
                     />
                   </FormControl>
@@ -62,7 +63,11 @@ const ChangePass = () => {
               )}
             />
 
-            <Button type="submit" className="w-full h-12" disabled={isResetting}>
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-full"
+              disabled={isResetting}
+            >
               {isResetting ? <Spinner /> : "Reset"}
             </Button>
           </form>

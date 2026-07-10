@@ -42,16 +42,19 @@ const SignUp = () => {
       <WelcomeScreen />
 
       {/* SignUp Form (Right Side) */}
-      <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-[#F4F7F4]">
-        <div className="w-full md:max-w-[75%] p-6 md:p-8 border border-grey-5 bg-white rounded-2xl">
+      <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-2 md:p-8 bg-[#F4F7F4]">
+        <div className="w-full md:max-w-[75%] p-2 md:p-8 border border-grey-5 bg-white rounded-2xl">
           <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
 
-          <div className="mb-8 mt-4">
+          <div className="mb-8">
             <h1 className="text-2xl font-bold text-grey-1">Create Account</h1>
           </div>
           {/* Signup Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-5 w-full"
+            >
               {/* First Name and Last Name in same row */}
               <div className="flex gap-4">
                 <FormField
@@ -63,7 +66,11 @@ const SignUp = () => {
                         First Name
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          placeholder="John"
+                          className="rounded-full bg-[#EEF4EF]"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -78,7 +85,11 @@ const SignUp = () => {
                         Last Name
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          placeholder="Doe"
+                          className="rounded-full bg-[#EEF4EF]"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -103,6 +114,7 @@ const SignUp = () => {
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="Enter phone number"
+                        className="rounded-full bg-[#EEF4EF]"
                       />
                     </FormControl>
                     <FormMessage />
@@ -120,7 +132,11 @@ const SignUp = () => {
                       Email
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="example@email.com" {...field} />
+                      <Input
+                        placeholder="example@email.com"
+                        className="rounded-full bg-[#EEF4EF]"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,6 +157,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="At least 8 characters"
                         showPasswordToggle
+                        className="rounded-full bg-[#EEF4EF]"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -164,6 +181,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="Confirm your password"
                         showPasswordToggle
+                        className="rounded-full bg-[#EEF4EF]"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -188,6 +206,7 @@ const SignUp = () => {
                     <FormControl>
                       <Input
                         placeholder="Enter referral code"
+                        className="rounded-full bg-[#EEF4EF]"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -197,7 +216,11 @@ const SignUp = () => {
                 )}
               />
 
-              <Button type="submit" className="w-full h-12" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full h-12 rounded-full"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? <Spinner /> : "Create Account"}
               </Button>
             </form>
@@ -231,7 +254,7 @@ const SignUp = () => {
 
           <div className="flex flex-col gap-2 mt-4">
             <Button
-              className="w-full h-[48px]"
+              className="w-full h-[48px] rounded-full"
               onClick={handleVerifyOtp}
               disabled={isVerifying || otp.length !== 6}
             >
@@ -240,7 +263,7 @@ const SignUp = () => {
 
             <Button
               variant="outline"
-              className="w-full h-[48px]"
+              className="w-full h-[48px] rounded-full"
               onClick={handleResendOtp}
               disabled={isVerifying}
             >
