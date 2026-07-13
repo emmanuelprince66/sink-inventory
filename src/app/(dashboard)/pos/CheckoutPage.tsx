@@ -305,16 +305,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       ) : (
         <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
           {/* Sticky top — Checkout title + Add Customer/Attendant */}
-          <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex flex-col gap-3">
-            <p className="text-xl font-extrabold text-grey-1">Checkout</p>
-            <div className="grid grid-cols-1 gap-2">
+          <div className="shrink-0 p-3 pb-2 border-b border-grey-5 bg-white flex flex-col gap-2">
+            <p className="text-lg font-extrabold text-grey-1">Checkout</p>
+            <div
+              className={`grid gap-2 ${
+                user && user?.role === "OWNER" ? "grid-cols-2" : "grid-cols-1"
+              }`}
+            >
               <Button
                 variant="outline"
-                className="flex items-center border-grey-5 justify-start gap-2 h-12 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
+                className="flex items-center border-grey-5 justify-start gap-2 h-10 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
                 onClick={() => setIsCustomerDrawerOpen(true)}
               >
                 <UserPlus size={16} />
-                <span className="text-xs">
+                <span className="text-xs truncate">
                   {customer ? customer.name : "Add Customer"}
                 </span>
               </Button>
@@ -322,10 +326,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <Button
                   onClick={() => setIsAttendantDrawerOpen(true)}
                   variant="outline"
-                  className="flex items-center border-grey-5 justify-start gap-2 h-12 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
+                  className="flex items-center border-grey-5 justify-start gap-2 h-10 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
                 >
                   <Users size={16} />
-                  <p className="text-xs">
+                  <p className="text-xs truncate">
                     {attendant ? attendant.name : "Add Attendant"}
                   </p>
                 </Button>
@@ -333,22 +337,21 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
 
             <div className="flex justify-between items-center w-full">
-              <h2 className="text-sm font-bold text-grey-1">
+              <h2 className="text-xs font-bold text-grey-1">
                 Cart Items ({cartItems.length})
               </h2>
               <Button
                 variant="outline"
-                size="sm"
-                className="flex items-center justify-start border-error-1/30 text-error-1 hover:bg-error-2 gap-2"
+                className="flex items-center justify-start h-6 px-2 border-error-1/30 text-error-1 hover:bg-error-2 gap-1"
                 onClick={clearCartFunc}
               >
-                <p className="text-xs">Clear Cart</p>
+                <p className="text-[10px]">Clear Cart</p>
               </Button>
             </div>
           </div>
 
           {/* Scrollable middle — Cart items */}
-          <div className="h-full min-h-0 overflow-y-auto p-4">
+          <div className="h-full min-h-[180px] overflow-y-auto p-4 pb-8">
             <div className="border rounded-xl bg-white overflow-hidden border-grey-5">
               {cartItems.length === 0 ? (
                 <div className="p-6 text-center text-grey-4 text-sm">
@@ -367,49 +370,49 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     return (
                       <div
                         key={item.id}
-                        className="p-3 flex items-start hover:bg-grey-6/60 transition-colors"
+                        className="p-3 hover:bg-grey-6/60 transition-colors"
                       >
-                        <div className="h-10 w-10 rounded-lg overflow-hidden mr-3 bg-grey-6 flex-shrink-0 border border-grey-5">
-                          {item.image && (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
-                        </div>
-
-                        <div className="flex-grow">
-                          <div className="flex items-center gap-1">
-                            <h3 className="font-sm text-grey-1">
-                              {item.name}
-                            </h3>
-                            {hasVariations && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-4 px-1 text-[8px] hover:bg-secondary-6"
-                                onClick={() => openVariationChanger(item)}
-                              >
-                                <RefreshCw
-                                  size={10}
-                                  className="text-success-1"
-                                />
-                              </Button>
-                            )}
-                            {item.allow_tax && vatCalculation.enabled && (
-                              <span className="text-[8px] px-1.5 py-0.5 bg-info-2 text-info-1 rounded-full font-medium">
-                                +VAT
-                              </span>
+                        {/* Top row — image, name/SKU/price, remove */}
+                        <div className="flex items-start gap-3">
+                          <div className="h-12 w-12 rounded-lg overflow-hidden bg-grey-6 flex-shrink-0 border border-grey-5">
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                              />
                             )}
                           </div>
-                          <p className="text-[10px] text-grey-4">
-                            SKU: {item.sku}
-                          </p>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <h3 className="text-sm font-bold text-grey-1 truncate">
+                                {item.name}
+                              </h3>
+                              {hasVariations && (
+                                <button
+                                  type="button"
+                                  className="shrink-0 p-0.5 rounded hover:bg-secondary-6 cursor-pointer"
+                                  onClick={() => openVariationChanger(item)}
+                                >
+                                  <RefreshCw
+                                    size={11}
+                                    className="text-success-1"
+                                  />
+                                </button>
+                              )}
+                              {item.allow_tax && vatCalculation.enabled && (
+                                <span className="shrink-0 text-[9px] px-1.5 py-0.5 bg-info-2 text-info-1 rounded-full font-bold">
+                                  +VAT
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-grey-4">
+                              SKU: {item.sku}
+                            </p>
+
                             {isEditingPrice ? (
-                              <div className="flex items-start flex-col gap-1">
+                              <div className="flex items-center flex-wrap gap-1 mt-1">
                                 <input
                                   type="number"
                                   min="0"
@@ -428,112 +431,121 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                   }`}
                                   autoFocus
                                 />
-                                <div className="flex gap-1 mb-[4px]">
-                                  <Button
-                                    variant="outline"
-                                    className="h-4 px-1 text-[8px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
-                                    onClick={() => applyPriceEdit(item.id)}
-                                    disabled={
-                                      !priceEditInputs[item.id] || !!priceError
-                                    }
-                                  >
-                                    <p className="text-[9px]">Save</p>
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-4 px-1 text-[8px] border-grey-5 hover:border-error-1 hover:bg-error-2"
-                                    onClick={() => cancelPriceEdit(item.id)}
-                                  >
-                                    <p className="text-[9px]">Cancel</p>
-                                  </Button>
-                                </div>
+                                <Button
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                                  onClick={() => applyPriceEdit(item.id)}
+                                  disabled={
+                                    !priceEditInputs[item.id] || !!priceError
+                                  }
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="h-6 px-2 text-[10px] border-grey-5 hover:border-error-1 hover:bg-error-2"
+                                  onClick={() => cancelPriceEdit(item.id)}
+                                >
+                                  Cancel
+                                </Button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1">
-                                <p className="text-[10px] font-semibold text-primary-green-300">
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <p className="text-xs font-bold text-primary-green-300">
                                   {formatToNaira(currentPrice)}
                                 </p>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-4 w-4 p-0 hover:bg-grey-6"
+                                <button
+                                  type="button"
+                                  className="p-1 rounded hover:bg-grey-6 cursor-pointer"
                                   onClick={() =>
                                     startPriceEdit(item.id, currentPrice)
                                   }
                                 >
-                                  <Edit3 size={10} className="text-grey-4" />
-                                </Button>
+                                  <Edit3 size={11} className="text-grey-4" />
+                                </button>
+                              </div>
+                            )}
+
+                            {priceError && (
+                              <p className="text-[10px] text-error-1 mt-0.5">
+                                {priceError}
+                              </p>
+                            )}
+                            {item.quantity !== undefined && (
+                              <p className="text-[10px] text-grey-4 mt-0.5">
+                                Available: {item.quantity}
+                              </p>
+                            )}
+                            {item.discount_threshold && (
+                              <p className="text-[10px] text-info-1 mt-0.5">
+                                Discount threshold: {item.discount_threshold}
+                              </p>
+                            )}
+                            {discountInfo && (
+                              <div className="text-[10px] text-success-1 font-bold mt-0.5">
+                                <p>
+                                  Discount:{" "}
+                                  {formatToNaira(discountInfo.perUnitDiscount)}{" "}
+                                  per unit
+                                </p>
+                                <p>
+                                  Total Discount: -
+                                  {formatToNaira(
+                                    discountInfo.totalItemDiscount,
+                                  )}
+                                </p>
                               </div>
                             )}
                           </div>
 
-                          {priceError && (
-                            <p className="text-[8px] text-error-1">
-                              {priceError}
-                            </p>
-                          )}
-
-                          {item.quantity !== undefined && (
-                            <p className="text-[8px] text-grey-4">
-                              Available: {item.quantity}
-                            </p>
-                          )}
-                          {item.discount_threshold && (
-                            <p className="text-[8px] text-info-1">
-                              Discount threshold: {item.discount_threshold}
-                            </p>
-                          )}
-                          {discountInfo && (
-                            <div className="text-[8px] text-success-1 font-semibold">
-                              <p>
-                                Discount:{" "}
-                                {formatToNaira(discountInfo.perUnitDiscount)}{" "}
-                                per unit
-                              </p>
-                              <p>
-                                Total Discount: -
-                                {formatToNaira(discountInfo.totalItemDiscount)}
-                              </p>
-                            </div>
-                          )}
+                          <button
+                            type="button"
+                            className="shrink-0 text-error-1 p-1.5 rounded-full cursor-pointer hover:bg-error-2"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <Trash2 size={14} />
+                          </button>
                         </div>
 
-                        <div className="flex flex-col items-end space-y-2 ml-2">
-                          <div className="flex items-center space-x-2">
+                        {/* Controls — qty stepper, bulk qty, decimal qty */}
+                        <div className="mt-2.5 flex items-center flex-wrap gap-x-3 gap-y-2">
+                          <div className="flex items-center gap-2">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-7 w-7 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => decrementQuantity(item.id)}
                               disabled={(item.cartQuantity || 1) <= 1}
                             >
                               <MinusCircle
-                                size={3}
+                                size={14}
                                 className="text-primary-green-300"
                               />
                             </Button>
 
-                            <span className="w-8 text-center text-grey-2">
+                            <span className="w-6 text-center text-sm font-bold text-grey-1">
                               {Math.floor(item.cartQuantity || 1)}
                             </span>
 
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-8 w-8 border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-7 w-7 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => incrementQuantity(item.id)}
                               disabled={
                                 (item.cartQuantity || 1) >=
                                 (item.quantity ?? Infinity)
                               }
                             >
-                              <PlusCircle size={3} className="text-primary-green-300" />
+                              <PlusCircle
+                                size={14}
+                                className="text-primary-green-300"
+                              />
                             </Button>
                           </div>
 
                           <div className="flex items-center gap-1">
-                            <span className="text-[8px] text-grey-4">
+                            <span className="text-[10px] text-grey-4 whitespace-nowrap">
                               Bulk Qty:
                             </span>
                             <input
@@ -554,7 +566,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 px-2 text-[8px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-6 px-2 text-[10px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => applyBulkQuantity(item.id)}
                               disabled={
                                 !bulkQuantityInputs[item.id] || !!bulkError
@@ -563,15 +575,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               Set
                             </Button>
                           </div>
-                          {bulkError && (
-                            <p className="text-[8px] text-error-1">
-                              {bulkError}
-                            </p>
-                          )}
 
                           {item?.type?.toLocaleLowerCase() === "product" && (
                             <div className="flex items-center gap-1">
-                              <span className="text-[8px] text-grey-4">
+                              <span className="text-[10px] text-grey-4 whitespace-nowrap">
                                 Decimal Qty:
                               </span>
                               <Button
@@ -584,7 +591,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 disabled={(item.cartQuantity || 0.5) <= 0.5}
                               >
                                 <MinusCircle
-                                  size={2}
+                                  size={12}
                                   className="text-primary-green-300"
                                 />
                               </Button>
@@ -609,7 +616,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-6 w-6 border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                                className="h-6 w-6 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
                                   incrementDecimalQuantity(item.id)
                                 }
@@ -619,20 +626,18 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 }
                               >
                                 <PlusCircle
-                                  size={2}
+                                  size={12}
                                   className="text-primary-green-300"
                                 />
                               </Button>
                             </div>
                           )}
-
-                          <div
-                            className="text-error-1 p-1 rounded-full cursor-pointer hover:bg-error-2"
-                            onClick={() => removeFromCart(item.id)}
-                          >
-                            <Trash2 size={1} className="w-3 h-3" />
-                          </div>
                         </div>
+                        {bulkError && (
+                          <p className="text-[10px] text-error-1 mt-1">
+                            {bulkError}
+                          </p>
+                        )}
                       </div>
                     );
                   })}
@@ -642,16 +647,16 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
 
           {/* Sticky bottom — Order Summary */}
-          <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5">
-            <h2 className="text-sm font-bold text-grey-1 mb-3">
+          <div className="shrink-0 bg-white p-2.5 pt-2 border-t border-grey-5">
+            <h2 className="text-xs font-bold text-grey-1 mb-1.5">
               Order Summary
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-1.5">
               <div className="flex justify-between">
-                <span className="text-grey-3 text-xs">
+                <span className="text-grey-3 text-[11px]">
                   Subtotal ({cartItems.length} items)
                 </span>
-                <span className="font-bold text-xs text-grey-1">
+                <span className="font-bold text-[11px] text-grey-1">
                   {formatToNaira(subtotal)}
                 </span>
               </div>
@@ -659,11 +664,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {automaticDiscountAmount > 0 && (
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="text-grey-3 text-xs">
+                    <span className="text-grey-3 text-[11px]">
                       Discount Applied
                     </span>
                     {eligibleItems.length > 0 && (
-                      <div className="text-[10px] text-grey-4">
+                      <div className="text-[9px] text-grey-4">
                         {eligibleItems.map((item: any) => {
                           const discountInfo = getItemDiscountDisplay(item);
                           return discountInfo ? (
@@ -677,7 +682,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                       </div>
                     )}
                   </div>
-                  <span className="font-bold text-xs text-success-1">
+                  <span className="font-bold text-[11px] text-success-1">
                     -{formatToNaira(automaticDiscountAmount)}
                   </span>
                 </div>
@@ -687,20 +692,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               {vatCalculation.enabled && vatCalculation.amount > 0 && (
                 <>
                   <div className="flex justify-between">
-                    <span className="text-grey-3 text-xs">
+                    <span className="text-grey-3 text-[11px]">
                       Subtotal (before VAT)
                     </span>
-                    <span className="font-bold text-xs text-grey-1">
+                    <span className="font-bold text-[11px] text-grey-1">
                       {formatToNaira(totalBeforeTax)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <div>
-                      <span className="text-grey-3 text-xs">
+                      <span className="text-grey-3 text-[11px]">
                         VAT ({vatCalculation.rate}%)
                       </span>
                       {vatCalculation.itemsBreakdown.length > 0 && (
-                        <div className="text-[10px] text-grey-4">
+                        <div className="text-[9px] text-grey-4">
                           {vatCalculation.itemsBreakdown.map((item: any) => (
                             <div key={item.id}>
                               {item.name}: {formatToNaira(item.itemVat)}
@@ -709,17 +714,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                         </div>
                       )}
                     </div>
-                    <span className="font-bold text-xs text-info-1">
+                    <span className="font-bold text-[11px] text-info-1">
                       +{formatToNaira(vatCalculation.amount)}
                     </span>
                   </div>
                 </>
               )}
 
-              <Separator className="my-2 bg-grey-5" />
-              <div className="flex justify-between">
-                <span className="font-bold text-sm text-grey-1">Total</span>
-                <span className="font-extrabold text-base text-primary-green-300">
+              <Separator className="my-1.5 bg-grey-5" />
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-xs text-grey-1">Total</span>
+                <span className="font-extrabold text-sm text-primary-green-300">
                   {formatToNaira(
                     vatCalculation.enabled
                       ? vatCalculation.totalWithVat
@@ -728,7 +733,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </span>
               </div>
               <Button
-                className="w-full mt-1 py-3 text-base font-bold"
+                className="w-full mt-1 h-9 text-xs font-bold"
                 onClick={() => setShowReceipt(true)}
                 disabled={
                   cartItems.length === 0 ||

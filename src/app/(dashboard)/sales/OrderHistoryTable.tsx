@@ -1,10 +1,7 @@
-import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
 import { useSalesHook } from "@/hooks/useSalesHook";
-import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useEffect, useState } from "react"; // Added useEffect
 import { useOrderHistoryColumn } from "./OrderHistoryColumn";
-import OrderHistoryDetails from "./OrderHistoryDetails";
 import { SalesOrderData } from "./types";
 
 const OrderHistoryTable = ({
@@ -18,16 +15,9 @@ const OrderHistoryTable = ({
   setPage: (page: number) => void;
   page: number; // Added page prop
 }) => {
-  const {
-    openOrderHistoryModal,
-    handleOrderHistoryRowClick,
-    closeOpenOrderHistoryModal,
-    orderDetails,
-  } = useSalesHook();
+  const { handleOrderHistoryRowClick } = useSalesHook();
 
   const columns = useOrderHistoryColumn(); // Use the hook here
-
-  const businessData = useBusinessDataStore((state) => state.businessData);
 
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(response?.data?.limit || 15);
@@ -55,38 +45,21 @@ const OrderHistoryTable = ({
   };
 
   return (
-    <>
-      <CustomTable
-        loading={loading}
-        noDataText="No orders found"
-        columns={columns}
-        data={response?.data?.results || []}
-        onRowClick={handleOrderHistoryRowClick}
-        bordered={false}
-        pagination={{
-          currentPage,
-          totalPages,
-          pageSize,
-          onPageChange: handlePageChange,
-          onPageSizeChange: handlePageSizeChange,
-        }}
-      />
-
-      <CustomModal
-        isOpen={openOrderHistoryModal}
-        onClose={closeOpenOrderHistoryModal}
-        trigger={false}
-        title="Order Details"
-      >
-        <div className="w-full">
-          <OrderHistoryDetails
-            orderDetails={orderDetails}
-            business={businessData}
-            closeModal={closeOpenOrderHistoryModal}
-          />
-        </div>
-      </CustomModal>
-    </>
+    <CustomTable
+      loading={loading}
+      noDataText="No orders found"
+      columns={columns}
+      data={response?.data?.results || []}
+      onRowClick={handleOrderHistoryRowClick}
+      bordered={false}
+      pagination={{
+        currentPage,
+        totalPages,
+        pageSize,
+        onPageChange: handlePageChange,
+        onPageSizeChange: handlePageSizeChange,
+      }}
+    />
   );
 };
 

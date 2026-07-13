@@ -271,7 +271,7 @@ const Pos: React.FC = () => {
                 Cart Items ({cartItems.length})
               </h2>
             </div>
-            <div className="flex-1 min-h-0 overflow-y-auto px-3 md:px-4">
+            <div className="flex-1 min-h-[180px] overflow-y-auto px-3 md:px-4">
               <div className="border border-grey-5 rounded-xl bg-white overflow-hidden">
                 <div className="divide-y divide-grey-6">
                   {cartItems.map((item: any) => (
@@ -321,12 +321,15 @@ const Pos: React.FC = () => {
   return (
     // Fixed to the viewport minus the dashboard shell's TopBar (64px) + content
     // padding (py-6 = 48px), so the header/tabs stay put and only the product
-    // grid and cart items scroll — no page-level scroll to fight with.
+    // grid and cart items scroll — no page-level scroll to fight with. The
+    // product grid and cart items containers each carry their own min-height
+    // floor (see below) so they never collapse to invisible on a squeezed
+    // viewport (small laptop + browser zoom).
     <div className="w-full h-[calc(100dvh-112px)] grid grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden">
       {/* Header with fixed height */}
-      <header className="w-full h-16 min-h-[4rem] shrink-0 bg-white border-b border-grey-5 flex items-center justify-between px-4">
+      <header className="w-full h-14 min-h-[3.5rem] shrink-0 bg-white border-b border-grey-5 flex items-center justify-between px-4">
         <div className="flex items-center gap-3">
-          <p className="text-xl md:text-2xl font-extrabold text-grey-1">
+          <p className="text-lg md:text-xl font-extrabold text-grey-1">
             POS System
           </p>
           {isPharmacist && (
@@ -363,7 +366,7 @@ const Pos: React.FC = () => {
 
       <div className="grid grid-cols-1 grid-rows-1 lg:grid-cols-[7fr_3fr] overflow-hidden min-h-0">
         {/* Products Section */}
-        <main className="w-full h-full  min-h-0 grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden lg:border-r border-grey-5">
+        <main className="w-full h-full min-h-0 grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden lg:border-r border-grey-5">
           {/* Sticky products header — title, search, scan */}
           <div className="shrink-0 p-4 border-b border-grey-5 bg-white">
             <div className="w-full flex flex-col md:flex-row justify-between items-center gap-2">
@@ -394,7 +397,7 @@ const Pos: React.FC = () => {
           </div>
 
           {/* Scrollable product grid */}
-          <div className="h-full min-h-0 overflow-y-auto p-4 pb-[7rem] md:pb-[5rem]">
+          <div className="h-full min-h-[220px] overflow-y-auto p-4 pb-[7rem] md:pb-[5rem]">
             {ProductDataLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (

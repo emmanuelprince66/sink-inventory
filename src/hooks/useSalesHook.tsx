@@ -4,7 +4,9 @@ import { useFetchOrderHistoryQuery } from "@/api/sales/fetch-order-history";
 import { useFetchSalesHistoryQuery } from "@/api/sales/fetch-sales";
 import { useReverseSaleMutation } from "@/api/sales/reverse-sale";
 import { queryKey } from "@/constants/query-key";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useSelectedOrderStore } from "@/lib/store/useSelectedOrderStore";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useRouter } from "next/navigation";
@@ -97,14 +99,18 @@ export const useSalesHook = ({
 
   const debouncedSearchTerm = useDebounce(searchInput, 500);
 
-  const [orderDetails, setOrderDetails] = useState<any>({});
-  const [openOrderHistoryModal, setOpenOrderHistoryModal] = useState(false);
-  const closeOpenOrderHistoryModal = () => setOpenOrderHistoryModal(false);
-  const openOrderHistoryModalFunc = () => setOpenOrderHistoryModal(true);
+  const businessData = useBusinessDataStore((state) => state.businessData);
+  const setSelectedOrder = useSelectedOrderStore(
+    (state) => state.setSelectedOrder,
+  );
 
+  // Order History has no fetch-by-id endpoint (unlike Orders), so the
+  // clicked row + current business snapshot are stashed in a persisted
+  // store and read back on the dedicated detail page.
   const handleOrderHistoryRowClick = (row: any) => {
-    setOrderDetails(row?.original);
-    openOrderHistoryModalFunc();
+    const order = row?.original;
+    setSelectedOrder(order, businessData);
+    router.push(`/sales/order-history/${order?.id}`);
   };
 
   const handleProductsRowClick = (row: any) => {
@@ -194,11 +200,8 @@ export const useSalesHook = ({
     loading,
     page,
     AttendantsLoading,
-    openOrderHistoryModal,
-    orderDetails,
     handleOrderHistoryRowClick,
     handleProductsRowClick,
-    closeOpenOrderHistoryModal,
     SalesOrderLoading,
     SalesOrderData,
   };

@@ -457,9 +457,9 @@ const OrderHistoryDetails = ({
 
   return (
     <>
-      <div className="flex items-center justify-center">
-        <div className="bg-white w-full max-w-full overflow-hidden max-h-[90vh] flex flex-col">
-          <div className="overflow-y-auto flex-1">
+      <div className="w-full">
+        <div className="w-full">
+          <div>
             {/* Printable content - Styled like PDF receipt */}
             <div
               ref={receiptRef}
