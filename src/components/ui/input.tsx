@@ -26,12 +26,12 @@ function Input({
         type={isPasswordField && showPassword ? "text" : type}
         data-slot="input"
         className={cn(
-          "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
-          "flex w-full min-w-0 rounded-md bg-[#EEF4EF] px-4 text-base shadow-xs transition-all outline-none",
+          "file:text-foreground placeholder:text-grey-4 selection:bg-primary-green-300 selection:text-white",
+          "flex w-full min-w-0 rounded-md bg-white border border-grey-5 px-4 text-base shadow-xs transition-all outline-none",
           "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
           "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          "h-12 border-0 focus:border-0 focus:outline-none focus:ring-2 focus:ring-[#329661]",
-          "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40",
+          "h-12 focus:border-primary-green-300 focus:outline-none",
+          "aria-invalid:border-destructive",
           icon || (isPasswordField && showPasswordToggle) ? "pr-10" : "",
           className
         )}

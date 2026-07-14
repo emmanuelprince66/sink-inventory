@@ -58,7 +58,7 @@ interface KpiProps {
   value: string | number;
   subtitle: string;
   icon: React.ReactNode;
-  iconBg: string;
+  cardBg: string;
   change: string;
   changeLabel: string;
   changeTone: "up" | "flat";
@@ -70,7 +70,7 @@ const KpiCard = ({
   value,
   subtitle,
   icon,
-  iconBg,
+  cardBg,
   change,
   changeLabel,
   changeTone,
@@ -78,37 +78,32 @@ const KpiCard = ({
 }: KpiProps) => {
   if (loading) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-5">
-        <Skeleton className="h-10 w-10 rounded-full mb-4 bg-gray-100" />
-        <Skeleton className="h-3 w-20 mb-3 bg-gray-100" />
-        <Skeleton className="h-7 w-16 mb-2 bg-gray-100" />
-        <Skeleton className="h-3 w-24 bg-gray-100" />
+      <div className="rounded-2xl border border-border-tint bg-white p-4">
+        <Skeleton className="h-9 w-9 rounded-full mb-3 bg-grey-5" />
+        <Skeleton className="h-3 w-20 mb-2 bg-grey-5" />
+        <Skeleton className="h-6 w-16 mb-1 bg-grey-5" />
+        <Skeleton className="h-3 w-24 bg-grey-5" />
       </div>
     );
   }
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-sm transition-shadow">
-      <div
-        className={cn(
-          "w-10 h-10 rounded-full flex items-center justify-center mb-3",
-          iconBg,
-        )}
-      >
+    <div className={cn("rounded-2xl border border-border-tint p-4", cardBg)}>
+      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center mb-3 flex-shrink-0">
         {icon}
       </div>
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-      <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
-      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100 text-xs">
+      <p className="text-xs font-bold text-grey-2">{title}</p>
+      <p className="text-2xl font-extrabold text-grey-1 mt-1">{value}</p>
+      <p className="text-xs text-grey-3 mt-0.5">{subtitle}</p>
+      <div className="flex items-center gap-1.5 mt-2 text-xs">
         <span
           className={cn(
-            "font-medium flex items-center gap-0.5",
-            changeTone === "up" ? "text-green-600" : "text-gray-400",
+            "font-bold flex items-center gap-0.5",
+            changeTone === "up" ? "text-success-1" : "text-grey-4",
           )}
         >
           {changeTone === "up" ? "↑" : "—"} {change}
         </span>
-        <span className="text-gray-400">{changeLabel}</span>
+        <span className="text-grey-3">{changeLabel}</span>
       </div>
     </div>
   );
@@ -211,7 +206,7 @@ export default function Overview() {
         name: p.product__name || "—",
         units: p.quantity_sold || 0,
         status: "Expired",
-        tone: "bg-red-50 text-red-600 border border-red-100",
+        tone: "bg-error-2 text-error-1 border border-error-1/20",
       }),
     );
     (data?.low_stock || []).forEach((p: any) =>
@@ -219,7 +214,7 @@ export default function Overview() {
         name: p.product__name || "—",
         units: p.quantity_sold || 0,
         status: "Low Stock",
-        tone: "bg-amber-50 text-amber-600 border border-amber-100",
+        tone: "bg-warning-2 text-warning-1 border border-warning-1/20",
       }),
     );
     (data?.out_of_stock || []).forEach((p: any) =>
@@ -227,7 +222,7 @@ export default function Overview() {
         name: p.product__name || "—",
         units: p.quantity_sold || 0,
         status: "Out of Stock",
-        tone: "bg-red-50 text-red-600 border border-red-100",
+        tone: "bg-error-2 text-error-1 border border-error-1/20",
       }),
     );
     return rows;
@@ -246,7 +241,7 @@ export default function Overview() {
         title: "New sale completed",
         subtitle: data.top_selling_products[0].product__name,
         when: "2 min ago",
-        icon: <ClipboardList className="w-4 h-4 text-gray-500" />,
+        icon: <ClipboardList className="w-4 h-4 text-grey-3" />,
       });
     }
     if (data?.low_stock?.[0]) {
@@ -254,7 +249,7 @@ export default function Overview() {
         title: "Inventory updated",
         subtitle: `${data.low_stock[0].product__name} — stock adjusted`,
         when: "15 min ago",
-        icon: <Package className="w-4 h-4 text-gray-500" />,
+        icon: <Package className="w-4 h-4 text-grey-3" />,
       });
     }
     if (data?.fast_moving_product?.[0]) {
@@ -262,7 +257,7 @@ export default function Overview() {
         title: "Product updated",
         subtitle: data.fast_moving_product[0].product__name,
         when: "1 hour ago",
-        icon: <Activity className="w-4 h-4 text-gray-500" />,
+        icon: <Activity className="w-4 h-4 text-grey-3" />,
       });
     }
     return acts;
@@ -275,14 +270,14 @@ export default function Overview() {
       {
         label: "Sales",
         data: salesSeries.values,
-        borderColor: "#10b981",
+        borderColor: "#329661",
         backgroundColor: "rgba(16, 185, 129, 0.12)",
         fill: true,
         tension: 0.4,
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 5,
-        pointBackgroundColor: "#10b981",
+        pointBackgroundColor: "#329661",
       },
     ],
   };
@@ -316,7 +311,7 @@ export default function Overview() {
       {
         label: "Sold",
         data: topSelling.map((t: any) => t.value),
-        backgroundColor: "#3b82f6",
+        backgroundColor: "#329661",
         borderRadius: 6,
         barThickness: 14,
       },
@@ -356,7 +351,7 @@ export default function Overview() {
           inventoryStatus.low,
           inventoryStatus.out,
         ],
-        backgroundColor: ["#10b981", "#eab308", "#ef4444"],
+        backgroundColor: ["#329661", "#d97706", "#e53e3e"],
         borderWidth: 0,
       },
     ],
@@ -380,29 +375,29 @@ export default function Overview() {
     {
       title: "Add New Product",
       description: "Expand your inventory",
-      icon: <Plus className="w-4 h-4 text-blue-600" />,
-      bg: "bg-blue-50",
+      icon: <Plus className="w-4 h-4 text-info-1" />,
+      bg: "bg-info-2",
       href: "/new-add-product",
     },
     {
       title: "Create Campaign",
       description: "Promote your products",
-      icon: <Megaphone className="w-4 h-4 text-purple-600" />,
-      bg: "bg-purple-50",
+      icon: <Megaphone className="w-4 h-4 text-[#7c3aed]" />,
+      bg: "bg-[#f5f3ff]",
       href: "/campaign",
     },
     {
       title: "View Reports",
       description: "Check detailed analytics",
-      icon: <BarChart3 className="w-4 h-4 text-green-600" />,
-      bg: "bg-green-50",
+      icon: <BarChart3 className="w-4 h-4 text-success-1" />,
+      bg: "bg-success-2",
       href: "/analytics",
     },
     {
       title: "Manage Expenses",
       description: "Track your spending",
-      icon: <DollarSign className="w-4 h-4 text-amber-600" />,
-      bg: "bg-amber-50",
+      icon: <DollarSign className="w-4 h-4 text-warning-1" />,
+      bg: "bg-warning-2",
       href: "/expenses",
     },
   ];
@@ -410,13 +405,13 @@ export default function Overview() {
   const isPrivileged = role === "OWNER" || role === "ADMIN-ATTENDANT";
 
   return (
-    <div className="flex min-h-screen w-full flex-col gap-5 p-4 md:p-6 bg-gray-50">
+    <div className="flex w-full flex-col gap-4 sm:gap-5">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-grey-1">
           Overview
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-grey-3 mt-1">
           Here's what's happening with your business today.
         </p>
       </div>
@@ -431,7 +426,7 @@ export default function Overview() {
                 value=""
                 subtitle=""
                 icon={null}
-                iconBg=""
+                cardBg=""
                 change=""
                 changeLabel=""
                 changeTone="flat"
@@ -442,7 +437,7 @@ export default function Overview() {
                 value=""
                 subtitle=""
                 icon={null}
-                iconBg=""
+                cardBg=""
                 change=""
                 changeLabel=""
                 changeTone="flat"
@@ -453,7 +448,7 @@ export default function Overview() {
                 value=""
                 subtitle=""
                 icon={null}
-                iconBg=""
+                cardBg=""
                 change=""
                 changeLabel=""
                 changeTone="flat"
@@ -464,7 +459,7 @@ export default function Overview() {
                 value=""
                 subtitle=""
                 icon={null}
-                iconBg=""
+                cardBg=""
                 change=""
                 changeLabel=""
                 changeTone="flat"
@@ -477,8 +472,8 @@ export default function Overview() {
                 title="Total Sales"
                 value={formatNumber(totalOrders)}
                 subtitle="Total Orders"
-                icon={<DollarSign className="w-5 h-5 text-green-600" />}
-                iconBg="bg-green-50"
+                icon={<DollarSign className="w-4 h-4 text-success-1" />}
+                cardBg="bg-success-2"
                 change="+12.5%"
                 changeLabel="vs last 7 days"
                 changeTone={totalOrders > 0 ? "up" : "flat"}
@@ -487,8 +482,8 @@ export default function Overview() {
                 title="Today's Sales"
                 value={formatNumber(ordersToday)}
                 subtitle="Orders Today"
-                icon={<ShoppingCart className="w-5 h-5 text-orange-600" />}
-                iconBg="bg-orange-50"
+                icon={<ShoppingCart className="w-4 h-4 text-warning-1" />}
+                cardBg="bg-warning-2"
                 change="0%"
                 changeLabel="vs yesterday"
                 changeTone="flat"
@@ -497,8 +492,8 @@ export default function Overview() {
                 title="New Customers"
                 value={formatNumber(newCustomers)}
                 subtitle="This Month"
-                icon={<UserPlus className="w-5 h-5 text-blue-600" />}
-                iconBg="bg-blue-50"
+                icon={<UserPlus className="w-4 h-4 text-info-1" />}
+                cardBg="bg-info-2"
                 change="0%"
                 changeLabel="vs last month"
                 changeTone="flat"
@@ -507,8 +502,8 @@ export default function Overview() {
                 title="Returning Customers"
                 value={formatNumber(returningCustomers)}
                 subtitle="This Month"
-                icon={<Users className="w-5 h-5 text-amber-600" />}
-                iconBg="bg-amber-50"
+                icon={<Users className="w-4 h-4 text-[#7c3aed]" />}
+                cardBg="bg-[#f5f3ff]"
                 change="0%"
                 changeLabel="vs last month"
                 changeTone={returningCustomers > 0 ? "up" : "flat"}
@@ -519,15 +514,15 @@ export default function Overview() {
       )}
 
       {/* Business Performance */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+      <section className="rounded-2xl border border-border-tint bg-white p-4 sm:p-5">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900">
+          <h2 className="text-base sm:text-lg font-extrabold text-grey-1">
             Business Performance
           </h2>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as "7" | "30" | "90")}
-            className="text-xs sm:text-sm border border-gray-200 rounded-md px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="text-xs sm:text-sm font-bold border border-border-tint rounded-full px-4 py-2 bg-white text-grey-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-green-300/30"
           >
             <option value="7">Last 7 Days</option>
             <option value="30">Last 30 Days</option>
@@ -535,47 +530,47 @@ export default function Overview() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Sales overview line chart */}
-          <div className="border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-900">Sales Overview</p>
-            <p className="text-xs text-gray-400 mt-3">Total Sales</p>
-            <p className="text-2xl font-bold text-gray-900 mb-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4">
+          {/* Row 1 — headers (grid stretches both to the same height,
+              so both charts below start at the same Y regardless of
+              how much header text either side has) */}
+          <div>
+            <p className="text-sm font-bold text-grey-1">Sales Overview</p>
+            <p className="text-xs text-grey-4 mt-3">Total Sales</p>
+            <p className="text-2xl font-extrabold text-grey-1">
               {formatNumber(totalOrders)}
             </p>
-            <div className="h-[220px] sm:h-[260px]">
-              {SalesDashboardLoading ? (
-                <Skeleton className="h-full w-full bg-gray-100" />
-              ) : (
-                <Line data={lineData} options={lineOptions} />
-              )}
-            </div>
+          </div>
+          <div className="flex items-start justify-between">
+            <p className="text-sm font-bold text-grey-1">
+              Top Selling Products
+            </p>
+            <button
+              onClick={() => handleViewMore("top")}
+              className="text-xs text-primary-green-300 hover:text-primary-green-300/80 font-bold cursor-pointer"
+            >
+              View All
+            </button>
           </div>
 
-          {/* Top selling bar chart */}
-          <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium text-gray-900">
-                Top Selling Products
-              </p>
-              <button
-                onClick={() => handleViewMore("top")}
-                className="text-xs text-green-600 hover:text-green-700 font-medium"
-              >
-                View All
-              </button>
-            </div>
-            <div className="h-[220px] sm:h-[260px]">
-              {SalesDashboardLoading ? (
-                <Skeleton className="h-full w-full bg-gray-100" />
-              ) : topSelling.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-sm text-gray-400">
-                  No sales data yet.
-                </div>
-              ) : (
-                <Bar data={topSellingData} options={topSellingOptions} />
-              )}
-            </div>
+          {/* Row 2 — charts, same fixed height on both sides */}
+          <div className="h-[220px] sm:h-[260px] mt-3">
+            {SalesDashboardLoading ? (
+              <Skeleton className="h-full w-full bg-grey-5" />
+            ) : (
+              <Line data={lineData} options={lineOptions} />
+            )}
+          </div>
+          <div className="h-[220px] sm:h-[260px] mt-3">
+            {SalesDashboardLoading ? (
+              <Skeleton className="h-full w-full bg-grey-5" />
+            ) : topSelling.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-grey-4">
+                No sales data yet.
+              </div>
+            ) : (
+              <Bar data={topSellingData} options={topSellingOptions} />
+            )}
           </div>
         </div>
       </section>
@@ -583,14 +578,14 @@ export default function Overview() {
       {/* Inventory Status + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Inventory Status */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">
+        <div className="rounded-2xl border border-border-tint bg-white p-4 sm:p-5">
+          <h3 className="text-base font-extrabold text-grey-1 mb-4">
             Inventory Status
           </h3>
           {SalesDashboardLoading ? (
-            <Skeleton className="h-[220px] w-full bg-gray-100" />
+            <Skeleton className="h-[220px] w-full bg-grey-5" />
           ) : inventoryStatus.total === 0 ? (
-            <div className="h-[220px] flex items-center justify-center text-sm text-gray-400">
+            <div className="h-[220px] flex items-center justify-center text-sm text-grey-4">
               No inventory data yet.
             </div>
           ) : (
@@ -598,8 +593,8 @@ export default function Overview() {
               <div className="relative w-[180px] h-[180px] shrink-0">
                 <Doughnut data={donutData} options={donutOptions} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                  <p className="text-xs text-gray-500">Total Items</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-xs text-grey-3">Total Items</p>
+                  <p className="text-2xl font-extrabold text-grey-1">
                     {inventoryStatus.total}
                   </p>
                 </div>
@@ -607,19 +602,19 @@ export default function Overview() {
 
               <div className="flex-1 w-full space-y-3">
                 <InventoryLegendRow
-                  color="bg-green-500"
+                  color="bg-success-1"
                   label="In Stock"
                   count={inventoryStatus.inStock}
                   pct={inventoryStatus.pct(inventoryStatus.inStock)}
                 />
                 <InventoryLegendRow
-                  color="bg-yellow-500"
+                  color="bg-warning-1"
                   label="Low Stock"
                   count={inventoryStatus.low}
                   pct={inventoryStatus.pct(inventoryStatus.low)}
                 />
                 <InventoryLegendRow
-                  color="bg-red-500"
+                  color="bg-error-1"
                   label="Out of Stock"
                   count={inventoryStatus.out}
                   pct={inventoryStatus.pct(inventoryStatus.out)}
@@ -630,8 +625,8 @@ export default function Overview() {
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">
+        <div className="rounded-2xl border border-border-tint bg-white p-4 sm:p-5">
+          <h3 className="text-base font-extrabold text-grey-1 mb-4">
             Quick Actions
           </h3>
           <div className="space-y-2">
@@ -639,7 +634,7 @@ export default function Overview() {
               <Link
                 key={a.title}
                 href={a.href}
-                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg border border-border-tint hover:border-border-tint hover:bg-grey-6 transition-colors"
               >
                 <div
                   className={cn(
@@ -650,10 +645,10 @@ export default function Overview() {
                   {a.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{a.title}</p>
-                  <p className="text-xs text-gray-500">{a.description}</p>
+                  <p className="text-sm font-bold text-grey-1">{a.title}</p>
+                  <p className="text-xs text-grey-3">{a.description}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <ChevronRight className="w-4 h-4 text-grey-4" />
               </Link>
             ))}
           </div>
@@ -663,14 +658,14 @@ export default function Overview() {
       {/* Inventory Alerts + Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Inventory Alerts */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+        <div className="rounded-2xl border border-border-tint bg-white p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-extrabold text-grey-1">
               Inventory Alerts
             </h3>
             <button
               onClick={() => handleViewMore("alerts")}
-              className="text-xs text-green-600 hover:text-green-700 font-medium"
+              className="text-xs text-primary-green-300 hover:text-primary-green-300/80 font-bold"
             >
               View All
             </button>
@@ -678,11 +673,11 @@ export default function Overview() {
           {SalesDashboardLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full bg-gray-100" />
+                <Skeleton key={i} className="h-14 w-full bg-grey-5" />
               ))}
             </div>
           ) : inventoryAlerts.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">
+            <div className="py-10 text-center text-sm text-grey-4">
               No inventory alerts. All stock is healthy.
             </div>
           ) : (
@@ -691,22 +686,22 @@ export default function Overview() {
                 {inventoryAlerts.slice(0, 3).map((alert, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-100"
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border-tint"
                   >
                     <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
                       <AlertTriangle className="w-4 h-4 text-amber-600" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-bold text-grey-1 truncate">
                         {alert.name}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-grey-3">
                         {alert.units} units
                       </p>
                     </div>
                     <span
                       className={cn(
-                        "text-[10px] font-semibold px-2 py-1 rounded-full whitespace-nowrap",
+                        "text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap",
                         alert.tone,
                       )}
                     >
@@ -715,7 +710,7 @@ export default function Overview() {
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-400 mt-3">
+              <p className="text-xs text-grey-4 mt-3">
                 Showing {Math.min(3, inventoryAlerts.length)} of{" "}
                 {inventoryAlerts.length} alerts
               </p>
@@ -724,23 +719,23 @@ export default function Overview() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
+        <div className="rounded-2xl border border-border-tint bg-white p-4 sm:p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-extrabold text-grey-1">
               Recent Activity
             </h3>
-            <button className="text-xs text-green-600 hover:text-green-700 font-medium">
+            <button className="text-xs text-primary-green-300 hover:text-primary-green-300/80 font-bold">
               View All
             </button>
           </div>
           {SalesDashboardLoading ? (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-14 w-full bg-gray-100" />
+                <Skeleton key={i} className="h-14 w-full bg-grey-5" />
               ))}
             </div>
           ) : recentActivity.length === 0 ? (
-            <div className="py-10 text-center text-sm text-gray-400">
+            <div className="py-10 text-center text-sm text-grey-4">
               No recent activity yet.
             </div>
           ) : (
@@ -749,26 +744,26 @@ export default function Overview() {
                 {recentActivity.map((act, idx) => (
                   <li
                     key={idx}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-100"
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border-tint"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-grey-5 flex items-center justify-center shrink-0">
                       {act.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-bold text-grey-1 truncate">
                         {act.title}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-grey-3 truncate">
                         {act.subtitle}
                       </p>
                     </div>
-                    <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                    <span className="text-[11px] text-grey-4 whitespace-nowrap">
                       {act.when}
                     </span>
                   </li>
                 ))}
               </ul>
-              <p className="text-xs text-gray-400 mt-3">
+              <p className="text-xs text-grey-4 mt-3">
                 Showing {recentActivity.length} activities
               </p>
             </>
@@ -806,11 +801,11 @@ const InventoryLegendRow = ({
   <div className="flex items-center justify-between text-sm">
     <div className="flex items-center gap-2">
       <span className={cn("w-2.5 h-2.5 rounded-full", color)} />
-      <span className="text-gray-900 font-medium">{label}</span>
+      <span className="text-grey-1 font-bold">{label}</span>
     </div>
     <div className="flex items-center gap-3 text-xs">
-      <span className="text-gray-500">{count} items</span>
-      <span className="font-semibold text-gray-900 w-12 text-right">
+      <span className="text-grey-3">{count} items</span>
+      <span className="font-bold text-grey-1 w-12 text-right">
         {pct}%
       </span>
     </div>

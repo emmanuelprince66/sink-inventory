@@ -154,6 +154,58 @@ const CustomSalesCard = ({
   );
 };
 
+// Table-shaped skeletons — mirror InventoryTableSkeleton's pattern so the
+// loading state reads as a table instead of generic flat bars.
+const ProductsSoldSkeleton = () => (
+  <div className="w-full mt-4">
+    <div className="hidden md:flex items-center gap-4 px-6 py-3.5 bg-grey-6 rounded-t-lg">
+      <Skeleton className="h-3 w-32 bg-grey-5 flex-1" />
+      <Skeleton className="h-3 w-16 bg-grey-5" />
+      <Skeleton className="h-3 w-20 bg-grey-5" />
+      <Skeleton className="h-3 w-14 bg-grey-5" />
+      <Skeleton className="h-3 w-20 bg-grey-5" />
+      <Skeleton className="h-3 w-16 bg-grey-5" />
+    </div>
+    <div className="divide-y divide-grey-6">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="flex items-center gap-4 px-6 py-4">
+          <Skeleton className="h-3.5 w-32 sm:w-40 bg-grey-5 flex-1" />
+          <Skeleton className="hidden sm:block h-3.5 w-14 bg-grey-5" />
+          <Skeleton className="h-3.5 w-20 bg-grey-5" />
+          <Skeleton className="hidden sm:block h-3.5 w-12 bg-grey-5" />
+          <Skeleton className="hidden md:block h-3.5 w-16 bg-grey-5" />
+          <Skeleton className="hidden md:block h-3.5 w-14 bg-grey-5" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const OrderHistorySkeleton = () => (
+  <div className="w-full mt-4">
+    <div className="hidden md:flex items-center gap-4 px-6 py-3.5 bg-grey-6 rounded-t-lg">
+      <Skeleton className="h-3 w-24 bg-grey-5" />
+      <Skeleton className="h-3 w-28 bg-grey-5 flex-1" />
+      <Skeleton className="h-3 w-24 bg-grey-5" />
+      <Skeleton className="h-3 w-20 bg-grey-5" />
+      <Skeleton className="h-3 w-16 bg-grey-5" />
+      <Skeleton className="h-3 w-14 bg-grey-5" />
+    </div>
+    <div className="divide-y divide-grey-6">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={index} className="flex items-center gap-4 px-6 py-4">
+          <Skeleton className="h-3.5 w-20 bg-grey-5" />
+          <Skeleton className="h-3.5 w-28 sm:w-32 bg-grey-5 flex-1" />
+          <Skeleton className="hidden sm:block h-3.5 w-20 bg-grey-5" />
+          <Skeleton className="hidden sm:block h-3.5 w-16 bg-grey-5" />
+          <Skeleton className="h-3.5 w-16 bg-grey-5" />
+          <Skeleton className="h-6 w-16 rounded-full bg-grey-5" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const Sales = () => {
   // Kept for DownloadSalesButton, currently disabled above.
   const business_id = useBusinessStore((state) => state.business_id);
@@ -362,8 +414,8 @@ const Sales = () => {
                   className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
                 >
                   <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-6" />
-                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-6" />
+                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-5" />
+                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
                   </div>
                 </CustomCard>
               ))}
@@ -600,7 +652,7 @@ const Sales = () => {
                     {Array.from({ length: 6 }).map((_, index) => (
                       <Skeleton
                         key={index}
-                        className="h-8 sm:h-10 w-16 sm:w-20 bg-grey-6 rounded-full flex-shrink-0"
+                        className="h-8 sm:h-10 w-16 sm:w-20 bg-grey-5 rounded-full flex-shrink-0"
                       />
                     ))}
                   </div>
@@ -719,17 +771,7 @@ const Sales = () => {
             >
               <TabsContent value="products">
                 {SalesLoading || !SalesData ? (
-                  <div className="w-full">
-                    <div className="sm:space-y-4">
-                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  <ProductsSoldSkeleton />
                 ) : (
                   <ProductsSold
                     SalesData={SalesData}
@@ -746,17 +788,7 @@ const Sales = () => {
 
               <TabsContent value="history">
                 {SalesOrderLoading || !SalesOrderData ? (
-                  <div className="w-full">
-                    <div className="space-y-3 sm:space-y-4">
-                      <Skeleton className="h-8 sm:h-10 w-full bg-grey-6" />
-                      {Array.from({ length: 5 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          className="h-12 sm:h-16 w-full bg-grey-6 mt-1 sm:mt-2"
-                        />
-                      ))}
-                    </div>
-                  </div>
+                  <OrderHistorySkeleton />
                 ) : (
                   <OrderHistory
                     SalesOrderData={SalesOrderData}

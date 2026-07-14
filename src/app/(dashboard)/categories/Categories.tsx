@@ -1,19 +1,29 @@
 "use client";
 import { CustomModal } from "@/components/app/CustomModal";
+import { CustomTable } from "@/components/app/CutomTable";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
-import { Edit, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Departments from "../departments/Departments";
 import AddCategory from "./AddCategory";
+import { getCategoriesColumns } from "./column";
 import DeleteCategory from "./DeleteCategory";
 import EditCategory from "./EditCategory";
 
+const TABS = [
+  { key: "categories", label: "Categories" },
+  { key: "departments", label: "Departments" },
+] as const;
+
 const Categories = () => {
-  const [activeTab, setActiveTab] = useState("categories");
+  const router = useRouter();
+  const [activeTab, setActiveTab] =
+    useState<(typeof TABS)[number]["key"]>("categories");
   const [searchInput, setSearchInput] = useState("");
   const [editModal, setEditModal] = useState(false);
   const { showToast } = useToast();
@@ -58,169 +68,137 @@ const Categories = () => {
     refetch(); // Refresh the categories list after deletion
   };
 
+  const filteredCategories = (CategoriesData?.data ?? []).filter(
+    (category: any) =>
+      category.name.toLowerCase().includes(searchInput.toLowerCase()),
+  );
+
+  const columns = getCategoriesColumns({
+    onEdit: handleOpenEditModal,
+    onDelete: handleOpenDeleteModal,
+  });
+
   return (
-    <div className="container mx-auto px-4 ">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Store Management</h1>
+    <div className="w-full flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-grey-5 text-sm font-bold text-grey-2 hover:bg-grey-6 hover:border-grey-4 cursor-pointer transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="hidden sm:inline">Back</span>
+        </button>
+        <h1 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+          Store Management
+        </h1>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab("categories")}
-            className={`${
-              activeTab === "categories"
-                ? "border-green-600 text-green-700 bg-green-50"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-all rounded-t-md`}
-          >
-            Categories
-          </button>
-          <button
-            onClick={() => setActiveTab("departments")}
-            className={`${
-              activeTab === "departments"
-                ? "border-green-600 text-green-700 bg-green-50"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-all rounded-t-md`}
-          >
-            Departments
-          </button>
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === "categories" ? (
-        <>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700">
-              All Categories
-            </h2>
-            <Button onClick={handleOpenCreateModal}>Add Category</Button>
+      <div className="w-full rounded-2xl border border-border-tint bg-white overflow-hidden">
+        {/* Tabs */}
+        <div className="border-b border-border-tint px-4 sm:px-6">
+          <div className="flex items-center gap-6">
+            {TABS.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "py-4 text-sm cursor-pointer font-bold border-b-2 transition-colors",
+                  activeTab === tab.key
+                    ? "border-primary-green-300 text-primary-green-300"
+                    : "border-transparent text-grey-3 hover:text-grey-2",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div className="w-full md:w-1/2 mb-4">
-            <SearchInput
-              placeholder="Search categories..."
-              value={searchInput}
-              onValueChange={handleSearchChange}
-            />
-            {searchInput.length > 0 && searchInput.length < 3 && (
-              <div className="mt-1 text-sm text-muted-foreground">
-                Type at least 3 characters to search
-              </div>
-            )}
-          </div>
-
-          {CategoriesDataLoading ? (
-            // Loading skeleton
-            <div className="space-y-1">
-              {[...Array(5)].map((_, index) => (
-                <div key={index} className="p-2 ">
-                  <Skeleton className="h-14 w-full   bg-[#eef4ef]" />
-                </div>
-              ))}
+        {activeTab === "categories" ? (
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <h2 className="text-base sm:text-lg font-extrabold text-grey-1">
+                All Categories
+              </h2>
+              <Button
+                onClick={handleOpenCreateModal}
+                className="flex items-center gap-1.5 w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4" />
+                Add Category
+              </Button>
             </div>
-          ) : (
-            // Categories table
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {CategoriesData?.data?.map((category: any) => (
-                    <tr key={category.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">
-                          {category.name}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                          {category.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => handleOpenEditModal(category)}
-                            className="cursor-pointer text-gray-500 hover:text-indigo-600 transition-colors"
-                            title="Edit category"
-                          >
-                            <Edit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleOpenDeleteModal(category)}
-                            className="cursor-pointer text-red-500 hover:text-red-600 transition-colors"
-                            title="Delete category"
-                          >
-                            <Trash2 className="w-5 h-5text-red-500" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
-          {/* Edit Category Modal */}
-          <CustomModal
-            isOpen={editModal}
-            onClose={closeEditModal}
-            trigger={false}
-            title="Edit Category"
-          >
-            <EditCategory
-              type="PRODUCT"
-              closeModal={closeEditModal}
-              categoryObj={categoryObj}
-            />
-          </CustomModal>
-
-          {/* Create Category Modal */}
-          <CustomModal
-            isOpen={createModal}
-            onClose={handleCloseCreateModal}
-            trigger={false}
-            title="Create Category"
-          >
-            <AddCategory closeModal={handleCloseCreateModal} type="PRODUCT" />
-          </CustomModal>
-
-          {/* Delete Category Modal */}
-          <CustomModal
-            isOpen={deleteModal}
-            onClose={handleCloseDeleteModal}
-            trigger={false}
-            title="Delete Category"
-          >
-            {categoryToDelete && (
-              <DeleteCategory
-                categoryId={categoryToDelete.id}
-                categoryName={categoryToDelete.name}
-                closeModal={handleCloseDeleteModal}
-                onDeleteSuccess={handleDeleteSuccess}
+            <div className="w-full sm:w-80 mb-4">
+              <SearchInput
+                placeholder="Search categories..."
+                value={searchInput}
+                onValueChange={handleSearchChange}
               />
-            )}
-          </CustomModal>
-        </>
-      ) : (
-        <Departments />
-      )}
+              {searchInput.length > 0 && searchInput.length < 3 && (
+                <div className="mt-1 text-xs text-grey-4">
+                  Type at least 3 characters to search
+                </div>
+              )}
+            </div>
+
+            <CustomTable
+              columns={columns}
+              data={filteredCategories}
+              loading={CategoriesDataLoading}
+              noDataText="No categories found"
+              showSerialNumber={false}
+              bordered={false}
+            />
+          </div>
+        ) : (
+          <div className="p-4 sm:p-6">
+            <Departments />
+          </div>
+        )}
+      </div>
+
+      {/* Edit Category Modal */}
+      <CustomModal
+        isOpen={editModal}
+        onClose={closeEditModal}
+        trigger={false}
+        title="Edit Category"
+      >
+        <EditCategory
+          type="PRODUCT"
+          closeModal={closeEditModal}
+          categoryObj={categoryObj}
+        />
+      </CustomModal>
+
+      {/* Create Category Modal */}
+      <CustomModal
+        isOpen={createModal}
+        onClose={handleCloseCreateModal}
+        trigger={false}
+        title="Create Category"
+      >
+        <AddCategory closeModal={handleCloseCreateModal} type="PRODUCT" />
+      </CustomModal>
+
+      {/* Delete Category Modal */}
+      <CustomModal
+        isOpen={deleteModal}
+        onClose={handleCloseDeleteModal}
+        trigger={false}
+        title="Delete Category"
+      >
+        {categoryToDelete && (
+          <DeleteCategory
+            categoryId={categoryToDelete.id}
+            categoryName={categoryToDelete.name}
+            closeModal={handleCloseDeleteModal}
+            onDeleteSuccess={handleDeleteSuccess}
+          />
+        )}
+      </CustomModal>
     </div>
   );
 };

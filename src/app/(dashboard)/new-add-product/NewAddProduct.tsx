@@ -32,7 +32,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -47,17 +46,26 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { ArrowLeft, CalendarIcon, ChevronDown, Edit, Plus, Trash2, X } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarIcon,
+  ChevronDown,
+  Edit,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import AddCategory from "../categories/AddCategory";
 import AddDepartments from "../departments/AddDepartments";
-import { ProductFormSkeleton } from "./ProductSkeleton";
 import MediaUploader from "./MediaUploader";
+import { ProductFormSkeleton } from "./ProductSkeleton";
 
 interface NewAddProductProps {
   id?: string;
@@ -462,7 +470,7 @@ const NewAddProduct = ({
   }
 
   return (
-    <div className="min-h-screen bg-grey-6 p-4">
+    <div className="min-h-screen  p-4">
       <div className="max-w-7xl mx-auto mb-4">
         <button
           onClick={() => window.history.back()}
@@ -508,9 +516,7 @@ const NewAddProduct = ({
                                 className="w-full h-full object-cover rounded-lg"
                               />
                             ) : (
-                              <span className="text-grey-4">
-                                Product Image
-                              </span>
+                              <span className="text-grey-4">Product Image</span>
                             )}
                           </div>
                         </FormItem>
@@ -634,8 +640,8 @@ const NewAddProduct = ({
                             <p className="text-xs text-grey-4">
                               Product Media{" "}
                               <span className="text-grey-4">
-                                — {usedTotal} of {TOTAL_MEDIA_CAP} used (images +
-                                videos combined)
+                                — {usedTotal} of {TOTAL_MEDIA_CAP} used (images
+                                + videos combined)
                               </span>
                             </p>
                           </div>
@@ -1107,8 +1113,7 @@ const NewAddProduct = ({
                                     </FormControl>
                                     {isEditMode && (
                                       <p className="text-xs text-grey-4 mt-1">
-                                        Quantity can only be updated via
-                                        restock
+                                        Quantity can only be updated via restock
                                       </p>
                                     )}
                                     <FormMessage className="text-xs" />
@@ -1371,10 +1376,7 @@ const NewAddProduct = ({
                           {selectedVariations.length > 0 && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  className="cursor-pointer"
-                                >
+                                <Button size="sm" className="cursor-pointer">
                                   Edit Selected{" "}
                                   <ChevronDown className="w-4 h-4 ml-1 cursor-pointer" />
                                 </Button>
@@ -2207,7 +2209,6 @@ const NewAddProduct = ({
                   </div>
                 </CardContent>
               </Card>
-
             </div>
           </div>
         </form>
@@ -2408,10 +2409,7 @@ const NewAddProduct = ({
             >
               Cancel
             </Button>
-            <Button
-              onClick={applyEditAll}
-              className="flex-1"
-            >
+            <Button onClick={applyEditAll} className="flex-1">
               Apply to All
             </Button>
           </div>
@@ -2425,7 +2423,9 @@ const NewAddProduct = ({
           className="w-[300px] md:w-[500px] bg-white shadow-xl p-5 overflow-y-auto"
         >
           <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b border-grey-6">
-            <SheetTitle className="text-lg font-extrabold text-grey-1">Add types</SheetTitle>
+            <SheetTitle className="text-lg font-extrabold text-grey-1">
+              Add types
+            </SheetTitle>
           </SheetHeader>
 
           <div className="py-6 space-y-6">
@@ -2433,7 +2433,9 @@ const NewAddProduct = ({
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-primary-green-300 rounded-full"></div>
-                  <h3 className="font-bold text-grey-1">{selectedVariationType}</h3>
+                  <h3 className="font-bold text-grey-1">
+                    {selectedVariationType}
+                  </h3>
                 </div>
 
                 <div className="ml-4 space-y-3">

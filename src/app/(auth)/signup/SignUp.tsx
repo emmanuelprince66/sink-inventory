@@ -42,18 +42,19 @@ const SignUp = () => {
       <WelcomeScreen />
 
       {/* SignUp Form (Right Side) */}
-      <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-8 bg-primary-green-600">
-        <div className="w-full  md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
-          <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
+      <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-2 md:p-6 bg-[#F4F7F4]">
+        <div className="w-full md:max-w-[75%] p-2 md:p-6 border border-grey-5 bg-white rounded-2xl">
+          <Image src="/asset/sink2.png" alt="Logo" width={90} height={90} />
 
-          <div className="mb-8">
-            <h1 className="text-2xl font-light text-gray-600 mb-2">
-              Create Account
-            </h1>
+          <div className="mb-4">
+            <h1 className="text-xl font-bold text-grey-1">Create Account</h1>
           </div>
           {/* Signup Form */}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-3 w-full"
+            >
               {/* First Name and Last Name in same row */}
               <div className="flex gap-4">
                 <FormField
@@ -61,13 +62,13 @@ const SignUp = () => {
                   name="firstname"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         First Name
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="John"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
                         />
                       </FormControl>
@@ -80,13 +81,13 @@ const SignUp = () => {
                   name="lastname"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         Last Name
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Doe"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
                         />
                       </FormControl>
@@ -102,7 +103,7 @@ const SignUp = () => {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <FormLabel className="text-xs font-bold text-grey-2">
                       Phone Number
                     </FormLabel>
                     <FormControl>
@@ -113,7 +114,7 @@ const SignUp = () => {
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="Enter phone number"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        className="rounded-full bg-[#EEF4EF] h-10"
                       />
                     </FormControl>
                     <FormMessage />
@@ -127,13 +128,13 @@ const SignUp = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <FormLabel className="text-xs font-bold text-grey-2">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="example@email.com"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        className="rounded-full bg-[#EEF4EF] h-10"
                         {...field}
                       />
                     </FormControl>
@@ -148,7 +149,7 @@ const SignUp = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <FormLabel className="text-xs font-bold text-grey-2">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -156,7 +157,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="At least 8 characters"
                         showPasswordToggle
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        className="rounded-full bg-[#EEF4EF] h-10"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -172,7 +173,7 @@ const SignUp = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <FormLabel className="text-xs font-bold text-grey-2">
                       Confirm Password
                     </FormLabel>
                     <FormControl>
@@ -180,7 +181,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="Confirm your password"
                         showPasswordToggle
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        className="rounded-full bg-[#EEF4EF] h-10"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -196,16 +197,16 @@ const SignUp = () => {
                 name="referal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                    <FormLabel className="text-xs font-bold text-grey-2">
                       Referral Code{" "}
-                      <span className="text-gray-400 normal-case tracking-normal">
+                      <span className="text-grey-4 font-normal">
                         (optional)
                       </span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter referral code"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                        className="rounded-full bg-[#EEF4EF] h-10"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -217,7 +218,7 @@ const SignUp = () => {
 
               <Button
                 type="submit"
-                className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
+                className="w-full h-10 rounded-full"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? <Spinner /> : "Create Account"}
@@ -225,10 +226,12 @@ const SignUp = () => {
             </form>
           </Form>
 
-          <div className="w-full mt-4 flex justify-center items-center gap-2">
-            <p className="text-[14px]">Already have an account?</p>
+          <div className="w-full mt-3 flex justify-center items-center gap-2">
+            <p className="text-xs text-grey-3">Already have an account?</p>
             <Link href="/login">
-              <p className="text-[14px] text-blue-500">Login</p>
+              <p className="text-xs text-primary-green-300 hover:text-primary-green-100 font-bold transition-colors">
+                Login
+              </p>
             </Link>
           </div>
         </div>
@@ -251,7 +254,7 @@ const SignUp = () => {
 
           <div className="flex flex-col gap-2 mt-4">
             <Button
-              className="w-full h-[48px]"
+              className="w-full h-[48px] rounded-full"
               onClick={handleVerifyOtp}
               disabled={isVerifying || otp.length !== 6}
             >
@@ -260,7 +263,7 @@ const SignUp = () => {
 
             <Button
               variant="outline"
-              className="w-full h-[48px]"
+              className="w-full h-[48px] rounded-full"
               onClick={handleResendOtp}
               disabled={isVerifying}
             >

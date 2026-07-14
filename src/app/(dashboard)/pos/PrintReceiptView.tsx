@@ -814,21 +814,21 @@ const PrintReceiptView = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center gap-4 p-1">
-      {/* Top action bar */}
-      <div className="w-full flex justify-between items-center no-print">
+    <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
+      {/* Sticky top action bar */}
+      <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex justify-between items-center no-print">
         <button
           onClick={() => setShowPrintReceiptView(false)}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-full bg-secondary-6 hover:bg-secondary-5 transition-colors"
           aria-label="Go back"
           disabled={isPrinting}
         >
-          <ArrowBigLeftDash className="text-green-600" size={24} />
+          <ArrowBigLeftDash className="text-primary-green-300" size={24} />
         </button>
 
         <Button
           onClick={handleNewSale}
-          className="gap-2 bg-green-600 hover:bg-green-700"
+          className="gap-2"
           disabled={isPrinting}
         >
           <PlusCircle size={11} />
@@ -836,7 +836,8 @@ const PrintReceiptView = ({
         </Button>
       </div>
 
-      {/* Receipt content */}
+      {/* Scrollable middle — receipt content */}
+      <div className="h-full min-h-0 overflow-y-auto p-4 flex flex-col items-center gap-4">
       <div
         ref={receiptRef}
         className="receipt-container bg-white rounded-lg w-full p-2"
@@ -1084,9 +1085,10 @@ const PrintReceiptView = ({
           </p>
         </div>
       </div>
+      </div>
 
-      {/* Action buttons */}
-      <div className="w-full max-w-md flex flex-col gap-3 no-print">
+      {/* Sticky bottom — Action buttons */}
+      <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5 flex flex-col gap-3 no-print">
         <Button
           onClick={handlePrint}
           variant="outline"

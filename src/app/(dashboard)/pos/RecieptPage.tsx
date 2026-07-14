@@ -528,14 +528,20 @@ const ReceiptPage = ({
           discountAmount={discountAmount}
         />
       ) : (
-        <div className="w-full flex flex-col items-start gap-3">
-          <div
-            className="w-10 h-10 rounded-full p-2 bg-green-50 cursor-pointer"
-            onClick={() => setShowReceipt(false)}
-          >
-            <ArrowBigLeftDash color="green" />
+        <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
+          {/* Sticky top — back to cart */}
+          <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white">
+            <div
+              className="w-10 h-10 rounded-full p-2 bg-secondary-6 hover:bg-secondary-5 transition-colors cursor-pointer"
+              onClick={() => setShowReceipt(false)}
+            >
+              <ArrowBigLeftDash className="text-primary-green-300" />
+            </div>
           </div>
 
+          {/* Scrollable middle — sales date, summary, items, customer, payment */}
+          <div className="h-full min-h-0 overflow-y-auto p-4">
+          <div className="w-full flex flex-col items-start gap-3">
           <div className="w-full">
             <p className="text-xs mb-1">Sales Date</p>
             <Popover>
@@ -1171,8 +1177,11 @@ const ReceiptPage = ({
             </div>
           )}
 
-          {/* Submit Button */}
-          <div className="mt-5 mb-3 w-full">
+          </div>
+          </div>
+
+          {/* Sticky bottom — Pay button */}
+          <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5">
             <Button
               className="w-full bg-primary-green-300 text-white"
               onClick={openSureModal}

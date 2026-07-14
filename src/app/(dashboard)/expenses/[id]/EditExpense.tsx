@@ -49,8 +49,8 @@ const EditExpense = () => {
         <div className="w-1/2 mx-auto my-4 pb-6">
           {Array.from({ length: 12 }).map((_, index) => (
             <div className="flex flex-col gap-6 items-start">
-              <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-              <Skeleton className="h-6 w-full bg-[#eef4ef]" />
+              <Skeleton className="h-4 w-full bg-grey-5" />
+              <Skeleton className="h-6 w-full bg-grey-5" />
             </div>
           ))}
         </div>

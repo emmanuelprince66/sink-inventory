@@ -120,7 +120,7 @@ const Contact = ({ id }: { id: string }) => {
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 shrink-0 rounded-full bg-primary-green-300/10 flex items-center justify-center text-primary-green-300 font-extrabold text-xl">
               {!customer || CustomerLoading ? (
-                <Skeleton className="h-14 w-14 rounded-full bg-grey-6" />
+                <Skeleton className="h-14 w-14 rounded-full bg-grey-5" />
               ) : (
                 initial
               )}
@@ -128,21 +128,21 @@ const Contact = ({ id }: { id: string }) => {
             <div className="space-y-1">
               <p className="text-lg font-extrabold text-grey-1">
                 {!customer || CustomerLoading ? (
-                  <Skeleton className="h-5 w-32 bg-grey-6" />
+                  <Skeleton className="h-5 w-32 bg-grey-5" />
                 ) : (
                   customer.name
                 )}
               </p>
               <p className="text-sm text-grey-3">
                 {!customer || CustomerLoading ? (
-                  <Skeleton className="h-4 w-40 bg-grey-6 mt-1" />
+                  <Skeleton className="h-4 w-40 bg-grey-5 mt-1" />
                 ) : (
                   customer.email || "No email provided"
                 )}
               </p>
               <p className="text-sm text-grey-3">
                 {!customer || CustomerLoading ? (
-                  <Skeleton className="h-4 w-28 bg-grey-6 mt-1" />
+                  <Skeleton className="h-4 w-28 bg-grey-5 mt-1" />
                 ) : (
                   customer.phone
                 )}

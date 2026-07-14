@@ -4,6 +4,7 @@ import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumHook } from "@/hooks/usePremiumHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
 
@@ -31,6 +32,31 @@ interface PlanData {
 }
 
 type BillingPeriod = "monthly" | "quarterly" | "biannually" | "annually";
+
+// Cycled by card position so each plan reads as visually distinct, matching
+// the multi-color reference while staying within our own token palette.
+const cardColorSchemes = [
+  {
+    border: "border-primary-green-300/40",
+    bg: "bg-white",
+    button: "bg-primary-green-300 hover:bg-primary-green-300/90 text-white",
+  },
+  {
+    border: "border-warning-1/40",
+    bg: "bg-warning-2/40",
+    button: "bg-warning-1 hover:bg-warning-1/90 text-white",
+  },
+  {
+    border: "border-success-1/40",
+    bg: "bg-success-2/40",
+    button: "bg-success-1 hover:bg-success-1/90 text-white",
+  },
+  {
+    border: "border-primary-green-100/30",
+    bg: "bg-white",
+    button: "bg-primary-green-100 hover:bg-primary-green-100/90 text-white",
+  },
+];
 
 const Subscriptions = () => {
   const [searchInput, setSearchInput] = useState("");
@@ -114,18 +140,21 @@ const Subscriptions = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <p className="text-3xl font-bold text-gray-900 ">Choose the</p>
-        <p className="text-primary-green-300">Right Plan For Your Business</p>
-        <p className="text-gray-600 text-xs">
+    <div className="w-full">
+      <div className="text-center mb-6 sm:mb-8">
+        <p className="text-2xl sm:text-3xl font-extrabold text-grey-1">
+          Choose the{" "}
+          <span className="text-primary-green-300">Right Plan</span> For Your
+          Business
+        </p>
+        <p className="text-grey-3 text-sm mt-1">
           Flexible plans designed to grow with your business.
         </p>
       </div>
 
-      {/* Billing Period Tabs */}
-      <div className="flex justify-center mb-8">
-        <div className="bg-primary-green-200 p-1 rounded-lg inline-flex">
+      {/* Billing Period Tabs — segmented pill control, matches Customers/Campaigns switch */}
+      <div className="flex justify-center mb-6 sm:mb-8">
+        <div className="bg-grey-6 p-1 rounded-full inline-flex">
           {[
             { key: "monthly" as BillingPeriod, label: "One-off" },
             { key: "quarterly" as BillingPeriod, label: "Quarterly" },
@@ -135,10 +164,10 @@ const Subscriptions = () => {
             <button
               key={period.key}
               onClick={() => setSelectedPeriod(period.key)}
-              className={`px-6 py-2 cursor-pointer rounded-md font-medium transition-all duration-200 ${
+              className={`px-4 sm:px-6 py-2 cursor-pointer rounded-full text-sm font-bold transition-all duration-200 ${
                 selectedPeriod === period.key
-                  ? "bg-primary-green-300 text-primary-green-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-primary-green-300 text-white shadow-sm"
+                  : "text-grey-3 hover:text-grey-2"
               }`}
             >
               {period.label}
@@ -148,46 +177,41 @@ const Subscriptions = () => {
       </div>
 
       {/* Pricing Cards */}
-
       {!UserPlanData || UserPlanDataLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <CustomCard
               key={index}
-              className="w-full h-[550px] border-gray-200"
+              className="w-full h-[550px] rounded-2xl border-border-tint p-0"
+              contentClassName="p-4 sm:p-5 h-full"
             >
-              <div className="flex flex-col gap-6 items-start">
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
-                <Skeleton className="h-4 w-full bg-[#eef4ef]" />
+              <div className="flex flex-col gap-4 items-start">
+                <Skeleton className="h-4 w-full bg-grey-5" />
+                <Skeleton className="h-8 w-2/3 bg-grey-5" />
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <Skeleton key={i} className="h-4 w-full bg-grey-5" />
+                ))}
               </div>
             </CustomCard>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {planData.map((plan) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {planData.map((plan, index) => {
+            const scheme = cardColorSchemes[index % cardColorSchemes.length];
+            return (
             <div
               key={plan.id}
-              className="bg-primary-green-200 border border-primary-green-200 rounded-xl p-4 hover:shadow-lg transition-shadow duration-200"
+              className={`h-[550px] flex flex-col ${scheme.bg} border ${scheme.border} rounded-2xl p-4 sm:p-5 hover:shadow-md transition-shadow duration-200`}
             >
               {/* Plan Header */}
               <div className="text-center mb-6">
-                <h3 className="text-sm font-bold text-gray-900 mb-2">
+                <h3 className="text-sm font-bold text-grey-2 mb-2">
                   {plan.name}
                 </h3>
-                <div className="text-3xl font-bold text-primary-black-100">
-                  ₦{plan[selectedPeriod].toLocaleString()}
-                  <span className="text-sm font-normal text-gray-600">
+                <div className="text-3xl font-extrabold text-grey-1">
+                  {formatToNaira(plan[selectedPeriod])}
+                  <span className="text-sm font-normal text-grey-3">
                     {" "}
                     /{" "}
                     {selectedPeriod === "monthly"
@@ -202,7 +226,7 @@ const Subscriptions = () => {
               </div>
 
               {/* Features List */}
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 overflow-y-auto">
                 {featureKeys.map((key) => {
                   const value = plan[key as keyof PlanData];
                   const isBoolean = typeof value === "boolean";
@@ -216,25 +240,25 @@ const Subscriptions = () => {
                     >
                       <div className="flex items-center space-x-2">
                         {isIncluded ? (
-                          <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                          <Check className="h-4 w-4 text-success-1 flex-shrink-0" />
                         ) : (
-                          <X className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+                          <X className="h-4 w-4 text-warning-1 flex-shrink-0" />
                         )}
-                        <span className="text-[11px] text-gray-700">
+                        <span className="text-[11px] text-grey-2">
                           {getFeatureLabel(key)}
                         </span>
                       </div>
                       {!isBoolean && (
                         <span
-                          className={`text-[10px] font-medium ${
-                            isIncluded ? "text-gray-900" : "text-yellow-600"
+                          className={`text-[10px] font-bold ${
+                            isIncluded ? "text-grey-1" : "text-warning-1"
                           }`}
                         >
                           {displayValue}
                         </span>
                       )}
                       {!isIncluded && isBoolean && (
-                        <span className="text-[10px] text-yellow-600 bg-yellow-100 px-2 py-[2px] rounded">
+                        <span className="text-[10px] font-extrabold uppercase text-warning-1 bg-warning-2 px-2 py-0.5 rounded-full">
                           Coming soon
                         </span>
                       )}
@@ -244,11 +268,11 @@ const Subscriptions = () => {
               </div>
 
               {/* Choose Plan Button */}
-              <div className="mt-8 w-full ">
+              <div className="mt-4 w-full">
                 <Button
                   disabled={subUserLoading && loadingPlanId === plan.id}
                   onClick={() => handlePlanSelection(plan, selectedPeriod)}
-                  className="w-full  hover:bg-primary-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200"
+                  className={`w-full ${scheme.button}`}
                 >
                   {subUserLoading && loadingPlanId === plan.id ? (
                     <Spinner />
@@ -258,7 +282,8 @@ const Subscriptions = () => {
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

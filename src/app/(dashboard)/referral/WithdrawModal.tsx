@@ -68,26 +68,26 @@ const WithdrawModal = ({
       title="Withdraw Referral Earnings"
     >
       <div className="space-y-5">
-        <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-            <Banknote className="w-5 h-5 text-emerald-600" />
+        <div className="flex items-center gap-3 bg-success-2 rounded-lg p-3">
+          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+            <Banknote className="w-5 h-5 text-success-1" />
           </div>
           <div>
-            <p className="text-xs text-emerald-700 uppercase tracking-wide">
+            <p className="text-xs font-bold text-success-1 uppercase tracking-wide">
               Available
             </p>
-            <p className="text-lg font-bold text-emerald-900">
+            <p className="text-lg font-extrabold text-grey-1">
               {formatToNaira(availableBalance)}
             </p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="withdraw-amount" className="font-semibold">
+          <Label htmlFor="withdraw-amount" className="font-bold">
             Amount
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grey-3">
               ₦
             </span>
             <Input
@@ -103,13 +103,13 @@ const WithdrawModal = ({
               disabled={submitting}
             />
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-grey-3">
             Maximum {formatToNaira(availableBalance)}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="withdraw-bank" className="font-semibold">
+          <Label htmlFor="withdraw-bank" className="font-bold">
             Destination Bank Account
           </Label>
           <Input
@@ -119,7 +119,7 @@ const WithdrawModal = ({
             placeholder="e.g. GTBank — 0123456789"
             disabled={submitting}
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-grey-3">
             Funds settle within 1 business day.
           </p>
         </div>
@@ -137,7 +137,7 @@ const WithdrawModal = ({
             Cancel
           </Button>
           <Button
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="flex-1"
             onClick={handleSubmit}
             disabled={submitting}
           >

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { Download } from "lucide-react";
 import type React from "react";
@@ -48,12 +49,8 @@ export default function HomePage(): React.ReactElement {
 
   if (!businessData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-gray-900 font-semibold text-lg">
-            Error loading data
-          </p>
-        </div>
+      <div className="w-full flex items-center justify-center py-24">
+        <p className="text-grey-1 font-bold text-base">Error loading data</p>
       </div>
     );
   }
@@ -136,65 +133,56 @@ export default function HomePage(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 md:py-12 md:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8 text-center space-y-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
-            E-Pricing QR Code
-          </h1>
-          <p className="text-gray-600">
-            Download and display your pricing access portal
-          </p>
-        </div>
+    <div className="w-full max-w-2xl mx-auto">
+      {/* Header Section */}
+      <div className="mb-6 text-center">
+        <h1 className="text-2xl md:text-3xl font-extrabold text-grey-1">
+          E-Pricing QR Code
+        </h1>
+        <p className="text-grey-3 text-sm mt-1">
+          Download and display your pricing access portal
+        </p>
+      </div>
 
-        {/* Tab Selection */}
-        <div className="mb-8 bg-white rounded-lg shadow-sm p-4 md:p-6">
-          <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg">
-            {[
-              {
-                key: "INSTORE",
-                label: "🏪 In-Store",
-                description:
-                  "Display in your physical store for customers to check prices on-site",
-              },
-              {
-                key: "OUTSTORE",
-                label: "📦 Out-Store",
-                description:
-                  "Display online, in emails, or for remote customers to check prices",
-              },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key as "INSTORE" | "OUTSTORE")}
-                className={`py-2 md:py-3 px-4 rounded-md font-semibold transition-all ${
-                  activeTab === tab.key
-                    ? "bg-white text-emerald-600 shadow-sm"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-3 text-center">
-            {activeTab === "INSTORE"
-              ? "Display in your physical store for customers to check prices on-site"
-              : "Display online, in emails, or for remote customers to check prices"}
-          </p>
+      {/* Tab Selection */}
+      <div className="mb-3 flex justify-center">
+        <div className="inline-flex items-center border border-border-tint rounded-lg overflow-hidden">
+          {[
+            { key: "INSTORE", label: "In-Store" },
+            { key: "OUTSTORE", label: "Out-Store" },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key as "INSTORE" | "OUTSTORE")}
+              className={`px-6 py-2 text-sm font-bold border-b-2 transition-colors cursor-pointer ${
+                activeTab === tab.key
+                  ? "border-primary-green-300 text-primary-green-300"
+                  : "border-transparent text-grey-3 hover:text-grey-2"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
+      <p className="text-xs text-grey-3 mb-6 text-center">
+        {activeTab === "INSTORE"
+          ? "Display in your physical store for customers to check prices on-site"
+          : "Display online, in emails, or for remote customers to check prices"}
+      </p>
 
-        {/* QR Poster Preview */}
-        <div
-          id="qr-poster-content"
-          className="mb-8 w-full bg-white rounded-2xl shadow-xl overflow-hidden print:shadow-none"
-        >
+      {/* QR Poster Preview — this is the downloadable/printable in-store asset;
+          intentionally keeps its own branded poster look (dark green header,
+          "SCAN TO CHECK PRICE" signage) rather than the admin dashboard's
+          grey/primary-green-300 tokens. The "Powered by" pill and Download
+          button share one white card so they read as a single unit, but only
+          #qr-poster-content (header + main content + Powered-by pill) is
+          captured into the downloaded image — the Download button itself
+          must never appear inside its own screenshot. */}
+      <div className="mb-6 w-full bg-white rounded-2xl border border-grey-5 overflow-hidden">
+        <div id="qr-poster-content" className="bg-white">
           {/* Dark Green Header Bar */}
           <div className="bg-gradient-to-r from-emerald-700 to-emerald-800 px-6 py-4 md:px-8 md:py-6">
-            {/* <p className="text-emerald-100 text-xs md:text-sm font-semibold tracking-wide uppercase">
-              Aetos Domain
-            </p> */}
             <h2 className="text-white text-xl md:text-2xl font-bold mt-1">
               {businessData.name}
             </h2>
@@ -215,9 +203,9 @@ export default function HomePage(): React.ReactElement {
             </div>
 
             {/* QR Code Container */}
-            <div className="bg-gradient-to-b from-emerald-50 to-white p-8 md:p-10 rounded-xl relative border-2 border-emerald-100 shadow-inner">
-              <div className="bg-white p-6 md:p-10 rounded-lg inline-block shadow-md ">
-                <div className="bg-primary-black-100 text-sm md:text-md text-white rounded-b-xl absolute h-[45px] md:h-[60px] w-[150px] top-0 left-[85px] md:left-[103px] right-0 bottom-10 p-2 md:p-5">
+            <div className="bg-white p-8 md:p-10 rounded-xl border border-grey-5">
+              <div className="relative bg-white p-6 md:p-8 rounded-lg inline-block">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 bg-primary-black-100 text-white text-[10px] md:text-xs font-bold rounded-full px-3 py-1.5 whitespace-nowrap">
                   {businessData.name}
                 </div>
                 <QRCode
@@ -256,27 +244,26 @@ export default function HomePage(): React.ReactElement {
             </div>
           </div>
 
-          {/* Footer Badge */}
-          <div className="bg-emerald-500 text-white px-6 py-3 md:px-8 md:py-4 text-center">
-            <p className="text-xs md:text-sm font-bold tracking-wider">
+          {/* Powered by pill — inset, full width, matches the Download button below */}
+          <div className="px-6 pb-6 md:px-8 md:pb-8">
+            <div className="w-full bg-primary-black-100 text-white rounded-full py-3 text-center text-xs md:text-sm font-bold tracking-wider">
               Powered by sync360.africa
-            </p>
+            </div>
           </div>
         </div>
 
-        {/* Download Button */}
-        <button
-          onClick={handleDownload}
-          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-semibold py-3 md:py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 mb-6"
-        >
-          <Download size={20} />
-          <span>
+        {/* Download Button — same card, same pill shape/width as "Powered by",
+            deliberately outside #qr-poster-content so it isn't captured in its own screenshot */}
+        <div className="px-6 pb-6 md:px-8 md:pb-8">
+          <Button
+            onClick={handleDownload}
+            className="w-full rounded-full py-3 h-auto"
+          >
+            <Download className="w-4 h-4 mr-2" />
             Download {activeTab === "INSTORE" ? "In-Store" : "Out-Store"} QR
             Poster
-          </span>
-        </button>
-
-        {/* Info Section */}
+          </Button>
+        </div>
       </div>
     </div>
   );

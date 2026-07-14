@@ -135,7 +135,7 @@ const DeliveryAndPickup = () => {
                 placeholder="1"
                 className="pr-14"
               />
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-emerald-700 px-2 py-0.5 bg-emerald-50 border border-emerald-100 rounded">
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-primary-green-300 px-2 py-0.5 bg-secondary-6 border border-primary-green-300/20 rounded">
                 days
               </span>
             </div>
@@ -147,7 +147,7 @@ const DeliveryAndPickup = () => {
             <Select value={reminder} onValueChange={setReminder}>
               <SelectTrigger>
                 <div className="flex items-center gap-2">
-                  <Bell className="w-3.5 h-3.5 text-slate-500" />
+                  <Bell className="w-3.5 h-3.5 text-grey-3" />
                   <SelectValue />
                 </div>
               </SelectTrigger>
@@ -187,30 +187,30 @@ const DeliveryAndPickup = () => {
         {customerPickup && (
           <button
             onClick={() => setShowPickupSheet(true)}
-            className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 transition-colors text-left"
+            className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-primary-green-300/30 bg-secondary-6 hover:bg-secondary-6/70 transition-colors text-left cursor-pointer"
           >
             <div>
-              <p className="text-sm font-semibold text-emerald-900">
+              <p className="text-sm font-bold text-primary-green-100">
                 Configure pickup address
               </p>
-              <p className="text-xs text-emerald-700/70 mt-0.5">
+              <p className="text-xs text-grey-3 mt-0.5">
                 Add your physical store details for the checkout pickup option.
               </p>
             </div>
-            <ChevronRight className="w-4 h-4 text-emerald-700" />
+            <ChevronRight className="w-4 h-4 text-primary-green-300" />
           </button>
         )}
       </StepTile>
 
-      {/* Save bar — distinct floating-style action strip */}
+      {/* Save bar */}
       <div className="sticky bottom-3 sm:bottom-4 z-10">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-lg shadow-slate-200/60">
-          <p className="text-xs text-slate-500 flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-grey-5 shadow-lg">
+          <p className="text-xs text-grey-3 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-primary-green-300" />
             Changes are saved per section. Tap save to publish.
           </p>
-          <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white">
-            <Save className="w-4 h-4 mr-1.5" />
+          <Button className="gap-1.5">
+            <Save className="w-4 h-4" />
             Save Changes
           </Button>
         </div>
@@ -247,30 +247,28 @@ const StepTile = ({
   <div
     className={cn(
       "relative bg-white rounded-xl border transition-all",
-      active
-        ? "border-emerald-300 shadow-md shadow-emerald-100/60"
-        : "border-slate-200 hover:border-slate-300",
+      active ? "border-primary-green-300/40" : "border-grey-5",
     )}
   >
-    {/* Left accent bar — distinct from the typical card outline */}
+    {/* Left accent bar */}
     <span
       className={cn(
         "absolute left-0 top-4 bottom-4 w-1 rounded-r transition-colors",
-        active ? "bg-emerald-500" : "bg-slate-200",
+        active ? "bg-primary-green-300" : "bg-grey-5",
       )}
     />
     <div className="pl-5 pr-4 sm:pl-6 sm:pr-5 py-4 sm:py-5">
       <div className="flex items-start gap-3">
-        {/* Numbered step badge — visual identity marker */}
+        {/* Numbered step badge */}
         <div
           className={cn(
             "shrink-0 w-10 h-10 rounded-xl flex flex-col items-center justify-center border",
             active
-              ? "bg-gradient-to-br from-emerald-500 to-teal-600 border-transparent text-white"
-              : "bg-slate-50 border-slate-200 text-slate-600",
+              ? "bg-primary-green-300 border-transparent text-white"
+              : "bg-grey-6 border-grey-5 text-grey-3",
           )}
         >
-          <span className="text-[8px] font-semibold uppercase tracking-wider opacity-80">
+          <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
             Step
           </span>
           <span className="text-xs font-bold leading-none">
@@ -283,14 +281,14 @@ const StepTile = ({
             <span
               className={cn(
                 "mt-0.5",
-                active ? "text-emerald-600" : "text-slate-500",
+                active ? "text-primary-green-300" : "text-grey-3",
               )}
             >
               {icon}
             </span>
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-slate-900">{title}</h4>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              <h4 className="text-sm font-bold text-grey-1">{title}</h4>
+              <p className="text-xs text-grey-3 mt-1 leading-relaxed">
                 {description}
               </p>
             </div>
@@ -312,7 +310,7 @@ const Field = ({
   children: React.ReactNode;
 }) => (
   <div>
-    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 block mb-1.5">
+    <label className="text-[11px] font-bold uppercase tracking-wider text-grey-3 block mb-1.5">
       {label}
     </label>
     {children}
@@ -320,8 +318,8 @@ const Field = ({
 );
 
 const Hint = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[11px] text-emerald-700 mt-1.5 flex items-start gap-1.5">
-    <span className="shrink-0 inline-block w-1 h-1 rounded-full bg-emerald-500 mt-1.5" />
+  <p className="text-[11px] text-grey-3 mt-1.5 flex items-start gap-1.5">
+    <span className="shrink-0 inline-block w-1 h-1 rounded-full bg-primary-green-300 mt-1.5" />
     {children}
   </p>
 );
@@ -337,14 +335,14 @@ const SubRow = ({
   description: string;
   control: React.ReactNode;
 }) => (
-  <div className="flex items-start justify-between gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+  <div className="flex items-start justify-between gap-3 p-3 rounded-lg bg-grey-6/60 border border-grey-5">
     <div className="flex items-start gap-2.5 flex-1">
-      <span className="w-7 h-7 rounded-md bg-white border border-slate-200 flex items-center justify-center text-slate-600 shrink-0">
+      <span className="w-7 h-7 rounded-md bg-white border border-grey-5 flex items-center justify-center text-grey-3 shrink-0">
         {icon}
       </span>
       <div>
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+        <p className="text-sm font-bold text-grey-1">{title}</p>
+        <p className="text-xs text-grey-3 mt-0.5">{description}</p>
       </div>
     </div>
     {control}
@@ -364,16 +362,16 @@ const CheckTile = ({
     className={cn(
       "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
       checked
-        ? "border-emerald-300 bg-emerald-50"
-        : "border-slate-200 bg-white hover:border-slate-300",
+        ? "border-primary-green-300/40 bg-secondary-6"
+        : "border-grey-5 bg-white hover:border-grey-4",
     )}
   >
     <span
       className={cn(
         "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0",
         checked
-          ? "bg-emerald-600 border-emerald-600"
-          : "border-slate-300 bg-white",
+          ? "bg-primary-green-300 border-primary-green-300"
+          : "border-grey-5 bg-white",
       )}
     >
       {checked && <CheckCircle2 className="w-3 h-3 text-white" />}
@@ -386,8 +384,8 @@ const CheckTile = ({
     />
     <span
       className={cn(
-        "text-sm font-medium",
-        checked ? "text-emerald-900" : "text-slate-700",
+        "text-sm font-bold",
+        checked ? "text-primary-green-100" : "text-grey-2",
       )}
     >
       {label}

@@ -4,6 +4,7 @@
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { SummaryCardSkeleton } from "@/components/app/SummaryCardSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -23,7 +24,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { createProductionHistoryColumns } from "./ProductionHistoryColunm";
-import { ProductionHistorySkeleton } from "./ProductionHistorySkeleton";
 
 const ProductionHistoryPage = () => {
   const { role } = useUserRole();
@@ -67,10 +67,6 @@ const ProductionHistoryPage = () => {
     isAccepting,
   });
 
-  if (isLoading) {
-    return <ProductionHistorySkeleton />;
-  }
-
   return (
     <div className="w-full flex flex-col gap-6">
       <div>
@@ -86,29 +82,38 @@ const ProductionHistoryPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-        <div className="bg-success-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
-          <div className="p-2.5 rounded-full bg-white/60">
-            <TrendingUp className="h-5 w-5 text-success-1" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Total Production Cost</p>
-            <p className="text-2xl font-extrabold text-success-1">
-              {formatNumber(productionStats.total)}
-            </p>
-          </div>
-        </div>
+        {isLoading || isFetching ? (
+          <>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </>
+        ) : (
+          <>
+            <div className="bg-success-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/60">
+                <TrendingUp className="h-5 w-5 text-success-1" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Total Production Cost</p>
+                <p className="text-2xl font-extrabold text-success-1">
+                  {formatNumber(productionStats.total)}
+                </p>
+              </div>
+            </div>
 
-        <div className="bg-warning-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
-          <div className="p-2.5 rounded-full bg-white/60">
-            <PackageMinus className="h-5 w-5 text-warning-1" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Moved</p>
-            <p className="text-2xl font-extrabold text-warning-1">
-              {new Intl.NumberFormat("en-NG").format(productionStats.moved)}
-            </p>
-          </div>
-        </div>
+            <div className="bg-warning-2 rounded-2xl p-4 sm:p-5 flex items-center gap-4">
+              <div className="p-2.5 rounded-full bg-white/60">
+                <PackageMinus className="h-5 w-5 text-warning-1" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Moved</p>
+                <p className="text-2xl font-extrabold text-warning-1">
+                  {new Intl.NumberFormat("en-NG").format(productionStats.moved)}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Main Content Card */}
@@ -214,7 +219,7 @@ const ProductionHistoryPage = () => {
           bordered={false}
           columns={columns}
           data={data?.data?.results?.data || []}
-          loading={isFetching}
+          loading={isLoading || isFetching}
           noDataText={
             <div className="py-12 text-center">
               <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">

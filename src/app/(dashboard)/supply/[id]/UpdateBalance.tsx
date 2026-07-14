@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { useFetchSingleSupplyHook } from "@/hooks/useFetchSingleSupplyHook";
 import { cn } from "@/lib/utils";
+import { formatToNaira } from "@/utils/formatMoney";
 
 const UpdateBalance = ({
   wallet,
@@ -34,11 +35,16 @@ const UpdateBalance = ({
 
   return (
     <div className="flex w-full flex-col items-start gap-3">
-      <div className="border bg-white    border-green-300 rounded w-full p-4 flex flex-col justify-between items-center">
+      <div className="border bg-white border-grey-5 rounded-lg w-full p-4 flex flex-col justify-between items-center">
         <span className="flex gap-2 items-center w-full">
-          <p>Balance : </p>
-          <p className={cn("", isDebt ? "text-red-500" : "text-green-300")}>
-            {wallet}
+          <p className="text-grey-2">Balance :</p>
+          <p
+            className={cn(
+              "font-bold",
+              isDebt ? "text-error-1" : "text-primary-green-300",
+            )}
+          >
+            {formatToNaira(wallet)}
           </p>
         </span>
       </div>
@@ -75,20 +81,20 @@ const UpdateBalance = ({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
+                      <SelectTrigger className="w-full border border-grey-5">
                         <SelectValue placeholder="Select a payment method" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    <SelectContent className="bg-white cursor-pointer border border-grey-5">
                       <SelectItem
                         value="CASH"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
                       >
                         Cash
                       </SelectItem>
                       <SelectItem
                         value="BANK"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
                       >
                         Bank Transfer
                       </SelectItem>
@@ -109,20 +115,20 @@ const UpdateBalance = ({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger className="w-full border border-green-300">
+                      <SelectTrigger className="w-full border border-grey-5">
                         <SelectValue placeholder="Select a payment method" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white cursor-pointer border border-green-100">
+                    <SelectContent className="bg-white cursor-pointer border border-grey-5">
                       <SelectItem
                         value="DEPOSIT"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
                       >
                         Deposit
                       </SelectItem>
                       <SelectItem
                         value="REFUND"
-                        className="hover:bg-primary-green-300 hover:text-white   cursor-pointer "
+                        className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
                       >
                         Refund
                       </SelectItem>

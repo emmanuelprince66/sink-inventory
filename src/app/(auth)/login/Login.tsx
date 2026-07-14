@@ -52,16 +52,16 @@ const Login = () => {
 
       {/* Login Form (Right Side) */}
       {showLogin ? (
-        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-6 lg:p-12 bg-gray-50">
-          <Card className="w-full md:max-w-[75%] p-2 md:p-8 shadow-lg border-0 bg-white">
+        <div className="w-full md:w-1/2 flex items-center flex-col justify-center p-2 md:p-6 lg:p-12 bg-[#F4F7F4]">
+          <Card className="w-full md:max-w-[75%] p-2 md:p-6 border border-grey-5 bg-white rounded-2xl">
             {/* Logo */}
 
-            <Image src="/asset/sink2.png" alt="Logo" width={130} height={130} />
+            <Image src="/asset/sink2.png" alt="Logo" width={90} height={90} />
 
             {/* Welcome Message */}
-            <div className="mb-8">
-              <h1 className="text-2xl font-light text-gray-600 mb-2">
-                Welcome to Sync360 Admin,
+            <div className="mb-4 mt-2">
+              <h1 className="text-xl font-bold text-grey-1">
+                Welcome to Sync360 Admin
               </h1>
             </div>
 
@@ -69,24 +69,21 @@ const Login = () => {
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
+                className="space-y-3"
               >
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         Email
                       </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter your email"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
-                          onChange={(e) => {
-                            field.onChange(e); // Ensure onChange is properly handled
-                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -98,7 +95,7 @@ const Login = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 uppercase tracking-wider">
+                      <FormLabel className="text-xs font-bold text-grey-2">
                         Password
                       </FormLabel>
                       <FormControl>
@@ -106,11 +103,8 @@ const Login = () => {
                           type="password"
                           showPasswordToggle
                           placeholder="Enter your password"
-                          className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                          className="rounded-full bg-[#EEF4EF] h-10"
                           {...field}
-                          onChange={(e) => {
-                            field.onChange(e); // Ensure onChange is properly handled
-                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -119,7 +113,7 @@ const Login = () => {
                 />
                 <Button
                   type="submit"
-                  className="w-full py-3 bg-green-800 hover:bg-gray-800 text-white font-medium rounded-full transition-colors uppercase tracking-wider h-[48px]"
+                  className="w-full h-10 rounded-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? <Spinner /> : "Continue"}
@@ -128,19 +122,19 @@ const Login = () => {
             </Form>
 
             {/* Additional Links */}
-            <div className="mt-6 space-y-4 text-center">
+            <div className="mt-3 space-y-2 text-center">
               <div className="flex justify-center items-center gap-2">
-                <p className="text-sm text-gray-600">
+                <p className="text-xs text-grey-3">
                   Don't have an account yet?
                 </p>
                 <Link href="/signup">
-                  <p className="text-sm text-blue-500 hover:text-blue-600 font-medium transition-colors">
+                  <p className="text-xs text-primary-green-300 hover:text-primary-green-100 font-bold transition-colors">
                     Sign Up
                   </p>
                 </Link>
               </div>
               <Link href="/forget-password">
-                <p className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                <p className="text-xs text-grey-3 hover:text-grey-2 transition-colors">
                   Forget Password
                 </p>
               </Link>
@@ -162,23 +156,25 @@ const Login = () => {
               />
 
               <div className="flex w-full flex-col items-start mt-4">
-                <p className="text-sm text-gray-600 mb-2">Enter Phone Number</p>
+                <p className="text-sm font-bold text-grey-2 mb-2">
+                  Enter Phone Number
+                </p>
                 <PhoneInput
                   international
                   defaultCountry="NG"
                   value={verifyOtpPhone}
                   onChange={(value) => setVerifyOtpPhone(value)}
                   placeholder="Enter phone number"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-full focus:border-orange-500 focus:ring-0 transition-colors"
+                  className="rounded-full bg-[#EEF4EF]"
                 />
-                <p className="text-[10px] text-yellow-600 mt-1 mb-2 ">
+                <p className="text-xs text-warning-1 mt-1.5 mb-2">
                   Please enter the phone number you used in signing up.
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 mt-4">
                 <Button
-                  className="w-full h-[48px]"
+                  className="w-full h-[48px] rounded-full"
                   onClick={handleVerifyOtp}
                   disabled={isVerifying || otp.length !== 6 || !verifyOtpPhone}
                 >
@@ -187,7 +183,7 @@ const Login = () => {
 
                 <Button
                   variant="outline"
-                  className="w-full h-[48px]"
+                  className="w-full h-[48px] rounded-full"
                   onClick={handleResendOtp}
                   disabled={isVerifying || !verifyOtpPhone}
                 >

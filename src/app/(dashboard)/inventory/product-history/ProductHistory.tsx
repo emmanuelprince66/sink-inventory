@@ -2,6 +2,7 @@
 
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
+import { SummaryCardSkeleton } from "@/components/app/SummaryCardSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -25,7 +26,6 @@ import {
 } from "lucide-react";
 import { formatToNaira } from "@/utils/formatMoney";
 import { createProductHistoryColumns } from "./ProductHistoryColumns";
-import { ProductHistorySkeleton } from "./ProductHistorySkeleton";
 
 const tabIcons = {
   WASTE: Trash2,
@@ -77,10 +77,6 @@ const ProductHistory = () => {
 
   const columns = createProductHistoryColumns();
 
-  if (isLoading) {
-    return <ProductHistorySkeleton />;
-  }
-
   const colors = tabColors[activeTab];
   const activeTabLabel =
     PRODUCT_HISTORY_TABS.find((t) => t.value === activeTab)?.label || "Records";
@@ -103,29 +99,38 @@ const ProductHistory = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-        <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
-          <div className="p-2.5 rounded-full bg-white/60">
-            <ActiveIcon className={cn("h-5 w-5", colors.icon)} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Total Records</p>
-            <p className={cn("text-2xl font-extrabold", colors.value)}>
-              {total}
-            </p>
-          </div>
-        </div>
+        {isLoading || isFetching ? (
+          <>
+            <SummaryCardSkeleton />
+            <SummaryCardSkeleton />
+          </>
+        ) : (
+          <>
+            <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
+              <div className="p-2.5 rounded-full bg-white/60">
+                <ActiveIcon className={cn("h-5 w-5", colors.icon)} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Total Records</p>
+                <p className={cn("text-2xl font-extrabold", colors.value)}>
+                  {total}
+                </p>
+              </div>
+            </div>
 
-        <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
-          <div className="p-2.5 rounded-full bg-white/60">
-            <Banknote className={cn("h-5 w-5", colors.icon)} />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-grey-3">Total Value</p>
-            <p className={cn("text-2xl font-extrabold", colors.value)}>
-              {formatCurrency(totalValue)}
-            </p>
-          </div>
-        </div>
+            <div className={cn("rounded-2xl p-4 sm:p-5 flex items-center gap-4", colors.bg)}>
+              <div className="p-2.5 rounded-full bg-white/60">
+                <Banknote className={cn("h-5 w-5", colors.icon)} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-grey-3">Total Value</p>
+                <p className={cn("text-2xl font-extrabold", colors.value)}>
+                  {formatCurrency(totalValue)}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Main Content Card */}
@@ -247,7 +252,7 @@ const ProductHistory = () => {
           bordered={false}
           columns={columns}
           data={results}
-          loading={isFetching}
+          loading={isLoading || isFetching}
           noDataText={
             <div className="py-12 text-center">
               <div className="w-16 h-16 bg-grey-6 rounded-full flex items-center justify-center mx-auto mb-4">

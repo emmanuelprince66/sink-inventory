@@ -30,6 +30,7 @@ const SupplyHistoryTable = ({
         data={response?.supply_history}
         loading={loading}
         noDataText="No Suppliers found" // Updated text
+        bordered={false}
       />
 
       {/* modal to add supply */}

@@ -14,11 +14,13 @@ export const usePosHook = ({
   setSearchInput,
   addToCart,
   cartItems,
+  incrementQuantity,
 }: {
   searchInput?: string;
   addToCart?: any;
   setSearchInput?: any;
   cartItems?: any;
+  incrementQuantity?: (itemId: string) => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
@@ -71,7 +73,7 @@ export const usePosHook = ({
       id: business_id,
       search: searchTerm,
       page,
-      limit: 40,
+      limit: 20,
       include_raw_material: "false", // Exclude raw materials from regular search results
     },
     enabled: !!business_id,
@@ -227,23 +229,22 @@ export const usePosHook = ({
         return;
       }
 
-      // Check if product already exists in cart
-      const productExist = cartItems?.find((item: any) => item.id === cart.id);
-
-      if (productExist) {
-        showToast("Item already in cart", "info");
+      if (saleCompleted) {
+        showToast("Please start a new sale first", "info");
         return;
       }
 
-      if (saleCompleted) {
-        showToast("Please start a new sale first", "info");
+      // Product already in cart — bump the quantity instead of blocking.
+      const productExist = cartItems?.find((item: any) => item.id === cart.id);
+      if (productExist) {
+        incrementQuantity?.(cart.id);
         return;
       }
 
       addToCart(cart);
       showToast(`${cart.name} added to cart`, "success");
     },
-    [cartItems, addToCart, showToast, saleCompleted],
+    [cartItems, addToCart, incrementQuantity, showToast, saleCompleted],
   );
 
   // Effect to handle when scanned product data is fetched

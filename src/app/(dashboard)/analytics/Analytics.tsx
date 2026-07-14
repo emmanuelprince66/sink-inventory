@@ -94,30 +94,23 @@ const Analytics = () => {
       <div className="w-full">
         {/* Header Section */}
         <div className="w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <p className="text-xl sm:text-2xl lg:text-3xl text-primary-black-100 font-medium">
+          <p className="text-xl sm:text-2xl lg:text-3xl text-grey-1 font-extrabold">
             Analytics
           </p>
           <div className="grid grid-cols-1 sm:flex justify-end gap-2 sm:gap-3 w-full">
             <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
 
+            {/* Download Report temporarily disabled — re-enable when ready.
             <DownloadReportButton
               business_id={business_id}
               dateRange={dateRange}
             />
+            */}
 
             <GenerateReportButton
               reportType="analytics"
               className="w-full sm:w-auto"
             />
-            {/* <Button
-              variant={"outline"}
-              className="text-green-600 px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base w-full sm:w-auto hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleDownloadReport}
-              disabled={isDownloading || !business_id}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              {isDownloading ? "Downloading..." : "Download Report"}
-            </Button> */}
           </div>
         </div>
 
@@ -126,25 +119,25 @@ const Analytics = () => {
           <Tabs
             value={activeTab}
             onValueChange={(value) => setActiveTab(value as typeof activeTab)}
-            className="w-full mt-4 sm:mt-6"
+            className="w-full"
           >
-            {/* Responsive Tabs List */}
-            <div className="mb-4 overflow-x-auto">
-              <TabsList className="w-full min-w-[300px] sm:w-auto inline-flex">
+            {/* Pill tabs — compact, left-aligned, matches the Analytics reference screenshot */}
+            <div className="mb-3 overflow-x-auto">
+              <div className="inline-flex items-center gap-2">
                 {AnalyticsOptionsTab.map((tab) => (
-                  <TabsTrigger
+                  <button
                     key={tab}
-                    value={tab}
-                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-md h-10 sm:h-14 min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm hover:text-black font-medium transition-colors ${
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors cursor-pointer ${
                       activeTab === tab
                         ? "bg-primary-green-300 text-white"
-                        : "bg-primary-green-200 text-primary-black-100"
+                        : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6"
                     }`}
                   >
                     {tab}
-                  </TabsTrigger>
+                  </button>
                 ))}
-              </TabsList>
+              </div>
             </div>
 
             {/* Tab Content */}
@@ -169,7 +162,7 @@ const Analytics = () => {
                 (user?.role === "OWNER" ||
                   user?.role === "ADMIN-ATTENDANT" ||
                   user?.role === "ACCOUNTANT") && (
-                  <TabsContent value="Products" className="mt-0 p-3 sm:p-6">
+                  <TabsContent value="Products" className="mt-0">
                     {ProductAnalyticLoading ? (
                       <SkeletonComp />
                     ) : (
@@ -186,7 +179,7 @@ const Analytics = () => {
                 (user?.role === "OWNER" ||
                   user?.role === "ADMIN-ATTENDANT" ||
                   user?.role === "ACCOUNTANT") && (
-                  <TabsContent value="Customers" className="mt-0 p-3 sm:p-6">
+                  <TabsContent value="Customers" className="mt-0">
                     {CustomerAnalyticLoading ? (
                       <SkeletonComp />
                     ) : (

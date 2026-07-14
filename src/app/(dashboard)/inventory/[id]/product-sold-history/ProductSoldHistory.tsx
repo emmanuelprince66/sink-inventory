@@ -44,7 +44,7 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
         {!productData || ProductTransactionLoading ? (
           <div className="w-full flex items-center gap-4">
             {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={index} className="h-40 w-full bg-grey-6" />
+              <Skeleton key={index} className="h-40 w-full bg-grey-5" />
             ))}
           </div>
         ) : (
@@ -172,9 +172,9 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
         {ProductTransactionLoading || !ProductTransactionData ? (
           <div className="w-full px-4 sm:px-6 pb-4 sm:pb-6">
             <div className="space-y-4">
-              <Skeleton className="h-10 w-full bg-grey-6" />
+              <Skeleton className="h-10 w-full bg-grey-5" />
               {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-16 w-full bg-grey-6 mt-2" />
+                <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
               ))}
             </div>
           </div>

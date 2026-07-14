@@ -13,6 +13,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { endOfMonth, format, getDaysInMonth, startOfMonth } from "date-fns";
+import { Landmark } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Doughnut } from "react-chartjs-2";
 import { DateRange } from "react-day-picker";
@@ -142,26 +143,26 @@ const TableSkeleton = ({
   rows?: number;
   cols?: number;
 }) => (
-  <div className="p-4 sm:p-6 rounded-xl border border-gray-200 shadow-sm bg-white animate-pulse">
-    <div className="h-6 w-56 bg-gray-200 rounded mx-auto mb-6" />
+  <div className="p-4 sm:p-6 rounded-2xl border border-border-tint bg-white animate-pulse">
+    <div className="h-6 w-56 bg-grey-5 rounded mx-auto mb-6" />
     <div className="overflow-x-auto">
       <table className="w-full" style={{ minWidth: cols > 6 ? 900 : "auto" }}>
         <thead>
           <tr>
             {Array.from({ length: cols }).map((_, i) => (
               <th key={i} className="py-3 px-2">
-                <div className="h-4 bg-gray-200 rounded" />
+                <div className="h-4 bg-grey-5 rounded" />
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
           {Array.from({ length: rows }).map((_, ri) => (
-            <tr key={ri} className="border-b border-gray-100">
+            <tr key={ri} className="border-b border-border-tint">
               {Array.from({ length: cols }).map((_, ci) => (
                 <td key={ci} className="py-3 px-2">
                   <div
-                    className={`h-4 rounded ${ci === 1 ? "bg-gray-200 w-3/4" : "bg-gray-100"}`}
+                    className={`h-4 rounded ${ci === 1 ? "bg-grey-5 w-3/4" : "bg-grey-6"}`}
                   />
                 </td>
               ))}
@@ -178,15 +179,12 @@ const TableSkeleton = ({
 const CustomCard = ({
   children,
   className = "",
-  shadow = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  shadow?: boolean;
 }) => (
   <div
-    className={`p-4 sm:p-6 rounded-xl border ${className} ${shadow ? "shadow-sm" : ""}`}
-    style={{ backgroundColor: "#FEFFFE" }}
+    className={`p-4 sm:p-6 rounded-2xl border border-border-tint bg-white ${className}`}
   >
     {children}
   </div>
@@ -205,20 +203,17 @@ const CustomSalesCard = ({
 }) => {
   const formattedAmount = typeof amount === "number" ? fmt(amount) : amount;
   return (
-    <CustomCard
-      className="bg-primary-green-200 border-primary-green-300 w-full shadow"
-      shadow
-    >
+    <CustomCard className="w-full">
       <div className="flex flex-col gap-2 items-start">
-        <p className="font-[500] text-xs sm:text-sm text-primary-black-100">
+        <p className="text-xs sm:text-sm font-bold text-primary-green-300">
           {title}
         </p>
-        <p className="font-[600] text-lg sm:text-xl text-primary-black-100">
+        <p className="text-lg sm:text-xl font-extrabold text-grey-1">
           {type === "transaction" ? amount : formattedAmount}
         </p>
         {change !== undefined && (
           <p
-            className={`text-xs ${change >= 0 ? "text-green-600" : "text-red-600"}`}
+            className={`text-xs font-semibold ${change >= 0 ? "text-success-1" : "text-error-1"}`}
           >
             {change >= 0 ? "+" : ""}
             {change}% from last period
@@ -248,19 +243,19 @@ const YearTable = ({
   const grandTotal = colTotals.reduce((a, b) => a + b, 0);
 
   return (
-    <CustomCard className="border-gray-200" shadow>
-      <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+    <CustomCard>
+      <h3 className="font-extrabold text-lg sm:text-xl mb-4 text-center text-grey-1">
         {title}
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs sm:text-sm" style={{ minWidth: 900 }}>
           <thead>
-            <tr className="border-b-2 border-gray-300">
-              <th className="text-left py-3 px-2 font-semibold text-gray-700 sticky left-0 bg-white">
+            <tr className="border-b-2 border-grey-5">
+              <th className="text-left py-3 px-2 font-semibold text-grey-3 sticky left-0 bg-white">
                 #
               </th>
               <th
-                className="text-left py-3 px-2 font-semibold text-gray-700 sticky left-6 bg-white"
+                className="text-left py-3 px-2 font-semibold text-grey-3 sticky left-6 bg-white"
                 style={{ minWidth: 160 }}
               >
                 Category
@@ -268,14 +263,14 @@ const YearTable = ({
               {MONTHS.map((m) => (
                 <th
                   key={m}
-                  className="text-right py-3 px-2 font-semibold text-gray-700"
+                  className="text-right py-3 px-2 font-semibold text-grey-3"
                   style={{ minWidth: 90 }}
                 >
                   {m}
                 </th>
               ))}
               <th
-                className="text-right py-3 px-2 font-semibold text-gray-900 bg-gray-50"
+                className="text-right py-3 px-2 font-semibold text-grey-1 bg-grey-6"
                 style={{ minWidth: 110 }}
               >
                 YTD Total
@@ -285,7 +280,7 @@ const YearTable = ({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={15} className="text-center py-8 text-gray-400">
+                <td colSpan={15} className="text-center py-8 text-grey-4">
                   No data for this period
                 </td>
               </tr>
@@ -293,12 +288,12 @@ const YearTable = ({
               rows.map((item, i) => (
                 <tr
                   key={i}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-border-tint hover:bg-grey-6"
                 >
-                  <td className="py-2 px-2 text-gray-500 sticky left-0 bg-inherit">
+                  <td className="py-2 px-2 text-grey-4 sticky left-0 bg-inherit">
                     {item.number}
                   </td>
-                  <td className="py-2 px-2 font-medium text-gray-900 sticky left-6 bg-inherit">
+                  <td className="py-2 px-2 font-medium text-grey-1 sticky left-6 bg-inherit">
                     {item.category}
                   </td>
                   {item.monthly.map((v, mi) => (
@@ -309,17 +304,17 @@ const YearTable = ({
                       {v !== 0 ? (
                         fmt(v)
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-grey-5">—</span>
                       )}
                     </td>
                   ))}
-                  <td className="py-2 px-2 text-right font-bold text-gray-800 bg-gray-50">
+                  <td className="py-2 px-2 text-right font-bold text-grey-2 bg-grey-6">
                     {fmt(item.ytd)}
                   </td>
                 </tr>
               ))
             )}
-            <tr className="border-t-2 border-gray-300 bg-gray-100 font-bold">
+            <tr className="border-t-2 border-grey-5 bg-grey-6 font-bold">
               <td className="py-3 px-2" colSpan={2}>
                 {totalsLabel}
               </td>
@@ -328,7 +323,7 @@ const YearTable = ({
                   {fmt(t)}
                 </td>
               ))}
-              <td className="py-3 px-2 text-right text-gray-900">
+              <td className="py-3 px-2 text-right text-grey-1">
                 {fmt(grandTotal)}
               </td>
             </tr>
@@ -355,21 +350,21 @@ const MonthTable = ({
   const totalActual = rows.reduce((s, r) => s + r.actual, 0);
 
   return (
-    <CustomCard className="border-gray-200" shadow>
-      <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+    <CustomCard>
+      <h3 className="font-extrabold text-lg sm:text-xl mb-4 text-center text-grey-1">
         {title}
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs sm:text-sm">
           <thead>
-            <tr className="border-b-2 border-gray-300">
-              <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
+            <tr className="border-b-2 border-grey-5">
+              <th className="text-left py-3 px-2 sm:px-4 font-semibold text-grey-3">
                 #
               </th>
-              <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700">
+              <th className="text-left py-3 px-2 sm:px-4 font-semibold text-grey-3">
                 Category
               </th>
-              <th className="text-right py-3 px-2 sm:px-4 font-semibold text-gray-700">
+              <th className="text-right py-3 px-2 sm:px-4 font-semibold text-grey-3">
                 Amount
               </th>
             </tr>
@@ -377,7 +372,7 @@ const MonthTable = ({
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center py-8 text-gray-400">
+                <td colSpan={3} className="text-center py-8 text-grey-4">
                   No data for this month
                 </td>
               </tr>
@@ -385,12 +380,12 @@ const MonthTable = ({
               rows.map((item, i) => (
                 <tr
                   key={i}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b border-border-tint hover:bg-grey-6"
                 >
-                  <td className="py-3 px-2 sm:px-4 text-gray-600">
+                  <td className="py-3 px-2 sm:px-4 text-grey-3">
                     {item.number}
                   </td>
-                  <td className="py-3 px-2 sm:px-4 font-medium text-gray-900">
+                  <td className="py-3 px-2 sm:px-4 font-medium text-grey-1">
                     {item.category}
                   </td>
                   <td
@@ -399,13 +394,13 @@ const MonthTable = ({
                     {item.actual !== 0 ? (
                       fmt(item.actual)
                     ) : (
-                      <span className="text-gray-300">—</span>
+                      <span className="text-grey-5">—</span>
                     )}
                   </td>
                 </tr>
               ))
             )}
-            <tr className="border-t-2 border-gray-300 bg-gray-50 font-bold">
+            <tr className="border-t-2 border-grey-5 bg-grey-6 font-bold">
               <td className="py-3 px-2 sm:px-4" colSpan={2}>
                 {totalsLabel}
               </td>
@@ -455,28 +450,28 @@ const NetProfitTable = ({
         label: "Gross Profit",
         values: revenueByMonth,
         ytd: ytdRevenue,
-        accent: "text-green-600",
+        accent: "text-success-1",
         bold: false,
       },
       {
         label: "Direct Costs (Expenses)",
         values: expensesByMonth,
         ytd: ytdExpenses,
-        accent: "text-red-500",
+        accent: "text-error-1",
         bold: false,
       },
       {
         label: "Net Profit",
         values: netProfitByMonth,
         ytd: ytdNet,
-        accent: "text-emerald-700",
+        accent: "text-primary-green-300",
         bold: true,
       },
     ];
 
     return (
-      <CustomCard className="border-gray-200" shadow>
-        <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+      <CustomCard>
+        <h3 className="font-extrabold text-lg sm:text-xl mb-4 text-center text-grey-1">
           Net Profit Summary — {selectedYear} YTD
         </h3>
         <div className="overflow-x-auto">
@@ -485,9 +480,9 @@ const NetProfitTable = ({
             style={{ minWidth: 900 }}
           >
             <thead>
-              <tr className="border-b-2 border-gray-300">
+              <tr className="border-b-2 border-grey-5">
                 <th
-                  className="text-left py-3 px-2 font-semibold text-gray-700 sticky left-0 bg-white"
+                  className="text-left py-3 px-2 font-semibold text-grey-3 sticky left-0 bg-white"
                   style={{ minWidth: 200 }}
                 >
                   Category
@@ -495,14 +490,14 @@ const NetProfitTable = ({
                 {MONTHS.map((m) => (
                   <th
                     key={m}
-                    className="text-right py-3 px-2 font-semibold text-gray-700"
+                    className="text-right py-3 px-2 font-semibold text-grey-3"
                     style={{ minWidth: 90 }}
                   >
                     {m}
                   </th>
                 ))}
                 <th
-                  className="text-right py-3 px-2 font-semibold text-gray-900 bg-gray-50"
+                  className="text-right py-3 px-2 font-semibold text-grey-1 bg-grey-6"
                   style={{ minWidth: 110 }}
                 >
                   YTD
@@ -513,27 +508,27 @@ const NetProfitTable = ({
               {summaryRows.map((row, i) => (
                 <tr
                   key={i}
-                  className={`border-b ${row.bold ? "border-t-2 border-gray-300 bg-gray-50" : "border-gray-100 hover:bg-gray-50"}`}
+                  className={`border-b ${row.bold ? "border-t-2 border-grey-5 bg-grey-6" : "border-border-tint hover:bg-grey-6"}`}
                 >
                   <td
-                    className={`py-3 px-2 sticky left-0 bg-inherit ${row.bold ? "font-bold" : "font-medium"} text-gray-900`}
+                    className={`py-3 px-2 sticky left-0 bg-inherit ${row.bold ? "font-bold" : "font-medium"} text-grey-1`}
                   >
                     {row.label}
                   </td>
                   {row.values.map((v, mi) => (
                     <td
                       key={mi}
-                      className={`py-3 px-2 text-right ${row.bold ? "font-bold" : "font-semibold"} ${v < 0 ? "text-red-600" : row.accent}`}
+                      className={`py-3 px-2 text-right ${row.bold ? "font-bold" : "font-semibold"} ${v < 0 ? "text-error-1" : row.accent}`}
                     >
                       {v !== 0 ? (
                         fmt(v)
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-grey-5">—</span>
                       )}
                     </td>
                   ))}
                   <td
-                    className={`py-3 px-2 text-right bg-gray-50 ${row.bold ? "font-bold text-gray-900" : "font-semibold"} ${row.ytd < 0 ? "text-red-600" : row.accent}`}
+                    className={`py-3 px-2 text-right bg-grey-6 ${row.bold ? "font-bold text-grey-1" : "font-semibold"} ${row.ytd < 0 ? "text-error-1" : row.accent}`}
                   >
                     {fmt(row.ytd)}
                   </td>
@@ -556,37 +551,37 @@ const NetProfitTable = ({
     {
       label: "Revenue",
       actual: revenueActual,
-      accent: "text-green-600",
+      accent: "text-success-1",
       bold: false,
     },
     {
       label: "Direct Costs (Expenses)",
       actual: expensesActual,
-      accent: "text-red-500",
+      accent: "text-error-1",
       bold: false,
     },
     {
       label: "Net Profit",
       actual: netActual,
-      accent: "text-emerald-700",
+      accent: "text-primary-green-300",
       bold: true,
     },
   ];
 
   return (
-    <CustomCard className="border-gray-200" shadow>
-      <h3 className="font-[600] text-lg sm:text-xl mb-4 text-center">
+    <CustomCard>
+      <h3 className="font-extrabold text-lg sm:text-xl mb-4 text-center text-grey-1">
         Net Profit Summary —{" "}
         {dateRangeLabel || `${FULL_MONTHS[selectedMonth]} ${selectedYear}`}
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-xs sm:text-sm">
           <thead>
-            <tr className="border-b-2 border-gray-300">
-              <th className="text-left py-3 px-4 font-semibold text-gray-700">
+            <tr className="border-b-2 border-grey-5">
+              <th className="text-left py-3 px-4 font-semibold text-grey-3">
                 Category
               </th>
-              <th className="text-right py-3 px-4 font-semibold text-gray-700">
+              <th className="text-right py-3 px-4 font-semibold text-grey-3">
                 Amount
               </th>
             </tr>
@@ -595,15 +590,15 @@ const NetProfitTable = ({
             {rows.map((row, i) => (
               <tr
                 key={i}
-                className={`border-b ${row.bold ? "border-t-2 border-gray-300 bg-gray-50" : "border-gray-100 hover:bg-gray-50"}`}
+                className={`border-b ${row.bold ? "border-t-2 border-grey-5 bg-grey-6" : "border-border-tint hover:bg-grey-6"}`}
               >
                 <td
-                  className={`py-3 px-4 ${row.bold ? "font-bold" : "font-medium"} text-gray-900`}
+                  className={`py-3 px-4 ${row.bold ? "font-bold" : "font-medium"} text-grey-1`}
                 >
                   {row.label}
                 </td>
                 <td
-                  className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${row.actual < 0 ? "text-red-600" : row.accent}`}
+                  className={`py-3 px-4 text-right ${row.bold ? "font-bold" : "font-semibold"} ${row.actual < 0 ? "text-error-1" : row.accent}`}
                 >
                   {fmt(row.actual)}
                 </td>
@@ -634,19 +629,18 @@ const FilterBar = ({
   setMonthDateRange: (d: DateRange | undefined) => void;
 }) => {
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-6 p-4 rounded-xl border border-gray-200 bg-gray-50">
+    <div className="flex flex-wrap items-center gap-3 mb-6">
       {/* Mode toggle */}
-      <div className="flex rounded-lg overflow-hidden border border-gray-300">
+      <div className="flex rounded-full overflow-hidden bg-grey-6 p-1">
         {(["year", "month"] as FilterMode[]).map((m) => (
           <button
             key={m}
             onClick={() => setFilterMode(m)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors ${
+            className={`px-4 py-1.5 text-sm font-bold capitalize rounded-full transition-colors cursor-pointer ${
               filterMode === m
-                ? "text-white"
-                : "bg-white text-gray-600 hover:bg-gray-100"
+                ? "bg-primary-green-300 text-white"
+                : "text-grey-3 hover:text-grey-2"
             }`}
-            style={filterMode === m ? { backgroundColor: "#16a34a" } : {}}
           >
             {m === "year" ? "Year (YTD)" : "Month"}
           </button>
@@ -655,11 +649,11 @@ const FilterBar = ({
 
       {/* Year selector */}
       <div className="flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-700">Year:</label>
+        <label className="text-sm font-bold text-grey-3">Year:</label>
         <select
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-400"
+          className="border border-grey-5 rounded-lg px-3 py-2 text-sm bg-white text-grey-2 focus:outline-none focus:ring-2 focus:ring-primary-green-300/30"
         >
           {YEARS.map((y) => (
             <option key={y} value={y}>
@@ -672,9 +666,7 @@ const FilterBar = ({
       {/* Date Range selector — only in month mode */}
       {filterMode === "month" && (
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">
-            Date Range:
-          </label>
+          <label className="text-sm font-bold text-grey-3">Date Range:</label>
           <DatePickerWithRange
             date={monthDateRange}
             onDateChange={setMonthDateRange}
@@ -682,7 +674,7 @@ const FilterBar = ({
         </div>
       )}
 
-      <span className="ml-auto text-xs text-gray-500 italic">
+      <span className="ml-auto text-xs text-grey-4 italic">
         {filterMode === "year"
           ? `Showing all months for ${selectedYear}`
           : monthDateRange?.from && monthDateRange?.to
@@ -844,8 +836,8 @@ const SalesAnalytics = ({
           SalesAnalyticData?.data?.total_profit ?? 0,
           SalesAnalyticData?.data?.expenses ?? 0,
         ],
-        backgroundColor: ["#4CAF50", "#DC2626"],
-        borderColor: ["#388E3C", "red"],
+        backgroundColor: ["#329661", "#e53e3e"],
+        borderColor: ["#329661", "#e53e3e"],
         borderWidth: 1,
       },
     ],
@@ -855,7 +847,17 @@ const SalesAnalytics = ({
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: "right" },
+      legend: {
+        position: "right",
+        labels: {
+          color: "#374151",
+          font: { weight: "bold", size: 12 },
+          boxWidth: 10,
+          boxHeight: 10,
+          usePointStyle: true,
+          pointStyle: "circle",
+        },
+      },
       tooltip: {
         callbacks: {
           label: (ctx) => {
@@ -875,7 +877,7 @@ const SalesAnalytics = ({
   const tableCols = filterMode === "year" ? 15 : 3;
 
   return (
-    <div className="w-full py-4 sm:py-8">
+    <div className="w-full pb-4 sm:pb-8">
       {/* Top controls */}
       <div className="w-full justify-end flex gap-3 mb-4">
         {user?.role === "OWNER" && (
@@ -889,7 +891,7 @@ const SalesAnalytics = ({
         {attendantsName && (
           <Button
             variant="outline"
-            className="border primary-red-100 text-primary-red-100 text-xs sm:text-sm"
+            className="border-error-1/30 text-error-1 hover:bg-error-2 text-xs sm:text-sm"
             onClick={handleClearAttendant}
           >
             Clear
@@ -926,10 +928,11 @@ const SalesAnalytics = ({
 
       {/* Doughnut + Payment Methods */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <CustomCard className="h-full border-gray-200" shadow>
+        <CustomCard className="h-full">
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-base sm:text-lg mb-4">
-              Net Profit : {fmt(SalesAnalyticData?.data?.net_profit ?? 0)}
+            <p className="text-sm font-bold text-grey-3">Net Profit</p>
+            <h3 className="text-xl font-extrabold text-grey-1 mb-4">
+              {fmt(SalesAnalyticData?.data?.net_profit ?? 0)}
             </h3>
             <div className="flex-grow h-[250px] sm:h-[300px]">
               <Doughnut data={chartData} options={chartOptions} />
@@ -937,12 +940,12 @@ const SalesAnalytics = ({
           </div>
         </CustomCard>
 
-        <CustomCard className="border-gray-200" shadow>
+        <CustomCard>
           <div className="h-full flex flex-col">
-            <h3 className="font-[600] text-base sm:text-lg mb-4">
+            <h3 className="text-base sm:text-lg font-extrabold text-grey-1 mb-4">
               Payment Methods
             </h3>
-            <div className="space-y-4 flex-grow">
+            <div className="space-y-2 flex-grow">
               {SalesAnalyticData?.data?.transaction_breakdown?.map(
                 (method: any, index: number) => (
                   <div
@@ -950,12 +953,17 @@ const SalesAnalytics = ({
                     onClick={() =>
                       handleOpenPaymentDetailsModal(method?.payment_method)
                     }
-                    className="flex cursor-pointer p-2 hover:bg-primary-green-500 justify-between items-center w-full text-sm sm:text-base"
+                    className="flex cursor-pointer p-2 rounded-lg hover:bg-grey-6 justify-between items-center w-full text-sm sm:text-base transition-colors"
                   >
-                    <span className="font-medium">
-                      {method?.payment_method}
-                    </span>
-                    <span className="font-semibold">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-8 h-8 rounded-full bg-secondary-6 flex items-center justify-center flex-shrink-0">
+                        <Landmark className="w-3.5 h-3.5 text-primary-green-300" />
+                      </span>
+                      <span className="font-semibold text-grey-2">
+                        {method?.payment_method}
+                      </span>
+                    </div>
+                    <span className="font-bold text-grey-1">
                       {fmt(method?.total_amount)}
                     </span>
                   </div>
@@ -969,8 +977,10 @@ const SalesAnalytics = ({
       {/* Financial Tables */}
       <div className="space-y-6">
         <div>
-          <div className="text-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">{headingText}</h2>
+          <div className="mb-4">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-grey-1">
+              {headingText}
+            </h2>
           </div>
           <FilterBar
             filterMode={filterMode}
@@ -990,14 +1000,14 @@ const SalesAnalytics = ({
             title="Revenue"
             rows={incomeYearRows}
             totalsLabel="TOTAL REVENUE"
-            accentClass="text-green-600"
+            accentClass="text-success-1"
           />
         ) : (
           <MonthTable
             title={`Revenue — ${dateRangeLabel}`}
             rows={incomeMonthRows}
             totalsLabel="TOTAL REVENUE"
-            actualAccent="text-green-600"
+            actualAccent="text-success-1"
           />
         )}
 
@@ -1009,14 +1019,14 @@ const SalesAnalytics = ({
             title="Direct Costs (Expenses)"
             rows={directCostYearRows}
             totalsLabel="TOTAL DIRECT COSTS"
-            accentClass="text-red-600"
+            accentClass="text-error-1"
           />
         ) : (
           <MonthTable
             title={`Direct Costs — ${dateRangeLabel}`}
             rows={directCostMonthRows}
             totalsLabel="TOTAL DIRECT COSTS"
-            actualAccent="text-red-600"
+            actualAccent="text-error-1"
           />
         )}
 

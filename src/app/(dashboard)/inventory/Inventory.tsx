@@ -121,6 +121,37 @@ const DEFAULT_FILTERS: ProductFilters = {
   watchlist: false,
 };
 
+// Table-shaped skeleton (header row + thumbnail/name/category/price/status/action
+// columns) so loading state resembles the real InventoryTable/ComboTable/ServiceTable
+// instead of generic flat bars.
+const InventoryTableSkeleton = () => (
+  <div className="w-full mt-4">
+    <div className="hidden md:flex items-center gap-4 px-6 py-3.5 bg-grey-6 rounded-t-lg">
+      <Skeleton className="h-3 w-6 bg-grey-5" />
+      <Skeleton className="h-3 w-32 bg-grey-5 flex-1" />
+      <Skeleton className="h-3 w-20 bg-grey-5" />
+      <Skeleton className="h-3 w-16 bg-grey-5" />
+      <Skeleton className="h-3 w-16 bg-grey-5" />
+      <Skeleton className="h-3 w-12 bg-grey-5" />
+    </div>
+    <div className="divide-y divide-grey-6">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="flex items-center gap-4 px-6 py-4">
+          <Skeleton className="hidden md:block h-3 w-6 bg-grey-5" />
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Skeleton className="h-10 w-10 rounded-lg bg-grey-5 shrink-0" />
+            <Skeleton className="h-3.5 w-32 sm:w-40 bg-grey-5" />
+          </div>
+          <Skeleton className="hidden sm:block h-3 w-16 bg-grey-5" />
+          <Skeleton className="hidden sm:block h-3 w-14 bg-grey-5" />
+          <Skeleton className="h-6 w-16 rounded-full bg-grey-5" />
+          <Skeleton className="hidden sm:block h-4 w-4 rounded bg-grey-5" />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
@@ -325,8 +356,8 @@ const Inventory = () => {
         </div>
 
         {/* Overview Cards */}
-        <div className="mb-4 sm:mb-6">
-          <p className="text-sm font-bold text-primary-green-300 border-b border-grey-6 pb-2 mb-3 sm:mb-4">
+        <div>
+          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-2 mb-3 sm:mb-4">
             Overview
           </p>
 
@@ -335,8 +366,8 @@ const Inventory = () => {
               {Array.from({ length: 3 }).map((_, index) => (
                 <CustomCard key={index} className="w-full border-grey-5">
                   <div className="flex flex-col gap-4 sm:gap-6 items-start">
-                    <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-6" />
-                    <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-6" />
+                    <Skeleton className="h-4 w-[80px] sm:w-[100px] bg-grey-5" />
+                    <Skeleton className="h-5 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
                   </div>
                 </CustomCard>
               ))}
@@ -370,7 +401,7 @@ const Inventory = () => {
       {/* Main Content Section */}
       <div className="w-full  overflow-hidden">
         {/* Tabs Header */}
-        <div className="border-b border-grey-5">
+        <div className="border-b border-border-tint">
           <div className="flex items-center gap-6">
             <button
               onClick={() => handleTabChange("PRODUCT")}
@@ -424,7 +455,7 @@ const Inventory = () => {
         </div>
 
         {/* Categories and Search Header */}
-        <div className="py-4 sm:py-6 border-b border-grey-5 w-full overflow-hidden">
+        <div className="py-4 sm:py-6 border-b border-border-tint w-full overflow-hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4">
             <h2 className="text-base sm:text-lg font-extrabold text-grey-1">
               {activeTab === "PRODUCT" ? "Manage Products" : "Manage Services"}
@@ -565,23 +596,23 @@ const Inventory = () => {
               {CategoriesDataLoading || !CategoriesData ? (
                 <div className="space-y-4">
                   <div>
-                    <Skeleton className="h-4 w-24 mb-2 bg-grey-6" />
+                    <Skeleton className="h-4 w-24 mb-2 bg-grey-5" />
                     <div className="flex gap-2">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Skeleton
                           key={i}
-                          className="h-8 w-24 rounded-full bg-grey-6 flex-shrink-0"
+                          className="h-8 w-24 rounded-full bg-grey-5 flex-shrink-0"
                         />
                       ))}
                     </div>
                   </div>
                   <div>
-                    <Skeleton className="h-4 w-20 mb-2 bg-grey-6" />
+                    <Skeleton className="h-4 w-20 mb-2 bg-grey-5" />
                     <div className="flex gap-2">
                       {Array.from({ length: 6 }).map((_, i) => (
                         <Skeleton
                           key={i}
-                          className="h-8 w-20 rounded-full bg-grey-6 flex-shrink-0"
+                          className="h-8 w-20 rounded-full bg-grey-5 flex-shrink-0"
                         />
                       ))}
                     </div>
@@ -599,7 +630,7 @@ const Inventory = () => {
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Skeleton
                             key={i}
-                            className="h-8 w-24 rounded-full bg-grey-6 flex-shrink-0"
+                            className="h-8 w-24 rounded-full bg-grey-5 flex-shrink-0"
                           />
                         ))}
                       </div>
@@ -714,17 +745,7 @@ const Inventory = () => {
         <div className="pb-6">
           {activeTab === "COMBO" ? (
             InventoryDataLoading || !InventoryData ? (
-              <div className="w-full px-6">
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-full bg-grey-6" />
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-16 w-full bg-grey-6 mt-2"
-                    />
-                  ))}
-                </div>
-              </div>
+              <InventoryTableSkeleton />
             ) : (
               <ComboTable
                 setPage={setPage}
@@ -735,17 +756,7 @@ const Inventory = () => {
             )
           ) : activeTab === "PRODUCT" ? (
             InventoryDataLoading || !InventoryData ? (
-              <div className="w-full px-6">
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-full bg-grey-6" />
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-16 w-full bg-grey-6 mt-2"
-                    />
-                  ))}
-                </div>
-              </div>
+              <InventoryTableSkeleton />
             ) : (
               <>
                 {InventoryData?.data?.results?.data?.length > 0 ? (
@@ -765,17 +776,7 @@ const Inventory = () => {
               </>
             )
           ) : InventoryDataLoading || !InventoryData ? (
-            <div className="w-full px-6">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-grey-6" />
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton
-                    key={index}
-                    className="h-16 w-full bg-grey-6 mt-2"
-                  />
-                ))}
-              </div>
-            </div>
+            <InventoryTableSkeleton />
           ) : (
             <>
               {InventoryData?.data?.results?.data?.length > 0 ? (
