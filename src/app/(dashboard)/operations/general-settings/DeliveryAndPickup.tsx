@@ -235,57 +235,23 @@ interface StepTileProps {
   right?: React.ReactNode;
   children?: React.ReactNode;
 }
-const StepTile = ({
-  step,
-  icon,
-  title,
-  description,
-  active,
-  right,
-  children,
-}: StepTileProps) => (
-  <div
-    className={cn(
-      "relative bg-white rounded-xl border transition-all",
-      active ? "border-primary-green-300/40" : "border-grey-5",
-    )}
-  >
-    {/* Left accent bar */}
-    <span
-      className={cn(
-        "absolute left-0 top-4 bottom-4 w-1 rounded-r transition-colors",
-        active ? "bg-primary-green-300" : "bg-grey-5",
-      )}
-    />
-    <div className="pl-5 pr-4 sm:pl-6 sm:pr-5 py-4 sm:py-5">
-      <div className="flex items-start gap-3">
-        {/* Numbered step badge */}
-        <div
-          className={cn(
-            "shrink-0 w-10 h-10 rounded-xl flex flex-col items-center justify-center border",
-            active
-              ? "bg-primary-green-300 border-transparent text-white"
-              : "bg-grey-6 border-grey-5 text-grey-3",
-          )}
-        >
-          <span className="text-[8px] font-bold uppercase tracking-wider opacity-80">
-            Step
-          </span>
-          <span className="text-xs font-bold leading-none">
-            {String(step).padStart(2, "0")}
-          </span>
-        </div>
+const StepTile = ({ step, icon, title, description, right, children }: StepTileProps) => (
+  <div className="bg-white rounded-xl border border-grey-5 p-4 sm:p-5">
+    <div className="flex items-start gap-4">
+      {/* Step number */}
+      <div className="shrink-0 flex flex-col items-center leading-none pt-0.5">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
+          Step
+        </span>
+        <span className="text-xl font-extrabold text-grey-1">
+          {String(step).padStart(2, "0")}
+        </span>
+      </div>
 
-        <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2">
-            <span
-              className={cn(
-                "mt-0.5",
-                active ? "text-primary-green-300" : "text-grey-3",
-              )}
-            >
-              {icon}
-            </span>
+            <span className="mt-0.5 text-primary-green-300">{icon}</span>
             <div className="flex-1">
               <h4 className="text-sm font-bold text-grey-1">{title}</h4>
               <p className="text-xs text-grey-3 mt-1 leading-relaxed">
@@ -293,10 +259,10 @@ const StepTile = ({
               </p>
             </div>
           </div>
-          {children}
-        </div>
 
-        {right && <div className="shrink-0 pl-2">{right}</div>}
+          {right && <div className="shrink-0 pl-2">{right}</div>}
+        </div>
+        {children}
       </div>
     </div>
   </div>
@@ -362,19 +328,19 @@ const CheckTile = ({
     className={cn(
       "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all",
       checked
-        ? "border-primary-green-300/40 bg-secondary-6"
+        ? "border-primary-green-300 bg-secondary-6"
         : "border-grey-5 bg-white hover:border-grey-4",
     )}
   >
     <span
       className={cn(
-        "w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0",
-        checked
-          ? "bg-primary-green-300 border-primary-green-300"
-          : "border-grey-5 bg-white",
+        "w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-colors shrink-0",
+        checked ? "border-primary-green-300" : "border-grey-5",
       )}
     >
-      {checked && <CheckCircle2 className="w-3 h-3 text-white" />}
+      {checked && (
+        <span className="w-2 h-2 rounded-full bg-primary-green-300" />
+      )}
     </span>
     <input
       type="checkbox"

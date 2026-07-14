@@ -47,9 +47,9 @@ const GeneralSettings = () => {
       {/* Body — left section rail + right content */}
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
         {/* Section navigation */}
-        <aside className="lg:sticky lg:top-4 self-start">
+        <aside className="lg:sticky lg:top-4 bg-white border border-grey-5 rounded-2xl p-2 h-fit lg:h-full">
           {/* Horizontal scroll on mobile, vertical stack on desktop */}
-          <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 -mx-1 px-1">
+          <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0">
             {SECTIONS.map((s) => {
               const isActive = active === s.key;
               return (
@@ -57,36 +57,29 @@ const GeneralSettings = () => {
                   key={s.key}
                   onClick={() => setActive(s.key)}
                   className={cn(
-                    "group w-full text-left rounded-xl border transition-all cursor-pointer",
-                    "flex items-start gap-3 px-3.5 py-3 shrink-0 lg:shrink",
+                    "w-full text-left rounded-xl transition-all cursor-pointer",
+                    "flex items-center gap-3 px-4 py-3.5 shrink-0 lg:shrink",
                     isActive
-                      ? "bg-secondary-6 border-primary-green-300/30"
-                      : "bg-white border-grey-5 hover:border-primary-green-300/30 hover:bg-secondary-6/40",
+                      ? "bg-primary-green-300 text-white"
+                      : "text-grey-2 hover:bg-secondary-6/60",
                   )}
                 >
-                  <div
+                  <span
                     className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                      isActive
-                        ? "bg-primary-green-300 text-white"
-                        : "bg-grey-6 text-grey-3 group-hover:bg-secondary-6 group-hover:text-primary-green-300",
+                      "shrink-0",
+                      isActive ? "text-white" : "text-grey-3",
                     )}
                   >
                     {s.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p
-                      className={cn(
-                        "text-sm font-bold whitespace-nowrap lg:whitespace-normal",
-                        isActive ? "text-primary-green-100" : "text-grey-1",
-                      )}
-                    >
-                      {s.label}
-                    </p>
-                    <p className="hidden lg:block text-xs text-grey-3 mt-0.5">
-                      {s.description}
-                    </p>
-                  </div>
+                  </span>
+                  <span
+                    className={cn(
+                      "text-sm font-bold whitespace-nowrap lg:whitespace-normal",
+                      isActive ? "text-white" : "text-grey-2",
+                    )}
+                  >
+                    {s.label}
+                  </span>
                 </button>
               );
             })}
