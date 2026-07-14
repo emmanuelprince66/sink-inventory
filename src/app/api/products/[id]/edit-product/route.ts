@@ -50,14 +50,33 @@ export async function PATCH(
       body: formData,
     });
 
-    const responseData = await response.json();
+    // The backend doesn't always return JSON on error (e.g. an unhandled
+    // 500 can come back as an HTML traceback page or plain text). Read as
+    // text first and only parse as JSON if it looks like JSON, so a
+    // non-JSON error body doesn't get swallowed into a generic 500 by the
+    // catch block below — we want the real backend status/message to reach
+    // the client.
+    const rawBody = await response.text();
+    let responseData: any = null;
+    try {
+      responseData = rawBody ? JSON.parse(rawBody) : null;
+    } catch {
+      console.error(
+        "Non-JSON response from backend on product edit:",
+        response.status,
+        rawBody.slice(0, 2000),
+      );
+    }
 
     if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
-          message: responseData.message || "Failed to edit product",
-          error: responseData.error || "Product edit failed",
+          message:
+            responseData?.message ||
+            responseData?.error ||
+            (rawBody ? rawBody.slice(0, 500) : "Failed to edit product"),
+          error: responseData?.error || "Product edit failed",
         },
         { status: response.status }
       );

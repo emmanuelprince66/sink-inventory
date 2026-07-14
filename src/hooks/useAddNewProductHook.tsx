@@ -285,7 +285,7 @@ const splitMediaFromResponse = (
   media: unknown,
   legacySingleImage?: unknown,
 ): { images: string[]; videos: string[] } => {
-  if (Array.isArray(media)) {
+  if (Array.isArray(media) && media.length > 0) {
     const images: string[] = [];
     const videos: string[] = [];
     for (const item of media as ApiMediaItem[]) {
@@ -296,7 +296,9 @@ const splitMediaFromResponse = (
     }
     return { images, videos };
   }
-  // Legacy fallback — single image URL only.
+  // Legacy fallback — single image URL only. Some old products return an
+  // empty `media: []` even though they still have a real legacy `image`,
+  // so an empty array must fall through here too, not just a missing one.
   if (typeof legacySingleImage === "string" && legacySingleImage.length > 0) {
     return { images: [legacySingleImage], videos: [] };
   }
