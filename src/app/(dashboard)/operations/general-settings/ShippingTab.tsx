@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Lightbulb, MapPin, Zap } from "lucide-react";
+import { Info, MapPin, Zap } from "lucide-react";
 import { useState } from "react";
 import AutomatedShipping from "./AutomatedShipping";
 import DeliveryAndPickup from "./DeliveryAndPickup";
@@ -70,14 +70,11 @@ const ShippingTab = () => {
       </div>
 
       {/* Tip banner */}
-      <div className="relative pl-4 py-3 pr-4 bg-secondary-6 rounded-r-lg overflow-hidden">
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-primary-green-300 rounded-l" />
-        <div className="flex items-start gap-2.5">
-          <Lightbulb className="w-4 h-4 text-primary-green-300 mt-0.5 shrink-0" />
-          <p className="text-sm text-primary-green-100 leading-relaxed">
-            {activeView.tip}
-          </p>
-        </div>
+      <div className="flex items-start gap-2.5 px-4 py-3 bg-secondary-6 border border-primary-green-300/15 rounded-lg">
+        <Info className="w-4 h-4 text-primary-green-300 mt-0.5 shrink-0" />
+        <p className="text-sm text-primary-green-100 leading-relaxed">
+          {activeView.tip}
+        </p>
       </div>
 
       {view === "delivery" ? <DeliveryAndPickup /> : <AutomatedShipping />}
