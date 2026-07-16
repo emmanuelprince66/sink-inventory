@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Info, MapPin, Zap } from "lucide-react";
+import { Info } from "lucide-react";
 import { useState } from "react";
 import AutomatedShipping from "./AutomatedShipping";
 import DeliveryAndPickup from "./DeliveryAndPickup";
@@ -12,21 +12,18 @@ const VIEWS: {
   key: ShippingView;
   label: string;
   shortLabel: string;
-  icon: React.ReactNode;
   tip: string;
 }[] = [
   {
     key: "delivery",
     label: "Delivery & Pickup",
     shortLabel: "Delivery",
-    icon: <MapPin className="w-4 h-4" />,
     tip: "Tailor shipping settings to give customers flexible delivery options.",
   },
   {
     key: "automated",
     label: "Automated Shipping",
     shortLabel: "Automated",
-    icon: <Zap className="w-4 h-4" />,
     tip: "Automated shipping works with online payment methods only.",
   },
 ];
@@ -46,22 +43,12 @@ const ShippingTab = () => {
               key={v.key}
               onClick={() => setView(v.key)}
               className={cn(
-                "flex items-center gap-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 cursor-pointer whitespace-nowrap transition-colors",
+                "px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 cursor-pointer whitespace-nowrap transition-colors",
                 isActive
                   ? "border-primary-green-300 text-primary-green-300"
                   : "border-transparent text-grey-3 hover:text-grey-2",
               )}
             >
-              <span
-                className={cn(
-                  "flex items-center justify-center w-6 h-6 rounded-md transition-colors",
-                  isActive
-                    ? "bg-secondary-6 text-primary-green-300"
-                    : "bg-grey-6 text-grey-3",
-                )}
-              >
-                {v.icon}
-              </span>
               <span className="hidden sm:inline">{v.label}</span>
               <span className="sm:hidden">{v.shortLabel}</span>
             </button>

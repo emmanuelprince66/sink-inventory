@@ -233,7 +233,7 @@ const StepTile = ({ step, icon, title, description, right, children }: StepTileP
           <div className="flex items-start gap-2">
             <span className="mt-0.5 text-primary-green-300">{icon}</span>
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-grey-1">{title}</h4>
+              <h4 className="text-base font-bold text-grey-1">{title}</h4>
               <p className="text-xs text-grey-3 mt-1 leading-relaxed">
                 {description}
               </p>

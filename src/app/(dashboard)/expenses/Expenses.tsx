@@ -14,67 +14,117 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/toast/useToast";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ChevronDown, Plus, TrendingDown } from "lucide-react";
+import {
+  ArrowUpRight,
+  ChevronDown,
+  PiggyBank,
+  Plus,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
-import AccountBalanceCard from "./expense-accounts/AccountBalanceCard";
 import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
 import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
 import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
-import TransferMoneyModal from "./expense-accounts/TransferMoneyModal";
-import {
-  EXPENSE_ACCOUNT,
-  ExpenseTransaction,
-  MOCK_TRANSACTIONS,
-} from "./expense-accounts/mock-data";
 
 type ExpenseTab = "accounts" | "transactions";
 
-// Matches Sales' CustomSalesCard pattern — tinted background, icon+label row,
-// value below. See sink/src/app/(dashboard)/sales/Sales.tsx.
-const EXPENSE_CARD_STYLES: Record<
-  string,
-  { bg: string; iconColor: string; icon: React.ReactNode }
-> = {
-  "Total Expenses": {
-    bg: "bg-error-2",
-    iconColor: "text-error-1",
-    icon: <TrendingDown className="w-[15px] h-[15px]" />,
-  },
-};
+const OVERVIEW_CARD_STYLES = {
+  error: { bg: "bg-error-2", iconColor: "text-error-1" },
+  success: { bg: "bg-success-2", iconColor: "text-success-1" },
+} as const;
 
 const CustomExpenseCard = ({
   title,
   amount,
+  tone,
 }: {
   title: string;
   amount: number | string;
+  tone: keyof typeof OVERVIEW_CARD_STYLES;
 }) => {
-  const cardStyle = EXPENSE_CARD_STYLES[title] ?? {
-    bg: "bg-grey-6",
-    iconColor: "text-grey-3",
-    icon: <TrendingDown className="w-[15px] h-[15px]" />,
-  };
-
+  const style = OVERVIEW_CARD_STYLES[tone];
+  const Icon = tone === "success" ? TrendingUp : TrendingDown;
   return (
     <CustomCard
       className={cn(
         "rounded-2xl border-none transition-all w-full h-full p-0",
-        cardStyle.bg,
+        style.bg,
       )}
       contentClassName="p-4 sm:p-5 flex flex-col gap-3 h-full"
     >
       <div className="flex items-center gap-2">
-        <span className={cardStyle.iconColor}>{cardStyle.icon}</span>
-        <span className={cn("text-xs font-bold", cardStyle.iconColor)}>
+        <span className={style.iconColor}>
+          <Icon className="w-[15px] h-[15px]" />
+        </span>
+        <span className={cn("text-xs font-bold", style.iconColor)}>
           {title}
         </span>
       </div>
       <p className="text-2xl font-extrabold text-grey-1">{amount}</p>
+    </CustomCard>
+  );
+};
+
+/** Real bank-account data — results.summary on /expenses/business/{id}/
+ * (account_balance, bank_name, account_number). No "pending" count is
+ * shown — there's no pending-approvals field in that data yet. */
+const ExpenseAccountBalanceCard = ({
+  balance,
+  bankName,
+  accountNumber,
+}: {
+  balance: number;
+  bankName?: string;
+  accountNumber?: string;
+}) => {
+  const { showToast } = useToast();
+  return (
+    <CustomCard
+      className="rounded-2xl border border-primary-green-300/15 bg-gradient-to-br from-secondary-6 via-white to-secondary-6 w-full h-full p-0"
+      contentClassName="p-4 sm:p-5 flex flex-col gap-3 h-full"
+    >
+      <div className="flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-xl bg-primary-green-300 flex items-center justify-center text-white shrink-0">
+          <Wallet className="w-4 h-4" />
+        </div>
+        <div className="min-w-0">
+          <span className="text-xs font-bold text-primary-green-100 uppercase tracking-wide block">
+            Expense Account Balance
+          </span>
+          {(bankName || accountNumber) && (
+            <span className="text-[11px] text-grey-3 truncate block">
+              {bankName}
+              {bankName && accountNumber ? " · " : ""}
+              {accountNumber}
+            </span>
+          )}
+        </div>
+      </div>
+      <div>
+        <p className="text-2xl font-extrabold text-grey-1">
+          {formatToNaira(balance)}
+        </p>
+        <p className="text-[11px] text-grey-3 mt-0.5">
+          Funds available for operational spending
+        </p>
+      </div>
+      <Button
+        size="sm"
+        className="w-fit gap-1.5"
+        onClick={() => showToast("Transfer Money is coming soon.", "info")}
+      >
+        <ArrowUpRight className="w-3.5 h-3.5" />
+        Transfer Money
+      </Button>
     </CustomCard>
   );
 };
@@ -97,25 +147,16 @@ const Expenses = () => {
     handleOpenNotSubscribeModal,
   });
 
-  // ─── Expense Account Management state (mock-data build) ──────────────────
+  // Real bank-account data — results.summary on /expenses/business/{id}/.
+  const accountSummary = ExpensesData?.data?.results?.summary;
+
+  // ─── Expense Account Management state ─────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ExpenseTab>("accounts");
-  const [openTransfer, setOpenTransfer] = useState(false);
-  const [transferCategory, setTransferCategory] = useState<
-    string | undefined
-  >();
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<ExpenseTransaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<any | null>(
+    null,
+  );
 
-  const pendingApprovalsCount = MOCK_TRANSACTIONS.filter(
-    (t) => t.status === "PENDING",
-  ).length;
-
-  const handleTransfer = (category?: string) => {
-    setTransferCategory(category);
-    setOpenTransfer(true);
-  };
-  const handleViewTransaction = (txn: ExpenseTransaction) =>
-    setSelectedTransaction(txn);
+  const handleViewTransaction = (txn: any) => setSelectedTransaction(txn);
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start px-2 sm:px-4">
@@ -142,6 +183,15 @@ const Expenses = () => {
                   <Plus className="w-4 h-4" />
                   Add Expenses
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg py-1.5 focus:bg-secondary-6">
+                  <Link
+                    href="/expenses/budgets"
+                    className="font-semibold text-grey-2 flex items-center gap-2 cursor-pointer"
+                  >
+                    <PiggyBank className="w-4 h-4" />
+                    Manage Budgets
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
                   <div>
                     <GenerateReportButton
@@ -164,13 +214,13 @@ const Expenses = () => {
         </div>
         {/* Overview Cards */}
         <div className="mb-4 sm:mb-6">
-          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-2 mb-3 sm:mb-4">
+          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-3 mb-4 sm:mb-5">
             Overview
           </p>
 
           {ExpensesLoading || !ExpensesData ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              {Array.from({ length: 2 }).map((_, index) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
                 <CustomCard
                   key={index}
                   className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
@@ -183,26 +233,30 @@ const Expenses = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <CustomExpenseCard
                 title="Total Expenses"
+                tone="error"
                 amount={formatToNaira(
                   ExpensesData?.data?.results?.total_expenses,
                 )}
               />
-              <AccountBalanceCard
-                balance={EXPENSE_ACCOUNT.balance}
-                accountNumber={EXPENSE_ACCOUNT.accountNumber}
-                bankName={EXPENSE_ACCOUNT.bankName}
-                pendingApprovals={pendingApprovalsCount}
-                onTransfer={() => handleTransfer()}
+              <CustomExpenseCard
+                title="Spent This Month"
+                tone="success"
+                amount={formatToNaira(accountSummary?.spent_this_month ?? 0)}
+              />
+              <ExpenseAccountBalanceCard
+                balance={accountSummary?.account_balance ?? 0}
+                bankName={accountSummary?.bank_name}
+                accountNumber={accountSummary?.account_number}
               />
             </div>
           )}
         </div>
       </div>
 
-      {/* ─── Expense Account Management tabs (mock-data build) ─── */}
+      {/* ─── Expense Account Management tabs ─── */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as ExpenseTab)}
@@ -235,7 +289,7 @@ const Expenses = () => {
 
         <TabsContent value="accounts" className="mt-4">
           <ExpenseAccountsView
-            onTransfer={(defaultCategory) => handleTransfer(defaultCategory)}
+            dateRange={dateRange}
             onViewTransaction={handleViewTransaction}
             onViewAllTransactions={() => setActiveTab("transactions")}
           />
@@ -243,6 +297,7 @@ const Expenses = () => {
 
         <TabsContent value="transactions" className="mt-4">
           <ExpenseTransactionsView
+            dateRange={dateRange}
             onSelectTransaction={handleViewTransaction}
           />
         </TabsContent>
@@ -273,25 +328,10 @@ const Expenses = () => {
         </div>
       </CustomModal>
 
-      {/* ─── Expense Account Management modals (mock-data build) ─── */}
-      <TransferMoneyModal
-        isOpen={openTransfer}
-        onClose={() => setOpenTransfer(false)}
-        defaultCategory={transferCategory}
-      />
-
       <TransactionDetailsModal
         isOpen={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         transaction={selectedTransaction}
-        onApprove={(id) => {
-          console.log("approve", id);
-          setSelectedTransaction(null);
-        }}
-        onReject={(id) => {
-          console.log("reject", id);
-          setSelectedTransaction(null);
-        }}
       />
     </div>
   );

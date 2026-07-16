@@ -265,13 +265,13 @@ const Pos: React.FC = () => {
 
         {/* Show cart items for pharmacist but no checkout */}
         {isPharmacist && (
-          <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-            <div className="shrink-0 p-3 md:p-4 pb-3">
+          <div className="flex flex-col">
+            <div className="p-3 md:p-4 pb-3">
               <h2 className="text-lg font-extrabold text-grey-1">
                 Cart Items ({cartItems.length})
               </h2>
             </div>
-            <div className="flex-1 min-h-[180px] overflow-y-auto px-3 md:px-4">
+            <div className="px-3 md:px-4">
               <div className="border border-grey-5 rounded-xl bg-white overflow-hidden">
                 <div className="divide-y divide-grey-6">
                   {cartItems.map((item: any) => (
@@ -300,7 +300,7 @@ const Pos: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="shrink-0 p-3 md:p-4 pt-3">
+            <div className="p-3 md:p-4 pt-3">
               <div className="text-sm font-medium text-primary-green-100 p-3 bg-secondary-6 rounded-xl">
                 <p className="font-bold">Pharmacist Mode</p>
                 <p className="text-xs mt-1">
@@ -313,22 +313,22 @@ const Pos: React.FC = () => {
         )}
       </>
     ) : (
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="flex items-center justify-center p-8">
         <NoCartItem />
       </div>
     );
 
   return (
-    // Fixed to the viewport minus the dashboard shell's TopBar (64px) + content
-    // padding (py-6 = 48px), so the header/tabs stay put and only the product
-    // grid and cart items scroll — no page-level scroll to fight with. The
-    // product grid and cart items containers each carry their own min-height
-    // floor (see below) so they never collapse to invisible on a squeezed
-    // viewport (small laptop + browser zoom).
-    <div className="w-full h-[calc(100dvh-112px)] grid grid-rows-[auto_auto_minmax(0,1fr)] overflow-hidden">
-      {/* Header with fixed height */}
-      <header className="w-full h-14 min-h-[3.5rem] shrink-0 bg-white border-b border-grey-5 flex items-center justify-between px-4">
-        <div className="flex items-center gap-3">
+    // A normal flowing page — no viewport-height locking, no internal
+    // overflow-hidden scroll regions. The dashboard shell already handles
+    // page-level scroll for every other screen; fighting that with a
+    // calc(100dvh-...) + overflow-hidden grid was fragile across zoom levels
+    // and unusual viewport sizes. The one deliberate exception is the mobile
+    // floating cart bar below, which stays genuinely fixed to the bottom of
+    // the viewport since that's the point of it.
+    <div className="w-full flex flex-col gap-4 pb-24 lg:pb-6">
+      <header className="w-full bg-white border border-grey-5 rounded-2xl px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <p className="text-lg md:text-xl font-extrabold text-grey-1">
             POS System
           </p>
@@ -364,11 +364,10 @@ const Pos: React.FC = () => {
       {/* Cart Tabs — supports multiple simultaneous sales */}
       <CartTabs />
 
-      <div className="grid grid-cols-1 grid-rows-1 lg:grid-cols-[7fr_3fr] overflow-hidden min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4 items-start">
         {/* Products Section */}
-        <main className="w-full h-full min-h-0 grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden lg:border-r border-grey-5">
-          {/* Sticky products header — title, search, scan */}
-          <div className="shrink-0 p-4 border-b border-grey-5 bg-white">
+        <main className="w-full bg-white border border-grey-5 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-grey-5">
             <div className="w-full flex flex-col md:flex-row justify-between items-center gap-2">
               <h2 className="text-lg md:text-xl font-extrabold text-grey-1">
                 Products
@@ -396,8 +395,7 @@ const Pos: React.FC = () => {
             </div>
           </div>
 
-          {/* Scrollable product grid */}
-          <div className="h-full min-h-[220px] overflow-y-auto p-4 pb-[7rem] md:pb-[5rem]">
+          <div className="p-4">
             {ProductDataLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -550,32 +548,39 @@ const Pos: React.FC = () => {
             )}
           </div>
         </main>
-        {/* Floating cart bar — mobile/tablet only, opens the bottom-sheet drawer */}
-        {isCompact && cartItems.length > 0 && (
-          <div className="shrink-0 border-t border-grey-5 bg-white p-3">
-            <button
-              type="button"
-              onClick={() => setShowCartDrawer(true)}
-              className="w-full flex items-center justify-between rounded-xl bg-primary-green-300 text-white px-4 py-3 shadow-md active:scale-[0.99] transition-transform"
-            >
-              <span className="flex items-center gap-2 font-bold text-sm">
-                <ShoppingCart size={18} />
-                Cart ({getTotalItems()})
-              </span>
-              <span className="font-extrabold text-sm">
-                {formatToNaira(getTotalPrice())}
-              </span>
-            </button>
-          </div>
-        )}
 
-        {/* Cart Sidebar — desktop/tablet-landscape (lg+) only */}
+        {/* Cart Sidebar — desktop/tablet-landscape (lg+) only. Sticks below
+            the app's TopBar (h-16, itself sticky) while the product grid
+            scrolls past, capped to the visible viewport so it scrolls
+            internally instead of spilling off-screen once stuck. */}
         {!isCompact && (
-          <aside className="w-full h-full min-h-0 flex flex-col overflow-hidden bg-white border-grey-5">
+          <aside className="w-full lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] bg-white border border-grey-5 rounded-2xl overflow-hidden lg:overflow-y-auto flex flex-col">
             {cartPanelContent}
           </aside>
         )}
       </div>
+
+      {/* Floating cart bar — mobile/tablet only, opens the bottom-sheet drawer.
+          Genuinely fixed to the viewport bottom, since a "floating" bar that
+          scrolls away with the page defeats its purpose — this is the one
+          intentional exception to the page's normal flow/scroll. */}
+      {isCompact && cartItems.length > 0 && (
+        <div className="fixed bottom-0 inset-x-0 z-30 border-t border-grey-5 bg-white p-3">
+          <button
+            type="button"
+            onClick={() => setShowCartDrawer(true)}
+            className="w-full flex items-center justify-between rounded-xl bg-primary-green-300 text-white px-4 py-3 shadow-md active:scale-[0.99] transition-transform"
+          >
+            <span className="flex items-center gap-2 font-bold text-sm">
+              <ShoppingCart size={18} />
+              Cart ({getTotalItems()})
+            </span>
+            <span className="font-extrabold text-sm">
+              {formatToNaira(getTotalPrice())}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Cart bottom-sheet — mobile/tablet only */}
       <Sheet
@@ -584,7 +589,7 @@ const Pos: React.FC = () => {
       >
         <SheetContent
           side="bottom"
-          className="h-[92dvh] p-0 gap-0 rounded-t-2xl border-grey-5"
+          className="h-[92dvh] p-0 gap-0 rounded-t-2xl border-grey-5 overflow-y-auto"
         >
           <SheetTitle className="sr-only">Cart</SheetTitle>
           {cartPanelContent}

@@ -303,9 +303,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           businessData={businessData}
         />
       ) : (
-        <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
-          {/* Sticky top — Checkout title + Add Customer/Attendant */}
-          <div className="shrink-0 p-3 pb-2 border-b border-grey-5 bg-white flex flex-col gap-2">
+        <div className="flex flex-col">
+          <div className="p-3 pb-2 border-b border-grey-5 flex flex-col gap-2">
             <p className="text-lg font-extrabold text-grey-1">Checkout</p>
             <div
               className={`grid gap-2 ${
@@ -350,8 +349,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
           </div>
 
-          {/* Scrollable middle — Cart items */}
-          <div className="h-full min-h-[180px] overflow-y-auto p-4 pb-8">
+          <div className="p-4 pb-2">
             <div className="border rounded-xl bg-white overflow-hidden border-grey-5">
               {cartItems.length === 0 ? (
                 <div className="p-6 text-center text-grey-4 text-sm">
@@ -646,8 +644,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
           </div>
 
-          {/* Sticky bottom — Order Summary */}
-          <div className="shrink-0 bg-white p-2.5 pt-2 border-t border-grey-5">
+          <div className="p-2.5 pt-3 mt-1 border-t border-grey-5">
             <h2 className="text-xs font-bold text-grey-1 mb-1.5">
               Order Summary
             </h2>
