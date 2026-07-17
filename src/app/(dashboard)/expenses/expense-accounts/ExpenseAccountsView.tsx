@@ -409,7 +409,7 @@ const ExpenseCard = ({
                       : "text-primary-green-100",
               )}
             >
-              {hasBudget ? `${pct}%` : "—"}
+              {!hasBudget ? "—" : pct >= 100 ? "Over budget" : `${pct}%`}
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-grey-6 overflow-hidden">

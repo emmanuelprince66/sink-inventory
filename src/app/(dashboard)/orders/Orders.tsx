@@ -314,12 +314,16 @@ const Orders = () => {
   const successRate =
     totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
-  // Calculate total link visits
-  const totalLinkVisits = Math.floor(totalOrders * 2.6);
+  // "Total Link Visits" had no real backing field from the API — it was a
+  // fabricated `totalOrders * 2.6` guess. Removed until the backend
+  // actually returns a link-visits stat, rather than show a fake number.
+  // const totalLinkVisits = Math.floor(totalOrders * 2.6);
 
-  // Calculate paid and unpaid for invoices
-  const paidInvoices = ordersData?.results?.paid_orders || 0;
-  const unpaidInvoices = totalOrders - paidInvoices;
+  // Paid/Unpaid breakdown removed — the endpoint's `results` only returns
+  // total_orders/completed_orders/total_revenue/data, no paid_orders field,
+  // so this was always reading undefined and showing a fake "0 paid".
+  // const paidInvoices = ordersData?.results?.paid_orders || 0;
+  // const unpaidInvoices = totalOrders - paidInvoices;
 
   // Sum shipping fees across the visible orders (until backend returns a dedicated stat).
   const totalDeliveryCost = (ordersData?.results?.data || []).reduce(
@@ -384,34 +388,21 @@ const Orders = () => {
         <div className="mb-1 sm:mb-2">
           {OrderDataLoading ? (
             <StatCardSkeletonRow
-              count={5}
-              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4"
+              count={activeTab === "INSTORE" ? 3 : 4}
+              gridClassName={cn(
+                "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
+                activeTab === "INSTORE" ? "lg:grid-cols-3" : "lg:grid-cols-4",
+              )}
             />
           ) : activeTab === "INSTORE" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-              <CustomOrderCard
-                title="Total Orders"
-                amount={totalOrders}
-                type="total"
-                subtitle="+12% from last month"
-              />
-              <CustomOrderCard
-                title="Paid"
-                amount={paidInvoices}
-                type="completed"
-                subtitle={`${successRate}% success rate`}
-              />
-              <CustomOrderCard
-                title="Unpaid"
-                amount={unpaidInvoices}
-                type="visits"
-                subtitle="+8% from last month"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <CustomOrderCard title="Total Orders" amount={totalOrders} type="total" />
+              {/* "Paid"/"Unpaid" removed — the endpoint has no paid_orders
+                  field, so these always showed a fake "0 paid". */}
               <CustomOrderCard
                 title="Total Revenue"
                 amount={formatToNaira(totalRevenue)}
                 type="revenue"
-                subtitle="+8% from last month"
               />
               <CustomOrderCard
                 title="Completed Orders"
@@ -421,13 +412,8 @@ const Orders = () => {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-              <CustomOrderCard
-                title="Total Orders"
-                amount={totalOrders}
-                type="total"
-                subtitle="+12% from last month"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <CustomOrderCard title="Total Orders" amount={totalOrders} type="total" />
               <CustomOrderCard
                 title="Completed Orders"
                 amount={completedOrders}
@@ -438,7 +424,6 @@ const Orders = () => {
                 title="Total Revenue"
                 amount={formatToNaira(totalRevenue)}
                 type="revenue"
-                subtitle="+8% from last month"
               />
               <CustomOrderCard
                 title="Delivery Cost"
@@ -446,12 +431,8 @@ const Orders = () => {
                 type="cost"
                 subtitle="across active deliveries"
               />
-              <CustomOrderCard
-                title="Total Link Visits"
-                amount={totalLinkVisits}
-                type="visits"
-                subtitle="+5% from last month"
-              />
+              {/* "Total Link Visits" removed — its number was fabricated
+                  (totalOrders * 2.6), not a real backend stat. */}
             </div>
           )}
         </div>

@@ -222,7 +222,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
                     : "text-primary-green-100",
               )}
             >
-              {spentPct}%
+              {spentPct >= 100 ? "Over budget" : `${spentPct}%`}
             </span>
           </div>
           <div className="mt-3 h-2.5 rounded-full bg-grey-6 overflow-hidden">
@@ -233,7 +233,8 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
           </div>
           {spentPct >= 100 && (
             <p className="text-[11px] text-error-1 mt-2">
-              Budget exhausted. Consider raising the cap.
+              Budget exhausted — {formatToNaira(Math.abs(remaining))} over.
+              Consider raising the cap.
             </p>
           )}
         </section>

@@ -27,6 +27,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
+import moment from "moment";
 import Link from "next/link";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
@@ -136,9 +137,14 @@ const ExpenseAccountBalanceCard = ({
 const Expenses = () => {
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const [addExpensesModal, setAddExpensesModal] = useState(false);
+  // Today-only made every card on this page (and the category grid) look
+  // nearly empty by default, and disagree with drill-down pages like
+  // CategoryDetail that default to a 6-month window for the same category
+  // — same data, wildly different numbers, purely from the date filter.
+  // Match that convention here so the overview is consistent by default.
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
+    from: moment().subtract(6, "months").startOf("day").toDate(),
+    to: moment().endOf("day").toDate(),
   });
 
   const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
