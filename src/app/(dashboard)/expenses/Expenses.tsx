@@ -4,6 +4,7 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import GenerateReportButton from "@/components/app/GenerateReportButton";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/toast/useToast";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
@@ -89,11 +89,15 @@ const ExpenseAccountBalanceCard = ({
   const { showToast } = useToast();
   return (
     <CustomCard
-      className="rounded-2xl border border-primary-green-300/15 bg-gradient-to-br from-secondary-6 via-white to-secondary-6 w-full h-full p-0"
-      contentClassName="p-4 sm:p-5 flex flex-col gap-3 h-full"
+      className="relative overflow-hidden rounded-2xl border border-primary-green-300/20 bg-gradient-to-br from-primary-green-300/15 via-secondary-6 to-white w-full h-full p-0"
+      contentClassName="relative p-4 sm:p-5 flex flex-col gap-3 h-full"
     >
-      <div className="flex items-center gap-2.5">
-        <div className="w-9 h-9 rounded-xl bg-primary-green-300 flex items-center justify-center text-white shrink-0">
+      {/* Decorative glow — depth without breaking the flat-card design language */}
+      <div className="absolute -right-8 -top-10 w-32 h-32 rounded-full bg-primary-green-300/25 blur-2xl pointer-events-none" />
+      <div className="absolute -left-10 -bottom-12 w-32 h-32 rounded-full bg-primary-green-300/10 blur-2xl pointer-events-none" />
+
+      <div className="relative flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-xl bg-primary-green-300 flex items-center justify-center text-white shrink-0 shadow-sm">
           <Wallet className="w-4 h-4" />
         </div>
         <div className="min-w-0">
@@ -109,7 +113,7 @@ const ExpenseAccountBalanceCard = ({
           )}
         </div>
       </div>
-      <div>
+      <div className="relative">
         <p className="text-2xl font-extrabold text-grey-1">
           {formatToNaira(balance)}
         </p>
@@ -119,7 +123,7 @@ const ExpenseAccountBalanceCard = ({
       </div>
       <Button
         size="sm"
-        className="w-fit gap-1.5"
+        className="relative w-fit gap-1.5"
         onClick={() => showToast("Transfer Money is coming soon.", "info")}
       >
         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -219,19 +223,10 @@ const Expenses = () => {
           </p>
 
           {ExpensesLoading || !ExpensesData ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <CustomCard
-                  key={index}
-                  className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
-                >
-                  <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-5" />
-                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
-                  </div>
-                </CustomCard>
-              ))}
-            </div>
+            <StatCardSkeletonRow
+              count={3}
+              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+            />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <CustomExpenseCard

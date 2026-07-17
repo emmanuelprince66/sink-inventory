@@ -246,33 +246,52 @@ const SetCategoryBudgetModal = ({
           </p>
         </div>
 
-        {/* Year */}
-        <div className="space-y-2">
-          <Label htmlFor="budget-year" className="font-semibold">
-            Year
-          </Label>
-          <Select value={year} onValueChange={setYear} disabled={submitting}>
-            <SelectTrigger id="budget-year" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {YEAR_OPTIONS.map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Year + Duration — grouped side by side since both are compact fields */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="budget-year" className="font-semibold">
+              Year
+            </Label>
+            <Select value={year} onValueChange={setYear} disabled={submitting}>
+              <SelectTrigger id="budget-year" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {YEAR_OPTIONS.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="budget-duration" className="font-semibold">
+              Duration{" "}
+              <span className="text-xs font-normal text-grey-4">(months)</span>
+            </Label>
+            <div className="relative">
+              <CalendarRange className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-3" />
+              <Input
+                id="budget-duration"
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max="60"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="6"
+                className="pl-10"
+                disabled={submitting}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Duration */}
+        {/* Quick-pick duration */}
         <div className="space-y-2">
-          <Label htmlFor="budget-duration" className="font-semibold">
-            Duration{" "}
-            <span className="text-xs font-normal text-grey-4">
-              (in months)
-            </span>
-          </Label>
+          <Label className="font-semibold">Quick pick</Label>
           <div className="flex gap-2 flex-wrap">
             {[1, 3, 6, 12].map((m) => (
               <button
@@ -290,21 +309,6 @@ const SetCategoryBudgetModal = ({
                 {m} {m === 1 ? "month" : "months"}
               </button>
             ))}
-          </div>
-          <div className="relative">
-            <CalendarRange className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-grey-3" />
-            <Input
-              id="budget-duration"
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max="60"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="6"
-              className="pl-10"
-              disabled={submitting}
-            />
           </div>
         </div>
 

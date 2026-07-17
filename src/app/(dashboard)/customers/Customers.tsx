@@ -4,6 +4,8 @@ import { AlertCircle, Megaphone, Plus, Users, Wallet } from "lucide-react";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
@@ -170,14 +172,10 @@ const Customers = () => {
       {CustomerLoading || !CustomerData ? (
         <>
           {/* Skeleton for cards */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className="h-24 w-full rounded-2xl bg-grey-5"
-              />
-            ))}
-          </div>
+          <StatCardSkeletonRow
+            count={3}
+            gridClassName="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+          />
 
           {/* Skeleton for banner */}
           <Skeleton className="h-32 w-full rounded-2xl bg-grey-5" />
@@ -196,9 +194,17 @@ const Customers = () => {
                 )}
               </div>
               <Skeleton className="h-10 w-full bg-grey-5" />
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-14 w-full bg-grey-5" />
-              ))}
+              <TableSkeleton
+                rows={5}
+                columns={[
+                  { flex: true },
+                  { width: "w-28", hiddenOnMobile: true },
+                  { width: "w-24" },
+                  { width: "w-24", hiddenOnMobile: true },
+                  { width: "w-24", alignRight: true },
+                  { width: "w-8" },
+                ]}
+              />
             </div>
           </div>
         </>

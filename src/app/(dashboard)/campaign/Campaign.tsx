@@ -3,6 +3,7 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
@@ -208,17 +209,17 @@ const Campaign = () => {
         <div className="mt-4">
           {activeTab === "campaigns" &&
             (CampaignLoading || !CampaignData ? (
-              <div className="w-full">
-                <div className="space-y-3 sm:space-y-4">
-                  <Skeleton className="h-8 sm:h-10 w-full bg-grey-5" />
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Skeleton
-                      key={index}
-                      className="h-12 sm:h-16 w-full bg-grey-5"
-                    />
-                  ))}
-                </div>
-              </div>
+              <TableSkeleton
+                rows={5}
+                columns={[
+                  { width: "w-28" },
+                  { width: "w-32", hiddenOnMobile: true },
+                  { width: "w-20", hiddenOnMobile: true },
+                  { width: "w-20" },
+                  { flex: true },
+                  { width: "w-8" },
+                ]}
+              />
             ) : (
               <div className="overflow-x-auto">
                 <AllCampaigns
@@ -228,14 +229,20 @@ const Campaign = () => {
               </div>
             ))}
 
-          {activeTab === "groups" && (
-            <div className="overflow-x-auto">
-              <AllGroups
-                groupData={CampaignGroupData}
-                groupLoading={CampaignGroupLoading}
+          {activeTab === "groups" &&
+            (CampaignGroupLoading || !CampaignGroupData ? (
+              <TableSkeleton
+                rows={5}
+                columns={[{ flex: true }, { width: "w-20" }, { width: "w-8" }]}
               />
-            </div>
-          )}
+            ) : (
+              <div className="overflow-x-auto">
+                <AllGroups
+                  groupData={CampaignGroupData}
+                  groupLoading={CampaignGroupLoading}
+                />
+              </div>
+            ))}
 
           {activeTab === "usage" && <UnitUsage />}
 

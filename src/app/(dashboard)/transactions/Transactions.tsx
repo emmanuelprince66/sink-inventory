@@ -6,6 +6,8 @@ import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import KycConfirm from "@/components/app/kyc/KycConfirm";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Spinner } from "@/components/app/Spinner";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -156,14 +158,10 @@ const Transactions = () => {
 
         {/* KPI Cards */}
         {TrxDataLoading || !TrxData ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton
-                key={index}
-                className="h-24 w-full rounded-2xl bg-grey-5"
-              />
-            ))}
-          </div>
+          <StatCardSkeletonRow
+            count={3}
+            gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full">
             {user?.role === "OWNER" && (
@@ -359,12 +357,19 @@ const Transactions = () => {
 
           {!TrxData || TrxDataLoading ? (
             <div className="w-full p-4 sm:p-6">
-              <div className="space-y-4">
-                <Skeleton className="h-10 w-full bg-grey-5" />
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
-                ))}
-              </div>
+              <TableSkeleton
+                rows={5}
+                columns={[
+                  { width: "w-24" },
+                  { flex: true },
+                  { width: "w-20", pill: true },
+                  { width: "w-24", alignRight: true },
+                  { width: "w-32", hiddenOnMobile: true },
+                  { width: "w-32", hiddenOnMobile: true },
+                  { width: "w-20", pill: true },
+                  { width: "w-8" },
+                ]}
+              />
             </div>
           ) : TrxData?.data?.results?.transactions?.length > 0 ? (
             <TransactionTable

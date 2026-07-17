@@ -1,9 +1,11 @@
 "use client";
+import { CardGridSkeleton } from "@/components/app/CardGridSkeleton";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -43,7 +44,6 @@ interface CustomOrderCardProps {
   type: "total" | "completed" | "revenue" | "visits" | "cost";
   className?: string;
   subtitle?: string;
-  loading?: boolean;
 }
 
 interface FilterState {
@@ -105,7 +105,6 @@ const CustomOrderCard = ({
   type,
   className,
   subtitle,
-  loading = false,
 }: CustomOrderCardProps) => {
   const variants = {
     total: {
@@ -141,18 +140,6 @@ const CustomOrderCard = ({
   };
 
   const variant = variants[type];
-
-  if (loading) {
-    return (
-      <CustomCard
-        className={cn("w-full rounded-2xl border-none p-0", className)}
-        contentClassName="p-4 flex flex-col gap-3 items-start"
-      >
-        <Skeleton className="h-4 w-[100px] bg-grey-5" />
-        <Skeleton className="h-6 w-[70px] bg-grey-5" />
-      </CustomCard>
-    );
-  }
 
   return (
     <CustomCard
@@ -396,17 +383,10 @@ const Orders = () => {
         {/* Stats Cards */}
         <div className="mb-1 sm:mb-2">
           {OrderDataLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <CustomOrderCard
-                  key={index}
-                  title=""
-                  amount=""
-                  type="total"
-                  loading={true}
-                />
-              ))}
-            </div>
+            <StatCardSkeletonRow
+              count={5}
+              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4"
+            />
           ) : activeTab === "INSTORE" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <CustomOrderCard
@@ -711,14 +691,7 @@ const Orders = () => {
         {/* Card grid (replaces the previous table layout) */}
         <div className="w-full">
           {OrderDataLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-40 w-full bg-grey-5 rounded-2xl"
-                />
-              ))}
-            </div>
+            <CardGridSkeleton count={6} cardHeight="h-40" />
           ) : ordersData?.results?.data?.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">

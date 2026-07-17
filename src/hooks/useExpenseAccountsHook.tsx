@@ -11,16 +11,11 @@ import {
   useEditBudgetMutation,
 } from "@/api/expenses/edit-budget";
 import { useFetchBudgetsQuery } from "@/api/expenses/fetch-budgets";
+import { useFetchExpenseCategoriesQuery } from "@/api/expenses/fetch-expense-categories";
 import { useFetchExpenseCategoryByIdQuery } from "@/api/expenses/fetch-expense-category-by-id";
-import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
 import { useFetchRecentActivityQuery } from "@/api/expenses/fetch-recent-activity";
 import { useFetchSpendByUserQuery } from "@/api/expenses/fetch-spend-by-user";
 import { useFetchTransactionsQuery } from "@/api/expenses/fetch-transactions";
-import {
-  getRefId,
-  getRefLabel,
-  unwrapPaginated,
-} from "@/app/(dashboard)/expenses/expense-accounts/expense-ui-meta";
 import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
@@ -36,32 +31,23 @@ export const useExpenseUserOptions = () => {
 };
 
 /**
- * List of categories for filter/picker dropdowns — derived from the
- * confirmed-working /expenses/business/{id}/ endpoint rather than the
- * dedicated /categories/ list endpoint, which returns nothing usable
- * (confirmed live: a business with real categorised expenses gets back an
- * empty list from /categories/). Every expense item already carries its
- * category as {id, name}, so this is the same proven derivation used for
- * the category grid, just exposed as a shared hook so every dropdown
- * across the module (Transactions filter, Budgets category picker) uses
- * one real source instead of each guessing at the broken endpoint.
+ * List of categories for filter/picker dropdowns — powered by the dedicated
+ * /expenses/business/{id}/categories/ endpoint (confirmed live: returns
+ * `{success, data: {data: [{category_id, category_name, spent,
+ * transaction_count, budget, ...}], year}, message}`, proxied through our
+ * own route which wraps it again as `data.data`). This lists every category
+ * configured on the account, not just ones with logged expenses, so a
+ * brand-new category can get a budget set before its first expense.
  */
 export const useExpenseCategoryOptions = () => {
   const business_id = useBusinessStore((state) => state.business_id);
-  const { data, isLoading } = useFetchExpensesQuery({
+  const { data, isLoading } = useFetchExpenseCategoriesQuery({
     params: { id: business_id as string, limit: 200 },
     enabled: !!business_id,
   });
   const categoryOptions = useMemo(() => {
-    const items = unwrapPaginated<any>(data?.data).items;
-    const map = new Map<string, { id: string; name: string }>();
-    for (const item of items) {
-      const id = getRefId(item.category) || getRefLabel(item.category);
-      if (!map.has(id)) {
-        map.set(id, { id, name: getRefLabel(item.category, "Uncategorised") });
-      }
-    }
-    return Array.from(map.values());
+    const items: any[] = data?.data?.data ?? [];
+    return items.map((c) => ({ id: c.category_id, name: c.category_name }));
   }, [data]);
 
   return { categoryOptions, categoryOptionsLoading: isLoading };
@@ -93,11 +79,12 @@ export const useExpenseDashboardData = (dateFilters?: {
       enabled: !!business_id,
     });
 
-  const { data: BudgetsData, isLoading: budgetsLoading } =
-    useFetchBudgetsQuery({
+  const { data: BudgetsData, isLoading: budgetsLoading } = useFetchBudgetsQuery(
+    {
       params: { id: business_id as string, limit: 50 },
       enabled: !!business_id,
-    });
+    },
+  );
 
   return {
     business_id,
@@ -130,7 +117,12 @@ export const useExpenseTransactionsTable = (filters: TransactionFilters) => {
     enabled: !!business_id,
   });
 
-  return { business_id, TransactionsData: data, transactionsLoading: isLoading, transactionsFetching: isFetching };
+  return {
+    business_id,
+    TransactionsData: data,
+    transactionsLoading: isLoading,
+    transactionsFetching: isFetching,
+  };
 };
 
 /** Powers the category detail page — one call returns both the summary card and the scoped table. */

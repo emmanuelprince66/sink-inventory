@@ -1,8 +1,21 @@
 "use client";
 
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
+import { CardGridSkeleton } from "@/components/app/CardGridSkeleton";
+import { SearchInput } from "@/components/app/SearchInput";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useExpenseDashboardData } from "@/hooks/useExpenseAccountsHook";
+import { useDebounce } from "@/hooks/useDebounce";
+import {
+  useExpenseCategoryOptions,
+  useExpenseDashboardData,
+} from "@/hooks/useExpenseAccountsHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -16,7 +29,7 @@ import {
 import moment from "moment";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import {
   getCategoryMeta,
@@ -51,6 +64,8 @@ interface Budget {
   [key: string]: any;
 }
 
+const ALL_CATEGORIES = "__all__";
+
 const ExpenseAccountsView = ({
   dateRange,
   onViewTransaction,
@@ -59,6 +74,17 @@ const ExpenseAccountsView = ({
   const router = useRouter();
   const goToCategory = (categoryId: string) =>
     router.push(`/expenses/categories/${encodeURIComponent(categoryId)}`);
+
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>(ALL_CATEGORIES);
+  const debouncedCategorySearch = useDebounce(categorySearch, 500);
+
+  // Dropdown options come from the full, unfiltered category list (same
+  // hook used by the Transactions tab / Budgets) so picking a category
+  // doesn't shrink its own option list once a filter is applied.
+  const { categoryOptions } = useExpenseCategoryOptions();
+
+  console.log("categoryOptions", categoryOptions);
 
   const start_date = dateRange?.from
     ? moment(dateRange.from).format("YYYY-MM-DD")
@@ -93,11 +119,24 @@ const ExpenseAccountsView = ({
   // silently hiding real data. A category with zero logged expenses in this
   // window won't show up here — it can still get a budget set up front via
   // the standalone Budgets screen.
-  const { data: AllExpensesData, isLoading: allExpensesLoading } =
-    useFetchExpensesQuery({
-      params: { id: business_id as string, limit: 200, start_date, end_date },
-      enabled: !!business_id,
-    });
+  // `search`/`category` are sent straight to the endpoint (it natively
+  // supports both query params) rather than filtered client-side after the
+  // fact, so the grid reflects exactly what the backend matched.
+  const {
+    data: AllExpensesData,
+    isLoading: allExpensesLoading,
+    isFetching: allExpensesFetching,
+  } = useFetchExpensesQuery({
+    params: {
+      id: business_id as string,
+      limit: 200,
+      start_date,
+      end_date,
+      search: debouncedCategorySearch || undefined,
+      category: categoryFilter !== ALL_CATEGORIES ? categoryFilter : undefined,
+    },
+    enabled: !!business_id,
+  });
   const expenseCategories: ExpenseCategory[] = useMemo(() => {
     const items = unwrapPaginated<any>(AllExpensesData?.data).items;
     const map = new Map<
@@ -116,6 +155,9 @@ const ExpenseAccountsView = ({
     }
     return Array.from(map.values());
   }, [AllExpensesData]);
+
+  const categoryFiltersActive =
+    !!categorySearch || categoryFilter !== ALL_CATEGORIES;
 
   const recentActivity = unwrapPaginated(RecentActivityData?.data).items;
   const spendByUser = unwrapPaginated(SpendByUserData?.data).items;
@@ -147,16 +189,71 @@ const ExpenseAccountsView = ({
           </Link>
         </div>
 
-        {budgetsLoading || allExpensesLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-[190px] rounded-xl bg-grey-5" />
-            ))}
+        {/* Search + category filter — same SearchInput + Select pattern as the
+            Transactions tab, sent straight to /expenses/business/{id}/'s
+            own `search` and `category` query params. Dropdown lists every
+            category on the account, not just the ones in the current
+            filtered result, so it never shrinks its own option list. */}
+        {categoryOptions.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3">
+            <div className="w-full sm:w-72">
+              <SearchInput
+                placeholder="Search expenses..."
+                value={categorySearch}
+                onValueChange={setCategorySearch}
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-10 min-h-0 font-bold text-grey-2 w-full sm:w-[190px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent className="min-w-[220px]">
+                <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                {categoryOptions.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+        )}
+
+        {budgetsLoading || allExpensesLoading ? (
+          <CardGridSkeleton
+            count={8}
+            cardHeight="h-[190px]"
+            gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          />
         ) : expenseCategories.length === 0 ? (
-          <EmptyState label="No expenses logged yet." />
+          categoryFiltersActive ? (
+            <div className="text-center py-14">
+              <div className="w-10 h-10 rounded-full bg-grey-6 mx-auto flex items-center justify-center mb-2.5">
+                <Inbox className="w-4 h-4 text-grey-4" />
+              </div>
+              <p className="text-xs text-grey-3">
+                No expenses match your search or filter.
+              </p>
+              <button
+                onClick={() => {
+                  setCategorySearch("");
+                  setCategoryFilter(ALL_CATEGORIES);
+                }}
+                className="mt-2 text-xs font-bold text-primary-green-300 hover:text-primary-green-100 cursor-pointer"
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            <EmptyState label="No expenses logged yet." />
+          )
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div
+            className={cn(
+              "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3",
+              allExpensesFetching && "opacity-50 transition-opacity",
+            )}
+          >
             {expenseCategories.map((c) => (
               <ExpenseCard
                 key={c.id}
@@ -208,9 +305,15 @@ const ExpenseCard = ({
       ? Math.round(budgetAmount / budget!.duration_months)
       : 0;
   const pct =
-    hasBudget && budgetAmount > 0 ? Math.round((spent / budgetAmount) * 100) : 0;
+    hasBudget && budgetAmount > 0
+      ? Math.round((spent / budgetAmount) * 100)
+      : 0;
   const progressTone =
-    pct >= 100 ? "bg-error-1" : pct >= 80 ? "bg-warning-1" : "bg-primary-green-300";
+    pct >= 100
+      ? "bg-error-1"
+      : pct >= 80
+        ? "bg-warning-1"
+        : "bg-primary-green-300";
 
   return (
     <button
@@ -245,7 +348,9 @@ const ExpenseCard = ({
             {formatToNaira(spent)}
           </p>
           {hasBudget && (
-            <p className="text-xs text-grey-3">of {formatToNaira(budgetAmount)}</p>
+            <p className="text-xs text-grey-3">
+              of {formatToNaira(budgetAmount)}
+            </p>
           )}
         </div>
         <p className="text-[11px] text-grey-3 mt-0.5">
@@ -275,7 +380,10 @@ const ExpenseCard = ({
           <div className="h-1.5 rounded-full bg-grey-6 overflow-hidden">
             {hasBudget && (
               <div
-                className={cn("h-full rounded-full transition-all", progressTone)}
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  progressTone,
+                )}
                 style={{ width: `${Math.min(100, pct)}%` }}
               />
             )}
@@ -283,10 +391,17 @@ const ExpenseCard = ({
         </div>
       </div>
 
-      <div className="border-t border-grey-5 flex items-center justify-center gap-1 py-2.5 text-[11px] font-bold text-primary-green-300 group-hover:bg-secondary-6 transition-colors shrink-0">
-        <PiggyBank className="w-3 h-3" />
-        {hasBudget ? "View more" : "Set budget"}
-        <ChevronRight className="w-3 h-3" />
+      <div className="px-4 pb-4 pt-1 shrink-0">
+        <div
+          className={cn(
+            "flex items-center justify-center gap-1.5 rounded-full py-2 text-[11px] font-bold transition-colors",
+            "bg-secondary-6 text-primary-green-300 group-hover:bg-primary-green-300 group-hover:text-white",
+          )}
+        >
+          <PiggyBank className="w-3 h-3" />
+          {hasBudget ? "View more" : "Set budget"}
+          <ChevronRight className="w-3 h-3" />
+        </div>
       </div>
     </button>
   );

@@ -5,6 +5,8 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -154,55 +156,37 @@ const CustomSalesCard = ({
   );
 };
 
-// Table-shaped skeletons — mirror InventoryTableSkeleton's pattern so the
-// loading state reads as a table instead of generic flat bars.
+// Table-shaped skeletons — same canonical TableSkeleton used by every
+// table-loading screen in the app (see Inventory.tsx's InventoryTableSkeleton).
 const ProductsSoldSkeleton = () => (
-  <div className="w-full mt-4">
-    <div className="hidden md:flex items-center gap-4 px-6 py-3.5 bg-grey-6 rounded-t-lg">
-      <Skeleton className="h-3 w-32 bg-grey-5 flex-1" />
-      <Skeleton className="h-3 w-16 bg-grey-5" />
-      <Skeleton className="h-3 w-20 bg-grey-5" />
-      <Skeleton className="h-3 w-14 bg-grey-5" />
-      <Skeleton className="h-3 w-20 bg-grey-5" />
-      <Skeleton className="h-3 w-16 bg-grey-5" />
-    </div>
-    <div className="divide-y divide-grey-6">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="flex items-center gap-4 px-6 py-4">
-          <Skeleton className="h-3.5 w-32 sm:w-40 bg-grey-5 flex-1" />
-          <Skeleton className="hidden sm:block h-3.5 w-14 bg-grey-5" />
-          <Skeleton className="h-3.5 w-20 bg-grey-5" />
-          <Skeleton className="hidden sm:block h-3.5 w-12 bg-grey-5" />
-          <Skeleton className="hidden md:block h-3.5 w-16 bg-grey-5" />
-          <Skeleton className="hidden md:block h-3.5 w-14 bg-grey-5" />
-        </div>
-      ))}
-    </div>
+  <div className="mt-4">
+    <TableSkeleton
+      rows={5}
+      columns={[
+        { flex: true },
+        { width: "w-14", hiddenOnMobile: true },
+        { width: "w-20" },
+        { width: "w-12", hiddenOnMobile: true },
+        { width: "w-16", hiddenOnMobile: true },
+        { width: "w-14", hiddenOnMobile: true },
+      ]}
+    />
   </div>
 );
 
 const OrderHistorySkeleton = () => (
-  <div className="w-full mt-4">
-    <div className="hidden md:flex items-center gap-4 px-6 py-3.5 bg-grey-6 rounded-t-lg">
-      <Skeleton className="h-3 w-24 bg-grey-5" />
-      <Skeleton className="h-3 w-28 bg-grey-5 flex-1" />
-      <Skeleton className="h-3 w-24 bg-grey-5" />
-      <Skeleton className="h-3 w-20 bg-grey-5" />
-      <Skeleton className="h-3 w-16 bg-grey-5" />
-      <Skeleton className="h-3 w-14 bg-grey-5" />
-    </div>
-    <div className="divide-y divide-grey-6">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="flex items-center gap-4 px-6 py-4">
-          <Skeleton className="h-3.5 w-20 bg-grey-5" />
-          <Skeleton className="h-3.5 w-28 sm:w-32 bg-grey-5 flex-1" />
-          <Skeleton className="hidden sm:block h-3.5 w-20 bg-grey-5" />
-          <Skeleton className="hidden sm:block h-3.5 w-16 bg-grey-5" />
-          <Skeleton className="h-3.5 w-16 bg-grey-5" />
-          <Skeleton className="h-6 w-16 rounded-full bg-grey-5" />
-        </div>
-      ))}
-    </div>
+  <div className="mt-4">
+    <TableSkeleton
+      rows={5}
+      columns={[
+        { width: "w-20" },
+        { flex: true },
+        { width: "w-20", hiddenOnMobile: true },
+        { width: "w-16", hiddenOnMobile: true },
+        { width: "w-16" },
+        { pill: true },
+      ]}
+    />
   </div>
 );
 
@@ -407,19 +391,10 @@ const Sales = () => {
           </p>
 
           {SalesLoading || !SalesData ? (
-            <div className="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <CustomCard
-                  key={index}
-                  className="w-full rounded-2xl border-none h-[100px] sm:h-[120px]"
-                >
-                  <div className="flex flex-col gap-3 sm:gap-6 items-start h-full justify-center">
-                    <Skeleton className="h-3 sm:h-4 w-[80px] sm:w-[100px] bg-grey-5" />
-                    <Skeleton className="h-4 sm:h-6 w-[60px] sm:w-[70px] bg-grey-5" />
-                  </div>
-                </CustomCard>
-              ))}
-            </div>
+            <StatCardSkeletonRow
+              count={6}
+              gridClassName="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4"
+            />
           ) : (
             <>
               {user &&

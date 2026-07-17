@@ -3,8 +3,9 @@ import { AlertCircle, Plus, Users, Wallet } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useSupplyHook } from "@/hooks/useSupplyHook";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
@@ -100,18 +101,10 @@ const Supply = () => {
           </p>
 
           {SupplierLoading ? (
-            <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <CustomCard
-                  key={index}
-                  className="w-full rounded-2xl border-none p-0"
-                  contentClassName="p-4 sm:p-5 flex flex-col gap-3"
-                >
-                  <Skeleton className="h-4 w-[100px] bg-grey-5" />
-                  <Skeleton className="h-6 w-[70px] bg-grey-5" />
-                </CustomCard>
-              ))}
-            </div>
+            <StatCardSkeletonRow
+              count={3}
+              gridClassName="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4"
+            />
           ) : (
             <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               <CustomSupplyCard
@@ -135,14 +128,15 @@ const Supply = () => {
 
       {/* Main Content Section */}
       {SupplierLoading ? (
-        <div className="w-full">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full bg-grey-5" />
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-16 w-full bg-grey-5 mt-2" />
-            ))}
-          </div>
-        </div>
+        <TableSkeleton
+          rows={5}
+          columns={[
+            { flex: true },
+            { width: "w-32", hiddenOnMobile: true },
+            { width: "w-24", alignRight: true },
+            { width: "w-8" },
+          ]}
+        />
       ) : (
         <AllSupply
           SupplierData={SupplierData}

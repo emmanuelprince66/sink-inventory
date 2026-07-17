@@ -2,8 +2,8 @@
 
 import { useFetchBudgetsQuery } from "@/api/expenses/fetch-budgets";
 import { SearchInput } from "@/components/app/SearchInput";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseCategoryOptions } from "@/hooks/useExpenseAccountsHook";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -73,21 +73,33 @@ const Budgets = () => {
 
       <div className="rounded-xl border border-grey-5 bg-white overflow-hidden">
         <div className="p-3 sm:p-4 border-b border-grey-5">
-          <div className="max-w-sm">
-            <SearchInput
-              placeholder="Search by category..."
-              value={search}
-              onValueChange={setSearch}
-            />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="w-full sm:max-w-sm">
+              <SearchInput
+                placeholder="Search by category..."
+                value={search}
+                onValueChange={setSearch}
+              />
+            </div>
+            {!isLoading && (
+              <span className="text-xs font-bold text-grey-3 shrink-0">
+                {budgets.length} {budgets.length === 1 ? "budget" : "budgets"}
+              </span>
+            )}
           </div>
         </div>
 
         {isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 rounded-lg bg-grey-5" />
-            ))}
-          </div>
+          <TableSkeleton
+            rows={5}
+            columns={[
+              { flex: true, thumbnail: true },
+              { width: "w-12", hiddenOnMobile: true },
+              { width: "w-24", alignRight: true },
+              { width: "w-20", hiddenOnMobile: true },
+              { width: "w-20", alignRight: true, hiddenOnMobile: true },
+            ]}
+          />
         ) : budgets.length === 0 ? (
           <div className="py-16 px-4 text-center">
             <div className="w-12 h-12 rounded-full bg-grey-6 mx-auto flex items-center justify-center mb-3">

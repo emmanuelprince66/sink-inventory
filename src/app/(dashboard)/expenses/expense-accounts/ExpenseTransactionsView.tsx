@@ -3,6 +3,7 @@
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
 import CustomPagination from "@/components/app/CustomPagination";
 import { SearchInput } from "@/components/app/SearchInput";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useExpenseCategoryOptions } from "@/hooks/useExpenseAccountsHook";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -146,11 +146,16 @@ const ExpenseTransactionsView = ({
       {/* Table */}
       <div className="rounded-xl border border-grey-5 bg-white overflow-hidden">
         {isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 rounded-lg bg-grey-5" />
-            ))}
-          </div>
+          <TableSkeleton
+            rows={6}
+            columns={[
+              { flex: true, thumbnail: true },
+              { width: "w-24", hiddenOnMobile: true },
+              { width: "w-20", hiddenOnMobile: true },
+              { width: "w-16", alignRight: true },
+              { width: "w-20", hiddenOnMobile: true, alignRight: true },
+            ]}
+          />
         ) : (
           <>
             {/* Desktop */}

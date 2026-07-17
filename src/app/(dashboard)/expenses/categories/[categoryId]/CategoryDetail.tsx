@@ -3,8 +3,9 @@
 import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useExpenseCategoryDetail } from "@/hooks/useExpenseAccountsHook";
 import { cn } from "@/lib/utils";
@@ -147,7 +148,10 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
           </h1>
         </div>
 
-        <Button onClick={() => setOpenBudgetEdit(true)}>
+        <Button
+          onClick={() => setOpenBudgetEdit(true)}
+          className="w-full sm:w-auto"
+        >
           <PiggyBank className="w-4 h-4 mr-1.5" />
           {hasBudget ? "Edit budget" : "Set budget"}
         </Button>
@@ -156,18 +160,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
       {/* Budget summary */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {categoryDetailLoading ? (
-          <>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-2xl p-3 sm:p-4 bg-grey-6">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="w-4 h-4 rounded bg-grey-5" />
-                  <Skeleton className="h-3 w-16 rounded bg-grey-5" />
-                </div>
-                <Skeleton className="h-6 w-24 rounded mt-3 bg-grey-5" />
-                <Skeleton className="h-3 w-20 rounded mt-2 bg-grey-5" />
-              </div>
-            ))}
-          </>
+          <StatCardSkeletonRow count={4} gridClassName="contents" />
         ) : (
           <>
             <StatTile
@@ -301,11 +294,15 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
         </div>
 
         {categoryDetailLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 rounded-lg bg-grey-5" />
-            ))}
-          </div>
+          <TableSkeleton
+            rows={5}
+            columns={[
+              { flex: true },
+              { width: "w-24", hiddenOnMobile: true },
+              { width: "w-20", hiddenOnMobile: true },
+              { width: "w-16", alignRight: true },
+            ]}
+          />
         ) : (
           <>
             <div
