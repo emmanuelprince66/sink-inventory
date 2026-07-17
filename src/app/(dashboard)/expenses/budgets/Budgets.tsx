@@ -20,9 +20,9 @@ interface Budget {
   id: string;
   category_name: string;
   year: number;
-  total_budget_amount_formatted?: number;
+  total_budget_amount?: number;
   duration_months?: number;
-  monthly_allocated_amount_formatted?: number;
+  monthly_allocated_amount?: number;
   created_at?: string;
   [key: string]: any;
 }
@@ -168,13 +168,13 @@ const Budgets = () => {
                           {b.year}
                         </td>
                         <td className="py-3 px-4 text-sm font-bold text-grey-1 text-right whitespace-nowrap">
-                          {formatToNaira(b.total_budget_amount_formatted || 0)}
+                          {formatToNaira(b.total_budget_amount || 0)}
                         </td>
                         <td className="py-3 px-4 text-sm text-grey-2">
                           {b.duration_months} months
                         </td>
                         <td className="py-3 px-4 text-sm text-grey-2 text-right whitespace-nowrap">
-                          {formatToNaira(b.monthly_allocated_amount_formatted || 0)}
+                          {formatToNaira(b.monthly_allocated_amount || 0)}
                         </td>
                         <td className="py-3 px-4 text-xs text-grey-3 text-right whitespace-nowrap">
                           {b.created_at
@@ -220,7 +220,7 @@ const Budgets = () => {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-grey-1">
-                          {formatToNaira(b.total_budget_amount_formatted || 0)}
+                          {formatToNaira(b.total_budget_amount || 0)}
                         </p>
                       </div>
                     </button>

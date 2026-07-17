@@ -59,7 +59,8 @@ interface ExpenseCategory {
 interface Budget {
   id: string;
   category_name: string;
-  total_budget_amount_formatted?: number;
+  total_budget_amount?: number;
+  monthly_allocated_amount?: number;
   duration_months?: number;
   [key: string]: any;
 }
@@ -299,11 +300,16 @@ const ExpenseCard = ({
   const hasBudget = Boolean(budget);
   const spent = stats?.total || 0;
   const count = stats?.count || 0;
-  const budgetAmount = budget?.total_budget_amount_formatted || 0;
+  // `total_budget_amount`/`monthly_allocated_amount` are the real Naira
+  // values entered when the budget was set. Their "_formatted" siblings
+  // from this endpoint come back scaled by /100 (confirmed live: a ₦200
+  // budget reports total_budget_amount_formatted: 2) — don't use them.
+  const budgetAmount = budget?.total_budget_amount || 0;
   const monthly =
-    hasBudget && budget!.duration_months
+    budget?.monthly_allocated_amount ??
+    (hasBudget && budget!.duration_months
       ? Math.round(budgetAmount / budget!.duration_months)
-      : 0;
+      : 0);
   const pct =
     hasBudget && budgetAmount > 0
       ? Math.round((spent / budgetAmount) * 100)

@@ -31,7 +31,7 @@ import { getCategoryMeta } from "./expense-ui-meta";
 interface ExistingBudget {
   id: string;
   year?: number;
-  total_budget_amount_formatted?: number;
+  total_budget_amount?: number;
   duration_months?: number;
 }
 
@@ -85,8 +85,8 @@ const SetCategoryBudgetModal = ({
     if (isOpen) {
       setSelectedCategoryId(categoryId || "");
       setAmount(
-        existingBudget?.total_budget_amount_formatted
-          ? String(existingBudget.total_budget_amount_formatted)
+        existingBudget?.total_budget_amount
+          ? String(existingBudget.total_budget_amount)
           : "",
       );
       setDuration(

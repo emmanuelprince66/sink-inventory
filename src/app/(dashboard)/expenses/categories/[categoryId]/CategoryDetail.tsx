@@ -118,7 +118,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
     ? {
         id: budgetObj.id,
         year: budgetObj.year,
-        total_budget_amount_formatted: budgetObj.total_budget_amount,
+        total_budget_amount: budgetObj.total_budget_amount,
         duration_months: budgetObj.duration_months,
       }
     : undefined;
