@@ -24,6 +24,7 @@ import {
   Inbox,
   LayoutGrid,
   PiggyBank,
+  Receipt,
   Users,
 } from "lucide-react";
 import moment from "moment";
@@ -142,16 +143,33 @@ const ExpenseAccountsView = ({
     const items = unwrapPaginated<any>(AllExpensesData?.data).items;
     const map = new Map<
       string,
-      ExpenseCategory & { total: number; count: number }
+      ExpenseCategory & {
+        total: number;
+        count: number;
+        latestExpenseName?: string;
+        latestDate?: string;
+      }
     >();
     for (const item of items) {
       const id = getRefId(item.category) || getRefLabel(item.category);
       const name = getRefLabel(item.category, "Uncategorised");
-      const prev = map.get(id) || { id, name, total: 0, count: 0 };
+      const prev = map.get(id) || {
+        id,
+        name,
+        total: 0,
+        count: 0,
+        latestExpenseName: undefined,
+        latestDate: undefined,
+      };
+      // Track the most recently dated expense in this category so the card
+      // can show what it was actually for, not just a bare count.
+      const isNewer = !prev.latestDate || (item.date && item.date >= prev.latestDate);
       map.set(id, {
         ...prev,
         total: prev.total + (item.amount || 0),
         count: prev.count + 1,
+        latestExpenseName: isNewer ? item.name || prev.latestExpenseName : prev.latestExpenseName,
+        latestDate: isNewer ? item.date || prev.latestDate : prev.latestDate,
       });
     }
     return Array.from(map.values());
@@ -260,7 +278,11 @@ const ExpenseAccountsView = ({
                 key={c.id}
                 category={c}
                 budget={budgetByCategoryName.get(c.name)}
-                stats={{ total: c.total, count: c.count }}
+                stats={{
+                  total: c.total,
+                  count: c.count,
+                  latestExpenseName: c.latestExpenseName,
+                }}
                 onViewMore={() => goToCategory(c.id)}
               />
             ))}
@@ -292,7 +314,7 @@ const ExpenseCard = ({
 }: {
   category: ExpenseCategory;
   budget?: Budget;
-  stats?: { total: number; count: number };
+  stats?: { total: number; count: number; latestExpenseName?: string };
   onViewMore: () => void;
 }) => {
   const meta = getCategoryMeta(category.name);
@@ -300,6 +322,7 @@ const ExpenseCard = ({
   const hasBudget = Boolean(budget);
   const spent = stats?.total || 0;
   const count = stats?.count || 0;
+  const latestExpenseName = stats?.latestExpenseName;
   // `total_budget_amount`/`monthly_allocated_amount` are the real Naira
   // values entered when the budget was set. Their "_formatted" siblings
   // from this endpoint come back scaled by /100 (confirmed live: a ₦200
@@ -362,6 +385,12 @@ const ExpenseCard = ({
         <p className="text-[11px] text-grey-3 mt-0.5">
           {count} {count === 1 ? "transaction" : "transactions"}
         </p>
+        {latestExpenseName && (
+          <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-grey-6 px-2 py-1 text-[11px] font-semibold text-grey-2 truncate max-w-full w-fit">
+            <Receipt className="w-3 h-3 text-grey-4 shrink-0" />
+            <span className="truncate">{latestExpenseName}</span>
+          </p>
+        )}
 
         {/* Always rendered (even without a budget) so every card in the row
             ends up the same height — no ragged grid from optional content. */}
