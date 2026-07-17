@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/toast/useToast";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -23,6 +22,7 @@ import {
   ChevronDown,
   PiggyBank,
   Plus,
+  Sparkles,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -87,7 +87,6 @@ const ExpenseAccountBalanceCard = ({
   bankName?: string;
   accountNumber?: string;
 }) => {
-  const { showToast } = useToast();
   return (
     <CustomCard
       className="relative overflow-hidden rounded-2xl border border-primary-green-300/20 bg-gradient-to-br from-primary-green-300/15 via-secondary-6 to-white w-full h-full p-0"
@@ -122,14 +121,21 @@ const ExpenseAccountBalanceCard = ({
           Funds available for operational spending
         </p>
       </div>
-      <Button
-        size="sm"
-        className="relative w-fit gap-1.5"
-        onClick={() => showToast("Transfer Money is coming soon.", "info")}
-      >
-        <ArrowUpRight className="w-3.5 h-3.5" />
-        Transfer Money
-      </Button>
+      <div className="relative flex items-center gap-2">
+        <Button
+          size="sm"
+          disabled
+          title="Transfer Money is coming soon"
+          className="w-fit gap-1.5"
+        >
+          <ArrowUpRight className="w-3.5 h-3.5" />
+          Transfer Money
+        </Button>
+        <span className="inline-flex items-center gap-1 rounded-full bg-warning-2 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-warning-1">
+          <Sparkles className="w-2.5 h-2.5" />
+          Coming soon
+        </span>
+      </div>
     </CustomCard>
   );
 };

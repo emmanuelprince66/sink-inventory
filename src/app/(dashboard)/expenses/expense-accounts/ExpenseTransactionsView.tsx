@@ -217,7 +217,7 @@ const ExpenseTransactionsView = ({
                         <td className="py-3 px-4 text-sm text-grey-2">
                           {getRefLabel(t.added_by)}
                         </td>
-                        <td className="py-3 px-4 text-sm font-bold text-grey-1 text-right whitespace-nowrap">
+                        <td className="py-3 px-4 text-sm font-bold text-error-1 text-right whitespace-nowrap">
                           {formatToNaira(t.amount)}
                         </td>
                         <td className="py-3 px-4 text-xs text-grey-3 text-right whitespace-nowrap">
@@ -267,7 +267,7 @@ const ExpenseTransactionsView = ({
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-grey-1">
+                        <p className="text-sm font-bold text-error-1">
                           {formatToNaira(t.amount)}
                         </p>
                       </div>

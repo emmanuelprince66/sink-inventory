@@ -36,7 +36,7 @@ const CustomPagination = ({
 }: CustomPaginationProps) => {
   if (totalPages <= 1) {
     return total !== undefined ? (
-      <div className={cn("text-xs text-gray-500 text-center py-2", className)}>
+      <div className={cn("text-xs text-grey-3 text-center py-2", className)}>
         Showing {total} {total === 1 ? "result" : "results"}
       </div>
     ) : null;
@@ -58,7 +58,7 @@ const CustomPagination = ({
       )}
     >
       {showingFrom !== null && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-grey-3">
           Showing {showingFrom}–{showingTo} of {total}
         </p>
       )}
@@ -79,7 +79,7 @@ const CustomPagination = ({
           p === "…" ? (
             <span
               key={`ellipsis-${i}`}
-              className="px-2 text-xs text-gray-400 select-none"
+              className="px-2 text-xs text-grey-4 select-none"
             >
               …
             </span>
@@ -88,10 +88,10 @@ const CustomPagination = ({
               key={p}
               onClick={() => onPageChange(p)}
               className={cn(
-                "h-8 min-w-8 px-2 rounded-md text-xs font-medium transition-colors cursor-pointer",
+                "h-8 min-w-8 px-2 rounded-md text-xs font-bold transition-colors cursor-pointer",
                 p === currentPage
-                  ? "bg-blue-600 text-white"
-                  : "border border-gray-200 text-gray-700 hover:bg-gray-50",
+                  ? "bg-primary-green-300 text-white"
+                  : "border border-grey-5 text-grey-2 hover:bg-grey-6",
               )}
             >
               {p}
