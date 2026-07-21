@@ -70,6 +70,9 @@ export async function GET(request: NextRequest) {
   apiUrl.searchParams.append("export_format", export_format);
 
   try {
+    // Report generation now runs as a background task — this call just
+    // kicks it off and returns 202 + a task_id to poll via
+    // /api/report/status/[taskId], instead of streaming the file directly.
     const upstream = await fetch(apiUrl.toString(), {
       method: "GET",
       headers: {
@@ -78,44 +81,18 @@ export async function GET(request: NextRequest) {
       cache: "no-store",
     });
 
+    const body = await upstream.json().catch(() => ({}));
+
     if (!upstream.ok) {
-      // Try to read a JSON error body if upstream returned one.
-      const errorBody = await upstream
-        .clone()
-        .json()
-        .catch(() => ({}));
       return NextResponse.json(
-        {
-          error: errorBody.message || "Failed to generate report",
-          status: upstream.status,
-        },
+        { error: body.message || body.detail || "Failed to start report generation" },
         { status: upstream.status },
       );
     }
 
-    // Pass through binary/text body and content headers so the browser can save
-    // the file with the right type. For json export, the upstream returns JSON
-    // directly — we still forward it as-is.
-    const arrayBuffer = await upstream.arrayBuffer();
-    const contentType =
-      upstream.headers.get("content-type") ||
-      (export_format === "xlsx"
-        ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        : export_format === "csv"
-          ? "text/csv"
-          : "application/json");
-    const contentDisposition =
-      upstream.headers.get("content-disposition") || undefined;
-
-    const headers: Record<string, string> = {
-      "Content-Type": contentType,
-      "Cache-Control": "no-store",
-    };
-    if (contentDisposition) headers["Content-Disposition"] = contentDisposition;
-
-    return new NextResponse(arrayBuffer, { status: 200, headers });
+    return NextResponse.json(body, { status: upstream.status });
   } catch (error) {
-    console.error("Error generating report:", error);
+    console.error("Error starting report generation:", error);
     return NextResponse.json(
       {
         error: "Internal server error",

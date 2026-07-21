@@ -3,7 +3,7 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
-import GenerateReportButton from "@/components/app/GenerateReportButton";
+import GenerateReportModal from "@/components/app/GenerateReportModal";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import { Button } from "@/components/ui/button";
@@ -15,11 +15,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
+import { useReportGeneration } from "@/hooks/useReportGeneration";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowUpRight,
   ChevronDown,
+  FileDown,
   PiggyBank,
   Plus,
   Sparkles,
@@ -163,6 +165,14 @@ const Expenses = () => {
     handleOpenNotSubscribeModal,
   });
 
+  const {
+    isConfigOpen: isGenerateReportOpen,
+    openConfig: openGenerateReport,
+    closeConfig: closeGenerateReport,
+    isStarting: isGenerateReportStarting,
+    handleGenerate: handleGenerateReport,
+  } = useReportGeneration("expenses");
+
   // Real bank-account data — results.summary on /expenses/business/{id}/.
   const accountSummary = ExpensesData?.data?.results?.summary;
 
@@ -208,14 +218,12 @@ const Expenses = () => {
                     Manage Budgets
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                  <div>
-                    <GenerateReportButton
-                      reportType="expenses"
-                      variant="ghost"
-                      className="w-full justify-start rounded-lg py-1.5 font-semibold text-grey-2 hover:bg-secondary-6 hover:text-grey-2"
-                    />
-                  </div>
+                <DropdownMenuItem
+                  onClick={openGenerateReport}
+                  className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2 cursor-pointer gap-2"
+                >
+                  <FileDown className="w-4 h-4" />
+                  Generate Report
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -334,6 +342,19 @@ const Expenses = () => {
           <UserNotSubscribe />
         </div>
       </CustomModal>
+
+      {/* Generate Report Modal — rendered here (outside the DropdownMenu)
+          on purpose. The dropdown unmounts its children on close, so a
+          modal nested inside it would flicker open-then-closed the moment
+          it opens (the dropdown's close/focus-return races the dialog's
+          own mount). */}
+      <GenerateReportModal
+        isOpen={isGenerateReportOpen}
+        onClose={closeGenerateReport}
+        reportType="expenses"
+        onSubmit={handleGenerateReport}
+        isSubmitting={isGenerateReportStarting}
+      />
 
       <TransactionDetailsModal
         isOpen={!!selectedTransaction}

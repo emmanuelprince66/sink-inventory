@@ -3,7 +3,7 @@
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
-import GenerateReportButton from "@/components/app/GenerateReportButton";
+import GenerateReportModal from "@/components/app/GenerateReportModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
@@ -17,6 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { useReportGeneration } from "@/hooks/useReportGeneration";
 import { useSalesHook } from "@/hooks/useSalesHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useUserRole } from "@/lib/store/user-store";
@@ -27,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
+  FileDown,
   Percent,
   Receipt,
   Settings,
@@ -225,6 +227,14 @@ const Sales = () => {
   const closeAttendantsModal = () => setShowAttendants(false);
   const openAttendantsModal = () => setShowAttendants(true);
 
+  const {
+    isConfigOpen: isGenerateReportOpen,
+    openConfig: openGenerateReport,
+    closeConfig: closeGenerateReport,
+    isStarting: isGenerateReportStarting,
+    handleGenerate: handleGenerateReport,
+  } = useReportGeneration("sales");
+
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
   };
@@ -353,14 +363,12 @@ const Sales = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52 p-1.5">
-                <DropdownMenuItem asChild className="p-0 focus:bg-transparent">
-                  <div>
-                    <GenerateReportButton
-                      reportType="sales"
-                      variant="ghost"
-                      className="w-full justify-start rounded-lg py-1.5 font-semibold text-grey-2 hover:bg-secondary-6 hover:text-grey-2"
-                    />
-                  </div>
+                <DropdownMenuItem
+                  onClick={openGenerateReport}
+                  className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2"
+                >
+                  <FileDown className="w-4 h-4 mr-0.5" />
+                  Generate Report
                 </DropdownMenuItem>
                 {user && user?.role === "OWNER" && (
                   <DropdownMenuItem
@@ -794,6 +802,19 @@ const Sales = () => {
           handleClickAttendants={handleClickAttendants}
         />
       </CustomModal>
+
+      {/* Generate Report Modal — rendered here (outside the DropdownMenu)
+          on purpose. The dropdown unmounts its children on close, so a
+          modal nested inside it would flicker open-then-closed the moment
+          it opens (the dropdown's close/focus-return races the dialog's
+          own mount). See the Attendants modal above for the same pattern. */}
+      <GenerateReportModal
+        isOpen={isGenerateReportOpen}
+        onClose={closeGenerateReport}
+        reportType="sales"
+        onSubmit={handleGenerateReport}
+        isSubmitting={isGenerateReportStarting}
+      />
       <CustomModal
         isOpen={showDiscountSalesModal}
         onClose={closeDiscountSalesModal}
