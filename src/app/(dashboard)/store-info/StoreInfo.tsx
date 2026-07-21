@@ -10,6 +10,7 @@ import {
   Info,
   Mail,
   MapPin,
+  Palette,
   Phone,
   Store,
   Truck,
@@ -79,7 +80,12 @@ const getInitials = (name?: string) => {
 
 export default function StoreInfo() {
   const [isEditing, setIsEditing] = useState(false);
-  const { BusinessDataLoading, storeData } = useStoreHook({ setIsEditing });
+  const { BusinessDataLoading, storeData, storeThemeOptions } = useStoreHook({
+    setIsEditing,
+  });
+  const activeTheme = storeThemeOptions.find(
+    (theme) => theme.key === storeData.storeTheme,
+  );
 
   return (
     <>
@@ -231,6 +237,22 @@ export default function StoreInfo() {
                     icon={<Store className="w-4 h-4 text-primary-green-300" />}
                     label="Store Display Name"
                     value={storeData.storeName}
+                  />
+
+                  <InfoRow
+                    icon={<Palette className="w-4 h-4 text-primary-green-300" />}
+                    label="Store Theme"
+                    value={
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
+                          style={{
+                            backgroundColor: activeTheme?.primary || "#047857",
+                          }}
+                        />
+                        {activeTheme?.label || "Emerald"}
+                      </span>
+                    }
                   />
                 </div>
 

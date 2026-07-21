@@ -89,6 +89,15 @@ interface SubmitOrderArgs {
   shippingId?: string; // required for the in-house flow (static shipping method)
 }
 
+export interface CustomerAddressRecord {
+  address: string;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  is_default?: boolean;
+}
+
 interface UseOrderDeliveryHookProps {
   businessId: string | null;
   findBusiness: any;
@@ -97,6 +106,9 @@ interface UseOrderDeliveryHookProps {
   /** Selected customer's phone/email — prefilled and locked when present. */
   customerPhone?: string;
   customerEmail?: string;
+  /** Selected customer's saved addresses — the default (or first) one
+   * prefills state/city/shipping address, but stays editable per-order. */
+  customerAddresses?: CustomerAddressRecord[];
 }
 
 export const useOrderDeliveryHook = ({
@@ -105,6 +117,7 @@ export const useOrderDeliveryHook = ({
   customerName,
   customerPhone,
   customerEmail,
+  customerAddresses,
 }: UseOrderDeliveryHookProps) => {
   const { showToast } = useToast();
   const router = useRouter();
@@ -144,6 +157,28 @@ export const useOrderDeliveryHook = ({
     () => (address.state ? City.getCitiesOfState("NG", address.state) : []),
     [address.state],
   );
+
+  // Prefill state/city/shipping address from the customer's default saved
+  // address (falls back to the first one) when a customer is selected.
+  // Stays editable afterwards — unlike phone/email, a per-order delivery
+  // address can legitimately differ from the customer's saved one.
+  useEffect(() => {
+    const defaultAddress =
+      customerAddresses?.find((a) => a?.is_default) || customerAddresses?.[0];
+
+    const matchedState = defaultAddress?.state
+      ? stateList.find(
+          (s) => s.name.toLowerCase() === defaultAddress.state!.toLowerCase(),
+        )
+      : undefined;
+
+    setAddress((prev) => ({
+      ...prev,
+      state: matchedState?.isoCode || "",
+      city: defaultAddress?.city || "",
+      shippingAddress: defaultAddress?.address || "",
+    }));
+  }, [customerAddresses, stateList]);
 
   const isAddressComplete = Boolean(
     customerName?.trim() &&

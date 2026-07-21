@@ -2,7 +2,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ArrowLeft, Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  MapPin,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
@@ -17,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
 
 import DeleteCustomer from "../DeleteCustomer";
+import { CustomerAddress } from "../types";
 import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
@@ -195,6 +203,49 @@ const Contact = ({ id }: { id: string }) => {
           </div>
         </div>
       </div>
+
+      {/* Addresses */}
+      {!CustomerLoading && (customer?.addresses?.length ?? 0) > 0 && (
+        <div className="bg-white rounded-2xl border border-grey-5 p-4 sm:p-6">
+          <h3 className="font-extrabold text-grey-1 text-sm mb-3">
+            Addresses
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {customer!.addresses!.map((address: CustomerAddress) => (
+              <div
+                key={address.id}
+                className="flex items-start gap-3 rounded-xl border border-grey-5 p-3.5"
+              >
+                <div className="w-9 h-9 rounded-full bg-secondary-6 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="w-4 h-4 text-primary-green-300" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm font-bold text-grey-1 truncate">
+                      {address.address}
+                    </p>
+                    {address.is_default && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-primary-green-300 bg-secondary-6 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-grey-3">
+                    {[address.city, address.state, address.country]
+                      .filter(Boolean)
+                      .join(", ") || "N/A"}
+                  </p>
+                  {address.phone && (
+                    <p className="text-xs text-grey-3 mt-0.5">
+                      {address.phone}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tabs + Content */}
       <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">

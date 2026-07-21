@@ -73,7 +73,9 @@ export const columns: ColumnDef<CustomerType>[] = [
     header: ({ column }) => {
       return (
         <button
-          className="flex items-center gap-1"
+          type="button"
+          className="flex items-center gap-1 uppercase"
+          style={{ textTransform: "uppercase" }}
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Total Transactions

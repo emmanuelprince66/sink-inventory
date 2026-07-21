@@ -1,5 +1,10 @@
 import { useUpdateBusinessMutation } from "@/api/business/create-business";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
+import {
+  DEFAULT_STORE_THEME_KEY,
+  FALLBACK_STORE_THEMES,
+  useGetStoreThemesQuery,
+} from "@/api/business/get-store-themes";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { compressImage } from "@/utils/compressImage";
 import { useEffect, useRef, useState } from "react";
@@ -28,6 +33,7 @@ interface StoreData {
   deliveryDays: string[];
   workingDays: string[];
   weight: string;
+  storeTheme: string;
 }
 
 interface FormErrors {
@@ -95,6 +101,15 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
 
   const findBusiness = BusinessData?.data;
 
+  const { data: storeThemesData, isLoading: storeThemesLoading } =
+    useGetStoreThemesQuery();
+  const storeThemeOptions =
+    storeThemesData?.themes && storeThemesData.themes.length > 0
+      ? storeThemesData.themes
+      : FALLBACK_STORE_THEMES;
+  const defaultStoreThemeKey =
+    storeThemesData?.defaultKey || DEFAULT_STORE_THEME_KEY;
+
   const initialStoreData: StoreData = {
     logo: "/placeholder.svg?height=120&width=120",
     headerImage: "/placeholder.svg?height=300&width=1200",
@@ -116,6 +131,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     deliveryDays: [],
     workingDays: [],
     weight: "",
+    storeTheme: DEFAULT_STORE_THEME_KEY,
   };
 
   const [storeData, setStoreData] = useState<StoreData>(initialStoreData);
@@ -190,13 +206,14 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
           ? findBusiness.working_days
           : [],
         weight: findBusiness.weight ? String(findBusiness.weight) : "",
+        storeTheme: findBusiness.store_theme || defaultStoreThemeKey,
       };
       setStoreData(data);
       setFormData(data);
       setLogoPreview(data.logo);
       setBannerPreview(data.headerImage);
     }
-  }, [findBusiness, business_id]);
+  }, [findBusiness, business_id, defaultStoreThemeKey]);
 
   // Validation logic
   const validateForm = (): boolean => {
@@ -472,6 +489,12 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         formDataToSend.append("weight", formData.weight);
       }
 
+      // Store theme — sent as the preset key (e.g. "emerald"), matching
+      // the Business schema's `store_theme` string field.
+      if (formData.storeTheme) {
+        formDataToSend.append("store_theme", formData.storeTheme);
+      }
+
       // Add image files if provided
       if (logoFile) {
         formDataToSend.append("logo", logoFile);
@@ -553,5 +576,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     CURRENCY_OPTIONS,
     BUSINESS_SECTOR_OPTIONS,
     DELIVERY_DAYS_OPTIONS,
+    storeThemeOptions,
+    storeThemesLoading,
   };
 };

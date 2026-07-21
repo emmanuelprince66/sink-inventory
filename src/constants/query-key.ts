@@ -4,6 +4,7 @@ export const queryKey = {
     createBusiness: "create-business",
     getBusinessById: "get-business-by-id",
     updateBusiness: "update-business",
+    getStoreThemes: "get-store-themes",
   },
   auth: {
     login: "login",

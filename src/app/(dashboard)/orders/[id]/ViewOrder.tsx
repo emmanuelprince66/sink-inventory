@@ -669,48 +669,53 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </p>
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-3">
-                    Update shipping status:
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 mb-5">
-                    <ShippingStatusButton
-                      status="PENDING"
-                      active={selectedShippingStatus === "PENDING"}
-                      onClick={setSelectedShippingStatus}
-                    />
-
-                    {orderData?.channel === "OUTSTORE" && (
+                {/* Manual status-update action — Shipbubble orders get their
+                    shipping_status from Shipbubble's webhooks, so this
+                    flow only makes sense for manual deliveries. */}
+                {orderData.delivery?.type !== "SHIPBUBBLE" && (
+                  <div>
+                    <h4 className="text-sm font-bold text-grey-2 mb-3">
+                      Update shipping status:
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 mb-5">
                       <ShippingStatusButton
-                        status="SHIPPED"
-                        active={selectedShippingStatus === "SHIPPED"}
+                        status="PENDING"
+                        active={selectedShippingStatus === "PENDING"}
                         onClick={setSelectedShippingStatus}
                       />
-                    )}
 
-                    <ShippingStatusButton
-                      status="DELIVERED"
-                      active={selectedShippingStatus === "DELIVERED"}
-                      onClick={setSelectedShippingStatus}
-                    />
-                    <ShippingStatusButton
-                      status="RETURNED"
-                      active={selectedShippingStatus === "RETURNED"}
-                      onClick={setSelectedShippingStatus}
-                    />
+                      {orderData?.channel === "OUTSTORE" && (
+                        <ShippingStatusButton
+                          status="SHIPPED"
+                          active={selectedShippingStatus === "SHIPPED"}
+                          onClick={setSelectedShippingStatus}
+                        />
+                      )}
+
+                      <ShippingStatusButton
+                        status="DELIVERED"
+                        active={selectedShippingStatus === "DELIVERED"}
+                        onClick={setSelectedShippingStatus}
+                      />
+                      <ShippingStatusButton
+                        status="RETURNED"
+                        active={selectedShippingStatus === "RETURNED"}
+                        onClick={setSelectedShippingStatus}
+                      />
+                    </div>
+                    <Button
+                      disabled={editOrderShippingStatusLoading}
+                      onClick={() =>
+                        handleUpdateOrderStatus(selectedShippingStatus)
+                      }
+                      className="w-full mt-3"
+                    >
+                      {editOrderShippingStatusLoading
+                        ? "Updating..."
+                        : "Update Status"}
+                    </Button>
                   </div>
-                  <Button
-                    disabled={editOrderShippingStatusLoading}
-                    onClick={() =>
-                      handleUpdateOrderStatus(selectedShippingStatus)
-                    }
-                    className="w-full mt-3"
-                  >
-                    {editOrderShippingStatusLoading
-                      ? "Updating..."
-                      : "Update Status"}
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
 

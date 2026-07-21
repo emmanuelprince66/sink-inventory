@@ -115,6 +115,7 @@ const CreateOrders = () => {
     customerName: customer?.name,
     customerPhone: customer?.phone,
     customerEmail: customer?.email,
+    customerAddresses: customer?.addresses,
   });
 
   const handleAddressFieldChange = (field: any, value: string) => {
@@ -322,6 +323,7 @@ const CreateOrders = () => {
                   />
                 ) : (
                   <Select
+                    key={address.state}
                     value={address.city}
                     onValueChange={(v) => handleAddressFieldChange("city", v)}
                     disabled={!address.state}

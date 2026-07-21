@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { City, State } from "country-state-city";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
@@ -23,6 +24,11 @@ const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().optional(),
+  // State holds the NG state's ISO code (matches the order delivery address
+  // flow) — translated to its full name in the submit payload below.
+  state: z.string().optional(),
+  city: z.string().optional(),
+  address: z.string().optional(),
 });
 
 export type CustomerFormValues = z.infer<typeof CustomerSchema>;
@@ -158,15 +164,56 @@ export const useCustomerHook = ({
       name: "",
       phone: "",
       email: "",
+      state: "",
+      city: "",
+      address: "",
     },
     mode: "onChange",
   });
 
+  // Same NG state/city source as the order delivery address flow
+  // (useOrderDeliveryHook) — state is stored as its ISO code, city list
+  // depends on the selected state.
+  const stateList = useMemo(() => State.getStatesOfCountry("NG"), []);
+  const selectedState = form.watch("state");
+  const cityList = useMemo(
+    () => (selectedState ? City.getCitiesOfState("NG", selectedState) : []),
+    [selectedState],
+  );
+
+  const handleStateChange = (value: string) => {
+    form.setValue("state", value);
+    form.setValue("city", "");
+  };
+
   const onSubmit = (values: CustomerFormValues) => {
+    // The backend's `address` field is required *within* the nested
+    // CustomerAddress object once that object is sent at all — so a
+    // city/state picked without a street just silently gets dropped
+    // (and the request would 400) unless we ask for the street too.
+    if ((values.city || values.state) && !values.address?.trim()) {
+      form.setError("address", {
+        message: "Street address is required when city/state is set",
+      });
+      return;
+    }
+
+    const stateName =
+      stateList.find((s) => s.isoCode === values.state)?.name || values.state;
+
     const payload = {
       name: values.name,
       phone: values.phone,
       email: values.email,
+      ...(values.address?.trim() && {
+        address: {
+          address: values.address.trim(),
+          city: values.city || undefined,
+          state: stateName || undefined,
+          country: "Nigeria",
+          is_default: true,
+        },
+      }),
     };
 
     if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
@@ -198,6 +245,10 @@ export const useCustomerHook = ({
     onSubmit,
 
     CustomerSchema,
+
+    stateList,
+    cityList,
+    handleStateChange,
 
     handleDeleteCustomer,
     handleRowClick,
