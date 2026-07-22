@@ -819,20 +819,20 @@ const PrintReceiptView = ({
       <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex justify-between items-center no-print">
         <button
           onClick={() => setShowPrintReceiptView(false)}
-          className="p-2 rounded-full bg-secondary-6 hover:bg-secondary-5 transition-colors"
+          className="p-1.5 rounded-full bg-secondary-6 hover:bg-secondary-5 transition-colors"
           aria-label="Go back"
           disabled={isPrinting}
         >
-          <ArrowBigLeftDash className="text-primary-green-300" size={24} />
+          <ArrowBigLeftDash className="text-primary-green-300" size={16} />
         </button>
 
         <Button
           onClick={handleNewSale}
-          className="gap-2"
+          className="gap-2 h-12 px-6 text-base font-bold"
           disabled={isPrinting}
         >
-          <PlusCircle size={11} />
-          <p className="text-sm"> Start New Sale</p>
+          <PlusCircle size={18} />
+          Start New Sale
         </Button>
       </div>
 

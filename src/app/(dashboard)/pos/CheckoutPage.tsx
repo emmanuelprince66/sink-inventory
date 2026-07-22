@@ -507,28 +507,30 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                         {/* Controls — qty stepper, bulk qty, decimal qty */}
                         <div className="mt-2.5 flex items-center flex-wrap gap-x-3 gap-y-2">
-                          <div className="flex items-center gap-2">
+                          {/* Main integer stepper — the primary, most-used control,
+                              deliberately the most visually pronounced element here. */}
+                          <div className="flex items-center gap-1 rounded-full border border-grey-5 bg-secondary-6/60 p-1">
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-8 w-8 cursor-pointer rounded-full border-primary-green-300/30 bg-white hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => decrementQuantity(item.id)}
                               disabled={(item.cartQuantity || 1) <= 1}
                             >
                               <MinusCircle
-                                size={14}
+                                size={16}
                                 className="text-primary-green-300"
                               />
                             </Button>
 
-                            <span className="w-6 text-center text-sm font-bold text-grey-1">
+                            <span className="w-8 text-center text-lg font-extrabold text-grey-1">
                               {Math.floor(item.cartQuantity || 1)}
                             </span>
 
                             <Button
                               variant="outline"
                               size="icon"
-                              className="h-7 w-7 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-8 w-8 cursor-pointer rounded-full border-primary-green-300/30 bg-white hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => incrementQuantity(item.id)}
                               disabled={
                                 (item.cartQuantity || 1) >=
@@ -536,14 +538,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               }
                             >
                               <PlusCircle
-                                size={14}
+                                size={16}
                                 className="text-primary-green-300"
                               />
                             </Button>
                           </div>
 
+                          {/* Bulk / decimal qty — secondary, less-used controls,
+                              deliberately toned down so they don't compete with
+                              the main stepper above. */}
                           <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-grey-4 whitespace-nowrap">
+                            <span className="text-[10px] font-normal text-grey-5 whitespace-nowrap">
                               Bulk Qty:
                             </span>
                             <input
@@ -557,14 +562,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                   e.target.value,
                                 )
                               }
-                              className={`w-16 text-center text-xs border rounded-md py-1 ${
-                                bulkError ? "border-error-1" : "border-grey-5"
+                              className={`w-16 text-center text-xs font-normal text-grey-4 border rounded-md py-1 ${
+                                bulkError ? "border-error-1" : "border-grey-6"
                               }`}
                             />
                             <Button
                               variant="outline"
                               size="sm"
-                              className="h-6 px-2 text-[10px] border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                              className="h-6 px-2 text-[10px] font-normal text-grey-4 border-grey-6 hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() => applyBulkQuantity(item.id)}
                               disabled={
                                 !bulkQuantityInputs[item.id] || !!bulkError
@@ -576,13 +581,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
                           {item?.type?.toLocaleLowerCase() === "product" && (
                             <div className="flex items-center gap-1">
-                              <span className="text-[10px] text-grey-4 whitespace-nowrap">
+                              <span className="text-[10px] font-normal text-grey-5 whitespace-nowrap">
                                 Decimal Qty:
                               </span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-6 w-6 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                                className="h-6 w-6 cursor-pointer border-grey-6 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
                                   decrementDecimalQuantity(item.id)
                                 }
@@ -590,7 +595,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               >
                                 <MinusCircle
                                   size={12}
-                                  className="text-primary-green-300"
+                                  className="text-grey-4"
                                 />
                               </Button>
                               <input
@@ -601,7 +606,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 onChange={(e) =>
                                   handleCustomQuantity(item.id, e.target.value)
                                 }
-                                className="w-12 text-center text-xs border border-grey-5 rounded-md py-1"
+                                className="w-12 text-center text-xs font-normal text-grey-4 border border-grey-6 rounded-md py-1"
                                 onBlur={(e) => {
                                   if (
                                     e.target.value === "" ||
@@ -614,7 +619,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-6 w-6 cursor-pointer border-grey-5 hover:border-primary-green-300 hover:bg-secondary-6"
+                                className="h-6 w-6 cursor-pointer border-grey-6 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
                                   incrementDecimalQuantity(item.id)
                                 }
@@ -625,7 +630,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               >
                                 <PlusCircle
                                   size={12}
-                                  className="text-primary-green-300"
+                                  className="text-grey-4"
                                 />
                               </Button>
                             </div>
