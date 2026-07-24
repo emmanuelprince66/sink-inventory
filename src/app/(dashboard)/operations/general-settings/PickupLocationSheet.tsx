@@ -15,9 +15,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { City, State } from "country-state-city";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface PickupLocation {
   id: string;
@@ -37,18 +38,37 @@ const PickupLocationSheet = ({
   const [showForm, setShowForm] = useState(false);
 
   // Form state
-  const [storeLocation, setStoreLocation] = useState("headquarters");
   const [locationName, setLocationName] = useState("");
   const [phone, setPhone] = useState("");
-  const [cantFindAddress, setCantFindAddress] = useState(false);
+  const [stateIso, setStateIso] = useState("");
+  const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [customCityMode, setCustomCityMode] = useState(false);
+
+  // Deliveries/pickups are domestic (Nigeria) — same convention as the
+  // Shipbubble Configure form (ShipbubbleSettingsModal.tsx) right next to
+  // this sheet: canonical state/city names so an address validator
+  // downstream doesn't reject freeform spelling.
+  const NG_STATES = useMemo(() => State.getStatesOfCountry("NG"), []);
+  const cityOptions = useMemo(
+    () => (stateIso ? City.getCitiesOfState("NG", stateIso) : []),
+    [stateIso],
+  );
+  const useCustomCityInput = customCityMode || (!!stateIso && cityOptions.length === 0);
+
+  const handleStateChange = (iso: string) => {
+    setStateIso(iso);
+    setCity("");
+    setCustomCityMode(false);
+  };
 
   const resetForm = () => {
-    setStoreLocation("headquarters");
     setLocationName("");
     setPhone("");
-    setCantFindAddress(false);
+    setStateIso("");
+    setCity("");
     setAddress("");
+    setCustomCityMode(false);
   };
 
   const handleBack = () => {
@@ -136,25 +156,6 @@ const PickupLocationSheet = ({
           <div className="flex-1 overflow-y-auto">
             <div className="p-5 space-y-5 border-t border-slate-100">
               <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-1.5">
-                  Store Location
-                </label>
-                <Select
-                  value={storeLocation}
-                  onValueChange={setStoreLocation}
-                >
-                  <SelectTrigger className="bg-blue-50/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="headquarters">Headquarters</SelectItem>
-                    <SelectItem value="branch1">Branch 1</SelectItem>
-                    <SelectItem value="branch2">Branch 2</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
                 <label className="text-sm text-slate-600 block mb-1.5">
                   Location Name (Optional)
                 </label>
@@ -176,24 +177,92 @@ const PickupLocationSheet = ({
                 />
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={cantFindAddress}
-                  onChange={(e) => setCantFindAddress(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300"
-                />
-                <span className="text-sm text-slate-700">
-                  Couldn't find address?
-                </span>
-              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                    State <span className="text-red-500">*</span>
+                  </label>
+                  <Select value={stateIso} onValueChange={handleStateChange}>
+                    <SelectTrigger className="bg-white w-full">
+                      <SelectValue placeholder="Pick a state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {NG_STATES.map((s) => (
+                        <SelectItem key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                    Town <span className="text-red-500">*</span>
+                  </label>
+                  {useCustomCityInput ? (
+                    <div className="space-y-1.5">
+                      <Input
+                        placeholder={stateIso ? "Enter your town" : "Pick a state first"}
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        disabled={!stateIso}
+                      />
+                      {cityOptions.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomCityMode(false);
+                            setCity("");
+                          }}
+                          className="text-[11px] text-green-700 hover:text-green-800 font-semibold"
+                        >
+                          Back to town list
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <Select
+                      value={city}
+                      onValueChange={(v) => {
+                        if (v === "__other__") {
+                          setCustomCityMode(true);
+                          setCity("");
+                        } else {
+                          setCity(v);
+                        }
+                      }}
+                      disabled={!stateIso}
+                    >
+                      <SelectTrigger className="bg-white w-full">
+                        <SelectValue
+                          placeholder={stateIso ? "Pick a town" : "Pick a state first"}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cityOptions.map((c) => (
+                          <SelectItem key={c.name} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem
+                          value="__other__"
+                          className="text-green-700 font-semibold"
+                        >
+                          Other (type your own)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
 
               <div>
                 <label className="text-sm font-semibold text-slate-700 block mb-1.5">
-                  Address
+                  Address <span className="text-red-500">*</span>
                 </label>
                 <Input
-                  placeholder="Start typing an address..."
+                  placeholder="e.g. 14 Allen Avenue"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
@@ -202,7 +271,7 @@ const PickupLocationSheet = ({
 
             <div className="p-5 border-t border-slate-100 sticky bottom-0 bg-white">
               <Button
-                disabled={!phone.trim() || !address.trim()}
+                disabled={!phone.trim() || !stateIso || !city.trim() || !address.trim()}
                 className="w-full h-11 bg-green-600 hover:bg-green-700 text-white font-semibold"
               >
                 Save Location

@@ -14,6 +14,16 @@ import { useState } from "react";
 import DeleteCustomer from "./DeleteCustomer";
 import { CustomerType } from "./types";
 
+// NOTE: the Tier/Points/Risk/Score mock columns (backed by
+// ./growth/mockCustomerMetrics) were pulled out before the production push
+// since they show placeholder data — the growth/ folder is left in place
+// so they can be dropped back in once real backend fields exist. See git
+// history around the "Customer Growth Platform" build for the removed
+// column defs (tier/points before "Total Amount Spent", risk/score before
+// "Action") and re-add the two imports below:
+//   import { cn } from "@/lib/utils";
+//   import { getMockCustomerMetrics } from "./growth/mockCustomerMetrics";
+
 export const columns: ColumnDef<CustomerType>[] = [
   //   {
   //     accessorKey: "logo",

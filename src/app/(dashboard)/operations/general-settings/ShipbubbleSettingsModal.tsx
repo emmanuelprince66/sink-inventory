@@ -105,13 +105,15 @@ const ShipbubbleSettingsModal = ({
       showToast(err, "error");
       return;
     }
-    // Saving the Shipbubble Configure form is, by definition, enabling
-    // Shipbubble — always include it in shipping_companies on save.
+    // Saving the Shipbubble Configure form is, by definition, enabling and
+    // activating Shipbubble — always include it in shipping_companies AND
+    // flip is_active on, so the AutomatedShipping toggle reflects "on"
+    // immediately once this save succeeds, without a separate manual toggle.
     const nextCompanies = Array.from(
       new Set([...companies, "SHIPBUBBLE" as const]),
     );
     save(
-      { shippingCompanies: nextCompanies },
+      { shippingCompanies: nextCompanies, settingsPatch: { isActive: true } },
       {
         onSuccess: () => {
           onSaved?.();
