@@ -521,9 +521,7 @@ export const useAddNewProductHook = ({
   const getDepartmentByName = useCallback(
     (name: string | null | undefined) => {
       if (!name || !DepartmentData?.data) return "";
-      const department = DepartmentData.data.find(
-        (d: any) => d.name === name,
-      );
+      const department = DepartmentData.data.find((d: any) => d.name === name);
       console.log(`🏬 [getDepartmentByName] "${name}" -> ID:`, department?.id);
       return department?.id || "";
     },
@@ -673,10 +671,8 @@ export const useAddNewProductHook = ({
           category: categoryId,
           department: departmentId,
           expiry_date: itemsData.expiry_date || "",
-          images: splitMediaFromResponse(
-            itemsData.media,
-            itemsData.image,
-          ).images,
+          images: splitMediaFromResponse(itemsData.media, itemsData.image)
+            .images,
           videos: splitMediaFromResponse(itemsData.media).videos,
           weight: itemsData.weight ? String(itemsData.weight) : "",
           description: itemsData.description || "",
@@ -725,10 +721,8 @@ export const useAddNewProductHook = ({
           category: categoryId,
           department: departmentId,
           expiry_date: itemsData.expiry_date || "",
-          images: splitMediaFromResponse(
-            itemsData.media,
-            itemsData.image,
-          ).images,
+          images: splitMediaFromResponse(itemsData.media, itemsData.image)
+            .images,
           videos: splitMediaFromResponse(itemsData.media).videos,
           weight: itemsData.weight ? String(itemsData.weight) : "",
           description: itemsData.description || "",
@@ -1058,7 +1052,7 @@ export const useAddNewProductHook = ({
     { label: "Grams", value: "Gram" },
     { label: "Feet", value: "Feet" },
     { label: "Packs", value: "Pack" },
-    { label: "Kegs", value: "keg" },
+    { label: "Kegs", value: "Keg" },
     { label: "Congos", value: "Congo" },
     { label: "Crates", value: "Crate" },
     { label: "Rolls", value: "Roll" },
