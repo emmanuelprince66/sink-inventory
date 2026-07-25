@@ -4,6 +4,7 @@ export const queryKey = {
     createBusiness: "create-business",
     getBusinessById: "get-business-by-id",
     updateBusiness: "update-business",
+    getStoreThemes: "get-store-themes",
   },
   auth: {
     login: "login",
@@ -113,6 +114,15 @@ export const queryKey = {
     deleteExpense: "delete-expense",
     getExpenseById: "get-expense-by-id",
     editExpense: "edit-expense",
+    getTransactions: "get-expense-transactions",
+    getRecentActivity: "get-expense-recent-activity",
+    getSpendByUser: "get-expense-spend-by-user",
+    getExpenseCategories: "get-expense-categories",
+    getExpenseCategoryById: "get-expense-category-by-id",
+    getBudgets: "get-expense-budgets",
+    createBudget: "create-expense-budget",
+    editBudget: "edit-expense-budget",
+    deleteBudget: "delete-expense-budget",
   },
   inventory: {
     getAllInventory: "get-all-inventory",

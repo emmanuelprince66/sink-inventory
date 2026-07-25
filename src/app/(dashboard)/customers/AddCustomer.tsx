@@ -11,6 +11,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 
 const AddCustomer = ({
@@ -20,10 +28,18 @@ const AddCustomer = ({
   closeOpenCustomerModal: any;
   handleOpenNotSubscribeModal?: () => void;
 }) => {
-  const { form, onSubmit, createCustomerLoading } = useCustomerHook({
+  const {
+    form,
+    onSubmit,
+    createCustomerLoading,
+    stateList,
+    cityList,
+    handleStateChange,
+  } = useCustomerHook({
     closeModal: closeOpenCustomerModal,
     handleOpenNotSubscribeModal,
   });
+  const selectedState = form.watch("state");
   return (
     <div>
       <Form {...form}>
@@ -66,6 +82,97 @@ const AddCustomer = ({
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter email...." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* State and City — same NG state/city flow as the order delivery
+              address (useOrderDeliveryHook) */}
+          <div className="flex gap-4">
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>State</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={handleStateChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select state" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {stateList.map((s) => (
+                        <SelectItem key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>City</FormLabel>
+                  {selectedState && cityList.length === 0 ? (
+                    <FormControl>
+                      <Input placeholder="Enter city" {...field} />
+                    </FormControl>
+                  ) : (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!selectedState}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={
+                              selectedState
+                                ? "Select city"
+                                : "Select state first"
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {cityList.map((c) => (
+                          <SelectItem key={c.name} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Full address"
+                    rows={2}
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

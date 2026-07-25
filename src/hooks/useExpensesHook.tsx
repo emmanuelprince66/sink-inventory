@@ -4,10 +4,12 @@ import { useDeleteExpenseMutation } from "@/api/expenses/delete-expenses";
 import { useEditExpenseMutation } from "@/api/expenses/edit-expense";
 import { useFetchExpensesByIdQuery } from "@/api/expenses/fetch-expense-by-id";
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
+import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
@@ -56,6 +58,7 @@ export const useExpensesHook = ({
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const params = useParams();
   const expenseId = params.id as string;
   const isUserSubscribed = useIsUserSubscribeStore(
@@ -70,14 +73,16 @@ export const useExpensesHook = ({
     useDeleteExpenseMutation({
       onSuccess: (data) => {
         showToast(data.message, "success");
-        ExpensesDataRefetch();
-
+        // Same reasoning as create: invalidate by key prefix so every
+        // mounted expenses-list instance refetches. This is called from the
+        // list view (expenseId from useParams() isn't set there), so the
+        // single-expense-by-id refetch this used to call was firing against
+        // an undefined id.
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.expenses.getAllExpenses],
+        });
         if (closeModal) closeModal();
-
-        // if (closeModal) closeModal();
-        // Optional: Invalidate queries or update cache
       },
-      // You can add other callbacks here if needed
     });
 
   const {
@@ -96,10 +101,15 @@ export const useExpensesHook = ({
       businessId: business_id, // Convert null to undefined
       onSuccess: (data) => {
         showToast(data.message, "success");
-        ExpensesDataRefetch();
+        // Multiple independent components each call useFetchExpensesQuery
+        // with their own params (the overview card, the category grid, the
+        // transactions table) — a single instance's refetch() only refreshes
+        // that one. Invalidate by key prefix so every mounted instance
+        // refetches, not just this hook's own.
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.expenses.getAllExpenses],
+        });
         if (closeModal) closeModal();
-
-        // Optional: Invalidate queries or update cache
       },
     });
   const form = useForm<AddExpenseFormValues>({

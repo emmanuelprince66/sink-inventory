@@ -16,7 +16,9 @@ import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
+  Check,
   Image as ImageIconLucide,
+  Palette,
   Save,
   Truck,
   Upload,
@@ -54,6 +56,8 @@ export default function StoreEditForm({ setIsEditing }: any) {
     CURRENCY_OPTIONS,
     BUSINESS_SECTOR_OPTIONS,
     DELIVERY_DAYS_OPTIONS,
+    storeThemeOptions,
+    storeThemesLoading,
   } = useStoreHook({ setIsEditing });
 
   return (
@@ -304,6 +308,63 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 </SelectContent>
               </Select>
               <ErrorMessage message={errors.currency} />
+            </div>
+          </CardContent>
+        </Card>
+        {/* Store Theme Section */}
+        <Card className="rounded-2xl border-border-tint py-0">
+          <CardHeader className="border-b border-border-tint py-4">
+            <CardTitle className="flex items-center gap-2 text-grey-1 text-base font-extrabold">
+              <Palette className="w-5 h-5 text-primary-green-300" />
+              Store Theme
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <p className="text-sm text-grey-3 mb-4">
+              Pick the accent color customers see across your storefront.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {(storeThemesLoading ? [] : storeThemeOptions).map((theme) => {
+                const isSelected = formData.storeTheme === theme.key;
+                return (
+                  <button
+                    key={theme.key}
+                    type="button"
+                    onClick={() => handleInputChange("storeTheme", theme.key)}
+                    disabled={isSubmitting}
+                    className={cn(
+                      "relative flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors cursor-pointer",
+                      isSelected
+                        ? "border-primary-green-300 ring-1 ring-primary-green-300 bg-secondary-6"
+                        : "border-border-tint hover:border-primary-green-300 hover:bg-secondary-6",
+                      isSubmitting && "opacity-60 cursor-not-allowed",
+                    )}
+                    aria-pressed={isSelected}
+                  >
+                    <span
+                      className="w-8 h-8 rounded-full flex-shrink-0 border border-black/10 flex items-center justify-center"
+                      style={{ backgroundColor: theme.primary }}
+                    >
+                      {isSelected && (
+                        <Check
+                          className="w-4 h-4"
+                          style={{ color: theme.on_primary }}
+                        />
+                      )}
+                    </span>
+                    <span className="text-sm font-bold text-grey-2 truncate">
+                      {theme.label}
+                    </span>
+                  </button>
+                );
+              })}
+              {storeThemesLoading &&
+                Array.from({ length: 4 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-14 rounded-xl border border-border-tint bg-grey-6 animate-pulse"
+                  />
+                ))}
             </div>
           </CardContent>
         </Card>

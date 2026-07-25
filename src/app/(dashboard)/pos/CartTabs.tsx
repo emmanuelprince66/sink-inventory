@@ -13,7 +13,7 @@ const CartTabs = () => {
   const setActiveCart = useCartStore((s) => s.setActiveCart);
 
   return (
-    <div className="shrink-0 flex items-center gap-1 px-2 py-1 bg-grey-6 border-b border-grey-5 overflow-x-auto">
+    <div className="shrink-0 flex items-center gap-2 px-2 py-2 bg-grey-6 border-b border-grey-5 overflow-x-auto">
       {cartOrder.map((cartId, idx) => {
         const slot = carts[cartId];
         const itemCount = slot?.items?.length ?? 0;
@@ -23,17 +23,17 @@ const CartTabs = () => {
         return (
           <div
             key={cartId}
-            className={`group flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-colors shrink-0 ${
+            className={`group flex items-center gap-2 px-4 py-2.5 rounded-xl text-base cursor-pointer transition-colors shrink-0 ${
               isActive
-                ? "bg-primary-green-300 text-white font-bold shadow-sm"
-                : "bg-white border border-grey-5 text-grey-2 font-bold hover:bg-grey-6"
+                ? "bg-primary-green-300 text-white font-extrabold shadow-sm"
+                : "bg-white border border-grey-5 text-grey-2 font-extrabold hover:bg-grey-6"
             }`}
             onClick={() => setActiveCart(cartId)}
           >
             <span>{label}</span>
             {itemCount > 0 && (
               <span
-                className={`text-[10px] px-1 py-0.5 rounded-full font-bold ${
+                className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                   isActive
                     ? "bg-white/20 text-white"
                     : "bg-grey-6 text-grey-3"
@@ -50,13 +50,13 @@ const CartTabs = () => {
                   e.stopPropagation();
                   closeCart(cartId);
                 }}
-                className={`flex items-center justify-center w-4 h-4 rounded-full transition-colors cursor-pointer ${
+                className={`flex items-center justify-center w-3 h-3 rounded-full opacity-60 hover:opacity-100 transition-opacity cursor-pointer ${
                   isActive
-                    ? "bg-white/20 text-white hover:bg-error-1 hover:text-white"
-                    : "bg-grey-6 text-grey-3 hover:bg-error-2 hover:text-error-1"
+                    ? "text-white hover:bg-error-1"
+                    : "text-grey-3 hover:bg-error-2 hover:text-error-1"
                 }`}
               >
-                <X size={12} strokeWidth={2.5} />
+                <X size={8} strokeWidth={3} />
               </button>
             )}
           </div>
@@ -66,10 +66,10 @@ const CartTabs = () => {
       <Button
         type="button"
         onClick={() => createCart()}
-        className="ml-1 gap-1 h-7 px-2.5 text-xs shrink-0"
+        className="ml-1 gap-1.5 h-9 px-4 text-sm font-bold shrink-0"
         aria-label="New sale"
       >
-        <Plus size={14} strokeWidth={2.5} />
+        <Plus size={16} strokeWidth={2.5} />
         New Sale
       </Button>
     </div>

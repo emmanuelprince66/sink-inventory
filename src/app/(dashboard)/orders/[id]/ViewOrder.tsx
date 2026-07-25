@@ -1,7 +1,6 @@
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
-import { InitialsAvatar } from "@/components/app/InitialsAvatar";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,40 +23,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import AssignDeliveryModal, {
-  DeliveryPartner,
-  MOCK_PARTNERS,
-} from "../AssignDeliveryModal";
 import DownloadOrderReceipt from "../DownloadOrderReceipt";
 import OrderFlowTimeline, { stepIndexFromShipping } from "./OrderFlowTimeline";
 import UpdateStatusComp from "./UpdateStatus";
-
-// Mock rider (until backend ships rider fields). Stable per order id.
-const MOCK_RIDERS = [
-  {
-    name: "Emeka Obi",
-    phone: "+234 803 111 2233",
-    plate: "LAG-243-AB",
-    eta: "25 mins",
-  },
-  {
-    name: "Bola Adeyemi",
-    phone: "+234 805 444 5566",
-    plate: "ABJ-118-CD",
-    eta: "40 mins",
-  },
-  {
-    name: "Yusuf Bala",
-    phone: "+234 808 777 8899",
-    plate: "KAN-901-EF",
-    eta: "1 hr 5 mins",
-  },
-];
-const hashSeed = (id: string) => {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h;
-};
 
 type ShippingStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "RETURNED";
 
@@ -74,28 +42,14 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
     editOrderShippingStatusLoading,
   } = useOrdersHook({ id });
 
-  console.log("orderIdData", OrderIdData);
   const [openUpdateStatusModal, setOpenUpdateStatusModal] = useState(false);
 
   const [selectedShippingStatus, setSelectedShippingStatus] =
     useState<ShippingStatus>("PENDING");
 
-  const [openAssignDelivery, setOpenAssignDelivery] = useState(false);
-  const [assignedPartner, setAssignedPartner] =
-    useState<DeliveryPartner | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const orderData = OrderIdData?.data;
-
-  // Default to first mock partner when none assigned yet — so the UI has data to show.
-  const activePartner =
-    assignedPartner ||
-    (orderData?.id
-      ? MOCK_PARTNERS[hashSeed(orderData.id) % MOCK_PARTNERS.length]
-      : null);
-  const activeRider = orderData?.id
-    ? MOCK_RIDERS[hashSeed(orderData.id) % MOCK_RIDERS.length]
-    : null;
 
   const handleContactCustomer = () => {
     const phone = orderData?.customer_info?.phone;
@@ -207,6 +161,17 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
     });
   };
 
+  const formatFlowTimestamp = (dateString?: string | null) =>
+    dateString
+      ? new Date(dateString).toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })
+      : undefined;
+
   if (OrderIdDataLoading) {
     return (
       <div className="w-full">
@@ -270,9 +235,13 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
             {/* Action Bar */}
             <div className="bg-white rounded-2xl border border-grey-5 p-4">
               <div className="flex items-center gap-2">
+                {/* Disabled — delivery-partner assignment isn't backed by a
+                    real endpoint yet (AssignDeliveryModal used a mock
+                    partner list), so it stays visible but inert. */}
                 <Button
                   size="sm"
-                  onClick={() => setOpenAssignDelivery(true)}
+                  disabled
+                  title="Delivery partner assignment is coming soon"
                   className="text-xs"
                 >
                   <Truck className="w-3 h-3 mr-1" />
@@ -383,10 +352,10 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
                   <div className="mb-4">
                     <h3 className="text-sm font-bold text-grey-2 mb-2">
-                      Order Type
+                      Payment Method
                     </h3>
                     <span className="text-sm text-grey-1">
-                      {orderData.type || "N/A"}
+                      {orderData.method || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -428,29 +397,19 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-grey-5">
-                <div>
-                  <h3 className="text-sm font-bold text-grey-2 mb-1">
-                    Created by
-                  </h3>
-                  <p className="text-sm text-grey-1">
-                    {formatDateTime(orderData.created_at) || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-grey-2 mb-1">
-                    Last Edited by
-                  </h3>
-                  <p className="text-sm text-grey-1">
-                    {orderData.last_updated_by || "Not updated"}
-                  </p>
-                </div>
+              <div className="mt-6 pt-6 border-t border-grey-5">
+                <h3 className="text-sm font-bold text-grey-2 mb-1">
+                  Created
+                </h3>
+                <p className="text-sm text-grey-1">
+                  {formatDateTime(orderData.created_at) || "N/A"}
+                </p>
               </div>
 
-              {orderData.note && (
+              {orderData.description && (
                 <div className="mt-6 pt-6 border-t border-grey-5">
                   <h3 className="text-sm font-bold text-grey-2 mb-2">Notes</h3>
-                  <p className="text-sm text-grey-3">{orderData.note}</p>
+                  <p className="text-sm text-grey-3">{orderData.description}</p>
                 </div>
               )}
             </div>
@@ -478,9 +437,6 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                         Quantity
                       </th>
                       <th className="text-right py-3 px-4 text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
-                        Discount
-                      </th>
-                      <th className="text-right py-3 px-4 text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
                         Total
                       </th>
                     </tr>
@@ -489,11 +445,10 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     {orderData.products?.map((product: any, index: number) => {
                       const unitPrice = parseFloat(product.unit_price || "0");
                       const quantity = parseFloat(product.quantity || "0");
-                      const discount = parseFloat(product.discount || "0");
-                      const total = unitPrice * quantity - discount;
+                      const total = unitPrice * quantity;
 
                       return (
-                        <tr key={product.id} className="border-t border-grey-6">
+                        <tr key={`${product.name}-${index}`} className="border-t border-grey-6">
                           <td className="py-3 px-4 text-sm font-medium text-grey-3">
                             {index + 1}
                           </td>
@@ -506,9 +461,6 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                           <td className="py-3 px-4 text-sm font-medium text-grey-1 text-center">
                             {quantity}
                           </td>
-                          <td className="py-3 px-4 text-sm font-bold text-success-1 text-right">
-                            ₦ {discount.toLocaleString()}
-                          </td>
                           <td className="py-3 px-4 text-sm font-extrabold text-grey-1 text-right">
                             ₦ {total.toLocaleString()}
                           </td>
@@ -520,23 +472,24 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
               </div>
             </div>
 
-            {/* Delivery flow timeline (mock timestamps until backend ships event log) */}
+            {/* Delivery flow timeline — steps beyond "Order Placed" only show
+                a timestamp once the real delivery.{rider_assigned,picked_up,
+                out_for_delivery,delivered} field is actually set. */}
             <OrderFlowTimeline
               currentStepIndex={stepIndexFromShipping(
                 orderData?.delivery?.shipping_status ||
                   orderData?.shipping_status,
               )}
               timestamps={{
-                ORDER: orderData?.created_at
-                  ? new Date(orderData.created_at).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })
-                  : undefined,
-                RIDER_ASSIGNED: assignedPartner ? "Just now" : undefined,
+                ORDER: formatFlowTimestamp(orderData?.created_at),
+                RIDER_ASSIGNED: formatFlowTimestamp(
+                  orderData?.delivery?.rider_assigned,
+                ),
+                PICKED_UP: formatFlowTimestamp(orderData?.delivery?.picked_up),
+                OUT_FOR_DELIVERY: formatFlowTimestamp(
+                  orderData?.delivery?.out_for_delivery,
+                ),
+                DELIVERED: formatFlowTimestamp(orderData?.delivery?.delivered),
               }}
             />
 
@@ -596,31 +549,22 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-grey-3">Amount</span>
                   <span className="text-grey-1">
-                    ₦ {parseFloat(orderData.amount || "0").toLocaleString()}
+                    ₦{" "}
+                    {parseFloat(orderData.total_price || "0").toLocaleString()}
                   </span>
                 </div>
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-grey-3">Total Discount</span>
-                  <span className="font-bold text-success-1">N/A</span>
-                </div>
+                {/* "Total Discount" and "Taxes" removed — neither has a real
+                    backing field (the old code hardcoded "N/A" and read a
+                    non-existent orderData.tax). */}
 
                 <div className="flex justify-between text-sm">
                   <span className="text-grey-3">Shipping Fee</span>
                   <span className="text-grey-1">
                     ₦{" "}
                     {parseFloat(
-                      orderData.delivery?.shipping_fee ||
-                        orderData.shipping_fee ||
-                        "0",
+                      orderData.delivery?.shipping_fee || "0",
                     ).toLocaleString()}
-                  </span>
-                </div>
-
-                <div className="flex justify-between text-sm">
-                  <span className="text-grey-3">Taxes</span>
-                  <span className="text-grey-1">
-                    ₦ {parseFloat(orderData.tax || "0").toLocaleString()}
                   </span>
                 </div>
 
@@ -683,15 +627,12 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-2">
-                    Shipping Date
-                  </h4>
-                  <p className="text-sm text-grey-1">
-                    {formatDate(orderData.shipping_date)}
-                  </p>
-                </div>
-
+                {/* "Shipping Date" removed — no such field on the order or
+                    delivery object. The delivery address fields below were
+                    also reading a nested delivery.delivery_address object
+                    that doesn't exist; the real API returns them flat on
+                    delivery itself (delivery.shipping_address, delivery.city,
+                    etc). */}
                 <div>
                   <h4 className="text-sm font-bold text-grey-2 mb-2">
                     Delivery To
@@ -701,7 +642,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   </p>
                   {orderData.customer_info?.phone && (
                     <p className="text-sm text-grey-4">
-                      {orderData.delivery?.delivery_address?.phone ||
+                      {orderData.delivery?.phone ||
                         orderData.customer_info?.phone}
                     </p>
                   )}
@@ -712,7 +653,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     Delivery Address
                   </h4>
                   <p className="text-sm text-grey-1 mb-1">
-                    {`${orderData.delivery?.delivery_address?.shipping_address || "N/A"}`}
+                    {`${orderData.delivery?.shipping_address || "N/A"}`}
                   </p>
                 </div>
                 <div>
@@ -720,141 +661,87 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     Delivery Location
                   </h4>
                   <p className="text-sm text-grey-1 mb-1">
-                    {`${orderData.delivery?.delivery_address?.city || ""}, ${
-                      orderData.delivery?.delivery_address?.state || ""
-                    }, ${orderData.delivery?.delivery_address?.country || ""}`
+                    {`${orderData.delivery?.city || ""}, ${
+                      orderData.delivery?.state || ""
+                    }, ${orderData.delivery?.country || ""}`
                       .replace(/^, |, $|, , /g, "")
                       .trim() || "N/A"}
                   </p>
                 </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-3">
-                    Update shipping status:
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2 mb-5">
-                    <ShippingStatusButton
-                      status="PENDING"
-                      active={selectedShippingStatus === "PENDING"}
-                      onClick={setSelectedShippingStatus}
-                    />
-
-                    {orderData?.channel === "OUTSTORE" && (
+                {/* Manual status-update action — Shipbubble orders get their
+                    shipping_status from Shipbubble's webhooks, so this
+                    flow only makes sense for manual deliveries. */}
+                {orderData.delivery?.type !== "SHIPBUBBLE" && (
+                  <div>
+                    <h4 className="text-sm font-bold text-grey-2 mb-3">
+                      Update shipping status:
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2 mb-5">
                       <ShippingStatusButton
-                        status="SHIPPED"
-                        active={selectedShippingStatus === "SHIPPED"}
+                        status="PENDING"
+                        active={selectedShippingStatus === "PENDING"}
                         onClick={setSelectedShippingStatus}
                       />
-                    )}
 
-                    <ShippingStatusButton
-                      status="DELIVERED"
-                      active={selectedShippingStatus === "DELIVERED"}
-                      onClick={setSelectedShippingStatus}
-                    />
-                    <ShippingStatusButton
-                      status="RETURNED"
-                      active={selectedShippingStatus === "RETURNED"}
-                      onClick={setSelectedShippingStatus}
-                    />
+                      {orderData?.channel === "OUTSTORE" && (
+                        <ShippingStatusButton
+                          status="SHIPPED"
+                          active={selectedShippingStatus === "SHIPPED"}
+                          onClick={setSelectedShippingStatus}
+                        />
+                      )}
+
+                      <ShippingStatusButton
+                        status="DELIVERED"
+                        active={selectedShippingStatus === "DELIVERED"}
+                        onClick={setSelectedShippingStatus}
+                      />
+                      <ShippingStatusButton
+                        status="RETURNED"
+                        active={selectedShippingStatus === "RETURNED"}
+                        onClick={setSelectedShippingStatus}
+                      />
+                    </div>
+                    <Button
+                      disabled={editOrderShippingStatusLoading}
+                      onClick={() =>
+                        handleUpdateOrderStatus(selectedShippingStatus)
+                      }
+                      className="w-full mt-3"
+                    >
+                      {editOrderShippingStatusLoading
+                        ? "Updating..."
+                        : "Update Status"}
+                    </Button>
                   </div>
-                  <Button
-                    disabled={editOrderShippingStatusLoading}
-                    onClick={() =>
-                      handleUpdateOrderStatus(selectedShippingStatus)
-                    }
-                    className="w-full mt-3"
-                  >
-                    {editOrderShippingStatusLoading
-                      ? "Updating..."
-                      : "Update Status"}
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* Delivery Company (mock until backend ships it) */}
-            {activePartner && (
+            {/* Delivery Company — only the real fields the API actually
+                returns (delivery.type, delivery.rider_assigned). The old
+                logo/rating/contact/estimated-cost card was a mock partner
+                lookup with no real backing field, so it's gone. */}
+            {orderData.delivery?.type && (
               <div className="bg-white rounded-2xl border border-grey-5 p-6">
                 <h3 className="text-lg font-extrabold text-grey-1 mb-4">
-                  Delivery Company
+                  Delivery
                 </h3>
-                <div className="flex items-start gap-3">
-                  <InitialsAvatar
-                    initials={activePartner.logo}
-                    tone="dark"
-                    size="md"
-                  />
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-grey-1">
-                      {activePartner.name}
-                    </p>
-                    <p className="text-xs font-medium text-grey-4">
-                      {activePartner.serviceType}
-                    </p>
-                    <div className="text-sm font-medium text-grey-2 space-y-0.5 mt-2">
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-grey-4" />
-                        <span>{activePartner.contact}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3 h-3 text-grey-4" />
-                        <span>{activePartner.support}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-grey-6">
-                      <span className="text-xs font-bold text-warning-1">
-                        ★ {activePartner.rating} rating
-                      </span>
-                      <span className="text-sm font-extrabold text-grey-1">
-                        ₦{activePartner.estimatedCost.toLocaleString()}
-                      </span>
-                    </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-grey-4">Type</span>
+                    <span className="font-bold text-grey-1">
+                      {orderData.delivery.type}
+                    </span>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Rider Information (mock until backend ships it) */}
-            {activeRider && (
-              <div className="bg-white rounded-2xl border border-grey-5 p-6">
-                <h3 className="text-lg font-extrabold text-grey-1 mb-4">
-                  Rider Information
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <InitialsAvatar
-                      name={activeRider.name}
-                      tone="green"
-                      size="md"
-                    />
-                    <div>
-                      <p className="text-sm font-bold text-grey-1">
-                        {activeRider.name}
-                      </p>
-                      <p className="text-xs font-medium text-grey-4">
-                        {activeRider.plate}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="font-medium text-grey-4">Phone</span>
-                      <a
-                        href={`tel:${activeRider.phone}`}
-                        className="font-bold text-grey-1 hover:text-primary-green-300"
-                      >
-                        {activeRider.phone}
-                      </a>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-grey-4">
-                        Estimated arrival
-                      </span>
-                      <span className="font-bold text-grey-1">
-                        {activeRider.eta}
-                      </span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="font-medium text-grey-4">
+                      Rider Assigned
+                    </span>
+                    <span className="font-bold text-grey-1">
+                      {orderData.delivery?.rider_assigned || "Not yet"}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -872,21 +759,11 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
         <UpdateStatusComp
           orderId={orderData?.id}
           currentStatus={orderData?.payment_status}
-          currentAmount={orderData?.amount}
+          currentAmount={orderData?.total_price}
           currentAmountPaid={orderData?.amount_paid}
           onClose={() => setOpenUpdateStatusModal(false)}
         />
       </CustomModal>
-
-      <AssignDeliveryModal
-        isOpen={openAssignDelivery}
-        onClose={() => setOpenAssignDelivery(false)}
-        orderId={orderData?.id}
-        onAssigned={(partner) => {
-          // UI-only: stash partner locally; backend status auto-change comes later.
-          setAssignedPartner(partner);
-        }}
-      />
 
       <CustomModal
         isOpen={showCancelConfirm}

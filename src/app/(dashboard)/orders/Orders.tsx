@@ -1,9 +1,11 @@
 "use client";
+import { CardGridSkeleton } from "@/components/app/CardGridSkeleton";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -43,7 +44,6 @@ interface CustomOrderCardProps {
   type: "total" | "completed" | "revenue" | "visits" | "cost";
   className?: string;
   subtitle?: string;
-  loading?: boolean;
 }
 
 interface FilterState {
@@ -105,7 +105,6 @@ const CustomOrderCard = ({
   type,
   className,
   subtitle,
-  loading = false,
 }: CustomOrderCardProps) => {
   const variants = {
     total: {
@@ -141,18 +140,6 @@ const CustomOrderCard = ({
   };
 
   const variant = variants[type];
-
-  if (loading) {
-    return (
-      <CustomCard
-        className={cn("w-full rounded-2xl border-none p-0", className)}
-        contentClassName="p-4 flex flex-col gap-3 items-start"
-      >
-        <Skeleton className="h-4 w-[100px] bg-grey-5" />
-        <Skeleton className="h-6 w-[70px] bg-grey-5" />
-      </CustomCard>
-    );
-  }
 
   return (
     <CustomCard
@@ -327,12 +314,16 @@ const Orders = () => {
   const successRate =
     totalOrders > 0 ? Math.round((completedOrders / totalOrders) * 100) : 0;
 
-  // Calculate total link visits
-  const totalLinkVisits = Math.floor(totalOrders * 2.6);
+  // "Total Link Visits" had no real backing field from the API — it was a
+  // fabricated `totalOrders * 2.6` guess. Removed until the backend
+  // actually returns a link-visits stat, rather than show a fake number.
+  // const totalLinkVisits = Math.floor(totalOrders * 2.6);
 
-  // Calculate paid and unpaid for invoices
-  const paidInvoices = ordersData?.results?.paid_orders || 0;
-  const unpaidInvoices = totalOrders - paidInvoices;
+  // Paid/Unpaid breakdown removed — the endpoint's `results` only returns
+  // total_orders/completed_orders/total_revenue/data, no paid_orders field,
+  // so this was always reading undefined and showing a fake "0 paid".
+  // const paidInvoices = ordersData?.results?.paid_orders || 0;
+  // const unpaidInvoices = totalOrders - paidInvoices;
 
   // Sum shipping fees across the visible orders (until backend returns a dedicated stat).
   const totalDeliveryCost = (ordersData?.results?.data || []).reduce(
@@ -396,42 +387,22 @@ const Orders = () => {
         {/* Stats Cards */}
         <div className="mb-1 sm:mb-2">
           {OrderDataLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <CustomOrderCard
-                  key={index}
-                  title=""
-                  amount=""
-                  type="total"
-                  loading={true}
-                />
-              ))}
-            </div>
+            <StatCardSkeletonRow
+              count={activeTab === "INSTORE" ? 3 : 4}
+              gridClassName={cn(
+                "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4",
+                activeTab === "INSTORE" ? "lg:grid-cols-3" : "lg:grid-cols-4",
+              )}
+            />
           ) : activeTab === "INSTORE" ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-              <CustomOrderCard
-                title="Total Orders"
-                amount={totalOrders}
-                type="total"
-                subtitle="+12% from last month"
-              />
-              <CustomOrderCard
-                title="Paid"
-                amount={paidInvoices}
-                type="completed"
-                subtitle={`${successRate}% success rate`}
-              />
-              <CustomOrderCard
-                title="Unpaid"
-                amount={unpaidInvoices}
-                type="visits"
-                subtitle="+8% from last month"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <CustomOrderCard title="Total Orders" amount={totalOrders} type="total" />
+              {/* "Paid"/"Unpaid" removed — the endpoint has no paid_orders
+                  field, so these always showed a fake "0 paid". */}
               <CustomOrderCard
                 title="Total Revenue"
                 amount={formatToNaira(totalRevenue)}
                 type="revenue"
-                subtitle="+8% from last month"
               />
               <CustomOrderCard
                 title="Completed Orders"
@@ -441,13 +412,8 @@ const Orders = () => {
               />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-              <CustomOrderCard
-                title="Total Orders"
-                amount={totalOrders}
-                type="total"
-                subtitle="+12% from last month"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <CustomOrderCard title="Total Orders" amount={totalOrders} type="total" />
               <CustomOrderCard
                 title="Completed Orders"
                 amount={completedOrders}
@@ -458,7 +424,6 @@ const Orders = () => {
                 title="Total Revenue"
                 amount={formatToNaira(totalRevenue)}
                 type="revenue"
-                subtitle="+8% from last month"
               />
               <CustomOrderCard
                 title="Delivery Cost"
@@ -466,12 +431,8 @@ const Orders = () => {
                 type="cost"
                 subtitle="across active deliveries"
               />
-              <CustomOrderCard
-                title="Total Link Visits"
-                amount={totalLinkVisits}
-                type="visits"
-                subtitle="+5% from last month"
-              />
+              {/* "Total Link Visits" removed — its number was fabricated
+                  (totalOrders * 2.6), not a real backend stat. */}
             </div>
           )}
         </div>
@@ -711,14 +672,7 @@ const Orders = () => {
         {/* Card grid (replaces the previous table layout) */}
         <div className="w-full">
           {OrderDataLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  className="h-40 w-full bg-grey-5 rounded-2xl"
-                />
-              ))}
-            </div>
+            <CardGridSkeleton count={6} cardHeight="h-40" />
           ) : ordersData?.results?.data?.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">

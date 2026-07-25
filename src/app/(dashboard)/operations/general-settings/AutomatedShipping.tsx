@@ -1,11 +1,13 @@
 "use client";
 
+import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
 import { cn } from "@/lib/utils";
 import {
+  AlertTriangle,
   CheckCircle2,
   ChevronRight,
   Lightbulb,
@@ -28,6 +30,7 @@ const AutomatedShipping = () => {
   const [showShippingLocation, setShowShippingLocation] = useState(false);
   const [showShipbubbleSettings, setShowShipbubbleSettings] = useState(false);
   const [showShipbubbleAgreement, setShowShipbubbleAgreement] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
   const {
     isConfigured,
@@ -37,14 +40,21 @@ const AutomatedShipping = () => {
   } = useShipbubbleHook();
 
   // Toggle is the backend flag `shipbubble_settings.is_active`:
-  //  • OFF (any state) → PATCH is_active=false
+  //  • OFF → confirm first (deactivating disables live rates at checkout,
+  //    easy to hit by mistake) → PATCH is_active=false on confirm
   //  • ON + not configured → open agreement → after accept, prompt the user to
   //    set up Shipbubble in the Configure modal (we can't activate without
-  //    a complete payload)
+  //    a complete payload) — that save also flips is_active=true itself
   //  • ON + configured → PATCH is_active=true straight away
   const handleShipbubbleToggle = (next: boolean) => {
     if (!next) {
-      setActive(false);
+      // Deferred to the next tick — opening the confirm Dialog synchronously
+      // inside the Switch's own click handler let Radix's dismissable-layer
+      // (attached the instant the Dialog mounts) catch the tail end of that
+      // same click as an "outside click" and immediately close it again, so
+      // the modal never appeared to open at all. Same fix class as the
+      // Generate Report modal closing when opened from a dropdown item.
+      setTimeout(() => setShowDeactivateConfirm(true), 0);
       return;
     }
     if (!isConfigured) {
@@ -52,6 +62,10 @@ const AutomatedShipping = () => {
       return;
     }
     setActive(true);
+  };
+
+  const handleConfirmDeactivate = () => {
+    setActive(false, { onSuccess: () => setShowDeactivateConfirm(false) });
   };
 
   const handleAgreementAccept = () => {
@@ -200,6 +214,44 @@ const AutomatedShipping = () => {
         onConnect={handleAgreementAccept}
         loading={isSavingShipbubble}
       />
+
+      <CustomModal
+        isOpen={showDeactivateConfirm}
+        onClose={() => setShowDeactivateConfirm(false)}
+        title="Deactivate Shipbubble?"
+        description="Customers will stop seeing live Shipbubble rates at checkout. Your saved pickup address and settings are kept, so you can turn it back on anytime."
+        size="sm"
+        headerIcon={
+          <div className="w-9 h-9 rounded-lg bg-error-2 flex items-center justify-center text-error-1">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+        }
+        footer={
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 border-grey-5"
+              onClick={() => setShowDeactivateConfirm(false)}
+              disabled={isSavingShipbubble}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 bg-error-1 hover:bg-error-1/90 border-error-1 text-white"
+              onClick={handleConfirmDeactivate}
+              disabled={isSavingShipbubble}
+            >
+              {isSavingShipbubble ? "Deactivating..." : "Yes, Deactivate"}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-grey-3">
+          You can reconnect Shipbubble at any time from this same screen.
+        </p>
+      </CustomModal>
     </div>
   );
 };
@@ -233,7 +285,7 @@ const StepTile = ({ step, icon, title, description, right, children }: StepTileP
           <div className="flex items-start gap-2">
             <span className="mt-0.5 text-primary-green-300">{icon}</span>
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-grey-1">{title}</h4>
+              <h4 className="text-base font-bold text-grey-1">{title}</h4>
               <p className="text-xs text-grey-3 mt-1 leading-relaxed">
                 {description}
               </p>
@@ -297,11 +349,31 @@ const PartnerCard = ({
         {icon}
       </div>
       {!comingSoon && (
-        <Switch
-          checked={checked}
-          onCheckedChange={onToggle}
-          disabled={disabled}
-        />
+        <div className="flex flex-col items-end gap-1.5">
+          <span
+            className={cn(
+              "text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+              checked
+                ? "bg-secondary-6 text-primary-green-100"
+                : "bg-grey-6 text-grey-3",
+            )}
+          >
+            {checked ? "Active" : "Inactive"}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant={checked ? "outline" : "default"}
+            className={cn(
+              "h-7 px-2.5 text-xs",
+              checked && "border-error-1/30 text-error-1 hover:bg-error-2 hover:text-error-1",
+            )}
+            onClick={() => onToggle(!checked)}
+            disabled={disabled}
+          >
+            {checked ? "Deactivate" : "Activate"}
+          </Button>
+        </div>
       )}
     </div>
     <h5

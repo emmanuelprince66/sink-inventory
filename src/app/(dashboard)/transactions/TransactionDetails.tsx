@@ -12,6 +12,7 @@ interface Transaction {
   account_name: string;
   type: "CREDIT" | "DEBIT";
   amount: string;
+  bank_name: string;
   created_at: string;
   status: "SUCCESS" | "PENDING" | "FAILED";
   description?: string;
@@ -55,7 +56,7 @@ export default function TransactionDetails({
       value: moment(transaction.created_at).format("MMM D, YYYY h:mm A"),
     },
     { label: "Account Name", value: transaction.account_name },
-    { label: "Account Number", value: transaction.account_number },
+    { label: "Bank Name", value: transaction.bank_name },
     { label: "Transaction Type", value: transaction.type },
   ];
 
@@ -77,11 +78,16 @@ export default function TransactionDetails({
             <AmountIcon className={`h-5 w-5 ${amountTint.text}`} />
           </div>
           <div className="min-w-0">
-            <p className={`text-xs font-bold uppercase tracking-wide ${amountTint.text}`}>
+            <p
+              className={`text-xs font-bold uppercase tracking-wide ${amountTint.text}`}
+            >
               {isCredit ? "Credit" : "Debit"}
             </p>
-            <p className={`text-xl sm:text-2xl font-extrabold ${amountTint.text} truncate`}>
-              {isCredit ? "+" : "-"}₦{parseFloat(transaction.amount).toLocaleString()}
+            <p
+              className={`text-xl sm:text-2xl font-extrabold ${amountTint.text} truncate`}
+            >
+              {isCredit ? "+" : "-"}₦
+              {parseFloat(transaction.amount).toLocaleString()}
             </p>
           </div>
         </div>

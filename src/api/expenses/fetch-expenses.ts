@@ -26,15 +26,12 @@ export const fetchExpenses = async ({
 }: fetchSalesExpensesProps) => {
   const url = new URL(`/api/expenses/${id}`, window.location.origin);
 
-  const params = new URLSearchParams();
-  if (search) params.append("search", search);
-  if (start_date) params.append("start_date", start_date);
-  if (end_date) params.append("end_date", end_date);
-  if (category) params.append("category", category);
+  if (search) url.searchParams.append("search", search);
+  if (start_date) url.searchParams.append("start_date", start_date);
+  if (end_date) url.searchParams.append("end_date", end_date);
+  if (category) url.searchParams.append("category", category);
   url.searchParams.append("page", page.toString());
   url.searchParams.append("limit", limit.toString());
-
-  url.search = params.toString();
 
   const response = await fetch(url.toString(), {
     method: "GET",

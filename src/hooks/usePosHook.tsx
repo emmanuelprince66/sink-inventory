@@ -73,7 +73,7 @@ export const usePosHook = ({
       id: business_id,
       search: searchTerm,
       page,
-      limit: 60,
+      limit: 50,
       include_raw_material: "false", // Exclude raw materials from regular search results
     },
     enabled: !!business_id,

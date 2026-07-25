@@ -1,27 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { InitialsAvatar } from "@/components/app/InitialsAvatar";
 import { StatusBadge } from "@/components/app/StatusBadge";
-import { Clock, Phone, Star, UserCheck } from "lucide-react";
+import { Clock, Phone, UserCheck } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
-import { MOCK_PARTNERS } from "./AssignDeliveryModal";
 import { OrderInfo } from "./type";
-
-// Mock rider list — stable per order id until backend ships rider fields.
-const MOCK_RIDERS = [
-  { name: "Emeka Obi", phone: "+234 803 111 2233" },
-  { name: "Bola Adeyemi", phone: "+234 805 444 5566" },
-  { name: "Yusuf Bala", phone: "+234 808 777 8899" },
-  { name: "Chinwe Eze", phone: "+234 814 222 3344" },
-  { name: "Ifeanyi Okeke", phone: "+234 816 555 6677" },
-];
-const hashSeed = (id: string) => {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return h;
-};
 
 interface OrderCardProps {
   order: OrderInfo;
@@ -35,9 +19,6 @@ interface OrderCardProps {
 // See sink/docs/FIGMA_VS_CODE_COMPARISON.md for the full checked breakdown.
 const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
   const isOutstore = type === "OUTSTORE";
-  const seed = hashSeed(order.id || "fallback");
-  const partner = isOutstore ? MOCK_PARTNERS[seed % MOCK_PARTNERS.length] : null;
-  const rider = isOutstore ? MOCK_RIDERS[seed % MOCK_RIDERS.length] : null;
 
   const amount = order.amount || order.total_price || "0";
 
@@ -81,44 +62,9 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
         </div>
       </div>
 
-      {/* Delivery partner + rider (outstore only) */}
-      {isOutstore && partner && rider && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-grey-6">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wide text-grey-4 mb-1">
-              Partner
-            </p>
-            <div className="flex items-center gap-2">
-              <InitialsAvatar initials={partner.logo} tone="dark" />
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-grey-1 leading-tight truncate">
-                  {partner.name}
-                </p>
-                <p className="text-[10px] font-bold text-warning-1 flex items-center gap-0.5">
-                  <Star className="w-2.5 h-2.5 fill-warning-1 text-warning-1" />
-                  {partner.rating}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wide text-grey-4 mb-1">
-              Rider
-            </p>
-            <div className="flex items-center gap-2">
-              <InitialsAvatar name={rider.name} tone="green" />
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-grey-1 leading-tight truncate">
-                  {rider.name}
-                </p>
-                <p className="text-[10px] font-medium text-grey-4 truncate">
-                  {rider.phone}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delivery partner + rider block removed — it was fabricating a
+          specific named partner/rider per order via a hash of the order id,
+          not real assignment data (the order payload has no such fields). */}
 
       {/* Action row */}
       <div className="flex flex-col gap-2 pt-3 mt-3 border-t border-grey-6">
@@ -127,10 +73,14 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
         </span>
         <div className="flex gap-2">
           {isOutstore && onAssignDelivery && (
+            // Disabled — delivery-partner assignment isn't backed by a real
+            // endpoint yet (AssignDeliveryModal picks from a mock partner
+            // list), so it stays visible but inert until that's real.
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onAssignDelivery(order.id)}
+              disabled
+              title="Delivery partner assignment is coming soon"
               className="text-xs flex-1"
             >
               <UserCheck className="w-3 h-3 mr-1" />

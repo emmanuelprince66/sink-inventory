@@ -4,6 +4,17 @@ export interface ApiResponse<T> {
   message: string;
 }
 
+export interface CustomerAddress {
+  id: string;
+  address: string;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  phone: string | null;
+  is_default: boolean;
+  created_at: string;
+}
+
 export interface CustomerType {
   id: string;
   name: string;
@@ -13,6 +24,7 @@ export interface CustomerType {
   wallet: number;
   email: string;
   profile_pic: string | null | any;
+  addresses?: CustomerAddress[];
 }
 
 export interface CustomerSummary {

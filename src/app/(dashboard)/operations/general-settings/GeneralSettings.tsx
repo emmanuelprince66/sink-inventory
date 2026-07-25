@@ -33,18 +33,9 @@ const GeneralSettings = () => {
 
   return (
     <div className="w-full flex flex-col gap-6">
-      {/* Header — simple, matches the rest of the app */}
-      <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-grey-1">
-          Operational Settings
-        </h1>
-        <p className="text-sm text-grey-3 mt-1 max-w-xl">
-          Configure how orders are fulfilled, what payment options your
-          customers see, and the add-ons that round out checkout.
-        </p>
-      </div>
-
-      {/* Body — left section rail + right content */}
+      {/* Left section rail + right content — no separate outer page title;
+          the active section's own name ("Shipping & Delivery" etc.) is the
+          page heading. */}
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-5">
         {/* Section navigation */}
         <aside className="lg:sticky lg:top-4 bg-white border border-grey-5 rounded-2xl p-2 h-fit lg:h-full">
@@ -86,26 +77,27 @@ const GeneralSettings = () => {
           </div>
         </aside>
 
-        {/* Active section content */}
+        {/* Active section content — title/subtitle sit directly on the page,
+            not inside a card; only the step tiles and save bar are cards. */}
         <div className="min-w-0">
           {active === "shipping" && (
-            <SectionShell
+            <SectionHeading
               title="Shipping & Delivery"
               subtitle="Manage how orders are dispatched and delivered to your customers."
             >
               <ShippingTab />
-            </SectionShell>
+            </SectionHeading>
           )}
 
           {active === "addons" && (
-            <SectionShell
+            <SectionHeading
               title="Payment Add-ons"
               subtitle="Optional payment products you can offer your customers at checkout."
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <BnplCard />
               </div>
-            </SectionShell>
+            </SectionHeading>
           )}
         </div>
       </div>
@@ -113,24 +105,24 @@ const GeneralSettings = () => {
   );
 };
 
-interface SectionShellProps {
+interface SectionHeadingProps {
   title: string;
   subtitle: string;
   children: React.ReactNode;
 }
-const SectionShell = ({ title, subtitle, children }: SectionShellProps) => (
-  <section className="bg-white border border-grey-5 rounded-2xl p-4 sm:p-6">
-    <div className="flex items-start justify-between gap-3 pb-4 mb-5 border-b border-grey-5">
+const SectionHeading = ({ title, subtitle, children }: SectionHeadingProps) => (
+  <div>
+    <div className="flex items-start justify-between gap-3 mb-5">
       <div>
-        <h2 className="text-lg sm:text-xl font-extrabold text-grey-1">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-grey-1">
           {title}
         </h2>
-        <p className="text-xs sm:text-sm text-grey-3 mt-1">{subtitle}</p>
+        <p className="text-sm text-grey-3 mt-1">{subtitle}</p>
       </div>
-      <span className="hidden sm:inline-flex w-2 h-2 rounded-full bg-primary-green-300 mt-2" />
+      <span className="shrink-0 inline-flex w-2 h-2 rounded-full bg-primary-green-300 mt-3" />
     </div>
     {children}
-  </section>
+  </div>
 );
 
 export default GeneralSettings;
