@@ -1,6 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,7 +17,6 @@ import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
-  Check,
   Image as ImageIconLucide,
   Palette,
   Save,
@@ -287,9 +287,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
               </Label>
               <Select
                 value={formData.currency}
-                onValueChange={(value) =>
-                  handleInputChange("currency", value)
-                }
+                onValueChange={(value) => handleInputChange("currency", value)}
                 disabled={isSubmitting}
               >
                 <SelectTrigger
@@ -312,60 +310,30 @@ export default function StoreEditForm({ setIsEditing }: any) {
           </CardContent>
         </Card>
         {/* Store Theme Section */}
-        <Card className="rounded-2xl border-border-tint py-0">
+        <Card className="rounded-2xl bg-white z-100 border-border-tint py-0">
           <CardHeader className="border-b border-border-tint py-4">
             <CardTitle className="flex items-center gap-2 text-grey-1 text-base font-extrabold">
               <Palette className="w-5 h-5 text-primary-green-300" />
               Store Theme
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-6 bg-white">
             <p className="text-sm text-grey-3 mb-4">
-              Pick the accent color customers see across your storefront.
+              Pick your brand color. We use it as the accent customers see
+              across your storefront, and shades are generated from it
+              automatically.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-              {(storeThemesLoading ? [] : storeThemeOptions).map((theme) => {
-                const isSelected = formData.storeTheme === theme.key;
-                return (
-                  <button
-                    key={theme.key}
-                    type="button"
-                    onClick={() => handleInputChange("storeTheme", theme.key)}
-                    disabled={isSubmitting}
-                    className={cn(
-                      "relative flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors cursor-pointer",
-                      isSelected
-                        ? "border-primary-green-300 ring-1 ring-primary-green-300 bg-secondary-6"
-                        : "border-border-tint hover:border-primary-green-300 hover:bg-secondary-6",
-                      isSubmitting && "opacity-60 cursor-not-allowed",
-                    )}
-                    aria-pressed={isSelected}
-                  >
-                    <span
-                      className="w-8 h-8 rounded-full flex-shrink-0 border border-black/10 flex items-center justify-center"
-                      style={{ backgroundColor: theme.primary }}
-                    >
-                      {isSelected && (
-                        <Check
-                          className="w-4 h-4"
-                          style={{ color: theme.on_primary }}
-                        />
-                      )}
-                    </span>
-                    <span className="text-sm font-bold text-grey-2 truncate">
-                      {theme.label}
-                    </span>
-                  </button>
-                );
-              })}
-              {storeThemesLoading &&
-                Array.from({ length: 4 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className="h-14 rounded-xl border border-border-tint bg-grey-6 animate-pulse"
-                  />
-                ))}
-            </div>
+            {storeThemesLoading ? (
+              <div className="h-16 w-64 rounded-xl border border-border-tint bg-grey-6 animate-pulse" />
+            ) : (
+              <ColorPicker
+                value={formData.storeTheme}
+                onChange={(hex) => handleInputChange("storeTheme", hex)}
+                disabled={isSubmitting}
+                presets={storeThemeOptions}
+              />
+            )}
+            <ErrorMessage message={errors.storeTheme} />
           </CardContent>
         </Card>
         {/* Contact & Address Section */}
@@ -433,9 +401,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <Input
                   id="country"
                   value={formData.country}
-                  onChange={(e) =>
-                    handleInputChange("country", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("country", e.target.value)}
                   placeholder="Enter country"
                   className={errors.country ? "border-error-1" : ""}
                   disabled={isSubmitting}
@@ -480,9 +446,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <Input
                   id="zipCode"
                   value={formData.zipCode}
-                  onChange={(e) =>
-                    handleInputChange("zipCode", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("zipCode", e.target.value)}
                   placeholder="12345"
                   className={errors.zipCode ? "border-error-1" : ""}
                   disabled={isSubmitting}
@@ -511,9 +475,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {DELIVERY_DAYS_OPTIONS.map((day) => {
-                  const isSelected = formData.workingDays.includes(
-                    day.value,
-                  );
+                  const isSelected = formData.workingDays.includes(day.value);
                   return (
                     <button
                       key={day.value}
@@ -547,14 +509,12 @@ export default function StoreEditForm({ setIsEditing }: any) {
             <div className="space-y-2">
               <Label className="font-bold">Delivery Days</Label>
               <p className="text-sm text-grey-3">
-                Select the days your store delivers orders. Customers will
-                only be able to choose these days at checkout.
+                Select the days your store delivers orders. Customers will only
+                be able to choose these days at checkout.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {DELIVERY_DAYS_OPTIONS.map((day) => {
-                  const isSelected = formData.deliveryDays.includes(
-                    day.value,
-                  );
+                  const isSelected = formData.deliveryDays.includes(day.value);
                   return (
                     <button
                       key={day.value}
@@ -601,14 +561,9 @@ export default function StoreEditForm({ setIsEditing }: any) {
                   step="0.01"
                   min="0"
                   value={formData.weight}
-                  onChange={(e) =>
-                    handleInputChange("weight", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("weight", e.target.value)}
                   placeholder="2"
-                  className={cn(
-                    "pr-12",
-                    errors.weight ? "border-error-1" : "",
-                  )}
+                  className={cn("pr-12", errors.weight ? "border-error-1" : "")}
                   disabled={isSubmitting}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-grey-3">
@@ -635,11 +590,7 @@ export default function StoreEditForm({ setIsEditing }: any) {
             <X className="w-4 h-4 mr-2" />
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
+          <Button type="button" onClick={handleSubmit} disabled={isSubmitting}>
             <Save className="w-4 h-4 mr-2" />
             {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>

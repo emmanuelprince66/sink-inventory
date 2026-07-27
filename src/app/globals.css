@@ -191,3 +191,20 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 } */
+
+/* react-colorful sizing/rounding for the store brand color picker */
+.sink-color-picker.react-colorful {
+  width: 232px;
+  height: 200px;
+}
+.sink-color-picker .react-colorful__saturation {
+  border-radius: 12px 12px 0 0;
+}
+.sink-color-picker .react-colorful__hue {
+  height: 20px;
+  border-radius: 0 0 12px 12px;
+}
+.sink-color-picker .react-colorful__pointer {
+  width: 18px;
+  height: 18px;
+}
