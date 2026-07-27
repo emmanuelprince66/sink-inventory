@@ -1,10 +1,28 @@
 import { useUpdateBusinessMutation } from "@/api/business/create-business";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import {
-  DEFAULT_STORE_THEME_KEY,
   FALLBACK_STORE_THEMES,
   useGetStoreThemesQuery,
 } from "@/api/business/get-store-themes";
+
+// Brand color is now a hex string. The backend derives every shade from it.
+export const DEFAULT_STORE_THEME_HEX =
+  FALLBACK_STORE_THEMES[0]?.primary || "#047857";
+
+const HEX_COLOR_REGEX = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/;
+
+export const isHexColor = (value?: string | null): boolean =>
+  !!value && HEX_COLOR_REGEX.test(value.trim());
+
+// Resolve the value that comes back from the API into a hex string. New stores
+// save a hex directly; legacy stores saved a preset key (e.g. "emerald"), so we
+// map that back to the preset's primary color. Anything else falls to default.
+const resolveStoreThemeHex = (value?: string | null): string => {
+  const trimmed = value?.trim();
+  if (trimmed && HEX_COLOR_REGEX.test(trimmed)) return trimmed;
+  const preset = FALLBACK_STORE_THEMES.find((theme) => theme.key === trimmed);
+  return preset?.primary || DEFAULT_STORE_THEME_HEX;
+};
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { compressImage } from "@/utils/compressImage";
 import { useEffect, useRef, useState } from "react";
@@ -107,8 +125,6 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     storeThemesData?.themes && storeThemesData.themes.length > 0
       ? storeThemesData.themes
       : FALLBACK_STORE_THEMES;
-  const defaultStoreThemeKey =
-    storeThemesData?.defaultKey || DEFAULT_STORE_THEME_KEY;
 
   const initialStoreData: StoreData = {
     logo: "/placeholder.svg?height=120&width=120",
@@ -131,7 +147,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     deliveryDays: [],
     workingDays: [],
     weight: "",
-    storeTheme: DEFAULT_STORE_THEME_KEY,
+    storeTheme: DEFAULT_STORE_THEME_HEX,
   };
 
   const [storeData, setStoreData] = useState<StoreData>(initialStoreData);
@@ -206,14 +222,14 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
           ? findBusiness.working_days
           : [],
         weight: findBusiness.weight ? String(findBusiness.weight) : "",
-        storeTheme: findBusiness.store_theme || defaultStoreThemeKey,
+        storeTheme: resolveStoreThemeHex(findBusiness.store_theme),
       };
       setStoreData(data);
       setFormData(data);
       setLogoPreview(data.logo);
       setBannerPreview(data.headerImage);
     }
-  }, [findBusiness, business_id, defaultStoreThemeKey]);
+  }, [findBusiness, business_id]);
 
   // Validation logic
   const validateForm = (): boolean => {
@@ -293,6 +309,11 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       newErrors.currency = "Currency is required";
     } else if (!CURRENCY_OPTIONS.includes(formData.currency as any)) {
       newErrors.currency = "Invalid currency selected";
+    }
+
+    // Store theme — must be a valid hex color; backend derives shades from it.
+    if (!isHexColor(formData.storeTheme)) {
+      newErrors.storeTheme = "Pick a valid brand color";
     }
 
     // Tagline validation (optional, max 150 characters)
@@ -489,8 +510,8 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         formDataToSend.append("weight", formData.weight);
       }
 
-      // Store theme — sent as the preset key (e.g. "emerald"), matching
-      // the Business schema's `store_theme` string field.
+      // Store theme — sent as a hex brand color (e.g. "#047857"). The backend
+      // computes every derived shade from this single value.
       if (formData.storeTheme) {
         formDataToSend.append("store_theme", formData.storeTheme);
       }

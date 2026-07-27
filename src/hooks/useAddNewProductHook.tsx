@@ -11,6 +11,7 @@ import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
+import { compressImage } from "@/utils/compressImage";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
@@ -834,14 +835,23 @@ export const useAddNewProductHook = ({
       if (id) formData.append("kept_media_ids", id);
     };
 
-    (values.images || []).forEach((item) => {
+    // Compress newly added image files client-side before upload — same util
+    // and settings as the store-info flow. Existing (URL) entries and videos
+    // are left untouched. compressImage falls back to the original on failure.
+    for (const item of values.images || []) {
       if (item instanceof File) {
-        formData.append("images", item);
-        console.log("📷 [onSubmit] Appending image file:", item.name);
+        let fileToSend = item;
+        try {
+          fileToSend = await compressImage(item, 1200, 0.7);
+        } catch {
+          fileToSend = item;
+        }
+        formData.append("images", fileToSend);
+        console.log("📷 [onSubmit] Appending image file:", fileToSend.name);
       } else if (isEditMode) {
         appendKeptId(item);
       }
-    });
+    }
     (values.videos || []).forEach((item) => {
       if (item instanceof File) {
         formData.append("videos", item);
@@ -1044,6 +1054,7 @@ export const useAddNewProductHook = ({
   const unitTypeOptions = [
     { label: "Pieces", value: "Pcs" },
     { label: "Kilograms", value: "Kg" },
+    { label: "Liters", value: "Ltr" },
     { label: "Bags", value: "Bag" },
     { label: "Boxes", value: "Box" },
     { label: "Cartons", value: "Ctn" },

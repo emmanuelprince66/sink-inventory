@@ -83,9 +83,15 @@ export default function StoreInfo() {
   const { BusinessDataLoading, storeData, storeThemeOptions } = useStoreHook({
     setIsEditing,
   });
+  // storeData.storeTheme is a hex brand color. If it happens to match one of
+  // the preset swatches, show that preset's name; otherwise show the hex.
+  const themeColor = storeData.storeTheme || "#047857";
   const activeTheme = storeThemeOptions.find(
-    (theme) => theme.key === storeData.storeTheme,
+    (theme) =>
+      theme.key === storeData.storeTheme ||
+      theme.primary?.toLowerCase() === themeColor.toLowerCase(),
   );
+  const themeLabel = activeTheme?.label || themeColor.toUpperCase();
 
   return (
     <>
@@ -246,11 +252,9 @@ export default function StoreInfo() {
                       <span className="flex items-center gap-1.5">
                         <span
                           className="w-3.5 h-3.5 rounded-full border border-black/10 flex-shrink-0"
-                          style={{
-                            backgroundColor: activeTheme?.primary || "#047857",
-                          }}
+                          style={{ backgroundColor: themeColor }}
                         />
-                        {activeTheme?.label || "Emerald"}
+                        {themeLabel}
                       </span>
                     }
                   />
