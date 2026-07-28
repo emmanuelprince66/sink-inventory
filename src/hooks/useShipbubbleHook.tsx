@@ -265,17 +265,31 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
   };
 
   // ─── Quick toggle for shipbubble_settings.is_active ──────────────────────
-  // The backend only accepts a full shipbubble_settings object on PATCH (all
-  // nested fields are required), so flipping is_active means re-sending the
-  // current saved values + the new flag. Caller is expected to have already
-  // configured Shipbubble (isConfigured === true) before flipping ON.
+  // Activate/deactivate only needs the flag — the backend accepts a partial
+  // shipbubble_settings containing just `is_active` and leaves the rest of the
+  // saved config untouched. So we send that alone instead of re-sending the
+  // full nested object. Caller is expected to have already configured
+  // Shipbubble (isConfigured === true) before flipping ON.
   const setActive = (
     next: boolean,
     callbacks?: { onSuccess?: () => void; onError?: () => void },
   ) => {
+    if (!business_id) {
+      showToast("Business is not loaded yet.", "error");
+      return;
+    }
     // Local update first so the switch animates immediately.
     setSettings((prev) => ({ ...prev, isActive: next }));
-    save({ settingsPatch: { isActive: next } }, callbacks);
+    updateBusiness(
+      {
+        business_id,
+        shipbubble_settings: { is_active: next },
+      },
+      {
+        onSuccess: () => callbacks?.onSuccess?.(),
+        onError: () => callbacks?.onError?.(),
+      },
+    );
   };
 
   // ─── Derived flags ───────────────────────────────────────────────────────
