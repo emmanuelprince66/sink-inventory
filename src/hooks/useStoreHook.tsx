@@ -25,6 +25,7 @@ const resolveStoreThemeHex = (value?: string | null): string => {
 };
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { compressImage } from "@/utils/compressImage";
+import { isValidPhoneNumber } from "react-phone-number-input";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 
@@ -37,6 +38,7 @@ interface StoreData {
   tagline: string | null;
   description: string | null;
   phone: string;
+  whatsappNumber: string;
   email: string;
   address: string;
   city: string;
@@ -135,6 +137,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     tagline: null,
     description: null,
     phone: "",
+    whatsappNumber: "",
     email: "",
     address: "",
     city: "",
@@ -204,6 +207,7 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         // back to owner.* for older API responses where they lived on the
         // owner relationship.
         phone: findBusiness.phone || findBusiness.owner?.phone || "",
+        whatsappNumber: findBusiness.whatsapp_number || "",
         email: findBusiness.email || findBusiness.owner?.email || "",
         address: findBusiness.street || "",
         city: findBusiness.city || "",
@@ -263,6 +267,14 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     }
     if (!formData.phone.trim()) {
       newErrors.phone = "Contact phone is required";
+    }
+
+    // WhatsApp number — optional. The PhoneInput emits E.164 (e.g.
+    // "+2348012345678"); the backend requires this international format, so we
+    // validate the full number rather than a loose regex/length check.
+    if (formData.whatsappNumber && !isValidPhoneNumber(formData.whatsappNumber)) {
+      newErrors.whatsappNumber =
+        "Enter a valid WhatsApp number in international format";
     }
 
     // Email validation
@@ -473,6 +485,9 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       // with an empty string.
       if (formData.phone) {
         formDataToSend.append("phone", formData.phone);
+      }
+      if (formData.whatsappNumber) {
+        formDataToSend.append("whatsapp_number", formData.whatsappNumber);
       }
       if (formData.email) {
         formDataToSend.append("email", formData.email);

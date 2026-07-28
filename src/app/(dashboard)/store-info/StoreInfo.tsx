@@ -10,6 +10,7 @@ import {
   Info,
   Mail,
   MapPin,
+  MessageCircle,
   Palette,
   Phone,
   Store,
@@ -214,6 +215,16 @@ export default function StoreInfo() {
                     label="Contact Phone"
                     value={storeData.phone || "Not set"}
                   />
+
+                  {storeData.whatsappNumber && (
+                    <InfoRow
+                      icon={
+                        <MessageCircle className="w-4 h-4 text-primary-green-300" />
+                      }
+                      label="WhatsApp Number"
+                      value={storeData.whatsappNumber}
+                    />
+                  )}
 
                   {storeData.email && (
                     <InfoRow

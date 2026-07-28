@@ -1,4 +1,5 @@
 "use client";
+import { PhoneInput } from "@/components/app/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ColorPicker } from "@/components/ui/color-picker";
@@ -361,6 +362,23 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <ErrorMessage message={errors.phone} />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="whatsappNumber" className="font-bold">
+                  WhatsApp Number
+                </Label>
+                <PhoneInput
+                  international
+                  defaultCountry="NG"
+                  value={formData.whatsappNumber || undefined}
+                  onChange={(value) =>
+                    handleInputChange("whatsappNumber", value || "")
+                  }
+                  placeholder="Enter WhatsApp number"
+                  className={errors.whatsappNumber ? "border-error-1" : ""}
+                  disabled={isSubmitting}
+                />
+                <ErrorMessage message={errors.whatsappNumber} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="email" className="font-bold">
                   Email Address
                 </Label>
