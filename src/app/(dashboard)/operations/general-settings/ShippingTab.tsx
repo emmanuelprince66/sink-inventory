@@ -4,7 +4,18 @@ import { cn } from "@/lib/utils";
 import { Info } from "lucide-react";
 import { useState } from "react";
 import AutomatedShipping from "./AutomatedShipping";
-import DeliveryAndPickup from "./DeliveryAndPickup";
+// import DeliveryAndPickup from "./DeliveryAndPickup";
+
+// ─── DISABLED: Delivery & Pickup ────────────────────────────────────────────
+// The whole "Delivery & Pickup" view is UI-only — every toggle is local
+// useState, its "Save Changes" button has no onClick, and the pickup-location
+// sheet it opens never persists either. Nothing it collects reaches the API,
+// so a merchant configuring it would silently lose the lot on refresh.
+//
+// To restore: uncomment the import, the "delivery" entry in VIEWS, and the
+// render branch below — then wire DeliveryAndPickup + PickupLocationSheet to
+// their endpoints. See the note at the top of DeliveryAndPickup.tsx for the
+// fields that need somewhere to go.
 
 type ShippingView = "delivery" | "automated";
 
@@ -14,12 +25,12 @@ const VIEWS: {
   shortLabel: string;
   tip: string;
 }[] = [
-  {
-    key: "delivery",
-    label: "Delivery & Pickup",
-    shortLabel: "Delivery",
-    tip: "Tailor shipping settings to give customers flexible delivery options.",
-  },
+  // {
+  //   key: "delivery",
+  //   label: "Delivery & Pickup",
+  //   shortLabel: "Delivery",
+  //   tip: "Tailor shipping settings to give customers flexible delivery options.",
+  // },
   {
     key: "automated",
     label: "Automated Shipping",
@@ -29,7 +40,7 @@ const VIEWS: {
 ];
 
 const ShippingTab = () => {
-  const [view, setView] = useState<ShippingView>("delivery");
+  const [view, setView] = useState<ShippingView>("automated");
   const activeView = VIEWS.find((v) => v.key === view) || VIEWS[0];
 
   return (
@@ -64,7 +75,8 @@ const ShippingTab = () => {
         </p>
       </div>
 
-      {view === "delivery" ? <DeliveryAndPickup /> : <AutomatedShipping />}
+      {/* {view === "delivery" ? <DeliveryAndPickup /> : <AutomatedShipping />} */}
+      <AutomatedShipping />
     </div>
   );
 };

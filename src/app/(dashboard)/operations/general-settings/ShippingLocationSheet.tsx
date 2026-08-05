@@ -1,5 +1,11 @@
 "use client";
 
+// ─── NOT RENDERED ───────────────────────────────────────────────────────────
+// Unmounted from AutomatedShipping.tsx (Service Area step). The sheet has no
+// save action at all — worldwide/specific-locations/ship-by-distance and the
+// selected country + states are local state that vanish when it closes.
+// Re-enable once there's an endpoint to persist a business's service area.
+
 import { SearchInput } from "@/components/app/SearchInput";
 import {
   Popover,

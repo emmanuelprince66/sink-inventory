@@ -1,5 +1,6 @@
 "use client";
 
+import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { DatePicker } from "@/components/app/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +95,8 @@ const CreateOrders = () => {
   const {
     address,
     updateAddressField,
+    applyAddressSuggestion,
+    hasCoordinates,
     stateList,
     cityList,
     isAddressComplete,
@@ -125,6 +128,26 @@ const CreateOrders = () => {
       setShippingFee(0);
     }
   };
+
+  // Picking a suggestion rewrites the address, so any rate already quoted for
+  // the previous one is void — same invalidation as editing a field by hand.
+  const handleAddressSuggestionSelect = (suggestion: any) => {
+    applyAddressSuggestion(suggestion);
+    if (selectedCourier) {
+      resetShipmentRates();
+      setShippingFee(0);
+    }
+  };
+
+  // The merchant's saved Shipbubble pickup point, used to bias address search
+  // toward their own area. Undefined until Shipbubble is configured.
+  const pickupProximity =
+    findBusiness?.shipbubble?.latitude && findBusiness?.shipbubble?.longitude
+      ? {
+          latitude: String(findBusiness.shipbubble.latitude),
+          longitude: String(findBusiness.shipbubble.longitude),
+        }
+      : null;
 
   const buildOrderProducts = () =>
     selectedProducts.map((p) => ({
@@ -287,6 +310,31 @@ const CreateOrders = () => {
               )}
             </div>
 
+            {/* Address search sits above State/City on purpose: picking a
+                suggestion fills both of them (and pins the coordinates), so
+                asking for them first makes the merchant do work the search
+                would have done. The selects below are for confirming or
+                correcting what the search resolved. */}
+            <div className="space-y-2">
+              <Label className="text-xs text-grey-3">
+                Shipping Address *
+              </Label>
+              <AddressAutocomplete
+                multiline
+                rows={2}
+                value={address.shippingAddress}
+                placeholder="Start typing the delivery address..."
+                hasCoordinates={hasCoordinates}
+                // Bias results toward the merchant's own pickup point so a
+                // street name that exists in several states ranks locally first.
+                proximity={pickupProximity}
+                onChange={(v) =>
+                  handleAddressFieldChange("shippingAddress", v)
+                }
+                onSelect={handleAddressSuggestionSelect}
+              />
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs text-grey-3">State *</Label>
@@ -351,19 +399,6 @@ const CreateOrders = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs text-grey-3">
-                Shipping Address *
-              </Label>
-              <Textarea
-                value={address.shippingAddress}
-                onChange={(e) =>
-                  handleAddressFieldChange("shippingAddress", e.target.value)
-                }
-                placeholder="Full delivery address"
-                rows={2}
-              />
-            </div>
           </div>
         </div>
 

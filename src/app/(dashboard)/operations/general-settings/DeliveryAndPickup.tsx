@@ -1,5 +1,15 @@
 "use client";
 
+// ─── NOT RENDERED ───────────────────────────────────────────────────────────
+// Unmounted from ShippingTab.tsx: nothing in this file reaches an endpoint.
+// Every toggle and field below is local useState, and the "Save Changes"
+// button has no onClick — a merchant configuring this loses everything on
+// refresh. PickupLocationSheet (opened from step 4) is unwired too.
+//
+// Needs endpoints for: delivery calendar/days, delivery-window flag,
+// same-day rules, processing days, reminder lead time, and the customer
+// pickup location. Re-enable the tab in ShippingTab.tsx once they exist.
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

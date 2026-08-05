@@ -11,6 +11,13 @@ export interface CustomerAddress {
   state: string | null;
   country: string | null;
   phone: string | null;
+  /** Resolved once when the customer is created, then reused on every order
+   * instead of re-geocoding the same address. Nullable because customers
+   * created before the backend added these fields won't have them — the
+   * order form falls back to its autocomplete / city-centroid chain.
+   * API caps these at 15 chars; we emit 6dp, so max is 11 (e.g. "-179.123456"). */
+  latitude: string | null;
+  longitude: string | null;
   is_default: boolean;
   created_at: string;
 }

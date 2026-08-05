@@ -2,32 +2,45 @@
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+// Only used by the disabled blocks below — restore alongside them.
+// import { Input } from "@/components/ui/input";
+// import { Switch } from "@/components/ui/switch";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
-  CheckCircle2,
-  ChevronRight,
+  // CheckCircle2,
+  // ChevronRight,
   Lightbulb,
-  Map,
+  // Map,
   Package,
-  Save,
+  // Save,
   Settings as SettingsIcon,
   Truck,
-  Weight,
-  Zap,
+  // Weight,
+  // Zap,
 } from "lucide-react";
 import { useState } from "react";
 import ShipbubbleAgreementModal from "./ShipbubbleAgreementModal";
 import ShipbubbleSettingsModal from "./ShipbubbleSettingsModal";
-import ShippingLocationSheet from "./ShippingLocationSheet";
+// import ShippingLocationSheet from "./ShippingLocationSheet";
+
+// ─── DISABLED in this file ──────────────────────────────────────────────────
+// Commented out below: the "Automated Shipping" master toggle, Service Area,
+// Default Package Weight, and the sticky Save bar. All four are local useState
+// with no endpoint behind them — the Save button never even had an onClick, so
+// anything typed there was lost on refresh.
+//
+// What's left (Logistics Integrations → Shipbubble) is fully wired: the toggle
+// and the Configure modal both PATCH business/{id}/.
+//
+// To restore any of them: uncomment the block plus its state + imports, and
+// point it at a real endpoint.
 
 const AutomatedShipping = () => {
-  const [automated, setAutomated] = useState(true);
-  const [defaultWeight, setDefaultWeight] = useState("2");
-  const [showShippingLocation, setShowShippingLocation] = useState(false);
+  // const [automated, setAutomated] = useState(true);
+  // const [defaultWeight, setDefaultWeight] = useState("2");
+  // const [showShippingLocation, setShowShippingLocation] = useState(false);
   const [showShipbubbleSettings, setShowShipbubbleSettings] = useState(false);
   const [showShipbubbleAgreement, setShowShipbubbleAgreement] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
@@ -90,7 +103,9 @@ const AutomatedShipping = () => {
         </p>
       </div>
 
-      {/* Step 1 — Master toggle */}
+      {/* DISABLED — master toggle, Service Area and Default Package Weight
+          are all local-only. See the note at the top of this file.
+
       <StepTile
         step={1}
         icon={<Zap className="w-4 h-4" />}
@@ -100,93 +115,93 @@ const AutomatedShipping = () => {
         active={automated}
       />
 
-      {automated && (
-        <>
-          {/* Step 2 — Service Area */}
-          <StepTile
-            step={2}
-            icon={<Map className="w-4 h-4" />}
-            title="Service Area"
-            description="Pick the locations you deliver to — selected cities, a delivery radius, or worldwide."
-          >
-            <button
-              onClick={() => setShowShippingLocation(true)}
-              className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-primary-green-300/30 bg-secondary-6 hover:bg-secondary-6/70 transition-colors text-left cursor-pointer"
-            >
-              <span className="text-sm font-bold text-primary-green-100">
-                Choose shipping locations
+      <StepTile
+        step={2}
+        icon={<Map className="w-4 h-4" />}
+        title="Service Area"
+        description="Pick the locations you deliver to — selected cities, a delivery radius, or worldwide."
+      >
+        <button
+          onClick={() => setShowShippingLocation(true)}
+          className="mt-3 w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-primary-green-300/30 bg-secondary-6 hover:bg-secondary-6/70 transition-colors text-left cursor-pointer"
+        >
+          <span className="text-sm font-bold text-primary-green-100">
+            Choose shipping locations
+          </span>
+          <ChevronRight className="w-4 h-4 text-primary-green-300" />
+        </button>
+      </StepTile>
+
+      <StepTile
+        step={3}
+        icon={<Weight className="w-4 h-4" />}
+        title="Default Package Weight"
+        description="Used as a fallback when a product doesn't have its own weight. Shipping rates depend on this."
+      >
+        <div className="mt-3">
+          <label className="text-[11px] font-bold uppercase tracking-wider text-grey-3 block mb-1.5">
+            Default Weight
+          </label>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+            <div className="relative w-full sm:w-[160px] shrink-0">
+              <Input
+                type="number"
+                value={defaultWeight}
+                onChange={(e) => setDefaultWeight(e.target.value)}
+                className="pr-12"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-primary-green-300 px-2 py-0.5 bg-secondary-6 border border-primary-green-300/20 rounded">
+                Kg
               </span>
-              <ChevronRight className="w-4 h-4 text-primary-green-300" />
-            </button>
-          </StepTile>
-
-          {/* Step 3 — Default Weight */}
-          <StepTile
-            step={3}
-            icon={<Weight className="w-4 h-4" />}
-            title="Default Package Weight"
-            description="Used as a fallback when a product doesn't have its own weight. Shipping rates depend on this."
-          >
-            <div className="mt-3">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-grey-3 block mb-1.5">
-                Default Weight
-              </label>
-              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-                <div className="relative w-full sm:w-[160px] shrink-0">
-                  <Input
-                    type="number"
-                    value={defaultWeight}
-                    onChange={(e) => setDefaultWeight(e.target.value)}
-                    className="pr-12"
-                  />
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-primary-green-300 px-2 py-0.5 bg-secondary-6 border border-primary-green-300/20 rounded">
-                    Kg
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  className="h-12 w-full sm:w-auto border-primary-green-300/30 text-primary-green-300 hover:bg-secondary-6 hover:border-primary-green-300/50 cursor-pointer"
-                >
-                  Apply weight to all products
-                </Button>
-              </div>
             </div>
-          </StepTile>
+            <Button
+              variant="outline"
+              className="h-12 w-full sm:w-auto border-primary-green-300/30 text-primary-green-300 hover:bg-secondary-6 hover:border-primary-green-300/50 cursor-pointer"
+            >
+              Apply weight to all products
+            </Button>
+          </div>
+        </div>
+      </StepTile>
+      */}
 
-          {/* Step 4 — Integrations */}
-          <StepTile
-            step={4}
-            icon={<Truck className="w-4 h-4" />}
-            title="Logistics Integrations"
-            description="Connect a partner network so customers see live shipping rates at checkout."
-          >
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <PartnerCard
-                name="Shipbubble"
-                tagline="Nationwide & international delivery with 50+ partners"
-                logoTone="bg-info-2 text-info-1"
-                icon={<Truck className="w-5 h-5" />}
-                checked={isShipbubbleActive}
-                disabled={isSavingShipbubble}
-                onToggle={handleShipbubbleToggle}
-                onConfigure={() => setShowShipbubbleSettings(true)}
-                isConfigured={isConfigured}
-              />
-              <PartnerCard
-                name="Chowdeck"
-                tagline="Fast, reliable same-day deliveries in select cities"
-                logoTone="bg-warning-2 text-warning-1"
-                icon={<Package className="w-5 h-5" />}
-                checked={false}
-                onToggle={() => {}}
-                comingSoon
-              />
-            </div>
-          </StepTile>
-        </>
-      )}
+      {/* Logistics Integrations — the one wired flow here. Both the toggle and
+          the Configure modal PATCH business/{id}/. Renumbered to step 1 now
+          that the three unwired steps above are commented out. */}
+      <StepTile
+        step={1}
+        icon={<Truck className="w-4 h-4" />}
+        title="Logistics Integrations"
+        description="Connect a partner network so customers see live shipping rates at checkout."
+      >
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <PartnerCard
+            name="Shipbubble"
+            tagline="Nationwide & international delivery with 50+ partners"
+            logoTone="bg-info-2 text-info-1"
+            icon={<Truck className="w-5 h-5" />}
+            checked={isShipbubbleActive}
+            disabled={isSavingShipbubble}
+            onToggle={handleShipbubbleToggle}
+            onConfigure={() => setShowShipbubbleSettings(true)}
+            isConfigured={isConfigured}
+          />
+          {/* Kept: explicitly badged "Coming soon", so it promises nothing. */}
+          <PartnerCard
+            name="Chowdeck"
+            tagline="Fast, reliable same-day deliveries in select cities"
+            logoTone="bg-warning-2 text-warning-1"
+            icon={<Package className="w-5 h-5" />}
+            checked={false}
+            onToggle={() => {}}
+            comingSoon
+          />
+        </div>
+      </StepTile>
 
-      {/* Sticky save bar */}
+      {/* DISABLED — the Save button had no onClick at all, and the Shipbubble
+          card saves itself on toggle/configure, so there's nothing to publish.
+
       <div className="sticky bottom-3 sm:bottom-4 z-10">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white border border-grey-5 shadow-lg">
           <p className="text-xs text-grey-3 flex items-center gap-1.5">
@@ -204,6 +219,8 @@ const AutomatedShipping = () => {
         open={showShippingLocation}
         onClose={() => setShowShippingLocation(false)}
       />
+      */}
+
       <ShipbubbleSettingsModal
         open={showShipbubbleSettings}
         onClose={() => setShowShipbubbleSettings(false)}

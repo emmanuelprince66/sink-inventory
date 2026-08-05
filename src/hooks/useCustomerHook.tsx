@@ -16,6 +16,12 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
+import {
+  GeocodeSuggestion,
+  cityCentroid,
+  coordinatesPayload,
+  resolveCoordinates,
+} from "@/utils/geocode";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useDebounce } from "./useDebounce";
@@ -29,6 +35,10 @@ const CustomerSchema = z.object({
   state: z.string().optional(),
   city: z.string().optional(),
   address: z.string().optional(),
+  // Resolved by the address autocomplete, never typed. Held as strings to
+  // match the API's own typing everywhere else coordinates appear.
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
 });
 
 export type CustomerFormValues = z.infer<typeof CustomerSchema>;
@@ -167,6 +177,8 @@ export const useCustomerHook = ({
       state: "",
       city: "",
       address: "",
+      latitude: "",
+      longitude: "",
     },
     mode: "onChange",
   });
@@ -184,6 +196,32 @@ export const useCustomerHook = ({
   const handleStateChange = (value: string) => {
     form.setValue("state", value);
     form.setValue("city", "");
+    // A hand-picked state invalidates coordinates resolved for the old one.
+    clearAddressCoordinates();
+  };
+
+  // Applies a picked autocomplete suggestion. `state` is stored as an ISO code
+  // here (same convention as the order delivery form), so the resolved state
+  // name is mapped back before it's set.
+  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+    const matchedState = stateList.find(
+      (s) =>
+        s.isoCode === suggestion.stateCode ||
+        s.name.toLowerCase() === suggestion.state.toLowerCase(),
+    );
+
+    form.setValue("address", suggestion.address || suggestion.label, {
+      shouldValidate: true,
+    });
+    if (matchedState) form.setValue("state", matchedState.isoCode);
+    if (suggestion.city) form.setValue("city", suggestion.city);
+    form.setValue("latitude", suggestion.latitude);
+    form.setValue("longitude", suggestion.longitude);
+  };
+
+  const clearAddressCoordinates = () => {
+    form.setValue("latitude", "");
+    form.setValue("longitude", "");
   };
 
   const onSubmit = (values: CustomerFormValues) => {
@@ -201,6 +239,16 @@ export const useCustomerHook = ({
     const stateName =
       stateList.find((s) => s.isoCode === values.state)?.name || values.state;
 
+    // Street-level coordinates from the autocomplete, else the city centroid.
+    // Backend is still adding latitude/longitude to the customer-address
+    // model — until it lands, these keys are simply ignored by the serializer.
+    // Once they land, saved customers stop needing a fresh lookup on every
+    // order they place.
+    const coords = resolveCoordinates(
+      { latitude: values.latitude, longitude: values.longitude },
+      cityCentroid(values.state, values.city),
+    );
+
     const payload = {
       name: values.name,
       phone: values.phone,
@@ -212,6 +260,7 @@ export const useCustomerHook = ({
           state: stateName || undefined,
           country: "Nigeria",
           is_default: true,
+          ...coordinatesPayload(coords),
         },
       }),
     };
@@ -249,6 +298,8 @@ export const useCustomerHook = ({
     stateList,
     cityList,
     handleStateChange,
+    applyAddressSuggestion,
+    clearAddressCoordinates,
 
     handleDeleteCustomer,
     handleRowClick,
