@@ -1,5 +1,13 @@
 "use client";
 
+// ─── NOT RENDERED ───────────────────────────────────────────────────────────
+// Only opened from DeliveryAndPickup.tsx, which is itself unmounted. The
+// "Save Location" button has no onClick and the locations list is a hardcoded
+// empty array, so this never had a working path.
+//
+// Not to be confused with the Shipbubble pickup address, which IS wired —
+// that one lives in ShipbubbleSettingsModal.tsx and PATCHes business/{id}/.
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

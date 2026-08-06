@@ -1,5 +1,11 @@
 "use client";
 
+// ─── NOT RENDERED ───────────────────────────────────────────────────────────
+// Unmounted from GeneralSettings.tsx. The KYC status it shows is real (read
+// from the business record), but handleActivate only sets local state and
+// toasts "activated" — nothing is persisted, so the merchant is told BNPL is
+// live when the backend has no idea. Re-enable once activation has an endpoint.
+
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";

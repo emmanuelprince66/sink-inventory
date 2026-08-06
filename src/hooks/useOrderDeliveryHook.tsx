@@ -4,6 +4,12 @@ import {
   useFetchShipmentRateMutation,
 } from "@/api/orders/delivery";
 import { queryKey } from "@/constants/query-key";
+import {
+  GeocodeSuggestion,
+  cityCentroid,
+  coordinatesPayload,
+  resolveCoordinates,
+} from "@/utils/geocode";
 import { City, State } from "country-state-city";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -17,6 +23,12 @@ export interface DeliveryAddress {
   shippingAddress: string;
   state: string; // ISO code, e.g. "LA"
   city: string;
+  /** Delivery coordinates, kept as strings to match the API's own typing.
+   * Set as a pair when the merchant picks an autocomplete suggestion (or when
+   * the customer record already carries them); cleared as a pair the moment
+   * any address field is edited by hand. */
+  latitude: string;
+  longitude: string;
 }
 
 export interface NormalizedCourier {
@@ -40,7 +52,17 @@ const EMPTY_ADDRESS: DeliveryAddress = {
   shippingAddress: "",
   state: "",
   city: "",
+  latitude: "",
+  longitude: "",
 };
+
+// Editing any of these invalidates a previously pinned point. Phone/email
+// don't — they aren't part of the location.
+const LOCATION_FIELDS: (keyof DeliveryAddress)[] = [
+  "shippingAddress",
+  "state",
+  "city",
+];
 
 // Customer only has a single `name` field today (no first/last split) — derive
 // both from it. A single-word name is duplicated into both so the backend's
@@ -96,6 +118,12 @@ export interface CustomerAddressRecord {
   country?: string | null;
   phone?: string | null;
   is_default?: boolean;
+  /** Not on the customer-address model yet — backend is adding them. Read
+   * optimistically so the moment they ship, saved customers stop needing a
+   * fresh lookup on every order. Until then these are simply undefined and we
+   * fall through to the autocomplete / centroid path. */
+  latitude?: string | number | null;
+  longitude?: string | number | null;
 }
 
 interface UseOrderDeliveryHookProps {
@@ -132,9 +160,19 @@ export const useOrderDeliveryHook = ({
     setAddress((prev) => {
       const next = { ...prev, [field]: value };
       if (field === "state") next.city = "";
+      // Hand-editing the location invalidates the pinned coordinates —
+      // sending the rider to the address the merchant just replaced is worse
+      // than sending no coordinates at all. buildAddressPayload() falls back
+      // to a city centroid, so we're never left with nothing.
+      if (LOCATION_FIELDS.includes(field)) {
+        next.latitude = "";
+        next.longitude = "";
+      }
       return next;
     });
   };
+
+  const hasCoordinates = Boolean(address.latitude && address.longitude);
 
   // Phone/email come from the customer's profile when available — keep them
   // in sync with whichever customer is selected instead of asking the
@@ -158,6 +196,28 @@ export const useOrderDeliveryHook = ({
     [address.state],
   );
 
+  // Applies a picked autocomplete suggestion as one atomic update. `state` is
+  // held as an ISO code here (the Select is keyed on it), so the resolved
+  // state name has to be mapped back before it's stored.
+  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+    setAddress((prev) => {
+      const matchedState = stateList.find(
+        (s) =>
+          s.isoCode === suggestion.stateCode ||
+          s.name.toLowerCase() === suggestion.state.toLowerCase(),
+      );
+
+      return {
+        ...prev,
+        shippingAddress: suggestion.address || suggestion.label,
+        state: matchedState?.isoCode || prev.state,
+        city: suggestion.city || prev.city,
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude,
+      };
+    });
+  };
+
   // Prefill state/city/shipping address from the customer's default saved
   // address (falls back to the first one) when a customer is selected.
   // Stays editable afterwards — unlike phone/email, a per-order delivery
@@ -177,6 +237,17 @@ export const useOrderDeliveryHook = ({
       state: matchedState?.isoCode || "",
       city: defaultAddress?.city || "",
       shippingAddress: defaultAddress?.address || "",
+      // Only trusted as a pair, and only when the saved address actually
+      // carries them. A customer saved before the backend added these fields
+      // resolves through the autocomplete (or the centroid fallback) instead.
+      latitude:
+        defaultAddress?.latitude != null && defaultAddress?.longitude != null
+          ? String(defaultAddress.latitude)
+          : "",
+      longitude:
+        defaultAddress?.latitude != null && defaultAddress?.longitude != null
+          ? String(defaultAddress.longitude)
+          : "",
     }));
   }, [customerAddresses, stateList]);
 
@@ -194,6 +265,15 @@ export const useOrderDeliveryHook = ({
       address.state;
     const { firstName, lastName } = splitCustomerName(customerName || "");
 
+    // Coordinate resolution order: what the merchant pinned (or what came off
+    // the customer record) → the city/state centroid. Centroid accuracy is
+    // kilometre-level, which is still enough for Shipbubble's serviceability
+    // check and zone banding even though it won't guide the last 100 metres.
+    const coords = resolveCoordinates(
+      { latitude: address.latitude, longitude: address.longitude },
+      cityCentroid(address.state, address.city),
+    );
+
     return {
       first_name: sanitizeAddressText(firstName),
       last_name: sanitizeAddressText(lastName),
@@ -204,6 +284,10 @@ export const useOrderDeliveryHook = ({
       state: stateName,
       city: address.city ? sanitizeAddressText(address.city) : null,
       shipping_address: sanitizeAddressText(address.shippingAddress),
+      // Optional but NOT nullable on the API model (unlike city /
+      // shipping_address, which are explicitly x-nullable) — so the keys are
+      // omitted entirely rather than sent as null when nothing resolves.
+      ...coordinatesPayload(coords),
     };
   };
 
@@ -371,6 +455,8 @@ export const useOrderDeliveryHook = ({
     // Address
     address,
     updateAddressField,
+    applyAddressSuggestion,
+    hasCoordinates,
     stateList,
     cityList,
     isAddressComplete,

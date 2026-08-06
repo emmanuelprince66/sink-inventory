@@ -1,10 +1,20 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CreditCard, Truck } from "lucide-react";
+import { Truck } from "lucide-react";
 import { useState } from "react";
-import BnplCard from "./BnplCard";
+// import BnplCard from "./BnplCard";
 import ShippingTab from "./ShippingTab";
+
+// ─── DISABLED: Payment Add-ons ──────────────────────────────────────────────
+// BnplCard reads the business record for KYC status, but its "Activate"
+// action only flips local state and fires a success toast — nothing is
+// persisted, so the merchant is told BNPL is on when the backend knows
+// nothing about it. That's worse than the feature being absent.
+//
+// To restore: uncomment the import, the "addons" entry in SECTIONS, the
+// render branch below, and the CreditCard icon import — then wire
+// BnplCard's handleActivate to a real endpoint.
 
 type SectionKey = "shipping" | "addons";
 
@@ -20,12 +30,12 @@ const SECTIONS: {
     description: "Pickup, dispatch and automated logistics",
     icon: <Truck className="w-5 h-5" />,
   },
-  {
-    key: "addons",
-    label: "Payment Add-ons",
-    description: "Optional checkout features",
-    icon: <CreditCard className="w-5 h-5" />,
-  },
+  // {
+  //   key: "addons",
+  //   label: "Payment Add-ons",
+  //   description: "Optional checkout features",
+  //   icon: <CreditCard className="w-5 h-5" />,
+  // },
 ];
 
 const GeneralSettings = () => {
@@ -89,6 +99,8 @@ const GeneralSettings = () => {
             </SectionHeading>
           )}
 
+          {/* DISABLED — see the note at the top of this file.
+
           {active === "addons" && (
             <SectionHeading
               title="Payment Add-ons"
@@ -99,6 +111,7 @@ const GeneralSettings = () => {
               </div>
             </SectionHeading>
           )}
+          */}
         </div>
       </div>
     </div>

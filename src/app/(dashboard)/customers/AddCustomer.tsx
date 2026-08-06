@@ -1,5 +1,6 @@
 import { CircleAlert } from "lucide-react";
 
+import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 
 const AddCustomer = ({
@@ -35,11 +35,16 @@ const AddCustomer = ({
     stateList,
     cityList,
     handleStateChange,
+    applyAddressSuggestion,
+    clearAddressCoordinates,
   } = useCustomerHook({
     closeModal: closeOpenCustomerModal,
     handleOpenNotSubscribeModal,
   });
   const selectedState = form.watch("state");
+  const hasAddressCoordinates = Boolean(
+    form.watch("latitude") && form.watch("longitude"),
+  );
   return (
     <div>
       <Form {...form}>
@@ -82,6 +87,40 @@ const AddCustomer = ({
                 <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter email...." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Address search sits above State/City on purpose: picking a
+              suggestion fills both of them and pins the coordinates saved on
+              the customer, so asking for them first makes the user do work
+              the search would have done. The selects below are for confirming
+              or correcting what the search resolved.
+
+              Autocomplete rather than free text so the saved address is one a
+              geocoder can actually resolve — that's what stops Shipbubble
+              rejecting it later at rate time. */}
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Address</FormLabel>
+                <FormControl>
+                  <AddressAutocomplete
+                    multiline
+                    rows={2}
+                    value={field.value || ""}
+                    placeholder="Start typing an address..."
+                    hasCoordinates={hasAddressCoordinates}
+                    onChange={(v) => {
+                      field.onChange(v);
+                      if (hasAddressCoordinates) clearAddressCoordinates();
+                    }}
+                    onSelect={applyAddressSuggestion}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -160,24 +199,6 @@ const AddCustomer = ({
               )}
             />
           </div>
-
-          <FormField
-            control={form.control}
-            name="address"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Address</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Full address"
-                    rows={2}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
 
           <Button
             type="submit"

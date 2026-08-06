@@ -11,6 +11,10 @@ import {
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import {
+  GeocodeSuggestion,
+  centroidByStateName,
+} from "@/utils/geocode";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
@@ -28,6 +32,11 @@ export interface ShipbubbleSettings {
   packageSize: BoxSizeOption | null;
   /** Backend's `shipbubble_settings.is_active`. Drives the AutomatedShipping toggle. */
   isActive: boolean;
+  /** Pickup coordinates. Typed as strings by the API — kept as strings all the
+   * way through so we never round-trip through a float and lose precision.
+   * Always set/cleared as a pair; a lone latitude is meaningless. */
+  latitude: string;
+  longitude: string;
 }
 
 const EMPTY_SETTINGS: ShipbubbleSettings = {
@@ -39,6 +48,8 @@ const EMPTY_SETTINGS: ShipbubbleSettings = {
   category: null,
   packageSize: null,
   isActive: false,
+  latitude: "",
+  longitude: "",
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -92,6 +103,11 @@ const hydrateFromBusiness = (
       category,
       packageSize,
       isActive: Boolean(sb.is_active),
+      // Coerced through String() because the API types these as strings but
+      // a JSON number would otherwise land here as a number and break the
+      // `.trim()` calls in the save path.
+      latitude: sb.latitude != null ? String(sb.latitude) : "",
+      longitude: sb.longitude != null ? String(sb.longitude) : "",
     },
     companies,
   };
@@ -135,6 +151,16 @@ const buildPatchPayload = (
         max_weight: settings.packageSize.max_weight,
       },
       is_active: settings.isActive,
+      // Only sent when both are present. The API models them as optional but
+      // NOT nullable (unlike `city`/`shipping_address`, which are explicitly
+      // x-nullable), so an unknown location omits the keys rather than
+      // sending nulls.
+      ...(settings.latitude.trim() && settings.longitude.trim()
+        ? {
+            latitude: settings.latitude.trim(),
+            longitude: settings.longitude.trim(),
+          }
+        : {}),
     };
   }
 
@@ -182,6 +208,41 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
     key: K,
     value: ShipbubbleSettings[K],
   ) => setSettings((prev) => ({ ...prev, [key]: value }));
+
+  // Applying a picked autocomplete suggestion is one atomic update — doing it
+  // as five separate updateSetting() calls would let a re-render land between
+  // them and briefly pair the new street with the old coordinates.
+  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+    setSettings((prev) => ({
+      ...prev,
+      street: suggestion.address || suggestion.label || prev.street,
+      // Only overwrite city/state when the provider actually resolved them —
+      // a street-level hit sometimes comes back without a region.
+      city: suggestion.city || prev.city,
+      state: suggestion.state || prev.state,
+      latitude: suggestion.latitude,
+      longitude: suggestion.longitude,
+    }));
+  };
+
+  // Coordinates describe the address they were resolved from. The moment the
+  // merchant edits the street by hand they're stale, and stale coordinates are
+  // worse than none — they'd send the rider to the previous address.
+  const clearCoordinates = () =>
+    setSettings((prev) => ({ ...prev, latitude: "", longitude: "" }));
+
+  // Used by the GPS fallback, which captures a raw fix without touching the
+  // address text — the merchant completes the street/city/state themselves.
+  const setCoordinates = (latitude: number, longitude: number) =>
+    setSettings((prev) => ({
+      ...prev,
+      latitude: latitude.toFixed(6),
+      longitude: longitude.toFixed(6),
+    }));
+
+  const hasCoordinates = Boolean(
+    settings.latitude.trim() && settings.longitude.trim(),
+  );
 
   const toggleCompany = (company: ShippingCompany) =>
     setCompanies((prev) =>
@@ -248,10 +309,23 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
       showToast("Business is not loaded yet.", "error");
       return;
     }
-    const effectiveSettings = overrides?.settingsPatch
+    let effectiveSettings = overrides?.settingsPatch
       ? { ...settings, ...overrides.settingsPatch }
       : settings;
     const effectiveCompanies = overrides?.shippingCompanies ?? companies;
+
+    // Last-resort coordinates. If the merchant typed the street by hand and
+    // never picked a suggestion (or geocoding isn't configured at all), fall back
+    // to the city's centroid. It's kilometre-level rather than street-level,
+    // but Shipbubble uses these for serviceability and zone banding — a town
+    // centroid answers both, and it costs nothing.
+    if (!effectiveSettings.latitude || !effectiveSettings.longitude) {
+      const centroid = centroidByStateName(
+        effectiveSettings.state,
+        effectiveSettings.city,
+      );
+      if (centroid) effectiveSettings = { ...effectiveSettings, ...centroid };
+    }
 
     const payload = buildPatchPayload(
       business_id,
@@ -324,6 +398,10 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
     setSettings,
     toggleCompany,
     resetFromBusiness,
+    applyAddressSuggestion,
+    clearCoordinates,
+    setCoordinates,
+    hasCoordinates,
 
     // Mutation
     save,

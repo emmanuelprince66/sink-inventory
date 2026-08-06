@@ -1,5 +1,6 @@
 "use client";
 
+import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { CustomModal } from "@/components/app/CustomModal";
 import { PhoneInput } from "@/components/app/PhoneInput";
 import { Button } from "@/components/ui/button";
@@ -17,9 +18,12 @@ import { useToast } from "@/hooks/toast/useToast";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
 import { City, State } from "country-state-city";
 import {
+  CheckCircle2,
   ChevronRight,
   Landmark,
   Layers,
+  Loader2,
+  LocateFixed,
   MapPin,
   Package,
   Pencil,
@@ -53,7 +57,52 @@ const ShipbubbleSettingsModal = ({
     validateSettings,
     isSaving,
     resetFromBusiness,
+    applyAddressSuggestion,
+    clearCoordinates,
+    setCoordinates,
+    hasCoordinates,
   } = useShipbubbleHook();
+
+  // GPS fallback — shown only when an address search comes back empty, which
+  // is the common case for Nigerian addresses no geocoder indexes ("beside
+  // the filling station, Ikeja"). Valid here precisely because the merchant is
+  // standing at the pickup point they're configuring; it is deliberately NOT
+  // offered on the order-delivery address, where the merchant is at the shop
+  // and would pin the customer's delivery to their own location.
+  const [gpsStatus, setGpsStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [gpsError, setGpsError] = useState<string | null>(null);
+
+  const handleCaptureGps = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus("error");
+      setGpsError("This browser doesn't support location access.");
+      return;
+    }
+
+    setGpsStatus("loading");
+    setGpsError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        // Coordinates only — no reverse geocode. The merchant already has the
+        // address in their head and the text fields in front of them; a second
+        // network call just adds a failure mode.
+        setCoordinates(position.coords.latitude, position.coords.longitude);
+        setGpsStatus("success");
+      },
+      (err) => {
+        setGpsStatus("error");
+        setGpsError(
+          err.code === err.PERMISSION_DENIED
+            ? "Location access was denied. Allow it in your browser settings and try again."
+            : "Couldn't get your location. Please try again.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10_000 },
+    );
+  };
   const { showToast } = useToast();
 
   const [openBoxPicker, setOpenBoxPicker] = useState(false);
@@ -88,6 +137,10 @@ const ShipbubbleSettingsModal = ({
     updateSetting("state", name);
     updateSetting("city", "");
     setCustomCityMode(false);
+    // Changing the state by hand means the pinned point is in the wrong state
+    // entirely. Drop it — save() will re-derive a centroid from the new
+    // state/city if the merchant doesn't pick a fresh suggestion.
+    clearCoordinates();
   };
 
   // Re-hydrate from the live business object every time the modal re-opens.
@@ -173,13 +226,83 @@ const ShipbubbleSettingsModal = ({
             description="Where Shipbubble riders should collect every shipment."
           >
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Street">
-                <Input
-                  value={settings.street}
-                  onChange={(e) => updateSetting("street", e.target.value)}
-                  placeholder="e.g. 14 Allen Avenue"
-                />
-              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Street">
+                  <AddressAutocomplete
+                    value={settings.street}
+                    placeholder="e.g. 14 Allen Avenue, Ikeja"
+                    hasCoordinates={hasCoordinates}
+                    onChange={(v) => {
+                      updateSetting("street", v);
+                      // Typing invalidates whatever was pinned — see
+                      // clearCoordinates() in useShipbubbleHook.
+                      if (hasCoordinates) clearCoordinates();
+                    }}
+                    onSelect={(suggestion) => {
+                      applyAddressSuggestion(suggestion);
+                      setGpsStatus("idle");
+                      setGpsError(null);
+                      // The city dropdown is driven by the state, so a
+                      // suggestion that carries its own city has to leave
+                      // free-text mode on — the resolved city won't
+                      // necessarily exist in country-state-city's list.
+                      if (suggestion.city) setCustomCityMode(true);
+                    }}
+                    renderNoResults={() => (
+                      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                        <div className="space-y-2.5">
+                          <p className="text-xs leading-relaxed text-blue-900">
+                            <span className="font-bold">
+                              Can&apos;t find your address?
+                            </span>{" "}
+                            While you&apos;re at your pickup location, tap
+                            below and we&apos;ll capture its exact coordinates
+                            so couriers can find you. Fill in the street, city
+                            and state yourself.
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCaptureGps}
+                            disabled={gpsStatus === "loading"}
+                            className="border-blue-400 text-blue-700 hover:bg-blue-100 text-xs font-semibold"
+                          >
+                            {gpsStatus === "loading" ? (
+                              <>
+                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                Getting location...
+                              </>
+                            ) : (
+                              <>
+                                <LocateFixed className="mr-2 h-3.5 w-3.5" />
+                                Use my current location
+                              </>
+                            )}
+                          </Button>
+                          {gpsStatus === "error" && gpsError && (
+                            <p className="text-xs text-red-600">{gpsError}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  />
+
+                  {/* Rendered outside the autocomplete: once GPS succeeds
+                      hasCoordinates flips true, which hides the fallback slot
+                      — so the confirmation has to live here or it would
+                      disappear the instant it became true. */}
+                  {gpsStatus === "success" && hasCoordinates && (
+                    <div className="mt-2 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                      <p className="text-xs font-medium leading-relaxed">
+                        Location captured. Now fill in the street, city and
+                        state below so couriers have a readable address too.
+                      </p>
+                    </div>
+                  )}
+                </Field>
+              </div>
               <Field label="State">
                 <Select
                   value={selectedStateIso}
@@ -262,14 +385,18 @@ const ShipbubbleSettingsModal = ({
                   </Select>
                 )}
               </Field>
-              <Field label="Phone">
-                <PhoneInput
-                  value={settings.phone || undefined}
-                  onChange={(value) => updateSetting("phone", value || "")}
-                  defaultCountry="NG"
-                  placeholder="Phone number"
-                />
-              </Field>
+              {/* Full width — the country-code selector plus a Nigerian
+                  number crowds a half-width column on smaller screens. */}
+              <div className="sm:col-span-2">
+                <Field label="Phone">
+                  <PhoneInput
+                    value={settings.phone || undefined}
+                    onChange={(value) => updateSetting("phone", value || "")}
+                    defaultCountry="NG"
+                    placeholder="Phone number"
+                  />
+                </Field>
+              </div>
               <div className="sm:col-span-2">
                 <Field label="Landmark">
                   <div className="relative">
