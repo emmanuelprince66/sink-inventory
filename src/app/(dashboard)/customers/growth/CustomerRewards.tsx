@@ -8,8 +8,22 @@ import {
   Percent,
   Wallet,
 } from "lucide-react";
+import { useFetchRewardsAnalyticsQuery } from "@/api/loyalty/fetch-rewards-analytics";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useFormatMoney } from "@/utils/formatMoney";
 import { REWARDS, REWARDS_KPIS } from "./dummyGrowthData";
 import { GrowthStatCard } from "./GrowthStatCard";
+
+interface RewardRowView {
+  key: string;
+  name: string;
+  type: string;
+  issued: string | number;
+  redeemed: string | number;
+  expired: string | number;
+  cost: string;
+  roi: string;
+}
 
 const KPI_ICONS = [
   { icon: <Award className="w-4 h-4" />, tone: "bg-secondary-6 text-primary-green-300" },
@@ -26,10 +40,64 @@ const TYPE_ICONS: Record<string, React.ReactNode> = {
 };
 
 const CustomerRewards = () => {
+  const business_id = useBusinessStore((state) => state.business_id);
+  const formatMoney = useFormatMoney();
+  const { data: analyticsRes } = useFetchRewardsAnalyticsQuery({
+    params: { id: business_id ?? "" },
+  });
+
+  const summary = analyticsRes?.data?.summary;
+  const breakdown = analyticsRes?.data?.per_campaign_breakdown;
+
+  const kpis =
+    summary && breakdown
+      ? [
+          { label: "Active Rewards", value: String(breakdown.length), delta: "" },
+          {
+            label: "Total Issued",
+            value: formatMoney(Number(summary.total_sent ?? 0)),
+            delta: "",
+          },
+          {
+            label: "Redeemed",
+            value: formatMoney(Number(summary.total_redeemed ?? 0)),
+            delta: "",
+          },
+          {
+            label: "Redemption Rate",
+            value: `${
+              Number(summary.total_sent) > 0
+                ? (
+                    (Number(summary.total_redeemed) / Number(summary.total_sent)) *
+                    100
+                  ).toFixed(1)
+                : "0.0"
+            }%`,
+            delta: "",
+          },
+        ]
+      : REWARDS_KPIS;
+
+  // Fall back to the sample rows until the business has live reward analytics.
+  const rows: RewardRowView[] = breakdown?.length
+    ? breakdown.map((c) => ({
+        key: c.program_id,
+        name: c.program_name,
+        type: c.reward_summary,
+        issued: c.total_sent,
+        redeemed: c.total_redeemed,
+        expired: c.cancelled,
+        // Per-campaign cost isn't exposed on this endpoint — only the overall
+        // est_retained_rev on the summary — so it stays blank for live data.
+        cost: "—",
+        roi: `${c.retention_rate}%`,
+      }))
+    : REWARDS;
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {REWARDS_KPIS.map((kpi, idx) => (
+        {kpis.map((kpi, idx) => (
           <GrowthStatCard
             key={kpi.label}
             icon={KPI_ICONS[idx].icon}
@@ -62,12 +130,12 @@ const CustomerRewards = () => {
               </tr>
             </thead>
             <tbody>
-              {REWARDS.map((reward) => (
+              {rows.map((reward) => (
                 <tr key={reward.key} className="border-b border-grey-6 last:border-0">
                   <td className="px-4 sm:px-5 py-3">
                     <div className="flex items-center gap-2.5">
                       <span className="w-8 h-8 rounded-full bg-secondary-6 text-primary-green-300 flex items-center justify-center shrink-0">
-                        {TYPE_ICONS[reward.type]}
+                        {TYPE_ICONS[reward.type] ?? <Gift className="w-4 h-4" />}
                       </span>
                       <span className="font-bold text-grey-1">
                         {reward.name}

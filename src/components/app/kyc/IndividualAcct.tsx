@@ -1,5 +1,6 @@
 "use client";
 
+import { useKycHook } from "@/hooks/useKycHook";
 import { AlertCircle, CheckCircle, Shield } from "lucide-react";
 import { useState } from "react";
 import Tier1Form from "./Tier1form";
@@ -8,7 +9,11 @@ import Tier2Form from "./TierTwoForm";
 
 const IndividualTierFlow = () => {
   const [currentTier, setCurrentTier] = useState<1 | 2 | 3>(1);
-  const [completedTiers, setCompletedTiers] = useState<number[]>([1, 2, 3]);
+  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
+
+  // One hook instance for the whole flow — all three tiers share this form, so
+  // each cumulative submit can send everything captured by earlier tiers.
+  const kyc = useKycHook();
 
   const handleTierComplete = (tier: number) => {
     if (!completedTiers.includes(tier)) {
@@ -18,16 +23,10 @@ const IndividualTierFlow = () => {
 
   const canAccessTier = (tier: number) => {
     if (tier === 1) return true;
-    if (tier === 2) return true;
-    if (tier === 3) return true;
+    if (tier === 2) return completedTiers.includes(1);
+    if (tier === 3) return completedTiers.includes(2);
     return false;
   };
-  // const canAccessTier = (tier: number) => {
-  //   if (tier === 1) return true;
-  //   if (tier === 2) return completedTiers.includes(1);
-  //   if (tier === 3) return completedTiers.includes(2);
-  //   return false;
-  // };
 
   return (
     <div className="space-y-6">
@@ -42,19 +41,19 @@ const IndividualTierFlow = () => {
               tier: 1,
               title: "Tier 1: Basic Verification",
               limit: "₦5,000,000",
-              requirement: "BVN or NIN",
+              requirement: "NIN",
             },
             {
               tier: 2,
               title: "Tier 2: Enhanced Verification",
               limit: "₦10,000,000",
-              requirement: "BVN + NIN",
+              requirement: "BVN",
             },
             {
               tier: 3,
               title: "Tier 3: Full Verification",
               limit: "₦50,000,000",
-              requirement: "Proof of Address",
+              requirement: "Residential Address",
             },
           ].map((item) => (
             <div
@@ -109,10 +108,10 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Complete basic verification to unlock ₦5,000,000 transaction limit
+            Provide your NIN to unlock a ₦5,000,000 transaction limit
           </p>
 
-          <Tier1Form onComplete={() => handleTierComplete(1)} />
+          <Tier1Form kyc={kyc} onComplete={() => handleTierComplete(1)} />
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 mt-6">
             <AlertCircle className="text-blue-600 shrink-0" size={20} />
@@ -136,7 +135,7 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Provide both BVN and NIN to increase your limit to ₦10,000,000
+            Add your BVN to increase your limit to ₦10,000,000
           </p>
 
           {!completedTiers.includes(1) ? (
@@ -148,7 +147,7 @@ const IndividualTierFlow = () => {
             </div>
           ) : (
             <>
-              <Tier2Form onComplete={() => handleTierComplete(2)} />
+              <Tier2Form kyc={kyc} onComplete={() => handleTierComplete(2)} />
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 mt-6">
                 <AlertCircle className="text-blue-600 shrink-0" size={20} />
@@ -173,7 +172,8 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Upload proof of address to unlock the maximum limit of ₦50,000,000
+            Confirm your residential address to unlock the maximum limit of
+            ₦50,000,000
           </p>
 
           {!completedTiers.includes(2) ? (
@@ -185,17 +185,16 @@ const IndividualTierFlow = () => {
             </div>
           ) : (
             <>
-              <Tier3Form onComplete={() => handleTierComplete(3)} />
+              <Tier3Form kyc={kyc} onComplete={() => handleTierComplete(3)} />
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex gap-3 mt-6">
                 <AlertCircle className="text-blue-600 shrink-0" size={20} />
                 <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">Accepted documents:</p>
-                  <ul className="list-disc ml-4 space-y-1">
-                    <li>Utility bills (electricity, water, gas)</li>
-                    <li>Bank statements</li>
-                    <li>Government-issued documents with address</li>
-                  </ul>
+                  <p>
+                    Start typing and pick your address from the list — selecting
+                    a suggestion is what confirms the state we send for
+                    verification.
+                  </p>
                 </div>
               </div>
             </>

@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "./lib/store/types";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forget-password", "/unauthorized"];
+// Customer-facing loyalty routes reached by scanning a campaign QR code. These
+// are prefix matches because the token/code is part of the path, and unlike the
+// auth pages a signed-in user must NOT be bounced away from them — a merchant
+// testing their own QR should still see the join page.
+const PUBLIC_PATH_PREFIXES = ["/loyalty/join", "/loyalty/progress"];
 const PROTECTED_PATHS = {
   "/inventory": [
     "OWNER",
@@ -27,7 +32,10 @@ const PROTECTED_PATHS = {
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const isPublicPath = PUBLIC_PATHS.includes(path);
+  const isCustomerLoyaltyPath = PUBLIC_PATH_PREFIXES.some((prefix) =>
+    path.startsWith(prefix),
+  );
+  const isPublicPath = PUBLIC_PATHS.includes(path) || isCustomerLoyaltyPath;
   const isLogoutRedirect =
     request.nextUrl.searchParams.get("fromLogout") === "true";
 
@@ -53,7 +61,12 @@ export function middleware(request: NextRequest) {
     | undefined;
 
   // Redirect logged-in users from public paths
-  if (isPublicPath && accessToken && path !== "/unauthorized") {
+  if (
+    isPublicPath &&
+    accessToken &&
+    path !== "/unauthorized" &&
+    !isCustomerLoyaltyPath
+  ) {
     return NextResponse.redirect(new URL("/pos", request.nextUrl));
   }
 
