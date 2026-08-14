@@ -365,32 +365,19 @@ const PartnerCard = ({
       >
         {icon}
       </div>
+      {/* Status only — the activate/deactivate control lives at the foot of
+          the card so the primary action can own this corner's visual weight. */}
       {!comingSoon && (
-        <div className="flex flex-col items-end gap-1.5">
-          <span
-            className={cn(
-              "text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
-              checked
-                ? "bg-secondary-6 text-primary-green-100"
-                : "bg-grey-6 text-grey-3",
-            )}
-          >
-            {checked ? "Active" : "Inactive"}
-          </span>
-          <Button
-            type="button"
-            size="sm"
-            variant={checked ? "outline" : "default"}
-            className={cn(
-              "h-7 px-2.5 text-xs",
-              checked && "border-error-1/30 text-error-1 hover:bg-error-2 hover:text-error-1",
-            )}
-            onClick={() => onToggle(!checked)}
-            disabled={disabled}
-          >
-            {checked ? "Deactivate" : "Activate"}
-          </Button>
-        </div>
+        <span
+          className={cn(
+            "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
+            checked
+              ? "bg-secondary-6 text-primary-green-100"
+              : "bg-grey-6 text-grey-3",
+          )}
+        >
+          {checked ? "Active" : "Inactive"}
+        </span>
       )}
     </div>
     <h5
@@ -408,27 +395,51 @@ const PartnerCard = ({
     </h5>
     <p
       className={cn(
-        "text-xs mt-1 mb-3 leading-relaxed",
+        "text-xs mt-1 leading-relaxed",
         comingSoon ? "text-grey-4" : "text-grey-3",
       )}
     >
       {tagline}
     </p>
     {!comingSoon && (
-      <div className="flex items-center gap-2 pt-3 border-t border-grey-5 text-xs">
+      <div className="mt-4">
+        {/* One filled button only. Configure is what a merchant actually needs
+            — activating without a pickup address saves nothing usable — so it
+            takes the single primary action and everything else drops to a
+            quiet text row. Three stacked full-width buttons read as a list of
+            equals, which is the opposite of a hierarchy. */}
         {onConfigure && (
-          <button
+          <Button
+            type="button"
             onClick={onConfigure}
-            className="text-primary-green-300 hover:text-primary-green-100 font-bold inline-flex items-center gap-1 cursor-pointer"
+            className="w-full h-9 gap-1.5 text-[13px] font-bold"
           >
-            <SettingsIcon className="w-3 h-3" />
+            <SettingsIcon className="w-3.5 h-3.5" />
             {isConfigured ? "Configure" : "Set up"}
-          </button>
+          </Button>
         )}
-        {onConfigure && <span className="text-grey-4">•</span>}
-        <button className="text-grey-3 hover:text-grey-2 font-bold cursor-pointer">
-          Get help
-        </button>
+
+        <div className="flex items-center justify-between gap-2 mt-2.5">
+          <button
+            type="button"
+            onClick={() => onToggle(!checked)}
+            disabled={disabled}
+            className={cn(
+              "text-[11px] font-bold cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+              checked
+                ? "text-error-1 hover:text-error-1/80"
+                : "text-primary-green-300 hover:text-primary-green-100",
+            )}
+          >
+            {checked ? "Deactivate" : "Activate"}
+          </button>
+          <button
+            type="button"
+            className="text-[11px] font-bold text-grey-3 hover:text-grey-2 cursor-pointer"
+          >
+            Get help
+          </button>
+        </div>
       </div>
     )}
   </div>

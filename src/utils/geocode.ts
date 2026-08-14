@@ -68,6 +68,30 @@ export const fetchAddressSuggestions = async (
   return data as GeocodeResponse;
 };
 
+/**
+ * Turns a device GPS fix into a readable address. Returns null when the
+ * provider has nothing at those coordinates, when geocoding is unconfigured,
+ * or on any failure — callers treat a null as "let the merchant type it",
+ * never as an error worth interrupting them with.
+ */
+export const fetchAddressFromCoordinates = async (
+  latitude: number,
+  longitude: number,
+): Promise<GeocodeSuggestion | null> => {
+  const url = new URL("/api/geocode/reverse", window.location.origin);
+  url.searchParams.set("lat", String(latitude));
+  url.searchParams.set("lon", String(longitude));
+
+  try {
+    const response = await fetch(url.toString(), { method: "GET" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
+    return (data?.data?.[0] as GeocodeSuggestion) ?? null;
+  } catch {
+    return null;
+  }
+};
+
 // ─── Fallback: city / state centroid ────────────────────────────────────────
 
 const toFixed6 = (v: unknown): string => {

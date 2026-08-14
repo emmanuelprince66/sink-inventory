@@ -15,6 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
+import { fetchAddressFromCoordinates } from "@/utils/geocode";
 import { City, State } from "country-state-city";
 import {
   CheckCircle2,
@@ -29,8 +30,32 @@ import {
   Save,
   Settings as SettingsIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import BoxSizePickerModal from "./BoxSizePickerModal";
+
+// A GPS fix carries an accuracy radius in metres. A real satellite fix lands
+// under ~50m; a phone using wifi/cell triangulation lands in the hundreds. When
+// the browser has neither it falls back to IP geolocation, which resolves to
+// the ISP's egress node and can be hundreds of kilometres out — that is what
+// puts a merchant in Akure on Third Mainland Bridge in Lagos.
+//
+// Anything beyond this radius is rejected outright rather than warned about:
+// a pin that wrong would misroute every rider, and the address it reverse
+// geocodes to looks entirely plausible, so a warning alone gets clicked past.
+const MAX_USABLE_ACCURACY_M = 1_000;
+// Above this we still accept the fix but say plainly that it is approximate.
+// Also the early-exit bar: once a reading is this tight, stop watching.
+const GOOD_ACCURACY_M = 100;
+// How long to keep listening for a better fix before taking the best so far.
+// Long enough for a phone to move from a cell-tower estimate to a satellite
+// lock, short enough that nobody thinks the button is broken.
+const GPS_WATCH_WINDOW_MS = 8_000;
+
+/** "12m" / "1.4km" / "604km" — metres are unreadable past a few thousand. */
+const formatAccuracy = (metres: number) =>
+  metres < 1_000
+    ? `${Math.round(metres)}m`
+    : `${(metres / 1_000).toFixed(metres < 10_000 ? 1 : 0)}km`;
 
 interface ShipbubbleSettingsModalProps {
   open: boolean;
@@ -56,6 +81,7 @@ const ShipbubbleSettingsModal = ({
     validateSettings,
     isSaving,
     resetFromBusiness,
+    applyAddressSuggestion,
     clearCoordinates,
     setCoordinates,
     hasCoordinates,
@@ -75,6 +101,86 @@ const ShipbubbleSettingsModal = ({
   // Metres of uncertainty reported by the device — surfaced so a merchant can
   // tell a rooftop-accurate fix from a cell-tower guess before saving.
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  // The human-readable address the captured point resolves to. Null means the
+  // lookup found nothing or failed — the pin is still valid either way, so
+  // this never blocks saving.
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  const [resolvingAddress, setResolvingAddress] = useState(false);
+  // Best accuracy seen so far in the current capture, shown live so the
+  // merchant can watch the fix tighten instead of staring at a spinner.
+  const [liveAccuracy, setLiveAccuracy] = useState<number | null>(null);
+
+  const watchIdRef = useRef<number | null>(null);
+  const watchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bestFixRef = useRef<GeolocationCoordinates | null>(null);
+
+  const stopWatching = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+    if (watchTimerRef.current) {
+      clearTimeout(watchTimerRef.current);
+      watchTimerRef.current = null;
+    }
+  };
+
+  // A device rarely returns its best fix first: phones typically answer from
+  // the cell network within a second, then tighten to a satellite lock a few
+  // seconds later. Watching for a short window and keeping the tightest
+  // reading is the difference between pinning 800m and pinning 15m.
+  const applyBestFix = () => {
+    stopWatching();
+
+    const coords = bestFixRef.current;
+    if (!coords) {
+      setGpsStatus("error");
+      setGpsError("Couldn't get your location. Please try again.");
+      return;
+    }
+
+    const { latitude, longitude, accuracy } = coords;
+
+    // Reject an unusable fix rather than pinning it. This also skips the
+    // reverse geocode: resolving 604km-wide coordinates returns a real,
+    // confident-looking address for somewhere the merchant has never been,
+    // which misleads far more than showing nothing.
+    if (Number.isFinite(accuracy) && accuracy > MAX_USABLE_ACCURACY_M) {
+      setGpsStatus("error");
+      setGpsAccuracy(null);
+      setResolvedAddress(null);
+      setGpsError(
+        `Your browser could only place you within ${formatAccuracy(
+          accuracy,
+        )}, so this location was not saved. That usually means no GPS is available — common on desktop, where the position is guessed from your internet connection. Open this page on a phone at your pickup point, or fill in the address below by hand.`,
+      );
+      return;
+    }
+
+    // The pin is what riders navigate to, so commit it before the lookup — a
+    // slow or failed reverse geocode must never cost the merchant their fix.
+    setCoordinates(latitude, longitude);
+    setGpsAccuracy(Number.isFinite(accuracy) ? Math.round(accuracy) : null);
+    setGpsStatus("success");
+
+    // Then fill the address in behind it, purely as confirmation and to save
+    // typing. Failure is silent by design.
+    setResolvingAddress(true);
+    fetchAddressFromCoordinates(latitude, longitude)
+      .then((suggestion) => {
+        if (!suggestion) return;
+        setResolvedAddress(suggestion.label || suggestion.address || null);
+        applyAddressSuggestion({
+          ...suggestion,
+          // Keep the device's own fix rather than the provider's snapped
+          // centroid for the matched building.
+          latitude: latitude.toFixed(6),
+          longitude: longitude.toFixed(6),
+        });
+        if (suggestion.city) setCustomCityMode(true);
+      })
+      .finally(() => setResolvingAddress(false));
+  };
 
   const handleCaptureGps = () => {
     if (!navigator.geolocation) {
@@ -83,35 +189,50 @@ const ShipbubbleSettingsModal = ({
       return;
     }
 
+    stopWatching();
+    bestFixRef.current = null;
+    setLiveAccuracy(null);
     setGpsStatus("loading");
     setGpsError(null);
+    setResolvedAddress(null);
 
-    navigator.geolocation.getCurrentPosition(
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
-        // Coordinates only — no reverse geocode. The merchant fills the street
-        // themselves; a second network call would only add a failure mode.
-        setCoordinates(position.coords.latitude, position.coords.longitude);
-        setGpsAccuracy(
-          Number.isFinite(position.coords.accuracy)
-            ? Math.round(position.coords.accuracy)
-            : null,
-        );
-        setGpsStatus("success");
+        const best = bestFixRef.current;
+        if (!best || position.coords.accuracy < best.accuracy) {
+          bestFixRef.current = position.coords;
+          setLiveAccuracy(Math.round(position.coords.accuracy));
+        }
+
+        // Already precise enough that more waiting buys nothing.
+        if (position.coords.accuracy <= GOOD_ACCURACY_M) applyBestFix();
       },
       (err) => {
+        stopWatching();
         setGpsStatus("error");
         setGpsAccuracy(null);
+        setLiveAccuracy(null);
         setGpsError(
           err.code === err.PERMISSION_DENIED
             ? "Location access was denied. Allow it in your browser settings, then try again."
             : err.code === err.TIMEOUT
-              ? "Timed out finding your location. Move somewhere with a clearer signal and try again."
+              ? "Timed out finding your location. Move somewhere with a clearer view of the sky and try again."
               : "Couldn't get your location. Please try again.",
         );
       },
-      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: GPS_WATCH_WINDOW_MS, maximumAge: 0 },
     );
+
+    // Hard stop: take whatever the best reading was by the end of the window.
+    watchTimerRef.current = setTimeout(applyBestFix, GPS_WATCH_WINDOW_MS);
   };
+
+  // Never leave a watch running — it keeps the GPS radio active and drains a
+  // phone battery long after the modal is gone.
+  useEffect(() => stopWatching, []);
+  useEffect(() => {
+    if (!open) stopWatching();
+  }, [open]);
   const { showToast } = useToast();
 
   const [openBoxPicker, setOpenBoxPicker] = useState(false);
@@ -153,6 +274,7 @@ const ShipbubbleSettingsModal = ({
     setGpsStatus("idle");
     setGpsAccuracy(null);
     setGpsError(null);
+    setResolvedAddress(null);
   };
 
   // Re-hydrate from the live business object every time the modal re-opens.
@@ -250,12 +372,25 @@ const ShipbubbleSettingsModal = ({
                             <p className="text-xs font-bold text-emerald-900">
                               Pickup point pinned
                             </p>
-                            <p className="mt-1 font-mono text-xs text-emerald-800 break-all">
+                            {/* The resolved address is the check a merchant can
+                                actually verify — coordinates alone tell them
+                                nothing about whether the pin is right. */}
+                            {resolvingAddress ? (
+                              <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Looking up the address…
+                              </p>
+                            ) : resolvedAddress ? (
+                              <p className="mt-1 text-xs font-medium text-emerald-900">
+                                {resolvedAddress}
+                              </p>
+                            ) : null}
+                            <p className="mt-1 font-mono text-[11px] text-emerald-800 break-all">
                               {settings.latitude}, {settings.longitude}
                             </p>
                             <p className="mt-1 text-[11px] text-emerald-700">
                               {gpsAccuracy != null
-                                ? `Accurate to about ${gpsAccuracy}m`
+                                ? `Accurate to about ${formatAccuracy(gpsAccuracy)}`
                                 : "Saved from a previous capture"}
                             </p>
                           </div>
@@ -271,7 +406,9 @@ const ShipbubbleSettingsModal = ({
                           {gpsStatus === "loading" ? (
                             <>
                               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              Updating
+                              {liveAccuracy != null
+                                ? `±${formatAccuracy(liveAccuracy)}`
+                                : "Updating"}
                             </>
                           ) : (
                             <>
@@ -281,12 +418,13 @@ const ShipbubbleSettingsModal = ({
                           )}
                         </Button>
                       </div>
-                      {/* A fix worse than ~100m is usually a cell-tower guess
-                          rather than GPS, and will misdirect a rider. */}
-                      {gpsAccuracy != null && gpsAccuracy > 100 && (
+                      {/* Accepted, but wide enough to be worth flagging — a
+                          few hundred metres is wifi/cell triangulation rather
+                          than a satellite fix. */}
+                      {gpsAccuracy != null && gpsAccuracy > GOOD_ACCURACY_M && (
                         <p className="mt-2 text-[11px] font-medium text-amber-700">
-                          This is a low-accuracy fix. Step outside and recapture
-                          for a tighter pin.
+                          This pin is approximate. Step outside and recapture
+                          for a tighter fix.
                         </p>
                       )}
                     </div>
@@ -307,7 +445,9 @@ const ShipbubbleSettingsModal = ({
                         {gpsStatus === "loading" ? (
                           <>
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Getting location…
+                            {liveAccuracy != null
+                              ? `Improving fix… ±${formatAccuracy(liveAccuracy)}`
+                              : "Getting location…"}
                           </>
                         ) : (
                           <>
