@@ -372,22 +372,27 @@ const ShipbubbleSettingsModal = ({
                             <p className="text-xs font-bold text-emerald-900">
                               Pickup point pinned
                             </p>
-                            {/* The resolved address is the check a merchant can
-                                actually verify — coordinates alone tell them
-                                nothing about whether the pin is right. */}
+                            {/* The address leads: it is the only part a
+                                merchant can actually check. A lat/long pair
+                                reads as noise — nobody can tell whether
+                                6.471680 is their street or the next state.
+                                Coordinates appear only as the fallback when
+                                the lookup returns nothing, so the card still
+                                confirms that something was pinned. */}
                             {resolvingAddress ? (
                               <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700">
                                 <Loader2 className="h-3 w-3 animate-spin" />
                                 Looking up the address…
                               </p>
                             ) : resolvedAddress ? (
-                              <p className="mt-1 text-xs font-medium text-emerald-900">
+                              <p className="mt-1 text-[13px] font-semibold leading-snug text-emerald-900">
                                 {resolvedAddress}
                               </p>
-                            ) : null}
-                            <p className="mt-1 font-mono text-[11px] text-emerald-800 break-all">
-                              {settings.latitude}, {settings.longitude}
-                            </p>
+                            ) : (
+                              <p className="mt-1 font-mono text-[11px] text-emerald-800 break-all">
+                                {settings.latitude}, {settings.longitude}
+                              </p>
+                            )}
                             <p className="mt-1 text-[11px] text-emerald-700">
                               {gpsAccuracy != null
                                 ? `Accurate to about ${formatAccuracy(gpsAccuracy)}`
