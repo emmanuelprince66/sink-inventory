@@ -213,4 +213,12 @@ export const queryKey = {
     getOverview: "get-customer-analytics-overview",
     getTopSpending: "get-customer-analytics-top-spending",
   },
+  segment: {
+    getSegments: "get-customer-segments",
+    createSegment: "create-customer-segment",
+    getSegmentDetail: "get-customer-segment-detail",
+    updateSegment: "update-customer-segment",
+    deleteSegment: "delete-customer-segment",
+    getSegmentCustomers: "get-customer-segment-customers",
+  },
 };

@@ -111,7 +111,10 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
         { label: "Avg Lifetime Value", value: formatMoney(Number(overview.avg_lifetime_value.value ?? 0)), delta: pctDelta(overview.avg_lifetime_value) },
         { label: "Loyalty Members", value: asCount(overview.loyalty_members.value), delta: pctDelta(overview.loyalty_members) },
       ]
-    : OVERVIEW_KPIS;
+    : // Keep the designed card grid, but show placeholders rather than the
+      // sample figures — a fabricated "₦95K" is indistinguishable from a real
+      // one on a metrics screen.
+      OVERVIEW_KPIS.map((kpi) => ({ ...kpi, value: "—", delta: "" }));
 
   // An empty series renders an empty state rather than a sample trend — a
   // fabricated line on an analytics chart reads as real data.

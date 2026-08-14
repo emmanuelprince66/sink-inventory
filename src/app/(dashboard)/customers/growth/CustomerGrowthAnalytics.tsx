@@ -92,7 +92,8 @@ const CustomerGrowthAnalytics = ({ month }: { month?: string }) => {
           delta: `${overview.revenue_per_customer.mom_percentage >= 0 ? "+" : ""}${overview.revenue_per_customer.mom_percentage}% vs last month`,
         },
       ]
-    : ANALYTICS_KPIS;
+    : // Placeholders rather than sample figures — see CustomerGrowthOverview.
+      ANALYTICS_KPIS.map((kpi) => ({ ...kpi, value: "—", delta: "" }));
 
   // Fall back to the sample series until the business has live analytics.
   // Empty series render an empty state rather than a sample trend.
@@ -108,25 +109,10 @@ const CustomerGrowthAnalytics = ({ month }: { month?: string }) => {
   const nvrReturning =
     charts?.new_vs_returning?.map((p) => p.returning_customers) ?? [];
 
-  const liveSpenders = dashboardRes?.data?.top_spending_customers;
-  const topSpenders: TopSpendingCustomer[] = liveSpenders?.length
-    ? liveSpenders
-    : TOP_SPENDERS.map((s, i) => ({
-        rank: i + 1,
-        id: String(i),
-        initials: s.name
-          .split(" ")
-          .map((p) => p[0])
-          .slice(0, 2)
-          .join("")
-          .toUpperCase(),
-        name: s.name,
-        tier_name: s.tier,
-        visits: s.visits,
-        lifetime_value: s.lifetimeValue,
-        avg_spend: s.avgSpend,
-        retention_score: s.score,
-      }));
+  // No sample leaderboard: invented customer names and spend figures in a
+  // ranked table read as real records.
+  const topSpenders: TopSpendingCustomer[] =
+    dashboardRes?.data?.top_spending_customers ?? [];
 
   const retentionData = {
     labels: retentionLabels,

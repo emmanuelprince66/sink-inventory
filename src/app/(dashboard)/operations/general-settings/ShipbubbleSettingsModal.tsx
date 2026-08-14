@@ -1,6 +1,5 @@
 "use client";
 
-import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { CustomModal } from "@/components/app/CustomModal";
 import { PhoneInput } from "@/components/app/PhoneInput";
 import { Button } from "@/components/ui/button";
@@ -57,22 +56,25 @@ const ShipbubbleSettingsModal = ({
     validateSettings,
     isSaving,
     resetFromBusiness,
-    applyAddressSuggestion,
     clearCoordinates,
     setCoordinates,
     hasCoordinates,
   } = useShipbubbleHook();
 
-  // GPS fallback — shown only when an address search comes back empty, which
-  // is the common case for Nigerian addresses no geocoder indexes ("beside
-  // the filling station, Ikeja"). Valid here precisely because the merchant is
-  // standing at the pickup point they're configuring; it is deliberately NOT
-  // offered on the order-delivery address, where the merchant is at the shop
-  // and would pin the customer's delivery to their own location.
+  // This flow pins the pickup point from the device's own GPS rather than by
+  // geocoding a typed address. That inversion is deliberate and specific to
+  // this screen: the merchant is physically standing at the pickup location
+  // they're configuring, so the device knows it more precisely than any
+  // geocoder can infer from "beside the filling station, Ikeja". The order
+  // form still uses the autocomplete — there the merchant is at the shop and
+  // GPS would pin the customer's delivery to the wrong place.
   const [gpsStatus, setGpsStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
   const [gpsError, setGpsError] = useState<string | null>(null);
+  // Metres of uncertainty reported by the device — surfaced so a merchant can
+  // tell a rooftop-accurate fix from a cell-tower guess before saving.
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
 
   const handleCaptureGps = () => {
     if (!navigator.geolocation) {
@@ -86,21 +88,28 @@ const ShipbubbleSettingsModal = ({
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        // Coordinates only — no reverse geocode. The merchant already has the
-        // address in their head and the text fields in front of them; a second
-        // network call just adds a failure mode.
+        // Coordinates only — no reverse geocode. The merchant fills the street
+        // themselves; a second network call would only add a failure mode.
         setCoordinates(position.coords.latitude, position.coords.longitude);
+        setGpsAccuracy(
+          Number.isFinite(position.coords.accuracy)
+            ? Math.round(position.coords.accuracy)
+            : null,
+        );
         setGpsStatus("success");
       },
       (err) => {
         setGpsStatus("error");
+        setGpsAccuracy(null);
         setGpsError(
           err.code === err.PERMISSION_DENIED
-            ? "Location access was denied. Allow it in your browser settings and try again."
-            : "Couldn't get your location. Please try again.",
+            ? "Location access was denied. Allow it in your browser settings, then try again."
+            : err.code === err.TIMEOUT
+              ? "Timed out finding your location. Move somewhere with a clearer signal and try again."
+              : "Couldn't get your location. Please try again.",
         );
       },
-      { enableHighAccuracy: true, timeout: 10_000 },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
   };
   const { showToast } = useToast();
@@ -138,9 +147,12 @@ const ShipbubbleSettingsModal = ({
     updateSetting("city", "");
     setCustomCityMode(false);
     // Changing the state by hand means the pinned point is in the wrong state
-    // entirely. Drop it — save() will re-derive a centroid from the new
-    // state/city if the merchant doesn't pick a fresh suggestion.
+    // entirely, so drop it and send the merchant back to the capture prompt
+    // rather than letting a stale pin be saved against the new state.
     clearCoordinates();
+    setGpsStatus("idle");
+    setGpsAccuracy(null);
+    setGpsError(null);
   };
 
   // Re-hydrate from the live business object every time the modal re-opens.
@@ -226,81 +238,106 @@ const ShipbubbleSettingsModal = ({
             description="Where Shipbubble riders should collect every shipment."
           >
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Pinned coordinates — the primary input for this flow. */}
               <div className="sm:col-span-2">
-                <Field label="Street">
-                  <AddressAutocomplete
-                    value={settings.street}
-                    placeholder="e.g. 14 Allen Avenue, Ikeja"
-                    hasCoordinates={hasCoordinates}
-                    onChange={(v) => {
-                      updateSetting("street", v);
-                      // Typing invalidates whatever was pinned — see
-                      // clearCoordinates() in useShipbubbleHook.
-                      if (hasCoordinates) clearCoordinates();
-                    }}
-                    onSelect={(suggestion) => {
-                      applyAddressSuggestion(suggestion);
-                      setGpsStatus("idle");
-                      setGpsError(null);
-                      // The city dropdown is driven by the state, so a
-                      // suggestion that carries its own city has to leave
-                      // free-text mode on — the resolved city won't
-                      // necessarily exist in country-state-city's list.
-                      if (suggestion.city) setCustomCityMode(true);
-                    }}
-                    renderNoResults={() => (
-                      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                        <div className="space-y-2.5">
-                          <p className="text-xs leading-relaxed text-blue-900">
-                            <span className="font-bold">
-                              Can&apos;t find your address?
-                            </span>{" "}
-                            While you&apos;re at your pickup location, tap
-                            below and we&apos;ll capture its exact coordinates
-                            so couriers can find you. Fill in the street, city
-                            and state yourself.
-                          </p>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={handleCaptureGps}
-                            disabled={gpsStatus === "loading"}
-                            className="border-blue-400 text-blue-700 hover:bg-blue-100 text-xs font-semibold"
-                          >
-                            {gpsStatus === "loading" ? (
-                              <>
-                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                                Getting location...
-                              </>
-                            ) : (
-                              <>
-                                <LocateFixed className="mr-2 h-3.5 w-3.5" />
-                                Use my current location
-                              </>
-                            )}
-                          </Button>
-                          {gpsStatus === "error" && gpsError && (
-                            <p className="text-xs text-red-600">{gpsError}</p>
-                          )}
+                <Field label="Pickup Coordinates">
+                  {hasCoordinates ? (
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-emerald-900">
+                              Pickup point pinned
+                            </p>
+                            <p className="mt-1 font-mono text-xs text-emerald-800 break-all">
+                              {settings.latitude}, {settings.longitude}
+                            </p>
+                            <p className="mt-1 text-[11px] text-emerald-700">
+                              {gpsAccuracy != null
+                                ? `Accurate to about ${gpsAccuracy}m`
+                                : "Saved from a previous capture"}
+                            </p>
+                          </div>
                         </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCaptureGps}
+                          disabled={gpsStatus === "loading"}
+                          className="shrink-0 border-emerald-400 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold"
+                        >
+                          {gpsStatus === "loading" ? (
+                            <>
+                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                              Updating
+                            </>
+                          ) : (
+                            <>
+                              <LocateFixed className="mr-1.5 h-3.5 w-3.5" />
+                              Recapture
+                            </>
+                          )}
+                        </Button>
                       </div>
-                    )}
-                  />
-
-                  {/* Rendered outside the autocomplete: once GPS succeeds
-                      hasCoordinates flips true, which hides the fallback slot
-                      — so the confirmation has to live here or it would
-                      disappear the instant it became true. */}
-                  {gpsStatus === "success" && hasCoordinates && (
-                    <div className="mt-2 flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-emerald-800">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p className="text-xs font-medium leading-relaxed">
-                        Location captured. Now fill in the street, city and
-                        state below so couriers have a readable address too.
+                      {/* A fix worse than ~100m is usually a cell-tower guess
+                          rather than GPS, and will misdirect a rider. */}
+                      {gpsAccuracy != null && gpsAccuracy > 100 && (
+                        <p className="mt-2 text-[11px] font-medium text-amber-700">
+                          This is a low-accuracy fix. Step outside and recapture
+                          for a tighter pin.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-grey-5 bg-grey-6/40 p-4 text-center">
+                      <MapPin className="mx-auto h-5 w-5 text-grey-4" />
+                      <p className="mt-2 text-xs leading-relaxed text-grey-3">
+                        Stand at your pickup location and capture its
+                        coordinates. Riders are routed to this exact point.
                       </p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleCaptureGps}
+                        disabled={gpsStatus === "loading"}
+                        className="mt-3 text-xs font-semibold"
+                      >
+                        {gpsStatus === "loading" ? (
+                          <>
+                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                            Getting location…
+                          </>
+                        ) : (
+                          <>
+                            <LocateFixed className="mr-2 h-3.5 w-3.5" />
+                            Use my current location
+                          </>
+                        )}
+                      </Button>
                     </div>
                   )}
+
+                  {gpsStatus === "error" && gpsError && (
+                    <p className="mt-2 text-xs font-medium text-red-600">
+                      {gpsError}
+                    </p>
+                  )}
+                </Field>
+              </div>
+
+              <div className="sm:col-span-2">
+                <Field label="Street">
+                  <Input
+                    value={settings.street}
+                    onChange={(e) => updateSetting("street", e.target.value)}
+                    placeholder="e.g. 14 Allen Avenue, Ikeja"
+                  />
+                  <p className="mt-1.5 text-[11px] text-grey-3">
+                    Written for the rider to read — the coordinates above are
+                    what they navigate to.
+                  </p>
                 </Field>
               </div>
               <Field label="State">
