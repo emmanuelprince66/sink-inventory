@@ -4,6 +4,7 @@ import { useDeleteSegmentMutation } from "@/api/segment/delete-segment";
 import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
 import { useUpdateSegmentMutation } from "@/api/segment/update-segment";
 import { CustomModal } from "@/components/app/CustomModal";
+import DataGapBadge from "@/components/app/DataGapBadge";
 import { Spinner } from "@/components/app/Spinner";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@/lib/react-query";
@@ -11,80 +12,18 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { toList } from "@/types/api";
 import type { CustomerSegment } from "@/types/segment";
-import {
-  AlertCircle,
-  Crown,
-  Heart,
-  Pause,
-  Play,
-  RotateCcw,
-  Star,
-  Trash2,
-  Users,
-} from "lucide-react";
+import { Pause, Play, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import AddSegment from "./AddSegment";
 import SegmentCustomers from "./SegmentCustomers";
+import { toneFor } from "./segmentTone";
 
-// segment_type's enum members are not published in the spec, so the icon/tone
-// lookup matches on substrings instead of exact keys — an unrecognised type
-// still renders with the neutral fallback rather than a blank card.
-const TONE_BY_KEYWORD: Array<{
-  match: RegExp;
-  icon: React.ReactNode;
-  iconBg: string;
-  badgeBg: string;
-  buttonBg: string;
-}> = [
-  {
-    match: /vip|top|high/i,
-    icon: <Crown className="w-4 h-4" />,
-    iconBg: "bg-violet-100 text-violet-600",
-    badgeBg: "bg-violet-100 text-violet-700",
-    buttonBg: "bg-violet-100 text-violet-700 hover:bg-violet-200",
-  },
-  {
-    match: /frequent|loyal/i,
-    icon: <Star className="w-4 h-4" />,
-    iconBg: "bg-warning-2 text-warning-1",
-    badgeBg: "bg-warning-2 text-warning-1",
-    buttonBg: "bg-warning-2 text-warning-1 hover:bg-warning-2/70",
-  },
-  {
-    match: /new/i,
-    icon: <Users className="w-4 h-4" />,
-    iconBg: "bg-info-2 text-info-1",
-    badgeBg: "bg-info-2 text-info-1",
-    buttonBg: "bg-info-2 text-info-1 hover:bg-info-2/70",
-  },
-  {
-    match: /risk|churn|lapsing/i,
-    icon: <AlertCircle className="w-4 h-4" />,
-    iconBg: "bg-error-2 text-error-1",
-    badgeBg: "bg-error-2 text-error-1",
-    buttonBg: "bg-error-2 text-error-1 hover:bg-error-2/70",
-  },
-  {
-    match: /inactive|dormant|lost/i,
-    icon: <RotateCcw className="w-4 h-4" />,
-    iconBg: "bg-grey-6 text-grey-3",
-    badgeBg: "bg-grey-6 text-grey-3",
-    buttonBg: "bg-grey-6 text-grey-3 hover:bg-grey-5",
-  },
-];
-
-const FALLBACK_TONE = {
-  icon: <Heart className="w-4 h-4" />,
-  iconBg: "bg-success-2 text-success-1",
-  badgeBg: "bg-success-2 text-success-1",
-  buttonBg: "bg-success-2 text-success-1 hover:bg-success-2/70",
-};
-
-const toneFor = (segment: CustomerSegment) => {
-  const haystack = `${segment.segment_type ?? ""} ${segment.name ?? ""}`;
-  return (
-    TONE_BY_KEYWORD.find((entry) => entry.match.test(haystack)) ?? FALLBACK_TONE
-  );
-};
+// Revenue, repeat rate and average spend are in the design but not in the
+// segments payload — it returns customer_count and nothing else. Rather than
+// invent them, the tiles render em-dashes and the tab carries a note saying
+// so. The real figures for a single segment are computed from its customers
+// in SegmentCustomers, which is the one place the data actually exists.
+const UNAVAILABLE = "—";
 
 const SegmentCard = ({
   segment,
@@ -95,7 +34,7 @@ const SegmentCard = ({
   onView: () => void;
   onChanged: () => void;
 }) => {
-  const tone = toneFor(segment);
+  const tone = toneFor(segment.segment_type, segment.name);
   const isActive = segment.is_active !== false;
 
   const { mutate: updateSegment, isPending: toggling } =
@@ -111,7 +50,12 @@ const SegmentCard = ({
     });
 
   return (
-    <div className="bg-white rounded-2xl border border-grey-5 p-4">
+    <div
+      className={cn(
+        "bg-white rounded-2xl border border-grey-5 p-4 flex flex-col",
+        !isActive && "opacity-60",
+      )}
+    >
       <div className="flex items-start justify-between mb-3">
         <div
           className={cn(
@@ -131,54 +75,63 @@ const SegmentCard = ({
         </span>
       </div>
 
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-3">
         <h3 className="text-base font-extrabold text-grey-1 truncate">
           {segment.name}
         </h3>
-        {segment.is_default && (
-          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-grey-6 text-grey-3">
-            Default
-          </span>
-        )}
         {!isActive && (
-          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-error-2 text-error-1">
+          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-grey-6 text-grey-3">
             Paused
           </span>
         )}
       </div>
 
-      <p className="text-[11px] text-grey-3 mb-3 truncate">
-        {segment.segment_type ?? "Custom segment"}
-        {segment.match_type ? ` · matches ${segment.match_type}` : ""}
-      </p>
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {[
+          { value: UNAVAILABLE, label: "Revenue" },
+          { value: UNAVAILABLE, label: "Repeat Rate" },
+          { value: UNAVAILABLE, label: "Avg Spend" },
+        ].map((stat) => (
+          <div key={stat.label} className="bg-grey-6 rounded-lg py-2 text-center">
+            <p className="text-sm font-extrabold text-grey-1">{stat.value}</p>
+            <p className="text-[10px] text-grey-3">{stat.label}</p>
+          </div>
+        ))}
+      </div>
 
       <button
         onClick={onView}
         className={cn(
-          "w-full flex items-center justify-center gap-1 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors",
+          "w-full flex items-center justify-center gap-1 py-2 rounded-full text-sm font-bold cursor-pointer transition-colors mt-auto",
           tone.buttonBg,
         )}
       >
         View Customers
-        <span aria-hidden>→</span>
+        <span aria-hidden>›</span>
       </button>
 
       <div className="flex items-center justify-end gap-1 mt-2">
-        <button
-          onClick={() => updateSegment({ is_active: !isActive })}
-          disabled={toggling || !segment.id}
-          title={isActive ? "Pause segment" : "Resume segment"}
-          className="p-1.5 rounded-lg text-grey-3 hover:bg-grey-6 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {toggling ? (
-            <Spinner className="w-3.5 h-3.5" />
-          ) : isActive ? (
-            <Pause className="w-3.5 h-3.5" />
-          ) : (
-            <Play className="w-3.5 h-3.5" />
-          )}
-        </button>
-        {/* Default segments are seeded by the backend and cannot be removed. */}
+        {/* Pause is deliberately absent. GET /customer/segment/{id}/ returns
+            only active segments, so setting is_active:false would drop the
+            card off this list with no way to bring it back — a one-way door
+            dressed up as a toggle. Restored as a pause/resume pair once the
+            list endpoint can return inactive segments too.
+            A paused segment that somehow appears here can still be resumed. */}
+        {!isActive && (
+          <button
+            onClick={() => updateSegment({ is_active: true })}
+            disabled={toggling || !segment.id}
+            title="Resume segment"
+            className="p-1.5 rounded-lg text-primary-green-300 hover:bg-primary-green-500 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {toggling ? (
+              <Spinner className="w-3.5 h-3.5" />
+            ) : (
+              <Play className="w-3.5 h-3.5" />
+            )}
+          </button>
+        )}
+        {/* Defaults are seeded by the backend and cannot be removed. */}
         {!segment.is_default && (
           <button
             onClick={() => deleteSegment(undefined)}
@@ -202,6 +155,8 @@ const CustomerSegments = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<CustomerSegment | null>(null);
+  const [editing, setEditing] = useState<CustomerSegment | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const { data, isLoading } = useFetchSegmentsQuery({
     params: { id: business_id ?? "" },
@@ -218,9 +173,15 @@ const CustomerSegments = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-grey-3">
-          Customer segments for this business. Click a segment to view its
-          customers.
+          Customer segments. Click a segment to view its customers.
         </p>
+        <button
+          onClick={() => setCreating(true)}
+          className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-green-300 text-white text-sm font-bold hover:bg-primary-green-300/90 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          Create Segment
+        </button>
       </div>
 
       {isLoading ? (
@@ -234,16 +195,28 @@ const CustomerSegments = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {segments.map((segment) => (
-            <SegmentCard
-              key={segment.id ?? segment.name}
-              segment={segment}
-              onView={() => setSelected(segment)}
-              onChanged={refresh}
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {segments.map((segment) => (
+              <SegmentCard
+                key={segment.id ?? segment.name}
+                segment={segment}
+                onView={() => setSelected(segment)}
+                onChanged={refresh}
+              />
+            ))}
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <DataGapBadge
+              label="Missing metrics"
+              needs="GET /customer/segment/{id}/ — (1) add revenue, repeat_rate and avg_spend to each segment; only customer_count is returned today. (2) The endpoint lists ACTIVE segments only, so a paused segment disappears and cannot be resumed — add an include_inactive flag (or return is_active on every segment) so pause/resume can be offered in the UI."
             />
-          ))}
-        </div>
+            <span className="text-[11px] text-grey-4">
+              Open a segment to see its real figures, computed from its
+              customers.
+            </span>
+          </div>
+        </>
       )}
 
       <CustomModal
@@ -254,6 +227,27 @@ const CustomerSegments = () => {
       >
         <div className="w-full">
           {selected?.id && <SegmentCustomers segmentId={selected.id} />}
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        isOpen={creating || Boolean(editing)}
+        onClose={() => {
+          setCreating(false);
+          setEditing(null);
+        }}
+        trigger={false}
+        title={editing ? "Edit Segment" : "Create Segment"}
+      >
+        <div className="w-full">
+          <AddSegment
+            segment={editing}
+            onDone={() => {
+              setCreating(false);
+              setEditing(null);
+              refresh();
+            }}
+          />
         </div>
       </CustomModal>
     </div>

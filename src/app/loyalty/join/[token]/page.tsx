@@ -16,13 +16,9 @@ const LoyaltyJoinPage = async ({
 }) => {
   const { token } = await params;
 
-  return (
-    <main className="min-h-screen bg-grey-6/50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl border border-grey-5 shadow-sm p-6 sm:p-8">
-        <JoinLoyaltyForm token={token} />
-      </div>
-    </main>
-  );
+  // JoinLoyaltyForm owns the full landing page — hero, streak, features and
+  // the activation form — so it is rendered without a wrapper card.
+  return <JoinLoyaltyForm token={token} />;
 };
 
 export default LoyaltyJoinPage;

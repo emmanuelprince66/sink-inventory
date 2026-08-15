@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import DataGapBadge from "@/components/app/DataGapBadge";
 import { Gift, Plus, Share2, Users } from "lucide-react";
 import { REFERRAL_KPIS, TOP_REFERRERS } from "./dummyGrowthData";
 
@@ -13,6 +14,13 @@ const KPI_STYLES = [
 const CustomerReferrals = () => {
   return (
     <div className="space-y-4">
+      {/* Nothing on this tab is live — no endpoint exists for it yet. */}
+      <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+        <DataGapBadge
+          label="Entire tab is sample data"
+          needs="No endpoint exists for Referrals. Needed: GET /customer/referrals/{business_id}/ (programme settings, referrer list with code, referral count, wallet earned) plus POST to create/update a referral programme"
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {REFERRAL_KPIS.map((kpi, idx) => (
           <div

@@ -26,6 +26,7 @@ import {
 import { useFetchCustomerDashboardQuery } from "@/api/customer-analytics/fetch-customer-dashboard";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import type { MetricPercentage, MetricPoint } from "@/types/loyalty";
+import DataGapBadge from "@/components/app/DataGapBadge";
 import { useFormatMoney } from "@/utils/formatMoney";
 import ChartEmptyState from "./ChartEmptyState";
 import { AI_INSIGHTS, OVERVIEW_KPIS } from "./dummyGrowthData";
@@ -264,9 +265,11 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
 
       {/* AI Customer Insights */}
       <div className="bg-grey-1 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
           <Sparkles className="w-4 h-4 text-primary-green-300" />
           <h3 className="text-sm font-extrabold text-white">AI Customer Insights</h3>
+          {/* These four insights are hardcoded copy, not derived from any call. */}
+          <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, action label and deep-link target" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {AI_INSIGHTS.map((insight) => (

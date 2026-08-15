@@ -1,16 +1,19 @@
 "use client";
 
 import { useFetchLoyaltyDashboardQuery } from "@/api/loyalty/fetch-loyalty-dashboard";
+import { fetchLoyaltyProgramDetail } from "@/api/loyalty/fetch-loyalty-program-detail";
 import { useFetchLoyaltyProgramsQuery } from "@/api/loyalty/fetch-loyalty-programs";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
+import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import AddLoyaltyProgram from "./AddLoyaltyProgram";
 import LoyaltyMembers from "./LoyaltyMembers";
 import LoyaltyTiers from "./LoyaltyTiers";
 import PointOfSale from "./PointOfSale";
-import ProgramParticipants from "./ProgramParticipants";
+import ProgramDetailPanel from "./ProgramDetailPanel";
 import ProgramQrModal from "./ProgramQrModal";
+import DataGapBadge from "@/components/app/DataGapBadge";
 import { cn } from "@/lib/utils";
 import { toList, type Paginated } from "@/types/api";
 import type { LoyaltyProgram, TopStreakPerformer } from "@/types/loyalty";
@@ -112,11 +115,15 @@ const CampaignCard = ({
   onEdit,
   onShowQr,
   onViewParticipants,
+  onOpenLandingPage,
+  openingLandingPage,
 }: {
   program: LoyaltyProgram;
   onEdit: (program: LoyaltyProgram) => void;
   onShowQr: (program: LoyaltyProgram) => void;
   onViewParticipants: (program: LoyaltyProgram) => void;
+  onOpenLandingPage: (program: LoyaltyProgram) => void;
+  openingLandingPage: boolean;
 }) => {
   const formatMoney = useFormatMoney();
   const isActive = (program.status ?? "ACTIVE") === "ACTIVE";
@@ -231,26 +238,23 @@ const CampaignCard = ({
             <QrCode className="w-3.5 h-3.5" />
             QR
           </button>
-          {program.qr_url ? (
-            <a
-              href={program.qr_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs font-bold text-grey-2 hover:text-grey-1 cursor-pointer"
-            >
+          {/* Deliberately not a link to program.qr_url — that field is the QR
+              *image* on S3 (…/loyalty/qrcodes/<id>.png), so linking it opened
+              a picture rather than the page. The join URL needs the campaign's
+              token, which only the detail endpoint carries, so resolve it on
+              click and open the real landing page. */}
+          <button
+            onClick={() => onOpenLandingPage(program)}
+            disabled={!isPersisted || openingLandingPage}
+            className="flex items-center gap-1 text-xs font-bold text-grey-2 hover:text-grey-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {openingLandingPage ? (
+              <Spinner className="w-3.5 h-3.5" />
+            ) : (
               <Link2 className="w-3.5 h-3.5" />
-              Landing Page
-            </a>
-          ) : (
-            <button
-              onClick={() => onShowQr(program)}
-              disabled={!isPersisted}
-              className="flex items-center gap-1 text-xs font-bold text-grey-2 hover:text-grey-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <Link2 className="w-3.5 h-3.5" />
-              Landing Page
-            </button>
-          )}
+            )}
+            Landing Page
+          </button>
         </div>
         <button
           onClick={() => onViewParticipants(program)}
@@ -280,6 +284,32 @@ const LoyaltyPrograms = () => {
   const [selected, setSelected] = useState<LoyaltyProgram | null>(null);
   const business_id = useBusinessStore((state) => state.business_id);
   const formatMoney = useFormatMoney();
+  const { showToast } = useToast();
+  // Which card is currently resolving its join token, so only that button
+  // shows a spinner.
+  const [landingPageFor, setLandingPageFor] = useState<string | null>(null);
+
+  // The campaign list carries no join token, so fetch the detail on demand and
+  // open the customer-facing page it points at.
+  const openLandingPage = async (program: LoyaltyProgram) => {
+    if (!program.id) return;
+    setLandingPageFor(program.id);
+    try {
+      const response = await fetchLoyaltyProgramDetail({
+        programId: program.id,
+      });
+      const token = response?.data?.qr_details?.token;
+      if (!token) {
+        showToast("This campaign has no landing page yet", "error");
+        return;
+      }
+      window.open(`/loyalty/join/${token}`, "_blank", "noopener,noreferrer");
+    } catch {
+      showToast("Could not open the landing page", "error");
+    } finally {
+      setLandingPageFor(null);
+    }
+  };
 
   const closeModal = () => {
     setModalView(null);
@@ -314,17 +344,18 @@ const LoyaltyPrograms = () => {
   );
 
   // Until the business has live loyalty data, fall back to the sample rows so
-  // the tab still reads as designed instead of rendering an empty shell.
-  const streakPerformers: TopStreakPerformer[] =
-    dashboard?.top_streak_performers?.length
-      ? dashboard.top_streak_performers
-      : STREAK_LEADERS.map((l, i) => ({
-          id: String(i),
-          initials: l.initials,
-          full_name: l.name,
-          tier: l.tier,
-          streak_count: l.streak,
-        }));
+  // the tab still reads as designed instead of rendering an empty shell. The
+  // flag below is what stops that sample being mistaken for real data.
+  const usingSampleStreaks = !dashboard?.top_streak_performers?.length;
+  const streakPerformers: TopStreakPerformer[] = !usingSampleStreaks
+    ? dashboard!.top_streak_performers!
+    : STREAK_LEADERS.map((l, i) => ({
+        id: String(i),
+        initials: l.initials,
+        full_name: l.name,
+        tier: l.tier,
+        streak_count: l.streak,
+      }));
 
   const campaigns: LoyaltyProgram[] = programs.length
     ? programs
@@ -432,11 +463,16 @@ const LoyaltyPrograms = () => {
 
       {/* Loyalty Streak System */}
       <div className="bg-primary-green-100 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <Flame className="w-4 h-4 text-warning-1" />
           <h3 className="text-sm font-extrabold text-white">
             Loyalty Streak System
           </h3>
+          {/* The dashboard endpoint returns top_streak_performers: [] today, so
+              these cards are the designed sample set until it is populated. */}
+          {usingSampleStreaks && (
+            <DataGapBadge needs="GET /loyalty/{business_id}/dashboard — top_streak_performers returns an empty array; populate it with the top streak holders (name, tier, streak count, progress)" />
+          )}
         </div>
         <p className="text-xs text-white/60 mb-4">
           Top streak performers{" "}
@@ -458,6 +494,8 @@ const LoyaltyPrograms = () => {
             onEdit={openEdit}
             onShowQr={openQr}
             onViewParticipants={openParticipants}
+            onOpenLandingPage={openLandingPage}
+            openingLandingPage={landingPageFor === program.id}
           />
         ))}
       </div>
@@ -507,16 +545,14 @@ const LoyaltyPrograms = () => {
         </div>
       </CustomModal>
 
-      <CustomModal
-        isOpen={modalView === "participants"}
+      {/* Programme detail is a right-side panel, not a centre modal: its four
+          tabs are a working surface a merchant reads alongside the campaign
+          list, and the design keeps that list visible behind it. */}
+      <ProgramDetailPanel
+        program={selected}
+        open={modalView === "participants"}
         onClose={closeModal}
-        trigger={false}
-        title={selected?.name ?? "Participants"}
-      >
-        <div className="w-full">
-          {selected?.id && <ProgramParticipants programId={selected.id} />}
-        </div>
-      </CustomModal>
+      />
 
       <CustomModal
         isOpen={modalView === "tiers"}

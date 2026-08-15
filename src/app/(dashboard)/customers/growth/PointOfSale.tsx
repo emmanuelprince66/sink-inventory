@@ -19,7 +19,7 @@ const STATUS_FILTERS = ["ISSUED", "REDEEMED", "EXPIRED"] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 const STATUS_TONES: Record<string, string> = {
-  ISSUED: "bg-primary-green-50 text-primary-green-300",
+  ISSUED: "bg-primary-green-500 text-primary-green-300",
   REDEEMED: "bg-grey-6 text-grey-3",
   EXPIRED: "bg-error-2 text-error-1",
   REVOKED: "bg-error-2 text-error-1",

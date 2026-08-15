@@ -2,21 +2,53 @@
 // Shapes for /customer/segment/* — see the Sync360 spec.
 
 /**
- * The spec collapses this enum to "Array [ 7 ]" without listing the members,
- * so the union below is left open. Narrow it once the real values are known —
- * the UI already keys its icon/tone lookup off this string.
+ * Verified against a live response: SCREAMING_SNAKE members such as
+ * INACTIVE_CUSTOMERS and FREQUENT_BUYERS. Left as a widened union so an
+ * unlisted member from the backend still type-checks rather than breaking the
+ * page — the spec only ever said "Array [ 7 ]".
  */
-export type SegmentType = string;
+export type SegmentType =
+  | "VIP_CUSTOMERS"
+  | "FREQUENT_BUYERS"
+  | "NEW_CUSTOMERS"
+  | "AT_RISK"
+  | "INACTIVE_CUSTOMERS"
+  | "REGULAR_BUYERS"
+  | "CUSTOM"
+  | (string & {});
 
-/** Spec shows "Array [ 2 ]"; ALL/ANY is the conventional pair for a rule set. */
-export type MatchType = string;
+/** Confirmed live: "ALL". ANY is the other half of the two-member enum. */
+export type MatchType = "ALL" | "ANY" | (string & {});
 
 /**
- * The spec types this as a bare object with no properties, so the condition
- * builder cannot be generated from it. Kept opaque and passed through
- * untouched rather than guessed at.
+ * A flat map of rule name → threshold, verified live:
+ *   { no_purchase_days: 30 }
+ *   { purchases: 4, within_days: 30 }
+ * Values are numeric in every observed case, but the map is left open because
+ * the spec publishes no properties at all for this object.
  */
-export type SegmentConditions = Record<string, unknown>;
+export type SegmentConditions = Record<string, number | string | boolean>;
+
+/**
+ * Condition keys seen in live default segments, plus the labels and units the
+ * editor renders. Unknown keys returned by the backend still round-trip — the
+ * editor falls back to a humanised version of the raw key.
+ */
+export const CONDITION_FIELDS: Array<{
+  key: string;
+  label: string;
+  suffix?: string;
+}> = [
+  { key: "purchases", label: "Number of purchases" },
+  { key: "within_days", label: "Within the last", suffix: "days" },
+  { key: "no_purchase_days", label: "No purchase for", suffix: "days" },
+  { key: "min_spend", label: "Minimum total spend" },
+  { key: "visits", label: "Number of visits" },
+];
+
+/** "no_purchase_days" → "No purchase days" for keys not in the list above. */
+export const humaniseConditionKey = (key: string) =>
+  key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 
 export interface CustomerSegment {
   id?: string;
@@ -27,8 +59,8 @@ export interface CustomerSegment {
   is_default?: boolean;
   is_active?: boolean;
   conditions?: SegmentConditions;
-  /** Read-only, and a string rather than a number in the spec. */
-  customer_count?: string;
+  /** Read-only. The spec types this as a string; live responses send a number. */
+  customer_count?: number | string;
   created_at?: string;
   updated_at?: string;
 }

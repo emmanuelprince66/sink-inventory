@@ -29,7 +29,7 @@ const initials = (name?: string) =>
 
 const TierPill = ({ tier }: { tier?: string | null }) =>
   tier ? (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-green-50 text-primary-green-300">
+    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary-green-500 text-primary-green-300">
       {tier}
     </span>
   ) : (

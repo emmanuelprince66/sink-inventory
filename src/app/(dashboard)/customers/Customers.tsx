@@ -1,18 +1,7 @@
 "use client";
-import {
-  AlertCircle,
-  Calendar,
-  ChevronDown,
-  Download,
-  Megaphone,
-  Plus,
-  Users,
-  Wallet,
-} from "lucide-react";
+import { Calendar, ChevronDown, Download, Plus } from "lucide-react";
 
-import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
-import { SearchInput } from "@/components/app/SearchInput";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
@@ -21,10 +10,8 @@ import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
-import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Spinner } from "@/components/app/Spinner";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
-import { formatToNaira } from "@/utils/formatMoney";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
@@ -94,53 +81,9 @@ const buildMonthOptions = () => {
   });
 };
 
-interface CustomerCardData {
-  title: string;
-  amount: number | string;
-  type: "wallet" | "debt" | "customers";
-}
-
-// Colored KPI cards — same pattern as Orders/Sales/Overview/Referral:
-// tinted card background per type, icon in a white circle.
-const CUSTOMER_CARD_STYLES: Record<
-  CustomerCardData["type"],
-  { cardBg: string; iconColor: string; icon: React.ReactNode }
-> = {
-  wallet: {
-    cardBg: "bg-success-2",
-    iconColor: "text-success-1",
-    icon: <Wallet className="w-4 h-4" />,
-  },
-  debt: {
-    cardBg: "bg-error-2",
-    iconColor: "text-error-1",
-    icon: <AlertCircle className="w-4 h-4" />,
-  },
-  customers: {
-    cardBg: "bg-info-2",
-    iconColor: "text-info-1",
-    icon: <Users className="w-4 h-4" />,
-  },
-};
-
-const CustomCustomerCard = ({ title, amount, type }: CustomerCardData) => {
-  const variant = CUSTOMER_CARD_STYLES[type];
-  return (
-    <CustomCard
-      className={cn(
-        "w-full rounded-2xl border border-border-tint p-0",
-        variant.cardBg,
-      )}
-      contentClassName="p-5"
-    >
-      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center mb-3">
-        <span className={variant.iconColor}>{variant.icon}</span>
-      </div>
-      <p className="text-xs font-bold text-grey-2">{title}</p>
-      <p className="text-2xl font-extrabold text-grey-1 mt-1">{amount}</p>
-    </CustomCard>
-  );
-};
+// The tinted wallet/debt/customers KPI cards that lived here were removed —
+// their figures now appear in the Wallet & Credit, Total Spend & Basket and
+// Total Customers cards rendered by CustomerSummaryCards.
 
 const Customers = () => {
   const [activeTopTab, setActiveTopTab] = useState<GrowthTab>("Overview");
@@ -173,6 +116,8 @@ const Customers = () => {
     handleFilterChange,
     activeFilter,
     handleSearchChange,
+    activeTier,
+    setActiveTier,
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
   return (
@@ -291,105 +236,34 @@ const Customers = () => {
         </>
       ) : (
         <>
-          {/* KPI Cards */}
-          <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-            <CustomCustomerCard
-              title="Total Wallet Balance"
-              amount={formatToNaira(CustomerData?.data?.results?.total_wallet)}
-              type="wallet"
-            />
+          {/* The tinted wallet/debt/customers KPI row that used to sit here was
+              removed: the design puts these figures in the Wallet & Credit,
+              Total Spend & Basket and Total Customers cards that
+              CustomerSummaryCards renders inside AllCustomers, and showing both
+              duplicated the same wallet, debt and count values twice on one
+              screen. */}
 
-            <CustomCustomerCard
-              title="Total Debt"
-              amount={formatToNaira(CustomerData?.data?.results?.total_debt)}
-              type="debt"
-            />
-
-            <CustomCustomerCard
-              title="Total Customers"
-              amount={CustomerData?.data?.results?.customer_count}
-              type="customers"
-            />
-          </div>
-
-          {/* Engage Your Customers Banner */}
-          <div className="bg-secondary-6 border border-primary-green-300/20 rounded-2xl p-4 sm:p-5 flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <Megaphone className="h-5 w-5 text-primary-green-300" />
-              <h2 className="text-base font-extrabold text-grey-1">
-                Engage Your Customers
-              </h2>
-            </div>
-            <p className="text-sm text-grey-2">
-              Send personalized promotions, offers, and reminders to keep your
-              customers coming back
-            </p>
-            <Button
-              className="self-start gap-1.5"
-              onClick={() => setActiveTopTab("Loyalty Programs")}
-            >
-              <Plus className="w-4 h-4" />
-              Create a Campaign
-            </Button>
-          </div>
-
-          {/* Main Content Card */}
-          <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
-            {/* Toolbar */}
-            <div className="p-4 sm:p-6 border-b border-grey-5">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-                  {filterOptions.map((filter) => (
-                    <button
-                      key={filter}
-                      onClick={() => handleFilterChange(filter)}
-                      className={cn(
-                        "px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold cursor-pointer rounded-full transition-all whitespace-nowrap flex-shrink-0",
-                        activeFilter === filter
-                          ? "bg-primary-green-300 text-white shadow-sm"
-                          : "bg-white border border-grey-5 text-grey-2 hover:bg-grey-6",
-                      )}
-                    >
-                      {filter}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-                  <div className="w-full sm:w-44">
-                    <DatePickerWithRange
-                      date={dateRange}
-                      onDateChange={setDateRange}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="w-full sm:w-56">
-                    <SearchInput
-                      placeholder="Search customers..."
-                      value={searchInput}
-                      onValueChange={handleSearchChange}
-                      className="h-9"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {searchInput.length > 0 && searchInput.length < 3 && (
-                <div className="mt-2 text-xs text-grey-4">
-                  Type at least 3 characters to search
-                </div>
-              )}
-            </div>
-
-            {/* Customers Table */}
-            <AllCustomers
-              customersData={CustomerData}
-              handleRowClick={handleRowClick}
-              customerLoading={CustomerLoading}
-              setPage={setPage}
-              page={page}
-            />
-          </div>
+          {/* The "Engage Your Customers" banner and the pill filter / date
+              range / search toolbar were removed — neither appears in the
+              Customers design. Search now lives in AllCustomers' own filter
+              row, sitting between the summary cards and the table as its own
+              block rather than inside the table's card. */}
+          <AllCustomers
+            customersData={CustomerData}
+            handleRowClick={handleRowClick}
+            customerLoading={CustomerLoading}
+            setPage={setPage}
+            page={page}
+            search={searchInput}
+            onSearchChange={handleSearchChange}
+            statusOptions={filterOptions}
+            activeStatus={activeFilter}
+            onStatusChange={(value) =>
+              handleFilterChange(value as (typeof filterOptions)[number])
+            }
+            activeTier={activeTier}
+            onTierChange={setActiveTier}
+          />
         </>
       )}
         </>

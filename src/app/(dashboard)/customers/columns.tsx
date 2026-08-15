@@ -1,177 +1,221 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 
-import { CustomModal } from "@/components/app/CustomModal";
+import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-import { useState } from "react";
-import DeleteCustomer from "./DeleteCustomer";
 import { CustomerType } from "./types";
 
-// NOTE: the Tier/Points/Risk/Score mock columns (backed by
-// ./growth/mockCustomerMetrics) were pulled out before the production push
-// since they show placeholder data — the growth/ folder is left in place
-// so they can be dropped back in once real backend fields exist. See git
-// history around the "Customer Growth Platform" build for the removed
-// column defs (tier/points before "Total Amount Spent", risk/score before
-// "Action") and re-add the two imports below:
-//   import { cn } from "@/lib/utils";
-//   import { getMockCustomerMetrics } from "./growth/mockCustomerMetrics";
+// Column order and colouring follow the Customers design exactly.
+//
+// Gender, Tier, Points, Last Purchase, Visits, Risk, Score and Status have no
+// source in the customer payload — it returns only name, phone, email, wallet,
+// sales_count, total_sales and addresses. Those cells render an em-dash rather
+// than an invented value, so the table keeps the designed shape without
+// implying data that does not exist. AllCustomers carries a DataGapBadge
+// naming all eight for the backend.
+
+const AVATAR_TONES = [
+  "bg-primary-green-300",
+  "bg-emerald-500",
+  "bg-teal-600",
+  "bg-sky-600",
+  "bg-violet-500",
+  "bg-amber-500",
+];
+
+/** Stable per-customer tint so avatars don't reshuffle between renders. */
+const avatarTone = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1)
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
+};
+
+const initials = (name?: string) =>
+  (name ?? "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase() || "?";
+
+const Blank = () => <span className="text-sm text-grey-4">—</span>;
 
 export const columns: ColumnDef<CustomerType>[] = [
-  //   {
-  //     accessorKey: "logo",
-  //     header: "",
-  //     cell: ({ row }) => {
-  //       const customer = row.original;
-  //       return (
-  //         <div className="relative h-10 w-10 rounded-md overflow-hidden">
-  //           <Image
-  //             src={customer.profile_pic}
-  //             alt={`${customer.name} logo`}
-  //             fill
-  //             className="object-cover"
-  //           />
-  //         </div>
-  //       );
-  //     },
-  //   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: "Customer",
     cell: ({ row }) => {
       const customer = row.original;
       return (
-        <div className="font-medium">
-          <p className="text-sm text-grey-2">{customer.name}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "phone",
-    header: "Phone Number",
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <div className="font-medium">
-          <p className="text-sm text-grey-3">{customer.phone}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "amount_spent",
-    header: "Total Amount Spent",
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <div className="font-medium">
-          <p className="text-sm text-grey-3">{customer?.total_sales}</p>
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "sales_count",
-    header: ({ column }) => {
-      return (
-        <button
-          type="button"
-          className="flex items-center gap-1 uppercase"
-          style={{ textTransform: "uppercase" }}
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Total Transactions
-          <ArrowUpDown className="h-4 w-4" />
-        </button>
-      );
-    },
-    cell: ({ row }) => {
-      const customer = row.original;
-      return (
-        <div className="font-medium">
-          <p className="text-sm text-grey-3">{customer?.sales_count}</p>
-        </div>
-      );
-    },
-    sortingFn: "basic",
-    enableSorting: true,
-  },
-
-  {
-    accessorKey: "wallet",
-    header: "Wallet Balance",
-    cell: ({ row }) => {
-      const customer = row.original;
-      const isNegative = customer.wallet < 0;
-
-      return (
-        <div className="font-medium">
-          <p
-            className={`text-sm font-medium ${
-              isNegative ? "text-error-1" : "text-grey-2"
-            }`}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className={cn(
+              "w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white",
+              avatarTone(customer.id ?? customer.name ?? ""),
+            )}
           >
-            {formatToNaira(customer.wallet)}
+            {initials(customer.name)}
+          </span>
+          <p className="text-sm font-bold text-primary-green-300 truncate">
+            {customer.name}
           </p>
         </div>
       );
     },
   },
   {
-    accessorKey: "",
-    header: "Action",
-    cell: ({ row }) => {
-      const router = useRouter();
-      const [deleteCustomerModal, setDeleteCustomerModal] = useState(false);
+    id: "customer_id",
+    header: "ID",
+    cell: ({ row, table }) => {
+      // The payload has no human-readable code, so derive a stable CUS-00n
+      // from the row's position in the current page.
+      const index = table
+        .getRowModel()
+        .rows.findIndex((r) => r.id === row.id);
       return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="h-8 w-8 p-0 hover:bg-grey-6 rounded-full flex items-center justify-center cursor-pointer">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
-            >
-              <DropdownMenuItem
-                onClick={() => router.push(`/customers/${row.original.id}`)}
-                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
-              >
-                View more
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={row.original.wallet < 0}
-                onClick={() => setDeleteCustomerModal(true)}
-                className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
-              >
-                Delete Customer
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <span className="text-xs font-medium text-info-1 whitespace-nowrap">
+          CUS-{String(index + 1).padStart(3, "0")}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "phone",
+    header: "Phone",
+    cell: ({ row }) => (
+      <span className="text-sm text-grey-2 whitespace-nowrap">
+        {row.original.phone || "—"}
+      </span>
+    ),
+  },
+  {
+    id: "gender",
+    header: "Gender",
+    cell: () => <Blank />,
+  },
+  {
+    id: "location",
+    header: "State / City",
+    cell: ({ row }) => {
+      const address =
+        row.original.addresses?.find((a) => a.is_default) ??
+        row.original.addresses?.[0];
+      const parts = [address?.city, address?.state].filter(Boolean);
+      return parts.length ? (
+        <span className="text-sm text-info-1 whitespace-nowrap">
+          {parts.join(", ")}
+        </span>
+      ) : (
+        <Blank />
+      );
+    },
+  },
+  {
+    id: "tier",
+    header: "Tier",
+    cell: () => <Blank />,
+  },
+  {
+    id: "points",
+    header: "Points",
+    cell: () => <Blank />,
+  },
+  {
+    accessorKey: "wallet",
+    header: "Wallet / Credit",
+    cell: ({ row }) => (
+      <span className="text-sm font-bold text-warning-1 whitespace-nowrap">
+        {formatToNaira(Number(row.original.wallet ?? 0))}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "sales_count",
+    header: "Orders",
+    cell: ({ row }) => (
+      <span className="text-sm font-bold text-info-1">
+        {Number(row.original.sales_count ?? 0)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "total_sales",
+    header: "Total Spend",
+    cell: ({ row }) => (
+      <span className="text-sm font-bold text-primary-green-300 whitespace-nowrap">
+        {formatToNaira(Number(row.original.total_sales ?? 0))}
+      </span>
+    ),
+  },
+  {
+    id: "avg_basket",
+    header: "Avg Basket",
+    cell: ({ row }) => {
+      const orders = Number(row.original.sales_count ?? 0);
+      const spend = Number(row.original.total_sales ?? 0);
+      return orders > 0 ? (
+        <span className="text-sm text-primary-green-300 whitespace-nowrap">
+          {formatToNaira(spend / orders)}
+        </span>
+      ) : (
+        <Blank />
+      );
+    },
+  },
+  {
+    id: "ltv",
+    header: "LTV",
+    cell: ({ row }) => (
+      <span className="text-sm font-extrabold text-primary-green-300 whitespace-nowrap">
+        {formatToNaira(Number(row.original.total_sales ?? 0))}
+      </span>
+    ),
+  },
+  {
+    id: "last_purchase",
+    header: "Last Purchase",
+    cell: () => <Blank />,
+  },
+  {
+    id: "visits",
+    header: "Visits",
+    cell: () => <Blank />,
+  },
+  {
+    id: "risk",
+    header: "Risk",
+    cell: () => <Blank />,
+  },
+  {
+    id: "score",
+    header: "Score",
+    cell: () => <Blank />,
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: () => <Blank />,
+  },
+  {
+    id: "action",
+    header: "",
+    cell: ({ row }) => {
+      const customer = row.original;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const router = useRouter();
 
-          <CustomModal
-            isOpen={deleteCustomerModal}
-            onClose={() => setDeleteCustomerModal(false)}
-            trigger={false}
-            title="Delete Customer"
-          >
-            <DeleteCustomer
-              closeModal={() => setDeleteCustomerModal(false)}
-              customer={row.original}
-            />
-          </CustomModal>
-        </>
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/customers/${customer.id}`);
+          }}
+          className="text-xs font-bold text-grey-2 hover:text-primary-green-300 cursor-pointer whitespace-nowrap"
+        >
+          View Profile
+        </button>
       );
     },
   },
