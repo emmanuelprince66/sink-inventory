@@ -128,11 +128,11 @@ const LoyaltyQrCard = ({
   };
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex w-full min-w-0 flex-col gap-4">
       {/* Compact preview — this is all the modal needs to show. The full
           artwork below is rendered off-screen and is what actually gets
           downloaded and printed. */}
-      <div className="flex w-full  items-center gap-4 rounded-2xl border border-grey-5 bg-white p-4">
+      <div className="flex w-full min-w-0 items-center gap-3 rounded-2xl border border-grey-5 bg-white p-3 sm:gap-4 sm:p-4">
         <JoinQrCode
           joinUrl={joinUrl}
           qrUrl={qrUrl}
@@ -280,32 +280,37 @@ const LoyaltyQrCard = ({
         </button>
       )}
 
-      <div className="grid w-full  grid-cols-1 gap-3 sm:grid-cols-2">
+      {/* Button carries whitespace-nowrap, so a long label's min-content width
+          is the whole unwrapped string. Letting it wrap below sm keeps the
+          modal from being forced wider than the phone; from sm the labels fit
+          on one line anyway, so h-11 and nowrap are restored and desktop is
+          unchanged. */}
+      <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         <Button
           variant="outline"
-          className="h-11 gap-1.5 rounded-xl"
+          className="h-auto min-h-11 gap-1.5 whitespace-normal rounded-xl py-2.5 sm:h-11 sm:whitespace-nowrap sm:py-0"
           disabled={busy !== null}
           onClick={downloadCard}
         >
-          <Download className="h-4 w-4" />
+          <Download className="h-4 w-4 shrink-0" />
           {busy === "download" ? "Preparing..." : "Download QR Code"}
         </Button>
         <Button
           variant="outline"
-          className="h-11 gap-1.5 rounded-xl"
+          className="h-auto min-h-11 gap-1.5 whitespace-normal rounded-xl py-2.5 sm:h-11 sm:whitespace-nowrap sm:py-0"
           disabled={busy !== null}
           onClick={printCard}
         >
-          <Printer className="h-4 w-4" />
+          <Printer className="h-4 w-4 shrink-0" />
           {busy === "print" ? "Preparing..." : "Print Card"}
         </Button>
       </div>
 
       {joinUrl && (
-        <div className="w-full ">
+        <div className="w-full min-w-0">
           <Button
             variant="outline"
-            className="h-11 w-full gap-1.5 rounded-xl"
+            className="h-auto min-h-11 w-full gap-1.5 whitespace-normal rounded-xl py-2.5 sm:h-11 sm:whitespace-nowrap sm:py-0"
             onClick={() =>
               window.open(
                 previewUrl ?? joinUrl,
@@ -314,7 +319,7 @@ const LoyaltyQrCard = ({
               )
             }
           >
-            <ExternalLink className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4 shrink-0" />
             Preview Customer Signup Page
           </Button>
         </div>

@@ -91,8 +91,16 @@ export function CustomModal({
           className,
         )}
       >
+        {/* min-w-0 on both grid children: DialogContent is a grid, and a grid
+            item defaults to min-width:auto, so its track cannot shrink below
+            the widest child's min-content width. A single nowrap label was
+            enough to push the track past the dialog and — because overflow-y
+            is auto here, which makes overflow-x compute to auto too — produce
+            a horizontal scrollbar on narrow screens. No effect where there is
+            already room, so desktop renders identically. */}
         <DialogHeader
           className={cn(
+            "min-w-0",
             isPinnedLayout && "px-4 sm:px-6 pt-5 pb-4 border-b border-slate-100",
           )}
         >
@@ -115,7 +123,7 @@ export function CustomModal({
         {/* Body */}
         <div
           className={cn(
-            "w-full",
+            "w-full min-w-0",
             isPinnedLayout
               ? "flex-1 overflow-y-auto px-4 sm:px-6 py-4"
               : "mt-4",
