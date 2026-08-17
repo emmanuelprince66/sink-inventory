@@ -225,6 +225,50 @@ export const buildPayload = (s: WizardState) => {
   };
 };
 
+/** The label/value pairs the Review step reads back to the user. */
+export const summaryRows = (s: WizardState) => [
+  { label: "Business", value: s.businessName || "—" },
+  { label: "Programme", value: s.name || "—" },
+  {
+    label: "Goal",
+    value: GOALS.find((g) => g.value === s.goal)?.title ?? "—",
+  },
+  {
+    label: "Reward",
+    value: `${REWARDS.find((r) => r.value === s.rewardType)?.title ?? "—"}${
+      s.rewardValue ? ` — ${s.rewardValue}` : ""
+    }`,
+  },
+  {
+    label: "Style",
+    value: STYLES.find((v) => v.value === s.rewardStyle)?.title ?? "—",
+  },
+  {
+    label: "Rule",
+    value:
+      s.ruleMode === "SPEND"
+        ? `Spend ${s.spendThreshold || 0}`
+        : `${s.visits} visits`,
+  },
+  {
+    label: "Time Limit",
+    value:
+      s.timeLimitDays === 0
+        ? "No limit"
+        : s.timeLimitDays === -1
+          ? `${s.customDays || 0} days`
+          : `${s.timeLimitDays} days`,
+  },
+  {
+    label: "If Expired",
+    value: TIMEOUT_ACTIONS.find((a) => a.value === s.timeoutAction)?.title ?? "—",
+  },
+  {
+    label: "Notifications",
+    value: `${NOTIFICATIONS.filter(({ key }) => s[key]).length} messages enabled`,
+  },
+];
+
 /** Blocks Continue until the current step has what it needs. */
 export const stepError = (step: StepName, s: WizardState): string | null => {
   if (step === "Name" && !s.name.trim()) return "Give the programme a name.";
