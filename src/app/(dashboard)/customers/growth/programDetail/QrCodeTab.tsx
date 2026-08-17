@@ -1,8 +1,12 @@
 "use client";
 
+import JoinQrCode from "@/components/app/JoinQrCode";
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import type { LoyaltyProgram } from "@/types/loyalty";
+import { downloadElementAsPng } from "@/utils/captureElement";
 import { Copy, Download, Printer } from "lucide-react";
+import { useRef, useState } from "react";
 import type { ProgramDetailData } from "./useProgramDetail";
 
 const QrCodeTab = ({
@@ -13,6 +17,23 @@ const QrCodeTab = ({
   program: LoyaltyProgram | null;
 }) => {
   const { qr, joinUrl, copyJoinUrl } = detail;
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Captures the card block on screen rather than linking the backend's
+  // qr_url image — that image encodes the bare token, so a downloaded copy of
+  // it would be a QR nobody's phone can act on.
+  const download = async () => {
+    setSaving(true);
+    try {
+      await downloadElementAsPng(
+        cardRef.current,
+        `${(program?.name ?? "loyalty").replace(/[^a-zA-Z0-9]/g, "_")}_qr_card.png`,
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!qr?.token) {
     return (
@@ -24,7 +45,7 @@ const QrCodeTab = ({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl bg-grey-1 p-4 text-center">
+      <div ref={cardRef} className="rounded-2xl bg-grey-1 p-4 text-center">
         <p className="text-[10px] font-bold uppercase tracking-wider text-primary-green-300">
           Loyalty Programme
         </p>
@@ -35,21 +56,16 @@ const QrCodeTab = ({
           {program?.trigger_summary}
         </p>
 
+        {/* Encodes joinUrl, not the backend qr_url image — that image carries
+            only the bare token, which a phone camera can do nothing with. */}
         <div className="mt-4 flex justify-center">
-          {qr.qr_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={qr.qr_url}
-              alt={`QR code for ${program?.name ?? "campaign"}`}
-              className="h-40 w-40 rounded-xl bg-white object-contain p-2"
-            />
-          ) : (
-            <div className="flex h-40 w-40 items-center justify-center rounded-xl border border-dashed border-white/30 px-3">
-              <p className="text-[11px] text-white/60">
-                QR image not returned — share the link below.
-              </p>
-            </div>
-          )}
+          <JoinQrCode
+            joinUrl={joinUrl}
+            qrUrl={qr.qr_url}
+            programmeName={program?.name}
+            className="h-40 w-40 rounded-xl p-2"
+            emptyLabel="QR image not returned — share the link below."
+          />
         </div>
 
         <p className="mt-3 text-xs font-bold text-white">Scan to join</p>
@@ -80,17 +96,22 @@ const QrCodeTab = ({
         <Button
           variant="outline"
           className="h-11 gap-1.5 text-xs font-bold"
-          onClick={() => qr.qr_url && window.open(qr.qr_url, "_blank")}
-          disabled={!qr.qr_url}
+          onClick={download}
+          disabled={saving}
         >
-          <Download className="h-3.5 w-3.5" />
-          Download QR
+          {saving ? (
+            <Spinner className="h-3.5 w-3.5" />
+          ) : (
+            <Download className="h-3.5 w-3.5" />
+          )}
+          {saving ? "Preparing..." : "Download QR"}
         </Button>
         <Button
           variant="outline"
           className="h-11 gap-1.5 text-xs font-bold"
           onClick={() => window.print()}
         >
+
           <Printer className="h-3.5 w-3.5" />
           Print Card
         </Button>

@@ -1,7 +1,9 @@
 "use client";
 
+import JoinQrCode from "@/components/app/JoinQrCode";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
+import { captureElementCanvas } from "@/utils/captureElement";
 import { Copy, Download, ExternalLink, Printer, Trophy } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -23,15 +25,6 @@ export interface LoyaltyQrCardProps {
 }
 
 const MAX_DOTS = 8;
-
-/**
- * The QR lives on S3, which serves it publicly but without CORS headers.
- * Loading it directly either fails (with crossOrigin) or taints the canvas so
- * html2canvas cannot export (without it). Proxying through our own route makes
- * it same-origin and sidesteps both.
- */
-const proxied = (url?: string | null) =>
-  url ? `/api/loyalty/qr-image?url=${encodeURIComponent(url)}` : null;
 
 const LoyaltyQrCard = ({
   programmeName,
@@ -64,38 +57,7 @@ const LoyaltyQrCard = ({
   const displayUrl =
     joinUrl && joinUrl.length > 44 ? `${joinUrl.slice(0, 44)}…` : joinUrl;
 
-  /**
-   * Rasterises the whole card, matching how the payment terminal and e-setup
-   * screens already export — html2canvas-pro at scale 3, then a blob download.
-   * Images are awaited first: html2canvas captures whatever is painted at that
-   * instant, so a QR still in flight would rasterise as a blank square.
-   */
-  const renderCanvas = async () => {
-    const element = cardRef.current;
-    if (!element) return null;
-
-    await Promise.all(
-      Array.from(element.querySelectorAll("img")).map(
-        (img) =>
-          new Promise<void>((resolve) => {
-            if (img.complete) return resolve();
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-          }),
-      ),
-    );
-
-    const html2canvas = (await import("html2canvas-pro")).default;
-    return html2canvas(element, {
-      scale: 3,
-      backgroundColor: "#ffffff",
-      logging: false,
-      useCORS: true,
-      allowTaint: true,
-      imageTimeout: 15000,
-      removeContainer: true,
-    });
-  };
+  const renderCanvas = () => captureElementCanvas(cardRef.current);
 
   const downloadCard = async () => {
     setBusy("download");
@@ -165,18 +127,12 @@ const LoyaltyQrCard = ({
           artwork below is rendered off-screen and is what actually gets
           downloaded and printed. */}
       <div className="flex w-full  items-center gap-4 rounded-2xl border border-grey-5 bg-white p-4">
-        {qrUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={proxied(qrUrl) ?? ""}
-            alt={`QR code to join ${programmeName}`}
-            className="h-24 w-24 shrink-0 rounded-lg border border-grey-6 bg-white object-contain p-1"
-          />
-        ) : (
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-dashed border-grey-5 px-2 text-center">
-            <span className="text-[10px] text-grey-3">QR not generated</span>
-          </div>
-        )}
+        <JoinQrCode
+          joinUrl={joinUrl}
+          qrUrl={qrUrl}
+          programmeName={programmeName}
+          className="h-24 w-24 shrink-0 rounded-lg border border-grey-6"
+        />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-extrabold text-grey-1">
             {programmeName}
@@ -274,20 +230,12 @@ const LoyaltyQrCard = ({
 
           {/* Scan */}
           <div className="mt-3 flex items-center gap-4 rounded-xl bg-grey-6 p-4">
-            {qrUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={proxied(qrUrl) ?? ""}
-                alt={`QR code to join ${programmeName}`}
-                className="h-24 w-24 shrink-0 rounded bg-white object-contain"
-              />
-            ) : (
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded border border-dashed border-grey-5 bg-white px-2 text-center">
-                <span className="text-[9px] text-grey-3">
-                  QR not generated
-                </span>
-              </div>
-            )}
+            <JoinQrCode
+              joinUrl={joinUrl}
+              qrUrl={qrUrl}
+              programmeName={programmeName}
+              className="h-24 w-24 shrink-0 rounded"
+            />
             <div className="min-w-0">
               <p className="text-sm font-extrabold text-primary-green-300">
                 Scan to Join
