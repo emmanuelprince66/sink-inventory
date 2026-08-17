@@ -1,5 +1,5 @@
 "use client";
-import { Calendar, ChevronDown, Download, Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 
 import { CustomModal } from "@/components/app/CustomModal";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
@@ -10,10 +10,12 @@ import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Spinner } from "@/components/app/Spinner";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import AddCustomer from "./AddCustomer";
 import AllCustomers from "./AllCustomers";
@@ -68,30 +70,39 @@ const GROWTH_TABS = [
 
 type GrowthTab = (typeof GROWTH_TABS)[number];
 
-// Month options for the header picker, newest first — the analytics endpoints
-// accept `month` as YYYY-MM.
-const buildMonthOptions = () => {
-  const now = new Date();
-  return Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    return {
-      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleDateString("en-NG", { month: "short", year: "numeric" }),
-    };
-  });
-};
-
 // The tinted wallet/debt/customers KPI cards that lived here were removed —
 // their figures now appear in the Wallet & Credit, Total Spend & Basket and
 // Total Customers cards rendered by CustomerSummaryCards.
 
 const Customers = () => {
-  const [activeTopTab, setActiveTopTab] = useState<GrowthTab>("Overview");
-  const monthOptions = useMemo(buildMonthOptions, []);
-  const [month, setMonth] = useState(monthOptions[0].value);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // ?tab=Loyalty%20Programs — falls back to Overview for a missing or unknown
+  // value, so a stale link can never render a blank screen.
+  const tabParam = searchParams.get("tab") as GrowthTab | null;
+  const activeTopTab: GrowthTab =
+    tabParam && GROWTH_TABS.includes(tabParam) ? tabParam : "Overview";
+
+  const setActiveTopTab = useCallback(
+    (tab: GrowthTab) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("tab", tab);
+      // replace, not push: flicking between tabs should not fill the history
+      // stack, and Back should leave the Customers page entirely.
+      router.replace(`/customers?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     undefined,
   );
+  // Analytics tabs still key off a month; take it from the range start so the
+  // single header control drives every tab.
+  const month = useMemo(() => {
+    const d = dateRange?.from ?? new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }, [dateRange]);
   const [page, setPage] = useState(1);
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
@@ -118,10 +129,16 @@ const Customers = () => {
     handleSearchChange,
     activeTier,
     setActiveTier,
+    activeSegment,
+    setActiveSegment,
   } = useCustomerHook({ handleOpenNotSubscribeModal, dateRange, page });
 
+  // min-w-0: the tab panels below are flex items, which default to
+  // min-width:auto and so refuse to shrink below their intrinsic content
+  // width. The streak marquee track is width:max-content, and without this
+  // that width propagates up and stretches the whole page sideways.
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full min-w-0 flex flex-col gap-6">
       {/* Header — title, month scope, and page actions */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div>
@@ -133,34 +150,43 @@ const Customers = () => {
           </p>
         </div>
 
-        <div className="flex gap-2 w-full lg:w-auto">
-          <div className="relative">
-            <Calendar className="w-4 h-4 text-grey-3 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <select
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="h-10 pl-9 pr-8 rounded-lg border border-grey-5 bg-white text-sm font-bold text-grey-1 cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-primary-green-300/30"
-            >
-              {monthOptions.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-grey-3 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        {/* Mobile: the date picker takes its own full-width row and the two
+            actions split the next one. From sm everything sits on one line,
+            all at h-10 so the row reads as a single control strip. */}
+        <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center lg:w-auto">
+          {/* One date control for the whole Customers screen. The list
+              endpoint takes start_date/end_date; the analytics tabs take a
+              YYYY-MM month, derived from the range start below. */}
+          {/* DatePickerWithRange styles its own trigger and takes no height
+              prop, so match the h-10 strip from here rather than changing the
+              shared component for every other screen that uses it. */}
+          <div className="w-full sm:w-56">
+            <DatePickerWithRange
+              date={dateRange}
+              onDateChange={setDateRange}
+              className="w-full [&_button]:h-10 [&_button]:rounded-xl"
+            />
           </div>
 
-          <Link href={"/customers/upload"}>
-            <Button variant="outline" className="gap-1.5">
-              <Download className="w-4 h-4" />
-              Import
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
+              <Button
+                variant="outline"
+                className="h-10 w-full gap-1.5 rounded-xl"
+              >
+                <Download className="w-4 h-4" />
+                Import
+              </Button>
+            </Link>
 
-          <Button className="gap-1.5" onClick={openCustomerModalFunc}>
-            <Plus className="w-4 h-4" />
-            Add Customer
-          </Button>
+            <Button
+              className="h-10 flex-1 gap-1.5 rounded-xl sm:flex-none"
+              onClick={openCustomerModalFunc}
+            >
+              <Plus className="w-4 h-4" />
+              Add Customer
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -263,6 +289,8 @@ const Customers = () => {
             }
             activeTier={activeTier}
             onTierChange={setActiveTier}
+            activeSegment={activeSegment}
+            onSegmentChange={setActiveSegment}
           />
         </>
       )}

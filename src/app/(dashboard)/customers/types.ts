@@ -32,12 +32,39 @@ export interface CustomerType {
   email: string;
   profile_pic: string | null | any;
   addresses?: CustomerAddress[];
+  // Growth fields — all returned by the list endpoint.
+  initials?: string;
+  gender?: string | null;
+  tier_name?: string | null;
+  loyalty_code?: string | null;
+  points?: number;
+  /** Human-readable code, e.g. "CUS-466E90". */
+  customer_code?: string;
+  visits?: number;
+  lifetime_value?: number;
+  avg_spend?: number;
+  /** Pre-formatted by the API, e.g. "Aug 12, 2026". Null when never seen. */
+  last_visit?: string | null;
+  risk_level?: "Low" | "Medium" | "High" | "Critical" | string;
+  /** 0–100. */
+  retention_score?: number;
+  status?: "Active" | "At Risk" | "Inactive" | string;
+  wallet_balance?: number;
+  credit_balance?: number;
 }
 
 export interface CustomerSummary {
   total_debt: number;
   total_wallet: number;
   customer_count: number;
+  /** Customers carrying a credit balance. */
+  credit_customers_count?: number;
+  total_spend?: number;
+  avg_basket?: number;
+  avg_ltv?: number;
+  active_customers?: number;
+  at_risk_customers?: number;
+  new_customers?: number;
   data: CustomerType[];
 }
 

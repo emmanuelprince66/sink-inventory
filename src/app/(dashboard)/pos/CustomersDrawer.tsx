@@ -20,6 +20,7 @@ const CustomerDrawer = ({
   onOpenChange,
   onCustomerSelect,
   onShippingSelect,
+  onViewLoyalty,
 }: any) => {
   const [searchInput, setSearchInput] = useState("");
 
@@ -94,7 +95,7 @@ const CustomerDrawer = ({
           <div className="w-full p-2">
             <Button className="w-full h-12" onClick={openCustomerModalFunc}>
               <Plus />
-              Add Customer
+              Create Customer
             </Button>
           </div>
           <div className="mt-2 space-y-4 flex-grow overflow-y-auto w-full">
@@ -113,17 +114,37 @@ const CustomerDrawer = ({
               CustomerData.data.results.data.map((customer: any) => (
                 <div
                   key={customer.id}
-                  className="m-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 border-gray-200 hover:border-[#52b661] transition-colors"
-                  onClick={() => handleSelectCustomer(customer)}
+                  className="m-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#52b661]"
                 >
-                  <h3 className="font-medium">{customer.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500">{customer.phone}</p>
-                    <p className="text-sm text-gray-500">-</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="truncate font-medium">{customer.name}</h3>
+                      <p className="truncate text-sm text-gray-500">
+                        {customer.phone || "No phone"}
+                        {customer.email ? ` · ${customer.email}` : ""}
+                      </p>
+                    </div>
+                    {customer.tier_name && (
+                      <span className="shrink-0 rounded-full bg-primary-green-500 px-2 py-0.5 text-[10px] font-bold text-primary-green-300">
+                        {customer.tier_name}
+                      </span>
+                    )}
+                  </div>
 
-                    <p className="text-[12px] text-gray-500">
-                      {customer.email}
-                    </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-9 rounded-lg text-xs"
+                      onClick={() => onViewLoyalty(customer)}
+                    >
+                      View Loyalty
+                    </Button>
+                    <Button
+                      className="h-9 rounded-lg text-xs"
+                      onClick={() => handleSelectCustomer(customer)}
+                    >
+                      Add to Sale
+                    </Button>
                   </div>
                 </div>
               ))
@@ -164,7 +185,7 @@ const CustomerDrawer = ({
         isOpen={openAddCustomerModal}
         onClose={closeOpenCustomerModal}
         trigger={false}
-        title="Add Customer"
+        title="Create Customer"
       >
         <div className="w-full ">
           <AddCustomer closeOpenCustomerModal={closeOpenCustomerModal} />

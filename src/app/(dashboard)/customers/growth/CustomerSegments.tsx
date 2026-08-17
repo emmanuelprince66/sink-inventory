@@ -219,37 +219,44 @@ const CustomerSegments = () => {
         </>
       )}
 
-      <CustomModal
-        isOpen={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        trigger={false}
-        title={selected?.name ?? "Segment"}
-      >
-        <div className="w-full">
-          {selected?.id && <SegmentCustomers segmentId={selected.id} />}
-        </div>
-      </CustomModal>
+      {/* Mount only the open dialog — see the note in LoyaltyPrograms: several
+          Radix overlays mounted together can deadlock the page's focus and
+          pointer-events locks. */}
+      {selected?.id && (
+        <CustomModal
+          isOpen
+          onClose={() => setSelected(null)}
+          trigger={false}
+          title={selected.name ?? "Segment"}
+        >
+          <div className="w-full">
+            <SegmentCustomers segmentId={selected.id} />
+          </div>
+        </CustomModal>
+      )}
 
-      <CustomModal
-        isOpen={creating || Boolean(editing)}
-        onClose={() => {
-          setCreating(false);
-          setEditing(null);
-        }}
-        trigger={false}
-        title={editing ? "Edit Segment" : "Create Segment"}
-      >
-        <div className="w-full">
-          <AddSegment
-            segment={editing}
-            onDone={() => {
-              setCreating(false);
-              setEditing(null);
-              refresh();
-            }}
-          />
-        </div>
-      </CustomModal>
+      {(creating || editing) && (
+        <CustomModal
+          isOpen
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          trigger={false}
+          title={editing ? "Edit Segment" : "Create Segment"}
+        >
+          <div className="w-full">
+            <AddSegment
+              segment={editing}
+              onDone={() => {
+                setCreating(false);
+                setEditing(null);
+                refresh();
+              }}
+            />
+          </div>
+        </CustomModal>
+      )}
     </div>
   );
 };

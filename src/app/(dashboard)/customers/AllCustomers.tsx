@@ -1,6 +1,5 @@
 "use client";
 
-import DataGapBadge from "@/components/app/DataGapBadge";
 import CustomerFilterBar from "./CustomerFilterBar";
 import CustomerSummaryCards from "./CustomerSummaryCards";
 import CustomerTable from "./CustomerTable";
@@ -20,6 +19,8 @@ const AllCustomers = ({
   onStatusChange,
   activeTier,
   onTierChange,
+  activeSegment,
+  onSegmentChange,
 }: {
   customersData: ApiResponse<CustomerResponse>;
   handleRowClick?: (row: any) => void; // Define the type of row if possible
@@ -33,6 +34,8 @@ const AllCustomers = ({
   onStatusChange: (value: string) => void;
   activeTier: string;
   onTierChange: (value: string) => void;
+  activeSegment: string;
+  onSegmentChange: (value: string) => void;
 }) => {
   const hasCustomers = (customersData?.data?.results?.data?.length ?? 0) > 0;
 
@@ -51,11 +54,13 @@ const AllCustomers = ({
         onStatusChange={onStatusChange}
         activeTier={activeTier}
         onTierChange={onTierChange}
+        activeSegment={activeSegment}
+        onSegmentChange={onSegmentChange}
       />
 
       {hasCustomers && !customerLoading ? (
         <>
-          <CustomerSummaryCards summary={summary} customers={rows} />
+          <CustomerSummaryCards summary={summary} />
 
           {/* Count, legend and the table share one card, as in the design. */}
           <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
@@ -86,15 +91,6 @@ const AllCustomers = ({
             />
           </div>
 
-          {/* Gender, Tier, Points, Last Purchase, Visits, Risk, Score and
-              Status render as em-dashes — the payload carries none of them,
-              even though tier and status can be filtered on. */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <DataGapBadge
-              label="Missing columns"
-              needs="GET /customer/{business_id}/ — the customer payload returns only name, phone, email, wallet, sales_count, total_sales and addresses. The Customers table design also needs these per customer: gender, loyalty tier, points, last_purchase_at, visits, risk level and retention score. Note tier and status are already accepted as filters, so the values exist server-side — they just aren't returned on each row."
-            />
-          </div>
         </>
       ) : (
         <div className="w-full h-full flex flex-col justify-center items-center">

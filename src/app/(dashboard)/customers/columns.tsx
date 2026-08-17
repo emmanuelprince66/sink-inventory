@@ -1,18 +1,13 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { CustomerType } from "./types";
 
-// Column order and colouring follow the Customers design exactly.
-//
-// Gender, Tier, Points, Last Purchase, Visits, Risk, Score and Status have no
-// source in the customer payload — it returns only name, phone, email, wallet,
-// sales_count, total_sales and addresses. Those cells render an em-dash rather
-// than an invented value, so the table keeps the designed shape without
-// implying data that does not exist. AllCustomers carries a DataGapBadge
-// naming all eight for the backend.
+// Every column below is backed by the list endpoint — it returns initials,
+// gender, tier_name, points, customer_code, visits, lifetime_value, avg_spend,
+// last_visit, risk_level, retention_score, status, wallet_balance and
+// credit_balance alongside the base fields. Nothing here is derived or faked.
 
 const AVATAR_TONES = [
   "bg-primary-green-300",
@@ -31,14 +26,33 @@ const avatarTone = (seed: string) => {
   return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
 };
 
-const initials = (name?: string) =>
-  (name ?? "?")
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase() || "?";
+const TIER_TONES: Record<string, string> = {
+  VIP: "bg-violet-100 text-violet-700",
+  Gold: "bg-amber-100 text-amber-700",
+  Silver: "bg-grey-6 text-grey-3",
+  Bronze: "bg-orange-100 text-orange-700",
+};
+
+const RISK_TONES: Record<string, string> = {
+  Low: "text-primary-green-300",
+  Medium: "text-warning-1",
+  High: "text-orange-600",
+  Critical: "text-error-1",
+};
+
+const STATUS_TONES: Record<string, string> = {
+  Active: "bg-primary-green-500 text-primary-green-300",
+  "At Risk": "bg-warning-2 text-warning-1",
+  Inactive: "bg-grey-6 text-grey-3",
+};
+
+/** Score bar colour tracks the same thresholds as the risk column. */
+const scoreTone = (score: number) =>
+  score >= 70
+    ? "bg-primary-green-300"
+    : score >= 40
+      ? "bg-warning-1"
+      : "bg-error-1";
 
 const Blank = () => <span className="text-sm text-grey-4">—</span>;
 
@@ -56,7 +70,7 @@ export const columns: ColumnDef<CustomerType>[] = [
               avatarTone(customer.id ?? customer.name ?? ""),
             )}
           >
-            {initials(customer.name)}
+            {customer.initials ?? "?"}
           </span>
           <p className="text-sm font-bold text-primary-green-300 truncate">
             {customer.name}
@@ -66,20 +80,13 @@ export const columns: ColumnDef<CustomerType>[] = [
     },
   },
   {
-    id: "customer_id",
+    accessorKey: "customer_code",
     header: "ID",
-    cell: ({ row, table }) => {
-      // The payload has no human-readable code, so derive a stable CUS-00n
-      // from the row's position in the current page.
-      const index = table
-        .getRowModel()
-        .rows.findIndex((r) => r.id === row.id);
-      return (
-        <span className="text-xs font-medium text-info-1 whitespace-nowrap">
-          CUS-{String(index + 1).padStart(3, "0")}
-        </span>
-      );
-    },
+    cell: ({ row }) => (
+      <span className="text-xs font-medium text-info-1 whitespace-nowrap">
+        {row.original.customer_code ?? "—"}
+      </span>
+    ),
   },
   {
     accessorKey: "phone",
@@ -91,9 +98,14 @@ export const columns: ColumnDef<CustomerType>[] = [
     ),
   },
   {
-    id: "gender",
+    accessorKey: "gender",
     header: "Gender",
-    cell: () => <Blank />,
+    cell: ({ row }) =>
+      row.original.gender ? (
+        <span className="text-sm text-grey-2">{row.original.gender}</span>
+      ) : (
+        <Blank />
+      ),
   },
   {
     id: "location",
@@ -113,26 +125,54 @@ export const columns: ColumnDef<CustomerType>[] = [
     },
   },
   {
-    id: "tier",
+    accessorKey: "tier_name",
     header: "Tier",
-    cell: () => <Blank />,
+    cell: ({ row }) => {
+      const tier = row.original.tier_name;
+      if (!tier) return <Blank />;
+      return (
+        <span
+          className={cn(
+            "text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap",
+            TIER_TONES[tier] ?? "bg-grey-6 text-grey-3",
+          )}
+        >
+          {tier}
+        </span>
+      );
+    },
   },
   {
-    id: "points",
+    accessorKey: "points",
     header: "Points",
-    cell: () => <Blank />,
-  },
-  {
-    accessorKey: "wallet",
-    header: "Wallet / Credit",
     cell: ({ row }) => (
-      <span className="text-sm font-bold text-warning-1 whitespace-nowrap">
-        {formatToNaira(Number(row.original.wallet ?? 0))}
+      <span className="text-sm font-bold text-warning-1">
+        {Number(row.original.points ?? 0).toLocaleString()}
       </span>
     ),
   },
   {
-    accessorKey: "sales_count",
+    id: "wallet_credit",
+    header: "Wallet / Credit",
+    cell: ({ row }) => {
+      const wallet = Number(row.original.wallet_balance ?? 0);
+      const credit = Number(row.original.credit_balance ?? 0);
+      return (
+        <div className="whitespace-nowrap">
+          <p className="text-sm font-bold text-warning-1">
+            {formatToNaira(wallet)}
+          </p>
+          {credit > 0 && (
+            <p className="text-[10px] font-bold text-primary-green-300">
+              +{formatToNaira(credit)} credit
+            </p>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "visits",
     header: "Orders",
     cell: ({ row }) => (
       <span className="text-sm font-bold text-info-1">
@@ -150,73 +190,100 @@ export const columns: ColumnDef<CustomerType>[] = [
     ),
   },
   {
-    id: "avg_basket",
+    accessorKey: "avg_spend",
     header: "Avg Basket",
-    cell: ({ row }) => {
-      const orders = Number(row.original.sales_count ?? 0);
-      const spend = Number(row.original.total_sales ?? 0);
-      return orders > 0 ? (
-        <span className="text-sm text-primary-green-300 whitespace-nowrap">
-          {formatToNaira(spend / orders)}
-        </span>
-      ) : (
-        <Blank />
-      );
-    },
-  },
-  {
-    id: "ltv",
-    header: "LTV",
     cell: ({ row }) => (
-      <span className="text-sm font-extrabold text-primary-green-300 whitespace-nowrap">
-        {formatToNaira(Number(row.original.total_sales ?? 0))}
+      <span className="text-sm text-primary-green-300 whitespace-nowrap">
+        {formatToNaira(Number(row.original.avg_spend ?? 0))}
       </span>
     ),
   },
   {
-    id: "last_purchase",
+    accessorKey: "lifetime_value",
+    header: "LTV",
+    cell: ({ row }) => (
+      <span className="text-sm font-extrabold text-primary-green-300 whitespace-nowrap">
+        {formatToNaira(Number(row.original.lifetime_value ?? 0))}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "last_visit",
     header: "Last Purchase",
-    cell: () => <Blank />,
+    cell: ({ row }) =>
+      row.original.last_visit ? (
+        <span className="text-sm text-grey-2 whitespace-nowrap">
+          {row.original.last_visit}
+        </span>
+      ) : (
+        <Blank />
+      ),
   },
   {
-    id: "visits",
+    accessorKey: "visits",
+    id: "visits_count",
     header: "Visits",
-    cell: () => <Blank />,
+    cell: ({ row }) => (
+      <span className="text-sm text-grey-2">
+        {Number(row.original.visits ?? 0)}
+      </span>
+    ),
   },
   {
-    id: "risk",
+    accessorKey: "risk_level",
     header: "Risk",
-    cell: () => <Blank />,
-  },
-  {
-    id: "score",
-    header: "Score",
-    cell: () => <Blank />,
-  },
-  {
-    id: "status",
-    header: "Status",
-    cell: () => <Blank />,
-  },
-  {
-    id: "action",
-    header: "",
     cell: ({ row }) => {
-      const customer = row.original;
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const router = useRouter();
-
+      const risk = row.original.risk_level;
+      if (!risk) return <Blank />;
       return (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            router.push(`/customers/${customer.id}`);
-          }}
-          className="text-xs font-bold text-grey-2 hover:text-primary-green-300 cursor-pointer whitespace-nowrap"
+        <span
+          className={cn(
+            "text-xs font-bold whitespace-nowrap",
+            RISK_TONES[risk] ?? "text-grey-3",
+          )}
         >
-          View Profile
-        </button>
+          {risk}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "retention_score",
+    header: "Score",
+    cell: ({ row }) => {
+      const score = Number(row.original.retention_score ?? 0);
+      return (
+        <div className="flex items-center gap-2 w-[70px]">
+          <div className="h-1.5 flex-1 rounded-full bg-grey-6 overflow-hidden">
+            <div
+              className={cn("h-full rounded-full", scoreTone(score))}
+              style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
+            />
+          </div>
+          <span className="text-[11px] font-bold text-grey-2">{score}</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.original.status;
+      if (!status) return <Blank />;
+      return (
+        <span
+          className={cn(
+            "text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap",
+            STATUS_TONES[status] ?? "bg-grey-6 text-grey-3",
+          )}
+        >
+          {status}
+        </span>
       );
     },
   },
 ];
+
+// No "View Profile" action column — the whole row is clickable and routes to
+// /customers/{id}, which is both the design and one less thing to aim at.

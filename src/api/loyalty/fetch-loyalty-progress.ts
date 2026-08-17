@@ -5,7 +5,7 @@ import {
   useQuery,
 } from "@/lib/react-query";
 import { ApiResponse } from "@/types/api";
-import { LoyaltyParticipantProgress } from "@/types/loyalty";
+import { LoyaltyWallet } from "@/types/loyalty";
 import { useLogoutMutation } from "../auth/logout-user";
 
 export type FetchLoyaltyProgressParams = {
@@ -37,7 +37,7 @@ export const fetchLoyaltyProgress = async ({ loyaltyCode }: FetchLoyaltyProgress
     throw error;
   }
 
-  return response.json() as Promise<ApiResponse<LoyaltyParticipantProgress>>;
+  return response.json() as Promise<ApiResponse<LoyaltyWallet>>;
 };
 
 type QueryFnType = typeof fetchLoyaltyProgress;

@@ -22,13 +22,17 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const TABS = ["Overview", "Participants", "QR Code", "Report"] as const;
 type Tab = (typeof TABS)[number];
 
 const PARTICIPANT_FILTERS = ["All", "Active", "Completed", "At Risk"] as const;
 type ParticipantFilter = (typeof PARTICIPANT_FILTERS)[number];
+
+/** Above this many steps a stamp card stops being readable — and stops being
+ *  safe to render one node at a time. Progress falls back to a bar. */
+const MAX_STAMPS = 12;
 
 const initials = (name?: string) =>
   (name ?? "?")
@@ -132,18 +136,41 @@ const ProgramDetailPanel = ({
     params: { programId },
   });
 
+  // Reset to the first tab whenever a different programme is opened, so the
+  // panel never opens showing the previous programme's Report tab.
+  useEffect(() => {
+    if (open) {
+      setTab("Overview");
+      setFilter("All");
+    }
+  }, [open, programId]);
+
+  // Radix locks the page by setting pointer-events:none on <body> while an
+  // overlay is open, and restores it on close. With several dialogs mounted
+  // alongside this sheet, that restore is unreliable — the style survives the
+  // close and the whole page stops accepting clicks, which reads as a freeze.
+  // Clearing it ourselves once the sheet is closed is the safety net.
+  useEffect(() => {
+    if (open) return;
+    const id = window.setTimeout(() => {
+      if (document.body.style.pointerEvents === "none") {
+        document.body.style.pointerEvents = "";
+      }
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [open]);
+
   const detail = data?.data;
   const overview = detail?.overview;
   const report = detail?.reward_cost_report;
   const qr = detail?.qr_details;
   const participants = detail?.participants ?? [];
 
-  // The visit target drives the stamp grid on the QR card and each
-  // participant's progress dots.
-  const target =
-    Number(participants[0]?.progress_target ?? 0) ||
-    Number(program?.conditions?.[0]?.threshold ?? 0) ||
-    0;
+  // Fallback target for participants whose own progress_target is missing.
+  // Deliberately NOT the programme's condition threshold: on a SPEND
+  // programme that value is the naira target (e.g. 50000), and feeding it to
+  // the stamp grid rendered 50,000 nodes per row and froze the page.
+  const target = Number(participants[0]?.progress_target ?? 0) || 0;
 
   const filtered = participants.filter((p) => {
     if (filter === "All") return true;
@@ -547,23 +574,40 @@ const ParticipantRow = ({
 
       {total > 0 && (
         <>
-          <div className="mt-2.5 flex flex-wrap gap-1">
-            {Array.from({ length: total }, (_, i) => (
-              <span
-                key={i}
-                className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded text-[9px] font-bold",
-                  i < current
-                    ? "bg-primary-green-300 text-white"
-                    : "bg-grey-6 text-grey-4",
-                )}
-              >
-                {i < current ? "✓" : i + 1}
-              </span>
-            ))}
-          </div>
+          {/* A stamp card only reads as one past a handful of steps. Beyond
+              MAX_STAMPS — and on spend-based programmes, where the target is a
+              money amount — fall back to a bar. Without this cap a target of
+              50,000 renders 50,000 nodes and locks the browser. */}
+          {total <= MAX_STAMPS ? (
+            <div className="mt-2.5 flex flex-wrap gap-1">
+              {Array.from({ length: total }, (_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "flex h-5 w-5 items-center justify-center rounded text-[9px] font-bold",
+                    i < current
+                      ? "bg-primary-green-300 text-white"
+                      : "bg-grey-6 text-grey-4",
+                  )}
+                >
+                  {i < current ? "✓" : i + 1}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-grey-6">
+              <div
+                className="h-full rounded-full bg-primary-green-300"
+                style={{
+                  width: `${Math.min(100, Math.max(0, (current / total) * 100))}%`,
+                }}
+              />
+            </div>
+          )}
           <p className="mt-1.5 text-[10px] text-grey-3">
-            Visit {current} of {total}
+            {total <= MAX_STAMPS
+              ? `Visit ${current} of ${total}`
+              : `${current.toLocaleString()} of ${total.toLocaleString()}`}
           </p>
         </>
       )}

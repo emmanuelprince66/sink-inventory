@@ -208,3 +208,39 @@
   width: 18px;
   height: 18px;
 }
+
+/* Used by horizontal carousels (loyalty streaks, tab strips) — the arrows are
+   the affordance, so the native bar is noise. Referenced in several places
+   before this but never actually defined. */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Marquee — used by the loyalty streak leaderboard. The track holds the list
+   twice and slides exactly -50%, so the second copy lands where the first
+   began and the loop is seamless. Duration is set per-instance via
+   --marquee-duration so longer lists don't scroll faster. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll var(--marquee-duration, 60s) linear infinite;
+  width: max-content;
+}
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}

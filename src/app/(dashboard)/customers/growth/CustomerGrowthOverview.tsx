@@ -29,7 +29,8 @@ import type { MetricPercentage, MetricPoint } from "@/types/loyalty";
 import DataGapBadge from "@/components/app/DataGapBadge";
 import { useFormatMoney } from "@/utils/formatMoney";
 import ChartEmptyState from "./ChartEmptyState";
-import { AI_INSIGHTS, OVERVIEW_KPIS } from "./dummyGrowthData";
+import { cn } from "@/lib/utils";
+import { AI_INSIGHTS, OVERVIEW_KPIS, type AiInsight } from "./dummyGrowthData";
 import { GrowthStatCard } from "./GrowthStatCard";
 
 Chart.register(
@@ -87,6 +88,39 @@ const asRate = (value: number | undefined | null) => {
   const n = Number(value ?? 0);
   if (Number.isNaN(n)) return "0";
   return Number.isInteger(n) ? String(n) : n.toFixed(1);
+};
+
+const HIGHLIGHT_TONES = {
+  amber: "text-warning-1",
+  blue: "text-info-1",
+  green: "text-primary-green-300",
+} as const;
+
+// Each tile carries one coloured figure — the number is the point of the
+// insight, so it is picked out of the sentence rather than styled uniformly.
+const InsightTile = ({ insight }: { insight: AiInsight }) => {
+  const tone = HIGHLIGHT_TONES[insight.tone ?? "green"];
+  const [before, after] = insight.highlight
+    ? insight.text.split(insight.highlight)
+    : [insight.text, ""];
+
+  return (
+    <div className="bg-grey-6/70 rounded-xl p-3.5">
+      <div className="flex items-start gap-2">
+        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-green-300 shrink-0" />
+        <p className="text-sm text-grey-1 leading-relaxed">
+          {before}
+          {insight.highlight && (
+            <span className={cn("font-bold", tone)}>{insight.highlight}</span>
+          )}
+          {after}
+        </p>
+      </div>
+      <button className="text-xs font-bold text-primary-green-300 hover:text-primary-green-300/80 mt-1.5 ml-3.5 cursor-pointer">
+        {insight.actionLabel} →
+      </button>
+    </div>
+  );
 };
 
 const CustomerGrowthOverview = ({ month }: { month?: string }) => {
@@ -264,26 +298,20 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
       </div>
 
       {/* AI Customer Insights */}
-      <div className="bg-grey-1 rounded-2xl p-5">
+      <div className="bg-white rounded-2xl border border-grey-5 p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <Sparkles className="w-4 h-4 text-primary-green-300" />
-          <h3 className="text-sm font-extrabold text-white">AI Customer Insights</h3>
+          <span className="w-7 h-7 rounded-full bg-grey-1 flex items-center justify-center shrink-0">
+            <Sparkles className="w-3.5 h-3.5 text-warning-1" />
+          </span>
+          <h3 className="text-base font-extrabold text-grey-1">
+            AI Customer Insights
+          </h3>
           {/* These four insights are hardcoded copy, not derived from any call. */}
-          <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, action label and deep-link target" />
+          <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, the figure to highlight, action label and deep-link target" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {AI_INSIGHTS.map((insight) => (
-            <div
-              key={insight.text}
-              className="bg-white/5 border border-white/10 rounded-xl p-3.5"
-            >
-              <p className="text-sm text-white/90 leading-relaxed">
-                {insight.text}
-              </p>
-              <button className="text-xs font-bold text-primary-green-300 hover:text-primary-green-300/80 mt-2 cursor-pointer">
-                {insight.actionLabel} →
-              </button>
-            </div>
+            <InsightTile key={insight.text} insight={insight} />
           ))}
         </div>
       </div>

@@ -1,11 +1,9 @@
 "use client";
 
-import { useFetchCustomerDashboardQuery } from "@/api/customer-analytics/fetch-customer-dashboard";
-import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { useFormatMoney } from "@/utils/formatMoney";
-import { Users, Wallet } from "lucide-react";
-import type { CustomerSummary, CustomerType } from "./types";
+import { ShoppingBag, Users, Wallet } from "lucide-react";
+import type { CustomerSummary } from "./types";
 
 /** Compact money for headline figures — ₦669K rather than ₦669,000. */
 const compact = (amount: number, symbol: string) => {
@@ -24,47 +22,27 @@ const Stat = ({
   label: string;
   value: string;
   tone: string;
-  align?: "left" | "right";
+  align?: "left" | "center" | "right";
 }) => (
-  <div className={align === "right" ? "text-right" : ""}>
+  <div
+    className={
+      align === "right" ? "text-right" : align === "center" ? "text-center" : ""
+    }
+  >
     <p className="text-[10px] text-grey-3">{label}</p>
     <p className={cn("text-xs font-extrabold mt-0.5", tone)}>{value}</p>
   </div>
 );
 
-const CustomerSummaryCards = ({
-  summary,
-  customers,
-}: {
-  summary?: CustomerSummary;
-  customers: CustomerType[];
-}) => {
-  const business_id = useBusinessStore((state) => state.business_id);
+// Every figure here comes straight from the list endpoint's summary block —
+// nothing is derived client-side and nothing is borrowed from the analytics
+// dashboard, both of which this component used to do.
+const CustomerSummaryCards = ({ summary }: { summary?: CustomerSummary }) => {
   const formatMoney = useFormatMoney();
 
-  // Active / At Risk / New come from the analytics dashboard — the customer
-  // list itself carries no status, so the dark card is stitched from both.
-  const { data: dashboardRes } = useFetchCustomerDashboardQuery({
-    params: { id: business_id ?? "" },
-  });
-  const overview = dashboardRes?.data?.overview;
-
-  // Naira symbol from the shared formatter so a non-NGN business is not
+  // Currency symbol from the shared formatter, so a non-NGN business is not
   // hardcoded into the compact figures.
   const symbol = formatMoney(0).replace(/[\d.,\s]/g, "") || "₦";
-
-  const totalSpend = customers.reduce(
-    (sum, c) => sum + Number(c.total_sales ?? 0),
-    0,
-  );
-  const totalOrders = customers.reduce(
-    (sum, c) => sum + Number(c.sales_count ?? 0),
-    0,
-  );
-  const customerCount = summary?.customer_count ?? customers.length;
-
-  const avgBasket = totalOrders > 0 ? totalSpend / totalOrders : 0;
-  const avgLtv = customerCount > 0 ? totalSpend / customerCount : 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -89,7 +67,7 @@ const CustomerSummaryCards = ({
           />
           <Stat
             label="Customers"
-            value={String(customerCount)}
+            value={String(summary?.credit_customers_count ?? 0)}
             tone="text-info-1"
             align="right"
           />
@@ -100,32 +78,24 @@ const CustomerSummaryCards = ({
       <div className="bg-white rounded-2xl border border-grey-5 p-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="w-7 h-7 rounded-full bg-warning-2 text-warning-1 flex items-center justify-center">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-3.5 h-3.5"
-            >
-              <path d="M3 3h2l2.4 12h9.2L19 7H6" />
-              <circle cx="9" cy="20" r="1" />
-              <circle cx="17" cy="20" r="1" />
-            </svg>
+            <ShoppingBag className="w-3.5 h-3.5" />
           </span>
-          <p className="text-xs font-bold text-grey-2">Total Spend &amp; Basket</p>
+          <p className="text-xs font-bold text-grey-2">
+            Total Spend &amp; Basket
+          </p>
         </div>
         <p className="text-2xl font-extrabold text-grey-1">
-          {compact(totalSpend, symbol)}
+          {compact(Number(summary?.total_spend ?? 0), symbol)}
         </p>
         <div className="flex items-center justify-between mt-3">
           <Stat
             label="Avg Basket"
-            value={formatMoney(avgBasket)}
+            value={formatMoney(Number(summary?.avg_basket ?? 0))}
             tone="text-info-1"
           />
           <Stat
             label="Avg LTV"
-            value={formatMoney(avgLtv)}
+            value={formatMoney(Number(summary?.avg_ltv ?? 0))}
             tone="text-primary-green-300"
             align="right"
           />
@@ -140,28 +110,26 @@ const CustomerSummaryCards = ({
           </span>
           <p className="text-xs font-bold text-white/70">Total Customers</p>
         </div>
-        <p className="text-2xl font-extrabold text-white">{customerCount}</p>
+        <p className="text-2xl font-extrabold text-white">
+          {summary?.customer_count ?? 0}
+        </p>
         <div className="flex items-center justify-between mt-3">
           <div>
             <p className="text-[10px] text-white/50">Active</p>
             <p className="text-xs font-extrabold text-primary-green-300 mt-0.5">
-              {Math.round(Number(overview?.active_customers?.value ?? 0))}
+              {summary?.active_customers ?? 0}
             </p>
           </div>
           <div className="text-center">
             <p className="text-[10px] text-white/50">At Risk</p>
             <p className="text-xs font-extrabold text-warning-1 mt-0.5">
-              {Math.round(Number(overview?.churn_rate?.value ?? 0) > 0
-                ? (customerCount *
-                    Number(overview?.churn_rate?.value ?? 0)) /
-                    100
-                : 0)}
+              {summary?.at_risk_customers ?? 0}
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] text-white/50">New</p>
             <p className="text-xs font-extrabold text-info-1 mt-0.5">
-              +{Math.round(Number(overview?.new_this_month?.value ?? 0))}
+              +{summary?.new_customers ?? 0}
             </p>
           </div>
         </div>

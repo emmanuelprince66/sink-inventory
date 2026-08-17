@@ -197,6 +197,7 @@ export const queryKey = {
     getLoyaltyCustomers: "get-loyalty-customers",
     getLoyaltyMembers: "get-loyalty-members",
     joinLoyalty: "join-loyalty",
+    getPublicCampaign: "get-public-loyalty-campaign",
     getLoyaltyProgress: "get-loyalty-progress",
     getRewardsAnalytics: "get-loyalty-rewards-analytics",
     getRewardsAnalyticsCampaigns: "get-loyalty-rewards-analytics-campaigns",

@@ -347,3 +347,95 @@ export interface UnifiedCustomerDashboard {
   charts: ConsolidatedCustomerCharts;
   top_spending_customers: TopSpendingCustomer[];
 }
+
+/**
+ * GET /loyalty/progress/{loyalty_code}/ — public, unauthenticated.
+ * The customer-facing reward wallet for one programme, keyed by the
+ * programme-scoped loyalty code. Verified against a live response.
+ */
+export interface LoyaltyNextTierInfo {
+  current_tier: string | null;
+  next_tier_name: string | null;
+  next_tier_threshold: number | null;
+  /** Pre-formatted, e.g. "₦6,784 / ₦25,000". */
+  next_tier_progress_display: string | null;
+  is_max_tier: boolean;
+}
+
+export interface LoyaltyEnrollmentProgress {
+  id: string;
+  loyalty_code: string;
+  program_name: string;
+  member_name: string;
+  tier_name: string | null;
+  status: string;
+  visit_count: number;
+  spend_total: string;
+  current_streak: number;
+  longest_streak: number;
+  completions_count: number;
+  /** e.g. "6784/50000 Spend" or "3/5 Visits". */
+  progress_display: string;
+  status_label: string;
+  reward_description: string | null;
+  remaining_message: string | null;
+  milestone_steps: unknown[];
+  joined_at: string;
+}
+
+export interface LoyaltyWallet {
+  name: string;
+  phone: string;
+  loyalty_code: string;
+  referral_code: string | null;
+  program: string;
+  tier: string | null;
+  next_tier_info: LoyaltyNextTierInfo;
+  total_visits: number;
+  total_spend: number;
+  points_balance: number;
+  enrollment: LoyaltyEnrollmentProgress;
+  available_rewards: Array<Record<string, unknown>>;
+  redemption_history: Array<Record<string, unknown>>;
+}
+
+/**
+ * GET /loyalty/join/{token}/ — public campaign details behind a QR code.
+ * Everything the landing page needs to render itself before anyone signs up.
+ */
+export interface PublicLoyaltyCondition {
+  type: string;
+  threshold: string | null;
+  min_spend_per_visit: string | null;
+  streak_interval: number | null;
+  product_name: string | null;
+  category_name: string | null;
+}
+
+export interface PublicLoyaltyBonusPeriod {
+  name: string;
+  multiplier: string;
+  days_of_week: string[];
+  start_date: string | null;
+  end_date: string | null;
+}
+
+export interface PublicLoyaltyProgram {
+  business_id: string;
+  business_name: string;
+  business_logo: string | null;
+  program_id: string;
+  name: string;
+  description: string | null;
+  start_date: string;
+  end_date: string | null;
+  reward_type: string;
+  reward_value: string | null;
+  reward_summary: string;
+  trigger_summary: string;
+  reward_style: string;
+  visit_window_hours: number;
+  completion_window_days: number | null;
+  conditions: PublicLoyaltyCondition[];
+  bonus_periods: PublicLoyaltyBonusPeriod[];
+}

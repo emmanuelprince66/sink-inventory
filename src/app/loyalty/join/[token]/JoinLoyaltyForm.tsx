@@ -1,24 +1,15 @@
 "use client";
 
 import { useJoinLoyaltyMutation } from "@/api/loyalty/join-loyalty";
-import DataGapBadge from "@/components/app/DataGapBadge";
+import { useFetchPublicCampaignQuery } from "@/api/loyalty/fetch-public-campaign";
 import { Spinner } from "@/components/app/Spinner";
+import QRCode from "react-qr-code";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { Download } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-// Everything above the form is campaign branding — business name, reward,
-// streak length. None of it can be loaded yet: there is no public endpoint
-// that resolves a join token to its programme, only POST /loyalty/join/{token}.
-// The copy below is the design's own, and the badge asks for the lookup that
-// would make it real.
-const FALLBACK = {
-  business: "Our Store",
-  programme: "Loyalty Rewards",
-  reward: "A reward",
-  trigger: "Complete the streak",
-  streakLength: 5,
-};
-
+// Campaign details come from the public token lookup — business name, reward,
+// trigger and the streak length, all resolved before anyone signs up.
 const FEATURES = [
   {
     icon: "⚡",
@@ -80,11 +71,86 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
   const [birthday, setBirthday] = useState("");
   const [address, setAddress] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [joined, setJoined] = useState(false);
+  const [joined, setJoined] = useState<any | null>(null);
+  // Read after mount — window is unavailable during SSR, and reading it during
+  // render would desync the first client paint from the server HTML.
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
+  }, []);
+
+  const { data: campaignRes, isLoading: campaignLoading } =
+    useFetchPublicCampaignQuery({ params: { token } });
+  const campaign = campaignRes?.data;
+
+  // Streak length is the VISIT condition's threshold. A spend-based programme
+  // has no stamp count, so the streak list is simply not drawn for one.
+  const visitCondition = campaign?.conditions?.find(
+    (condition) => condition.type === "VISIT",
+  );
+  const streakLength = Number(visitCondition?.threshold ?? 0);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [saving, setSaving] = useState(false);
+
+  /**
+   * Saves the card as a PNG, the same html2canvas-pro path the merchant QR
+   * card and the POS receipt use. Deliberately not window.print(): this page
+   * is opened on a phone from a QR scan, where a download is what a customer
+   * can actually keep.
+   */
+  const downloadCard = async () => {
+    const element = cardRef.current;
+    if (!element) return;
+
+    setSaving(true);
+    try {
+      // The QR is inline SVG, so nothing to await, but any future <img> would
+      // rasterise blank without this.
+      await Promise.all(
+        Array.from(element.querySelectorAll("img")).map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) return resolve();
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            }),
+        ),
+      );
+
+      const html2canvas = (await import("html2canvas-pro")).default;
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: true,
+        imageTimeout: 15000,
+      });
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `loyalty_card_${joined?.loyalty_code ?? "card"}.png`;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }, "image/png");
+    } catch {
+      // Nothing to recover — the card is still on screen to screenshot.
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const { mutate: join, isPending } = useJoinLoyaltyMutation({
     token,
-    onSuccess: () => setJoined(true),
+    onSuccess: (response: any) => setJoined(response?.data ?? {}),
   });
 
   const submit = (e: React.FormEvent) => {
@@ -109,15 +175,117 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
   };
 
   if (joined) {
+    // The join response returns the loyalty code, so the card can be shown
+    // immediately — and the QR encodes that code, which is exactly what the
+    // till scanner reads. No round trip, no separate endpoint.
+    const loyaltyCode = joined.loyalty_code;
+    const enrollment = joined.enrollment;
+
     return (
-      <div className="mx-auto max-w-md px-4 py-20 text-center">
-        <div className="text-5xl">🎉</div>
-        <h1 className="mt-4 text-2xl font-extrabold text-grey-1">
-          You&apos;re in!
+      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center gap-5 px-4 py-12">
+        <div className="text-center">
+          <div className="text-5xl">🎉</div>
+          <h1 className="mt-3 text-2xl font-extrabold text-grey-1">
+            {joined.already_joined ? "Welcome back!" : "You're in!"}
+          </h1>
+          <p className="mt-1.5 text-sm text-grey-3">
+            Show this card at the till and we&apos;ll track every visit.
+          </p>
+        </div>
+
+        <div
+          ref={cardRef}
+          className="w-full overflow-hidden rounded-2xl border border-grey-5 bg-white"
+        >
+          <div className="bg-primary-green-300 px-5 py-4 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/70">
+              Loyalty Card
+            </p>
+            <p className="mt-0.5 truncate text-lg font-extrabold text-white">
+              {enrollment?.member_name ?? fullName}
+            </p>
+            <p className="truncate text-[11px] text-white/70">
+              {joined.program ?? enrollment?.program_name}
+            </p>
+          </div>
+
+          <div className="flex flex-col items-center px-5 py-5">
+            {loyaltyCode && (
+              <div className="rounded-xl border border-grey-5 bg-white p-3">
+                <QRCode value={loyaltyCode} size={168} />
+              </div>
+            )}
+            <p className="mt-3 font-mono text-base font-extrabold tracking-wider text-grey-1">
+              {loyaltyCode}
+            </p>
+            <p className="mt-0.5 text-[11px] text-grey-3">
+              Scan or read out this code
+            </p>
+
+            {enrollment?.reward_description && (
+              <div className="mt-4 w-full rounded-xl bg-primary-green-500 px-4 py-3 text-center">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-primary-green-300">
+                  Your Reward
+                </p>
+                <p className="mt-0.5 text-base font-extrabold text-grey-1">
+                  {enrollment.reward_description}
+                </p>
+                {enrollment.remaining_message && (
+                  <p className="mt-0.5 text-[11px] text-grey-3">
+                    {enrollment.remaining_message}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <p className="border-t border-grey-6 py-2 text-center text-[9px] text-grey-4">
+            Powered by Sync360
+          </p>
+        </div>
+
+        <button
+          onClick={downloadCard}
+          disabled={saving}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-green-300 py-3.5 text-sm font-extrabold text-white transition-colors hover:bg-primary-green-300/90 disabled:opacity-70 cursor-pointer disabled:cursor-not-allowed"
+        >
+          {saving ? (
+            <Spinner className="h-4 w-4" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          {saving ? "Preparing..." : "Download My Card"}
+        </button>
+
+        <p className="text-center text-[11px] text-grey-3">
+          Save it to your phone so you always have it with you.
+        </p>
+      </div>
+    );
+  }
+
+  // A customer who scans a dead QR must be told so, not shown a working-looking
+  // signup form that will fail on submit.
+  if (campaignLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-grey-6/40">
+        <Spinner className="text-primary-green-300" />
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
+        <div className="text-5xl" aria-hidden>
+          🔒
+        </div>
+        <h1 className="text-xl font-extrabold text-grey-1">
+          This QR code isn&apos;t active
         </h1>
-        <p className="mt-2 text-sm text-grey-3">
-          Your loyalty card is active. Show your phone number at checkout and
-          we&apos;ll track every visit for you.
+        <p className="text-sm text-grey-3">
+          It may have expired, or the campaign behind it has ended. Ask a member
+          of staff for a current code.
         </p>
       </div>
     );
@@ -126,17 +294,41 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
   return (
     <div className="min-h-screen bg-grey-6/40">
       {/* Hero */}
-      <header className="relative bg-primary-green-100 px-4 pb-24 pt-6 text-center">
-        <div className="mx-auto max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white">
-            🏪 {FALLBACK.business}
+      <header className="relative bg-primary-green-100 px-4 pb-24 pt-6">
+        {/* Public page — a customer arrives here by scanning, so there may be
+            no history to go back to. Only render Back when there is. */}
+        {canGoBack && (
+          <button
+            onClick={() => window.history.back()}
+            className="mb-4 flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold text-white/70 hover:bg-white/10 hover:text-white cursor-pointer"
+          >
+            <span aria-hidden>←</span>
+            Back
+          </button>
+        )}
+
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 py-1 pl-1 pr-3 text-xs font-bold text-white">
+            {campaign?.business_logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={campaign.business_logo}
+                alt=""
+                className="h-6 w-6 rounded-full bg-white object-contain"
+              />
+            ) : (
+              <span className="pl-2" aria-hidden>
+                🏪
+              </span>
+            )}
+            {campaign?.business_name ?? "Our Store"}
           </span>
 
           <div className="mt-6 text-4xl" aria-hidden>
             🎁
           </div>
           <h1 className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
-            {FALLBACK.programme}
+            {campaign?.name ?? "Loyalty Rewards"}
           </h1>
 
           <div className="mx-auto mt-5 w-fit rounded-2xl bg-white/10 px-8 py-4">
@@ -144,19 +336,13 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
               Your Reward
             </p>
             <p className="mt-1 text-2xl font-extrabold text-white">
-              {FALLBACK.reward}
+              {campaign?.reward_summary ?? "A reward"}
             </p>
             <p className="mt-0.5 text-[11px] text-white/60">
-              {FALLBACK.trigger}
+              {campaign?.trigger_summary ?? "Complete the streak"}
             </p>
           </div>
 
-          <div className="mt-5 flex justify-center">
-            <DataGapBadge
-              label="Campaign details are placeholder"
-              needs="No public endpoint resolves a join token to its campaign. Needed: GET /loyalty/join/{token}/ returning business name, programme name, reward summary, trigger summary and streak length, so the landing page can show the real campaign instead of placeholder copy."
-            />
-          </div>
         </div>
       </header>
 
@@ -177,13 +363,14 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
           </p>
         </section>
 
-        {/* Visit streak */}
+        {/* Visit streak — only meaningful when the programme counts visits. */}
+        {streakLength > 0 && (
         <section className="mt-6 rounded-2xl bg-primary-green-100 p-5">
           <p className="text-[10px] font-bold uppercase tracking-widest text-primary-green-300">
             Visit Streak
           </p>
           <ol className="mt-4 space-y-3">
-            {Array.from({ length: FALLBACK.streakLength - 1 }, (_, i) => (
+            {Array.from({ length: Math.max(streakLength - 1, 0) }, (_, i) => (
               <li key={i} className="flex items-center gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-extrabold text-white">
                   {i + 1}
@@ -201,11 +388,12 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
                 Get Rewarded!
               </span>
               <span className="rounded-full bg-primary-green-300 px-2.5 py-0.5 text-[11px] font-extrabold text-white">
-                {FALLBACK.reward}
+                {campaign?.reward_summary ?? "A reward"}
               </span>
             </li>
           </ol>
         </section>
+        )}
 
         {/* Feature grid */}
         <section className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -320,7 +508,7 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
           <p className="rounded-xl bg-primary-green-500 px-3.5 py-3 text-[11px] leading-relaxed text-grey-2">
             By activating, you agree to receive loyalty updates from{" "}
             <span className="font-bold text-primary-green-300">
-              {FALLBACK.business}
+              {campaign?.business_name ?? "Our Store"}
             </span>{" "}
             via SMS/email. You can opt out at any time.
           </p>

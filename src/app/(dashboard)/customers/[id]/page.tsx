@@ -1,4 +1,4 @@
-import Contact from "./Contact";
+import CustomerProfile from "./CustomerProfile";
 
 export default async function Page({
   params,
@@ -7,9 +7,5 @@ export default async function Page({
 }) {
   const { id } = await params;
 
-  return (
-    <div>
-      <Contact id={id} />
-    </div>
-  );
+  return <CustomerProfile id={id} />;
 }

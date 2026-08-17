@@ -42,13 +42,36 @@ export const TOTAL_GROWTH = {
 export interface AiInsight {
   text: string;
   actionLabel: string;
+  /** Substring of `text` rendered in `tone` — the coloured figure in the design. */
+  highlight?: string;
+  tone?: "amber" | "blue" | "green";
 }
 
 export const AI_INSIGHTS: AiInsight[] = [
-  { text: "Repeat purchases increased by 18% this month.", actionLabel: "View Analytics" },
-  { text: "36 customers have not returned in 45+ days.", actionLabel: "Win Back" },
-  { text: "Saturday generates the highest repeat purchases.", actionLabel: "Schedule Campaign" },
-  { text: "Top 20 customers generated 48% of your revenue.", actionLabel: "Reward VIPs" },
+  {
+    text: "Repeat purchases increased by 18% this month.",
+    highlight: "18% this month",
+    tone: "amber",
+    actionLabel: "View Analytics",
+  },
+  {
+    text: "36 customers have not returned in 45+ days.",
+    highlight: "36 customers",
+    tone: "blue",
+    actionLabel: "Win Back",
+  },
+  {
+    text: "Saturday generates the highest repeat purchases.",
+    highlight: "Saturday",
+    tone: "green",
+    actionLabel: "Schedule Campaign",
+  },
+  {
+    text: "Top 20 customers generated 48% of your revenue.",
+    highlight: "48% of your revenue",
+    tone: "amber",
+    actionLabel: "Reward VIPs",
+  },
 ];
 
 // ─── Analytics tab ──────────────────────────────────────────────────────────
@@ -251,4 +274,65 @@ export const TOP_REFERRERS: TopReferrer[] = [
   { initials: "CE", name: "Chiamaka Eze", code: "CHI2024", successfulReferrals: 8, revenueGenerated: "₦124,000", status: "Active" },
   { initials: "SA", name: "Samson Akinola", code: "SAM2025", successfulReferrals: 5, revenueGenerated: "₦78,000", status: "Active" },
   { initials: "OO", name: "Olosunde Olosunde", code: "TOB2025", successfulReferrals: 3, revenueGenerated: "₦45,000", status: "Active" },
+];
+
+// ─── Referrals tab ──────────────────────────────────────────────────────────
+// Sample only — no referral endpoints exist yet. The tab renders a
+// DataGapBadge naming exactly what the backend would need to supply.
+
+export const REFERRAL_SUMMARY = {
+  programmes: 2,
+  participants: 4,
+  totalReferrals: 11,
+  paidOut: 24500,
+  conversion: 2.8,
+};
+
+export interface ReferralProgramme {
+  id: string;
+  name: string;
+  createdAt: string;
+  status: string;
+  rewardRate: number;
+  cap: number;
+  used: number;
+  participants: number;
+  referrals: number;
+  paidOut: number;
+  link: string;
+  sms: boolean;
+  email: boolean;
+}
+
+export const REFERRAL_PROGRAMMES: ReferralProgramme[] = [
+  {
+    id: "friend-referral-drive",
+    name: "Friend Referral Drive",
+    createdAt: "Jul 1, 2025",
+    status: "Active",
+    rewardRate: 10,
+    cap: 50,
+    used: 9,
+    participants: 3,
+    referrals: 9,
+    paidOut: 17000,
+    link: "sync360.africa/coffeehub/REF-XX-XXXXXX",
+    sms: true,
+    email: false,
+  },
+  {
+    id: "vip-bring-a-friend",
+    name: "VIP Bring-a-Friend",
+    createdAt: "Jul 15, 2025",
+    status: "Active",
+    rewardRate: 15,
+    cap: 20,
+    used: 2,
+    participants: 1,
+    referrals: 2,
+    paidOut: 7500,
+    link: "sync360.africa/coffeehub/REF-XX-XXXXXX",
+    sms: true,
+    email: true,
+  },
 ];

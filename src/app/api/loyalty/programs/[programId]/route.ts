@@ -25,7 +25,7 @@ export async function GET(
     );
   }
 
-  const apiUrl = new URL(`${BaseUrl}loyalty/programs/${programId}/`);
+  const apiUrl = new URL(`${BaseUrl}loyalty/programs/single/${programId}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {
@@ -92,7 +92,7 @@ export async function PATCH(
     );
   }
 
-  const apiUrl = new URL(`${BaseUrl}loyalty/programs/${programId}/`);
+  const apiUrl = new URL(`${BaseUrl}loyalty/programs/single/${programId}/`);
 
   try {
     const payload = await request.json();
@@ -162,7 +162,7 @@ export async function DELETE(
     );
   }
 
-  const apiUrl = new URL(`${BaseUrl}loyalty/programs/${programId}/`);
+  const apiUrl = new URL(`${BaseUrl}loyalty/programs/single/${programId}/`);
 
   try {
     const response = await fetch(apiUrl.toString(), {

@@ -13,12 +13,13 @@ import LoyaltyTiers from "./LoyaltyTiers";
 import PointOfSale from "./PointOfSale";
 import ProgramDetailPanel from "./ProgramDetailPanel";
 import ProgramQrModal from "./ProgramQrModal";
-import DataGapBadge from "@/components/app/DataGapBadge";
 import { cn } from "@/lib/utils";
 import { toList, type Paginated } from "@/types/api";
 import type { LoyaltyProgram, TopStreakPerformer } from "@/types/loyalty";
 import { useFormatMoney } from "@/utils/formatMoney";
 import {
+  ChevronLeft,
+  ChevronRight,
   Flame,
   Gift,
   Link2,
@@ -32,8 +33,9 @@ import {
 } from "lucide-react";
 // Trophy doubles as the Tiers action icon in the header.
 import dynamic from "next/dynamic";
-import { useState } from "react";
-import { LOYALTY_CAMPAIGNS, STREAK_LEADERS } from "./dummyGrowthData";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LOYALTY_CAMPAIGNS } from "./dummyGrowthData";
 
 // Same dynamic-import pattern Customers.tsx already used for the Campaigns
 // tab — kept reachable from here since Loyalty Programs is its closest
@@ -69,7 +71,7 @@ const StreakCard = ({ performer }: { performer: TopStreakPerformer }) => {
   const isStrong = performer.streak_count >= 5;
 
   return (
-    <div className="bg-white/[0.06] border border-white/10 rounded-xl p-3.5">
+    <div className="bg-white/[0.06] w-full border border-white/10 rounded-xl p-3.5">
       <div className="flex items-center gap-2 mb-3">
         <span
           className={cn(
@@ -106,6 +108,108 @@ const StreakCard = ({ performer }: { performer: TopStreakPerformer }) => {
           style={{ width: `${pct}%` }}
         />
       </div>
+    </div>
+  );
+};
+
+/**
+ * Streak leaderboard as a slow marquee.
+ *
+ * No scroll container anywhere — the track is a CSS animation inside an
+ * overflow-hidden viewport, so nothing can produce a scrollbar. The list is
+ * rendered twice and the track slides exactly -50%, which puts the second
+ * copy where the first started and makes the loop seamless.
+ *
+ * Speed is per-card rather than fixed, so a long leaderboard doesn't whip past
+ * faster than a short one. Hovering pauses it; reduced-motion users get a
+ * static row.
+ */
+const SECONDS_PER_CARD = 6;
+
+/**
+ * Shown while the dashboard request is in flight. Mirrors the real card's
+ * shape so the strip does not jump when data lands, and — more importantly —
+ * means the sample cards and their "sample data" badge never flash up on a
+ * business that does have real streaks.
+ */
+const StreakSkeleton = () => (
+  <div className="flex gap-3">
+    {[0, 1, 2].map((i) => (
+      <div
+        key={i}
+        className={cn(
+          "w-[280px] shrink-0 rounded-xl border border-white/10 bg-white/[0.06] p-3.5",
+          // Third card is desktop-only, matching how many fit on the strip.
+          i === 2 && "hidden lg:block",
+          i === 1 && "hidden sm:block",
+        )}
+      >
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-7 w-7 shrink-0 animate-pulse rounded-full bg-white/15" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="h-3 w-24 animate-pulse rounded bg-white/15" />
+            <div className="h-2 w-12 animate-pulse rounded bg-white/10" />
+          </div>
+        </div>
+        <div className="h-5 w-28 animate-pulse rounded bg-white/15" />
+        <div className="mt-2.5 h-1.5 w-full animate-pulse rounded-full bg-white/10" />
+      </div>
+    ))}
+  </div>
+);
+
+const StreakCarousel = ({
+  performers,
+}: {
+  performers: TopStreakPerformer[];
+}) => {
+  if (performers.length === 0) {
+    return (
+      <p className="py-6 text-center text-xs text-white/50">
+        No streaks yet — they appear once customers start returning.
+      </p>
+    );
+  }
+
+  const duration = `${performers.length * SECONDS_PER_CARD}s`;
+
+  return (
+    <div className="marquee-viewport relative w-full overflow-hidden">
+      {/* One invisible card, in flow, purely to give the viewport its height —
+          the animated track can't do that job now that it is absolute. */}
+      <div className="invisible w-[280px] px-1.5" aria-hidden>
+        <StreakCard performer={performers[0]} />
+      </div>
+
+      {/* The track is ABSOLUTE, and that is the entire fix. An out-of-flow
+          element contributes nothing to any ancestor's width, so a
+          width:max-content track cannot stretch the page no matter what the
+          flex ancestors do. Every earlier attempt left it in normal flow and
+          tried to contain it with min-w-0 / max-w-full / overflow-hidden,
+          which is why the page kept scrolling sideways. */}
+      <div
+        className="marquee-track absolute inset-y-0 left-0 flex"
+        style={{ ["--marquee-duration" as string]: duration }}
+      >
+        {/* Rendered twice: the first copy scrolls out as the second scrolls in.
+            The duplicate is decorative, so it is hidden from screen readers. */}
+        {[0, 1].map((copy) => (
+          <div key={copy} className="flex" aria-hidden={copy === 1}>
+            {performers.map((performer) => (
+              <div
+                key={`${copy}-${performer.id}`}
+                className="w-[280px] shrink-0 px-1.5"
+              >
+                <StreakCard performer={performer} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Soft edges so cards fade in and out rather than being cut off. */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-primary-green-100 to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-primary-green-100 to-transparent" />
     </div>
   );
 };
@@ -269,7 +373,6 @@ const CampaignCard = ({
 };
 
 type ModalView =
-  | "create"
   | "edit"
   | "qr"
   | "participants"
@@ -285,6 +388,7 @@ const LoyaltyPrograms = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const formatMoney = useFormatMoney();
   const { showToast } = useToast();
+  const router = useRouter();
   // Which card is currently resolving its join token, so only that button
   // shows a spinner.
   const [landingPageFor, setLandingPageFor] = useState<string | null>(null);
@@ -328,9 +432,10 @@ const LoyaltyPrograms = () => {
     setModalView("participants");
   };
 
-  const { data: dashboardRes } = useFetchLoyaltyDashboardQuery({
-    params: { id: business_id ?? "" },
-  });
+  const { data: dashboardRes, isLoading: dashboardLoading } =
+    useFetchLoyaltyDashboardQuery({
+      params: { id: business_id ?? "" },
+    });
   const { data: programsRes } = useFetchLoyaltyProgramsQuery({
     params: { id: business_id ?? "" },
   });
@@ -343,19 +448,11 @@ const LoyaltyPrograms = () => {
     programsRes?.data as unknown as Paginated<LoyaltyProgram>,
   );
 
-  // Until the business has live loyalty data, fall back to the sample rows so
-  // the tab still reads as designed instead of rendering an empty shell. The
-  // flag below is what stops that sample being mistaken for real data.
-  const usingSampleStreaks = !dashboard?.top_streak_performers?.length;
-  const streakPerformers: TopStreakPerformer[] = !usingSampleStreaks
-    ? dashboard!.top_streak_performers!
-    : STREAK_LEADERS.map((l, i) => ({
-        id: String(i),
-        initials: l.initials,
-        full_name: l.name,
-        tier: l.tier,
-        streak_count: l.streak,
-      }));
+  // Live only — the endpoint populates top_streak_performers now, so there is
+  // no sample fallback. Loading shows a skeleton, an empty result shows the
+  // empty state inside StreakCarousel.
+  const streakPerformers: TopStreakPerformer[] =
+    dashboard?.top_streak_performers ?? [];
 
   const campaigns: LoyaltyProgram[] = programs.length
     ? programs
@@ -399,7 +496,7 @@ const LoyaltyPrograms = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full min-w-0 max-w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <p className="text-sm text-grey-3 max-w-md">
@@ -407,11 +504,10 @@ const LoyaltyPrograms = () => {
           referrals, and more.
         </p>
         <div className="flex items-center gap-2 shrink-0">
+          {/* A page, not a modal — nine steps plus the QR handover needs the
+              room, and it gets its own URL. */}
           <button
-            onClick={() => {
-              setSelected(null);
-              setModalView("create");
-            }}
+            onClick={() => router.push("/customers/loyalty/create")}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-green-100 text-white text-sm font-bold hover:bg-primary-green-100/90 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -432,7 +528,7 @@ const LoyaltyPrograms = () => {
             Members
           </button>
           <button
-            onClick={() => setModalView("pos")}
+            onClick={() => router.push("/pos")}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-green-300 text-white text-sm font-bold hover:bg-primary-green-300/90 cursor-pointer"
           >
             <Store className="w-4 h-4" />
@@ -462,26 +558,23 @@ const LoyaltyPrograms = () => {
       </div>
 
       {/* Loyalty Streak System */}
-      <div className="bg-primary-green-100 rounded-2xl p-5">
+      <div className="bg-primary-green-100 rounded-2xl w-full min-w-0 p-5 overflow-hidden">
         <div className="flex items-center gap-2 mb-1 flex-wrap">
           <Flame className="w-4 h-4 text-warning-1" />
           <h3 className="text-sm font-extrabold text-white">
             Loyalty Streak System
           </h3>
-          {/* The dashboard endpoint returns top_streak_performers: [] today, so
-              these cards are the designed sample set until it is populated. */}
-          {usingSampleStreaks && (
-            <DataGapBadge needs="GET /loyalty/{business_id}/dashboard — top_streak_performers returns an empty array; populate it with the top streak holders (name, tier, streak count, progress)" />
-          )}
         </div>
         <p className="text-xs text-white/60 mb-4">
           Top streak performers{" "}
           <span className="text-primary-green-300 font-bold">this month</span>
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {streakPerformers.map((performer) => (
-            <StreakCard key={performer.id} performer={performer} />
-          ))}
+        <div className="w-full">
+          {dashboardLoading ? (
+            <StreakSkeleton />
+          ) : (
+            <StreakCarousel performers={streakPerformers} />
+          )}
         </div>
       </div>
 
@@ -523,69 +616,86 @@ const LoyaltyPrograms = () => {
         )}
       </div>
 
-      <CustomModal
-        isOpen={modalView === "create" || modalView === "edit"}
-        onClose={closeModal}
-        trigger={false}
-        title={modalView === "edit" ? "Edit Campaign" : "Create Campaign"}
-      >
-        <div className="w-full">
-          <AddLoyaltyProgram closeModal={closeModal} editData={selected} />
-        </div>
-      </CustomModal>
+      {/* Exactly one overlay is mounted at a time.
+          Previously all six dialogs plus the sheet were rendered together,
+          each with `open={false}`. Radix still mounts a focus scope and a
+          body pointer-events lock per instance, and those instances fight:
+          moving focus inside one (clicking a tab in the sheet) could leave the
+          page locked with no overlay owning it — a frozen screen that only
+          recovered when the window lost and regained focus and Radix
+          re-evaluated. Mounting only the active one removes the conflict
+          entirely rather than papering over it. */}
+      {modalView === "edit" && (
+        <CustomModal
+          isOpen
+          onClose={closeModal}
+          trigger={false}
+          title="Edit Campaign"
+        >
+          <div className="w-full">
+            <AddLoyaltyProgram closeModal={closeModal} editData={selected} />
+          </div>
+        </CustomModal>
+      )}
 
-      <CustomModal
-        isOpen={modalView === "qr"}
-        onClose={closeModal}
-        trigger={false}
-        title="Share Campaign"
-      >
-        <div className="w-full">
-          {selected?.id && <ProgramQrModal programId={selected.id} />}
-        </div>
-      </CustomModal>
+      {modalView === "qr" && selected?.id && (
+        <CustomModal
+          isOpen
+          onClose={closeModal}
+          trigger={false}
+          title="Share Campaign"
+        >
+          <div className="w-full">
+            <ProgramQrModal programId={selected.id} />
+          </div>
+        </CustomModal>
+      )}
 
       {/* Programme detail is a right-side panel, not a centre modal: its four
           tabs are a working surface a merchant reads alongside the campaign
           list, and the design keeps that list visible behind it. */}
-      <ProgramDetailPanel
-        program={selected}
-        open={modalView === "participants"}
-        onClose={closeModal}
-      />
+      {modalView === "participants" && (
+        <ProgramDetailPanel program={selected} open onClose={closeModal} />
+      )}
 
-      <CustomModal
-        isOpen={modalView === "tiers"}
-        onClose={closeModal}
-        trigger={false}
-        title="Loyalty Tiers"
-      >
-        <div className="w-full">
-          <LoyaltyTiers />
-        </div>
-      </CustomModal>
+      {modalView === "tiers" && (
+        <CustomModal
+          isOpen
+          onClose={closeModal}
+          trigger={false}
+          title="Loyalty Tiers"
+        >
+          <div className="w-full">
+            <LoyaltyTiers />
+          </div>
+        </CustomModal>
+      )}
 
-      <CustomModal
-        isOpen={modalView === "members"}
-        onClose={closeModal}
-        trigger={false}
-        title="Loyalty Members"
-      >
-        <div className="w-full">
-          <LoyaltyMembers />
-        </div>
-      </CustomModal>
+      {modalView === "members" && (
+        <CustomModal
+          isOpen
+          onClose={closeModal}
+          trigger={false}
+          title="Loyalty Members"
+        >
+          <div className="w-full">
+            <LoyaltyMembers />
+          </div>
+        </CustomModal>
+      )}
 
-      <CustomModal
-        isOpen={modalView === "pos"}
-        onClose={closeModal}
-        trigger={false}
-        title="Point of Sale"
-      >
-        <div className="w-full">
-          <PointOfSale />
-        </div>
-      </CustomModal>
+      {modalView === "pos" && (
+        <CustomModal
+          isOpen
+          onClose={closeModal}
+          trigger={false}
+          title="Point of Sale"
+        >
+          <div className="w-full">
+            <PointOfSale />
+          </div>
+        </CustomModal>
+      )}
     </div>
   );
 };

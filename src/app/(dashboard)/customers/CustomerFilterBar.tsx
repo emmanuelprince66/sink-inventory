@@ -1,20 +1,32 @@
 "use client";
 
 import { useFetchLoyaltyTiersQuery } from "@/api/loyalty/fetch-loyalty-tiers";
+import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
+import { SearchInput } from "@/components/app/SearchInput";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { toList } from "@/types/api";
 import type { LoyaltyTier } from "@/types/loyalty";
-import { Download, Search } from "lucide-react";
+import type { CustomerSegment } from "@/types/segment";
+import { Download } from "lucide-react";
+
+// Keep all controls aligned at the same height.
+const CONTROL = "h-10 min-h-10 rounded-xl";
 
 /**
- * Its own block, deliberately separate from both the summary cards above and
- * the table card below — in the design these are three distinct surfaces, not
- * a toolbar welded onto the top of the table.
+ * Its own block, separate from the summary cards above and the table below.
+ * Controls follow the Orders screen: the shared SearchInput and outline
+ * triggers rather than bespoke inputs.
  *
- * Search, tier and status all hit the server: the customer endpoint documents
- * `search`, `tier` and `status` query parameters, so none of this filters
- * client-side. Segment is the one exception — there is no segment parameter,
- * so that control is not rendered.
+ * Mobile: everything stacks full width. From `sm` the three selects share a
+ * row two-up, and from `lg` the whole thing is a single line.
  */
 const CustomerFilterBar = ({
   search,
@@ -24,6 +36,8 @@ const CustomerFilterBar = ({
   onStatusChange,
   activeTier,
   onTierChange,
+  activeSegment,
+  onSegmentChange,
 }: {
   search: string;
   onSearchChange: (value: string) => void;
@@ -32,68 +46,103 @@ const CustomerFilterBar = ({
   onStatusChange: (value: string) => void;
   activeTier: string;
   onTierChange: (value: string) => void;
+  activeSegment: string;
+  onSegmentChange: (value: string) => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
-  // Tier names come from the loyalty tiers the business actually configured —
-  // the endpoint accepts a tier ID or name.
+  // Tier accepts an ID or a name; segment accepts an ID, type or name.
   const { data: tiersRes } = useFetchLoyaltyTiersQuery({
     params: { id: business_id ?? "" },
   });
   const tiers = toList<LoyaltyTier>(tiersRes?.data as never);
 
-  const selectClass =
-    "shrink-0 h-9 rounded-lg border border-grey-5 bg-white px-3 text-xs font-medium text-grey-2 cursor-pointer focus:outline-none focus:border-primary-green-300";
+  const { data: segmentsRes } = useFetchSegmentsQuery({
+    params: { id: business_id ?? "" },
+  });
+  const segments = toList<CustomerSegment>(segmentsRes?.data as never);
+
+  const triggerClass = `${CONTROL} w-full border-grey-5 bg-white text-sm text-grey-2`;
 
   return (
     <div className="w-full rounded-2xl border border-grey-5 bg-white p-3">
-      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-        <div className="relative flex-1 min-w-[180px]">
-          <Search className="w-4 h-4 text-grey-4 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+        <div className="min-w-0 flex-1">
+          <SearchInput
             placeholder="Search by name, phone, ID, email..."
-            className="w-full h-9 rounded-lg border border-grey-5 bg-white pl-9 pr-3 text-sm text-grey-1 placeholder:text-grey-4 focus:outline-none focus:border-primary-green-300"
+            value={search}
+            onValueChange={onSearchChange}
+            className={CONTROL}
           />
         </div>
 
-        <select
-          value={activeTier}
-          onChange={(e) => onTierChange(e.target.value)}
-          className={selectClass}
-        >
-          <option value="">All Tiers</option>
-          {tiers.map((tier) => (
-            <option key={tier.id ?? tier.name} value={tier.name}>
-              {tier.name}
-            </option>
-          ))}
-        </select>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:flex lg:items-center">
+          <Select
+            value={activeTier || "all"}
+            onValueChange={(v) => onTierChange(v === "all" ? "" : v)}
+          >
+            <SelectTrigger className={`${triggerClass} lg:w-32 `}>
+              <SelectValue placeholder="All Tiers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tiers</SelectItem>
+              {tiers.map((tier) => (
+                <SelectItem key={tier.id ?? tier.name} value={tier.name}>
+                  {tier.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <select
-          value={activeStatus}
-          onChange={(e) => onStatusChange(e.target.value)}
-          className={selectClass}
-        >
-          {statusOptions.map((option) => (
-            <option key={option} value={option}>
-              {option === "All" ? "All Statuses" : option}
-            </option>
-          ))}
-        </select>
+          <Select value={activeStatus} onValueChange={onStatusChange}>
+            <SelectTrigger className={`${triggerClass} lg:w-36`}>
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option === "All" ? "All Statuses" : option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <button
-          type="button"
-          title="Export"
-          className="shrink-0 h-9 w-9 flex items-center justify-center rounded-lg border border-grey-5 bg-white text-grey-3 hover:bg-grey-6 cursor-pointer"
-        >
-          <Download className="w-4 h-4" />
-        </button>
+          {/* The endpoint accepts a segment ID, segment type (VIP_CUSTOMERS,
+              FREQUENT_BUYERS, INACTIVE_CUSTOMERS, LOST_CUSTOMERS,
+              BIG_SPENDERS, NEW_CUSTOMERS) or segment name. Options come from
+              the business's own segments, so the ID is sent. */}
+          <Select
+            value={activeSegment || "all"}
+            onValueChange={(v) => onSegmentChange(v === "all" ? "" : v)}
+          >
+            <SelectTrigger className={`${triggerClass} lg:w-40`}>
+              <SelectValue placeholder="All Segments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Segments</SelectItem>
+              {segments.map((segment) => (
+                <SelectItem
+                  key={segment.id ?? segment.name}
+                  value={segment.id ?? segment.name}
+                >
+                  {segment.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            className={`${CONTROL} w-full border-grey-5 text-grey-2 hover:bg-grey-6 hover:text-grey-2 lg:w-auto`}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        </div>
       </div>
 
       {search.length > 0 && search.length < 3 && (
-        <p className="mt-2 text-[11px] text-grey-4">
+        <p className="mt-2 text-xs font-medium text-grey-3">
           Type at least 3 characters to search
         </p>
       )}

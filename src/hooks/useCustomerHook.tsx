@@ -116,6 +116,9 @@ export const useCustomerHook = ({
     (typeof filterOptions)[number]
   >(filterOptions[0]);
   const [activeTier, setActiveTier] = useState("");
+  // No segment query param on the customer endpoint yet; held so the control
+  // keeps its selection and is ready to send the moment one exists.
+  const [activeSegment, setActiveSegment] = useState("");
 
   const { mutate: deleteCustomer, isPending: deleteCustomerLoading } =
     useDeleteCustomerMutation({
@@ -154,6 +157,7 @@ export const useCustomerHook = ({
       search: searchTerm,
       status: filterMapping[activeFilter],
       tier: activeTier,
+      segment: activeSegment,
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
         : undefined,
@@ -324,5 +328,7 @@ export const useCustomerHook = ({
     handleFilterChange,
     activeTier,
     setActiveTier,
+    activeSegment,
+    setActiveSegment,
   };
 };

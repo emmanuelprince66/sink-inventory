@@ -68,7 +68,9 @@ export function CustomModal({
   const isPinnedLayout = Boolean(footer);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    // onOpenChange receives a boolean, so passing onClose straight through
+    // fired it on open as well as on close. Only close on false.
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       {trigger && (
         <DialogTrigger asChild>
           <div className="cursor-pointer">{trigger}</div>
