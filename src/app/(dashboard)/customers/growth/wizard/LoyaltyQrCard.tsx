@@ -232,7 +232,8 @@ const LoyaltyQrCard = ({
               <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.14em] text-grey-4">
                 Your Progress
               </p>
-              <div className="mt-2 flex items-start gap-1.5">
+              {/* Wraps: ten stamps plus the reward is wider than a phone. */}
+              <div className="mt-2 flex flex-wrap items-start gap-1.5">
                 {Array.from({ length: dots }, (_, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary-green-300/40 text-[11px] font-bold text-primary-green-300">

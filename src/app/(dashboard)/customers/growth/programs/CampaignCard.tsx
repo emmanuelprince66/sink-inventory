@@ -87,9 +87,13 @@ const CampaignCard = ({
       {/* Enrolled / Active / Completed / Rate */}
       <div className="grid grid-cols-4 border-y border-grey-5 divide-x divide-grey-5">
         {cells.map((cell) => (
-          <div key={cell.label} className="py-3 text-center">
-            <p className="text-base font-extrabold text-grey-1">{cell.value}</p>
-            <p className="text-[10px] text-grey-3 mt-0.5">{cell.label}</p>
+          <div key={cell.label} className="min-w-0 px-1 py-3 text-center">
+            <p className="truncate text-sm sm:text-base font-extrabold text-grey-1">
+              {cell.value}
+            </p>
+            <p className="truncate text-[10px] text-grey-3 mt-0.5">
+              {cell.label}
+            </p>
           </div>
         ))}
       </div>
@@ -116,9 +120,11 @@ const CampaignCard = ({
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
-        <div className="flex items-center gap-4">
+      {/* Actions — the three text links wrap on mobile and View Participants
+          takes its own full-width row rather than being squeezed to an
+          unreadable pill. */}
+      <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <button
             onClick={() => onEdit(program)}
             disabled={!isPersisted}
@@ -155,7 +161,7 @@ const CampaignCard = ({
         <button
           onClick={() => onViewParticipants(program)}
           disabled={!isPersisted}
-          className="px-3.5 py-1.5 rounded-full bg-primary-green-100 text-white text-xs font-bold hover:bg-primary-green-100/90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full shrink-0 rounded-full bg-primary-green-100 px-3.5 py-2 text-xs font-bold text-white hover:bg-primary-green-100/90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed sm:w-auto sm:py-1.5"
         >
           View Participants
         </button>

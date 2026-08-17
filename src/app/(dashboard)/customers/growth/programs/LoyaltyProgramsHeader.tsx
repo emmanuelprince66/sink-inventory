@@ -3,8 +3,10 @@
 import { Plus, Store, Trophy, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+// Mobile: two per row at equal width — four pills on one line at 360px left
+// each of them a few characters wide. From sm they sit inline at natural size.
 const ACTION_CLASS =
-  "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-bold cursor-pointer";
+  "flex h-10 items-center justify-center gap-1.5 px-3.5 rounded-full text-sm font-bold cursor-pointer whitespace-nowrap";
 
 const LoyaltyProgramsHeader = ({
   onOpenTiers,
@@ -21,7 +23,7 @@ const LoyaltyProgramsHeader = ({
         Build unlimited loyalty campaigns. Reward customers for visits, spend,
         referrals, and more.
       </p>
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:shrink-0">
         {/* A page, not a modal — nine steps plus the QR handover needs the
             room, and it gets its own URL. */}
         <button
