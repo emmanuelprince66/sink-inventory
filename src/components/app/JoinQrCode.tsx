@@ -50,6 +50,10 @@ const JoinQrCode = ({
           // The SVG fills whatever box the caller sized, so one component
           // serves the 96px preview and the 160px card alike.
           style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+          // M over the default L: these cards get printed and then scanned off
+          // paper, where a smudge or a fold has to be recoverable. The join URL
+          // is ~115 characters, which still fits comfortably at this level.
+          level="M"
           title={`Scan to join ${programmeName ?? "this programme"}`}
         />
       </div>

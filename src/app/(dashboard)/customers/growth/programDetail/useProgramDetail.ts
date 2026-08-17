@@ -3,6 +3,7 @@
 import { useFetchLoyaltyProgramDetailQuery } from "@/api/loyalty/fetch-loyalty-program-detail";
 import { useToast } from "@/hooks/toast/useToast";
 import type { LoyaltyProgram } from "@/types/loyalty";
+import { loyaltyJoinUrl } from "@/utils/loyaltyJoinUrl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DetailTab, ParticipantFilter } from "./primitives";
 
@@ -71,9 +72,9 @@ export const useProgramDetail = (
     [participants, filter],
   );
 
-  const joinUrl = qr?.token
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/loyalty/join/${qr.token}`
-    : "";
+  // Public origin, not the current one: this URL goes into a QR and gets
+  // copied to customers, so it must not carry a dev host.
+  const joinUrl = qr?.token ? loyaltyJoinUrl(qr.token) : "";
 
   const copyJoinUrl = useCallback(() => {
     if (!joinUrl) return;

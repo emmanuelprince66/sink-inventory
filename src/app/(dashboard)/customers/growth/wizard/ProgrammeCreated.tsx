@@ -4,6 +4,10 @@ import { useFetchLoyaltyProgramDetailQuery } from "@/api/loyalty/fetch-loyalty-p
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import type { LoyaltyProgram } from "@/types/loyalty";
+import {
+  loyaltyJoinUrl,
+  loyaltyJoinUrlForThisBrowser,
+} from "@/utils/loyaltyJoinUrl";
 import LoyaltyQrCard from "./LoyaltyQrCard";
 
 /**
@@ -61,10 +65,9 @@ const ProgrammeCreated = ({
             triggerSummary={program.trigger_summary}
             streakLength={streakLength}
             qrUrl={qrUrl}
-            joinUrl={
-              token
-                ? `${window.location.origin}/loyalty/join/${token}`
-                : undefined
+            joinUrl={token ? loyaltyJoinUrl(token) : undefined}
+            previewUrl={
+              token ? loyaltyJoinUrlForThisBrowser(token) : undefined
             }
           />
         )}

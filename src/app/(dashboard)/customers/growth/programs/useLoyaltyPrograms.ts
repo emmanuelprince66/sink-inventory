@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { toList, type Paginated } from "@/types/api";
 import type { LoyaltyProgram, TopStreakPerformer } from "@/types/loyalty";
+import { loyaltyJoinUrlForThisBrowser } from "@/utils/loyaltyJoinUrl";
 import { useCallback, useMemo, useState } from "react";
 import { LOYALTY_CAMPAIGNS } from "../dummyGrowthData";
 
@@ -111,7 +112,13 @@ export const useLoyaltyPrograms = () => {
           showToast("This campaign has no landing page yet", "error");
           return;
         }
-        window.open(`/loyalty/join/${token}`, "_blank", "noopener,noreferrer");
+        // Opened by the merchant in this browser, so keep the current origin —
+        // a local dev server must still be previewable.
+        window.open(
+          loyaltyJoinUrlForThisBrowser(token),
+          "_blank",
+          "noopener,noreferrer",
+        );
       } catch {
         showToast("Could not open the landing page", "error");
       } finally {

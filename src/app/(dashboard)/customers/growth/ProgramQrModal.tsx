@@ -4,6 +4,10 @@ import { useFetchLoyaltyProgramDetailQuery } from "@/api/loyalty/fetch-loyalty-p
 import { useFetchLoyaltyProgramQrQuery } from "@/api/loyalty/fetch-loyalty-program-qr";
 import { Spinner } from "@/components/app/Spinner";
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import {
+  loyaltyJoinUrl,
+  loyaltyJoinUrlForThisBrowser,
+} from "@/utils/loyaltyJoinUrl";
 import LoyaltyQrCard from "./wizard/LoyaltyQrCard";
 
 // Shows the same card artwork the merchant gets after creating a programme,
@@ -48,7 +52,8 @@ const ProgramQrModal = ({ programId }: { programId: string }) => {
       triggerSummary={info?.trigger_summary}
       streakLength={streakLength}
       qrUrl={qr.qr_url}
-      joinUrl={`${window.location.origin}/loyalty/join/${qr.token}`}
+      joinUrl={loyaltyJoinUrl(qr.token)}
+      previewUrl={loyaltyJoinUrlForThisBrowser(qr.token)}
     />
   );
 };

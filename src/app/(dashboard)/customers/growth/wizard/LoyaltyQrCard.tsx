@@ -20,8 +20,13 @@ export interface LoyaltyQrCardProps {
   /** Steps in the streak. Capped on render — a spend target can be huge. */
   streakLength: number;
   qrUrl?: string | null;
-  /** Public join URL, when the token is known. */
+  /** Public join URL, when the token is known. Goes into the QR and the card. */
   joinUrl?: string;
+  /**
+   * Where the Preview button opens. Defaults to joinUrl; pass the current
+   * origin's URL so previewing still works against a local server.
+   */
+  previewUrl?: string;
 }
 
 const MAX_DOTS = 8;
@@ -34,6 +39,7 @@ const LoyaltyQrCard = ({
   streakLength,
   qrUrl,
   joinUrl,
+  previewUrl,
 }: LoyaltyQrCardProps) => {
   const { showToast } = useToast();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -300,7 +306,13 @@ const LoyaltyQrCard = ({
           <Button
             variant="outline"
             className="h-11 w-full gap-1.5 rounded-xl"
-            onClick={() => window.open(joinUrl, "_blank", "noopener,noreferrer")}
+            onClick={() =>
+              window.open(
+                previewUrl ?? joinUrl,
+                "_blank",
+                "noopener,noreferrer",
+              )
+            }
           >
             <ExternalLink className="h-4 w-4" />
             Preview Customer Signup Page
