@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  useAddReferralParticipantMutation,
   useFetchReferralParticipantsQuery,
   useFetchReferralProgrammeQuery,
 } from "@/api/customer-referral";
+import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import ProgrammeSettings from "../../growth/referrals/ProgrammeSettings";
+import AddParticipantForm from "./AddParticipantForm";
 import ParticipantCard from "./ParticipantCard";
 
 const StatCard = ({
@@ -57,10 +58,6 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
   const [search, setSearch] = useState("");
   const [adding, setAdding] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
 
   // Fetched by id rather than read from the list, so the URL works on its own.
   const { data: programmeRes, isLoading } = useFetchReferralProgrammeQuery({
@@ -89,20 +86,14 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
     });
   }, [queryClient, programmeId]);
 
-  const { mutate: addParticipant, isPending: addPending } =
-    useAddReferralParticipantMutation({
-      programmeId,
-      onSuccess: () => {
-        setName("");
-        setPhone("");
-        setEmail("");
-        setAdding(false);
-        queryClient.invalidateQueries({
-          queryKey: [queryKey.customerReferral.getParticipants, programmeId],
-        });
-        refreshProgramme();
-      },
+  const onParticipantAdded = useCallback(() => {
+    setAdding(false);
+    queryClient.invalidateQueries({
+      queryKey: [queryKey.customerReferral.getParticipants, programmeId],
     });
+    // participants_count on the header tile moves too.
+    refreshProgramme();
+  }, [queryClient, programmeId, refreshProgramme]);
 
   const copyLink = (link?: string | null) => {
     if (!link) return showToast("This participant has no link yet", "error");
@@ -110,19 +101,6 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
       .writeText(link)
       .then(() => showToast("Referral link copied", "success"))
       .catch(() => showToast("Could not copy the link", "error"));
-  };
-
-  const submitParticipant = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!name.trim()) return setError("Enter the customer's name.");
-    if (!phone.trim()) return setError("Enter the customer's phone number.");
-    addParticipant({
-      name: name.trim(),
-      phone: phone.trim(),
-      // The field is nullable, so an empty box sends null rather than "".
-      email: email.trim() || null,
-    });
   };
 
   // Back to the tab this was opened from, not just /customers.
@@ -201,10 +179,10 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
             <Button
               variant="outline"
               className="h-9 gap-1.5 rounded-xl text-xs font-bold"
-              onClick={() => setShowSettings((v) => !v)}
+              onClick={() => setShowSettings(true)}
             >
               <Settings2 className="h-3.5 w-3.5" />
-              {showSettings ? "Close" : "Settings"}
+              Settings
             </Button>
           </div>
         </div>
@@ -271,24 +249,15 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
         </div>
       </div>
 
-      {showSettings && (
-        <div className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-5">
-          <ProgrammeSettings
-            programme={programme}
-            onChanged={refreshProgramme}
-          />
-        </div>
-      )}
-
       {/* Participants */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-extrabold text-grey-1">Participants</h2>
         <Button
           className="h-9 gap-1.5 rounded-xl text-xs font-bold"
-          onClick={() => setAdding((v) => !v)}
+          onClick={() => setAdding(true)}
         >
           <Plus className="h-3.5 w-3.5" />
-          {adding ? "Close" : "Add Customer"}
+          Add Customer
         </Button>
       </div>
 
@@ -301,43 +270,6 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
           className="h-11 rounded-xl pl-9"
         />
       </div>
-
-      {adding && (
-        <form
-          onSubmit={submitParticipant}
-          className="flex flex-col gap-3 rounded-2xl border border-grey-5 bg-white p-4"
-        >
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Customer name"
-            className="h-11 rounded-xl"
-          />
-          <Input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            inputMode="tel"
-            placeholder="Phone number"
-            className="h-11 rounded-xl"
-          />
-          <Input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            placeholder="Email (optional)"
-            className="h-11 rounded-xl"
-          />
-          {error && <p className="text-xs font-medium text-error-1">{error}</p>}
-          <Button
-            type="submit"
-            className="h-11 gap-2 rounded-xl"
-            disabled={addPending}
-          >
-            {addPending && <Spinner className="h-4 w-4" />}
-            Add &amp; generate link
-          </Button>
-        </form>
-      )}
 
       <div className="flex flex-col gap-2.5">
         {participantsLoading ? (
@@ -360,6 +292,39 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
           ))
         )}
       </div>
+
+      {showSettings && (
+        <CustomModal
+          isOpen
+          onClose={() => setShowSettings(false)}
+          trigger={false}
+          title="Programme Settings"
+        >
+          <ProgrammeSettings
+            programme={programme}
+            onChanged={() => {
+              refreshProgramme();
+              setShowSettings(false);
+            }}
+            onCancel={() => setShowSettings(false)}
+          />
+        </CustomModal>
+      )}
+
+      {adding && (
+        <CustomModal
+          isOpen
+          onClose={() => setAdding(false)}
+          trigger={false}
+          title="Add Customer"
+        >
+          <AddParticipantForm
+            programmeId={programmeId}
+            onAdded={onParticipantAdded}
+            onCancel={() => setAdding(false)}
+          />
+        </CustomModal>
+      )}
     </div>
   );
 };

@@ -4,7 +4,11 @@ import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { CustomerReferralProgrammeCreate } from "@/types/customerReferral";
+import type {
+  CustomerReferralProgrammeCreate,
+  CustomerReferralProgrammeUpdate,
+} from "@/types/customerReferral";
+import { PauseCircle, PlayCircle } from "lucide-react";
 import { useState } from "react";
 
 const Toggle = ({
@@ -56,6 +60,7 @@ export interface ReferralProgrammeFormValues {
   reward_cap: string;
   notify_sms: boolean;
   notify_email: boolean;
+  is_active: boolean;
 }
 
 export const EMPTY_PROGRAMME: ReferralProgrammeFormValues = {
@@ -64,6 +69,9 @@ export const EMPTY_PROGRAMME: ReferralProgrammeFormValues = {
   reward_cap: "50",
   notify_sms: true,
   notify_email: false,
+  // Only surfaced when editing; a newly created programme starts running and
+  // the create schema has no is_active field to send.
+  is_active: true,
 };
 
 /**
@@ -75,13 +83,18 @@ const ReferralProgrammeForm = ({
   initial = EMPTY_PROGRAMME,
   submitLabel,
   pending,
+  includeActive = false,
   onSubmit,
   onCancel,
 }: {
   initial?: ReferralProgrammeFormValues;
   submitLabel: string;
   pending: boolean;
-  onSubmit: (payload: CustomerReferralProgrammeCreate) => void;
+  /** Editing only — shows the running/paused switch and sends is_active. */
+  includeActive?: boolean;
+  onSubmit: (
+    payload: CustomerReferralProgrammeCreate & CustomerReferralProgrammeUpdate,
+  ) => void;
   onCancel?: () => void;
 }) => {
   const [values, setValues] = useState(initial);
@@ -114,11 +127,70 @@ const ReferralProgrammeForm = ({
       reward_cap: cap,
       notify_sms: values.notify_sms,
       notify_email: values.notify_email,
+      // Omitted entirely on create — the schema has no such field.
+      ...(includeActive ? { is_active: values.is_active } : {}),
     });
   };
 
   return (
     <form onSubmit={submit} className="flex w-full min-w-0 flex-col gap-5">
+      {includeActive && (
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 rounded-xl border p-3.5",
+            values.is_active
+              ? "border-primary-green-300/40 bg-primary-green-500"
+              : "border-grey-5 bg-grey-6/60",
+          )}
+        >
+          <span className="flex min-w-0 items-start gap-2.5">
+            <span
+              className={cn(
+                "mt-0.5 shrink-0",
+                values.is_active ? "text-primary-green-300" : "text-grey-4",
+              )}
+            >
+              {values.is_active ? (
+                <PlayCircle className="h-5 w-5" />
+              ) : (
+                <PauseCircle className="h-5 w-5" />
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-extrabold text-grey-1">
+                {values.is_active ? "Programme is running" : "Programme is paused"}
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-relaxed text-grey-3">
+                {values.is_active
+                  ? "Existing links keep working and new referrals earn rewards."
+                  : "Links still resolve, but referrals stop earning until you start it again."}
+              </span>
+            </span>
+          </span>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={values.is_active}
+            aria-label={
+              values.is_active ? "Pause programme" : "Start programme"
+            }
+            onClick={() => set("is_active", !values.is_active)}
+            className={cn(
+              "flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors cursor-pointer",
+              values.is_active ? "bg-primary-green-300" : "bg-grey-5",
+            )}
+          >
+            <span
+              className={cn(
+                "h-5 w-5 rounded-full bg-white transition-transform",
+                values.is_active && "translate-x-5",
+              )}
+            />
+          </button>
+        </div>
+      )}
+
       <div>
         <label className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
           Programme Name
