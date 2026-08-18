@@ -12,10 +12,8 @@ import { toList } from "@/types/api";
 import type { CustomerReferralProgramme } from "@/types/customerReferral";
 import { useCallback, useMemo, useState } from "react";
 
-export type ReferralView =
-  | { kind: "none" }
-  | { kind: "create" }
-  | { kind: "manage"; programme: CustomerReferralProgramme };
+/** Managing a programme is its own page, so the only overlay left is create. */
+export type ReferralView = { kind: "none" } | { kind: "create" };
 
 export const useCustomerReferrals = () => {
   const business_id = useBusinessStore((state) => state.business_id);

@@ -4,8 +4,8 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFormatMoney } from "@/utils/formatMoney";
 import { Gift, Link2, Plus, TrendingUp, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
 import CreateReferralProgramme from "./referrals/CreateReferralProgramme";
-import ManageReferralProgramme from "./referrals/ManageReferralProgramme";
 import ReferralProgrammeCard from "./referrals/ReferralProgrammeCard";
 import { useCustomerReferrals } from "./referrals/useCustomerReferrals";
 
@@ -33,6 +33,7 @@ const SummaryTile = ({
 );
 
 const CustomerReferrals = () => {
+  const router = useRouter();
   const formatMoney = useFormatMoney();
   const {
     business_id,
@@ -44,7 +45,6 @@ const CustomerReferrals = () => {
     setView,
     closeView,
     refresh,
-    copyLink,
   } = useCustomerReferrals();
 
   const tiles = [
@@ -143,7 +143,9 @@ const CustomerReferrals = () => {
           <ReferralProgrammeCard
             key={programme.id}
             programme={programme}
-            onManage={() => setView({ kind: "manage", programme })}
+            onManage={() =>
+              router.push(`/customers/referrals/${programme.id}`)
+            }
           />
         ))
       )}
@@ -166,21 +168,6 @@ const CustomerReferrals = () => {
         </CustomModal>
       )}
 
-      {view.kind === "manage" && (
-        <CustomModal
-          isOpen
-          onClose={closeView}
-          trigger={false}
-          title="Manage Programme"
-          size="lg"
-        >
-          <ManageReferralProgramme
-            programme={view.programme}
-            onCopy={copyLink}
-            onChanged={refresh}
-          />
-        </CustomModal>
-      )}
     </div>
   );
 };

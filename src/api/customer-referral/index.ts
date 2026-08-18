@@ -98,6 +98,29 @@ export const useFetchReferralOverviewQuery = ({
     ...config,
   });
 
+// ─── Single programme ────────────────────────────────────────────────────────
+// Needed because the manage screen has its own URL: arriving there directly, or
+// refreshing it, means there is no list in cache to read the programme from.
+
+export const fetchReferralProgramme = ({
+  programmeId,
+}: {
+  programmeId: string;
+}) => request<ApiResponse<CustomerReferralProgramme>>(`${BASE}/${programmeId}`);
+
+export const useFetchReferralProgrammeQuery = ({
+  params,
+  ...config
+}: QueryConfigType<typeof fetchReferralProgramme> & {
+  params: { programmeId: string };
+}) =>
+  useQuery<ExtractFnReturnType<typeof fetchReferralProgramme>>({
+    queryKey: [queryKey.customerReferral.getProgramme, params.programmeId],
+    queryFn: () => fetchReferralProgramme(params),
+    enabled: Boolean(params.programmeId),
+    ...config,
+  });
+
 // ─── Create ──────────────────────────────────────────────────────────────────
 
 export const createReferralProgramme = ({
