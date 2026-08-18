@@ -43,6 +43,15 @@ export const queryKey = {
     getDashboard: "get-referral-dashboard",
     getBusiness: "get-referral-business",
   },
+  customerReferral: {
+    getProgrammes: "get-customer-referral-programmes",
+    getOverview: "get-customer-referral-overview",
+    getProgramme: "get-customer-referral-programme",
+    createProgramme: "create-customer-referral-programme",
+    updateProgramme: "update-customer-referral-programme",
+    getParticipants: "get-customer-referral-participants",
+    addParticipant: "add-customer-referral-participant",
+  },
   campaign: {
     getAllCampaigns: "get-all-campaigns",
     getGroups: "get-groups",
