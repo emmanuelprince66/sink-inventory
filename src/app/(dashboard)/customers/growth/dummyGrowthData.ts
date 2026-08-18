@@ -158,31 +158,9 @@ export const LOYALTY_CAMPAIGNS: LoyaltyCampaign[] = [
 ];
 
 // ─── Rewards tab ─────────────────────────────────────────────────────────────
-
-export const REWARDS_KPIS: GrowthKpi[] = [
-  { label: "Active Rewards", value: "4", delta: "" },
-  { label: "Total Issued", value: "104", delta: "" },
-  { label: "Redeemed", value: "29", delta: "" },
-  { label: "Redemption Rate", value: "27.9%", delta: "" },
-];
-
-export interface RewardRow {
-  key: string;
-  name: string;
-  type: string;
-  issued: number;
-  redeemed: number;
-  expired: number;
-  cost: string;
-  roi: string;
-}
-
-export const REWARDS: RewardRow[] = [
-  { key: "discount_10", name: "10% Discount Voucher", type: "Percentage Discount", issued: 45, redeemed: 12, expired: 3, cost: "₦36,000", roi: "+18%" },
-  { key: "wallet_2000", name: "₦2,000 Wallet Credit", type: "Wallet Credit", issued: 18, redeemed: 6, expired: 1, cost: "₦12,000", roi: "+24%" },
-  { key: "free_bread", name: "Free Product (Bread)", type: "Free Product", issued: 32, redeemed: 8, expired: 4, cost: "₦25,600", roi: "+11%" },
-  { key: "cash_5000", name: "₦5,000 Cash Credit", type: "Cash Discount", issued: 9, redeemed: 3, expired: 0, cost: "₦15,000", roi: "+41%" },
-];
+// Removed. /loyalty/rewards-analytics/ returns the summary, the per-campaign
+// breakdown and return likelihood, so CustomerRewards renders live figures with
+// a skeleton while loading and an empty state when there is no activity.
 
 // ─── AI Recommendations tab ─────────────────────────────────────────────────
 

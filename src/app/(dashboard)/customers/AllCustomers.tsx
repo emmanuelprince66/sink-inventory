@@ -43,7 +43,7 @@ const AllCustomers = ({
   const rows = summary?.data ?? [];
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full min-w-0 space-y-4">
       {/* Filters stay mounted even with no results — otherwise a search that
           matches nothing would remove the box used to clear it. */}
       <CustomerFilterBar
@@ -63,7 +63,7 @@ const AllCustomers = ({
           <CustomerSummaryCards summary={summary} />
 
           {/* Count, legend and the table share one card, as in the design. */}
-          <div className="w-full rounded-2xl border border-grey-5 bg-white overflow-hidden">
+          <div className="w-full min-w-0 rounded-2xl border border-grey-5 bg-white overflow-hidden">
             <div className="flex items-center justify-between gap-3 px-4 pt-3.5 pb-2 flex-wrap">
               <p className="text-xs text-grey-3">
                 {rows.length} of {customersData?.data?.total ?? rows.length}{" "}

@@ -56,8 +56,13 @@ const scoreTone = (score: number) =>
 
 const Blank = () => <span className="text-sm text-grey-4">—</span>;
 
-export const columns: ColumnDef<CustomerType>[] = [
-  {
+/**
+ * Every column the list endpoint can fill. Which of them actually render is
+ * decided by LIST_COLUMNS below — keeping the definitions here means putting
+ * one back is a one-word edit rather than rewriting a cell.
+ */
+const COLUMN_DEFS = {
+  name: {
     accessorKey: "name",
     header: "Customer",
     cell: ({ row }) => {
@@ -72,14 +77,24 @@ export const columns: ColumnDef<CustomerType>[] = [
           >
             {customer.initials ?? "?"}
           </span>
-          <p className="text-sm font-bold text-primary-green-300 truncate">
-            {customer.name}
-          </p>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-primary-green-300 truncate">
+              {customer.name}
+            </p>
+            {/* The customer code lives under the name rather than in its own
+                column — it is a lookup key, not something anyone scans a list
+                by, and it costs no width here. */}
+            {customer.customer_code && (
+              <p className="text-[10px] font-medium text-grey-4 truncate">
+                {customer.customer_code}
+              </p>
+            )}
+          </div>
         </div>
       );
     },
   },
-  {
+  customer_code: {
     accessorKey: "customer_code",
     header: "ID",
     cell: ({ row }) => (
@@ -88,7 +103,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  phone: {
     accessorKey: "phone",
     header: "Phone",
     cell: ({ row }) => (
@@ -97,7 +112,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  gender: {
     accessorKey: "gender",
     header: "Gender",
     cell: ({ row }) =>
@@ -107,7 +122,7 @@ export const columns: ColumnDef<CustomerType>[] = [
         <Blank />
       ),
   },
-  {
+  location: {
     id: "location",
     header: "State / City",
     cell: ({ row }) => {
@@ -124,7 +139,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-  {
+  tier: {
     accessorKey: "tier_name",
     header: "Tier",
     cell: ({ row }) => {
@@ -142,7 +157,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-  {
+  points: {
     accessorKey: "points",
     header: "Points",
     cell: ({ row }) => (
@@ -151,7 +166,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  wallet_credit: {
     id: "wallet_credit",
     header: "Wallet / Credit",
     cell: ({ row }) => {
@@ -171,8 +186,8 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-  {
-    accessorKey: "visits",
+  orders: {
+    accessorKey: "sales_count",
     header: "Orders",
     cell: ({ row }) => (
       <span className="text-sm font-bold text-info-1">
@@ -180,7 +195,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  total_spend: {
     accessorKey: "total_sales",
     header: "Total Spend",
     cell: ({ row }) => (
@@ -189,7 +204,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  avg_basket: {
     accessorKey: "avg_spend",
     header: "Avg Basket",
     cell: ({ row }) => (
@@ -198,7 +213,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  lifetime_value: {
     accessorKey: "lifetime_value",
     header: "LTV",
     cell: ({ row }) => (
@@ -207,7 +222,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  last_purchase: {
     accessorKey: "last_visit",
     header: "Last Purchase",
     cell: ({ row }) =>
@@ -219,7 +234,7 @@ export const columns: ColumnDef<CustomerType>[] = [
         <Blank />
       ),
   },
-  {
+  visits: {
     accessorKey: "visits",
     id: "visits_count",
     header: "Visits",
@@ -229,7 +244,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       </span>
     ),
   },
-  {
+  risk: {
     accessorKey: "risk_level",
     header: "Risk",
     cell: ({ row }) => {
@@ -247,7 +262,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-  {
+  retention_score: {
     accessorKey: "retention_score",
     header: "Score",
     cell: ({ row }) => {
@@ -265,7 +280,7 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-  {
+  status: {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
@@ -283,7 +298,42 @@ export const columns: ColumnDef<CustomerType>[] = [
       );
     },
   },
-];
+} satisfies Record<string, ColumnDef<CustomerType>>;
+
+/**
+ * What the list shows.
+ *
+ * The table's job is to find a customer and triage them; the profile behind a
+ * row click is where the detail lives, so anything the profile already answers
+ * is left out rather than duplicated across seventeen columns:
+ *
+ *  - ID          → shown under the name, and covered by search
+ *  - Gender      → profile ▸ Overview ▸ Identity
+ *  - State/City  → profile ▸ Overview ▸ Identity
+ *  - Points      → profile ▸ Loyalty (Tier already signals standing here)
+ *  - Avg Basket  → profile ▸ Purchase, and it is Total Spend ÷ Orders
+ *  - LTV         → profile ▸ Purchase; it tracked Total Spend so closely that
+ *                  two money columns side by side just raised "which is real?"
+ *  - Visits      → dropped outright: it read almost identically to Orders and
+ *                  the two were wired to different fields, so the same row
+ *                  could show 4 orders and 7 visits with nothing to explain it
+ *  - Score       → profile ▸ Purchase; Risk is derived from it and reads faster
+ */
+const LIST_COLUMNS = [
+  "name",
+  "phone",
+  "tier",
+  "wallet_credit",
+  "orders",
+  "total_spend",
+  "last_purchase",
+  "risk",
+  "status",
+] as const satisfies readonly (keyof typeof COLUMN_DEFS)[];
+
+export const columns: ColumnDef<CustomerType>[] = LIST_COLUMNS.map(
+  (key) => COLUMN_DEFS[key],
+);
 
 // No "View Profile" action column — the whole row is clickable and routes to
 // /customers/{id}, which is both the design and one less thing to aim at.

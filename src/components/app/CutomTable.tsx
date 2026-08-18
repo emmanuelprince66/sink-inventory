@@ -112,9 +112,14 @@ export function CustomTable<TData>({
   };
 
   return (
+    // min-w-0 so the table can never widen its container: the Table primitive
+    // already wraps itself in an overflow-x-auto scroller, but that only bites
+    // if every ancestor is allowed to shrink below the table's intrinsic width.
+    // Without it a flex ancestor takes the table's width as its minimum and the
+    // whole page scrolls sideways instead.
     <div
       className={cn(
-        "bg-white overflow-hidden mb-4",
+        "w-full min-w-0 bg-white overflow-hidden mb-4",
         bordered && "rounded-xl border border-grey-5",
       )}
     >
