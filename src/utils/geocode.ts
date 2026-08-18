@@ -21,9 +21,12 @@ export interface GeocodeSuggestion {
   state: string;
   stateCode: string;
   country: string;
+  /** Empty on an autocomplete prediction — see fetchAddressDetails. */
   latitude: string;
   longitude: string;
   precision: string;
+  /** Google place id; what fetchAddressDetails takes. */
+  placeId?: string;
 }
 
 export interface Coordinates {
@@ -38,9 +41,24 @@ interface GeocodeResponse {
   message?: string;
 }
 
+/**
+ * A Google Places session groups every keystroke plus the one Place Details
+ * call that follows into a single billable lookup. Without it each keystroke
+ * is charged separately, so the token is generated per typing session and
+ * discarded the moment a suggestion is picked.
+ */
+export const newSessionToken = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 export const fetchAddressSuggestions = async (
   query: string,
-  opts?: { limit?: number; proximity?: Coordinates | null },
+  opts?: {
+    limit?: number;
+    proximity?: Coordinates | null;
+    sessionToken?: string;
+  },
 ): Promise<GeocodeResponse> => {
   const trimmed = (query || "").trim();
   if (trimmed.length < 3) return { success: true, data: [] };
@@ -54,6 +72,7 @@ export const fetchAddressSuggestions = async (
       `${opts.proximity.longitude},${opts.proximity.latitude}`,
     );
   }
+  if (opts?.sessionToken) url.searchParams.set("sessionToken", opts.sessionToken);
 
   const response = await fetch(url.toString(), { method: "GET" });
   const data = await response.json().catch(() => ({}));
@@ -66,6 +85,34 @@ export const fetchAddressSuggestions = async (
     };
   }
   return data as GeocodeResponse;
+};
+
+/**
+ * Resolves a picked prediction into a full address with coordinates.
+ *
+ * Google's Autocomplete deliberately returns no geometry, so a prediction on
+ * its own cannot fill latitude/longitude. Callers pass the same sessionToken
+ * they used for the predictions; returns null on any failure, which the caller
+ * treats as "keep the typed text, drop the coordinates" rather than an error.
+ */
+export const fetchAddressDetails = async (
+  placeId: string,
+  sessionToken?: string,
+): Promise<GeocodeSuggestion | null> => {
+  if (!placeId) return null;
+
+  const url = new URL("/api/geocode/details", window.location.origin);
+  url.searchParams.set("place_id", placeId);
+  if (sessionToken) url.searchParams.set("sessionToken", sessionToken);
+
+  try {
+    const response = await fetch(url.toString(), { method: "GET" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
+    return (data?.data?.[0] as GeocodeSuggestion) ?? null;
+  } catch {
+    return null;
+  }
 };
 
 /**

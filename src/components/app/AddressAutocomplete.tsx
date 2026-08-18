@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils";
 import {
   Coordinates,
   GeocodeSuggestion,
+  fetchAddressDetails,
   fetchAddressSuggestions,
+  newSessionToken,
 } from "@/utils/geocode";
 import { Check, Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -64,10 +66,18 @@ const AddressAutocomplete = ({
   const [searchedQuery, setSearchedQuery] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  // Set when the proxy reports GEOAPIFY_KEY is missing — the field then
+  // Set when the proxy reports GOOGLE_MAPS_API_KEY is missing — the field then
   // behaves as a plain text input instead of showing a permanently empty
   // dropdown.
   const [lookupDisabled, setLookupDisabled] = useState(false);
+  // A pick is not instant any more: Google returns no coordinates with a
+  // prediction, so selecting one costs a Place Details round trip.
+  const [isResolving, setIsResolving] = useState(false);
+
+  // One Google Places session spans every keystroke plus the single Place
+  // Details call that follows, and is billed as one lookup. Rotated after each
+  // pick, because that is exactly what closes a session.
+  const sessionToken = useRef<string>(newSessionToken());
 
   const containerRef = useRef<HTMLDivElement>(null);
   // Text that arrived programmatically — a picked suggestion, or a parent
@@ -86,6 +96,7 @@ const AddressAutocomplete = ({
   // spinner is continuous.
   const isBusy =
     isSearching ||
+    isResolving ||
     (query.trim().length >= 3 &&
       query !== debouncedQuery &&
       suppressedQuery.current !== query);
@@ -112,7 +123,11 @@ const AddressAutocomplete = ({
     let ignore = false;
     setIsSearching(true);
 
-    fetchAddressSuggestions(debouncedQuery, { limit: 6, proximity })
+    fetchAddressSuggestions(debouncedQuery, {
+      limit: 6,
+      proximity,
+      sessionToken: sessionToken.current,
+    })
       .then((res) => {
         if (ignore) return;
         if (res.disabled) {
@@ -160,13 +175,40 @@ const AddressAutocomplete = ({
     onChange(next);
   };
 
-  const handleSelect = (suggestion: GeocodeSuggestion) => {
-    const text = suggestion.address || suggestion.label;
-    suppressedQuery.current = text;
-    setQuery(text);
+  const handleSelect = async (suggestion: GeocodeSuggestion) => {
+    // Show the prediction text straight away — the details round trip should
+    // never make the field feel like it ignored the click.
+    const previewText = suggestion.address || suggestion.label;
+    suppressedQuery.current = previewText;
+    setQuery(previewText);
     setSuggestions([]);
     setIsOpen(false);
-    onSelect(suggestion);
+
+    // Predictions carry no coordinates, so resolve the pick before handing it
+    // up. Anything already carrying coordinates (reverse geocode, a cached
+    // result) is passed through untouched.
+    if (!suggestion.placeId || suggestion.latitude) {
+      onSelect(suggestion);
+      return;
+    }
+
+    setIsResolving(true);
+    const resolved = await fetchAddressDetails(
+      suggestion.placeId,
+      sessionToken.current,
+    );
+    setIsResolving(false);
+
+    // A pick closes the session whether or not the lookup succeeded.
+    sessionToken.current = newSessionToken();
+
+    // On failure keep the prediction: the merchant still gets the text they
+    // chose, just without coordinates, which the callers already handle.
+    const final = resolved ?? suggestion;
+    const text = final.address || final.label;
+    suppressedQuery.current = text;
+    setQuery(text);
+    onSelect(final);
   };
 
   const sharedProps = {

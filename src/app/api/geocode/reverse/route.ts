@@ -1,47 +1,35 @@
+import {
+  GOOGLE_REVERSE_GEOCODE,
+  notConfigured,
+  suggestionFromComponents,
+} from "@/lib/googlePlaces";
 import { NextRequest, NextResponse } from "next/server";
 
 // Reverse geocode: coordinates → a readable address. Used by the Shipbubble
-// pickup settings, where the merchant captures their location from the device
-// and we turn that fix into something a rider can read.
+// settings form when the merchant taps "use my current location".
 //
 // Deliberately mirrors /api/geocode's response contract (success/data/message,
 // with data being GeocodeSuggestion[]) so the client helpers and the
-// suggestion-applying code in useShipbubbleHook work unchanged. The array holds
-// at most one entry.
-
-const GEOAPIFY_REVERSE = "https://api.geoapify.com/v1/geocode/reverse";
-
-const normalizeStateName = (name?: string) =>
-  (name || "").replace(/\s+state$/i, "").trim();
-
-const normalizeStateCode = (code?: string) =>
-  (code || "").replace(/^NG-/i, "").toUpperCase();
-
-const toFixed6 = (n: unknown): string => {
-  const num = Number(n);
-  return Number.isFinite(num) ? num.toFixed(6) : "";
-};
+// AddressAutocomplete dropdown stay interchangeable.
+//
+// Google's Geocoding API rather than Places here: reverse lookup takes raw
+// coordinates, which Places has no equivalent for.
 
 export async function GET(request: NextRequest) {
-  const apiKey = process.env.GEOAPIFY_KEY;
-  const lat = request.nextUrl.searchParams.get("lat") || "";
-  const lon = request.nextUrl.searchParams.get("lon") || "";
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const lat = request.nextUrl.searchParams.get("lat");
+  const lon = request.nextUrl.searchParams.get("lon");
 
   // Matches /api/geocode: report the missing key rather than 500ing, so the
-  // caller can fall back to manual entry instead of showing an error.
+  // caller can fall back to letting the merchant type the address.
   if (!apiKey) {
     return NextResponse.json(
-      {
-        success: true,
-        disabled: true,
-        data: [],
-        message: "Geocoding is not configured (GEOAPIFY_KEY is unset)",
-      },
+      notConfigured("Address lookup is not configured (GOOGLE_MAPS_API_KEY is unset)"),
       { status: 200 },
     );
   }
 
-  if (!lat || !lon || !Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) {
+  if (!lat || !lon) {
     return NextResponse.json(
       { success: false, data: [], message: "lat and lon are required" },
       { status: 400 },
@@ -49,68 +37,54 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const url = new URL(GEOAPIFY_REVERSE);
-    url.searchParams.set("lat", lat);
-    url.searchParams.set("lon", lon);
-    url.searchParams.set("apiKey", apiKey);
-    url.searchParams.set("lang", "en");
-    url.searchParams.set("limit", "1");
+    const url = new URL(GOOGLE_REVERSE_GEOCODE);
+    url.searchParams.set("latlng", `${lat},${lon}`);
+    url.searchParams.set("key", apiKey);
+    url.searchParams.set("language", "en");
+    // Street-level first; Google orders results narrowest-to-widest anyway,
+    // but this drops plus-codes and postal boxes from the running.
+    url.searchParams.set(
+      "result_type",
+      "street_address|premise|subpremise|route|neighborhood|locality",
+    );
 
     const response = await fetch(url.toString(), { cache: "no-store" });
     const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
+    // The Geocoding API answers 200 with a status field, so a failed lookup
+    // has to be read out of the body rather than the HTTP code.
+    if (!response.ok || (data?.status && data.status !== "OK")) {
+      const zeroResults = data?.status === "ZERO_RESULTS";
       return NextResponse.json(
         {
-          success: false,
+          success: zeroResults,
           data: [],
-          message: data?.message || data?.error || "Reverse lookup failed",
+          message:
+            data?.error_message ||
+            (zeroResults
+              ? "No address at those coordinates"
+              : "Reverse lookup failed"),
         },
-        { status: response.status },
+        { status: zeroResults ? 200 : response.status || 502 },
       );
     }
 
-    const feature = Array.isArray(data?.features) ? data.features[0] : null;
-
-    if (!feature) {
-      return NextResponse.json(
-        {
-          success: true,
-          data: [],
-          message: "No address found at these coordinates",
-        },
-        { status: 200 },
-      );
-    }
-
-    const p = feature.properties || {};
-    const streetLine =
-      [p.housenumber, p.street].filter(Boolean).join(" ") ||
-      p.address_line1 ||
-      p.name ||
-      "";
+    const results: any[] = Array.isArray(data?.results) ? data.results : [];
+    const suggestions = results.slice(0, 1).map((result) =>
+      suggestionFromComponents({
+        id: result?.place_id || `${lat},${lon}`,
+        components: result?.address_components ?? [],
+        formattedAddress: result?.formatted_address,
+        // Prefer the caller's own fix over the snapped result: the device
+        // knows where it is better than the nearest matched building does.
+        latitude: lat,
+        longitude: lon,
+        precision: result?.types?.[0],
+      }),
+    );
 
     return NextResponse.json(
-      {
-        success: true,
-        data: [
-          {
-            id: String(p.place_id || feature.id || "reverse"),
-            label: p.formatted || streetLine,
-            address: streetLine,
-            city: p.city || p.town || p.village || p.suburb || "",
-            state: normalizeStateName(p.state),
-            stateCode: normalizeStateCode(p.state_code),
-            country: p.country || "Nigeria",
-            // Echo the requested point, not the provider's snapped centroid —
-            // the device fix is more precise than the matched address.
-            latitude: toFixed6(lat),
-            longitude: toFixed6(lon),
-            precision: p.result_type || "",
-          },
-        ],
-        message: "Address resolved",
-      },
+      { success: true, data: suggestions, message: "Address resolved" },
       { status: 200 },
     );
   } catch (error) {
