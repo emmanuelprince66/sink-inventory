@@ -138,12 +138,15 @@ const ReferralProgrammeCard = ({
 
       {/* The referral link belongs to a participant, not the programme — the
           list endpoint carries no link, so Manage is where the codes live. */}
-      <button
+        <div className="mt-5">
+     <button
         onClick={onManage}
         className="mt-4 w-full rounded-xl bg-primary-green-300 py-3 text-sm font-bold text-white hover:bg-primary-green-300/90 cursor-pointer"
       >
         Manage Programme →
       </button>
+        </div>
+ 
     </div>
   );
 };
