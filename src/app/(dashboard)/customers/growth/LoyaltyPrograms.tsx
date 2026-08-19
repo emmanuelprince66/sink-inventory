@@ -40,10 +40,7 @@ const LoyaltyPrograms = () => {
 
   return (
     <div className="space-y-4 w-full min-w-0 max-w-full">
-      <LoyaltyProgramsHeader
-        onOpenTiers={() => openModal("tiers")}
-        onOpenMembers={() => openModal("members")}
-      />
+      <LoyaltyProgramsHeader />
 
       <LoyaltyStatCards dashboard={dashboard} />
 

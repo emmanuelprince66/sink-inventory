@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Store, Trophy, Users } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Mobile: two per row at equal width — four pills on one line at 360px left
@@ -8,13 +8,7 @@ import { useRouter } from "next/navigation";
 const ACTION_CLASS =
   "flex h-10 items-center justify-center gap-1.5 px-3.5 rounded-full text-sm font-bold cursor-pointer whitespace-nowrap";
 
-const LoyaltyProgramsHeader = ({
-  onOpenTiers,
-  onOpenMembers,
-}: {
-  onOpenTiers: () => void;
-  onOpenMembers: () => void;
-}) => {
+const LoyaltyProgramsHeader = () => {
   const router = useRouter();
 
   return (
@@ -33,20 +27,28 @@ const LoyaltyProgramsHeader = ({
           <Plus className="w-4 h-4" />
           Create Campaign
         </button>
-        <button
-          onClick={onOpenTiers}
-          className={`${ACTION_CLASS} border border-grey-5 bg-white text-grey-1 hover:bg-grey-6`}
-        >
-          <Trophy className="w-4 h-4" />
-          Tiers
-        </button>
-        <button
-          onClick={onOpenMembers}
-          className={`${ACTION_CLASS} border border-grey-5 bg-white text-grey-1 hover:bg-grey-6`}
-        >
-          <Users className="w-4 h-4" />
-          Members
-        </button>
+        {/* Tiers and Members are hidden for now, not deleted. The overlays
+            behind them (LoyaltyTiers, LoyaltyMembers) and their modalView
+            cases in LoyaltyProgramOverlays are all still wired, so bringing
+            them back is: uncomment below, re-add the Trophy and Users imports,
+            and restore the onOpenTiers / onOpenMembers props that
+            LoyaltyPrograms used to pass in.
+
+            <button
+              onClick={onOpenTiers}
+              className={`${ACTION_CLASS} border border-grey-5 bg-white text-grey-1 hover:bg-grey-6`}
+            >
+              <Trophy className="w-4 h-4" />
+              Tiers
+            </button>
+            <button
+              onClick={onOpenMembers}
+              className={`${ACTION_CLASS} border border-grey-5 bg-white text-grey-1 hover:bg-grey-6`}
+            >
+              <Users className="w-4 h-4" />
+              Members
+            </button>
+        */}
         <button
           onClick={() => router.push("/pos")}
           className={`${ACTION_CLASS} bg-primary-green-300 text-white hover:bg-primary-green-300/90`}
