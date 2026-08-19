@@ -141,6 +141,28 @@ export const NOTIFICATIONS = [
   },
 ] as const;
 
+/** How the programme's automatic messages reach the customer. */
+export const CHANNELS = [
+  {
+    value: "EMAIL",
+    icon: "✉️",
+    title: "Email only",
+    text: "0.3 unit per message · ₦3.50",
+  },
+  {
+    value: "SMS",
+    icon: "📱",
+    title: "SMS only",
+    text: "1 unit per message · ₦10.00",
+  },
+  {
+    value: "BOTH",
+    icon: "📨",
+    title: "Email and SMS",
+    text: "1.3 units per message · ₦13.50",
+  },
+] as const;
+
 export interface WizardState {
   businessName: string;
   name: string;
@@ -148,6 +170,13 @@ export interface WizardState {
   goal: (typeof GOALS)[number]["value"];
   rewardType: (typeof REWARDS)[number]["value"];
   rewardValue: string;
+  /** Set when rewardType is FREE_ITEM — the inventory product given away. */
+  rewardProductId: string;
+  rewardProductName: string;
+  /** Set when rewardType is FREE_SERVICE. */
+  rewardServiceId: string;
+  rewardServiceName: string;
+  channel: (typeof CHANNELS)[number]["value"];
   rewardStyle: (typeof STYLES)[number]["value"];
   ruleMode: "VISIT" | "SPEND" | "BOTH";
   visits: number;
@@ -170,6 +199,11 @@ export const INITIAL_STATE: WizardState = {
   goal: "VISIT",
   rewardType: "PERCENTAGE",
   rewardValue: "",
+  rewardProductId: "",
+  rewardProductName: "",
+  rewardServiceId: "",
+  rewardServiceName: "",
+  channel: "SMS",
   rewardStyle: "CONTINUOUS",
   ruleMode: "VISIT",
   visits: 5,
@@ -213,6 +247,13 @@ export const buildPayload = (s: WizardState) => {
     status: "ACTIVE",
     reward_type: s.rewardType,
     reward_value: s.rewardValue.trim() || undefined,
+    // Only one of these is ever set, and only for the matching reward type.
+    reward_product: s.rewardType === "FREE_ITEM" ? s.rewardProductId : undefined,
+    reward_service:
+      s.rewardType === "FREE_SERVICE" ? s.rewardServiceId : undefined,
+    // Not in the create schema yet — see the badge on the Notify step. Sent so
+    // the choice is not silently dropped the moment the backend adds the field.
+    notify_channel: s.channel,
     reward_style: s.rewardStyle,
     // Null rather than 0 — 0 would read as "must finish within zero days".
     completion_window_days: days > 0 ? days : null,
@@ -236,7 +277,14 @@ export const summaryRows = (s: WizardState) => [
   {
     label: "Reward",
     value: `${REWARDS.find((r) => r.value === s.rewardType)?.title ?? "—"}${
-      s.rewardValue ? ` — ${s.rewardValue}` : ""
+      // A give-away names the item; everything else carries a number.
+      s.rewardType === "FREE_ITEM" && s.rewardProductName
+        ? ` — ${s.rewardProductName}`
+        : s.rewardType === "FREE_SERVICE" && s.rewardServiceName
+          ? ` — ${s.rewardServiceName}`
+          : s.rewardValue
+            ? ` — ${s.rewardValue}`
+            : ""
     }`,
   },
   {
@@ -267,6 +315,10 @@ export const summaryRows = (s: WizardState) => [
     label: "Notifications",
     value: `${NOTIFICATIONS.filter(({ key }) => s[key]).length} messages enabled`,
   },
+  {
+    label: "Sent via",
+    value: CHANNELS.find((c) => c.value === s.channel)?.title ?? "—",
+  },
 ];
 
 /** Blocks Continue until the current step has what it needs. */
@@ -279,6 +331,12 @@ export const stepError = (step: StepName, s: WizardState): string | null => {
       s.rewardType === "PERCENTAGE";
     if (needsValue && !s.rewardValue.trim())
       return "Enter how much the reward is worth.";
+    // A give-away with nothing chosen would create a programme whose reward
+    // the till cannot hand over.
+    if (s.rewardType === "FREE_ITEM" && !s.rewardProductId)
+      return "Pick the product customers will get free.";
+    if (s.rewardType === "FREE_SERVICE" && !s.rewardServiceId)
+      return "Pick the service customers will get free.";
   }
   if (step === "Rules") {
     if ((s.ruleMode === "VISIT" || s.ruleMode === "BOTH") && s.visits < 1)

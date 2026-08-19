@@ -3,9 +3,10 @@
 import { useCreateLoyaltyProgramMutation } from "@/api/loyalty/create-loyalty-program";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@/lib/react-query";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import type { LoyaltyProgram } from "@/types/loyalty";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   INITIAL_STATE,
   STEPS,
@@ -21,6 +22,7 @@ import {
  */
 export const useCreateLoyaltyWizard = () => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const businessData = useBusinessDataStore((state: any) => state.businessData);
   const queryClient = useQueryClient();
 
   const [stepIndex, setStepIndex] = useState(0);
@@ -37,6 +39,18 @@ export const useCreateLoyaltyWizard = () => {
       setState((prev) => ({ ...prev, [key]: value })),
     [],
   );
+
+  // The business name is already on the account, so the merchant should not be
+  // retyping it onto their own loyalty card. Filled in only while the field is
+  // still untouched — the store hydrates from localStorage a beat after mount,
+  // and overwriting unconditionally would wipe a name typed in the meantime.
+  const storedBusinessName = businessData?.name ?? "";
+  useEffect(() => {
+    if (!storedBusinessName) return;
+    setState((prev) =>
+      prev.businessName ? prev : { ...prev, businessName: storedBusinessName },
+    );
+  }, [storedBusinessName]);
 
   const { mutate: createProgram, isPending } = useCreateLoyaltyProgramMutation({
     id: business_id ?? "",
