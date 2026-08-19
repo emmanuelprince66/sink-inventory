@@ -14,6 +14,7 @@ import { toList } from "@/types/api";
 import type { CustomerSegment } from "@/types/segment";
 import { Pause, Play, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import AddCampaign from "../../campaign/AddCampaign";
 import AddSegment from "./AddSegment";
 import SegmentCustomers from "./SegmentCustomers";
 import { toneFor } from "./segmentTone";
@@ -157,6 +158,9 @@ const CustomerSegments = () => {
   const [selected, setSelected] = useState<CustomerSegment | null>(null);
   const [editing, setEditing] = useState<CustomerSegment | null>(null);
   const [creating, setCreating] = useState(false);
+  // Customer ids the outreach campaign opens with — captured from the segment
+  // view so the audience is exactly the membership that was on screen.
+  const [messaging, setMessaging] = useState<string[] | null>(null);
 
   const { data, isLoading } = useFetchSegmentsQuery({
     params: { id: business_id ?? "" },
@@ -230,7 +234,36 @@ const CustomerSegments = () => {
           title={selected.name ?? "Segment"}
         >
           <div className="w-full">
-            <SegmentCustomers segmentId={selected.id} />
+            <SegmentCustomers
+              segmentId={selected.id}
+              // One overlay at a time: close this before opening the next,
+              // rather than stacking two Radix dialogs.
+              onEditConditions={() => {
+                setEditing(selected);
+                setSelected(null);
+              }}
+              onMessage={(customerIds) => {
+                setMessaging(customerIds);
+                setSelected(null);
+              }}
+            />
+          </div>
+        </CustomModal>
+      )}
+
+      {messaging && (
+        <CustomModal
+          isOpen
+          onClose={() => setMessaging(null)}
+          trigger={false}
+          title="Message Segment"
+          size="lg"
+        >
+          <div className="w-full">
+            <AddCampaign
+              closeModal={() => setMessaging(null)}
+              preselectedCustomerIds={messaging}
+            />
           </div>
         </CustomModal>
       )}

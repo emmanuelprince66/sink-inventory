@@ -32,7 +32,18 @@ import { useCampaignHook } from "@/hooks/useCampaignHook";
 import { MessageSquare, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
+const AddCampaign = ({
+  closeModal,
+  preselectedCustomerIds,
+}: {
+  closeModal: () => void;
+  /**
+   * Customers ticked before the merchant sees the form — used when the
+   * campaign is started from a segment, so the audience is the segment.
+   * Left editable: this is a starting point, not a lock.
+   */
+  preselectedCustomerIds?: string[];
+}) => {
   const [searchInput, setSearchInput] = useState("");
 
   const {
@@ -75,6 +86,15 @@ const AddCampaign = ({ closeModal }: { closeModal: () => void }) => {
       return searchableText.includes(searchInput.toLowerCase());
     });
   }, [CustomersData?.data, searchInput]);
+
+  // Seed the audience once, on mount. Keyed on the joined ids rather than the
+  // array itself — a new array identity every render would re-tick boxes the
+  // merchant had just cleared.
+  const preselectKey = (preselectedCustomerIds ?? []).join(",");
+  useEffect(() => {
+    if (preselectKey) form.setValue("customer_ids", preselectKey.split(","));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselectKey]);
 
   useEffect(() => {
     const currentLength = watchedMessage.length; // Get the length of the string (character count)

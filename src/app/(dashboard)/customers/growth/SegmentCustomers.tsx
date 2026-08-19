@@ -5,7 +5,7 @@ import { Spinner } from "@/components/app/Spinner";
 import { toList } from "@/types/api";
 import type { UserCustomer } from "@/types/segment";
 import { useFormatMoney } from "@/utils/formatMoney";
-import { Users } from "lucide-react";
+import { MessageSquare, Pencil, Users } from "lucide-react";
 
 const initials = (name?: string) =>
   (name ?? "?")
@@ -19,13 +19,34 @@ const initials = (name?: string) =>
 // The segment list endpoint only returns customer_count, so revenue and average
 // spend are derived here from the customers themselves rather than shown as
 // placeholders on the cards.
-const SegmentCustomers = ({ segmentId }: { segmentId: string }) => {
+const SegmentCustomers = ({
+  segmentId,
+  onEditConditions,
+  onMessage,
+}: {
+  segmentId: string;
+  /** Opens the segment's own edit form — the conditions live there. */
+  onEditConditions?: () => void;
+  /**
+   * Starts an outreach campaign against exactly these customers. Receives the
+   * ids rather than fetching them again: this component already holds the
+   * resolved membership, and re-querying could return a different set if the
+   * segment is recomputed between the two calls.
+   */
+  onMessage?: (customerIds: string[]) => void;
+}) => {
   const formatMoney = useFormatMoney();
   const { data, isLoading } = useFetchSegmentCustomersQuery({
     params: { segmentId },
   });
 
   const customers = toList<UserCustomer>(data?.data as never);
+
+  // Campaigns are addressed by customer id, so anyone the segment matched
+  // without one cannot be messaged and is dropped from the audience.
+  const messageableIds = customers
+    .map((c) => c.id)
+    .filter((id): id is string => Boolean(id));
 
   const revenue = customers.reduce(
     (sum, c) => sum + Number(c.total_sales ?? 0),
@@ -43,6 +64,33 @@ const SegmentCustomers = ({ segmentId }: { segmentId: string }) => {
 
   return (
     <div className="space-y-4">
+      {/* Actions sit above the figures: both act on the segment as a whole,
+          not on any one customer in the list below. */}
+      {(onEditConditions || onMessage) && (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {onEditConditions && (
+            <button
+              onClick={onEditConditions}
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-grey-5 bg-white text-sm font-bold text-grey-1 hover:bg-grey-6 cursor-pointer"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit Conditions
+            </button>
+          )}
+          {onMessage && (
+            <button
+              onClick={() => onMessage(messageableIds)}
+              disabled={messageableIds.length === 0}
+              className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary-green-300 text-sm font-bold text-white hover:bg-primary-green-300/90 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              Message {messageableIds.length || ""} Customer
+              {messageableIds.length === 1 ? "" : "s"}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-2">
         {[
           { value: String(customers.length), label: "Customers" },
