@@ -17,11 +17,11 @@ import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import {
-  GeocodeSuggestion,
+  AddressSuggestion,
   cityCentroid,
   coordinatesPayload,
   resolveCoordinates,
-} from "@/utils/geocode";
+} from "@/utils/address";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useDebounce } from "./useDebounce";
@@ -216,7 +216,7 @@ export const useCustomerHook = ({
   // Applies a picked autocomplete suggestion. `state` is stored as an ISO code
   // here (same convention as the order delivery form), so the resolved state
   // name is mapped back before it's set.
-  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+  const applyAddressSuggestion = (suggestion: AddressSuggestion) => {
     const matchedState = stateList.find(
       (s) =>
         s.isoCode === suggestion.stateCode ||

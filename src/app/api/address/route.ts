@@ -1,8 +1,11 @@
 import {
   GOOGLE_PLACES_AUTOCOMPLETE,
+  LEGACY_AUTOCOMPLETE,
   REGION_CODES,
+  isServiceDisabled,
   notConfigured,
-  type GeocodeSuggestion,
+  suggestionFromLegacyPrediction,
+  type AddressSuggestion,
 } from "@/lib/googlePlaces";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -15,10 +18,44 @@ import { NextRequest, NextResponse } from "next/server";
 //
 // Predictions carry NO coordinates — Google does not return geometry from
 // Autocomplete at all. The client resolves the picked one through
-// /api/geocode/details, which is both the documented flow and what makes a
+// /api/address/details, which is both the documented flow and what makes a
 // session token bill as a single lookup rather than one per keystroke.
 
-export type { GeocodeSuggestion };
+export type { AddressSuggestion };
+
+/** Same contract, served from the legacy Places endpoint. */
+const legacyAutocomplete = async (
+  apiKey: string,
+  q: string,
+  sessionToken?: string,
+) => {
+  const url = new URL(LEGACY_AUTOCOMPLETE);
+  url.searchParams.set("input", q);
+  url.searchParams.set("key", apiKey);
+  url.searchParams.set("language", "en");
+  url.searchParams.set("components", `country:${REGION_CODES[0]}`);
+  // Legacy spells it lowercase; it buys the same session-based billing.
+  if (sessionToken) url.searchParams.set("sessiontoken", sessionToken);
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+
+  if (data?.status && !["OK", "ZERO_RESULTS"].includes(data.status)) {
+    return {
+      success: false,
+      data: [] as AddressSuggestion[],
+      message: data?.error_message || "Address lookup failed",
+    };
+  }
+
+  return {
+    success: true,
+    data: (data?.predictions ?? [])
+      .map(suggestionFromLegacyPrediction)
+      .filter((s: AddressSuggestion | null): s is AddressSuggestion => s !== null),
+    message: "Addresses fetched",
+  };
+};
 
 export async function GET(request: NextRequest) {
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -75,6 +112,14 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json().catch(() => ({}));
 
+    // Only when Places API (New) is switched off on the project — every other
+    // failure is reported as-is rather than quietly retried elsewhere.
+    if (isServiceDisabled(response.status, data)) {
+      return NextResponse.json(await legacyAutocomplete(apiKey, q, sessionToken), {
+        status: 200,
+      });
+    }
+
     if (!response.ok) {
       return NextResponse.json(
         {
@@ -87,7 +132,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const suggestions: GeocodeSuggestion[] = (data?.suggestions ?? [])
+    const suggestions: AddressSuggestion[] = (data?.suggestions ?? [])
       .map((entry: any, index: number) => {
         const prediction = entry?.placePrediction;
         if (!prediction?.placeId) return null;
@@ -99,6 +144,7 @@ export async function GET(request: NextRequest) {
           id: prediction.placeId,
           placeId: prediction.placeId,
           label: prediction.text?.text || [main, secondary].filter(Boolean).join(", "),
+          secondary,
           // Main text is the street line; the rest is city/state context that
           // Place Details will break out properly on select.
           address: main,
@@ -110,9 +156,9 @@ export async function GET(request: NextRequest) {
           latitude: "",
           longitude: "",
           precision: prediction.types?.[0] || "",
-        } satisfies GeocodeSuggestion;
+        } satisfies AddressSuggestion;
       })
-      .filter((s: GeocodeSuggestion | null): s is GeocodeSuggestion => s !== null);
+      .filter((s: AddressSuggestion | null): s is AddressSuggestion => s !== null);
 
     return NextResponse.json(
       { success: true, data: suggestions, message: "Addresses fetched" },

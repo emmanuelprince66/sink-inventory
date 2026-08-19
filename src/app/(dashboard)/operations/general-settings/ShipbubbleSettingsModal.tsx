@@ -15,7 +15,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
-import { fetchAddressFromCoordinates } from "@/utils/geocode";
+import { fetchAddressFromCoordinates } from "@/utils/address";
 import { City, State } from "country-state-city";
 import {
   CheckCircle2,

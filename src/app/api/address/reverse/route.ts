@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
 // Reverse geocode: coordinates → a readable address. Used by the Shipbubble
 // settings form when the merchant taps "use my current location".
 //
-// Deliberately mirrors /api/geocode's response contract (success/data/message,
-// with data being GeocodeSuggestion[]) so the client helpers and the
+// Deliberately mirrors /api/address's response contract (success/data/message,
+// with data being AddressSuggestion[]) so the client helpers and the
 // AddressAutocomplete dropdown stay interchangeable.
 //
 // Google's Geocoding API rather than Places here: reverse lookup takes raw
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const lat = request.nextUrl.searchParams.get("lat");
   const lon = request.nextUrl.searchParams.get("lon");
 
-  // Matches /api/geocode: report the missing key rather than 500ing, so the
+  // Matches /api/address: report the missing key rather than 500ing, so the
   // caller can fall back to letting the merchant type the address.
   if (!apiKey) {
     return NextResponse.json(

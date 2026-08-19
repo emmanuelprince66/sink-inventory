@@ -1,6 +1,6 @@
 import { City, State } from "country-state-city";
 
-// Client-side helpers for the /api/geocode proxy, plus a zero-cost fallback.
+// Client-side helpers for the /api/address proxy, plus a zero-cost fallback.
 //
 // The coordinate resolution order used across the app:
 //   1. coordinates the user picked from the autocomplete  (street-level)
@@ -13,7 +13,7 @@ import { City, State } from "country-state-city";
 // a town centroid answers both of those, and country-state-city already ships
 // lat/long for every Nigerian state and city at no cost.
 
-export interface GeocodeSuggestion {
+export interface AddressSuggestion {
   id: string;
   label: string;
   address: string;
@@ -27,6 +27,8 @@ export interface GeocodeSuggestion {
   precision: string;
   /** Google place id; what fetchAddressDetails takes. */
   placeId?: string;
+  /** Prediction's second line — "Kuola - Aba Paanu Road, Ibadan, Nigeria". */
+  secondary?: string;
 }
 
 export interface Coordinates {
@@ -34,9 +36,9 @@ export interface Coordinates {
   longitude: string;
 }
 
-interface GeocodeResponse {
+interface AddressLookupResponse {
   success: boolean;
-  data: GeocodeSuggestion[];
+  data: AddressSuggestion[];
   disabled?: boolean;
   message?: string;
 }
@@ -59,11 +61,11 @@ export const fetchAddressSuggestions = async (
     proximity?: Coordinates | null;
     sessionToken?: string;
   },
-): Promise<GeocodeResponse> => {
+): Promise<AddressLookupResponse> => {
   const trimmed = (query || "").trim();
   if (trimmed.length < 3) return { success: true, data: [] };
 
-  const url = new URL("/api/geocode", window.location.origin);
+  const url = new URL("/api/address", window.location.origin);
   url.searchParams.set("q", trimmed);
   if (opts?.limit) url.searchParams.set("limit", String(opts.limit));
   if (opts?.proximity?.latitude && opts?.proximity?.longitude) {
@@ -84,7 +86,7 @@ export const fetchAddressSuggestions = async (
       message: data?.message || "Address lookup failed",
     };
   }
-  return data as GeocodeResponse;
+  return data as AddressLookupResponse;
 };
 
 /**
@@ -98,10 +100,10 @@ export const fetchAddressSuggestions = async (
 export const fetchAddressDetails = async (
   placeId: string,
   sessionToken?: string,
-): Promise<GeocodeSuggestion | null> => {
+): Promise<AddressSuggestion | null> => {
   if (!placeId) return null;
 
-  const url = new URL("/api/geocode/details", window.location.origin);
+  const url = new URL("/api/address/details", window.location.origin);
   url.searchParams.set("place_id", placeId);
   if (sessionToken) url.searchParams.set("sessionToken", sessionToken);
 
@@ -109,7 +111,7 @@ export const fetchAddressDetails = async (
     const response = await fetch(url.toString(), { method: "GET" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return null;
-    return (data?.data?.[0] as GeocodeSuggestion) ?? null;
+    return (data?.data?.[0] as AddressSuggestion) ?? null;
   } catch {
     return null;
   }
@@ -124,8 +126,8 @@ export const fetchAddressDetails = async (
 export const fetchAddressFromCoordinates = async (
   latitude: number,
   longitude: number,
-): Promise<GeocodeSuggestion | null> => {
-  const url = new URL("/api/geocode/reverse", window.location.origin);
+): Promise<AddressSuggestion | null> => {
+  const url = new URL("/api/address/reverse", window.location.origin);
   url.searchParams.set("lat", String(latitude));
   url.searchParams.set("lon", String(longitude));
 
@@ -133,7 +135,7 @@ export const fetchAddressFromCoordinates = async (
     const response = await fetch(url.toString(), { method: "GET" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return null;
-    return (data?.data?.[0] as GeocodeSuggestion) ?? null;
+    return (data?.data?.[0] as AddressSuggestion) ?? null;
   } catch {
     return null;
   }

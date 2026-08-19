@@ -6,11 +6,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import {
   Coordinates,
-  GeocodeSuggestion,
+  AddressSuggestion,
   fetchAddressDetails,
   fetchAddressSuggestions,
   newSessionToken,
-} from "@/utils/geocode";
+} from "@/utils/address";
 import { Check, Loader2, MapPin, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -21,7 +21,7 @@ interface AddressAutocompleteProps {
    * whatever the user is now typing. */
   onChange: (value: string) => void;
   /** Fired when a suggestion is picked. Carries street/city/state + coords. */
-  onSelect: (suggestion: GeocodeSuggestion) => void;
+  onSelect: (suggestion: AddressSuggestion) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -43,6 +43,23 @@ interface AddressAutocompleteProps {
   renderNoResults?: () => React.ReactNode;
 }
 
+/**
+ * What a picked suggestion reads as in the field.
+ *
+ * The prediction's own two lines, minus the trailing country. Deliberately not
+ * the resolved address that comes back from Place Details: those are different
+ * strings, and swapping one for the other a moment after the click makes the
+ * field look like it overrode the choice. Whatever is shown here is what gets
+ * stored, and nothing rewrites it afterwards.
+ */
+const pickedText = (suggestion: AddressSuggestion) => {
+  const full =
+    suggestion.secondary
+      ? `${suggestion.address}, ${suggestion.secondary}`
+      : suggestion.label || suggestion.address;
+  return full.replace(/,\s*Nigeria\s*$/i, "").trim();
+};
+
 const AddressAutocomplete = ({
   value,
   onChange,
@@ -59,7 +76,7 @@ const AddressAutocomplete = ({
   renderNoResults,
 }: AddressAutocompleteProps) => {
   const [query, setQuery] = useState(value);
-  const [suggestions, setSuggestions] = useState<GeocodeSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   // The query a search actually completed for. Gating the no-results fallback
   // on this (rather than just `suggestions.length === 0`) stops it flashing on
   // mount, when the field is prefilled but nothing has been searched yet.
@@ -175,20 +192,18 @@ const AddressAutocomplete = ({
     onChange(next);
   };
 
-  const handleSelect = async (suggestion: GeocodeSuggestion) => {
-    // Show the prediction text straight away — the details round trip should
-    // never make the field feel like it ignored the click.
-    const previewText = suggestion.address || suggestion.label;
-    suppressedQuery.current = previewText;
-    setQuery(previewText);
+  const handleSelect = async (suggestion: AddressSuggestion) => {
+    // Settled once, here, and never touched again.
+    const text = pickedText(suggestion);
+    suppressedQuery.current = text;
+    setQuery(text);
     setSuggestions([]);
     setIsOpen(false);
 
-    // Predictions carry no coordinates, so resolve the pick before handing it
-    // up. Anything already carrying coordinates (reverse geocode, a cached
-    // result) is passed through untouched.
+    // Anything already carrying coordinates (a reverse-geocode result) needs
+    // no resolving.
     if (!suggestion.placeId || suggestion.latitude) {
-      onSelect(suggestion);
+      onSelect({ ...suggestion, address: text });
       return;
     }
 
@@ -202,13 +217,12 @@ const AddressAutocomplete = ({
     // A pick closes the session whether or not the lookup succeeded.
     sessionToken.current = newSessionToken();
 
-    // On failure keep the prediction: the merchant still gets the text they
-    // chose, just without coordinates, which the callers already handle.
-    const final = resolved ?? suggestion;
-    const text = final.address || final.label;
-    suppressedQuery.current = text;
-    setQuery(text);
-    onSelect(final);
+    // Details supplies city, state and coordinates — the structured fields the
+    // prediction cannot fill. Its own address line is dropped: the merchant
+    // already chose one, and replacing it is the flicker this avoids. On
+    // failure the pick still stands, just without coordinates, which every
+    // caller already handles.
+    onSelect({ ...(resolved ?? suggestion), address: text });
   };
 
   const sharedProps = {
@@ -267,7 +281,9 @@ const AddressAutocomplete = ({
                     {s.address || s.label}
                   </span>
                   <span className="block text-xs text-grey-3 truncate">
-                    {[s.city, s.state].filter(Boolean).join(", ") || s.label}
+                    {s.secondary ||
+                      [s.city, s.state].filter(Boolean).join(", ") ||
+                      s.label}
                   </span>
                 </span>
               </button>
