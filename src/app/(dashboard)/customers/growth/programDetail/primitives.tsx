@@ -30,13 +30,22 @@ export const initials = (name?: string) =>
     .join("")
     .toUpperCase() || "?";
 
-/** Green when healthy, amber mid, red when poor — matches the design's bars. */
-export const rateTone = (rate: number) =>
-  rate >= 70
-    ? { bar: "bg-emerald-500", text: "text-emerald-700" }
-    : rate >= 40
-      ? { bar: "bg-amber-500", text: "text-amber-700" }
-      : { bar: "bg-rose-500", text: "text-rose-700" };
+/** Stable per-member tint, so an avatar keeps its colour between renders. */
+const AVATAR_TONES = [
+  "bg-primary-green-300",
+  "bg-amber-500",
+  "bg-sky-600",
+  "bg-violet-500",
+  "bg-rose-500",
+  "bg-teal-600",
+];
+
+export const avatarTone = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1)
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
+};
 
 export const rateCaption = (rate: number) =>
   rate >= 70
@@ -45,76 +54,107 @@ export const rateCaption = (rate: number) =>
       ? "Room to improve"
       : "Needs attention";
 
+/**
+ * One figure in the Overview grid: tinted icon, big number, quiet label.
+ * The number carries the tone, not the card — the design keeps every card on
+ * white so the four read as one set.
+ */
 export const StatTile = ({
   icon,
   value,
   label,
-  tone,
+  tone = "text-grey-1",
 }: {
   icon: ReactNode;
   value: number | string;
   label: string;
-  tone: string;
+  tone?: string;
 }) => (
-  <div className="min-w-0 rounded-xl border border-grey-5 bg-white p-3">
-    <div
-      className={cn(
-        "flex items-center gap-1.5 text-[11px] font-bold min-w-0",
-        tone,
-      )}
-    >
-      <span className="shrink-0">{icon}</span>
-      <span className="truncate">{label}</span>
-    </div>
-    <p className="mt-1.5 truncate text-xl font-extrabold text-grey-1">{value}</p>
+  <div className="min-w-0 rounded-2xl border border-grey-5 bg-primary-green-700 p-4">
+    <div className="mb-2.5">{icon}</div>
+    <p className={cn("truncate text-2xl font-extrabold", tone)}>{value}</p>
+    <p className="mt-0.5 truncate text-[11px] font-medium text-grey-4">
+      {label}
+    </p>
   </div>
 );
 
+/**
+ * Retention and completion. `highlight` gives the tinted treatment the design
+ * reserves for retention — completion sits on plain white beneath it.
+ */
 export const RateBar = ({
   label,
   rate,
   caption,
+  highlight = false,
 }: {
   label: string;
   rate: number;
   caption?: string;
-}) => {
-  const tone = rateTone(rate);
-  return (
-    <div className="rounded-xl border border-grey-5 bg-white p-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-bold text-grey-1">{label}</p>
-        <p className={cn("shrink-0 text-sm font-extrabold", tone.text)}>
-          {asRate(rate)}%
-        </p>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-grey-6">
-        <div
-          className={cn("h-full rounded-full transition-all", tone.bar)}
-          style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
-        />
-      </div>
-      {caption && (
-        <p className={cn("mt-1.5 text-[11px] font-medium", tone.text)}>
-          {caption}
-        </p>
-      )}
+  highlight?: boolean;
+}) => (
+  <div
+    className={cn(
+      "rounded-2xl border p-4",
+      highlight
+        ? "border-primary-green-300/25 bg-primary-green-500"
+        : "border-grey-5 bg-white",
+    )}
+  >
+    <div className="flex items-center justify-between gap-2">
+      <p className="text-sm font-bold text-grey-1">{label}</p>
+      <p className="shrink-0 text-base font-extrabold text-primary-green-300">
+        {asRate(rate)}%
+      </p>
     </div>
-  );
-};
+    <div className="mt-2.5 h-2 overflow-hidden rounded-full bg-white/80">
+      <div
+        className="h-full rounded-full bg-primary-green-300 transition-all"
+        style={{ width: `${Math.min(100, Math.max(0, rate))}%` }}
+      />
+    </div>
+    {caption && (
+      <p className="mt-2 flex items-center gap-1.5 text-[11px] font-medium text-primary-green-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary-green-300" />
+        {caption}
+      </p>
+    )}
+  </div>
+);
 
-/** Label on the left, figure on the right — used by the Report tab. */
+/**
+ * A money line on the Report tab — tinted square icon, label, figure.
+ * Each row owns its tint so the four read as categories, not a table.
+ */
 export const StatRow = ({
+  icon,
   label,
   value,
-  tone = "text-grey-1",
+  tone,
+  surface,
+  border,
 }: {
+  icon: ReactNode;
   label: string;
   value: string;
-  tone?: string;
+  tone: string;
+  surface: string;
+  /** A stronger draw of `surface` — the design outlines each row in its own
+   *  colour rather than a neutral grey, so the four stay distinguishable. */
+  border: string;
 }) => (
-  <div className="flex items-center justify-between gap-2 rounded-xl border border-grey-5 bg-white px-3 py-2.5">
-    <p className="text-xs font-medium text-grey-2">{label}</p>
+  <div
+    className={cn(
+      "flex items-center justify-between gap-3 rounded-2xl border px-3.5 py-3",
+      surface,
+      border,
+    )}
+  >
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span className={cn("shrink-0", tone)}>{icon}</span>
+      <p className="truncate text-xs font-medium text-grey-2">{label}</p>
+    </div>
     <p className={cn("shrink-0 text-sm font-extrabold", tone)}>{value}</p>
   </div>
 );

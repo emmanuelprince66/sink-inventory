@@ -102,6 +102,9 @@
   --color-primary-green-300: #329661;
   --color-primary-green-500: #edf8ee;
   --color-primary-green-600: #fefffe;
+  /* Off-white card surface from the loyalty designs — sits between white and
+     grey-6, warm enough to read as a card rather than as the page. */
+  --color-primary-green-700: #f7f9f6;
   --color-primary-black-100: #1e1e1e;
   --color-primary-gray-100: #535353;
   --color-primary-red-100: #d23838;
