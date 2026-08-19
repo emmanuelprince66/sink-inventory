@@ -98,6 +98,8 @@ export const queryKey = {
     salesDashboard: "sales-dashboard",
     fetchPresaleDetails: "fetch-presale-details",
     createPresale: "create-presale",
+    getComboSales: "get-combo-sales",
+    getComboSaleDetail: "get-combo-sale-detail",
   },
   orders: {
     getAllOrders: "get-all-orders",
