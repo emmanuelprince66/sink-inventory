@@ -64,6 +64,7 @@ export const queryKey = {
     deleteGroup: "delete-group",
     createGroup: "create-group",
     getCampaignSettings: "get-campaign-settings",
+    getCreditUsage: "get-campaign-credit-usage",
     createCampaignSettings: "create-campaign-settings",
   },
   attendants: {

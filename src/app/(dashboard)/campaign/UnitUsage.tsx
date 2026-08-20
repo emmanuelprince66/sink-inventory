@@ -1,103 +1,86 @@
 "use client";
 
+import {
+  useFetchCampaignCreditUsageQuery,
+  type CampaignCreditUsageLog,
+} from "@/api/campaign/fetch-credit-usage";
 import { CustomModal } from "@/components/app/CustomModal";
+import DataGapBadge from "@/components/app/DataGapBadge";
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
+import { toList } from "@/types/api";
 import { MessageSquare } from "lucide-react";
 import moment from "moment";
 import { useState } from "react";
 
-type MessageType = "SMS" | "WHATSAPP";
+/**
+ * usage_type is a six-value enum and the API sends its own display string, so
+ * the tint is keyed on what the value looks like rather than on a fixed map —
+ * an unrecognised type gets a neutral chip instead of no chip.
+ */
+const typeBadgeClass = (usageType: string) => {
+  const value = (usageType || "").toUpperCase();
+  if (value.includes("SMS")) return "bg-blue-100 text-blue-700";
+  if (value.includes("WHATSAPP")) return "bg-green-100 text-green-700";
+  if (value.includes("EMAIL")) return "bg-violet-100 text-violet-700";
+  if (value.includes("TOPUP") || value.includes("CREDIT"))
+    return "bg-emerald-100 text-emerald-700";
+  return "bg-gray-100 text-gray-700";
+};
 
-interface UsageRow {
-  id: string;
-  phone: string;
-  messageType: MessageType;
-  messageLabel: string;
-  body: string;
-  unit: number;
-  sentAt: string;
-}
-
-// Mock usage log — replace with API data once the endpoint exists.
-const MOCK_USAGE: UsageRow[] = [
-  {
-    id: "u-001",
-    phone: "+234 803 111 2233",
-    messageType: "SMS",
-    messageLabel: "Thank You Message",
-    body: "Thank you for your purchase! Your order #A8F2 has been received.",
-    unit: 10,
-    sentAt: "2026-05-25T09:30:00Z",
-  },
-  {
-    id: "u-002",
-    phone: "+234 805 444 5566",
-    messageType: "SMS",
-    messageLabel: "Order Confirmation",
-    body: "Your order #B3C9 has been confirmed and is being processed.",
-    unit: 8,
-    sentAt: "2026-05-25T10:15:00Z",
-  },
-  {
-    id: "u-003",
-    phone: "+234 808 777 8899",
-    messageType: "WHATSAPP",
-    messageLabel: "Promotion",
-    body: "Get 20% off this weekend on all bakery items. Use code SWEET20.",
-    unit: 4,
-    sentAt: "2026-05-25T11:05:00Z",
-  },
-  {
-    id: "u-004",
-    phone: "+234 814 222 3344",
-    messageType: "SMS",
-    messageLabel: "Reminder",
-    body: "Reminder: your invoice #FA12 is due tomorrow.",
-    unit: 10,
-    sentAt: "2026-05-24T16:42:00Z",
-  },
-  {
-    id: "u-005",
-    phone: "+234 816 555 6677",
-    messageType: "SMS",
-    messageLabel: "Thank You Message",
-    body: "Thank you for shopping with us — your loyalty means everything.",
-    unit: 10,
-    sentAt: "2026-05-24T15:20:00Z",
-  },
-  {
-    id: "u-006",
-    phone: "+234 803 999 1122",
-    messageType: "WHATSAPP",
-    messageLabel: "Delivery Update",
-    body: "Your delivery is on the way and should arrive within 30 minutes.",
-    unit: 4,
-    sentAt: "2026-05-23T12:00:00Z",
-  },
-];
-
-const typeBadgeClass = (type: MessageType) =>
-  type === "SMS"
-    ? "bg-blue-100 text-blue-700"
-    : "bg-green-100 text-green-700";
+const typeLabel = (row: CampaignCreditUsageLog) =>
+  row.usage_type_display || row.usage_type || "—";
 
 const UnitUsage = () => {
-  const [selected, setSelected] = useState<UsageRow | null>(null);
+  const business_id = useBusinessStore((state) => state.business_id);
+  const [selected, setSelected] = useState<CampaignCreditUsageLog | null>(null);
 
-  const totalUnits = MOCK_USAGE.reduce((sum, r) => sum + r.unit, 0);
+  const { data, isLoading } = useFetchCampaignCreditUsageQuery(
+    business_id ?? "",
+  );
+
+  const rows = toList<CampaignCreditUsageLog>(data?.data as any);
+
+  // A top-up credits the account, so units_used comes back negative on those
+  // rows. Spend is what this tab reports, so only positive charges are summed.
+  const totalUnits = rows.reduce(
+    (sum, row) => sum + Math.max(0, Number(row.units_used ?? 0)),
+    0,
+  );
+  const charges = rows.filter((row) => Number(row.units_used ?? 0) > 0).length;
+
+  // balance_after is the balance immediately after each charge, so the newest
+  // row carries the current one. Rows come back newest first.
+  const currentBalance = rows.find(
+    (row) => row.balance_after !== undefined && row.balance_after !== null,
+  )?.balance_after;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Spinner className="text-primary-green-300" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
+      {/* The ledger records credit being spent, not messages being delivered —
+          it has no recipient and no message body, so neither can be shown. */}
+      <DataGapBadge
+        label="No per-recipient detail"
+        needs="Campaign › Usage — GET /campaign/credit-usage/{id}/ is wired and its figures are live. CampaignCreditUsageLog has no recipient and no message body, so the tab can only report what each charge cost, not who it reached: the old Phone column and the message-body panel are gone. If per-message detail is wanted here, add recipient (phone/email) and message_body to the log, or expose a separate per-message send log keyed to the campaign. Also worth confirming: usage_type is a 6-value enum and the chip is currently tinted by string match (SMS / WHATSAPP / EMAIL / TOPUP) — please send the actual six values so it can be mapped properly."
+      />
+
       {/* Summary strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="border border-gray-200 rounded-lg p-3 bg-white">
           <p className="text-[11px] uppercase tracking-wide text-gray-500">
-            Total messages sent
+            Charges logged
           </p>
-          <p className="text-lg font-bold text-gray-900 mt-1">
-            {MOCK_USAGE.length}
-          </p>
+          <p className="text-lg font-bold text-gray-900 mt-1">{charges}</p>
         </div>
         <div className="border border-gray-200 rounded-lg p-3 bg-white">
           <p className="text-[11px] uppercase tracking-wide text-gray-500">
@@ -107,12 +90,14 @@ const UnitUsage = () => {
         </div>
         <div className="border border-gray-200 rounded-lg p-3 bg-white">
           <p className="text-[11px] uppercase tracking-wide text-gray-500">
-            Avg. units / message
+            {currentBalance === undefined ? "Avg. units / charge" : "Balance"}
           </p>
           <p className="text-lg font-bold text-gray-900 mt-1">
-            {MOCK_USAGE.length
-              ? (totalUnits / MOCK_USAGE.length).toFixed(1)
-              : "0"}
+            {currentBalance !== undefined
+              ? currentBalance
+              : charges
+                ? (totalUnits / charges).toFixed(1)
+                : "0"}
           </p>
         </div>
       </div>
@@ -127,10 +112,10 @@ const UnitUsage = () => {
                   No
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
-                  Phone
+                  Description
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-gray-600">
-                  Type of message
+                  Type
                 </th>
                 <th className="py-2.5 px-4 text-xs font-medium text-gray-600 text-right">
                   Unit
@@ -141,52 +126,61 @@ const UnitUsage = () => {
               </tr>
             </thead>
             <tbody>
-              {MOCK_USAGE.map((row, index) => (
-                <tr
-                  key={row.id}
-                  className="border-b border-gray-100 hover:bg-gray-50"
-                >
-                  <td className="py-3 px-4 text-sm text-gray-700">
-                    {index + 1}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
-                    {row.phone}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2 flex-wrap">
+              {rows.map((row, index) => {
+                const units = Number(row.units_used ?? 0);
+                return (
+                  <tr
+                    key={row.id}
+                    className="border-b border-gray-100 hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-4 text-sm text-gray-700">
+                      {index + 1}
+                    </td>
+                    <td className="py-3 px-4">
+                      <p className="text-sm text-gray-900">{row.title}</p>
+                      {row.created_at && (
+                        <p className="text-[11px] text-gray-500">
+                          {moment(row.created_at).format("MMM DD, YYYY • h:mm A")}
+                        </p>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
                       <span
                         className={cn(
-                          "text-[10px] font-semibold px-2 py-0.5 rounded-full",
-                          typeBadgeClass(row.messageType),
+                          "text-[10px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap",
+                          typeBadgeClass(row.usage_type),
                         )}
                       >
-                        {row.messageType}
+                        {typeLabel(row)}
                       </span>
-                      <span className="text-xs text-gray-700">
-                        [{row.messageLabel}]
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm font-medium text-gray-900 text-right">
-                    {row.unit}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelected(row)}
-                      className="text-xs h-7 px-2"
+                    </td>
+                    {/* Negative means credit was added rather than spent. */}
+                    <td
+                      className={cn(
+                        "py-3 px-4 text-sm font-medium text-right whitespace-nowrap",
+                        units < 0 ? "text-emerald-700" : "text-gray-900",
+                      )}
                     >
-                      View more
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                      {units < 0 ? `+${Math.abs(units)}` : units}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelected(row)}
+                        className="text-xs h-7 px-2"
+                      >
+                        View more
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
 
-        {MOCK_USAGE.length === 0 && (
+        {rows.length === 0 && (
           <div className="py-10 text-center text-sm text-gray-500">
             No campaign usage yet.
           </div>
@@ -196,20 +190,24 @@ const UnitUsage = () => {
       <CustomModal
         isOpen={!!selected}
         onClose={() => setSelected(null)}
-        title="Message Details"
+        title="Usage Details"
       >
         {selected && (
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
                 <MessageSquare className="w-4 h-4 text-gray-600" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-900">
-                  {selected.phone}
+                  {selected.title}
                 </p>
                 <p className="text-xs text-gray-500">
-                  Sent {moment(selected.sentAt).format("MMM DD, YYYY • h:mm A")}
+                  {selected.created_at
+                    ? moment(selected.created_at).format(
+                        "MMM DD, YYYY • h:mm A",
+                      )
+                    : "No timestamp"}
                 </p>
               </div>
             </div>
@@ -217,10 +215,10 @@ const UnitUsage = () => {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="border border-gray-200 rounded-md p-3">
                 <p className="text-[11px] uppercase tracking-wide text-gray-500">
-                  Channel
+                  Type
                 </p>
                 <p className="font-medium text-gray-900 mt-1">
-                  {selected.messageType}
+                  {typeLabel(selected)}
                 </p>
               </div>
               <div className="border border-gray-200 rounded-md p-3">
@@ -228,26 +226,20 @@ const UnitUsage = () => {
                   Units used
                 </p>
                 <p className="font-medium text-gray-900 mt-1">
-                  {selected.unit}
+                  {selected.units_used}
                 </p>
               </div>
-              <div className="border border-gray-200 rounded-md p-3 col-span-2">
-                <p className="text-[11px] uppercase tracking-wide text-gray-500">
-                  Template
-                </p>
-                <p className="font-medium text-gray-900 mt-1">
-                  {selected.messageLabel}
-                </p>
-              </div>
-            </div>
-
-            <div className="border border-gray-200 rounded-md p-3 bg-gray-50">
-              <p className="text-[11px] uppercase tracking-wide text-gray-500 mb-1.5">
-                Message body
-              </p>
-              <p className="text-sm text-gray-800 leading-relaxed">
-                {selected.body}
-              </p>
+              {selected.balance_after !== undefined &&
+                selected.balance_after !== null && (
+                  <div className="border border-gray-200 rounded-md p-3 col-span-2">
+                    <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                      Balance after
+                    </p>
+                    <p className="font-medium text-gray-900 mt-1">
+                      {selected.balance_after}
+                    </p>
+                  </div>
+                )}
             </div>
 
             <div className="flex justify-end">
