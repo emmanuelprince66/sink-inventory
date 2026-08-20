@@ -38,6 +38,9 @@ export interface CustomerType {
   tier_name?: string | null;
   loyalty_code?: string | null;
   points?: number;
+  /** Rewards this customer has earned. Preferred over a raw visit count —
+   *  a completed reward is the outcome; visits are only the mechanism. */
+  reward_count?: number;
   /** Human-readable code, e.g. "CUS-466E90". */
   customer_code?: string;
   visits?: number;

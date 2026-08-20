@@ -17,13 +17,23 @@ import { useState } from "react";
 import AddCampaign from "../../campaign/AddCampaign";
 import AddSegment from "./AddSegment";
 import SegmentCustomers from "./SegmentCustomers";
+import { asRate } from "./loyaltyFormat";
 import { toneFor } from "./segmentTone";
 
-// Revenue, repeat rate and average spend are in the design but not in the
-// segments payload — it returns customer_count and nothing else. Rather than
-// invent them, the tiles render em-dashes and the tab carries a note saying
-// so. The real figures for a single segment are computed from its customers
-// in SegmentCustomers, which is the one place the data actually exists.
+// Revenue, repeat rate and average spend come off the segments payload now.
+// A field the endpoint omits still falls back to an em dash rather than a
+// confident zero — an unanswered figure and a real zero mean different things
+// to a merchant reading a card.
+
+/** Three money tiles across a narrow card, so ₦294K rather than ₦294,000. */
+const compactMoney = (amount: number) => {
+  if (!Number.isFinite(amount)) return UNAVAILABLE;
+  const abs = Math.abs(amount);
+  if (abs >= 1_000_000) return `₦${(amount / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000)
+    return `₦${(amount / 1_000).toFixed(abs < 10_000 ? 1 : 0)}K`;
+  return `₦${Math.round(amount).toLocaleString()}`;
+};
 const UNAVAILABLE = "—";
 
 const SegmentCard = ({
@@ -87,15 +97,37 @@ const SegmentCard = ({
         )}
       </div>
 
+      {/* Live off the segment list now. A field the endpoint omits still
+          falls back to the em dash rather than printing a confident zero. */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         {[
-          { value: UNAVAILABLE, label: "Revenue" },
-          { value: UNAVAILABLE, label: "Repeat Rate" },
-          { value: UNAVAILABLE, label: "Avg Spend" },
+          {
+            value:
+              segment.revenue === undefined || segment.revenue === null
+                ? UNAVAILABLE
+                : compactMoney(Number(segment.revenue)),
+            label: "Revenue",
+          },
+          {
+            value:
+              segment.repeat_rate === undefined || segment.repeat_rate === null
+                ? UNAVAILABLE
+                : `${asRate(segment.repeat_rate)}%`,
+            label: "Repeat Rate",
+          },
+          {
+            value:
+              segment.avg_spend === undefined || segment.avg_spend === null
+                ? UNAVAILABLE
+                : compactMoney(Number(segment.avg_spend)),
+            label: "Avg Spend",
+          },
         ].map((stat) => (
-          <div key={stat.label} className="bg-grey-6 rounded-lg py-2 text-center">
-            <p className="text-sm font-extrabold text-grey-1">{stat.value}</p>
-            <p className="text-[10px] text-grey-3">{stat.label}</p>
+          <div key={stat.label} className="min-w-0 bg-grey-6 rounded-lg py-2 text-center">
+            <p className="truncate text-sm font-extrabold text-grey-1">
+              {stat.value}
+            </p>
+            <p className="truncate text-[10px] text-grey-3">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -212,12 +244,11 @@ const CustomerSegments = () => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <DataGapBadge
-              label="Missing metrics"
-              needs="GET /customer/segment/{id}/ — (1) add revenue, repeat_rate and avg_spend to each segment; only customer_count is returned today. (2) The endpoint lists ACTIVE segments only, so a paused segment disappears and cannot be resumed — add an include_inactive flag (or return is_active on every segment) so pause/resume can be offered in the UI."
+              label="Paused segments disappear"
+              needs="GET /customer/segment/{business_id}/ lists ACTIVE segments only, so setting is_active:false drops the card off this list with no way to bring it back. Pause is therefore not offered in the UI. Please add an include_inactive flag (or return is_active on every segment) so pause and resume can be a real pair. revenue, repeat_rate and avg_spend have landed and are now rendered."
             />
             <span className="text-[11px] text-grey-4">
-              Open a segment to see its real figures, computed from its
-              customers.
+              Open a segment to see the customers behind these figures.
             </span>
           </div>
         </>

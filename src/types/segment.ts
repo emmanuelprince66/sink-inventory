@@ -61,6 +61,12 @@ export interface CustomerSegment {
   conditions?: SegmentConditions;
   /** Read-only. The spec types this as a string; live responses send a number. */
   customer_count?: number | string;
+  /** Read-only. Total revenue from everyone currently in the segment. */
+  revenue?: number | string;
+  /** Read-only. Share of the segment that has bought more than once. */
+  repeat_rate?: number | string;
+  /** Read-only. Average basket across the segment. */
+  avg_spend?: number | string;
   created_at?: string;
   updated_at?: string;
 }
