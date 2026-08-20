@@ -33,6 +33,8 @@ const CustomerLoyaltyModal = ({
   open,
   onClose,
   onAddToSale,
+  onApplyReward,
+  appliedRewardId,
 }: {
   loyaltyCode: string | null;
   /** The row this was opened from, when there is one — used for Add to Sale. */
@@ -40,6 +42,10 @@ const CustomerLoyaltyModal = ({
   open: boolean;
   onClose: () => void;
   onAddToSale: (customer: any) => void;
+  /** Attaches a reward to the current sale; null clears it. */
+  onApplyReward?: (reward: any | null, wallet: any) => void;
+  /** Which reward, if any, this sale is already redeeming. */
+  appliedRewardId?: string | null;
 }) => {
   const { data, isLoading } = useFetchLoyaltyProgressQuery({
     params: { loyaltyCode: loyaltyCode ?? "" },
@@ -54,7 +60,8 @@ const CustomerLoyaltyModal = ({
   const isVisitStreak = /visit/i.test(enrollment?.progress_display ?? "");
   const showStamps = isVisitStreak && target > 0 && target <= MAX_STAMPS;
 
-  const rewardReady = (wallet?.available_rewards?.length ?? 0) > 0;
+  const rewards = (wallet?.available_rewards ?? []) as any[];
+  const rewardReady = rewards.length > 0;
 
   const [tierCurrent, tierTarget] = parseProgress(
     nextTier?.next_tier_progress_display,
@@ -179,6 +186,95 @@ const CustomerLoyaltyModal = ({
                 </div>
               )}
             </div>
+
+            {/* Redeeming a reward. Only its id goes to the sale — the backend
+                zeroes the price, deducts the stock and marks it REDEEMED — so
+                nothing here calculates a discount. */}
+            {!rewardReady && onApplyReward && (
+              <div className="rounded-xl border border-grey-5 bg-grey-6/60 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
+                  Available Rewards
+                </p>
+                <p className="mt-1.5 text-xs font-bold text-grey-1">
+                  Nothing to redeem yet
+                </p>
+                {/* Says why, rather than leaving the cashier with an empty
+                    panel. A reward has to be issued by the backend before it
+                    can be applied, and that only happens once the condition is
+                    met — so there is nothing to press here yet.
+
+                    remaining_message is deliberately not repeated: it already
+                    sits under the streak bar above, where the progress it
+                    describes is on screen. This line explains the mechanism
+                    instead, and only falls back to the progress string when
+                    there is no streak card to read it from. */}
+                <p className="mt-0.5 text-[11px] leading-relaxed text-grey-3">
+                  {enrollment?.remaining_message
+                    ? "A reward becomes redeemable once the streak above is complete."
+                    : enrollment?.progress_display
+                      ? `${enrollment.progress_display} on ${
+                          enrollment.program_name ?? "this programme"
+                        } — a reward is issued once it completes.`
+                      : "This customer has no rewards waiting on their account."}
+                </p>
+              </div>
+            )}
+
+            {rewardReady && onApplyReward && (
+              <div className="rounded-xl border border-primary-green-300/40 bg-primary-green-500 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-primary-green-300">
+                  Available Rewards
+                </p>
+                <div className="mt-2 flex flex-col gap-2">
+                  {rewards.map((reward: any, index: number) => {
+                    const id = String(reward?.id ?? index);
+                    const applied = appliedRewardId === id;
+                    return (
+                      <div
+                        key={id}
+                        className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-grey-1">
+                            {reward?.reward_description ??
+                              reward?.description ??
+                              reward?.reward_summary ??
+                              reward?.reward_type ??
+                              "Reward"}
+                          </p>
+                          {reward?.program_name && (
+                            <p className="truncate text-[10px] text-grey-3">
+                              {reward.program_name}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onApplyReward(
+                              applied ? null : { ...reward, id },
+                              wallet,
+                            )
+                          }
+                          className={cn(
+                            "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-colors",
+                            applied
+                              ? "bg-grey-6 text-grey-2 hover:bg-grey-5"
+                              : "bg-primary-green-300 text-white hover:bg-primary-green-300/90",
+                          )}
+                        >
+                          {applied ? "Remove" : "Apply to sale"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[10px] leading-relaxed text-grey-3">
+                  Applying attaches the reward to this sale. It is only marked
+                  redeemed once the sale goes through.
+                </p>
+              </div>
+            )}
 
             {/* Tier progress */}
             {nextTier && !nextTier.is_max_tier && nextTier.next_tier_name && (

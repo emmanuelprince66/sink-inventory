@@ -67,7 +67,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const customer = cartState.customer;
   const attendant = cartState.attendant;
   const showReceipt = cartState.showReceipt;
-  const setCustomer = (v: any | null) => updateCartState({ customer: v });
+  // A reward belongs to a person, so changing or clearing the customer drops
+  // it — otherwise it would be billed to whoever the cashier picks next.
+  const setCustomer = (v: any | null) =>
+    updateCartState({ customer: v, loyaltyReward: null });
   const setAttendant = (v: any | null) => updateCartState({ attendant: v });
   const setShowReceipt = (v: boolean) => updateCartState({ showReceipt: v });
   // ---- end per-sale state ----
@@ -801,6 +804,29 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             onAddToSale={(selected: any) => {
               setCustomer(selected);
               setIsCustomerDrawerOpen(false);
+            }}
+            appliedRewardId={cartState.loyaltyReward?.id ?? null}
+            onApplyReward={(reward: any | null, wallet: any) => {
+              // Customer and reward move together in one update: setCustomer
+              // deliberately clears the reward, so calling both in sequence
+              // would wipe the one just applied.
+              const owner =
+                cartState.customer ??
+                loyaltyView?.customer ??
+                (wallet
+                  ? {
+                      name: wallet.name,
+                      phone: wallet.phone,
+                      loyalty_code: wallet.loyalty_code,
+                    }
+                  : null);
+
+              updateCartState({
+                loyaltyReward: reward,
+                // A reward can only be redeemed against its owner, so applying
+                // one puts them on the sale if they are not already there.
+                ...(reward ? { customer: owner } : {}),
+              });
             }}
           />
           <AttendantDrawer

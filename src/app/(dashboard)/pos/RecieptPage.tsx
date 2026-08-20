@@ -87,6 +87,7 @@ const ReceiptPage = ({
     bank?: string;
     dueDate?: Date;
   }>;
+  const loyaltyReward = cartState.loyaltyReward;
   const tempSplitPayment = cartState.tempSplitPayment;
   const remainingAmount = cartState.remainingAmount;
 
@@ -438,6 +439,12 @@ const ReceiptPage = ({
         })),
         ...(customer?.id && { customer: customer.id }),
         ...(attendant?.id && { attendant: attendant.id }),
+        // Redeeming a loyalty reward. Only the id goes up: the backend prices
+        // the item at zero, deducts its stock, marks the reward REDEEMED and
+        // records the redemption against the sale. Nothing is discounted
+        // client-side, so the cart total stays what the cashier rang up and
+        // the receipt reads loyalty_discount back off the response.
+        ...(loyaltyReward?.id && { loyalty_reward_id: loyaltyReward.id }),
       };
 
       if (isChecked) {

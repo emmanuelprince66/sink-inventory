@@ -6,6 +6,13 @@ import { persist } from "zustand/middleware";
 // customer, attendant, etc. selected in Sale 1 do NOT bleed into Sale 2.
 export interface CartSlotState {
   customer: any | null;
+  /**
+   * A reward the customer chose to redeem on this sale, from their loyalty
+   * wallet. Only its id is sent — the backend prices the item at zero, deducts
+   * the stock and marks the reward REDEEMED — so the rest is kept purely to
+   * show what is being applied without a second lookup.
+   */
+  loyaltyReward: any | null;
   attendant: any | null;
   paymentMethod: string;
   selectedBank: string;
@@ -25,6 +32,7 @@ export interface CartSlotState {
 
 const emptyState = (): CartSlotState => ({
   customer: null,
+  loyaltyReward: null,
   attendant: null,
   paymentMethod: "",
   selectedBank: "",
