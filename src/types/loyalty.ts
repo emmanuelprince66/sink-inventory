@@ -144,8 +144,14 @@ export interface LoyaltyMilestone {
   trigger_count: number;
   reward_type: "POINTS" | "WALLET_CREDIT" | "PERCENTAGE" | "FREE_ITEM" | "FREE_SERVICE";
   reward_value?: string | null;
+  /** UUID sent on create/update when reward_type is FREE_ITEM. */
   reward_product?: string | null;
+  /** UUID sent on create/update when reward_type is FREE_SERVICE. */
   reward_service?: string | null;
+  /** Read-only: what reward_product resolves to, so the item can be shown
+   *  without a second lookup against inventory. */
+  reward_product_detail?: LoyaltyRewardItem | null;
+  reward_service_detail?: LoyaltyRewardItem | null;
   reward_description?: string | null;
   created_at?: string;
 }
@@ -161,6 +167,14 @@ export interface LoyaltyParticipantProgress {
   progress_target: number | null;
 }
 
+/** The product or service a FREE_ITEM / FREE_SERVICE programme gives away. */
+export interface LoyaltyRewardItem {
+  id: string;
+  name: string;
+  selling_price?: string | number | null;
+  image?: string | null;
+}
+
 export interface LoyaltyProgram {
   id?: string;
   name: string;
@@ -170,8 +184,14 @@ export interface LoyaltyProgram {
   status?: "DRAFT" | "ACTIVE" | "PAUSED" | "EXPIRED";
   reward_type: "POINTS" | "WALLET_CREDIT" | "PERCENTAGE" | "FREE_ITEM" | "FREE_SERVICE";
   reward_value?: string | null;
+  /** UUID sent on create/update when reward_type is FREE_ITEM. */
   reward_product?: string | null;
+  /** UUID sent on create/update when reward_type is FREE_SERVICE. */
   reward_service?: string | null;
+  /** Read-only: what reward_product resolves to, so the item can be shown
+   *  without a second lookup against inventory. */
+  reward_product_detail?: LoyaltyRewardItem | null;
+  reward_service_detail?: LoyaltyRewardItem | null;
   reward_description?: string | null;
   reward_style?: "CONTINUOUS" | "ONE_TIME";
   visit_window_hours?: number;

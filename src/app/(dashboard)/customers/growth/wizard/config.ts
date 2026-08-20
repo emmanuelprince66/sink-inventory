@@ -203,7 +203,9 @@ export const INITIAL_STATE: WizardState = {
   rewardProductName: "",
   rewardServiceId: "",
   rewardServiceName: "",
-  channel: "SMS",
+  // Matches the API's own default, so what the step shows and what the
+  // programme would do without input never disagree.
+  channel: "BOTH",
   rewardStyle: "CONTINUOUS",
   ruleMode: "VISIT",
   visits: 5,
@@ -251,9 +253,8 @@ export const buildPayload = (s: WizardState) => {
     reward_product: s.rewardType === "FREE_ITEM" ? s.rewardProductId : undefined,
     reward_service:
       s.rewardType === "FREE_SERVICE" ? s.rewardServiceId : undefined,
-    // Not in the create schema yet — see the badge on the Notify step. Sent so
-    // the choice is not silently dropped the moment the backend adds the field.
-    notify_channel: s.channel,
+    // SMS | EMAIL | BOTH — the API defaults to BOTH, and so does the step.
+    communication_channel: s.channel,
     reward_style: s.rewardStyle,
     // Null rather than 0 — 0 would read as "must finish within zero days".
     completion_window_days: days > 0 ? days : null,

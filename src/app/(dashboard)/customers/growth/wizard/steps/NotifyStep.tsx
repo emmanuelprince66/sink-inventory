@@ -1,6 +1,5 @@
 "use client";
 
-import DataGapBadge from "@/components/app/DataGapBadge";
 import { cn } from "@/lib/utils";
 import { CHANNELS, NOTIFICATIONS } from "../config";
 import { FieldLabel, StepShell, type StepProps } from "./StepShell";
@@ -69,10 +68,6 @@ const NotifyStep = ({ state, set }: StepProps) => {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <FieldLabel>How should these reach customers?</FieldLabel>
-            <DataGapBadge
-              label="Channel not saved yet"
-              needs="POST /loyalty/{business_id}/programs/ — the create schema has no notification channel field, so the merchant's Email/SMS/Both choice cannot be stored. Needed: notify_channel (EMAIL | SMS | BOTH) on create and update, and honoured when the programme sends welcome/progress/reward-ready/expiry messages. The UI already sends notify_channel on create; it is being ignored."
-            />
           </div>
 
           <div className="mt-2 flex flex-col gap-3">
