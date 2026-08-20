@@ -7,6 +7,18 @@ import {
 import { ApiResponse, Paginated } from "@/types/api";
 
 /**
+ * The six usage_type values, from the spec. CREDIT_TOPUP is the only one that
+ * adds credit rather than spending it.
+ */
+export type CampaignUsageType =
+  | "CAMPAIGN_BROADCAST"
+  | "MARKET_AUTOMATION"
+  | "POST_SALE_RECEIPT"
+  | "LOYALTY_ALERT"
+  | "BIRTHDAY_WISH"
+  | "CREDIT_TOPUP";
+
+/**
  * One row of the campaign credit ledger — GET /campaign/credit-usage/{id}/.
  *
  * This is a record of credit being spent, not of a message being delivered:
@@ -15,8 +27,8 @@ import { ApiResponse, Paginated } from "@/types/api";
  */
 export interface CampaignCreditUsageLog {
   id: string;
-  /** Enum of six; the human form comes back as usage_type_display. */
-  usage_type: string;
+  /** Widened to string: an unrecognised value should render, not break. */
+  usage_type: CampaignUsageType | string;
   usage_type_display?: string;
   title: string;
   units_used: number;

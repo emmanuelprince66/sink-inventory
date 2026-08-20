@@ -16,19 +16,20 @@ import moment from "moment";
 import { useState } from "react";
 
 /**
- * usage_type is a six-value enum and the API sends its own display string, so
- * the tint is keyed on what the value looks like rather than on a fixed map —
- * an unrecognised type gets a neutral chip instead of no chip.
+ * The six usage_type values, from the spec. CREDIT_TOPUP is the only one that
+ * adds credit rather than spending it, which is why it reads green.
  */
-const typeBadgeClass = (usageType: string) => {
-  const value = (usageType || "").toUpperCase();
-  if (value.includes("SMS")) return "bg-blue-100 text-blue-700";
-  if (value.includes("WHATSAPP")) return "bg-green-100 text-green-700";
-  if (value.includes("EMAIL")) return "bg-violet-100 text-violet-700";
-  if (value.includes("TOPUP") || value.includes("CREDIT"))
-    return "bg-emerald-100 text-emerald-700";
-  return "bg-gray-100 text-gray-700";
+const TYPE_TONES: Record<string, string> = {
+  CAMPAIGN_BROADCAST: "bg-blue-100 text-blue-700",
+  MARKET_AUTOMATION: "bg-violet-100 text-violet-700",
+  POST_SALE_RECEIPT: "bg-gray-100 text-gray-700",
+  LOYALTY_ALERT: "bg-amber-100 text-amber-700",
+  BIRTHDAY_WISH: "bg-pink-100 text-pink-700",
+  CREDIT_TOPUP: "bg-emerald-100 text-emerald-700",
 };
+
+const typeBadgeClass = (usageType: string) =>
+  TYPE_TONES[(usageType || "").toUpperCase()] ?? "bg-gray-100 text-gray-700";
 
 const typeLabel = (row: CampaignCreditUsageLog) =>
   row.usage_type_display || row.usage_type || "—";
@@ -71,7 +72,7 @@ const UnitUsage = () => {
           it has no recipient and no message body, so neither can be shown. */}
       <DataGapBadge
         label="No per-recipient detail"
-        needs="Campaign › Usage — GET /campaign/credit-usage/{id}/ is wired and its figures are live. CampaignCreditUsageLog has no recipient and no message body, so the tab can only report what each charge cost, not who it reached: the old Phone column and the message-body panel are gone. If per-message detail is wanted here, add recipient (phone/email) and message_body to the log, or expose a separate per-message send log keyed to the campaign. Also worth confirming: usage_type is a 6-value enum and the chip is currently tinted by string match (SMS / WHATSAPP / EMAIL / TOPUP) — please send the actual six values so it can be mapped properly."
+        needs="Campaign › Usage — GET /campaign/credit-usage/{id}/ is wired and its figures are live. CampaignCreditUsageLog has no recipient and no message body, so the tab can only report what each charge cost, not who it reached: the old Phone column and the message-body panel are gone. usage_type is now mapped straight from the spec's six values (CAMPAIGN_BROADCAST, MARKET_AUTOMATION, POST_SALE_RECEIPT, LOYALTY_ALERT, BIRTHDAY_WISH, CREDIT_TOPUP) — note none of them records whether a message went by SMS or email, so no delivery channel can be shown either. If per-message detail is wanted here, add recipient, message_body and the channel to the log, or expose a separate per-message send log keyed to the campaign."
       />
 
       {/* Summary strip */}
