@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
+import { useBusinessBanks } from "@/hooks/useBusinessBanks";
+import BankSelector from "./BankSelector";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -101,6 +103,7 @@ const Transactions = () => {
     setActiveFilter(filter);
   };
 
+  const { selectedBank, primaryBank } = useBusinessBanks();
   const { TrxData, TrxDataLoading, user, businessData } = useTransactionsHook({
     searchInput,
     dateRange,
@@ -201,7 +204,11 @@ const Transactions = () => {
                   <Landmark className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold">Main Account</p>
+                  <p className="text-sm font-bold">
+                    {selectedBank && primaryBank && selectedBank.id !== primaryBank.id
+                      ? "Sub Account"
+                      : "Main Account"}
+                  </p>
                   <p className="text-xs text-white/70 mt-0.5">
                     {`${
                       TrxData?.data?.results?.wallet_details?.bank_name || "Nil"
@@ -233,7 +240,10 @@ const Transactions = () => {
                 </div>
               </div>
 
-              {user?.role === "OWNER" && (
+              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+                <BankSelector />
+
+                {user?.role === "OWNER" && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Link href="transactions/transfer" className="flex-1 sm:flex-none">
                     <Button
@@ -252,7 +262,8 @@ const Transactions = () => {
                     Create Sub Account
                   </Button>
                 </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         )}

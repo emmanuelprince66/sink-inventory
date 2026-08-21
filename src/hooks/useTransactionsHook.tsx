@@ -3,6 +3,7 @@ import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useFetchTrxBank } from "@/api/transactions/fetch-bank";
 import { useFetchTransactionQuery } from "@/api/transactions/fetch-transactions";
 import { useTransferFundsMutation } from "@/api/transactions/transfer";
+import { useBusinessBanks } from "@/hooks/useBusinessBanks";
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { useMutation } from "@tanstack/react-query";
@@ -37,8 +38,9 @@ export const useTransactionsHook = ({
   // console.log("user", user);
   const businessData = useBusinessDataStore((state: any) => state.businessData);
 
-  console.log("businessData", businessData);
-  console.log("business_id", businessData?.id);
+  // The wallet is keyed on a bank account, not the business — a business can
+  // hold several, and each is its own wallet with its own balance and history.
+  const { selectedBankId, selectedBank, hasBanks } = useBusinessBanks();
   const {
     data: BankData,
     isLoading: BankDataLoading,
@@ -89,7 +91,13 @@ export const useTransactionsHook = ({
   console.log("beneficairy_info", beneficiaryInfo);
 
   const handleSubmitTransferFunds = (data: any) => {
-    console.log("data----4", data);
+    // Guard rather than send a blank id: the URL would still be well formed
+    // and the API would answer about some other wallet, or none.
+    if (!selectedBankId) {
+      showToast("Select an account before transferring", "error");
+      return;
+    }
+
     const masterPayload = {
       pin: data?.pin,
       ref: data?.beneficiaryRef || beneficiaryInfo?.data?.ref || "",
@@ -99,7 +107,9 @@ export const useTransactionsHook = ({
     };
 
     TransferFund(
-      { body: masterPayload, businessId: businessData?.id },
+      // Money leaves the wallet the screen is pointed at, so the transfer is
+      // keyed on the same bank id the balance above it was read from.
+      { body: masterPayload, businessId: selectedBankId },
       {
         onSuccess: () => {
           TrxDataRefetch();
@@ -166,11 +176,13 @@ export const useTransactionsHook = ({
         ? moment(dateRange.to).format("YYYY-MM-DD")
         : undefined,
       limit: 20,
-      id: businessData?.id,
+      id: selectedBankId ?? "",
       search: searchTerm,
       type: type,
     },
-    enabled: !!businessData?.id,
+    // Nothing to read until a bank resolves — querying with the business id
+    // would point at a wallet that is not this one.
+    enabled: !!selectedBankId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -186,6 +198,9 @@ export const useTransactionsHook = ({
 
   return {
     BankData,
+    selectedBankId,
+    selectedBank,
+    hasBanks,
     TrxData,
     TrxDataLoading,
     user,
