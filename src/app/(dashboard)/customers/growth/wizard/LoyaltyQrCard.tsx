@@ -1,6 +1,7 @@
 "use client";
 
 import JoinQrCode from "@/components/app/JoinQrCode";
+import { useLoyaltyTheme } from "@/utils/storeTheme";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
 import { captureElementCanvas } from "@/utils/captureElement";
@@ -42,6 +43,9 @@ const LoyaltyQrCard = ({
   previewUrl,
 }: LoyaltyQrCardProps) => {
   const { showToast } = useToast();
+  // The card carries the storefront's own colour, so what a customer scans
+  // matches the shop they scanned it in.
+  const theme = useLoyaltyTheme();
   const cardRef = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState<"download" | "print" | null>(null);
 
@@ -146,7 +150,10 @@ const LoyaltyQrCard = ({
           <p className="mt-0.5 truncate text-xs text-grey-3">
             {businessName || "Your Business"}
           </p>
-          <p className="mt-2 truncate text-sm font-extrabold text-primary-green-300">
+          <p
+            className="mt-2 truncate text-sm font-extrabold"
+            style={{ color: theme.qrFg }}
+          >
             {rewardSummary ?? "Reward"}
           </p>
           {triggerSummary && (
@@ -173,14 +180,33 @@ const LoyaltyQrCard = ({
           className="w-[360px] overflow-hidden rounded-2xl border border-grey-5 bg-white"
         >
         {/* Green header */}
-        <div className="relative bg-gradient-to-br from-primary-green-300 to-[#2b7d51] px-5 py-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/70">
+        <div
+          className="relative px-5 py-4"
+          style={{
+            backgroundImage: `linear-gradient(to bottom right, ${theme.base}, ${theme.dark})`,
+          }}
+        >
+          <p
+            className="text-[9px] font-bold uppercase tracking-[0.18em] opacity-70"
+            style={{ color: theme.onBase }}
+          >
             Loyalty Card
           </p>
-          <p className="mt-0.5 truncate pr-12 text-xl font-extrabold text-white">
+          <p
+            className="mt-0.5 truncate pr-12 text-xl font-extrabold"
+            style={{ color: theme.onBase }}
+          >
             {businessName || "Your Business"}
           </p>
-          <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+          <span
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full"
+            style={{
+              backgroundColor:
+                theme.onBase === "#ffffff"
+                  ? "rgba(255,255,255,0.2)"
+                  : "rgba(0,0,0,0.12)",
+            }}
+          >
             <Trophy className="h-4 w-4 text-amber-300" />
           </span>
         </div>
@@ -198,14 +224,23 @@ const LoyaltyQrCard = ({
               <div className="mt-2 flex flex-wrap items-start gap-1.5">
                 {Array.from({ length: dots }, (_, i) => (
                   <div key={i} className="flex flex-col items-center gap-1">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-primary-green-300/40 text-[11px] font-bold text-primary-green-300">
+                    <span
+                      className="flex h-7 w-7 items-center justify-center rounded-full border-2 text-[11px] font-bold"
+                      style={{
+                        borderColor: theme.surfaceBorder,
+                        color: theme.qrFg,
+                      }}
+                    >
                       {i + 1}
                     </span>
                     <span className="text-[7px] text-grey-4">Visit {i + 1}</span>
                   </div>
                 ))}
                 <div className="flex flex-col items-center gap-1">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-green-300 text-xs">
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-xs"
+                    style={{ backgroundColor: theme.base }}
+                  >
                     🎁
                   </span>
                   <span className="text-[7px] text-grey-4">Reward</span>
@@ -215,9 +250,18 @@ const LoyaltyQrCard = ({
           )}
 
           {/* Reward */}
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-primary-green-300/30 bg-primary-green-500 px-4 py-3">
+          <div
+            className="mt-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
+            style={{
+              borderColor: theme.surfaceBorder,
+              backgroundColor: theme.surface,
+            }}
+          >
             <div className="min-w-0">
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-primary-green-300">
+              <p
+                className="text-[9px] font-bold uppercase tracking-[0.14em]"
+                style={{ color: theme.qrFg }}
+              >
                 Your Reward
               </p>
               <p className="mt-0.5 truncate text-lg font-extrabold text-grey-1">
@@ -243,7 +287,10 @@ const LoyaltyQrCard = ({
               className="h-24 w-24 shrink-0 rounded"
             />
             <div className="min-w-0">
-              <p className="text-sm font-extrabold text-primary-green-300">
+              <p
+                className="text-sm font-extrabold"
+                style={{ color: theme.qrFg }}
+              >
                 Scan to Join
               </p>
               <p className="mt-0.5 text-[10px] leading-relaxed text-grey-3">
@@ -254,11 +301,14 @@ const LoyaltyQrCard = ({
         </div>
 
           {/* Green footer */}
-          <div className="flex items-center justify-between bg-primary-green-300 px-5 py-2">
-            <p className="text-[9px] font-bold text-white/90">
+          <div
+            className="flex items-center justify-between px-5 py-2"
+            style={{ backgroundColor: theme.base, color: theme.onBase }}
+          >
+            <p className="text-[9px] font-bold opacity-90">
               Powered by Sync360
             </p>
-            <p className="text-[9px] text-white/60">
+            <p className="text-[9px] opacity-60">
               {triggerSummary ?? "Loyalty"}
             </p>
           </div>

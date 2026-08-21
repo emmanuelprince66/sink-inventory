@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/app/Spinner";
 import { Download } from "lucide-react";
+import { buildLoyaltyTheme } from "@/utils/storeTheme";
 import QRCode from "react-qr-code";
 import type { JoinLoyaltyApi } from "./useJoinLoyalty";
 
@@ -11,7 +12,12 @@ import type { JoinLoyaltyApi } from "./useJoinLoyalty";
  * is exactly what the till scanner reads. No round trip, no second endpoint.
  */
 const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
-  const { joined, form, cardRef, saving, downloadCard } = join;
+  const { joined, form, cardRef, saving, downloadCard, campaign } = join;
+
+  // Resolved from the campaign rather than the business store: this page is
+  // public, so there is no signed-in business to read a theme from. Falls back
+  // to the default palette until store_theme is on the public payload.
+  const theme = buildLoyaltyTheme(campaign?.store_theme);
 
   const loyaltyCode = joined.loyalty_code;
   const enrollment = joined.enrollment;
@@ -32,14 +38,17 @@ const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
         ref={cardRef}
         className="w-full overflow-hidden rounded-2xl border border-grey-5 bg-white"
       >
-        <div className="bg-primary-green-300 px-5 py-4 text-center">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/70">
+        <div
+          className="px-5 py-4 text-center"
+          style={{ backgroundColor: theme.base, color: theme.onBase }}
+        >
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] opacity-70">
             Loyalty Card
           </p>
-          <p className="mt-0.5 truncate text-lg font-extrabold text-white">
+          <p className="mt-0.5 truncate text-lg font-extrabold">
             {enrollment?.member_name ?? form.fullName}
           </p>
-          <p className="truncate text-[11px] text-white/70">
+          <p className="truncate text-[11px] opacity-70">
             {joined.program ?? enrollment?.program_name}
           </p>
         </div>
@@ -53,6 +62,8 @@ const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
                 value={loyaltyCode}
                 size={168}
                 style={{ height: "auto", maxWidth: "100%", width: "168px" }}
+                fgColor={theme.qrFg}
+                bgColor="#ffffff"
               />
             </div>
           )}
@@ -64,8 +75,14 @@ const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
           </p>
 
           {enrollment?.reward_description && (
-            <div className="mt-4 w-full rounded-xl bg-primary-green-500 px-4 py-3 text-center">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-primary-green-300">
+            <div
+              className="mt-4 w-full rounded-xl px-4 py-3 text-center"
+              style={{ backgroundColor: theme.surface }}
+            >
+              <p
+                className="text-[9px] font-bold uppercase tracking-widest"
+                style={{ color: theme.qrFg }}
+              >
                 Your Reward
               </p>
               <p className="mt-0.5 text-base font-extrabold text-grey-1">
@@ -88,7 +105,8 @@ const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
       <button
         onClick={downloadCard}
         disabled={saving}
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-green-300 py-3.5 text-sm font-extrabold text-white transition-colors hover:bg-primary-green-300/90 disabled:opacity-70 cursor-pointer disabled:cursor-not-allowed"
+        className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-extrabold transition-opacity hover:opacity-90 disabled:opacity-70 cursor-pointer disabled:cursor-not-allowed"
+        style={{ backgroundColor: theme.base, color: theme.onBase }}
       >
         {saving ? (
           <Spinner className="h-4 w-4" />

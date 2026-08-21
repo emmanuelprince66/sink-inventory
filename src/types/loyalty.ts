@@ -444,6 +444,12 @@ export interface PublicLoyaltyProgram {
   business_id: string;
   business_name: string;
   business_logo: string | null;
+  /**
+   * The storefront's colour, so the card a customer keeps matches the shop.
+   * Not currently returned — the page falls back to the default palette until
+   * the backend adds it.
+   */
+  store_theme?: string | null;
   program_id: string;
   name: string;
   description: string | null;

@@ -1,10 +1,10 @@
 "use client";
 
 import JoinQrCode from "@/components/app/JoinQrCode";
+import { useLoyaltyTheme } from "@/utils/storeTheme";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
-import { cn } from "@/lib/utils";
 import type { LoyaltyProgram } from "@/types/loyalty";
 import { downloadElementAsPng } from "@/utils/captureElement";
 import { Download, Gift, Printer } from "lucide-react";
@@ -28,6 +28,7 @@ const QrCodeTab = ({
   program: LoyaltyProgram | null;
 }) => {
   const { qr, joinUrl } = detail;
+  const theme = useLoyaltyTheme();
   const businessData = useBusinessDataStore((state: any) => state.businessData);
   const cardRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
@@ -68,10 +69,14 @@ const QrCodeTab = ({
 
       <div
         ref={cardRef}
-        className="overflow-hidden rounded-2xl bg-primary-green-100"
+        className="overflow-hidden rounded-2xl"
+        style={{ backgroundColor: theme.deep, color: theme.onDeep }}
       >
         <div className="p-5">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-primary-green-300">
+          <p
+            className="text-[9px] font-bold uppercase tracking-[0.18em]"
+            style={{ color: theme.base }}
+          >
             Loyalty Programme
           </p>
           <h4 className="mt-1 text-2xl font-extrabold text-white">
@@ -81,7 +86,10 @@ const QrCodeTab = ({
 
           {rows > 0 && (
             <>
-              <p className="mt-5 text-[9px] font-bold uppercase tracking-[0.18em] text-primary-green-300">
+              <p
+                className="mt-5 text-[9px] font-bold uppercase tracking-[0.18em]"
+                style={{ color: theme.base }}
+              >
                 Visit Streak
               </p>
 
@@ -98,7 +106,10 @@ const QrCodeTab = ({
                 ))}
 
                 <li className="flex flex-wrap items-center gap-2.5">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-white">
+                  <span
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    style={{ backgroundColor: theme.base, color: theme.onBase }}
+                  >
                     <Gift className="h-4 w-4" />
                   </span>
                   <span className="text-sm font-extrabold text-white">
@@ -107,7 +118,10 @@ const QrCodeTab = ({
                   {/* inline-flex + leading-none: a 10px label in a pill with
                       default line-height sits high in the tag, which reads as
                       the text slipping out of it. */}
-                  <span className="inline-flex items-center justify-center rounded-full bg-primary-green-300 px-3 py-1.5 text-center text-[10px] font-extrabold leading-none text-white">
+                  <span
+                    className="inline-flex items-center justify-center rounded-full px-3 py-1.5 text-center text-[10px] font-extrabold leading-none"
+                    style={{ backgroundColor: theme.base, color: theme.onBase }}
+                  >
                     {program?.reward_summary ?? "Reward"}
                   </span>
                 </li>
@@ -151,10 +165,8 @@ const QrCodeTab = ({
       <div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
         <Button
           variant="outline"
-          className={cn(
-            "h-11 gap-1.5 rounded-xl border-primary-green-300/40 text-xs font-bold",
-            "text-primary-green-300 hover:bg-primary-green-500",
-          )}
+          className="h-11 gap-1.5 rounded-xl text-xs font-bold"
+          style={{ borderColor: theme.surfaceBorder, color: theme.qrFg }}
           onClick={download}
           disabled={saving}
         >

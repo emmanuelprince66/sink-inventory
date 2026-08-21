@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useLoyaltyTheme, type LoyaltyTheme } from "@/utils/storeTheme";
 import QRCode from "react-qr-code";
 
 /**
@@ -25,6 +26,11 @@ export interface JoinQrCodeProps {
   /** Sizing/border classes for the box — the QR fills it. */
   className?: string;
   emptyLabel?: string;
+  /**
+   * Overrides the palette. The public join page has no business store to read
+   * from, so it passes the theme resolved from the campaign payload instead.
+   */
+  theme?: LoyaltyTheme;
 }
 
 /**
@@ -41,7 +47,11 @@ const JoinQrCode = ({
   programmeName,
   className,
   emptyLabel = "QR not generated",
+  theme: themeOverride,
 }: JoinQrCodeProps) => {
+  const storeTheme = useLoyaltyTheme();
+  const theme = themeOverride ?? storeTheme;
+
   if (joinUrl) {
     return (
       <div className={cn("bg-white p-1", className)}>
@@ -54,6 +64,10 @@ const JoinQrCode = ({
           // paper, where a smudge or a fold has to be recoverable. The join URL
           // is ~115 characters, which still fits comfortably at this level.
           level="M"
+          // qrFg is the brand colour darkened until it clears 7:1 on white, so
+          // the code carries the storefront's tint without costing a scan.
+          fgColor={theme.qrFg}
+          bgColor="#ffffff"
           title={`Scan to join ${programmeName ?? "this programme"}`}
         />
       </div>
