@@ -159,19 +159,19 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-green-600" />
                 <span className="font-medium text-gray-700">
-                  Tier 1: ₦5,000,000 (BVN or NIN)
+                  Tier 1: ₦5,000,000 (NIN)
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-green-600" />
                 <span className="font-medium text-gray-700">
-                  Tier 2: ₦10,000,000 (BVN + NIN)
+                  Tier 2: ₦10,000,000 (+ BVN)
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield size={16} className="text-green-600" />
                 <span className="font-medium text-gray-700">
-                  Tier 3: ₦50,000,000 (+ Proof of Address)
+                  Tier 3: ₦50,000,000 (+ Residential Address)
                 </span>
               </div>
             </div>

@@ -47,7 +47,9 @@ const CustomerTable = ({
   return (
     <>
       <CustomTable
-        // onRowClick={handleRowClick}
+        // The row is the affordance — there is no "View Profile" column, so
+        // clicking anywhere on a row opens that customer's profile.
+        onRowClick={handleRowClick}
         bordered={false}
         columns={columns}
         data={response?.data?.results?.data}

@@ -8,6 +8,8 @@ import {
 type FetchCustomersProps = {
   id: string;
   status?: string;
+  tier?: string;
+  segment?: string;
   search?: string;
   start_date?: string;
   end_date?: string;
@@ -19,6 +21,8 @@ export const fetchCustomers = async ({
   id,
   search = "",
   status = "",
+  tier = "",
+  segment = "",
   start_date = "",
   end_date = "",
   page = 1,
@@ -28,6 +32,8 @@ export const fetchCustomers = async ({
   const url = new URL(`/api/customers/${id}`, window.location.origin);
   if (search) url.searchParams.append("search", search);
   if (status) url.searchParams.append("status", status);
+  if (tier) url.searchParams.append("tier", tier);
+  if (segment) url.searchParams.append("segment", segment);
   if (start_date) url.searchParams.append("start_date", start_date);
   if (end_date) url.searchParams.append("end_date", end_date);
   url.searchParams.append("page", page.toString());
@@ -66,6 +72,8 @@ export const useGetCustomerQuery = ({
       params.id,
       params.search,
       params.status,
+      params.tier,
+      params.segment,
       params.start_date,
       params.end_date,
       params.limit,

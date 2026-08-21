@@ -290,6 +290,47 @@ const styles = StyleSheet.create({
 });
 
 // Updated PDF Document Component
+/**
+ * Loyalty redemption, read back off the sale rather than computed here.
+ *
+ * The cart still holds what the cashier rang up, so a redeemed item is priced
+ * normally in it — the backend is what zeroes the line, and loyalty_discount is
+ * what it took off. Subtracting that from the cart total is the only way the
+ * printed receipt matches the money actually taken.
+ */
+const loyaltyFromSale = (createSaleResponse: any) => {
+  const sale = createSaleResponse?.data ?? createSaleResponse;
+  const discount = Number(sale?.loyalty_discount ?? 0) || 0;
+  const applied = sale?.loyalty_reward_applied;
+
+  // loyalty_reward_applied is documented only as "metadata", so it may come
+  // back as a flag or as an object describing the reward. Both are handled.
+  const label =
+    (typeof applied === "object" && applied
+      ? applied.reward_description ??
+        applied.description ??
+        applied.name ??
+        applied.reward_type
+      : null) || "Loyalty Reward";
+
+  const lines: any[] = sale?.products ?? sale?.items ?? [];
+  const rewardIds = new Set(
+    lines
+      .filter((line) => line?.is_loyalty_reward)
+      .map((line) =>
+        String(line?.id ?? line?.product ?? line?.product_id ?? line?.service),
+      ),
+  );
+
+  return {
+    discount,
+    label,
+    rewardIds,
+    /** A reward counts as applied only when it actually moved the total. */
+    active: discount > 0 || rewardIds.size > 0 || applied === true,
+  };
+};
+
 const ReceiptPDFDocument = ({
   cart,
   business,
@@ -332,6 +373,8 @@ const ReceiptPDFDocument = ({
     }>;
   };
 }) => {
+  const loyalty = loyaltyFromSale(createSaleResponse);
+
   try {
     console.log("vatInfo in receipt PDF", vatInfo);
     return (
@@ -398,12 +441,24 @@ const ReceiptPDFDocument = ({
 
               const itemDiscount = hasItemDiscount ? item.discount : 0;
               const hasVat = item.allow_tax && vatInfo?.enabled;
+              const isReward = loyalty.rewardIds.has(String(item.id));
 
               return (
                 <View key={item.id} style={styles.tableRow}>
                   <View style={styles.cellItem}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     {hasVat && <Text style={styles.vatBadge}>+VAT</Text>}
+                    {isReward && (
+                      <Text
+                        style={{
+                          fontSize: 6,
+                          fontStyle: "italic",
+                          color: "green",
+                        }}
+                      >
+                        Loyalty reward
+                      </Text>
+                    )}
                   </View>
                   <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                   <View style={styles.cellPrice}>
@@ -477,13 +532,28 @@ const ReceiptPDFDocument = ({
             </View>
           )}
 
+          {/* Loyalty redemption — the backend zeroed the line, so the cart
+              total has to come down by the same amount here. */}
+          {loyalty.active && loyalty.discount > 0 && (
+            <View style={styles.summarySection}>
+              <View style={styles.discountRow}>
+                <Text style={styles.discountLabel}>{loyalty.label}:</Text>
+                <Text style={styles.discountValue}>
+                  -{loyalty.discount.toLocaleString()}
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Total - Updated to use totalWithVat if VAT enabled */}
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
             <Text style={styles.totalAmount}>
-              {vatInfo?.enabled
-                ? vatInfo.totalWithVat.toLocaleString()
-                : total.toLocaleString()}
+              {Math.max(
+                0,
+                (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+                  loyalty.discount,
+              ).toLocaleString()}
             </Text>
           </View>
 
@@ -634,6 +704,8 @@ const PrintReceiptView = ({
     }>;
   };
 }) => {
+  const loyalty = loyaltyFromSale(createSaleResponse);
+
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const { user } = useUserRole();
@@ -886,6 +958,7 @@ const PrintReceiptView = ({
                   (item.cartQuantity || 1) >= item.discount_threshold;
 
                 const itemDiscount = hasItemDiscount ? item.discount : 0;
+                const isReward = loyalty.rewardIds.has(String(item.id));
                 const hasVat = item.allow_tax && vatInfo?.enabled;
 
                 return (
@@ -906,6 +979,11 @@ const PrintReceiptView = ({
                             ? formatToNaira(item.selling_price)
                             : (formatToNaira(item.amount) ?? "₦0")}
                         </div>
+                        {isReward && (
+                          <span className="block text-[9px] italic text-primary-green-300">
+                            Loyalty reward
+                          </span>
+                        )}
                         {hasItemDiscount && (
                           <div className="discount-text">
                             Discount - {formatToNaira(itemDiscount)}
@@ -972,11 +1050,28 @@ const PrintReceiptView = ({
           </div>
         )}
 
+        {/* Loyalty redemption — mirrors the PDF: the cart priced the item
+            normally, the backend zeroed it, so the total comes down here. */}
+        {loyalty.active && loyalty.discount > 0 && (
+          <div className="flex justify-between">
+            <span className="text-[11px]">{loyalty.label}:</span>
+            <span className="text-[11px]">
+              -{formatToNaira(loyalty.discount)}
+            </span>
+          </div>
+        )}
+
         {/* Payment summary - Updated to use totalWithVat if VAT enabled */}
         <div className="total-row">
           <span className="text-[11px]">TOTAL:</span>
           <span className=" text-[11px] detail-value">
-            {formatToNaira(vatInfo?.enabled ? vatInfo.totalWithVat : total)}
+            {formatToNaira(
+              Math.max(
+                0,
+                (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+                  loyalty.discount,
+              ),
+            )}
           </span>
         </div>
 

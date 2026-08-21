@@ -11,12 +11,15 @@ import {
   PlusCircle,
   RefreshCw,
   Trash2,
+  ScanLine,
   UserPlus,
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import CustomerDrawer from "./CustomersDrawer";
+import CustomerLoyaltyModal from "./CustomerLoyaltyModal";
+import LoyaltyScanner from "./LoyaltyScanner";
 import RecieptPage from "./RecieptPage";
 import VariationChangeModal from "./VariationChangeModal";
 
@@ -64,12 +67,22 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const customer = cartState.customer;
   const attendant = cartState.attendant;
   const showReceipt = cartState.showReceipt;
-  const setCustomer = (v: any | null) => updateCartState({ customer: v });
+  // A reward belongs to a person, so changing or clearing the customer drops
+  // it — otherwise it would be billed to whoever the cashier picks next.
+  const setCustomer = (v: any | null) =>
+    updateCartState({ customer: v, loyaltyReward: null });
   const setAttendant = (v: any | null) => updateCartState({ attendant: v });
   const setShowReceipt = (v: boolean) => updateCartState({ showReceipt: v });
   // ---- end per-sale state ----
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] =
     useState<boolean>(false);
+  // Loyalty scan + the modal it feeds. loyaltyCustomerId is set either by a
+  // scan or by "View Loyalty" on a row in the customer drawer.
+  const [isLoyaltyScannerOpen, setIsLoyaltyScannerOpen] = useState(false);
+  const [loyaltyView, setLoyaltyView] = useState<{
+    code: string;
+    customer?: any;
+  } | null>(null);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] =
     useState<boolean>(false);
   const [bulkQuantityInputs, setBulkQuantityInputs] = useState<
@@ -306,31 +319,41 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <div className="flex flex-col">
           <div className="p-3 pb-2 border-b border-grey-5 flex flex-col gap-2">
             <p className="text-lg font-extrabold text-grey-1">Checkout</p>
-            <div
-              className={`grid gap-2 ${
-                user && user?.role === "OWNER" ? "grid-cols-2" : "grid-cols-1"
-              }`}
-            >
-              <Button
-                variant="outline"
-                className="flex items-center border-grey-5 justify-start gap-2 h-10 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
-                onClick={() => setIsCustomerDrawerOpen(true)}
-              >
-                <UserPlus size={16} />
-                <span className="text-xs truncate">
-                  {customer ? customer.name : "Add Customer"}
-                </span>
-              </Button>
+            {/* Row 1: pick a customer, or scan their loyalty card.
+                Row 2: attendant, full width. */}
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  className="flex h-10 min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
+                  onClick={() => setIsCustomerDrawerOpen(true)}
+                >
+                  <UserPlus size={16} className="shrink-0" />
+                  <span className="truncate text-xs">
+                    {customer ? customer.name : "Add Customer"}
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="flex h-10 min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
+                  onClick={() => setIsLoyaltyScannerOpen(true)}
+                >
+                  <ScanLine size={16} className="shrink-0" />
+                  <span className="truncate text-xs">Scan Loyalty</span>
+                </Button>
+              </div>
+
               {user && user?.role === "OWNER" && (
                 <Button
                   onClick={() => setIsAttendantDrawerOpen(true)}
                   variant="outline"
-                  className="flex items-center border-grey-5 justify-start gap-2 h-10 hover:border-primary-green-300 hover:bg-secondary-6 transition-colors"
+                  className="flex h-10 w-full min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
                 >
-                  <Users size={16} />
-                  <p className="text-xs truncate">
+                  <Users size={16} className="shrink-0" />
+                  <span className="truncate text-xs">
                     {attendant ? attendant.name : "Add Attendant"}
-                  </p>
+                  </span>
                 </Button>
               )}
             </div>
@@ -754,6 +777,57 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             onCustomerSelect={(selectedCustomer: any) =>
               setCustomer(selectedCustomer)
             }
+            onViewLoyalty={(selectedCustomer: any) =>
+              selectedCustomer?.loyalty_code &&
+              setLoyaltyView({
+                code: selectedCustomer.loyalty_code,
+                customer: selectedCustomer,
+              })
+            }
+          />
+
+          {/* Scanning a loyalty card resolves the code to a customer, then
+              hands off to the same loyalty modal the drawer opens. */}
+          <LoyaltyScanner
+            open={isLoyaltyScannerOpen}
+            onOpenChange={setIsLoyaltyScannerOpen}
+            onResolved={(code: string, matched?: any) =>
+              setLoyaltyView({ code, customer: matched })
+            }
+          />
+
+          <CustomerLoyaltyModal
+            loyaltyCode={loyaltyView?.code ?? null}
+            customer={loyaltyView?.customer}
+            open={Boolean(loyaltyView)}
+            onClose={() => setLoyaltyView(null)}
+            onAddToSale={(selected: any) => {
+              setCustomer(selected);
+              setIsCustomerDrawerOpen(false);
+            }}
+            appliedRewardId={cartState.loyaltyReward?.id ?? null}
+            onApplyReward={(reward: any | null, wallet: any) => {
+              // Customer and reward move together in one update: setCustomer
+              // deliberately clears the reward, so calling both in sequence
+              // would wipe the one just applied.
+              const owner =
+                cartState.customer ??
+                loyaltyView?.customer ??
+                (wallet
+                  ? {
+                      name: wallet.name,
+                      phone: wallet.phone,
+                      loyalty_code: wallet.loyalty_code,
+                    }
+                  : null);
+
+              updateCartState({
+                loyaltyReward: reward,
+                // A reward can only be redeemed against its owner, so applying
+                // one puts them on the sale if they are not already there.
+                ...(reward ? { customer: owner } : {}),
+              });
+            }}
           />
           <AttendantDrawer
             open={isAttendantDrawerOpen}

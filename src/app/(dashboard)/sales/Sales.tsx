@@ -743,7 +743,7 @@ const Sales = () => {
         {/* Table Content */}
         <div className="pb-4 sm:pb-6">
           {showComboSales ? (
-            <ComboSalesTable />
+            <ComboSalesTable dateRange={dateRange} />
           ) : (
             <Tabs
               value={activeTab}

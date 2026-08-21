@@ -34,8 +34,10 @@ import VariationSelectorModal from "./VariationSelectorModal";
 
 const CheckoutPage = dynamic(() => import("./CheckoutPage"), {
   ssr: false,
+  // Fills the cart column and centres the spinner. Without the flex centring
+  // it sat in the top-left corner of an otherwise empty panel.
   loading: () => (
-    <div className="w-full h-full">
+    <div className="flex h-full min-h-[320px] w-full items-center justify-center bg-white">
       <Spinner className="text-primary-green-300" />
     </div>
   ),

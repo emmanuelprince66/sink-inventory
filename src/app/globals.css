@@ -102,6 +102,9 @@
   --color-primary-green-300: #329661;
   --color-primary-green-500: #edf8ee;
   --color-primary-green-600: #fefffe;
+  /* Off-white card surface from the loyalty designs — sits between white and
+     grey-6, warm enough to read as a card rather than as the page. */
+  --color-primary-green-700: #f7f9f6;
   --color-primary-black-100: #1e1e1e;
   --color-primary-gray-100: #535353;
   --color-primary-red-100: #d23838;
@@ -207,4 +210,40 @@
 .sink-color-picker .react-colorful__pointer {
   width: 18px;
   height: 18px;
+}
+
+/* Used by horizontal carousels (loyalty streaks, tab strips) — the arrows are
+   the affordance, so the native bar is noise. Referenced in several places
+   before this but never actually defined. */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Marquee — used by the loyalty streak leaderboard. The track holds the list
+   twice and slides exactly -50%, so the second copy lands where the first
+   began and the loop is seamless. Duration is set per-instance via
+   --marquee-duration so longer lists don't scroll faster. */
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: marquee-scroll var(--marquee-duration, 60s) linear infinite;
+  width: max-content;
+}
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
 }

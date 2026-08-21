@@ -17,11 +17,11 @@ import { queryKey } from "@/constants/query-key";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import {
-  GeocodeSuggestion,
+  AddressSuggestion,
   cityCentroid,
   coordinatesPayload,
   resolveCoordinates,
-} from "@/utils/geocode";
+} from "@/utils/address";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useDebounce } from "./useDebounce";
@@ -90,12 +90,16 @@ export const useCustomerHook = ({
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearchTerm = useDebounce(searchInput, 500); // 500ms debounce
+  // Every status the customer endpoint accepts, per its query-param spec.
   const filterOptions = [
     "All",
     "Most Active",
     "New",
     "Least Active",
     "Debts",
+    "Active",
+    "At Risk",
+    "Inactive",
   ] as const;
 
   const filterMapping = {
@@ -104,10 +108,17 @@ export const useCustomerHook = ({
     "Least Active": "LEAST_ACTIVE",
     New: "NEW",
     Debts: "DEBTS",
+    Active: "ACTIVE",
+    "At Risk": "AT_RISK",
+    Inactive: "INACTIVE",
   } as const;
   const [activeFilter, setActiveFilter] = useState<
     (typeof filterOptions)[number]
   >(filterOptions[0]);
+  const [activeTier, setActiveTier] = useState("");
+  // No segment query param on the customer endpoint yet; held so the control
+  // keeps its selection and is ready to send the moment one exists.
+  const [activeSegment, setActiveSegment] = useState("");
 
   const { mutate: deleteCustomer, isPending: deleteCustomerLoading } =
     useDeleteCustomerMutation({
@@ -145,6 +156,8 @@ export const useCustomerHook = ({
       id: business_id,
       search: searchTerm,
       status: filterMapping[activeFilter],
+      tier: activeTier,
+      segment: activeSegment,
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
         : undefined,
@@ -203,7 +216,7 @@ export const useCustomerHook = ({
   // Applies a picked autocomplete suggestion. `state` is stored as an ISO code
   // here (same convention as the order delivery form), so the resolved state
   // name is mapped back before it's set.
-  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+  const applyAddressSuggestion = (suggestion: AddressSuggestion) => {
     const matchedState = stateList.find(
       (s) =>
         s.isoCode === suggestion.stateCode ||
@@ -313,5 +326,9 @@ export const useCustomerHook = ({
     filterOptions,
     activeFilter,
     handleFilterChange,
+    activeTier,
+    setActiveTier,
+    activeSegment,
+    setActiveSegment,
   };
 };

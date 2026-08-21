@@ -1,6 +1,6 @@
 import { City, State } from "country-state-city";
 
-// Client-side helpers for the /api/geocode proxy, plus a zero-cost fallback.
+// Client-side helpers for the /api/address proxy, plus a zero-cost fallback.
 //
 // The coordinate resolution order used across the app:
 //   1. coordinates the user picked from the autocomplete  (street-level)
@@ -13,7 +13,7 @@ import { City, State } from "country-state-city";
 // a town centroid answers both of those, and country-state-city already ships
 // lat/long for every Nigerian state and city at no cost.
 
-export interface GeocodeSuggestion {
+export interface AddressSuggestion {
   id: string;
   label: string;
   address: string;
@@ -21,9 +21,14 @@ export interface GeocodeSuggestion {
   state: string;
   stateCode: string;
   country: string;
+  /** Empty on an autocomplete prediction — see fetchAddressDetails. */
   latitude: string;
   longitude: string;
   precision: string;
+  /** Google place id; what fetchAddressDetails takes. */
+  placeId?: string;
+  /** Prediction's second line — "Kuola - Aba Paanu Road, Ibadan, Nigeria". */
+  secondary?: string;
 }
 
 export interface Coordinates {
@@ -31,21 +36,36 @@ export interface Coordinates {
   longitude: string;
 }
 
-interface GeocodeResponse {
+interface AddressLookupResponse {
   success: boolean;
-  data: GeocodeSuggestion[];
+  data: AddressSuggestion[];
   disabled?: boolean;
   message?: string;
 }
 
+/**
+ * A Google Places session groups every keystroke plus the one Place Details
+ * call that follows into a single billable lookup. Without it each keystroke
+ * is charged separately, so the token is generated per typing session and
+ * discarded the moment a suggestion is picked.
+ */
+export const newSessionToken = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 export const fetchAddressSuggestions = async (
   query: string,
-  opts?: { limit?: number; proximity?: Coordinates | null },
-): Promise<GeocodeResponse> => {
+  opts?: {
+    limit?: number;
+    proximity?: Coordinates | null;
+    sessionToken?: string;
+  },
+): Promise<AddressLookupResponse> => {
   const trimmed = (query || "").trim();
   if (trimmed.length < 3) return { success: true, data: [] };
 
-  const url = new URL("/api/geocode", window.location.origin);
+  const url = new URL("/api/address", window.location.origin);
   url.searchParams.set("q", trimmed);
   if (opts?.limit) url.searchParams.set("limit", String(opts.limit));
   if (opts?.proximity?.latitude && opts?.proximity?.longitude) {
@@ -54,6 +74,7 @@ export const fetchAddressSuggestions = async (
       `${opts.proximity.longitude},${opts.proximity.latitude}`,
     );
   }
+  if (opts?.sessionToken) url.searchParams.set("sessionToken", opts.sessionToken);
 
   const response = await fetch(url.toString(), { method: "GET" });
   const data = await response.json().catch(() => ({}));
@@ -65,7 +86,59 @@ export const fetchAddressSuggestions = async (
       message: data?.message || "Address lookup failed",
     };
   }
-  return data as GeocodeResponse;
+  return data as AddressLookupResponse;
+};
+
+/**
+ * Resolves a picked prediction into a full address with coordinates.
+ *
+ * Google's Autocomplete deliberately returns no geometry, so a prediction on
+ * its own cannot fill latitude/longitude. Callers pass the same sessionToken
+ * they used for the predictions; returns null on any failure, which the caller
+ * treats as "keep the typed text, drop the coordinates" rather than an error.
+ */
+export const fetchAddressDetails = async (
+  placeId: string,
+  sessionToken?: string,
+): Promise<AddressSuggestion | null> => {
+  if (!placeId) return null;
+
+  const url = new URL("/api/address/details", window.location.origin);
+  url.searchParams.set("place_id", placeId);
+  if (sessionToken) url.searchParams.set("sessionToken", sessionToken);
+
+  try {
+    const response = await fetch(url.toString(), { method: "GET" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
+    return (data?.data?.[0] as AddressSuggestion) ?? null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Turns a device GPS fix into a readable address. Returns null when the
+ * provider has nothing at those coordinates, when geocoding is unconfigured,
+ * or on any failure — callers treat a null as "let the merchant type it",
+ * never as an error worth interrupting them with.
+ */
+export const fetchAddressFromCoordinates = async (
+  latitude: number,
+  longitude: number,
+): Promise<AddressSuggestion | null> => {
+  const url = new URL("/api/address/reverse", window.location.origin);
+  url.searchParams.set("lat", String(latitude));
+  url.searchParams.set("lon", String(longitude));
+
+  try {
+    const response = await fetch(url.toString(), { method: "GET" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
+    return (data?.data?.[0] as AddressSuggestion) ?? null;
+  } catch {
+    return null;
+  }
 };
 
 // ─── Fallback: city / state centroid ────────────────────────────────────────

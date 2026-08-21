@@ -12,9 +12,9 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import {
-  GeocodeSuggestion,
+  AddressSuggestion,
   centroidByStateName,
-} from "@/utils/geocode";
+} from "@/utils/address";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
@@ -212,7 +212,7 @@ export const useShipbubbleHook = (opts: UseShipbubbleHookOptions = {}) => {
   // Applying a picked autocomplete suggestion is one atomic update — doing it
   // as five separate updateSetting() calls would let a re-render land between
   // them and briefly pair the new street with the old coordinates.
-  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+  const applyAddressSuggestion = (suggestion: AddressSuggestion) => {
     setSettings((prev) => ({
       ...prev,
       street: suggestion.address || suggestion.label || prev.street,

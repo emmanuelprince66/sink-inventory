@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import DataGapBadge from "@/components/app/DataGapBadge";
 import {
   Award,
   Crown,
@@ -70,6 +71,13 @@ const AIRecommendations = () => {
 
   return (
     <div className="space-y-4">
+      {/* Nothing on this tab is live — no endpoint exists for it yet. */}
+      <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+        <DataGapBadge
+          label="Entire tab is sample data"
+          needs="No endpoint exists for AI Recommendations. Needed: GET /customer/recommendations/{business_id}/ returning recommendation text, action label, target segment and expected impact"
+        />
+      </div>
       <div className="bg-grey-1 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 text-primary-green-300" />

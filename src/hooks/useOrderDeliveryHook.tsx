@@ -5,11 +5,11 @@ import {
 } from "@/api/orders/delivery";
 import { queryKey } from "@/constants/query-key";
 import {
-  GeocodeSuggestion,
+  AddressSuggestion,
   cityCentroid,
   coordinatesPayload,
   resolveCoordinates,
-} from "@/utils/geocode";
+} from "@/utils/address";
 import { City, State } from "country-state-city";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -199,7 +199,7 @@ export const useOrderDeliveryHook = ({
   // Applies a picked autocomplete suggestion as one atomic update. `state` is
   // held as an ISO code here (the Select is keyed on it), so the resolved
   // state name has to be mapped back before it's stored.
-  const applyAddressSuggestion = (suggestion: GeocodeSuggestion) => {
+  const applyAddressSuggestion = (suggestion: AddressSuggestion) => {
     setAddress((prev) => {
       const matchedState = stateList.find(
         (s) =>

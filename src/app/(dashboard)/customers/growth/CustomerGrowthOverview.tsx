@@ -23,14 +23,14 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import {
-  AI_INSIGHTS,
-  MONTH_LABELS,
-  NEW_VS_RETURNING,
-  OVERVIEW_KPIS,
-  RETENTION_TREND,
-  TOTAL_GROWTH,
-} from "./dummyGrowthData";
+import { useFetchCustomerDashboardQuery } from "@/api/customer-analytics/fetch-customer-dashboard";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import type { MetricPercentage, MetricPoint } from "@/types/loyalty";
+import DataGapBadge from "@/components/app/DataGapBadge";
+import { useFormatMoney } from "@/utils/formatMoney";
+import ChartEmptyState from "./ChartEmptyState";
+import { cn } from "@/lib/utils";
+import { AI_INSIGHTS, OVERVIEW_KPIS, type AiInsight } from "./dummyGrowthData";
 import { GrowthStatCard } from "./GrowthStatCard";
 
 Chart.register(
@@ -68,13 +68,116 @@ const lineChartOptions = {
   },
 } as const;
 
-const CustomerGrowthOverview = () => {
+// The two metric shapes the overview endpoint returns differ in how they
+// express month-on-month movement: percentages vs. absolute points.
+const pctDelta = (m?: MetricPercentage) =>
+  m ? `${m.mom_percentage >= 0 ? "+" : ""}${m.mom_percentage}% vs last month` : "";
+const pointDelta = (m?: MetricPoint) =>
+  m
+    ? `${m.mom_point_change >= 0 ? "+" : ""}${m.mom_point_change}pt vs last month`
+    : "";
+
+// Counts come back as decimal strings ("17.00") — render them as whole numbers.
+const asCount = (value: string | number | undefined | null) => {
+  const n = Number(value ?? 0);
+  return Number.isNaN(n) ? String(value ?? "") : Math.round(n).toLocaleString();
+};
+
+// Rates arrive as 0, 100 or 33.33 — at most one decimal.
+const asRate = (value: number | undefined | null) => {
+  const n = Number(value ?? 0);
+  if (Number.isNaN(n)) return "0";
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+};
+
+const HIGHLIGHT_TONES = {
+  amber: "text-warning-1",
+  blue: "text-info-1",
+  green: "text-primary-green-300",
+} as const;
+
+// Each tile carries one coloured figure — the number is the point of the
+// insight, so it is picked out of the sentence rather than styled uniformly.
+const InsightTile = ({ insight }: { insight: AiInsight }) => {
+  const tone = HIGHLIGHT_TONES[insight.tone ?? "green"];
+  const [before, after] = insight.highlight
+    ? insight.text.split(insight.highlight)
+    : [insight.text, ""];
+
+  return (
+    <div className="bg-grey-6/70 rounded-xl p-3.5">
+      <div className="flex items-start gap-2">
+        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-green-300 shrink-0" />
+        <p className="text-sm text-grey-1 leading-relaxed">
+          {before}
+          {insight.highlight && (
+            <span className={cn("font-bold", tone)}>{insight.highlight}</span>
+          )}
+          {after}
+        </p>
+      </div>
+      <button className="text-xs font-bold text-primary-green-300 hover:text-primary-green-300/80 mt-1.5 ml-3.5 cursor-pointer">
+        {insight.actionLabel} →
+      </button>
+    </div>
+  );
+};
+
+const CustomerGrowthOverview = ({ month }: { month?: string }) => {
+  const business_id = useBusinessStore((state) => state.business_id);
+  const formatMoney = useFormatMoney();
+  const { data: dashboardRes } = useFetchCustomerDashboardQuery({
+    params: { id: business_id ?? "", month },
+  });
+
+  const overview = dashboardRes?.data?.overview;
+  const charts = dashboardRes?.data?.charts;
+
+  // KPI cards still fall back to the designed sample set before the first
+  // payload lands, but the charts below do not — see ChartEmptyState.
+  const kpis = overview
+    ? [
+        { label: "Total Customers", value: asCount(overview.total_customers.value), delta: pctDelta(overview.total_customers) },
+        { label: "Active Customers", value: asCount(overview.active_customers.value), delta: pctDelta(overview.active_customers) },
+        { label: "New This Month", value: asCount(overview.new_this_month.value), delta: pctDelta(overview.new_this_month) },
+        { label: "Returning", value: asCount(overview.returning_customers.value), delta: pctDelta(overview.returning_customers) },
+        { label: "Retention Rate", value: `${asRate(overview.retention_rate.value)}%`, delta: pointDelta(overview.retention_rate) },
+        { label: "Churn Rate", value: `${asRate(overview.churn_rate.value)}%`, delta: pointDelta(overview.churn_rate) },
+        { label: "Avg Lifetime Value", value: formatMoney(Number(overview.avg_lifetime_value.value ?? 0)), delta: pctDelta(overview.avg_lifetime_value) },
+        { label: "Loyalty Members", value: asCount(overview.loyalty_members.value), delta: pctDelta(overview.loyalty_members) },
+      ]
+    : // Keep the designed card grid, but show placeholders rather than the
+      // sample figures — a fabricated "₦95K" is indistinguishable from a real
+      // one on a metrics screen.
+      OVERVIEW_KPIS.map((kpi) => ({ ...kpi, value: "—", delta: "" }));
+
+  // An empty series renders an empty state rather than a sample trend — a
+  // fabricated line on an analytics chart reads as real data.
+  const hasRetention = Boolean(charts?.customer_retention?.length);
+  const hasNvr = Boolean(charts?.new_vs_returning?.length);
+
+  const retentionLabels = charts?.customer_retention?.map((p) => p.month) ?? [];
+  const retentionValues =
+    charts?.customer_retention?.map((p) => p.retention_rate) ?? [];
+
+  const nvrLabels = charts?.new_vs_returning?.map((p) => p.month) ?? [];
+  const nvrNew = charts?.new_vs_returning?.map((p) => p.new_customers) ?? [];
+  const nvrReturning =
+    charts?.new_vs_returning?.map((p) => p.returning_customers) ?? [];
+
+  const growth = charts?.total_customer_growth;
+  const hasGrowth = Boolean(growth?.chart_data?.length);
+  const growthLabels = growth?.chart_data?.map((p) => p.month) ?? [];
+  const growthValues = growth?.chart_data?.map((p) => p.total_customers) ?? [];
+  const growthTotal = growth ? String(growth.total_customers) : "—";
+  const growthDelta = growth ? `${growth.ytd_growth_percentage} YTD` : "";
+
   const retentionData = {
-    labels: MONTH_LABELS,
+    labels: retentionLabels,
     datasets: [
       {
         label: "Retention %",
-        data: RETENTION_TREND,
+        data: retentionValues,
         borderColor: "#329661",
         backgroundColor: "rgba(50, 150, 97, 0.12)",
         fill: true,
@@ -88,18 +191,18 @@ const CustomerGrowthOverview = () => {
   };
 
   const newVsReturningData = {
-    labels: MONTH_LABELS,
+    labels: nvrLabels,
     datasets: [
       {
         label: "New",
-        data: NEW_VS_RETURNING.new,
+        data: nvrNew,
         backgroundColor: "#111827",
         borderRadius: 4,
         barThickness: 10,
       },
       {
         label: "Returning",
-        data: NEW_VS_RETURNING.returning,
+        data: nvrReturning,
         backgroundColor: "#329661",
         borderRadius: 4,
         barThickness: 10,
@@ -108,11 +211,11 @@ const CustomerGrowthOverview = () => {
   };
 
   const totalGrowthData = {
-    labels: TOTAL_GROWTH.labels,
+    labels: growthLabels,
     datasets: [
       {
         label: "Total Customers",
-        data: TOTAL_GROWTH.values,
+        data: growthValues,
         borderColor: "#3b82f6",
         backgroundColor: "rgba(59, 130, 246, 0.1)",
         fill: true,
@@ -129,7 +232,7 @@ const CustomerGrowthOverview = () => {
     <div className="space-y-4">
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {OVERVIEW_KPIS.map((kpi, idx) => (
+        {kpis.map((kpi, idx) => (
           <GrowthStatCard
             key={kpi.label}
             icon={KPI_ICONS[idx].icon}
@@ -147,7 +250,11 @@ const CustomerGrowthOverview = () => {
           <h3 className="text-sm font-extrabold text-grey-1">Customer Retention</h3>
           <p className="text-xs text-grey-4 mb-3">Monthly retention rate %</p>
           <div className="h-[180px]">
-            <Line data={retentionData} options={lineChartOptions} />
+            {hasRetention ? (
+              <Line data={retentionData} options={lineChartOptions} />
+            ) : (
+              <ChartEmptyState />
+            )}
           </div>
         </div>
 
@@ -164,43 +271,47 @@ const CustomerGrowthOverview = () => {
             </div>
           </div>
           <div className="h-[180px]">
-            <Bar data={newVsReturningData} options={lineChartOptions} />
+            {hasNvr ? (
+              <Bar data={newVsReturningData} options={lineChartOptions} />
+            ) : (
+              <ChartEmptyState />
+            )}
           </div>
         </div>
 
         <div className="bg-white rounded-2xl border border-grey-5 p-4">
           <h3 className="text-sm font-extrabold text-grey-1">Total Customer Growth</h3>
           <p className="text-xl font-extrabold text-grey-1 mt-1">
-            {TOTAL_GROWTH.total}{" "}
+            {growthTotal}{" "}
             <span className="text-xs font-bold text-primary-green-300">
-              {TOTAL_GROWTH.ytdDelta}
+              {growthDelta}
             </span>
           </p>
           <div className="h-[150px] mt-2">
-            <Line data={totalGrowthData} options={lineChartOptions} />
+            {hasGrowth ? (
+              <Line data={totalGrowthData} options={lineChartOptions} />
+            ) : (
+              <ChartEmptyState height={150} />
+            )}
           </div>
         </div>
       </div>
 
       {/* AI Customer Insights */}
-      <div className="bg-grey-1 rounded-2xl p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-4 h-4 text-primary-green-300" />
-          <h3 className="text-sm font-extrabold text-white">AI Customer Insights</h3>
+      <div className="bg-white rounded-2xl border border-grey-5 p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="w-7 h-7 rounded-full bg-grey-1 flex items-center justify-center shrink-0">
+            <Sparkles className="w-3.5 h-3.5 text-warning-1" />
+          </span>
+          <h3 className="text-base font-extrabold text-grey-1">
+            AI Customer Insights
+          </h3>
+          {/* These four insights are hardcoded copy, not derived from any call. */}
+          <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, the figure to highlight, action label and deep-link target" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {AI_INSIGHTS.map((insight) => (
-            <div
-              key={insight.text}
-              className="bg-white/5 border border-white/10 rounded-xl p-3.5"
-            >
-              <p className="text-sm text-white/90 leading-relaxed">
-                {insight.text}
-              </p>
-              <button className="text-xs font-bold text-primary-green-300 hover:text-primary-green-300/80 mt-2 cursor-pointer">
-                {insight.actionLabel} →
-              </button>
-            </div>
+            <InsightTile key={insight.text} insight={insight} />
           ))}
         </div>
       </div>

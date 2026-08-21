@@ -42,13 +42,36 @@ export const TOTAL_GROWTH = {
 export interface AiInsight {
   text: string;
   actionLabel: string;
+  /** Substring of `text` rendered in `tone` — the coloured figure in the design. */
+  highlight?: string;
+  tone?: "amber" | "blue" | "green";
 }
 
 export const AI_INSIGHTS: AiInsight[] = [
-  { text: "Repeat purchases increased by 18% this month.", actionLabel: "View Analytics" },
-  { text: "36 customers have not returned in 45+ days.", actionLabel: "Win Back" },
-  { text: "Saturday generates the highest repeat purchases.", actionLabel: "Schedule Campaign" },
-  { text: "Top 20 customers generated 48% of your revenue.", actionLabel: "Reward VIPs" },
+  {
+    text: "Repeat purchases increased by 18% this month.",
+    highlight: "18% this month",
+    tone: "amber",
+    actionLabel: "View Analytics",
+  },
+  {
+    text: "36 customers have not returned in 45+ days.",
+    highlight: "36 customers",
+    tone: "blue",
+    actionLabel: "Win Back",
+  },
+  {
+    text: "Saturday generates the highest repeat purchases.",
+    highlight: "Saturday",
+    tone: "green",
+    actionLabel: "Schedule Campaign",
+  },
+  {
+    text: "Top 20 customers generated 48% of your revenue.",
+    highlight: "48% of your revenue",
+    tone: "amber",
+    actionLabel: "Reward VIPs",
+  },
 ];
 
 // ─── Analytics tab ──────────────────────────────────────────────────────────
@@ -135,31 +158,9 @@ export const LOYALTY_CAMPAIGNS: LoyaltyCampaign[] = [
 ];
 
 // ─── Rewards tab ─────────────────────────────────────────────────────────────
-
-export const REWARDS_KPIS: GrowthKpi[] = [
-  { label: "Active Rewards", value: "4", delta: "" },
-  { label: "Total Issued", value: "104", delta: "" },
-  { label: "Redeemed", value: "29", delta: "" },
-  { label: "Redemption Rate", value: "27.9%", delta: "" },
-];
-
-export interface RewardRow {
-  key: string;
-  name: string;
-  type: string;
-  issued: number;
-  redeemed: number;
-  expired: number;
-  cost: string;
-  roi: string;
-}
-
-export const REWARDS: RewardRow[] = [
-  { key: "discount_10", name: "10% Discount Voucher", type: "Percentage Discount", issued: 45, redeemed: 12, expired: 3, cost: "₦36,000", roi: "+18%" },
-  { key: "wallet_2000", name: "₦2,000 Wallet Credit", type: "Wallet Credit", issued: 18, redeemed: 6, expired: 1, cost: "₦12,000", roi: "+24%" },
-  { key: "free_bread", name: "Free Product (Bread)", type: "Free Product", issued: 32, redeemed: 8, expired: 4, cost: "₦25,600", roi: "+11%" },
-  { key: "cash_5000", name: "₦5,000 Cash Credit", type: "Cash Discount", issued: 9, redeemed: 3, expired: 0, cost: "₦15,000", roi: "+41%" },
-];
+// Removed. /loyalty/rewards-analytics/ returns the summary, the per-campaign
+// breakdown and return likelihood, so CustomerRewards renders live figures with
+// a skeleton while loading and an empty state when there is no activity.
 
 // ─── AI Recommendations tab ─────────────────────────────────────────────────
 
@@ -230,25 +231,6 @@ export const AI_RECOMMENDATIONS: AiRecommendation[] = [
   },
 ];
 
-// ─── Referrals tab ───────────────────────────────────────────────────────────
-
-export const REFERRAL_KPIS: GrowthKpi[] = [
-  { label: "Total Referrals", value: "24", delta: "" },
-  { label: "Revenue Generated", value: "₦247,000", delta: "" },
-  { label: "Active Referrers", value: "8", delta: "" },
-];
-
-export interface TopReferrer {
-  initials: string;
-  name: string;
-  code: string;
-  successfulReferrals: number;
-  revenueGenerated: string;
-  status: "Active" | "Inactive";
-}
-
-export const TOP_REFERRERS: TopReferrer[] = [
-  { initials: "CE", name: "Chiamaka Eze", code: "CHI2024", successfulReferrals: 8, revenueGenerated: "₦124,000", status: "Active" },
-  { initials: "SA", name: "Samson Akinola", code: "SAM2025", successfulReferrals: 5, revenueGenerated: "₦78,000", status: "Active" },
-  { initials: "OO", name: "Olosunde Olosunde", code: "TOB2025", successfulReferrals: 3, revenueGenerated: "₦45,000", status: "Active" },
-];
+// ─── Referrals tab ──────────────────────────────────────────
+// Removed. /referral/customer-programmes/ now backs the tab — overview,
+// programmes, participants, create, update and add-participant are all live.

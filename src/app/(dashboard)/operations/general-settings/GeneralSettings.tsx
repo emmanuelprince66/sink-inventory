@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { Truck } from "lucide-react";
 import { useState } from "react";
-// import BnplCard from "./BnplCard";
+// import BnplCard from "./BnplCardt";
 import ShippingTab from "./ShippingTab";
 
 // ─── DISABLED: Payment Add-ons ──────────────────────────────────────────────

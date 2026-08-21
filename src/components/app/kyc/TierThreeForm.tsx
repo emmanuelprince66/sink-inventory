@@ -1,3 +1,4 @@
+import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,117 +9,106 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FileText, Upload } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useKycHook } from "@/hooks/useKycHook";
+import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
 
 interface Tier3FormProps {
   onComplete: () => void;
+  kyc: ReturnType<typeof useKycHook>;
 }
 
-interface Tier3FormData {
-  proofOfAddress: File | null;
-}
+// Tier 3 captures proof of address using the same geocoded autocomplete as the
+// order flow. Only the resolved address string and state are sent — picking a
+// suggestion is what fills `state`, which the provider requires.
+const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
+  const { createIndividualAcctForm, isPending, submitTier } = kyc;
+  const [hasCoordinates, setHasCoordinates] = useState(false);
 
-const Tier3Form = ({ onComplete }: Tier3FormProps) => {
-  const [isPending, setIsPending] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const nin = createIndividualAcctForm.watch("nin");
+  const bvn = createIndividualAcctForm.watch("bvn");
 
-  const form = useForm<Tier3FormData>({
-    defaultValues: {
-      proofOfAddress: null,
-    },
-  });
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setUploadedFile(file);
-      form.setValue("proofOfAddress", file);
-    }
-  };
-
-  const handleSubmit = async (data: Tier3FormData) => {
-    if (!uploadedFile) {
-      alert("Please upload a proof of address document");
-      return;
-    }
-
-    setIsPending(true);
-    try {
-      // TODO: Replace with your actual file upload API call
-      const formData = new FormData();
-      formData.append("proofOfAddress", uploadedFile);
-
-      console.log("Tier 3 data:", { fileName: uploadedFile.name });
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Mark tier as complete
-      onComplete();
-
-      // Show success message
-      alert("Tier 3 verification submitted successfully!");
-    } catch (error) {
-      console.error("Tier 3 submission error:", error);
-    } finally {
-      setIsPending(false);
-    }
+  const handleSubmit = async () => {
+    const ok = await submitTier(3);
+    if (ok) onComplete();
   };
 
   return (
-    <Form {...form}>
+    <Form {...createIndividualAcctForm}>
       <form
         className="w-full space-y-5"
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
       >
+        <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50/60 p-3">
+          <ShieldCheck className="text-green-600 shrink-0" size={20} />
+          <div className="text-sm">
+            <p className="font-medium text-gray-800">Verified so far</p>
+            <p className="text-gray-600">
+              NIN {nin ? `••••${nin.slice(-4)}` : "—"} · BVN{" "}
+              {bvn ? `••••${bvn.slice(-4)}` : "—"}
+            </p>
+          </div>
+        </div>
+
         <FormField
-          control={form.control}
-          name="proofOfAddress"
+          control={createIndividualAcctForm.control}
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Proof of Address</FormLabel>
-              <p className="text-xs text-gray-500 mb-3">
-                Upload a recent utility bill (electricity, water, gas) or bank
-                statement not older than 3 months
-              </p>
+              <FormLabel>Residential Address</FormLabel>
               <FormControl>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
-                  <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-                  <label className="cursor-pointer">
-                    <span className="text-green-600 font-medium hover:text-green-700">
-                      Click to upload
-                    </span>
-                    <span className="text-gray-600"> or drag and drop</span>
-                    <input
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </label>
-                  <p className="text-xs text-gray-500 mt-2">
-                    PDF, JPG, or PNG (max 5MB)
-                  </p>
-                  {uploadedFile && (
-                    <div className="mt-3 text-sm text-green-600 font-medium flex items-center justify-center gap-2">
-                      <FileText size={16} />
-                      {uploadedFile.name}
-                    </div>
-                  )}
-                </div>
+                <AddressAutocomplete
+                  multiline
+                  rows={2}
+                  value={field.value ?? ""}
+                  placeholder="Start typing your address..."
+                  hasCoordinates={hasCoordinates}
+                  // Typing invalidates a previously picked suggestion, so drop
+                  // the state that came with it until a new one is chosen.
+                  onChange={(value) => {
+                    field.onChange(value);
+                    setHasCoordinates(false);
+                    createIndividualAcctForm.setValue("state", "");
+                  }}
+                  onSelect={(suggestion) => {
+                    field.onChange(suggestion.address || suggestion.label);
+                    createIndividualAcctForm.setValue(
+                      "state",
+                      suggestion.state ?? "",
+                    );
+                    setHasCoordinates(true);
+                  }}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button
-          type="submit"
-          disabled={isPending || !uploadedFile}
-          className="mt-4 w-full"
-        >
+        <FormField
+          control={createIndividualAcctForm.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>State</FormLabel>
+              <FormControl>
+                <Input
+                  readOnly
+                  placeholder="Filled in when you pick an address"
+                  className="bg-gray-50"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={isPending} className="mt-4 w-full">
           {isPending ? <Spinner /> : "Submit Tier 3 Verification"}
         </Button>
       </form>
