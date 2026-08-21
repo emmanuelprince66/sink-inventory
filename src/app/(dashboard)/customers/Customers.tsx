@@ -48,10 +48,13 @@ const CustomerRewards = dynamic(() => import("./growth/CustomerRewards"), {
   ssr: false,
   loading: tabSpinner,
 });
-const AIRecommendations = dynamic(() => import("./growth/AIRecommendations"), {
-  ssr: false,
-  loading: tabSpinner,
-});
+// AI Recommendations is hidden for now — the component and its screen are
+// untouched, so restoring it is uncommenting here, in GROWTH_TABS, and in the
+// panel switch below.
+// const AIRecommendations = dynamic(() => import("./growth/AIRecommendations"), {
+//   ssr: false,
+//   loading: tabSpinner,
+// });
 const CustomerReferrals = dynamic(() => import("./growth/CustomerReferrals"), {
   ssr: false,
   loading: tabSpinner,
@@ -64,7 +67,7 @@ const GROWTH_TABS = [
   "Segments",
   "Loyalty Programs",
   "Rewards",
-  "AI Recommendations",
+  // "AI Recommendations",
   "Referrals",
 ] as const;
 
@@ -215,7 +218,7 @@ const Customers = () => {
       {activeTopTab === "Segments" && <CustomerSegments />}
       {activeTopTab === "Loyalty Programs" && <LoyaltyPrograms />}
       {activeTopTab === "Rewards" && <CustomerRewards />}
-      {activeTopTab === "AI Recommendations" && <AIRecommendations />}
+      {/* {activeTopTab === "AI Recommendations" && <AIRecommendations />} */}
       {activeTopTab === "Referrals" && <CustomerReferrals />}
 
       {activeTopTab === "Customers" && (

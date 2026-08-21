@@ -123,39 +123,9 @@ export const CUSTOMER_SEGMENTS: CustomerSegment[] = [
 ];
 
 // ─── Loyalty Programs tab ───────────────────────────────────────────────────
-
-export interface StreakLeader {
-  initials: string;
-  name: string;
-  tier: string;
-  streak: number;
-  progressPct: number;
-  nextRewardIn: string;
-}
-
-export const STREAK_LEADERS: StreakLeader[] = [
-  { initials: "CE", name: "Chiamaka", tier: "VIP", streak: 8, progressPct: 80, nextRewardIn: "Next reward in 2 visits" },
-  { initials: "SA", name: "Samson", tier: "VIP", streak: 5, progressPct: 50, nextRewardIn: "Next reward in 5 visits" },
-  { initials: "OO", name: "Olosunde", tier: "Gold", streak: 3, progressPct: 30, nextRewardIn: "Next reward in 7 visits" },
-];
-
-export interface LoyaltyCampaign {
-  key: string;
-  name: string;
-  triggerLabel: string;
-  rewardLabel: string;
-  participants: number;
-  completions: number;
-  completionRate: string;
-  status: "Active" | "Paused";
-}
-
-export const LOYALTY_CAMPAIGNS: LoyaltyCampaign[] = [
-  { key: "visit_streak", name: "Visit Streak Reward", triggerLabel: "10 visits", rewardLabel: "10% Discount", participants: 45, completions: 12, completionRate: "27%", status: "Active" },
-  { key: "big_spender", name: "Big Spender", triggerLabel: "₦50,000 spent", rewardLabel: "₦2,000 Wallet Credit", participants: 18, completions: 6, completionRate: "33%", status: "Active" },
-  { key: "birthday", name: "Birthday Special", triggerLabel: "Birthday month", rewardLabel: "Free Product", participants: 32, completions: 8, completionRate: "25%", status: "Active" },
-  { key: "referral_champion", name: "Referral Champion", triggerLabel: "3 referrals", rewardLabel: "₦5,000 Cash Credit", participants: 9, completions: 3, completionRate: "33%", status: "Paused" },
-];
+// Removed. The tab is entirely live: /loyalty/{id}/programs backs the campaign
+// list and top_streak_performers on the dashboard backs the streak marquee. A
+// business with no campaigns gets an empty state rather than invented ones.
 
 // ─── Rewards tab ─────────────────────────────────────────────────────────────
 // Removed. /loyalty/rewards-analytics/ returns the summary, the per-campaign

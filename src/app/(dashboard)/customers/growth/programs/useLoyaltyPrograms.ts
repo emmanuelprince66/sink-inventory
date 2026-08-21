@@ -9,7 +9,6 @@ import { toList, type Paginated } from "@/types/api";
 import type { LoyaltyProgram, TopStreakPerformer } from "@/types/loyalty";
 import { loyaltyJoinUrlForThisBrowser } from "@/utils/loyaltyJoinUrl";
 import { useCallback, useMemo, useState } from "react";
-import { LOYALTY_CAMPAIGNS } from "../dummyGrowthData";
 
 export type ModalView =
   | "edit"
@@ -19,26 +18,6 @@ export type ModalView =
   | "members"
   | "pos"
   | null;
-
-/** Sample cards, shown only when the business has no campaigns at all. */
-const sampleCampaigns = (): LoyaltyProgram[] =>
-  LOYALTY_CAMPAIGNS.map((c) => ({
-    id: c.key,
-    name: c.name,
-    start_date: "",
-    reward_type: "PERCENTAGE" as const,
-    status: c.status === "Active" ? ("ACTIVE" as const) : ("PAUSED" as const),
-    trigger_summary: c.triggerLabel,
-    reward_summary: c.rewardLabel,
-    enrolled_count: String(c.participants),
-    active_count: String(Math.round(c.participants * 0.73)),
-    completed_members_count: String(c.completions),
-    completion_rate: c.completionRate.replace("%", ""),
-    completions_count: String(c.completions),
-    cancelled_rewards_count: "3",
-    total_rewards_given_out_value: String(c.completions * 2000),
-    retention_rate: "72",
-  }));
 
 /**
  * Data and interaction state for the Loyalty Programs tab: the dashboard
@@ -73,10 +52,10 @@ export const useLoyaltyPrograms = () => {
     [programsRes],
   );
 
-  const campaigns = useMemo(
-    () => (programs.length ? programs : sampleCampaigns()),
-    [programs],
-  );
+  // Live only. A business with no campaigns gets the empty state, not three
+  // invented ones — sample cards here read as real programmes someone could
+  // click into, and their Edit and QR actions pointed at ids that do not exist.
+  const campaigns = programs;
 
   // Live only — the endpoint populates top_streak_performers now, so there is
   // no sample fallback. Loading shows a skeleton, an empty result shows the

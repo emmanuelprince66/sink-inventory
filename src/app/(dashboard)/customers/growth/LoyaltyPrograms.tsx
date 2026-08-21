@@ -66,17 +66,29 @@ const LoyaltyPrograms = () => {
       </div>
 
       <div className="space-y-3">
-        {campaigns.map((program) => (
-          <CampaignCard
-            key={program.id}
-            program={program}
-            onEdit={(p) => openModal("edit", p)}
-            onShowQr={(p) => openModal("qr", p)}
-            onViewParticipants={(p) => openModal("participants", p)}
-            onOpenLandingPage={openLandingPage}
-            openingLandingPage={landingPageFor === program.id}
-          />
-        ))}
+        {campaigns.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-grey-5 bg-white px-4 py-14 text-center">
+            <p className="text-sm font-bold text-grey-1">
+              No loyalty campaigns yet
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-grey-3">
+              Create one to give customers a QR code they can scan to join, and
+              set what they earn for coming back.
+            </p>
+          </div>
+        ) : (
+          campaigns.map((program) => (
+            <CampaignCard
+              key={program.id}
+              program={program}
+              onEdit={(p) => openModal("edit", p)}
+              onShowQr={(p) => openModal("qr", p)}
+              onViewParticipants={(p) => openModal("participants", p)}
+              onOpenLandingPage={openLandingPage}
+              openingLandingPage={landingPageFor === program.id}
+            />
+          ))
+        )}
       </div>
 
       {/* Real marketing campaigns (SMS/email blasts) — kept reachable here */}

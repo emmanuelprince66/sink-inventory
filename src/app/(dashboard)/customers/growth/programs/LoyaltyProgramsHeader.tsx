@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Store } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // Mobile: two per row at equal width — four pills on one line at 360px left
@@ -17,7 +17,7 @@ const LoyaltyProgramsHeader = () => {
         Build unlimited loyalty campaigns. Reward customers for visits, spend,
         referrals, and more.
       </p>
-      <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:shrink-0">
+      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:shrink-0">
         {/* A page, not a modal — nine steps plus the QR handover needs the
             room, and it gets its own URL. */}
         <button
@@ -49,13 +49,16 @@ const LoyaltyProgramsHeader = () => {
               Members
             </button>
         */}
-        <button
-          onClick={() => router.push("/pos")}
-          className={`${ACTION_CLASS} bg-primary-green-300 text-white hover:bg-primary-green-300/90`}
-        >
-          <Store className="w-4 h-4" />
-          Point of Sale
-        </button>
+        {/* Point of Sale is hidden too — it only jumped to /pos, which the
+            sidebar already reaches.
+            <button
+              onClick={() => router.push("/pos")}
+              className={`${ACTION_CLASS} bg-primary-green-300 text-white hover:bg-primary-green-300/90`}
+            >
+              <Store className="w-4 h-4" />
+              Point of Sale
+            </button>
+        */}
       </div>
     </div>
   );
