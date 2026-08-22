@@ -8,17 +8,22 @@ import OverviewTab from "./profile/OverviewTab";
 import ProfileHeader from "./profile/ProfileHeader";
 import PurchaseTab from "./profile/PurchaseTab";
 import ShoppingTab from "./profile/ShoppingTab";
+import TransactionsTab from "./profile/TransactionsTab";
 import type { ProfileTab } from "./profile/primitives";
 import {
   useCustomerProfile,
   type CustomerProfileData,
 } from "./profile/useCustomerProfile";
 
-const TAB_VIEWS: Record<
-  ProfileTab,
-  (props: { profile: CustomerProfileData }) => React.ReactElement
-> = {
+/**
+ * Every tab takes the resolved profile; Transactions also needs the raw id,
+ * because it runs its own paged query rather than reading the detail payload.
+ */
+type TabViewProps = { profile: CustomerProfileData; id: string };
+
+const TAB_VIEWS: Record<ProfileTab, (props: TabViewProps) => React.ReactElement> = {
   Overview: OverviewTab,
+  Transactions: ({ id }) => <TransactionsTab id={id} />,
   Purchase: PurchaseTab,
   Loyalty: LoyaltyTab,
   Engagement: EngagementTab,
@@ -44,7 +49,7 @@ const CustomerProfile = ({ id }: { id: string }) => {
       <ProfileHeader profile={profile} />
 
       <div className="mt-4 space-y-4">
-        <TabView profile={profile} />
+        <TabView profile={profile} id={id} />
       </div>
     </div>
   );

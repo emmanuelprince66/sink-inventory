@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 export const TABS = [
   "Overview",
+  "Transactions",
   "Purchase",
   "Loyalty",
   "Engagement",

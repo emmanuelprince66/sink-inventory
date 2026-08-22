@@ -1,13 +1,21 @@
 "use client";
 
+import PurchaseHistoryList from "./PurchaseHistoryList";
 import { Cell, Panel } from "./primitives";
 import type { CustomerProfileData } from "./useCustomerProfile";
 
-const PurchaseTab = ({ profile }: { profile: CustomerProfileData }) => {
+const PurchaseTab = ({
+  profile,
+  id,
+}: {
+  profile: CustomerProfileData;
+  id: string;
+}) => {
   const { purchase, formatMoney } = profile;
 
   return (
-    <Panel title="Purchase Behaviour">
+    <div className="flex w-full min-w-0 flex-col gap-4">
+      <Panel title="Purchase Behaviour">
       <Cell label="First Purchase" value={purchase?.first_purchase_date} />
       <Cell label="Last Purchase" value={purchase?.last_purchase_date} />
       <Cell
@@ -37,7 +45,19 @@ const PurchaseTab = ({ profile }: { profile: CustomerProfileData }) => {
         label="Retention Score"
         value={`${purchase?.retention_score ?? 0}/100`}
       />
-    </Panel>
+      </Panel>
+
+      {/* The aggregates above answer "what kind of shopper is this"; the sales
+          below answer "what did they actually buy". The endpoint was already
+          wired — its only consumer was the old Contact screen, which stopped
+          being routed when this profile replaced it. */}
+      <div>
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-wider text-grey-3">
+          Purchase History
+        </p>
+        <PurchaseHistoryList id={id} />
+      </div>
+    </div>
   );
 };
 
