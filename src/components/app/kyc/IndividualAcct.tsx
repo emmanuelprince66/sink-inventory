@@ -6,6 +6,7 @@ import { useState } from "react";
 import Tier1Form from "./Tier1form";
 import Tier3Form from "./TierThreeForm";
 import Tier2Form from "./TierTwoForm";
+import { INDIVIDUAL_TIERS } from "./tiers";
 
 const IndividualTierFlow = () => {
   const [currentTier, setCurrentTier] = useState<1 | 2 | 3>(1);
@@ -36,26 +37,7 @@ const IndividualTierFlow = () => {
           Verification Progress
         </h3>
         <div className="space-y-3">
-          {[
-            {
-              tier: 1,
-              title: "Tier 1: Basic Verification",
-              limit: "₦5,000,000",
-              requirement: "NIN",
-            },
-            {
-              tier: 2,
-              title: "Tier 2: Enhanced Verification",
-              limit: "₦10,000,000",
-              requirement: "BVN",
-            },
-            {
-              tier: 3,
-              title: "Tier 3: Full Verification",
-              limit: "₦50,000,000",
-              requirement: "Residential Address",
-            },
-          ].map((item) => (
+          {INDIVIDUAL_TIERS.map((item) => (
             <div
               key={item.tier}
               className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
@@ -87,7 +69,7 @@ const IndividualTierFlow = () => {
                   {item.title}
                 </div>
                 <div className="text-xs text-gray-600">
-                  Limit: {item.limit} • {item.requirement}
+                  {item.limit} daily • {item.requirement}
                 </div>
               </div>
               {!canAccessTier(item.tier) && (
@@ -108,7 +90,8 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Provide your NIN to unlock a ₦5,000,000 transaction limit
+            Provide your BVN or NIN to unlock a {INDIVIDUAL_TIERS[0].limit}{" "}
+            daily transaction limit
           </p>
 
           <Tier1Form kyc={kyc} onComplete={() => handleTierComplete(1)} />
@@ -135,7 +118,8 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Add your BVN to increase your limit to ₦10,000,000
+            Add the other identity number to raise your daily limit to{" "}
+            {INDIVIDUAL_TIERS[1].limit}
           </p>
 
           {!completedTiers.includes(1) ? (
@@ -172,8 +156,8 @@ const IndividualTierFlow = () => {
             </h3>
           </div>
           <p className="text-gray-600 text-sm mb-6">
-            Confirm your residential address to unlock the maximum limit of
-            ₦50,000,000
+            Confirm your residential address to unlock the maximum daily limit
+            of {INDIVIDUAL_TIERS[2].limit}
           </p>
 
           {!completedTiers.includes(2) ? (

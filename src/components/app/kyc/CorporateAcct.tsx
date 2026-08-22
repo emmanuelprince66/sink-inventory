@@ -1,5 +1,6 @@
 "use client";
 import { useKycHook } from "@/hooks/useKycHook";
+import { CORPORATE_TIERS } from "./tiers";
 import { useEffect, useState } from "react";
 
 import { Spinner } from "@/components/app/Spinner";
@@ -128,18 +129,7 @@ const CorporateAcct = () => {
           Corporate Verification Progress
         </h3>
         <div className="space-y-3">
-          {[
-            {
-              tier: 1,
-              title: "Tier 1: Business Information",
-              description: "Director & business details",
-            },
-            {
-              tier: 2,
-              title: "Tier 2: Document Verification",
-              description: "CAC, memorandum, utility bill & more",
-            },
-          ].map((item) => (
+          {CORPORATE_TIERS.map((item) => (
             <div
               key={item.tier}
               className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
@@ -170,7 +160,9 @@ const CorporateAcct = () => {
                 <div className="font-medium text-gray-800 text-sm">
                   {item.title}
                 </div>
-                <div className="text-xs text-gray-600">{item.description}</div>
+                <div className="text-xs text-gray-600">
+                  {item.limit} daily • {item.description}
+                </div>
               </div>
               {!canAccessTier(item.tier) && (
                 <div className="text-xs text-gray-500 font-medium">Locked</div>

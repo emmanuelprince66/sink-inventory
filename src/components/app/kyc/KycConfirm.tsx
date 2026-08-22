@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import CorporateAcct from "./CorporateAcct";
 import IndividualTierFlow from "./IndividualAcct";
+import { CORPORATE_TIERS, INDIVIDUAL_TIERS } from "./tiers";
 
 interface KycConfirmProps {
   page: boolean;
@@ -156,24 +157,17 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
             </div>
 
             <div className="mt-4 pl-14 sm:pl-16 space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Shield size={16} className="text-green-600" />
-                <span className="font-medium text-gray-700">
-                  Tier 1: ₦5,000,000 (NIN)
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield size={16} className="text-green-600" />
-                <span className="font-medium text-gray-700">
-                  Tier 2: ₦10,000,000 (+ BVN)
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield size={16} className="text-green-600" />
-                <span className="font-medium text-gray-700">
-                  Tier 3: ₦50,000,000 (+ Residential Address)
-                </span>
-              </div>
+              {INDIVIDUAL_TIERS.map((tier) => (
+                <div key={tier.tier} className="flex items-start gap-2">
+                  <Shield
+                    size={16}
+                    className="text-green-600 shrink-0 mt-0.5"
+                  />
+                  <span className="font-medium text-gray-700">
+                    Tier {tier.tier}: {tier.limit} daily ({tier.requirement})
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -218,17 +212,21 @@ const KycConfirm = ({ page }: KycConfirmProps) => {
               )}
             </div>
 
-            <div className="mt-4 pl-14 sm:pl-16 space-y-2 text-sm sm:text-base">
-              <div className="font-medium text-gray-700">
-                Account Limit: ₦100,000,000
-              </div>
-              <div className="text-gray-600">Required documents:</div>
-              <ul className="text-gray-600 space-y-1 ml-4">
-                <li>• Director's BVN</li>
-                <li>• RC/BN Number</li>
-                <li>• CAC Certificate</li>
-                <li>• Utility Bill & Director's ID</li>
-              </ul>
+            <div className="mt-4 pl-14 sm:pl-16 space-y-3 text-sm">
+              {CORPORATE_TIERS.map((tier) => (
+                <div key={tier.tier} className="flex items-start gap-2">
+                  <Shield
+                    size={16}
+                    className="text-green-600 shrink-0 mt-0.5"
+                  />
+                  <span className="font-medium text-gray-700">
+                    Tier {tier.tier}: {tier.limit} daily
+                    <span className="block font-normal text-gray-600">
+                      {tier.requirement}
+                    </span>
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
