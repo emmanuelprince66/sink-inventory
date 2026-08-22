@@ -9,7 +9,8 @@ import { useJoinLoyalty } from "./parts/useJoinLoyalty";
 
 const JoinLoyaltyForm = ({ token }: { token: string }) => {
   const join = useJoinLoyalty(token);
-  const { joined, campaign, campaignLoading, streakLength, canGoBack } = join;
+  const { joined, campaign, campaignLoading, streakLength, canGoBack, theme } =
+    join;
 
   if (joined) return <JoinSuccessCard join={join} />;
 
@@ -42,13 +43,17 @@ const JoinLoyaltyForm = ({ token }: { token: string }) => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-grey-6/40">
-      <JoinHero campaign={campaign} canGoBack={canGoBack} />
+      <JoinHero campaign={campaign} canGoBack={canGoBack} theme={theme} />
 
       {/* Curved cut-out under the hero, as in the design */}
       <div className="-mt-16 h-16 rounded-t-[2.5rem] bg-grey-6/40" />
 
       <main className="mx-auto max-w-3xl px-4 pb-16">
-        <JoinHowItWorks campaign={campaign} streakLength={streakLength} />
+        <JoinHowItWorks
+          campaign={campaign}
+          streakLength={streakLength}
+          theme={theme}
+        />
         <JoinForm join={join} />
       </main>
     </div>

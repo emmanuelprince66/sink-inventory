@@ -39,20 +39,23 @@ const inputClass =
   "w-full h-11 rounded-xl border border-grey-5 bg-white px-3.5 text-sm text-grey-1 placeholder:text-grey-4 focus:outline-none focus:border-primary-green-300";
 
 const JoinForm = ({ join }: { join: JoinLoyaltyApi }) => {
-  const { form, setField, error, isPending, submit, campaign } = join;
+  const { form, setField, error, isPending, submit, campaign, theme } = join;
 
   return (
     <>
       <div className="my-8 flex items-center gap-3">
         <span className="h-px flex-1 bg-grey-5" />
-        <span className="shrink-0 text-[11px] font-medium text-primary-green-300">
+        <span
+          className="shrink-0 text-[11px] font-medium"
+          style={{ color: theme.qrFg }}
+        >
           Join in 30 seconds
         </span>
         <span className="h-px flex-1 bg-grey-5" />
       </div>
 
       <section className="text-center">
-        <span className="text-xs font-bold text-primary-green-300">
+        <span className="text-xs font-bold" style={{ color: theme.qrFg }}>
           🎁 Join Now — It&apos;s Free
         </span>
         <h2 className="mt-2 text-xl font-extrabold text-grey-1 sm:text-2xl">
@@ -134,9 +137,12 @@ const JoinForm = ({ join }: { join: JoinLoyaltyApi }) => {
           />
         </Field>
 
-        <p className="rounded-xl bg-primary-green-500 px-3.5 py-3 text-[11px] leading-relaxed text-grey-2">
+        <p
+          className="rounded-xl px-3.5 py-3 text-[11px] leading-relaxed text-grey-2"
+          style={{ backgroundColor: theme.surface }}
+        >
           By activating, you agree to receive loyalty updates from{" "}
-          <span className="font-bold text-primary-green-300">
+          <span className="font-bold" style={{ color: theme.qrFg }}>
             {campaign?.business_name ?? "Our Store"}
           </span>{" "}
           via SMS/email. You can opt out at any time.
@@ -148,11 +154,12 @@ const JoinForm = ({ join }: { join: JoinLoyaltyApi }) => {
           type="submit"
           disabled={isPending}
           className={cn(
-            "flex w-full items-center justify-center gap-2 rounded-xl bg-primary-green-300 py-3.5 text-sm font-extrabold text-white transition-colors",
+            "flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-extrabold transition-opacity",
             isPending
               ? "cursor-not-allowed opacity-70"
-              : "cursor-pointer hover:bg-primary-green-300/90",
+              : "cursor-pointer hover:opacity-90",
           )}
+          style={{ backgroundColor: theme.base, color: theme.onBase }}
         >
           {isPending ? <Spinner className="h-4 w-4" /> : <span>🎉</span>}
           Activate My Loyalty Card

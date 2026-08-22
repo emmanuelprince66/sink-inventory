@@ -80,7 +80,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   // scan or by "View Loyalty" on a row in the customer drawer.
   const [isLoyaltyScannerOpen, setIsLoyaltyScannerOpen] = useState(false);
   const [loyaltyView, setLoyaltyView] = useState<{
-    code: string;
+    /** Null when the customer holds no loyalty card — the modal still opens. */
+    code: string | null;
     customer?: any;
   } | null>(null);
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] =
@@ -772,15 +773,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           </div>
 
           <CustomerDrawer
+            variant="pos"
             open={isCustomerDrawerOpen}
             onOpenChange={setIsCustomerDrawerOpen}
             onCustomerSelect={(selectedCustomer: any) =>
               setCustomer(selectedCustomer)
             }
+            // Opens for everyone now, not only for customers holding a card.
+            // The row is the only target on the card, so guarding here left a
+            // tap that silently did nothing; the modal says plainly when there
+            // is no loyalty record and still offers Add to Sale.
             onViewLoyalty={(selectedCustomer: any) =>
-              selectedCustomer?.loyalty_code &&
               setLoyaltyView({
-                code: selectedCustomer.loyalty_code,
+                code: selectedCustomer?.loyalty_code ?? null,
                 customer: selectedCustomer,
               })
             }

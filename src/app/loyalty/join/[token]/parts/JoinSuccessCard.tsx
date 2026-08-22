@@ -2,7 +2,6 @@
 
 import { Spinner } from "@/components/app/Spinner";
 import { Download } from "lucide-react";
-import { buildLoyaltyTheme } from "@/utils/storeTheme";
 import QRCode from "react-qr-code";
 import type { JoinLoyaltyApi } from "./useJoinLoyalty";
 
@@ -12,12 +11,7 @@ import type { JoinLoyaltyApi } from "./useJoinLoyalty";
  * is exactly what the till scanner reads. No round trip, no second endpoint.
  */
 const JoinSuccessCard = ({ join }: { join: JoinLoyaltyApi }) => {
-  const { joined, form, cardRef, saving, downloadCard, campaign } = join;
-
-  // Resolved from the campaign rather than the business store: this page is
-  // public, so there is no signed-in business to read a theme from. Falls back
-  // to the default palette until store_theme is on the public payload.
-  const theme = buildLoyaltyTheme(campaign?.store_theme);
+  const { joined, form, cardRef, saving, downloadCard, theme } = join;
 
   const loyaltyCode = joined.loyalty_code;
   const enrollment = joined.enrollment;

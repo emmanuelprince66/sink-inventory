@@ -2,7 +2,8 @@
 
 import { useFetchPublicCampaignQuery } from "@/api/loyalty/fetch-public-campaign";
 import { useJoinLoyaltyMutation } from "@/api/loyalty/join-loyalty";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { buildLoyaltyTheme } from "@/utils/storeTheme";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface JoinFormState {
   fullName: string;
@@ -55,6 +56,14 @@ export const useJoinLoyalty = (token: string) => {
     (condition) => condition.type === "VISIT",
   );
   const streakLength = Number(visitCondition?.threshold ?? 0);
+
+  // Resolved from the campaign, not the business store: this page is public,
+  // so there is no signed-in business to read a theme from. One instance for
+  // the whole flow so the hero, the form and the issued card cannot disagree.
+  const theme = useMemo(
+    () => buildLoyaltyTheme(campaign?.store_theme),
+    [campaign?.store_theme],
+  );
 
   const { mutate: join, isPending } = useJoinLoyaltyMutation({
     token,
@@ -146,6 +155,7 @@ export const useJoinLoyalty = (token: string) => {
     joined,
     campaign,
     campaignLoading,
+    theme,
     streakLength,
     isPending,
     submit,

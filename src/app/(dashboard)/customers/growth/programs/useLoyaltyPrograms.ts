@@ -36,9 +36,8 @@ export const useLoyaltyPrograms = () => {
 
   const { data: dashboardRes, isLoading: dashboardLoading } =
     useFetchLoyaltyDashboardQuery({ params: { id: business_id ?? "" } });
-  const { data: programsRes } = useFetchLoyaltyProgramsQuery({
-    params: { id: business_id ?? "" },
-  });
+  const { data: programsRes, isLoading: programsLoading } =
+    useFetchLoyaltyProgramsQuery({ params: { id: business_id ?? "" } });
 
   const dashboard = dashboardRes?.data;
 
@@ -110,6 +109,7 @@ export const useLoyaltyPrograms = () => {
   return {
     dashboard,
     dashboardLoading,
+    programsLoading,
     campaigns,
     streakPerformers,
     modalView,

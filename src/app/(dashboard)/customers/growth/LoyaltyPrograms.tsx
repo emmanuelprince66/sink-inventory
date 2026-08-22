@@ -7,6 +7,9 @@ import { useState } from "react";
 import CampaignCard from "./programs/CampaignCard";
 import LoyaltyProgramOverlays from "./programs/LoyaltyProgramOverlays";
 import LoyaltyProgramsHeader from "./programs/LoyaltyProgramsHeader";
+import LoyaltyProgramsSkeleton, {
+  CampaignCardSkeleton,
+} from "./programs/LoyaltyProgramsSkeleton";
 import LoyaltyStatCards from "./programs/LoyaltyStatCards";
 import StreakMarquee, { StreakSkeleton } from "./programs/StreakMarquee";
 import { useLoyaltyPrograms } from "./programs/useLoyaltyPrograms";
@@ -28,6 +31,7 @@ const LoyaltyPrograms = () => {
   const {
     dashboard,
     dashboardLoading,
+    programsLoading,
     campaigns,
     streakPerformers,
     modalView,
@@ -42,6 +46,10 @@ const LoyaltyPrograms = () => {
     <div className="space-y-4 w-full min-w-0 max-w-full">
       <LoyaltyProgramsHeader />
 
+      {dashboardLoading && programsLoading ? (
+        <LoyaltyProgramsSkeleton />
+      ) : (
+        <>
       <LoyaltyStatCards dashboard={dashboard} />
 
       {/* Loyalty Streak System */}
@@ -66,7 +74,12 @@ const LoyaltyPrograms = () => {
       </div>
 
       <div className="space-y-3">
-        {campaigns.length === 0 ? (
+        {programsLoading ? (
+          <>
+            <CampaignCardSkeleton />
+            <CampaignCardSkeleton />
+          </>
+        ) : campaigns.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-grey-5 bg-white px-4 py-14 text-center">
             <p className="text-sm font-bold text-grey-1">
               No loyalty campaigns yet
@@ -90,6 +103,8 @@ const LoyaltyPrograms = () => {
           ))
         )}
       </div>
+        </>
+      )}
 
       {/* Real marketing campaigns (SMS/email blasts) — kept reachable here */}
       <div className="bg-white rounded-2xl border border-grey-5 overflow-hidden">

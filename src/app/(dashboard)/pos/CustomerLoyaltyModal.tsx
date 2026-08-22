@@ -82,9 +82,25 @@ const CustomerLoyaltyModal = ({
             <Spinner className="text-primary-green-300" />
           </div>
         ) : !wallet ? (
-          <p className="py-10 text-center text-sm text-grey-3">
-            No loyalty record found for {loyaltyCode ?? "this customer"}.
-          </p>
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-grey-5 px-4 py-10 text-center">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-grey-6 text-sm font-extrabold text-grey-2">
+              {(customer?.initials ||
+                (customer?.name ?? "?")
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((p: string) => p[0])
+                  .join("")) || "?"}
+            </span>
+            <p className="text-sm font-bold text-grey-1">
+              {customer?.name ?? "This customer"}
+            </p>
+            <p className="max-w-xs text-xs text-grey-3">
+              {loyaltyCode
+                ? "No loyalty record found for this card."
+                : "Not enrolled in a loyalty programme yet — they can still be added to this sale."}
+            </p>
+          </div>
         ) : (
           <>
             <div className="overflow-hidden rounded-2xl border border-grey-5">
@@ -317,21 +333,33 @@ const CustomerLoyaltyModal = ({
               ))}
             </div>
 
-            {/* Only offered when we have a customer record to attach — the
-                wallet endpoint returns a loyalty profile, not a customer. */}
-            {customer && (
-              <Button
-                className="h-11 w-full rounded-xl"
-                onClick={() => {
-                  onAddToSale(customer);
-                  onClose();
-                }}
-              >
-                Add to Sale
-              </Button>
-            )}
           </>
         )}
+
+        {/* Pinned under whichever branch rendered above, so the actions sit in
+            the same place whether or not this customer has a card. Add to Sale
+            needs a customer record to attach — the wallet endpoint returns a
+            loyalty profile, not a customer — so without one only Cancel shows. */}
+        <div className="flex gap-3 border-t border-grey-5 pt-4">
+          <Button
+            variant="outline"
+            className="h-11 flex-1 rounded-xl"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+          {customer && (
+            <Button
+              className="h-11 flex-1 rounded-xl"
+              onClick={() => {
+                onAddToSale(customer);
+                onClose();
+              }}
+            >
+              Add to Sale
+            </Button>
+          )}
+        </div>
       </div>
     </CustomModal>
   );

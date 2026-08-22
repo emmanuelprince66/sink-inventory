@@ -11,17 +11,72 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
-import { Plus } from "lucide-react";
+import { formatToNaira } from "@/utils/formatMoney";
+import { ArrowRight, Crown, Plus, Sprout, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddCustomer from "../customers/AddCustomer";
 
+// Same stable-tint idea the customers table uses, so a face keeps its colour
+// between the list and the till.
+const AVATAR_TONES = [
+  "bg-primary-green-300",
+  "bg-emerald-500",
+  "bg-teal-600",
+  "bg-sky-600",
+  "bg-violet-500",
+  "bg-amber-500",
+];
+
+const avatarTone = (seed: string) => {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1)
+    hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
+};
+
+const initialsOf = (name?: string) =>
+  (name ?? "?")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase() || "?";
+
+/** Tier chip. Anything unrecognised still gets a chip, just a neutral one. */
+const TIER_STYLES: Record<string, { icon: any; className: string }> = {
+  VIP: { icon: Crown, className: "bg-amber-100 text-amber-700" },
+  Gold: { icon: Crown, className: "bg-amber-100 text-amber-700" },
+  Silver: { icon: Star, className: "bg-grey-6 text-grey-2" },
+  Bronze: { icon: Sprout, className: "bg-orange-100 text-orange-700" },
+  Normal: { icon: Sprout, className: "bg-primary-green-500 text-primary-green-300" },
+};
+
+const tierStyle = (tier?: string | null) =>
+  TIER_STYLES[tier ?? ""] ?? {
+    icon: Sprout,
+    className: "bg-primary-green-500 text-primary-green-300",
+  };
+
+/**
+ * Shared by the POS till and Create Order, which want different things from a
+ * row.
+ *
+ * "pos" opens the loyalty modal, because a cashier's first question is what
+ * this customer has earned, and Add to Sale lives at the bottom of that modal.
+ * "simple" — the default — picks the customer and closes, which is all Create
+ * Order ever wanted. Defaulting to simple keeps every existing caller on the
+ * behaviour it already had.
+ */
 const CustomerDrawer = ({
   open,
   onOpenChange,
   onCustomerSelect,
   onShippingSelect,
   onViewLoyalty,
+  variant = "simple",
 }: any) => {
+  const isPos = variant === "pos";
   const [searchInput, setSearchInput] = useState("");
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
@@ -40,9 +95,14 @@ const CustomerDrawer = ({
   };
 
   const handleSelectCustomer = (customer: any) => {
-    onCustomerSelect(customer);
-    onOpenChange(false); // Close the drawer after selection
+    onCustomerSelect?.(customer);
+    onOpenChange(false);
   };
+
+  // Optional-called: Create Order renders this drawer without onViewLoyalty,
+  // so an unguarded call would throw on the first tap.
+  const handleCardClick = (customer: any) =>
+    isPos ? onViewLoyalty?.(customer) : handleSelectCustomer(customer);
 
   // Initialize pageSize with the limit from API response or default to 15
   const [pageSize, setPageSize] = useState<number>(
@@ -111,43 +171,65 @@ const CustomerDrawer = ({
               ))
             ) : CustomerData?.data?.results?.data?.length > 0 ? (
               // Show actual customer data when loaded
-              CustomerData.data.results.data.map((customer: any) => (
-                <div
-                  key={customer.id}
-                  className="m-2 rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#52b661]"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h3 className="truncate font-medium">{customer.name}</h3>
-                      <p className="truncate text-sm text-gray-500">
-                        {customer.phone || "No phone"}
-                        {customer.email ? ` · ${customer.email}` : ""}
-                      </p>
-                    </div>
-                    {customer.tier_name && (
-                      <span className="shrink-0 rounded-full bg-primary-green-500 px-2 py-0.5 text-[10px] font-bold text-primary-green-300">
-                        {customer.tier_name}
-                      </span>
-                    )}
-                  </div>
+              CustomerData.data.results.data.map((customer: any) => {
+                const tier = tierStyle(customer.tier_name);
+                const TierIcon = tier.icon;
 
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-9 rounded-lg text-xs"
-                      onClick={() => onViewLoyalty(customer)}
+                return (
+                  
+          <div className="flex w-full flex-col px-1" key={customer.id}>
+                 <button
+                    
+                    type="button"
+                    // The whole card opens the loyalty view; Add to Sale lives
+                    // at the bottom of that modal, so the row needs one target
+                    // rather than two competing buttons.
+                    onClick={() => handleCardClick(customer)}
+                    className="flex w-full items-center rounded-xl border border-grey-5 bg-white p-3 text-left transition-colors hover:border-primary-green-300 hover:bg-primary-green-500/40 cursor-pointer"
+                  >
+                    <span
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${avatarTone(
+                        customer.id ?? customer.name ?? "",
+                      )}`}
                     >
-                      View Loyalty
-                    </Button>
-                    <Button
-                      className="h-9 rounded-lg text-xs"
-                      onClick={() => handleSelectCustomer(customer)}
-                    >
-                      Add to Sale
-                    </Button>
-                  </div>
-                </div>
-              ))
+                      {customer.initials || initialsOf(customer.name)}
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-extrabold text-grey-1">
+                        {customer.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-[11px] text-grey-3">
+                        {customer.phone || "No phone"}
+                        {" · "}
+                        {formatToNaira(Number(customer.total_sales ?? 0))} spent
+                      </span>
+
+                      {isPos && (
+                      <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                        {customer.tier_name && (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.className}`}
+                          >
+                            <TierIcon className="h-3 w-3" />
+                            {customer.tier_name}
+                          </span>
+                        )}
+                        {/* reward_count, not visit progress — the list has no
+                            streak target to divide by, and a completed reward
+                            is the outcome anyway. */}
+                        <span className="text-[10px] text-grey-4">
+                          {Number(customer.reward_count ?? 0)} rewards
+                        </span>
+                      </span>
+                      )}
+                    </span>
+
+                    <ArrowRight className="h-4 w-4 shrink-0 text-primary-green-300" />
+                  </button>
+          </div>   
+                );
+              })
             ) : (
               <div className="text-center text-gray-500 p-4">
                 No customers found

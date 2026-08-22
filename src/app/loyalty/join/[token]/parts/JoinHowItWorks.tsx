@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicLoyaltyProgram } from "@/types/loyalty";
+import type { LoyaltyTheme } from "@/utils/storeTheme";
 
 const FEATURES = [
   {
@@ -28,13 +29,15 @@ const FEATURES = [
 const JoinHowItWorks = ({
   campaign,
   streakLength,
+  theme,
 }: {
   campaign: PublicLoyaltyProgram | undefined;
   streakLength: number;
+  theme: LoyaltyTheme;
 }) => (
   <>
     <section className="text-center">
-      <span className="text-xs font-bold text-primary-green-300">
+      <span className="text-xs font-bold" style={{ color: theme.qrFg }}>
         💡 How It Works
       </span>
       <h2 className="mt-2 text-xl font-extrabold text-grey-1 sm:text-2xl">
@@ -47,8 +50,14 @@ const JoinHowItWorks = ({
 
     {/* Visit streak — only meaningful when the programme counts visits. */}
     {streakLength > 0 && (
-      <section className="mt-6 rounded-2xl bg-primary-green-100 p-5">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-green-300">
+      <section
+        className="mt-6 rounded-2xl p-5"
+        style={{ backgroundColor: theme.deep }}
+      >
+        <p
+          className="text-[10px] font-bold uppercase tracking-widest"
+          style={{ color: theme.base }}
+        >
           Visit Streak
         </p>
         <ol className="mt-4 space-y-3">
@@ -65,13 +74,19 @@ const JoinHowItWorks = ({
           {/* Wraps on a phone — the reward pill after the label overflows a
               360px row otherwise. */}
           <li className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-base">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base"
+              style={{ backgroundColor: theme.base }}
+            >
               🎁
             </span>
             <span className="text-sm font-extrabold text-white">
               Get Rewarded!
             </span>
-            <span className="rounded-full bg-primary-green-300 px-2.5 py-0.5 text-[11px] font-extrabold text-white">
+            <span
+              className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-extrabold leading-none"
+              style={{ backgroundColor: theme.base, color: theme.onBase }}
+            >
               {campaign?.reward_summary ?? "A reward"}
             </span>
           </li>

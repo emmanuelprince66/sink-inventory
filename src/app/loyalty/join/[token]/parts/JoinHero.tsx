@@ -1,15 +1,23 @@
 "use client";
 
 import type { PublicLoyaltyProgram } from "@/types/loyalty";
+import type { LoyaltyTheme } from "@/utils/storeTheme";
 
 const JoinHero = ({
   campaign,
   canGoBack,
+  theme,
 }: {
   campaign: PublicLoyaltyProgram | undefined;
   canGoBack: boolean;
+  theme: LoyaltyTheme;
 }) => (
-  <header className="relative bg-primary-green-100 px-4 pb-24 pt-6">
+  // deep, not base: this is a full-bleed panel behind white text, and a mid
+  // brand colour behind white would fail contrast on the paler themes.
+  <header
+    className="relative px-4 pb-24 pt-6"
+    style={{ backgroundColor: theme.deep }}
+  >
     {/* Public page — a customer arrives here by scanning, so there may be no
         history to go back to. Only render Back when there is. */}
     {canGoBack && (
@@ -48,7 +56,10 @@ const JoinHero = ({
 
       {/* max-w-full so a long reward line wraps instead of widening the page. */}
       <div className="mx-auto mt-5 w-fit max-w-full rounded-2xl bg-white/10 px-5 py-4 sm:px-8">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-primary-green-300">
+        <p
+          className="text-[10px] font-bold uppercase tracking-widest"
+          style={{ color: theme.base }}
+        >
           Your Reward
         </p>
         <p className="mt-1 text-xl font-extrabold text-white sm:text-2xl">
