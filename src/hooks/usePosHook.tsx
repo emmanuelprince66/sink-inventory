@@ -7,7 +7,6 @@ import { useUserRole } from "@/lib/store/user-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
-import { useSSENotifications } from "./useWebSocketNotification";
 
 export const usePosHook = ({
   searchInput,
@@ -59,9 +58,6 @@ export const usePosHook = ({
       ? debouncedSearchTerm
       : null;
   }, [debouncedSearchTerm]);
-
-  const { notifications, isConnected, clearNotifications, connectionAttempts } =
-    useSSENotifications(user?.tokens?.access || "");
 
   // Main product search query for regular search input
   const {

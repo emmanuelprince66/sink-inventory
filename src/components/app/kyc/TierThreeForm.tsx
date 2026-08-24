@@ -1,3 +1,5 @@
+"use client";
+
 import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
@@ -10,24 +12,49 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useKycHook } from "@/hooks/useKycHook";
-import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
+import FileUploadField from "./FileUploadField";
+import { CapturedSummary, maskId, Notice, SectionHeading } from "./KycUi";
+import { PROOF_OF_ADDRESS_TYPES } from "./tiers";
 
 interface Tier3FormProps {
   onComplete: () => void;
   kyc: ReturnType<typeof useKycHook>;
 }
 
-// Tier 3 captures proof of address using the same geocoded autocomplete as the
-// order flow. Only the resolved address string and state are sent — picking a
-// suggestion is what fills `state`, which the provider requires.
+/**
+ * Tier 3 is proof of address: the street address itself, captured through the
+ * same geocoded autocomplete as the order flow, plus a utility bill or bank
+ * statement backing it. Picking a suggestion is what fills city and state,
+ * which the provider requires.
+ */
 const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
-  const { createIndividualAcctForm, isPending, submitTier } = kyc;
+  const {
+    createIndividualAcctForm,
+    isPending,
+    submitTier,
+    proofOfAddressFile,
+    setProofOfAddressFile,
+    proofOfAddressError,
+    setProofOfAddressError,
+  } = kyc;
   const [hasCoordinates, setHasCoordinates] = useState(false);
 
   const nin = createIndividualAcctForm.watch("nin");
   const bvn = createIndividualAcctForm.watch("bvn");
+  const documentType = createIndividualAcctForm.watch("proof_of_address_type");
+
+  const documentLabel =
+    PROOF_OF_ADDRESS_TYPES.find((type) => type.value === documentType)?.label ??
+    "document";
 
   const handleSubmit = async () => {
     const ok = await submitTier(3);
@@ -37,79 +64,157 @@ const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
   return (
     <Form {...createIndividualAcctForm}>
       <form
-        className="w-full space-y-5"
+        className="w-full space-y-6"
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit();
         }}
       >
-        <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50/60 p-3">
-          <ShieldCheck className="text-green-600 shrink-0" size={20} />
-          <div className="text-sm">
-            <p className="font-medium text-gray-800">Verified so far</p>
-            <p className="text-gray-600">
-              NIN {nin ? `••••${nin.slice(-4)}` : "—"} · BVN{" "}
-              {bvn ? `••••${bvn.slice(-4)}` : "—"}
-            </p>
+        <CapturedSummary
+          items={[
+            { label: "NIN", value: maskId(nin) },
+            { label: "BVN", value: maskId(bvn) },
+          ]}
+        />
+
+        <div className="space-y-4">
+          <SectionHeading
+            title="Street address"
+            description="Start typing and pick your address from the list — the suggestion is what confirms the city and state we send."
+          />
+
+          <FormField
+            control={createIndividualAcctForm.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Residential address</FormLabel>
+                <FormControl>
+                  <AddressAutocomplete
+                    multiline
+                    rows={2}
+                    value={field.value ?? ""}
+                    placeholder="Start typing your address..."
+                    hasCoordinates={hasCoordinates}
+                    // Typing invalidates a previously picked suggestion, so drop
+                    // the city/state that came with it until a new one is chosen.
+                    onChange={(value) => {
+                      field.onChange(value);
+                      setHasCoordinates(false);
+                      createIndividualAcctForm.setValue("city", "");
+                      createIndividualAcctForm.setValue("state", "");
+                    }}
+                    onSelect={(suggestion) => {
+                      field.onChange(suggestion.address || suggestion.label);
+                      createIndividualAcctForm.setValue(
+                        "city",
+                        suggestion.city ?? "",
+                      );
+                      createIndividualAcctForm.setValue(
+                        "state",
+                        suggestion.state ?? "",
+                      );
+                      setHasCoordinates(true);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              control={createIndividualAcctForm.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input
+                      readOnly
+                      placeholder="Filled in when you pick an address"
+                      className="bg-grey-6/60"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={createIndividualAcctForm.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <Input
+                      readOnly
+                      placeholder="Filled in when you pick an address"
+                      className="bg-grey-6/60"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 
-        <FormField
-          control={createIndividualAcctForm.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Residential Address</FormLabel>
-              <FormControl>
-                <AddressAutocomplete
-                  multiline
-                  rows={2}
-                  value={field.value ?? ""}
-                  placeholder="Start typing your address..."
-                  hasCoordinates={hasCoordinates}
-                  // Typing invalidates a previously picked suggestion, so drop
-                  // the state that came with it until a new one is chosen.
-                  onChange={(value) => {
-                    field.onChange(value);
-                    setHasCoordinates(false);
-                    createIndividualAcctForm.setValue("state", "");
-                  }}
-                  onSelect={(suggestion) => {
-                    field.onChange(suggestion.address || suggestion.label);
-                    createIndividualAcctForm.setValue(
-                      "state",
-                      suggestion.state ?? "",
-                    );
-                    setHasCoordinates(true);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-4">
+          <SectionHeading
+            title="Proof of address"
+            description="A utility bill or bank statement in your name, issued within the last 3 months."
+          />
 
-        <FormField
-          control={createIndividualAcctForm.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>State</FormLabel>
-              <FormControl>
-                <Input
-                  readOnly
-                  placeholder="Filled in when you pick an address"
-                  className="bg-gray-50"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={createIndividualAcctForm.control}
+            name="proof_of_address_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Document type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-12! min-h-0 w-full rounded-md border-grey-5">
+                      <SelectValue placeholder="Select the document you are uploading" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {PROOF_OF_ADDRESS_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button type="submit" disabled={isPending} className="mt-4 w-full">
-          {isPending ? <Spinner /> : "Submit Tier 3 Verification"}
+          <FileUploadField
+            id="individual-proof-of-address"
+            label={documentType ? `Upload ${documentLabel}` : "Upload document"}
+            hint="The name and address on the document must match the details above."
+            value={proofOfAddressFile}
+            onChange={(file) => {
+              setProofOfAddressFile(file);
+              setProofOfAddressError(null);
+            }}
+            error={proofOfAddressError ?? undefined}
+          />
+        </div>
+
+        <Notice>
+          Documents are reviewed manually and usually clear within one business
+          day. You keep your Tier 2 limit while the review is running.
+        </Notice>
+
+        <Button type="submit" disabled={isPending} size="lg" className="w-full">
+          {isPending ? <Spinner /> : "Submit Tier 3 verification"}
         </Button>
       </form>
     </Form>

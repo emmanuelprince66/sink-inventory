@@ -15,22 +15,35 @@ const firebaseConfig = {
 const app =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Initialize messaging with proper error handling
+/**
+ * Messaging is resolved asynchronously, because isSupported() is a promise.
+ *
+ * The exported `messaging` binding is therefore null for the first tick or two
+ * of page life, and anything that read it during startup — getToken, onMessage —
+ * silently did nothing and logged "not initialized". Callers must await
+ * messagingReady() instead of reading the binding directly.
+ */
 let messaging: any = null;
 
-if (typeof window !== "undefined") {
-  isSupported()
-    .then((supported) => {
-      if (supported) {
-        messaging = getMessaging(app);
-      } else {
-        console.log("Firebase messaging is not supported in this browser");
-      }
-    })
-    .catch((error) => {
-      console.error("Error checking Firebase messaging support:", error);
-    });
-}
+const messagingPromise: Promise<any> =
+  typeof window === "undefined"
+    ? Promise.resolve(null)
+    : isSupported()
+        .then((supported) => {
+          if (!supported) {
+            console.log("Firebase messaging is not supported in this browser");
+            return null;
+          }
+          messaging = getMessaging(app);
+          return messaging;
+        })
+        .catch((error) => {
+          console.error("Error checking Firebase messaging support:", error);
+          return null;
+        });
+
+/** Resolves once support has been determined; null when unsupported. */
+export const messagingReady = (): Promise<any> => messagingPromise;
 
 export { messaging };
 export default app;

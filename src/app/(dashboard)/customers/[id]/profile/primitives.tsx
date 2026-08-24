@@ -3,9 +3,10 @@
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
+// Transactions is no longer its own tab — the ledger now lives at the foot of
+// the Financial tab, next to the balances it explains.
 export const TABS = [
   "Overview",
-  "Transactions",
   "Purchase",
   "Loyalty",
   "Engagement",

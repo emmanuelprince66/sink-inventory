@@ -80,9 +80,6 @@ export default function RootLayout({
               <SubscriptionNotificationModal />
             </AuthProvider>
             <TawkToChat /> {/* Add this component */}
-            {/* <NotificationProvider>
-            
-            </NotificationProvider> */}
           </FcmNotificationProvider>
         </ReactQueryProvider>
       </body>

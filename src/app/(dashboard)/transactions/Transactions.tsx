@@ -3,7 +3,6 @@
 import { useCreateSubAccountMutation } from "@/api/transactions/create-sub-account";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
-import KycConfirm from "@/components/app/kyc/KycConfirm";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Spinner } from "@/components/app/Spinner";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
@@ -25,7 +24,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { DateRange } from "react-day-picker";
 import NoTransactions from "./NoTransactions";
 import TransactionTable from "./TransactionTable";
@@ -85,7 +84,6 @@ const Transactions = () => {
   );
   const [page, setPage] = useState(1);
 
-  const [showKycModal, setShowKycModal] = useState(false);
   const [showSubAccountModal, setShowSubAccountModal] = useState(false);
   const [previousAccount, setPreviousAccount] = useState("");
   const [branchName, setBranchName] = useState("");
@@ -136,11 +134,9 @@ const Transactions = () => {
     setSearchInput(value);
   };
 
-  useEffect(() => {
-    if (businessData) {
-      businessData?.kyc ? setShowKycModal(false) : setShowKycModal(true);
-    }
-  }, [businessData]);
+  // Verification lives on its own page now, so an unverified business gets a
+  // prompt at the foot of the table rather than a dialog thrown over it.
+  const needsKyc = Boolean(businessData) && !businessData?.kyc;
 
   return (
     <>
@@ -396,25 +392,15 @@ const Transactions = () => {
           )}
         </div>
 
-        {/* Verify KYC Button */}
-        <div className="w-full flex justify-center pb-2">
-          <Button
-            onClick={() => setShowKycModal(true)}
-            className="w-full sm:w-auto"
-          >
-            Complete KYC Verification
-          </Button>
-        </div>
+        {/* Verify KYC — the flow is its own page, not a dialog. */}
+        {needsKyc && (
+          <div className="w-full flex justify-center pb-2">
+            <Button asChild className="w-full sm:w-auto">
+              <Link href="/kyc">Complete KYC Verification</Link>
+            </Button>
+          </div>
+        )}
       </div>
-
-      {/* KYC Verification Modal */}
-      <CustomModal
-        isOpen={showKycModal}
-        onClose={() => setShowKycModal(false)}
-        title=""
-      >
-        <KycConfirm page={false} />
-      </CustomModal>
 
       {/* Create Sub Account Modal */}
       <CustomModal

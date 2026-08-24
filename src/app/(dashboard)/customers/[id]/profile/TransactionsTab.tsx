@@ -9,24 +9,18 @@ import {
   type CustomerTransactionType,
   type TransactionFlow,
 } from "@/types/customerTransaction";
-import { useFormatMoney } from "@/utils/formatMoney";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import TransactionRow from "./TransactionRow";
 import { typeMeta } from "./transactionMeta";
-import { useCustomerTransactions } from "./useCustomerTransactions";
+import type { CustomerTransactionsApi } from "./useCustomerTransactions";
 
 /**
- * Mirrors the loaded layout — four tiles, two filter rows, five rows — so the
- * tab does not jump when data lands. A centred spinner gave no sense of what
- * was coming and collapsed the tab to a fraction of its real height.
+ * Mirrors the loaded layout — two filter rows, five rows — so the section does
+ * not jump when data lands. A centred spinner gave no sense of what was coming
+ * and collapsed it to a fraction of its real height.
  */
 const TransactionsSkeleton = () => (
   <div className="flex w-full min-w-0 flex-col gap-4">
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {[0, 1, 2, 3].map((i) => (
-        <Skeleton key={i} className="h-[74px] rounded-xl bg-grey-5" />
-      ))}
-    </div>
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-1.5">
         {[56, 76, 64, 56, 68, 72].map((w, i) => (
@@ -81,10 +75,17 @@ const Pill = ({
   </button>
 );
 
-const TransactionsTab = ({ id }: { id: string }) => {
-  const formatMoney = useFormatMoney();
+/**
+ * The customer's transaction ledger — filters, rows and paging only.
+ *
+ * It used to be its own profile tab with a strip of summary tiles above it; it
+ * now renders at the foot of the Financial tab, and every figure those tiles
+ * carried is printed once in All Financial Details instead. The query lives in
+ * FinancialTab and arrives here as `api`, so the tab and the ledger read one
+ * summary rather than firing the request twice.
+ */
+const TransactionsTab = ({ api }: { api: CustomerTransactionsApi }) => {
   const {
-    summary,
     rows,
     total,
     pages,
@@ -97,68 +98,12 @@ const TransactionsTab = ({ id }: { id: string }) => {
     isLoading,
     isFetching,
     hasFilters,
-  } = useCustomerTransactions(id);
+  } = api;
 
   if (isLoading) return <TransactionsSkeleton />;
 
-  const tiles = summary
-    ? [
-        {
-          label: "Wallet Balance",
-          value: formatMoney(summary.wallet_balance),
-          tone: "text-primary-green-300",
-        },
-        {
-          label: "Outstanding Debt",
-          value: formatMoney(summary.outstanding_debt),
-          tone: summary.outstanding_debt > 0 ? "text-error-1" : "text-grey-1",
-        },
-        {
-          label: "Total Funded",
-          value: formatMoney(summary.total_funded ?? 0),
-          tone: "text-grey-1",
-        },
-        {
-          label: "Total Withdrawn",
-          value: formatMoney(summary.total_withdrawn ?? 0),
-          tone: "text-grey-1",
-        },
-        {
-          label: "Repayments",
-          value: formatMoney(summary.total_repayments ?? 0),
-          tone: "text-grey-1",
-        },
-        {
-          label: "Transactions",
-          value: String(summary.total_transactions ?? total),
-          tone: "text-info-1",
-        },
-      ]
-    : [];
-
   return (
     <div className="flex w-full min-w-0 flex-col gap-4">
-      {tiles.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {tiles.map((tile) => (
-            <div
-              key={tile.label}
-              className="min-w-0 rounded-xl border border-grey-5 bg-primary-green-700 p-3"
-            >
-              <p className="truncate text-[10px] text-grey-3">{tile.label}</p>
-              <p
-                className={cn(
-                  "mt-1 truncate text-lg font-extrabold",
-                  tile.tone,
-                )}
-              >
-                {tile.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-
       {/* Filters */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-1.5">

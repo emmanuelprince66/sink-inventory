@@ -1,6 +1,5 @@
 "use client";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
-import { NotificationSocketDisplay } from "@/app/(dashboard)/notification/NotificationSocketDisplay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,23 +24,18 @@ import {
   UserCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { useRealtime } from "../providers/RealtimeProvider";
 import { useState } from "react";
-// import { useNotificationContext } from "../providers/NotificationProvider";
 import { SidebarTrigger } from "../ui/sidebar";
 import { CustomModal } from "./CustomModal";
-import KycConfirm from "./kyc/KycConfirm";
 
 export function TopBar() {
   const business_id = useBusinessStore((state) => state.business_id);
   const { user } = useUserRole();
-  // const { notifications, isConnected } = useNotificationContext();
+  // Live from the socket, seeded from REST. Returns zeroes outside the
+  // dashboard shell rather than throwing.
+  const { unreadNotifications } = useRealtime();
 
-  // console.log("notifications", notifications);
-  // console.log("isConnected", isConnected);
-  console.log("user", user);
-
-  const [showConfirmKycModal, setShowConfirmKycModal] = useState(false);
-  const [showNotiSocketModal, setShowNotiSocketModal] = useState(false);
   const { data: BusinessData, isLoading: BusinessDataLoading } =
     useFetchBusinessById(business_id);
   const business = BusinessData?.data || {};
@@ -53,8 +47,7 @@ export function TopBar() {
   const nameParts = userName.split(" ");
   const firstName = nameParts[0] || "";
 
-  // Get notification count
-  const notificationCount = []?.length || 0;
+  const notificationCount = unreadNotifications;
 
   // Get user initials for avatar fallback
   const getInitials = (fullName: string) => {
@@ -69,24 +62,24 @@ export function TopBar() {
 
   const NotificationButton = ({ className = "" }) => (
     <Button
-      onClick={
-        notificationCount > 0
-          ? () => setShowNotiSocketModal(true)
-          : () => setShowNotiSocketModal(false)
-      }
+      asChild
       variant="ghost"
       size="sm"
       className={`relative h-9 w-9 p-0 rounded-xl bg-secondary-6 text-primary-green-100 hover:bg-secondary-5 hover:text-primary-green-100 ${className}`}
     >
-      <Bell className="h-4 w-4" />
-      {notificationCount > 0 && (
-        <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center shadow-sm border-2 border-white">
-          {notificationCount > 99 ? "99+" : notificationCount}
+      {/* The bell used to open a modal whose provider was commented out of the
+          root layout, so it could never render. It goes to the feed instead. */}
+      <Link href="/notification">
+        <Bell className="h-4 w-4" />
+        {notificationCount > 0 && (
+          <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center shadow-sm border-2 border-white">
+            {notificationCount > 99 ? "99+" : notificationCount}
+          </span>
+        )}
+        <span className="sr-only">
+          Notifications {notificationCount > 0 && `(${notificationCount})`}
         </span>
-      )}
-      <span className="sr-only">
-        Notifications {notificationCount > 0 && `(${notificationCount})`}
-      </span>
+      </Link>
     </Button>
   );
 
@@ -241,10 +234,8 @@ export function TopBar() {
                   </DropdownMenuItem>
 
                   {user && user?.role === "OWNER" && (
-                    <DropdownMenuItem
-                      onClick={() => setShowConfirmKycModal(true)}
-                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg"
-                    >
+                    <Link href="/kyc">
+                      <DropdownMenuItem className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-grey-2 hover:bg-secondary-6 cursor-pointer rounded-lg">
                       <Shield className="h-4 w-4 text-grey-3" />
                       <div className="flex items-center justify-between flex-1">
                         <span>KYC Verification</span>
@@ -264,8 +255,9 @@ export function TopBar() {
                             {business.kyc_status}
                           </Badge>
                         )}
-                      </div>
-                    </DropdownMenuItem>
+                        </div>
+                      </DropdownMenuItem>
+                    </Link>
                   )}
                 </div>
                 <DropdownMenuSeparator className="my-1 bg-grey-6" />
@@ -284,21 +276,6 @@ export function TopBar() {
           </div>
         </div>
       </header>
-      {/* KYC Verification Modal */}
-      <CustomModal
-        isOpen={showNotiSocketModal}
-        onClose={() => setShowNotiSocketModal(false)}
-        title=""
-      >
-        <NotificationSocketDisplay />
-      </CustomModal>
-      <CustomModal
-        isOpen={showConfirmKycModal}
-        onClose={() => setShowConfirmKycModal(false)}
-        title=""
-      >
-        <KycConfirm page={false} />
-      </CustomModal>
     </>
   );
 }

@@ -133,58 +133,12 @@ export const FcmNotificationProvider: React.FC<NotificationProviderProps> = ({
       });
     }
 
-    // Listen for foreground messages using your notification service
-    let unsubscribe: (() => void) | undefined;
-
-    if (typeof window !== "undefined") {
-      notificationService
-        .onMessageListener()
-        .then((payload: any) => {
-          console.log("🔔 Foreground message received:", payload);
-
-          // Add to received notifications list for tracking
-          const notification = addReceivedNotification(payload, "foreground");
-
-          // Show toast notification for foreground messages
-          toast(payload.notification?.title || "New Notification", {
-            description: payload.notification?.body,
-            action: payload.data?.url
-              ? {
-                  label: "Open",
-                  onClick: () => {
-                    // Mark as read when action is clicked
-                    markAsRead(notification.id);
-
-                    if (payload.data.url.startsWith("http")) {
-                      window.open(payload.data.url, "_blank");
-                    } else {
-                      window.location.href = payload.data.url;
-                    }
-                  },
-                }
-              : undefined,
-          });
-
-          // Forward message to service worker for tracking
-          if ("serviceWorker" in navigator) {
-            navigator.serviceWorker.ready.then((registration) => {
-              registration.active?.postMessage({
-                type: "FCM_MESSAGE",
-                payload: payload,
-              });
-            });
-          }
-        })
-        .catch((error: any) => {
-          console.error("Error setting up foreground message listener:", error);
-        });
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    // Foreground FCM messages are handled in exactly one place —
+    // NotificationModalProvider, via notificationService.setupForegroundListener().
+    // This provider used to register a second listener for the same messages,
+    // so every push ran two handlers and produced both a toast and a modal.
+    // It keeps permission, token and the received-notification log; the alerting
+    // belongs to the single consumer.
   }, []);
 
   const requestPermission = async (): Promise<boolean> => {

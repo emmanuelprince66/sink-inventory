@@ -14,6 +14,7 @@ import {
 import { links } from "@/constants/links";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
+import { useRealtime } from "../providers/RealtimeProvider";
 import { deleteCookie } from "cookies-next";
 import { ChevronDown, LogOut, Package, Settings, Store } from "lucide-react";
 import Image from "next/image";
@@ -25,6 +26,7 @@ export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
   const { role } = useUserRole(); // Only need role now
+  const { unreadNotifications, pendingOrders } = useRealtime();
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
@@ -283,6 +285,14 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {groupItems.map((item) => {
                       const isActive = pathname === item.url;
+                      // Notifications and Orders carry live counts; every other
+                      // link resolves to 0 and renders no badge.
+                      const badge =
+                        item.url === "/notification"
+                          ? unreadNotifications
+                          : item.url === "/orders"
+                            ? pendingOrders
+                            : 0;
 
                       return (
                         <SidebarMenuItem
@@ -300,7 +310,19 @@ export function AppSidebar() {
                               className="flex items-center font-bold text-sm px-4"
                             >
                               <item.icon className="mr-3 h-[17px] w-[17px]" />
-                              <span>{item.title}</span>
+                              <span className="flex-1">{item.title}</span>
+                              {badge > 0 && (
+                                <span
+                                  className={cn(
+                                    "ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-extrabold",
+                                    isActive
+                                      ? "bg-white text-primary-green-300"
+                                      : "bg-red-500 text-white",
+                                  )}
+                                >
+                                  {badge > 99 ? "99+" : badge}
+                                </span>
+                              )}
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

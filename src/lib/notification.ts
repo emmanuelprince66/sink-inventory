@@ -1,6 +1,6 @@
 // src/lib/notifications.ts
 import { getToken, onMessage } from "firebase/messaging";
-import { messaging } from "./firebase";
+import { messaging, messagingReady } from "./firebase";
 
 export interface NotificationPayload {
   title: string;
@@ -58,7 +58,8 @@ class NotificationService {
   }
 
   async getToken(): Promise<string | null> {
-    if (!messaging || !this.vapidKey) {
+    const ready = await messagingReady();
+    if (!ready || !this.vapidKey) {
       console.error(
         "❌ Firebase messaging not initialized or VAPID key missing"
       );
@@ -70,7 +71,7 @@ class NotificationService {
       // Ensure service worker is registered first
       await this.init();
 
-      const token = await getToken(messaging, {
+      const token = await getToken(ready, {
         vapidKey: this.vapidKey,
       });
 
@@ -88,6 +89,33 @@ class NotificationService {
     }
   }
 
+  /**
+   * Subscribes to foreground messages and returns an unsubscribe.
+   *
+   * onMessageListener below wraps onMessage in a Promise, and a Promise settles
+   * exactly once — so it delivers the FIRST foreground message of a session and
+   * silently drops every one after it. Anything that needs a stream of messages
+   * must use this instead.
+   */
+  onForegroundMessage(handler: (payload: any) => void): () => void {
+    // Subscribing has to wait for support detection, so the real unsubscribe
+    // only exists later. Hand back one that cancels either way — otherwise an
+    // unmount before readiness leaks the listener.
+    let inner: (() => void) | undefined;
+    let cancelled = false;
+
+    messagingReady().then((ready) => {
+      if (!ready || cancelled) return;
+      inner = onMessage(ready, (payload) => handler(payload));
+    });
+
+    return () => {
+      cancelled = true;
+      inner?.();
+    };
+  }
+
+  /** @deprecated Resolves once; use onForegroundMessage for a stream. */
   onMessageListener(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!messaging) {
@@ -123,27 +151,23 @@ class NotificationService {
     }
   }
 
-  // Setup foreground message listener with custom modal
-  setupForegroundListener(): void {
-    this.onMessageListener()
-      .then((payload) => {
-        console.log("📨 Received foreground message:", payload);
-
-        // Show custom modal instead of native notification
-        this.showCustomNotification({
-          title:
-            payload.notification?.title || payload.data?.title || "New Message",
-          body:
-            payload.notification?.body ||
-            payload.data?.body ||
-            "You have a new message",
-          icon: payload.notification?.icon,
-          data: payload.data,
-        });
-      })
-      .catch((error) => {
-        console.error("❌ Error setting up foreground listener:", error);
+  /**
+   * Shows the custom modal for every foreground message, not just the first —
+   * this used to chain off the single-shot onMessageListener.
+   */
+  setupForegroundListener(): () => void {
+    return this.onForegroundMessage((payload) => {
+      this.showCustomNotification({
+        title:
+          payload.notification?.title || payload.data?.title || "New Message",
+        body:
+          payload.notification?.body ||
+          payload.data?.body ||
+          "You have a new message",
+        icon: payload.notification?.icon,
+        data: payload.data,
       });
+    });
   }
 }
 

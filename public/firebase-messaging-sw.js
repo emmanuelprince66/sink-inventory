@@ -42,8 +42,8 @@ messaging.onBackgroundMessage((payload) => {
       icon:
         payload.notification?.icon ||
         payload.data?.icon ||
-        "/icons/notification-icon.png",
-      badge: payload.data?.badge || "/icons/badge-icon.png",
+        "/asset/sink.png",
+      badge: payload.data?.badge || "/asset/sink.png",
       tag: payload.data?.tag || "sync360-notification",
       data: {
         ...payload.data,

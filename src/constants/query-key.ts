@@ -177,6 +177,9 @@ export const queryKey = {
   },
   notification: {
     getNotification: "get-notification",
+    getUnreadCount: "get-notification-unread-count",
+    markRead: "mark-notification-read",
+    markAllRead: "mark-all-notifications-read",
   },
   bank: {
     getAllBanks: "get-all-banks",

@@ -298,21 +298,21 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
       </div>
 
       {/* AI Customer Insights */}
-      <div className="bg-white rounded-2xl border border-grey-5 p-4 sm:p-5">
+      <div className="">
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="w-7 h-7 rounded-full bg-grey-1 flex items-center justify-center shrink-0">
+          {/* <span className="w-7 h-7 rounded-full bg-grey-1 flex items-center justify-center shrink-0">
             <Sparkles className="w-3.5 h-3.5 text-warning-1" />
           </span>
           <h3 className="text-base font-extrabold text-grey-1">
             AI Customer Insights
-          </h3>
+          </h3> */}
           {/* These four insights are hardcoded copy, not derived from any call. */}
-          <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, the figure to highlight, action label and deep-link target" />
+          {/* <DataGapBadge needs="No endpoint backs AI Customer Insights. Needed: GET /customer/analytics/insights/{business_id}/ returning insight text, the figure to highlight, action label and deep-link target" /> */}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {AI_INSIGHTS.map((insight) => (
+          {/* {AI_INSIGHTS.map((insight) => (
             <InsightTile key={insight.text} insight={insight} />
-          ))}
+          ))} */}
         </div>
       </div>
     </div>

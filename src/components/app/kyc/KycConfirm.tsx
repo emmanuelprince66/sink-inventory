@@ -1,258 +1,191 @@
 "use client";
 
-import { Briefcase, Check, Shield, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  Check,
+  Lock,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 import { useState } from "react";
 
 import CorporateAcct from "./CorporateAcct";
 import IndividualTierFlow from "./IndividualAcct";
-import { CORPORATE_TIERS, INDIVIDUAL_TIERS } from "./tiers";
+import { CORPORATE_TIERS, INDIVIDUAL_TIERS, KycTier } from "./tiers";
 
-interface KycConfirmProps {
-  page: boolean;
-}
+type AccountType = "individual" | "corporate";
 
-const KycConfirm = ({ page }: KycConfirmProps) => {
-  const [showIntro, setShowIntro] = useState(true);
-  const [selectedAccountType, setSelectedAccountType] = useState<
-    "individual" | "corporate" | null
-  >(null);
+const ACCOUNT_TYPES: {
+  value: AccountType;
+  title: string;
+  blurb: string;
+  icon: typeof User;
+  tiers: KycTier[];
+}[] = [
+  {
+    value: "individual",
+    title: "Individual account",
+    blurb: "For sole traders and personal settlements.",
+    icon: User,
+    tiers: INDIVIDUAL_TIERS,
+  },
+  {
+    value: "corporate",
+    title: "Corporate account",
+    blurb: "For CAC-registered businesses with directors.",
+    icon: Briefcase,
+    tiers: CORPORATE_TIERS,
+  },
+];
 
-  const handleContinue = () => {
-    setShowIntro(false);
-  };
+/**
+ * The KYC screen — a full page rather than a modal.
+ *
+ * Corporate Tier 2 alone runs to four company documents plus four uploads per
+ * director, which a dialog cannot hold; the page also means a half-finished
+ * verification survives a stray click outside.
+ */
+const KycConfirm = () => {
+  const [accountType, setAccountType] = useState<AccountType | null>(null);
+  const [selection, setSelection] = useState<AccountType>("individual");
 
-  // ────────────────────────────────────────────────
-  // Intro / Welcome Screen
-  // ────────────────────────────────────────────────
-  if (showIntro) {
-    return (
-      <div
-        className={`
-          flex items-center justify-center min-h-[70vh] p-4 sm:p-6
-          ${page ? "max-w-md mx-auto" : "w-full"}
-        `}
-      >
-        <div className="bg-white rounded-xl shadow-sm w-full max-w-lg">
-          <div className="text-center px-5 pt-8 pb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3">
-              Let's verify your identity
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-              In line with recent CBN regulations, all SYNC360 users must
-              complete identity verification before receiving settlements.
+  const chosen = ACCOUNT_TYPES.find((type) => type.value === accountType);
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <header className="mb-6">
+        {accountType && (
+          <button
+            type="button"
+            onClick={() => setAccountType(null)}
+            className="mb-3 inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-grey-3 transition-colors hover:text-primary-green-300"
+          >
+            <ArrowLeft size={15} />
+            Change account type
+          </button>
+        )}
+
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-grey-1 sm:text-3xl">
+              {chosen ? chosen.title : "Verify your identity"}
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-grey-3">
+              {chosen
+                ? "Complete a tier to raise your daily limit. Each tier builds on the one before it, and you can stop at any point."
+                : "CBN regulations require every SYNC360 merchant to verify their identity before receiving settlements. Pick the account type that matches your business."}
             </p>
           </div>
 
-          <div className="px-5 sm:px-8 pb-8">
-            <p className="font-medium text-gray-800 mb-5 text-center sm:text-left">
-              Choose your account type to get started:
-            </p>
+          <span className="inline-flex items-center gap-2 rounded-full border border-border-tint bg-white px-3 py-2 text-xs font-semibold text-grey-3">
+            <Lock size={13} className="text-primary-green-300" />
+            Encrypted &amp; verified by licensed providers
+          </span>
+        </div>
+      </header>
 
-            <div className="space-y-4">
-              {[
-                {
-                  icon: User,
-                  title: "Individual Account",
-                  text: "Progressive verification with tiered limits",
-                },
-                {
-                  icon: Briefcase,
-                  title: "Corporate Account",
-                  text: "Business verification with CAC documentation",
-                },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50/30 transition-all cursor-pointer"
+      {chosen ? (
+        chosen.value === "individual" ? (
+          <IndividualTierFlow />
+        ) : (
+          <CorporateAcct />
+        )
+      ) : (
+        <div className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-2">
+            {ACCOUNT_TYPES.map((type) => {
+              const active = selection === type.value;
+              const Icon = type.icon;
+
+              return (
+                <button
+                  key={type.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setSelection(type.value)}
+                  className={cn(
+                    "cursor-pointer rounded-2xl border p-5 text-left transition-all",
+                    active
+                      ? "border-primary-green-300 bg-white shadow-sm ring-1 ring-primary-green-300"
+                      : "border-border-tint bg-white hover:border-secondary-3 hover:shadow-xs",
+                  )}
                 >
-                  <div className="p-2.5 bg-green-100 rounded-full shrink-0">
-                    <item.icon className="text-green-600" size={18} />
-                  </div>
-                  <div>
-                    <div className="font-medium text-gray-800 text-sm sm:text-base">
-                      {item.title}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={cn(
+                          "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                          active
+                            ? "bg-primary-green-300 text-white"
+                            : "bg-grey-6 text-grey-3",
+                        )}
+                      >
+                        <Icon size={20} />
+                      </span>
+                      <div>
+                        <h2 className="text-base font-bold text-grey-1">
+                          {type.title}
+                        </h2>
+                        <p className="mt-0.5 text-sm text-grey-3">
+                          {type.blurb}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-xs sm:text-sm text-gray-600">
-                      {item.text}
-                    </div>
+                    <span
+                      className={cn(
+                        "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                        active
+                          ? "border-primary-green-300 bg-primary-green-300 text-white"
+                          : "border-grey-5",
+                      )}
+                    >
+                      {active && <Check size={12} strokeWidth={3} />}
+                    </span>
                   </div>
-                </div>
-              ))}
-            </div>
+
+                  <ul className="mt-4 space-y-2 border-t border-grey-6 pt-4">
+                    {type.tiers.map((tier) => (
+                      <li key={tier.tier} className="flex items-start gap-2.5">
+                        <ShieldCheck
+                          size={15}
+                          className="mt-0.5 shrink-0 text-primary-green-300"
+                        />
+                        <span className="text-sm">
+                          <span className="font-bold text-grey-1">
+                            Tier {tier.tier} · {tier.limit} daily
+                          </span>
+                          <span className="block text-xs text-grey-3">
+                            {tier.requirement}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="px-5 sm:px-8 pb-8">
-            <button
-              onClick={handleContinue}
-              className="w-full bg-green-600 text-white py-3.5 rounded-lg font-medium hover:bg-green-700 transition-colors text-base"
+          <div className="flex flex-col items-center gap-3">
+            <Button
+              type="button"
+              size="lg"
+              onClick={() => setAccountType(selection)}
+              className="w-full sm:w-auto sm:min-w-64"
             >
               Continue
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ────────────────────────────────────────────────
-  // Account Type Selection Screen
-  // ────────────────────────────────────────────────
-  return (
-    <div
-      className={`
-        mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-sm
-        ${page ? "max-w-2xl w-full" : "w-full"}
-      `}
-    >
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2 text-center sm:text-left">
-        Choose your account type
-      </h1>
-
-      <p className="text-gray-600 mb-6 text-center sm:text-left max-w-xl mx-auto sm:mx-0">
-        Select the account type that best suits your needs. You can upgrade your
-        tier limits at any time.
-      </p>
-
-      {!selectedAccountType ? (
-        <div className="space-y-4 sm:space-y-5 mb-8">
-          {/* Individual Account */}
-          <div
-            className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
-              selectedAccountType === "individual"
-                ? "border-green-500 bg-green-50/60 shadow-sm"
-                : "border-gray-200 hover:border-green-300 hover:shadow"
-            }`}
-            onClick={() => setSelectedAccountType("individual")}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`p-3 rounded-full ${
-                    selectedAccountType === "individual"
-                      ? "bg-green-100"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  <User
-                    size={22}
-                    className={
-                      selectedAccountType === "individual"
-                        ? "text-green-600"
-                        : "text-gray-600"
-                    }
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 text-base sm:text-lg">
-                    Individual Account
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    Progressive verification tiers
-                  </p>
-                </div>
-              </div>
-              {selectedAccountType === "individual" && (
-                <Check className="text-green-600" size={24} />
-              )}
-            </div>
-
-            <div className="mt-4 pl-14 sm:pl-16 space-y-3 text-sm">
-              {INDIVIDUAL_TIERS.map((tier) => (
-                <div key={tier.tier} className="flex items-start gap-2">
-                  <Shield
-                    size={16}
-                    className="text-green-600 shrink-0 mt-0.5"
-                  />
-                  <span className="font-medium text-gray-700">
-                    Tier {tier.tier}: {tier.limit} daily ({tier.requirement})
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Corporate Account */}
-          <div
-            className={`border rounded-xl p-4 sm:p-5 cursor-pointer transition-all duration-200 ${
-              selectedAccountType === "corporate"
-                ? "border-green-500 bg-green-50/60 shadow-sm"
-                : "border-gray-200 hover:border-green-300 hover:shadow"
-            }`}
-            onClick={() => setSelectedAccountType("corporate")}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`p-3 rounded-full ${
-                    selectedAccountType === "corporate"
-                      ? "bg-green-100"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  <Briefcase
-                    size={22}
-                    className={
-                      selectedAccountType === "corporate"
-                        ? "text-green-600"
-                        : "text-gray-600"
-                    }
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-800 text-base sm:text-lg">
-                    Corporate Account
-                  </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                    For registered businesses
-                  </p>
-                </div>
-              </div>
-              {selectedAccountType === "corporate" && (
-                <Check className="text-green-600" size={24} />
-              )}
-            </div>
-
-            <div className="mt-4 pl-14 sm:pl-16 space-y-3 text-sm">
-              {CORPORATE_TIERS.map((tier) => (
-                <div key={tier.tier} className="flex items-start gap-2">
-                  <Shield
-                    size={16}
-                    className="text-green-600 shrink-0 mt-0.5"
-                  />
-                  <span className="font-medium text-gray-700">
-                    Tier {tier.tier}: {tier.limit} daily
-                    <span className="block font-normal text-gray-600">
-                      {tier.requirement}
-                    </span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {selectedAccountType === "individual" ? (
-            <IndividualTierFlow />
-          ) : (
-            <CorporateAcct />
-          )}
-
-          <div className="flex justify-start pt-4">
-            <button
-              type="button"
-              onClick={() => setSelectedAccountType(null)}
-              className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              ← Back to account types
-            </button>
+              <ArrowRight size={16} />
+            </Button>
+            <p className="text-xs text-grey-3">
+              You can upgrade your tier at any time after verification.
+            </p>
           </div>
         </div>
       )}
-
-      <div className="mt-8 text-center text-xs text-gray-500">
-        Verified by Third Party Providers
-      </div>
     </div>
   );
 };

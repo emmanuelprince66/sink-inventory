@@ -1,16 +1,19 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Sparkles } from "lucide-react";
+// import { Sparkles } from "lucide-react";
 import { Cell, asDate } from "./primitives";
 import type { CustomerProfileData } from "./useCustomerProfile";
 
 const OverviewTab = ({ profile }: { profile: CustomerProfileData }) => {
-  const { detail, identity, journey } = profile;
+  const { identity, journey } = profile;
 
   return (
     <>
-      <div className="rounded-2xl border border-grey-5 bg-white p-4">
+      {/* AI Customer Insight is hidden until the field carries real analysis —
+          detail.ai_customer_insight is placeholder copy today. Restoring it is
+          uncommenting this block, the Sparkles import and `detail` above. */}
+      {/* <div className="rounded-2xl border border-grey-5 bg-white p-4">
         <div className="mb-2 flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-grey-1">
             <Sparkles className="h-3 w-3 text-warning-1" />
@@ -23,7 +26,7 @@ const OverviewTab = ({ profile }: { profile: CustomerProfileData }) => {
           {detail?.ai_customer_insight ??
             "No insight available for this customer yet."}
         </p>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-grey-5 bg-white p-4">

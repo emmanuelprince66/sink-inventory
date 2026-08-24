@@ -37,7 +37,10 @@ export function NotificationModalProvider() {
   };
 
   useEffect(() => {
-    // Initialize notification service
+    // Returned by setupForegroundListener so the subscription is torn down on
+    // unmount rather than leaking one per remount.
+    let unsubscribe: (() => void) | undefined;
+
     const initNotifications = async () => {
       try {
         await notificationService.init();
@@ -51,9 +54,8 @@ export function NotificationModalProvider() {
               handleNotificationWithInvalidation
             );
 
-            // Setup foreground message listener
-            notificationService.setupForegroundListener();
-            console.log("✅ Notification service initialized");
+            // The only foreground FCM listener in the app.
+            unsubscribe = notificationService.setupForegroundListener();
           }
         }
       } catch (error) {
@@ -62,6 +64,8 @@ export function NotificationModalProvider() {
     };
 
     initNotifications();
+
+    return () => unsubscribe?.();
   }, [queryClient]);
 
   const handleNotificationAction = (action: string, data?: any) => {
