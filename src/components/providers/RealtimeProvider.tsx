@@ -9,7 +9,7 @@ import { queryKey } from "@/constants/query-key";
 import { useRealtimeSocket } from "@/hooks/useRealtimeSocket";
 import { useQueryClient } from "@/lib/react-query";
 import { playChime, primeChime } from "@/lib/realtime/chime";
-import { isOrderNotification } from "@/lib/realtime/types";
+import { isBadgeUpdate, isOrderNotification } from "@/lib/realtime/types";
 import type {
   NotificationCounts,
   RealtimeMessage,
@@ -105,6 +105,26 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
 
   const handleMessage = useCallback(
     (message: RealtimeMessage) => {
+      // Marking read — here or in another tab — broadcasts new counts and
+      // nothing else. No id, no message, so it must not reach the dedupe or
+      // the alert path; it only moves the numbers.
+      if (isBadgeUpdate(message)) {
+        if (business_id && message.business_id !== business_id) return;
+        setCounts({
+          unreadNotifications: Number(
+            message.data.unread_notifications_count ??
+              message.data.unread_count ??
+              0,
+          ),
+          pendingOrders: Number(message.data.pending_orders_count ?? 0),
+        });
+        // The feed's own is_read flags are now stale in every open tab.
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.notification.getNotification],
+        });
+        return;
+      }
+
       if (!isOrderNotification(message)) return;
 
       // Events arrive for every business the user belongs to; only the one

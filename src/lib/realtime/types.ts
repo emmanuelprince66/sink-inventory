@@ -46,12 +46,31 @@ export interface RealtimeOrderNotification {
   data: RealtimeOrderData;
 }
 
+/**
+ * Sent when a notification is marked read — single or bulk — so every open tab
+ * drops its badge without a refetch. Counts only: there is no notification_id,
+ * no message, and nothing to alert about.
+ */
+export interface RealtimeBadgeUpdate {
+  type: "badge_count_update";
+  business_id: string;
+  data: {
+    unread_notifications_count: number;
+    /** The same number under the feed endpoint's name, sent for convenience. */
+    unread_count?: number;
+    pending_orders_count: number;
+  };
+}
+
 /** The server answers our ping with this; it carries no payload. */
 export interface RealtimePong {
   type: "pong";
 }
 
-export type RealtimeMessage = RealtimeOrderNotification | RealtimePong;
+export type RealtimeMessage =
+  | RealtimeOrderNotification
+  | RealtimeBadgeUpdate
+  | RealtimePong;
 
 export const isOrderNotification = (
   message: unknown,
@@ -61,6 +80,13 @@ export const isOrderNotification = (
   (message as RealtimeOrderNotification).type === "order_notification" &&
   typeof (message as RealtimeOrderNotification).data?.notification_id ===
     "string";
+
+export const isBadgeUpdate = (
+  message: unknown,
+): message is RealtimeBadgeUpdate =>
+  typeof message === "object" &&
+  message !== null &&
+  (message as RealtimeBadgeUpdate).type === "badge_count_update";
 
 export interface NotificationCounts {
   unreadNotifications: number;

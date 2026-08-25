@@ -73,10 +73,11 @@ const Notification = () => {
       : [];
 
   /**
-   * The feed repeats rows — one order came back fifteen times under a single
-   * id, a loyalty event five times, which looks like a join fanout on the
-   * server. Deduping by id keeps the list honest; the reported unread count is
-   * inflated by the same duplication and can only be fixed upstream.
+   * The feed used to repeat rows — one order came back fifteen times under a
+   * single id — because of an M2M join fanout. That is fixed upstream, and the
+   * counts are exact now. This stays as a cheap guard: a list keyed on id
+   * would throw on duplicate keys if the join ever regresses, and one Set pass
+   * over twenty rows costs nothing to keep.
    */
   const seen = new Set<string>();
   const notifications = rawNotifications.filter((n) => {
