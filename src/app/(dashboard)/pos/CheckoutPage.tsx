@@ -779,16 +779,23 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             onCustomerSelect={(selectedCustomer: any) =>
               setCustomer(selectedCustomer)
             }
-            // Opens for everyone now, not only for customers holding a card.
-            // The row is the only target on the card, so guarding here left a
-            // tap that silently did nothing; the modal says plainly when there
-            // is no loyalty record and still offers Add to Sale.
-            onViewLoyalty={(selectedCustomer: any) =>
+            // A customer with no loyalty card goes straight onto the sale.
+            // The modal has nothing to tell a cashier about them — it would
+            // just say "not enrolled" over a Cancel and an Add to Sale, which
+            // is a tap and a read standing between them and the thing they
+            // already asked for. Enrolled customers still get the wallet,
+            // because there the progress and any ready reward are the point.
+            onViewLoyalty={(selectedCustomer: any) => {
+              if (!selectedCustomer?.loyalty_code) {
+                setCustomer(selectedCustomer);
+                setIsCustomerDrawerOpen(false);
+                return;
+              }
               setLoyaltyView({
-                code: selectedCustomer?.loyalty_code ?? null,
+                code: selectedCustomer.loyalty_code,
                 customer: selectedCustomer,
-              })
-            }
+              });
+            }}
           />
 
           {/* Scanning a loyalty card resolves the code to a customer, then

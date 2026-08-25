@@ -316,7 +316,7 @@ const ReferralProgrammePage = ({ programmeId }: { programmeId: string }) => {
           isOpen
           onClose={() => setAdding(false)}
           trigger={false}
-          title="Add Customer"
+          title="Enrol a Customer"
         >
           <AddParticipantForm
             programmeId={programmeId}

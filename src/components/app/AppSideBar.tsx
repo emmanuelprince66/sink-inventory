@@ -26,7 +26,7 @@ export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
   const { role } = useUserRole(); // Only need role now
-  const { unreadNotifications, pendingOrders } = useRealtime();
+  const { unreadNotifications } = useRealtime();
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
@@ -285,14 +285,18 @@ export function AppSidebar() {
                   <SidebarMenu>
                     {groupItems.map((item) => {
                       const isActive = pathname === item.url;
-                      // Notifications and Orders carry live counts; every other
-                      // link resolves to 0 and renders no badge.
+                      /**
+                       * Only Notifications carries a badge.
+                       *
+                       * Orders used to show pending_orders_count, but nothing
+                       * in the app can clear it: a merchant with old unpaid
+                       * orders would see a permanent red dot, and a badge that
+                       * never reaches zero teaches people to ignore badges.
+                       * The unread count is different — mark-read clears it,
+                       * and the socket broadcasts the new total.
+                       */
                       const badge =
-                        item.url === "/notification"
-                          ? unreadNotifications
-                          : item.url === "/orders"
-                            ? pendingOrders
-                            : 0;
+                        item.url === "/notification" ? unreadNotifications : 0;
 
                       return (
                         <SidebarMenuItem
