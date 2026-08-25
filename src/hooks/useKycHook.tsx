@@ -10,8 +10,11 @@ import {
   DIRECTOR_DOCUMENTS,
   DirectorDocKey,
 } from "@/components/app/kyc/tiers";
+import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
+import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 
 // NIN and BVN are both 11 digits in Nigeria; reject anything else early rather
@@ -61,6 +64,28 @@ export type AddCorporateAcctFormValues = z.infer<typeof corporateAccountSchema>;
 export type KycTier = 1 | 2 | 3;
 export type CorporateTier = 1 | 2;
 
+/** Tier 1 takes one identifier; this is which one the merchant picked. */
+export type IdentityMethod = "nin" | "bvn";
+
+export const IDENTITY_LABELS: Record<IdentityMethod, string> = {
+  nin: "National Identity Number (NIN)",
+  bvn: "Bank Verification Number (BVN)",
+};
+
+export const IDENTITY_SHORT: Record<IdentityMethod, string> = {
+  nin: "NIN",
+  bvn: "BVN",
+};
+
+/** "TIER 1" → 1. Returns 0 when the account has not been tiered yet. */
+const parseTierNumber = (tier?: string | null) => {
+  const match = /(\d+)/.exec(tier ?? "");
+  return match ? Number(match[1]) : 0;
+};
+
+const otherIdentity = (method: IdentityMethod): IdentityMethod =>
+  method === "nin" ? "bvn" : "nin";
+
 /** One director's record. `id` is local only — it keys the list in the UI. */
 export interface DirectorDetails {
   id: string;
@@ -90,8 +115,64 @@ const emptyCorporateDocs = () =>
 export const useKycHook = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
   const { mutate: CreateAcct, isPending } = useCreateKycAcctMutation();
+
+  // ──────────────────────────────────────────────────────────────────────
+  // What the account has already verified.
+  //
+  // The wallet endpoint answers this alongside the ledger: which tier the
+  // account sits on, whether a BVN and NIN are on file, and whether an
+  // address has been captured. Every "completed tier" in the UI is read from
+  // here rather than from local state, so a merchant who verified last week
+  // does not land back on Tier 1.
+  // ──────────────────────────────────────────────────────────────────────
+  const { TrxData, TrxDataLoading } = useTransactionsHook({ page: 1 });
+  const account = TrxData?.data?.results;
+
+  const verification = useMemo(() => {
+    const hasNin = Boolean(account?.nin);
+    const hasBvn = Boolean(account?.bvn);
+    const hasAddress = Boolean(account?.address);
+
+    const completedTiers: number[] = [];
+    if (hasNin || hasBvn) completedTiers.push(1);
+    if (hasNin && hasBvn) completedTiers.push(2);
+    if (hasNin && hasBvn && hasAddress) completedTiers.push(3);
+
+    return {
+      isLoading: TrxDataLoading,
+      /** 0 until the account has been tiered. */
+      tier: parseTierNumber(account?.tier),
+      tierLabel: account?.tier as string | undefined,
+      hasNin,
+      hasBvn,
+      hasAddress,
+      hasPin: Boolean(account?.pin),
+      wallet: account?.wallet_details,
+      completedTiers,
+      /**
+       * The identifier Tier 2 still needs. Null when both are on file, or when
+       * neither is — in which case Tier 1 has not been done and Tier 2 is not
+       * reachable yet.
+       */
+      missingIdentity: (hasNin === hasBvn
+        ? null
+        : hasNin
+          ? "bvn"
+          : "nin") as IdentityMethod | null,
+    };
+  }, [account, TrxDataLoading]);
+
+  /** Re-reads the wallet payload after a tier is accepted. */
+  const refreshVerification = useCallback(
+    () =>
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.transactions.getAllTransactions],
+      }),
+    [queryClient],
+  );
 
   const createIndividualAcctForm = useForm<AddIndividualAcctFormValues>({
     resolver: zodResolver(individualAccountSchema) as any, // Temporary workaround
@@ -126,6 +207,27 @@ export const useKycHook = () => {
     },
     mode: "onChange",
   });
+
+  // Tier 1 asks for one identifier, never both — the account cannot be opened
+  // with two at once, and showing both fields invites a merchant to fill in a
+  // number that is then thrown away.
+  const [identityMethod, setIdentityMethod] = useState<IdentityMethod>("nin");
+
+  const chooseIdentityMethod = useCallback(
+    (method: IdentityMethod) => {
+      setIdentityMethod(method);
+      // Drop whatever was typed under the other option: a half-entered number
+      // left behind would still be sitting in the payload builder.
+      const other = otherIdentity(method);
+      createIndividualAcctForm.setValue(other, "");
+      createIndividualAcctForm.clearErrors(other);
+    },
+    [createIndividualAcctForm],
+  );
+
+  /** What Tier 2 asks for: whatever Tier 1 did not supply. */
+  const tier2Identity: IdentityMethod =
+    verification.missingIdentity ?? otherIdentity(identityMethod);
 
   // ──────────────────────────────────────────────────────────────────────
   // Document state
@@ -258,10 +360,10 @@ export const useKycHook = () => {
   // ──────────────────────────────────────────────────────────────────────
   // Individual validation
   //
-  // Tier 1 takes NIN *or* BVN — one identifier is enough to open the account.
-  // Tier 2 requires both. Tier 3 adds a proof-of-address document on top of
-  // the street address. Submits are cumulative, so each tier re-checks
-  // everything the tiers below it collected.
+  // Tier 1 takes one identifier — the one the merchant chose. Tier 2 asks for
+  // the other, read off the account payload so it never asks again for a
+  // number already on file. Tier 3 adds a proof-of-address document on top of
+  // the street address.
   // ──────────────────────────────────────────────────────────────────────
 
   const validateTier = (tier: KycTier, values: AddIndividualAcctFormValues) => {
@@ -272,49 +374,35 @@ export const useKycHook = () => {
 
     let ok = true;
 
-    if (!values.first_name?.trim()) {
-      setError("first_name", "First name is required");
-      ok = false;
-    }
-    if (!values.last_name?.trim()) {
-      setError("last_name", "Last name is required");
-      ok = false;
-    }
-    if (!values.dob) {
-      setError("dob", "Date of birth is required");
-      ok = false;
+    // Name and date of birth open the account at Tier 1. Once the account
+    // exists they are on file, so a later tier — which may be reached in a
+    // fresh session with an empty form — does not ask for them again.
+    const opensAccount = !verification.completedTiers.includes(1);
+
+    if (opensAccount) {
+      if (!values.first_name?.trim()) {
+        setError("first_name", "First name is required");
+        ok = false;
+      }
+      if (!values.last_name?.trim()) {
+        setError("last_name", "Last name is required");
+        ok = false;
+      }
+      if (!values.dob) {
+        setError("dob", "Date of birth is required");
+        ok = false;
+      }
     }
 
-    const ninOk = ELEVEN_DIGITS.test(values.nin ?? "");
-    const bvnOk = ELEVEN_DIGITS.test(values.bvn ?? "");
+    const checkIdentity = (field: IdentityMethod) => {
+      if (!ELEVEN_DIGITS.test(values[field] ?? "")) {
+        setError(field, `Enter the 11-digit ${IDENTITY_SHORT[field]}`);
+        ok = false;
+      }
+    };
 
-    if (tier === 1) {
-      if (!ninOk && !bvnOk) {
-        const message = "Enter either an 11-digit NIN or an 11-digit BVN";
-        setError("nin", message);
-        setError("bvn", message);
-        ok = false;
-      } else {
-        // One is enough, but a half-typed second number is still an error.
-        if (values.nin && !ninOk) {
-          setError("nin", "Enter the 11-digit NIN");
-          ok = false;
-        }
-        if (values.bvn && !bvnOk) {
-          setError("bvn", "Enter the 11-digit BVN");
-          ok = false;
-        }
-      }
-    } else {
-      if (!ninOk) {
-        setError("nin", "Enter the 11-digit NIN");
-        ok = false;
-      }
-      if (!bvnOk) {
-        setError("bvn", "Enter the 11-digit BVN");
-        ok = false;
-      }
-    }
+    if (tier === 1) checkIdentity(identityMethod);
+    if (tier === 2) checkIdentity(tier2Identity);
 
     if (tier >= 3) {
       if (!values.address?.trim()) {
@@ -338,8 +426,9 @@ export const useKycHook = () => {
     return ok;
   };
 
-  // Builds the cumulative payload for a tier: everything collected so far,
-  // with empty optional fields dropped so the provider does not receive "".
+  // Builds the payload for a tier: the personal details still in the form,
+  // plus whatever this tier adds. Empty fields are dropped so the provider
+  // never receives "".
   const buildTierPayload = (
     tier: KycTier,
     values: AddIndividualAcctFormValues,
@@ -349,10 +438,12 @@ export const useKycHook = () => {
       first_name: values.first_name,
       last_name: values.last_name,
       dob: values.dob ? moment(values.dob).format("DD-MMM-YYYY") : undefined,
-      // Tier 1 may carry only one of these; the cleanup below drops the empty one.
-      nin: values.nin,
-      bvn: values.bvn,
     };
+
+    // One identifier per tier: the chosen one at Tier 1, the outstanding one
+    // at Tier 2. Tier 3 sends neither — both are already on file.
+    if (tier === 1) payload[identityMethod] = values[identityMethod];
+    if (tier === 2) payload[tier2Identity] = values[tier2Identity];
 
     if (tier >= 3) {
       payload.address = values.address;
@@ -388,6 +479,9 @@ export const useKycHook = () => {
         {
           onSuccess: (response: any) => {
             showToast(`Tier ${tier} verification submitted`, "success");
+            // The account payload is what the tier rail reads, so pull it
+            // again rather than trusting local state to match the server.
+            refreshVerification();
             openWalletUrl(response);
             resolve(true);
           },
@@ -543,6 +637,9 @@ export const useKycHook = () => {
         {
           onSuccess: (response: any) => {
             showToast(`Tier ${tier} verification submitted`, "success");
+            // The account payload is what the tier rail reads, so pull it
+            // again rather than trusting local state to match the server.
+            refreshVerification();
             openWalletUrl(response);
             resolve(true);
           },
@@ -595,6 +692,13 @@ export const useKycHook = () => {
     onSubmitCorporateAcct,
     submitTier,
     submitCorporateTier,
+    // what the account has already verified, read from the wallet payload
+    verification,
+    refreshVerification,
+    // Tier 1's one-identifier choice, and the one Tier 2 is left asking for
+    identityMethod,
+    chooseIdentityMethod,
+    tier2Identity,
     // individual documents
     proofOfAddressFile,
     setProofOfAddressFile,

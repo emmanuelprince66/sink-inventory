@@ -5,8 +5,8 @@ import { useKycHook } from "@/hooks/useKycHook";
 import { ArrowRight } from "lucide-react";
 import { useState } from "react";
 import CorporateTier1Form from "./CorporateTierOneForm";
-import DemoSkipButton from "./DemoSkipButton";
 import CorporateTier2Form from "./CorporateTierTwoForm";
+import AccountStatusCard from "./AccountStatusCard";
 import { LimitChip, Notice, TierPanel } from "./KycUi";
 import TierRail from "./TierRail";
 import { CORPORATE_TIERS } from "./tiers";
@@ -33,7 +33,9 @@ const CorporateAcct = () => {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-6 lg:self-start">
+      <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <AccountStatusCard verification={kyc.verification} />
+
         <div className="rounded-2xl border border-border-tint bg-primary-green-700 p-4">
           <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-grey-2">
             Verification progress
@@ -104,12 +106,6 @@ const CorporateAcct = () => {
             />
           )}
         </TierPanel>
-
-        {/* ⚠️ DEMO ONLY — delete this block and the import to remove. */}
-        <DemoSkipButton
-          label={currentTier === 1 ? "Skip to Tier 2" : "Mark all tiers done"}
-          onSkip={() => handleTierComplete(currentTier)}
-        />
       </div>
     </div>
   );

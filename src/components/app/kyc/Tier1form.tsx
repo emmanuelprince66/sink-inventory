@@ -11,7 +11,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useKycHook } from "@/hooks/useKycHook";
+import { IDENTITY_LABELS, IDENTITY_SHORT, useKycHook } from "@/hooks/useKycHook";
+import IdentityMethodPicker from "./IdentityMethodPicker";
 import KycDateField from "./KycDateField";
 import { Notice, SectionHeading } from "./KycUi";
 
@@ -21,16 +22,22 @@ interface Tier1FormProps {
 }
 
 /**
- * Tier 1 opens the account on a single identifier: NIN *or* BVN. Whichever one
- * is missing here is collected at Tier 2, so both inputs are shown and the
- * hook accepts either.
+ * Tier 1 opens the account on a single identifier: NIN *or* BVN. The merchant
+ * picks which, and only that field is shown — the other is what Tier 2 asks
+ * for, so putting both here would collect a number this tier throws away.
  *
  * The hook is owned by IndividualTierFlow and passed in, so all three tiers
- * share one form instance — without that, a cumulative submit at Tier 3 would
- * have no access to the identifiers captured here.
+ * share one form instance — without that, a submit at Tier 3 would have no
+ * access to what was captured here.
  */
 const Tier1Form = ({ onComplete, kyc }: Tier1FormProps) => {
-  const { createIndividualAcctForm, isPending, submitTier } = kyc;
+  const {
+    createIndividualAcctForm,
+    isPending,
+    submitTier,
+    identityMethod,
+    chooseIdentityMethod,
+  } = kyc;
 
   const handleSubmit = async () => {
     const ok = await submitTier(1);
@@ -95,59 +102,42 @@ const Tier1Form = ({ onComplete, kyc }: Tier1FormProps) => {
         <div className="space-y-4">
           <SectionHeading
             title="Identity"
-            description="Provide either number — you only need one to open the account."
+            description="Verify with one of these to start. Tier 2 asks for the other."
           />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField
-              control={createIndividualAcctForm.control}
-              name="nin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>National Identity Number (NIN)</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      maxLength={11}
-                      placeholder="11-digit NIN"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.replace(/\D/g, ""))
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <IdentityMethodPicker
+            value={identityMethod}
+            onChange={chooseIdentityMethod}
+          />
 
-            <FormField
-              control={createIndividualAcctForm.control}
-              name="bvn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bank Verification Number (BVN)</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      maxLength={11}
-                      placeholder="11-digit BVN"
-                      {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value.replace(/\D/g, ""))
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <FormField
+            control={createIndividualAcctForm.control}
+            name={identityMethod}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{IDENTITY_LABELS[identityMethod]}</FormLabel>
+                <FormControl>
+                  <Input
+                    inputMode="numeric"
+                    maxLength={11}
+                    placeholder={`Enter your 11-digit ${IDENTITY_SHORT[identityMethod]}`}
+                    {...field}
+                    onChange={(e) =>
+                      field.onChange(e.target.value.replace(/\D/g, ""))
+                    }
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <Notice title="After Tier 1">
-          You can start using the account straight away, or continue to Tier 2
-          for a higher daily limit.
+          You can start using the account straight away, or continue to Tier 2 —
+          which asks for your{" "}
+          {IDENTITY_SHORT[identityMethod === "nin" ? "bvn" : "nin"]} — for a
+          higher daily limit.
         </Notice>
 
         <Button type="submit" disabled={isPending} size="lg" className="w-full">

@@ -22,7 +22,7 @@ import {
 import { useKycHook } from "@/hooks/useKycHook";
 import { useState } from "react";
 import FileUploadField from "./FileUploadField";
-import { CapturedSummary, maskId, Notice, SectionHeading } from "./KycUi";
+import { CapturedSummary, Notice, SectionHeading } from "./KycUi";
 import { PROOF_OF_ADDRESS_TYPES } from "./tiers";
 
 interface Tier3FormProps {
@@ -45,11 +45,10 @@ const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
     setProofOfAddressFile,
     proofOfAddressError,
     setProofOfAddressError,
+    verification,
   } = kyc;
   const [hasCoordinates, setHasCoordinates] = useState(false);
 
-  const nin = createIndividualAcctForm.watch("nin");
-  const bvn = createIndividualAcctForm.watch("bvn");
   const documentType = createIndividualAcctForm.watch("proof_of_address_type");
 
   const documentLabel =
@@ -70,10 +69,16 @@ const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
           handleSubmit();
         }}
       >
+        {/* Read from the account payload, not the form: by Tier 3 the numbers
+            may have been submitted in an earlier session. */}
         <CapturedSummary
           items={[
-            { label: "NIN", value: maskId(nin) },
-            { label: "BVN", value: maskId(bvn) },
+            { label: "NIN", value: verification.hasNin ? "Verified" : "—" },
+            { label: "BVN", value: verification.hasBvn ? "Verified" : "—" },
+            {
+              label: "Tier",
+              value: verification.tierLabel ?? `Tier ${verification.tier}`,
+            },
           ]}
         />
 
