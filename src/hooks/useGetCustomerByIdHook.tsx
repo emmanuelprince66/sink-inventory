@@ -11,10 +11,39 @@ import { useFetchCustomerPurchaseHistory } from "@/api/customer/fetch-customer-p
 import { useFetchCustomerWalletTrx } from "@/api/customer/fetch-customer-wallet-trx";
 import { useUpdateWalletBalanceMutation } from "@/api/customer/update-wallet";
 
+/**
+ * POST /customer/fund/{id}/ — CustomerTransaction.
+ *
+ * `amount` is typed as an integer server-side and `payment_method` accepts
+ * only CASH or BANK. `note` is optional there, capped at 500 characters.
+ */
+export const FUND_PAYMENT_METHODS = [
+  { value: "CASH", label: "Cash" },
+  { value: "BANK", label: "Bank Transfer" },
+] as const;
+
+export const FUND_TYPES = [
+  { value: "DEPOSIT", label: "Deposit", hint: "Money into the wallet" },
+  { value: "WITHDRAWAL", label: "Withdrawal", hint: "Money out of the wallet" },
+] as const;
+
+export type FundType = (typeof FUND_TYPES)[number]["value"];
+
 const WalletTrxSchema = z.object({
-  amount: z.string().min(1, "Amount is required"),
-  payment_method: z.string().min(1, "Payment method is required"),
-  note: z.string().min(1, "Note is required"),
+  // Kept as a string so the input stays controlled while empty; coerced to the
+  // integer the endpoint wants at submit.
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((value) => Number(value) > 0, "Enter an amount greater than zero")
+    .refine(
+      (value) => Number.isInteger(Number(value)),
+      "Amount must be a whole number",
+    ),
+  payment_method: z.enum(["CASH", "BANK"], {
+    message: "Select a payment method",
+  }),
+  note: z.string().max(500, "Keep the note under 500 characters").optional(),
 });
 
 export type WalletTrxFormValues = z.infer<typeof WalletTrxSchema>;
@@ -31,7 +60,7 @@ export const useGetCustomerByIdHook = ({
     isLoading: CustomerLoading,
     refetch: refetchCustomer,
   } = useFetchCustomerById(customerId);
-  const [selectedOption, setSelectedOption] = useState<string>("DEPOSIT");
+  const [selectedOption, setSelectedOption] = useState<FundType>("DEPOSIT");
 
   const {
     mutate: updateWalletBalance,
@@ -46,8 +75,6 @@ export const useGetCustomerByIdHook = ({
     }
   }, [isWalletUpdated]);
 
-  console.log("CustomerData----4444", CustomerData);
-
   const {
     data: CustomerPurchaseHistory,
     isLoading: CustomerPurchaseHistoryLoading,
@@ -57,8 +84,6 @@ export const useGetCustomerByIdHook = ({
     isLoading: CustomerWalletTrxLoading,
     refetch,
   } = useFetchCustomerWalletTrx(customerId);
-
-  console.log("CustomerWalletTrx", CustomerWalletTrx);
 
   const [historyDetailsData, setHistoryDetailsData] = useState<any>({});
   const [openHistoryDetailsModal, setOpenHistoryDetailsModal] = useState(false);
@@ -85,37 +110,34 @@ export const useGetCustomerByIdHook = ({
     setWalletTrxDetails(row?.original);
     openWalletTrxDetailsModalFunc();
   };
-  const handleSelectOption = (option: string) => {
+  const handleSelectOption = (option: FundType) => {
     setSelectedOption(option);
   };
 
-  console.log("selectedOption", selectedOption);
-
   const form = useForm<WalletTrxFormValues>({
-    resolver: zodResolver(WalletTrxSchema),
+    resolver: zodResolver(WalletTrxSchema) as any,
     defaultValues: {
       amount: "",
-      payment_method: "",
+      payment_method: undefined,
       note: "",
     },
     mode: "onChange",
   });
 
   const onSubmit = (values: WalletTrxFormValues) => {
-    const payload = {
-      amount: Number(values.amount),
-      payment_method: values.payment_method,
-      note: values.note,
-    };
-    console.log("payload", payload);
+    // The route is keyed on the customer, not on a separate wallet record —
+    // params.id is that customer, and it is there before the detail query
+    // resolves.
+    const fundId = (customerId as string) ?? CustomerData?.data?.id;
 
     updateWalletBalance({
-      walletId: CustomerData?.data?.id, // Pass walletId directly
+      walletId: fundId,
       payload: {
-        amount: values.amount,
+        amount: Number(values.amount),
         payment_method: values.payment_method,
         type: selectedOption,
-        note: values.note,
+        // Optional server-side; sending "" would fail its minLength.
+        ...(values.note?.trim() ? { note: values.note.trim() } : {}),
       },
     });
   };

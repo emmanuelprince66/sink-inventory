@@ -69,9 +69,12 @@ export async function POST(
       );
     }
 
+    // POST /customer/fund/{id}/ types `amount` as an integer. The spread has
+    // to come first: with it last it put the form's string back over the
+    // coerced number, and the API rejected the body.
     const insert = {
-      amount: Number(payload.amount),
       ...payload,
+      amount: Number(payload.amount),
     };
 
     const apiUrl = `${BaseUrl}customer/fund/${walletId}/`;
