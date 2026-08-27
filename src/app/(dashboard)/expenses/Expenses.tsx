@@ -36,6 +36,7 @@ import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
 import ExpenseAccountsView from "./expense-accounts/ExpenseAccountsView";
 import ExpenseTransactionsView from "./expense-accounts/ExpenseTransactionsView";
+import CreateExpenseAccountModal from "./sub-account/CreateExpenseAccountModal";
 import TransactionDetailsModal from "./expense-accounts/TransactionDetailsModal";
 
 type ExpenseTab = "accounts" | "transactions";
@@ -144,6 +145,8 @@ const ExpenseAccountBalanceCard = ({
 
 const Expenses = () => {
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
+  const [createExpenseAccountOpen, setCreateExpenseAccountOpen] =
+    useState(false);
   const [addExpensesModal, setAddExpensesModal] = useState(false);
   // Today-only made every card on this page (and the category grid) look
   // nearly empty by default, and disagree with drill-down pages like
@@ -194,6 +197,13 @@ const Expenses = () => {
           </h1>
 
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <Button
+              className="w-full sm:w-auto gap-1.5"
+              onClick={() => setCreateExpenseAccountOpen(true)}
+            >
+              <Plus className="w-4 h-4" />
+              Create Expense Account
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-auto">
@@ -360,6 +370,11 @@ const Expenses = () => {
         isOpen={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
         transaction={selectedTransaction}
+      />
+
+      <CreateExpenseAccountModal
+        open={createExpenseAccountOpen}
+        onClose={() => setCreateExpenseAccountOpen(false)}
       />
     </div>
   );
