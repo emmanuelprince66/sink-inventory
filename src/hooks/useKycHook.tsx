@@ -145,6 +145,7 @@ export const useKycHook = () => {
     if (hasNin && hasBvn && hasAddress) completedTiers.push(3);
 
     const wallet = account?.wallet_details;
+    const tierNumber = parseTierNumber(account?.tier);
     // account_type is reported at the top level and again on the wallet; take
     // whichever is present.
     const rawType: string | undefined =
@@ -154,11 +155,27 @@ export const useKycHook = () => {
         ? (rawType.toLowerCase() as AccountType)
         : undefined;
 
+    /**
+     * Corporate progress, from the account's tier number.
+     *
+     * Guarded on account_type: the payload reports one tier for the account,
+     * and on an individual account that number describes the NIN/BVN ladder.
+     * Reading it as corporate progress would mark a company's Tier 1 done for
+     * a merchant who is only part-way through upgrading and has not submitted
+     * a single business detail.
+     */
+    const corporateCompletedTiers: number[] = [];
+    if (accountType === "corporate") {
+      if (tierNumber >= 1) corporateCompletedTiers.push(1);
+      if (tierNumber >= 2) corporateCompletedTiers.push(2);
+    }
+
     return {
       isLoading: TrxDataLoading,
       /** 0 until the account has been tiered. */
-      tier: parseTierNumber(account?.tier),
+      tier: tierNumber,
       tierLabel: account?.tier as string | undefined,
+      corporateCompletedTiers,
       hasNin,
       hasBvn,
       hasAddress,

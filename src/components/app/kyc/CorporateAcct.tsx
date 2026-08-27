@@ -1,12 +1,13 @@
 "use client";
 
+import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { useKycHook } from "@/hooks/useKycHook";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import AccountStatusCard from "./AccountStatusCard";
 import CorporateTier1Form from "./CorporateTierOneForm";
 import CorporateTier2Form from "./CorporateTierTwoForm";
-import AccountStatusCard from "./AccountStatusCard";
 import { LimitChip, Notice, TierPanel } from "./KycUi";
 import TierRail from "./TierRail";
 import { CORPORATE_TIERS } from "./tiers";
@@ -20,13 +21,30 @@ interface CorporateAcctProps {
 
 const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
   const [currentTier, setCurrentTier] = useState<Tier>(1);
-  // Local: the account payload reports identity verification, not which
-  // company documents have landed, so corporate progress is tracked here
-  // until the API reports it.
-  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
+  const { verification } = kyc;
+
+  // Same shape as the individual flow: the account payload is the truth, and
+  // tiers submitted in this session are merged in so the rail does not go
+  // backwards while the refetch is in flight.
+  const [justSubmitted, setJustSubmitted] = useState<number[]>([]);
+  const completedTiers = Array.from(
+    new Set([...verification.corporateCompletedTiers, ...justSubmitted]),
+  );
+
+  // Land once on the first tier that still needs something — a business
+  // already on TIER 1 opens on Tier 2, not back at the business details it
+  // has already filled in.
+  const landed = useRef(false);
+  useEffect(() => {
+    if (landed.current || verification.isLoading) return;
+    landed.current = true;
+    setCurrentTier(
+      verification.corporateCompletedTiers.includes(1) ? 2 : 1,
+    );
+  }, [verification.isLoading, verification.corporateCompletedTiers]);
 
   const handleTierComplete = (tier: number) => {
-    setCompletedTiers((prev) => (prev.includes(tier) ? prev : [...prev, tier]));
+    setJustSubmitted((prev) => (prev.includes(tier) ? prev : [...prev, tier]));
     if (tier < 2) setCurrentTier((tier + 1) as Tier);
   };
 
@@ -34,11 +52,12 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
     tier === 1 || completedTiers.includes(tier - 1);
 
   const tierMeta = CORPORATE_TIERS[currentTier - 1];
+  const resuming = justSubmitted.length === 0 && completedTiers.length > 0;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
       <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-        <AccountStatusCard verification={kyc.verification} />
+        <AccountStatusCard verification={verification} />
 
         <div className="rounded-2xl border border-border-tint bg-primary-green-700 p-4">
           <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-grey-2">
@@ -61,7 +80,9 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
             title={
               completedTiers.includes(2)
                 ? "Corporate account fully verified"
-                : "Tier 1 submitted"
+                : resuming
+                  ? "Welcome back — Tier 1 is verified"
+                  : "Tier 1 submitted"
             }
           >
             {completedTiers.includes(2) ? (
@@ -69,8 +90,9 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
             ) : (
               <div className="flex flex-wrap items-center gap-3">
                 <span>
-                  You can start using the account now, or continue to full
-                  document verification.
+                  {resuming
+                    ? "Tier 2 adds your CAC documents and director records. Pick up where you left off."
+                    : "You can start using the account now, or continue to full document verification."}
                 </span>
                 {currentTier === 1 && (
                   <Button
@@ -94,7 +116,18 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
           description={tierMeta.description}
           aside={<LimitChip limit={tierMeta.limit} />}
         >
-          {!canAccessTier(currentTier) ? (
+          {/* Hold the form back until the account's state is known, so a
+              business already past Tier 1 never sees it flash. */}
+          {verification.isLoading ? (
+            <div className="flex justify-center py-16">
+              <Spinner className="text-primary-green-300" />
+            </div>
+          ) : completedTiers.includes(currentTier) ? (
+            <Notice tone="success" title="Already verified">
+              This tier is complete. Pick the next one from the progress list to
+              carry on.
+            </Notice>
+          ) : !canAccessTier(currentTier) ? (
             <Notice tone="locked" title="Locked">
               Complete Tier 1 before starting Tier 2.
             </Notice>
