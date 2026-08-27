@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import AccountStatusCard from "./AccountStatusCard";
 import { LimitChip, Notice, TierPanel } from "./KycUi";
+import UpgradeToCorporateCard from "./UpgradeToCorporateCard";
 import Tier1Form from "./Tier1form";
 import Tier2Form from "./TierTwoForm";
 import TierRail from "./TierRail";
@@ -33,12 +34,17 @@ const firstUnfinished = (completed: number[]): Tier => {
   return 3;
 };
 
-const IndividualTierFlow = () => {
-  const [currentTier, setCurrentTier] = useState<Tier>(1);
+interface IndividualTierFlowProps {
+  /** Owned by KycConfirm so the page reads the account payload once. */
+  kyc: ReturnType<typeof useKycHook>;
+  onUpgradeToCorporate: () => void;
+}
 
-  // One hook instance for the whole flow — all three tiers share this form,
-  // and the account's verified state comes from the same place.
-  const kyc = useKycHook();
+const IndividualTierFlow = ({
+  kyc,
+  onUpgradeToCorporate,
+}: IndividualTierFlowProps) => {
+  const [currentTier, setCurrentTier] = useState<Tier>(1);
   const { verification } = kyc;
 
   // Tiers just submitted in this session, merged with what the account
@@ -85,6 +91,8 @@ const IndividualTierFlow = () => {
             onSelect={(tier) => setCurrentTier(tier as Tier)}
           />
         </div>
+
+        <UpgradeToCorporateCard onUpgrade={onUpgradeToCorporate} />
       </aside>
 
       <div className="space-y-5">
@@ -94,7 +102,9 @@ const IndividualTierFlow = () => {
             title={
               completedTiers.length === 3
                 ? "All tiers verified"
-                : `Tier ${Math.max(...completedTiers)} verified`
+                : justSubmitted.length === 0
+                  ? `Welcome back — Tier ${Math.max(...completedTiers)} is verified`
+                  : `Tier ${Math.max(...completedTiers)} verified`
             }
           >
             {completedTiers.length === 3 ? (
@@ -102,8 +112,11 @@ const IndividualTierFlow = () => {
             ) : (
               <div className="flex flex-wrap items-center gap-3">
                 <span>
-                  You can keep using the account as it is, or continue for a
-                  higher limit.
+                  {justSubmitted.length === 0
+                    ? `You stopped after Tier ${Math.max(...completedTiers)}. Tier ${
+                        Math.max(...completedTiers) + 1
+                      } is ready whenever you are.`
+                    : "You can keep using the account as it is, or continue for a higher limit."}
                 </span>
                 {currentTier < 3 && canAccessTier(currentTier + 1) && (
                   <Button

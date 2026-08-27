@@ -49,7 +49,9 @@ const AccountStatusCard = ({
     <div className="rounded-2xl border border-border-tint bg-white p-4">
       <div className="flex items-start justify-between gap-2">
         <p className="text-[11px] font-extrabold uppercase tracking-wide text-grey-3">
-          Settlement account
+          {verification.accountType === "corporate"
+            ? "Corporate account"
+            : "Settlement account"}
         </p>
         {verification.tierLabel && (
           <span className="rounded-full bg-primary-green-100 px-2 py-0.5 text-[10px] font-extrabold uppercase text-white">
@@ -65,6 +67,14 @@ const AccountStatusCard = ({
         {wallet.account_number}
         {wallet.bank_name ? ` · ${wallet.bank_name}` : ""}
       </p>
+
+      {/* Null until the provider has ruled on a submission — so it only
+          appears once there is something to report. */}
+      {verification.verificationStatus && (
+        <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-warning-2 px-2 py-1 text-[11px] font-bold text-warning-1">
+          {verification.verificationStatus}
+        </p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-1.5 border-t border-grey-6 pt-3">
         <Flag label="NIN" on={verification.hasNin} />

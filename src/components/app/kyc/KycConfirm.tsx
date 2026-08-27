@@ -1,6 +1,8 @@
 "use client";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { type AccountType, useKycHook } from "@/hooks/useKycHook";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
@@ -15,9 +17,8 @@ import { useState } from "react";
 
 import CorporateAcct from "./CorporateAcct";
 import IndividualTierFlow from "./IndividualAcct";
+import { Notice } from "./KycUi";
 import { CORPORATE_TIERS, INDIVIDUAL_TIERS, KycTier } from "./tiers";
-
-type AccountType = "individual" | "corporate";
 
 const ACCOUNT_TYPES: {
   value: AccountType;
@@ -42,26 +43,74 @@ const ACCOUNT_TYPES: {
   },
 ];
 
+const ChooserSkeleton = () => (
+  <div className="grid gap-4 md:grid-cols-2">
+    {[0, 1].map((i) => (
+      <Skeleton key={i} className="h-64 rounded-2xl bg-grey-5" />
+    ))}
+  </div>
+);
+
 /**
  * The KYC screen — a full page rather than a modal.
  *
  * Corporate Tier 2 alone runs to four company documents plus four uploads per
  * director, which a dialog cannot hold; the page also means a half-finished
  * verification survives a stray click outside.
+ *
+ * The hook lives here and is handed to whichever flow renders, so the account
+ * payload is read once and the chooser, the tier rail and the forms all agree
+ * on what has already been verified.
  */
 const KycConfirm = () => {
-  const [accountType, setAccountType] = useState<AccountType | null>(null);
+  const kyc = useKycHook();
+  const { verification } = kyc;
+
+  // Set only when the merchant picks a type on this screen. An account that
+  // has already been opened supplies its own, so the chooser is skipped
+  // entirely rather than asking a question that is already answered.
+  const [picked, setPicked] = useState<AccountType | null>(null);
   const [selection, setSelection] = useState<AccountType>("individual");
 
-  const chosen = ACCOUNT_TYPES.find((type) => type.value === accountType);
+  const resumedType = verification.hasStarted
+    ? (verification.accountType ?? "individual")
+    : null;
+  const activeType = picked ?? resumedType;
+
+  /** True when the merchant is opening a corporate account on top of an
+   *  individual one, rather than continuing what they started. */
+  const isUpgrading =
+    activeType === "corporate" && resumedType === "individual";
+
+  const chosen = ACCOUNT_TYPES.find((type) => type.value === activeType);
+
+  const headline = () => {
+    if (!chosen) return "Verify your identity";
+    if (isUpgrading) return "Upgrade to a corporate account";
+    if (verification.hasStarted) return `Continue verification`;
+    return chosen.title;
+  };
+
+  const subhead = () => {
+    if (!chosen)
+      return "CBN regulations require every SYNC360 merchant to verify their identity before receiving settlements. Pick the account type that matches your business.";
+    if (isUpgrading)
+      return "Your individual verification stays as it is while we review the company's documents.";
+    if (verification.hasStarted)
+      return "Pick up where you left off. Each tier builds on the one before it, and you can stop at any point.";
+    return "Complete a tier to raise your daily limit. Each tier builds on the one before it, and you can stop at any point.";
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       <header className="mb-6">
-        {accountType && (
+        {/* Only offered while nothing has been submitted — once an account
+            exists its type is set, and "corporate" becomes an upgrade rather
+            than a different answer to the same question. */}
+        {picked && !verification.hasStarted && (
           <button
             type="button"
-            onClick={() => setAccountType(null)}
+            onClick={() => setPicked(null)}
             className="mb-3 inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-grey-3 transition-colors hover:text-primary-green-300"
           >
             <ArrowLeft size={15} />
@@ -69,16 +118,23 @@ const KycConfirm = () => {
           </button>
         )}
 
+        {isUpgrading && (
+          <button
+            type="button"
+            onClick={() => setPicked(null)}
+            className="mb-3 inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-grey-3 transition-colors hover:text-primary-green-300"
+          >
+            <ArrowLeft size={15} />
+            Back to my individual verification
+          </button>
+        )}
+
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-grey-1 sm:text-3xl">
-              {chosen ? chosen.title : "Verify your identity"}
+              {headline()}
             </h1>
-            <p className="mt-1.5 max-w-2xl text-sm text-grey-3">
-              {chosen
-                ? "Complete a tier to raise your daily limit. Each tier builds on the one before it, and you can stop at any point."
-                : "CBN regulations require every SYNC360 merchant to verify their identity before receiving settlements. Pick the account type that matches your business."}
-            </p>
+            <p className="mt-1.5 max-w-2xl text-sm text-grey-3">{subhead()}</p>
           </div>
 
           <span className="inline-flex items-center gap-2 rounded-full border border-border-tint bg-white px-3 py-2 text-xs font-semibold text-grey-3">
@@ -88,11 +144,23 @@ const KycConfirm = () => {
         </div>
       </header>
 
-      {chosen ? (
+      {isUpgrading && (
+        <Notice tone="info" title="This starts a new corporate verification" className="mb-5">
+          You will need your CAC documents, TIN and a record for every director.
+          Nothing here changes the individual account you already verified.
+        </Notice>
+      )}
+
+      {verification.isLoading && !chosen ? (
+        <ChooserSkeleton />
+      ) : chosen ? (
         chosen.value === "individual" ? (
-          <IndividualTierFlow />
+          <IndividualTierFlow
+            kyc={kyc}
+            onUpgradeToCorporate={() => setPicked("corporate")}
+          />
         ) : (
-          <CorporateAcct />
+          <CorporateAcct kyc={kyc} />
         )
       ) : (
         <div className="space-y-5">
@@ -174,7 +242,7 @@ const KycConfirm = () => {
             <Button
               type="button"
               size="lg"
-              onClick={() => setAccountType(selection)}
+              onClick={() => setPicked(selection)}
               className="w-full sm:w-auto sm:min-w-64"
             >
               Continue

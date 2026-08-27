@@ -64,6 +64,9 @@ export type AddCorporateAcctFormValues = z.infer<typeof corporateAccountSchema>;
 export type KycTier = 1 | 2 | 3;
 export type CorporateTier = 1 | 2;
 
+/** Which verification path an account is on — mirrors the API's account_type. */
+export type AccountType = "individual" | "corporate";
+
 /** Tier 1 takes one identifier; this is which one the merchant picked. */
 export type IdentityMethod = "nin" | "bvn";
 
@@ -141,6 +144,16 @@ export const useKycHook = () => {
     if (hasNin && hasBvn) completedTiers.push(2);
     if (hasNin && hasBvn && hasAddress) completedTiers.push(3);
 
+    const wallet = account?.wallet_details;
+    // account_type is reported at the top level and again on the wallet; take
+    // whichever is present.
+    const rawType: string | undefined =
+      account?.account_type ?? wallet?.account_type;
+    const accountType =
+      rawType === "CORPORATE" || rawType === "INDIVIDUAL"
+        ? (rawType.toLowerCase() as AccountType)
+        : undefined;
+
     return {
       isLoading: TrxDataLoading,
       /** 0 until the account has been tiered. */
@@ -150,7 +163,19 @@ export const useKycHook = () => {
       hasBvn,
       hasAddress,
       hasPin: Boolean(account?.pin),
-      wallet: account?.wallet_details,
+      wallet,
+      /** Which flow this account was opened under, if it has been opened. */
+      accountType,
+      /** Null until the provider has reviewed a submission. */
+      verificationStatus: (account?.verification_status ?? null) as
+        | string
+        | null,
+      /**
+       * Whether verification has been started at all. A wallet exists as soon
+       * as the first tier is accepted, so its presence — not the tier number —
+       * is what says "this merchant has been here before".
+       */
+      hasStarted: Boolean(wallet) || completedTiers.length > 0,
       completedTiers,
       /**
        * The identifier Tier 2 still needs. Null when both are on file, or when

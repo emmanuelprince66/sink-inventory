@@ -13,13 +13,17 @@ import { CORPORATE_TIERS } from "./tiers";
 
 type Tier = 1 | 2;
 
-const CorporateAcct = () => {
-  const [currentTier, setCurrentTier] = useState<Tier>(1);
-  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
+interface CorporateAcctProps {
+  /** Owned by KycConfirm so the page reads the account payload once. */
+  kyc: ReturnType<typeof useKycHook>;
+}
 
-  // One hook instance for both tiers — Tier 2 re-submits everything Tier 1
-  // collected, so they have to share the same form.
-  const kyc = useKycHook();
+const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
+  const [currentTier, setCurrentTier] = useState<Tier>(1);
+  // Local: the account payload reports identity verification, not which
+  // company documents have landed, so corporate progress is tracked here
+  // until the API reports it.
+  const [completedTiers, setCompletedTiers] = useState<number[]>([]);
 
   const handleTierComplete = (tier: number) => {
     setCompletedTiers((prev) => (prev.includes(tier) ? prev : [...prev, tier]));
