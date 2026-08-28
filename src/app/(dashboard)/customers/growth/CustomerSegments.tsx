@@ -4,7 +4,6 @@ import { useDeleteSegmentMutation } from "@/api/segment/delete-segment";
 import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
 import { useUpdateSegmentMutation } from "@/api/segment/update-segment";
 import { CustomModal } from "@/components/app/CustomModal";
-import DataGapBadge from "@/components/app/DataGapBadge";
 import { Spinner } from "@/components/app/Spinner";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@/lib/react-query";
@@ -241,15 +240,6 @@ const CustomerSegments = () => {
                 onChanged={refresh}
               />
             ))}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <DataGapBadge
-              label="Paused segments disappear"
-              needs="GET /customer/segment/{business_id}/ — one question: does this list include segments with is_active:false? Every segment in the live response comes back is_active:true, so I cannot tell. If inactive ones are filtered out, pausing a segment drops its card off the list with no way to resume it, which is why the UI still offers no Pause. Either confirm inactive segments are returned, or add an include_inactive flag. (revenue, repeat_rate, avg_spend and is_active have all landed and are in use.)"
-            />
-            <span className="text-[11px] text-grey-4">
-              Open a segment to see the customers behind these figures.
-            </span>
           </div>
         </>
       )}
