@@ -2,21 +2,25 @@ import { BaseUrl } from "@/constants/base-url";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * The same progress lookup backs the merchant POS and the customer-facing join
+ * and progress pages, so auth is optional: the record is addressed by loyalty
+ * code and nothing about it depends on who asks. `?public=1` drops the header
+ * outright — a stale merchant cookie left in a phone's browser would otherwise
+ * be rejected while the API authenticates, before the endpoint's public
+ * permission is ever considered.
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ loyaltyCode: string }> }
 ) {
   const { loyaltyCode } = await params;
 
+  const isPublic = request.nextUrl.searchParams.get("public") === "1";
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-
-  if (!accessToken) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - No access token provided" },
-      { status: 401 }
-    );
-  }
+  const accessToken = isPublic
+    ? undefined
+    : cookieStore.get("accessToken")?.value;
 
   if (!loyaltyCode) {
     return NextResponse.json(
@@ -32,19 +36,20 @@ export async function GET(
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       cache: "no-store",
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
-          error: data.error || "Failed to fetch loyalty progress",
-          message: data.message || "Failed to fetch loyalty progress",
+          error: data?.error || "Failed to fetch loyalty progress",
+          message:
+            data?.message || data?.detail || "Failed to fetch loyalty progress",
         },
         { status: response.status }
       );

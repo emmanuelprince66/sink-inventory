@@ -10,14 +10,24 @@ import { useLogoutMutation } from "../auth/logout-user";
 
 export type FetchLoyaltyProgressParams = {
   loyaltyCode: string;
-
+  /**
+   * Set on the customer-facing pages, where the caller has no session. It stops
+   * the proxy forwarding whatever accessToken cookie happens to be in the
+   * browser — a stale one is rejected while the API authenticates, even though
+   * the endpoint itself is public.
+   */
+  isPublic?: boolean;
 };
 
-export const fetchLoyaltyProgress = async ({ loyaltyCode }: FetchLoyaltyProgressParams) => {
+export const fetchLoyaltyProgress = async ({
+  loyaltyCode,
+  isPublic,
+}: FetchLoyaltyProgressParams) => {
   const url = new URL(
     `/api/loyalty/progress/${loyaltyCode}`,
     window.location.origin
   );
+  if (isPublic) url.searchParams.set("public", "1");
 
   const response = await fetch(url.toString(), {
     method: "GET",
@@ -57,15 +67,17 @@ export const useFetchLoyaltyProgressQuery = ({
 
   return useQuery<ExtractFnReturnType<QueryFnType>>({
     retry(failureCount, error: any) {
-      if (error.status === 401) {
+      // Never on the public pages: the caller is a customer with no session, so
+      // a 401 there must not bounce them to /login off their own loyalty card.
+      if (error.status === 401 && !params.isPublic) {
         logout();
       }
-      if ([404, 401].includes(error.status)) return failureCount < 2;
       return failureCount < 2;
     },
     queryKey: [
       queryKey.loyalty.getLoyaltyProgress,
       params.loyaltyCode,
+      params.isPublic ?? false,
     ],
     queryFn: () => fetchLoyaltyProgress(params),
     enabled: Boolean(params.loyaltyCode),

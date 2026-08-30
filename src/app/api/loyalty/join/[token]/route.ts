@@ -1,22 +1,20 @@
 import { BaseUrl } from "@/constants/base-url";
-import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Public join for the landing page — no auth, by design: the customer filling
+ * the form has no session. The Authorization header is deliberately never sent,
+ * not even when an accessToken cookie happens to exist. A merchant testing
+ * their own QR on a phone they later signed out of elsewhere still carries a
+ * stale cookie, and the API rejects an invalid bearer token while
+ * authenticating, before it ever reaches the endpoint's public permission —
+ * which surfaced as "This token is no longer valid" on a public form.
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params;
-
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get("accessToken")?.value;
-
-  if (!accessToken) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized - No access token provided" },
-      { status: 401 }
-    );
-  }
 
   if (!token) {
     return NextResponse.json(
@@ -32,22 +30,22 @@ export async function POST(
 
     const response = await fetch(apiUrl.toString(), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       return NextResponse.json(
         {
           success: false,
-          error: data.error || "Failed to create loyalty programme",
-          message: data.message || "Failed to create loyalty programme",
+          error: data?.error || "Failed to join this campaign",
+          // `detail` is what DRF puts validation and permission errors under,
+          // and they are the ones worth showing the customer verbatim.
+          message:
+            data?.message || data?.detail || "Failed to join this campaign",
         },
         { status: response.status }
       );

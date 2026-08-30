@@ -9,7 +9,7 @@ import type { LoyaltyParticipantProgress } from "@/types/loyalty";
 // on the loyalty code rather than a session, since members are never signed in.
 const MemberProgress = ({ loyaltyCode }: { loyaltyCode: string }) => {
   const { data, isLoading, isError } = useFetchLoyaltyProgressQuery({
-    params: { loyaltyCode },
+    params: { loyaltyCode, isPublic: true },
   });
 
   if (isLoading) {
