@@ -87,10 +87,14 @@ const CreateExpenseAccountModal = ({
    * Only real business accounts can fund an expense account. is_sub marks the
    * ones that are themselves sub-accounts, and offering those would let someone
    * fund an expense account from another expense account.
+   *
+   * An account with no number is dropped rather than shown: previous_account is
+   * that number, so such a row could be selected and would then fail on submit
+   * with a server-side message the merchant cannot act on.
    */
   const fundingAccounts = useMemo(() => {
     const banks: any[] = businessRes?.data?.banks ?? [];
-    return banks.filter((bank) => !bank.is_sub);
+    return banks.filter((bank) => !bank.is_sub && bank.account_number);
   }, [businessRes]);
 
   const { mutate: createSubAccount, isPending } = useCreateSubAccountMutation({
@@ -132,11 +136,16 @@ const CreateExpenseAccountModal = ({
     createSubAccount({
       businessId: business_id ?? "",
       body: {
+        // The account NUMBER, which is what the wallet endpoint reports as
+        // wallet_details.account_number — not the bank record's id.
         previous_account: fundFrom,
         // "Expense" leads the branch so the name shown on transfers and
         // statements reads as an expense account rather than as another
         // ordinary branch of the business.
         branch: `Expense ${accountName.trim()}`,
+        // Without this the backend creates a plain sub-account and the
+        // expense screens never see it.
+        is_expenses: true,
       },
     });
   };
@@ -245,8 +254,14 @@ const CreateExpenseAccountModal = ({
                   <SelectValue placeholder="Select bank account" />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Keyed and valued on account_number: that is what
+                      previous_account expects, and it is the same value the
+                      wallet endpoint returns for this bank. */}
                   {fundingAccounts.map((bank) => (
-                    <SelectItem key={bank.id} value={String(bank.id)}>
+                    <SelectItem
+                      key={bank.id ?? bank.account_number}
+                      value={String(bank.account_number)}
+                    >
                       {bank.bank_name} · {bank.account_number}
                     </SelectItem>
                   ))}

@@ -6,7 +6,14 @@ const createSubAccount = async ({
   body,
   businessId,
 }: {
-  body: { previous_account: string; branch: string };
+  body: {
+    /** The funding account's NUMBER, not its id. */
+    previous_account: string;
+    branch: string;
+    /** Marks this sub-account as an expense account. */
+    is_expenses?: boolean;
+    type?: string;
+  };
   businessId: string;
 }) => {
   const response = await fetch(
