@@ -36,8 +36,11 @@ export interface AddressSuggestion {
 export const GOOGLE_PLACES_AUTOCOMPLETE =
   "https://places.googleapis.com/v1/places:autocomplete";
 export const GOOGLE_PLACE_DETAILS = "https://places.googleapis.com/v1/places";
+// Geocoding API, not Places — /maps/api/geocode/json. This read
+// /maps/api/address/json, which is not an endpoint Google serves, so reverse
+// lookup could never have worked no matter which APIs were enabled.
 export const GOOGLE_REVERSE_GEOCODE =
-  "https://maps.googleapis.com/maps/api/address/json";
+  "https://maps.googleapis.com/maps/api/geocode/json";
 
 /** Shipbubble is Nigeria-only. Unfiltered, "Allen Avenue" returns Texas. */
 export const REGION_CODES = ["ng"];
