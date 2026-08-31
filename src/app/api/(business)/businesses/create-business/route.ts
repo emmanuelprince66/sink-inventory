@@ -38,9 +38,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
+      // Keep the raw code ("1" | "2" | "3") when the backend sends one — the
+      // subscription interceptor maps it to the upgrade modal.
       return NextResponse.json(
-        { error: errorData.message || "Failed to create business" },
+        {
+          error:
+            errorData.error || errorData.message || "Failed to create business",
+        },
         { status: response.status }
       );
     }

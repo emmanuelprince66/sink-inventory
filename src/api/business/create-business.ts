@@ -1,3 +1,4 @@
+import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
@@ -82,13 +83,19 @@ export const useCreateBusinessMutation = (config?: CreateBusinessProps) => {
     onError: (error: any, variables: any, context: any) => {
       console.log("Error creating business:", error);
 
-      const errorMessage =
-        error?.details?.message ||
-        error?.error ||
-        error?.message ||
-        "Error creating business";
+      // Codes "1" | "2" | "3" mean subscription/plan-limit — the global
+      // SubscriptionNotificationModal handles those, so skip the toast.
+      const isSubscriptionError = handleSubscriptionError(error);
 
-      showToast(errorMessage, "error");
+      if (!isSubscriptionError) {
+        const errorMessage =
+          error?.details?.message ||
+          error?.error ||
+          error?.message ||
+          "Error creating business";
+
+        showToast(errorMessage, "error");
+      }
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
