@@ -1,37 +1,27 @@
 import { State } from "country-state-city";
+import {
+  normalizeStateCode,
+  normalizeStateName,
+  toFixed6,
+  type AddressSuggestion,
+} from "./addressContract";
 
 // Shared shaping for the Google Places / Geocoding responses behind
 // /api/address. Keeping it out of the route files means Autocomplete, Place
 // Details and Reverse Geocoding all produce the identical AddressSuggestion
 // the client has always consumed.
 
-export interface AddressSuggestion {
-  id: string;
-  /** Full human-readable line — what the dropdown row shows. */
-  label: string;
-  /** Street line only — what we drop into the address/street field. */
-  address: string;
-  city: string;
-  state: string;
-  /** ISO subdivision code when Google gives one, e.g. "LA". May be "" — the
-   * client falls back to matching on the state name. */
-  stateCode: string;
-  country: string;
-  /**
-   * Empty on an autocomplete prediction: Google's Autocomplete returns no
-   * geometry at all, by design. The client resolves them through
-   * /api/address/details when a suggestion is actually picked, which is also
-   * what makes a session token billable as one lookup instead of many.
-   */
-  latitude: string;
-  longitude: string;
-  /** Google place type, e.g. "street_address" | "premise" | "locality". */
-  precision: string;
-  /** Present on predictions; what /api/address/details takes. */
-  placeId?: string;
-  /** Prediction's second line — "Kuola - Aba Paanu Road, Ibadan, Nigeria". */
-  secondary?: string;
-}
+// The suggestion shape and the small normalisers are shared with Geoapify —
+// see addressContract.ts. Re-exported here so the route files that already
+// import them from this module keep working.
+export {
+  normalizeStateCode,
+  normalizeStateName,
+  notConfigured,
+  REGION_CODES,
+  toFixed6,
+  type AddressSuggestion,
+} from "./addressContract";
 
 export const GOOGLE_PLACES_AUTOCOMPLETE =
   "https://places.googleapis.com/v1/places:autocomplete";
@@ -41,22 +31,6 @@ export const GOOGLE_PLACE_DETAILS = "https://places.googleapis.com/v1/places";
 // lookup could never have worked no matter which APIs were enabled.
 export const GOOGLE_REVERSE_GEOCODE =
   "https://maps.googleapis.com/maps/api/geocode/json";
-
-/** Shipbubble is Nigeria-only. Unfiltered, "Allen Avenue" returns Texas. */
-export const REGION_CODES = ["ng"];
-
-export const toFixed6 = (n: unknown): string => {
-  const num = Number(n);
-  return Number.isFinite(num) ? num.toFixed(6) : "";
-};
-
-/** Google returns Nigerian states as "Lagos" or "Lagos State"; the client
- *  matches against country-state-city, which only knows the bare form. */
-export const normalizeStateName = (name?: string) =>
-  (name || "").replace(/\s+state$/i, "").trim();
-
-export const normalizeStateCode = (code?: string) =>
-  (code || "").replace(/^NG-/i, "").toUpperCase();
 
 /**
  * Google's subdivision codes are not country-state-city's: Oyo is "YO" to
@@ -192,13 +166,6 @@ export const suggestionFromComponents = ({
 };
 
 /** Shared shape for "no key configured" — the client degrades to plain text. */
-export const notConfigured = (message: string) => ({
-  success: true as const,
-  disabled: true as const,
-  data: [] as AddressSuggestion[],
-  message,
-});
-
 // ─── Legacy fallback ────────────────────────────────────────────────────────
 //
 // Places API (New) is the target, but a project that has only the legacy

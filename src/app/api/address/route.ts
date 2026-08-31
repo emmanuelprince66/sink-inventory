@@ -1,15 +1,26 @@
 import {
+  activeProvider,
+  notConfigured,
+  REGION_CODES,
+  type AddressSuggestion,
+} from "@/lib/addressContract";
+import {
+  COUNTRY_FILTER,
+  GEOAPIFY_AUTOCOMPLETE,
+  geoapifyError,
+  suggestionFromFeature,
+} from "@/lib/geoapify";
+import {
   GOOGLE_PLACES_AUTOCOMPLETE,
   LEGACY_AUTOCOMPLETE,
-  REGION_CODES,
   isServiceDisabled,
-  notConfigured,
   suggestionFromLegacyPrediction,
-  type AddressSuggestion,
 } from "@/lib/googlePlaces";
 import { NextRequest, NextResponse } from "next/server";
 
-// Proxies Google Places Autocomplete (New).
+// Address autocomplete, served by whichever provider ADDRESS_PROVIDER selects
+// — Geoapify by default, Google when explicitly switched. Both answer in the
+// same AddressSuggestion shape, so the client never branches.
 //
 // A proxy rather than calling Google from the browser: the key stays
 // server-side and never ships in the client bundle, which matches how every
@@ -57,14 +68,90 @@ const legacyAutocomplete = async (
   };
 };
 
+/**
+ * Geoapify autocomplete. One call, coordinates included — no details round
+ * trip and no session token, because neither is billed or needed here.
+ */
+const geoapifyAutocomplete = async (
+  q: string,
+  limit: string,
+  proximity: string,
+) => {
+  const apiKey = process.env.GEOAPIFY_KEY;
+
+  if (!apiKey) {
+    return notConfigured("Address lookup is not configured (GEOAPIFY_KEY is unset)");
+  }
+
+  const url = new URL(GEOAPIFY_AUTOCOMPLETE);
+  url.searchParams.set("text", q);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("lang", "en");
+  url.searchParams.set("limit", limit);
+  url.searchParams.set("filter", COUNTRY_FILTER);
+  // Geoapify takes one pipe-separated `bias`. Proximity arrives as "lon,lat"
+  // here — the inverse of the lat,lng order used everywhere else.
+  url.searchParams.set(
+    "bias",
+    proximity ? `proximity:${proximity}|${COUNTRY_FILTER}` : COUNTRY_FILTER,
+  );
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return {
+      success: false,
+      data: [] as AddressSuggestion[],
+      message: geoapifyError(data, "Address lookup failed"),
+    };
+  }
+
+  const features: any[] = Array.isArray(data?.features) ? data.features : [];
+
+  return {
+    success: true,
+    data: features
+      .map(suggestionFromFeature)
+      .filter((s): s is AddressSuggestion => s !== null),
+    message: "Addresses fetched",
+  };
+};
+
 export async function GET(request: NextRequest) {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   const q = (request.nextUrl.searchParams.get("q") || "").trim();
+  const limit = request.nextUrl.searchParams.get("limit") || "6";
   // "lng,lat" — biases results toward the merchant's own pickup point so local
   // streets outrank same-named streets in another state.
   const proximity = request.nextUrl.searchParams.get("proximity") || "";
   const sessionToken =
     request.nextUrl.searchParams.get("sessionToken") || undefined;
+
+  if (q.length < 3) {
+    return NextResponse.json({ success: true, data: [] }, { status: 200 });
+  }
+
+  if (activeProvider() === "geoapify") {
+    try {
+      return NextResponse.json(
+        await geoapifyAutocomplete(q, limit, proximity),
+        { status: 200 },
+      );
+    } catch (error) {
+      console.error("Geoapify autocomplete error:", error);
+      return NextResponse.json(
+        {
+          success: false,
+          data: [],
+          message:
+            error instanceof Error ? error.message : "Address lookup failed",
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   // No key configured → report it plainly instead of 500ing. The
   // AddressAutocomplete component degrades to a plain text input when it sees
@@ -74,10 +161,6 @@ export async function GET(request: NextRequest) {
       notConfigured("Address lookup is not configured (GOOGLE_MAPS_API_KEY is unset)"),
       { status: 200 },
     );
-  }
-
-  if (q.length < 3) {
-    return NextResponse.json({ success: true, data: [] }, { status: 200 });
   }
 
   const [lng, lat] = proximity.split(",").map(Number);

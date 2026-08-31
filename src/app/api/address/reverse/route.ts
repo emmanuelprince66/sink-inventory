@@ -1,6 +1,11 @@
+import { activeProvider, notConfigured } from "@/lib/addressContract";
+import {
+  GEOAPIFY_REVERSE,
+  geoapifyError,
+  suggestionFromReverse,
+} from "@/lib/geoapify";
 import {
   GOOGLE_REVERSE_GEOCODE,
-  notConfigured,
   suggestionFromComponents,
 } from "@/lib/googlePlaces";
 import { NextRequest, NextResponse } from "next/server";
@@ -15,10 +20,78 @@ import { NextRequest, NextResponse } from "next/server";
 // Google's Geocoding API rather than Places here: reverse lookup takes raw
 // coordinates, which Places has no equivalent for.
 
+/** Geoapify reverse lookup — coordinates in, one suggestion out. */
+const geoapifyReverse = async (lat: string, lon: string) => {
+  const apiKey = process.env.GEOAPIFY_KEY;
+
+  if (!apiKey) {
+    return notConfigured("Address lookup is not configured (GEOAPIFY_KEY is unset)");
+  }
+
+  const url = new URL(GEOAPIFY_REVERSE);
+  url.searchParams.set("lat", lat);
+  url.searchParams.set("lon", lon);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("lang", "en");
+  url.searchParams.set("limit", "1");
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    return {
+      success: false,
+      data: [],
+      message: geoapifyError(data, "Reverse lookup failed"),
+    };
+  }
+
+  const feature = Array.isArray(data?.features) ? data.features[0] : null;
+
+  if (!feature) {
+    return {
+      success: true,
+      data: [],
+      message: "No address found at these coordinates",
+    };
+  }
+
+  return {
+    success: true,
+    data: [suggestionFromReverse(feature, lat, lon)],
+    message: "Address resolved",
+  };
+};
+
 export async function GET(request: NextRequest) {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   const lat = request.nextUrl.searchParams.get("lat");
   const lon = request.nextUrl.searchParams.get("lon");
+
+  if (!lat || !lon) {
+    return NextResponse.json(
+      { success: false, data: [], message: "lat and lon are required" },
+      { status: 400 },
+    );
+  }
+
+  if (activeProvider() === "geoapify") {
+    try {
+      return NextResponse.json(await geoapifyReverse(lat, lon), { status: 200 });
+    } catch (error) {
+      console.error("Geoapify reverse error:", error);
+      return NextResponse.json(
+        {
+          success: false,
+          data: [],
+          message:
+            error instanceof Error ? error.message : "Reverse lookup failed",
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   // Matches /api/address: report the missing key rather than 500ing, so the
   // caller can fall back to letting the merchant type the address.
@@ -26,13 +99,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       notConfigured("Address lookup is not configured (GOOGLE_MAPS_API_KEY is unset)"),
       { status: 200 },
-    );
-  }
-
-  if (!lat || !lon) {
-    return NextResponse.json(
-      { success: false, data: [], message: "lat and lon are required" },
-      { status: 400 },
     );
   }
 

@@ -1,8 +1,8 @@
+import { activeProvider, notConfigured } from "@/lib/addressContract";
 import {
   GOOGLE_PLACE_DETAILS,
   LEGACY_DETAILS,
   isServiceDisabled,
-  notConfigured,
   suggestionFromComponents,
 } from "@/lib/googlePlaces";
 import { NextRequest, NextResponse } from "next/server";
@@ -67,6 +67,21 @@ const legacyDetails = async (
 };
 
 export async function GET(request: NextRequest) {
+  // Google-only by nature: this endpoint exists to fetch the geometry that
+  // Google's Autocomplete withholds. Geoapify predictions already carry
+  // coordinates, so the client never calls this under that provider — and if
+  // something does, an empty result is the honest answer rather than an error.
+  if (activeProvider() === "geoapify") {
+    return NextResponse.json(
+      {
+        success: true,
+        data: [],
+        message: "Place details are not used by the Geoapify provider",
+      },
+      { status: 200 },
+    );
+  }
+
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
   const placeId = (request.nextUrl.searchParams.get("place_id") || "").trim();
   const sessionToken = request.nextUrl.searchParams.get("sessionToken") || "";
