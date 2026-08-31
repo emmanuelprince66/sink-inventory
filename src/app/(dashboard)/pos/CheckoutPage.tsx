@@ -7,21 +7,18 @@ import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   Edit3,
+  Gift,
   MinusCircle,
   PlusCircle,
   RefreshCw,
   Trash2,
-  ScanLine,
-  UserPlus,
   Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
-import CustomerDrawer from "./CustomersDrawer";
-import CustomerLoyaltyModal from "./CustomerLoyaltyModal";
-import LoyaltyScanner from "./LoyaltyScanner";
 import RecieptPage from "./RecieptPage";
 import VariationChangeModal from "./VariationChangeModal";
+import { isRewardLine } from "./loyaltyReward";
 
 // Types
 interface Variation {
@@ -67,23 +64,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const customer = cartState.customer;
   const attendant = cartState.attendant;
   const showReceipt = cartState.showReceipt;
-  // A reward belongs to a person, so changing or clearing the customer drops
-  // it — otherwise it would be billed to whoever the cashier picks next.
-  const setCustomer = (v: any | null) =>
-    updateCartState({ customer: v, loyaltyReward: null });
   const setAttendant = (v: any | null) => updateCartState({ attendant: v });
   const setShowReceipt = (v: boolean) => updateCartState({ showReceipt: v });
   // ---- end per-sale state ----
-  const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] =
-    useState<boolean>(false);
-  // Loyalty scan + the modal it feeds. loyaltyCustomerId is set either by a
-  // scan or by "View Loyalty" on a row in the customer drawer.
-  const [isLoyaltyScannerOpen, setIsLoyaltyScannerOpen] = useState(false);
-  const [loyaltyView, setLoyaltyView] = useState<{
-    /** Null when the customer holds no loyalty card — the modal still opens. */
-    code: string | null;
-    customer?: any;
-  } | null>(null);
+  // The customer, their loyalty and any redemption are picked in CustomerBar,
+  // above the product grid — a cashier needs those before there is a cart, and
+  // this panel does not render until there is one.
   const [isAttendantDrawerOpen, setIsAttendantDrawerOpen] =
     useState<boolean>(false);
   const [bulkQuantityInputs, setBulkQuantityInputs] = useState<
@@ -118,6 +104,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     getAutomaticDiscountAmount,
     getTotalPrice,
     getEligibleItems,
+    getLoyaltyRewardValue,
+    clearCartItems,
     addToCart,
   } = useCartStore();
 
@@ -127,6 +115,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const automaticDiscountAmount = getAutomaticDiscountAmount();
   const totalBeforeTax = getTotalPrice();
   const eligibleItems = getEligibleItems();
+  /**
+   * What the redeemed lines are worth. They sit in the cart at their normal
+   * price — the sale sends them like any other item and the backend is what
+   * zeroes them — so this is what comes off the amount the cashier collects.
+   */
+  const loyaltyRewardValue = getLoyaltyRewardValue();
 
   // VAT calculation logic - Per product basis
   const vatCalculation = useMemo(() => {
@@ -148,9 +142,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
 
     const vatRate = parseFloat(businessData.tax_rate);
 
-    // Calculate VAT only for items with allow_tax: true
+    // Calculate VAT only for items with allow_tax: true. A redeemed line is
+    // left out: the customer pays nothing for it, so there is nothing to tax.
     const itemsBreakdown = cartItems
-      .filter((item) => item.allow_tax === true)
+      .filter((item) => item.allow_tax === true && !isRewardLine(item))
       .map((item) => {
         const itemTotal =
           (item.selling_price || item.amount || 0) * (item.cartQuantity || 1);
@@ -177,6 +172,20 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       itemsBreakdown,
     };
   }, [businessData, totalBeforeTax, cartItems]);
+
+  /**
+   * What the cashier actually collects.
+   *
+   * The redeemed line stays in the cart at its normal price so the sale can be
+   * sent as an ordinary one, with loyalty_reward_id the only difference. The
+   * backend zeroes that line, so the same amount has to come off here or the
+   * customer would be asked to pay for their own reward.
+   */
+  const payableTotal = Math.max(
+    0,
+    (vatCalculation.enabled ? vatCalculation.totalWithVat : totalBeforeTax) -
+      loyaltyRewardValue,
+  );
 
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
     (error) => error !== "",
@@ -312,7 +321,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
           }
           discountAmount={automaticDiscountAmount}
           subtotal={subtotal}
+          // Deliberately the total BEFORE the reward comes off. The printed
+          // receipt subtracts the backend's own loyalty_discount from this, so
+          // taking it off here as well would deduct the reward twice.
           total={totalBeforeTax}
+          loyaltyRewardValue={loyaltyRewardValue}
           vatInfo={vatCalculation}
           businessData={businessData}
         />
@@ -320,53 +333,32 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
         <div className="flex flex-col">
           <div className="p-3 pb-2 border-b border-grey-5 flex flex-col gap-2">
             <p className="text-lg font-extrabold text-grey-1">Checkout</p>
-            {/* Row 1: pick a customer, or scan their loyalty card.
-                Row 2: attendant, full width. */}
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="flex h-10 min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
-                  onClick={() => setIsCustomerDrawerOpen(true)}
-                >
-                  <UserPlus size={16} className="shrink-0" />
-                  <span className="truncate text-xs">
-                    {customer ? customer.name : "Add Customer"}
-                  </span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="flex h-10 min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
-                  onClick={() => setIsLoyaltyScannerOpen(true)}
-                >
-                  <ScanLine size={16} className="shrink-0" />
-                  <span className="truncate text-xs">Scan Loyalty</span>
-                </Button>
-              </div>
-
-              {user && user?.role === "OWNER" && (
-                <Button
-                  onClick={() => setIsAttendantDrawerOpen(true)}
-                  variant="outline"
-                  className="flex h-10 w-full min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
-                >
-                  <Users size={16} className="shrink-0" />
-                  <span className="truncate text-xs">
-                    {attendant ? attendant.name : "Add Attendant"}
-                  </span>
-                </Button>
-              )}
-            </div>
+            {/* Who serves the sale. Who it is FOR is set in the customer bar
+                above the products, since that has to come first. */}
+            {user && user?.role === "OWNER" && (
+              <Button
+                onClick={() => setIsAttendantDrawerOpen(true)}
+                variant="outline"
+                className="flex h-10 w-full min-w-0 items-center justify-start gap-2 border-grey-5 transition-colors hover:border-primary-green-300 hover:bg-secondary-6"
+              >
+                <Users size={16} className="shrink-0" />
+                <span className="truncate text-xs">
+                  {attendant ? attendant.name : "Add Attendant"}
+                </span>
+              </Button>
+            )}
 
             <div className="flex justify-between items-center w-full">
               <h2 className="text-xs font-bold text-grey-1">
                 Cart Items ({cartItems.length})
               </h2>
+              {/* Empties the basket only. clearCartFunc is the full reset and
+                  belongs to finishing a sale, not to starting the basket over
+                  — it would take the customer out of the bar above too. */}
               <Button
                 variant="outline"
                 className="flex items-center justify-start h-6 px-2 border-error-1/30 text-error-1 hover:bg-error-2 gap-1"
-                onClick={clearCartFunc}
+                onClick={clearCartItems}
               >
                 <p className="text-[10px]">Clear Cart</p>
               </Button>
@@ -382,6 +374,72 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               ) : (
                 <div className="divide-y divide-grey-6">
                   {cartItems.map((item: any) => {
+                    // A redeemed line is not something the cashier can edit:
+                    // the quantity, the price and the item itself are all
+                    // fixed by the reward, so it gets a read-only row that
+                    // says what it is and what it would otherwise have cost.
+                    if (isRewardLine(item)) {
+                      const listPrice = item.selling_price || item.amount || 0;
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-start gap-3 bg-primary-green-500/50 p-3"
+                        >
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-primary-green-300/40 bg-white">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Gift className="h-5 w-5 text-primary-green-300" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <h3 className="truncate text-sm font-bold text-grey-1">
+                                {item.name}
+                              </h3>
+                              <span className="shrink-0 rounded-full bg-primary-green-300 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                                FREE
+                              </span>
+                            </div>
+                            <p className="mt-0.5 truncate text-[10px] text-grey-3">
+                              Loyalty reward
+                              {item.rewardLabel ? ` · ${item.rewardLabel}` : ""}
+                            </p>
+                            <div className="mt-0.5 flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-primary-green-300">
+                                {formatToNaira(0)}
+                              </p>
+                              {listPrice > 0 && (
+                                <p className="text-[10px] text-grey-4 line-through">
+                                  {formatToNaira(listPrice)}
+                                </p>
+                              )}
+                              <span className="text-[10px] text-grey-4">
+                                × 1
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="shrink-0 cursor-pointer rounded-full p-1.5 text-error-1 hover:bg-error-2"
+                            aria-label="Remove this reward from the sale"
+                            onClick={() => {
+                              removeFromCart(item.id);
+                              updateCartState({ loyaltyReward: null });
+                            }}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    }
+
                     const discountInfo = getItemDiscountDisplay(item);
                     const bulkError = bulkQuantityErrors[item.id];
                     const priceError = priceEditErrors[item.id];
@@ -747,15 +805,28 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 </>
               )}
 
+              {/* Redemption. Shown as its own deduction rather than folded
+                  into the item's price, so the receipt and the till agree on
+                  what the reward was worth. */}
+              {loyaltyRewardValue > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex min-w-0 items-center gap-1">
+                    <Gift className="h-3 w-3 shrink-0 text-primary-green-300" />
+                    <span className="truncate text-[11px] text-grey-3">
+                      Loyalty reward
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold text-primary-green-300">
+                    -{formatToNaira(loyaltyRewardValue)}
+                  </span>
+                </div>
+              )}
+
               <Separator className="my-1.5 bg-grey-5" />
               <div className="flex justify-between items-center">
                 <span className="font-bold text-xs text-grey-1">Total</span>
                 <span className="font-extrabold text-sm text-primary-green-300">
-                  {formatToNaira(
-                    vatCalculation.enabled
-                      ? vatCalculation.totalWithVat
-                      : totalBeforeTax,
-                  )}
+                  {formatToNaira(payableTotal)}
                 </span>
               </div>
               <Button
@@ -772,75 +843,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             </div>
           </div>
 
-          <CustomerDrawer
-            variant="pos"
-            open={isCustomerDrawerOpen}
-            onOpenChange={setIsCustomerDrawerOpen}
-            onCustomerSelect={(selectedCustomer: any) =>
-              setCustomer(selectedCustomer)
-            }
-            // A customer with no loyalty card goes straight onto the sale.
-            // The modal has nothing to tell a cashier about them — it would
-            // just say "not enrolled" over a Cancel and an Add to Sale, which
-            // is a tap and a read standing between them and the thing they
-            // already asked for. Enrolled customers still get the wallet,
-            // because there the progress and any ready reward are the point.
-            onViewLoyalty={(selectedCustomer: any) => {
-              if (!selectedCustomer?.loyalty_code) {
-                setCustomer(selectedCustomer);
-                setIsCustomerDrawerOpen(false);
-                return;
-              }
-              setLoyaltyView({
-                code: selectedCustomer.loyalty_code,
-                customer: selectedCustomer,
-              });
-            }}
-          />
-
-          {/* Scanning a loyalty card resolves the code to a customer, then
-              hands off to the same loyalty modal the drawer opens. */}
-          <LoyaltyScanner
-            open={isLoyaltyScannerOpen}
-            onOpenChange={setIsLoyaltyScannerOpen}
-            onResolved={(code: string, matched?: any) =>
-              setLoyaltyView({ code, customer: matched })
-            }
-          />
-
-          <CustomerLoyaltyModal
-            loyaltyCode={loyaltyView?.code ?? null}
-            customer={loyaltyView?.customer}
-            open={Boolean(loyaltyView)}
-            onClose={() => setLoyaltyView(null)}
-            onAddToSale={(selected: any) => {
-              setCustomer(selected);
-              setIsCustomerDrawerOpen(false);
-            }}
-            appliedRewardId={cartState.loyaltyReward?.id ?? null}
-            onApplyReward={(reward: any | null, wallet: any) => {
-              // Customer and reward move together in one update: setCustomer
-              // deliberately clears the reward, so calling both in sequence
-              // would wipe the one just applied.
-              const owner =
-                cartState.customer ??
-                loyaltyView?.customer ??
-                (wallet
-                  ? {
-                      name: wallet.name,
-                      phone: wallet.phone,
-                      loyalty_code: wallet.loyalty_code,
-                    }
-                  : null);
-
-              updateCartState({
-                loyaltyReward: reward,
-                // A reward can only be redeemed against its owner, so applying
-                // one puts them on the sale if they are not already there.
-                ...(reward ? { customer: owner } : {}),
-              });
-            }}
-          />
           <AttendantDrawer
             open={isAttendantDrawerOpen}
             onOpenChange={setIsAttendantDrawerOpen}

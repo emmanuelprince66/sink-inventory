@@ -1,11 +1,23 @@
 "use client";
 
+import { useFetchLoyaltyProgramsQuery } from "@/api/loyalty/fetch-loyalty-programs";
 import { useFetchLoyaltyProgressQuery } from "@/api/loyalty/fetch-loyalty-progress";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
+import { toList, type Paginated } from "@/types/api";
+import type { LoyaltyProgram } from "@/types/loyalty";
+import { formatToNaira } from "@/utils/formatMoney";
 import { Gift, Trophy } from "lucide-react";
+import { useMemo } from "react";
+import {
+  parseProgress,
+  resolveRewardItem,
+  rewardIdOf,
+  rewardLabelOf,
+} from "./loyaltyReward";
 
 /**
  * A customer's loyalty standing, opened from a row in the customer drawer or
@@ -16,13 +28,6 @@ import { Gift, Trophy } from "lucide-react";
  * encodes, and it returns the tier, streak, next-tier progress and any
  * unredeemed rewards pre-formatted, so nothing here is derived.
  */
-
-/** "6784/50000 Spend" or "3/5 Visits" → [3, 5]. */
-const parseProgress = (display?: string | null): [number, number] => {
-  const match = String(display ?? "").match(/([\d.]+)\s*\/\s*([\d.]+)/);
-  if (!match) return [0, 0];
-  return [Number(match[1]), Number(match[2])];
-};
 
 /** Stamps only make sense for a visit streak, and only at a sane length. */
 const MAX_STAMPS = 10;
@@ -55,6 +60,23 @@ const CustomerLoyaltyModal = ({
   const wallet = data?.data;
   const enrollment = wallet?.enrollment;
   const nextTier = wallet?.next_tier_info;
+
+  // A reward says it is a FREE_ITEM but never which item; the programme is
+  // where reward_product_detail lives. Same query as the customer bar, so
+  // react-query serves this from cache rather than fetching twice.
+  const business_id = useBusinessStore((state) => state.business_id);
+  const { data: programsResponse } = useFetchLoyaltyProgramsQuery({
+    params: { id: business_id ?? "" },
+    enabled: Boolean(business_id) && open,
+  } as any);
+
+  const programs = useMemo(
+    () =>
+      toList<LoyaltyProgram>(
+        programsResponse?.data as unknown as Paginated<LoyaltyProgram>,
+      ),
+    [programsResponse],
+  );
 
   const [current, target] = parseProgress(enrollment?.progress_display);
   const isVisitStreak = /visit/i.test(enrollment?.progress_display ?? "");
@@ -243,51 +265,72 @@ const CustomerLoyaltyModal = ({
                 </p>
                 <div className="mt-2 flex flex-col gap-2">
                   {rewards.map((reward: any, index: number) => {
-                    const id = String(reward?.id ?? index);
-                    const applied = appliedRewardId === id;
+                    // The reward's own id is what redeems it. There is no
+                    // stand-in for a missing one — loyalty_reward_id is a UUID
+                    // the sale endpoint looks up, so anything invented here
+                    // would only fail at checkout.
+                    const id = rewardIdOf(reward);
+                    const applied = Boolean(id) && appliedRewardId === id;
+                    const item = resolveRewardItem(reward, {
+                      programs,
+                      enrollment,
+                    });
+
                     return (
                       <div
-                        key={id}
+                        key={id ?? index}
                         className="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-xs font-bold text-grey-1">
-                            {reward?.reward_description ??
-                              reward?.description ??
-                              reward?.reward_summary ??
-                              reward?.reward_type ??
-                              "Reward"}
+                            {item?.name ??
+                              rewardLabelOf(
+                                reward,
+                                enrollment?.reward_description,
+                              )}
                           </p>
-                          {reward?.program_name && (
-                            <p className="truncate text-[10px] text-grey-3">
-                              {reward.program_name}
-                            </p>
-                          )}
+                          <p className="truncate text-[10px] text-grey-3">
+                            {reward?.program_name ?? enrollment?.program_name}
+                            {item && item.price > 0
+                              ? ` · worth ${formatToNaira(item.price)}`
+                              : ""}
+                          </p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onApplyReward(
-                              applied ? null : { ...reward, id },
-                              wallet,
-                            )
-                          }
-                          className={cn(
-                            "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-colors",
-                            applied
-                              ? "bg-grey-6 text-grey-2 hover:bg-grey-5"
-                              : "bg-primary-green-300 text-white hover:bg-primary-green-300/90",
-                          )}
-                        >
-                          {applied ? "Remove" : "Apply to sale"}
-                        </button>
+                        {id ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onApplyReward(
+                                applied ? null : { ...reward, id },
+                                wallet,
+                              )
+                            }
+                            className={cn(
+                              "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold cursor-pointer transition-colors",
+                              applied
+                                ? "bg-grey-6 text-grey-2 hover:bg-grey-5"
+                                : "bg-primary-green-300 text-white hover:bg-primary-green-300/90",
+                            )}
+                          >
+                            {applied
+                              ? "Remove"
+                              : item
+                                ? "Add free item"
+                                : "Apply to sale"}
+                          </button>
+                        ) : (
+                          <span className="shrink-0 text-[10px] text-grey-4">
+                            No reward id
+                          </span>
+                        )}
                       </div>
                     );
                   })}
                 </div>
                 <p className="mt-2 text-[10px] leading-relaxed text-grey-3">
-                  Applying attaches the reward to this sale. It is only marked
-                  redeemed once the sale goes through.
+                  A free product or service is added to the cart as its own
+                  line, priced at nothing. It is only marked redeemed once the
+                  sale goes through.
                 </p>
               </div>
             )}

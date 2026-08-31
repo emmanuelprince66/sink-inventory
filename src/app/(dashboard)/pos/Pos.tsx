@@ -27,6 +27,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useState } from "react";
 import CartTabs from "./CartTabs";
+import CustomerBar from "./CustomerBar";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
 import LoadPresaleModal from "./LoadPresaleModal";
 import { ScannerButton } from "./ScannerButton";
@@ -365,6 +366,11 @@ const Pos: React.FC = () => {
 
       {/* Cart Tabs — supports multiple simultaneous sales */}
       <CartTabs />
+
+      {/* Who this sale is for, before anything is rung up. A pharmacist only
+          builds a basket for an attendant to take payment on, so there is no
+          sale here to attach a customer or a redemption to. */}
+      {!isPharmacist && <CustomerBar />}
 
       <div className="grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-4 items-start">
         {/* Products Section */}

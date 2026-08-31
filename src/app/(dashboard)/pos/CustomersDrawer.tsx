@@ -27,14 +27,14 @@ const AVATAR_TONES = [
   "bg-amber-500",
 ];
 
-const avatarTone = (seed: string) => {
+export const avatarTone = (seed: string) => {
   let hash = 0;
   for (let i = 0; i < seed.length; i += 1)
     hash = (hash * 31 + seed.charCodeAt(i)) | 0;
   return AVATAR_TONES[Math.abs(hash) % AVATAR_TONES.length];
 };
 
-const initialsOf = (name?: string) =>
+export const initialsOf = (name?: string) =>
   (name ?? "?")
     .split(" ")
     .filter(Boolean)
@@ -52,7 +52,7 @@ const TIER_STYLES: Record<string, { icon: any; className: string }> = {
   Normal: { icon: Sprout, className: "bg-primary-green-500 text-primary-green-300" },
 };
 
-const tierStyle = (tier?: string | null) =>
+export const tierStyle = (tier?: string | null) =>
   TIER_STYLES[tier ?? ""] ?? {
     icon: Sprout,
     className: "bg-primary-green-500 text-primary-green-300",

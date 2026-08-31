@@ -26,7 +26,7 @@ import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
-import { ArrowBigLeftDash, CalendarIcon, X } from "lucide-react";
+import { ArrowBigLeftDash, CalendarIcon, Gift, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { AddBankForm } from "../settings/bank/AddBankForm";
@@ -54,6 +54,7 @@ const ReceiptPage = ({
   businessData,
   subtotal,
   total,
+  loyaltyRewardValue = 0,
 }: {
   cart: any;
   attendant: any;
@@ -65,7 +66,16 @@ const ReceiptPage = ({
   discountAmount: any;
   setShowReceipt: any;
   subtotal: any;
+  /** The cart total BEFORE any redemption — see loyaltyRewardValue. */
   total: any;
+  /**
+   * What the redeemed lines are worth. They are in the cart at their normal
+   * price, because the sale goes up as an ordinary one and the backend is what
+   * zeroes them, so this is the difference between what was rung up and what
+   * is actually collected. `total` stays untouched: PrintReceiptView subtracts
+   * the backend's own loyalty_discount from it once the sale comes back.
+   */
+  loyaltyRewardValue?: number;
 }) => {
   console.log("vatInfo in checkout", vatInfo);
 
@@ -143,6 +153,24 @@ const ReceiptPage = ({
   const { user } = useUserRole();
   const business_id = useBusinessStore((state) => state.business_id);
 
+  /**
+   * What there is left to pay. Every amount the cashier handles — what is owed,
+   * what a partial payment has to stay under, what the splits add up to — is
+   * this, not `total`, which still counts the reward at its normal price.
+   */
+  const payableTotal = Math.max(0, total - (loyaltyRewardValue || 0));
+
+  /**
+   * The reward covers the whole sale, so loyalty is genuinely how it was
+   * settled and there is nothing to collect.
+   *
+   * Short of that, loyalty is not a payment method: it has already come off the
+   * total as a deduction, and the balance is still paid in cash or by transfer.
+   * Offering it against a remaining balance would say the customer paid with a
+   * reward they had already spent.
+   */
+  const settledByLoyalty = loyaltyRewardValue > 0 && payableTotal === 0;
+
   const [payloadData, setPayloadData] = useState({});
   console.log("payloadData", payloadData);
 
@@ -186,7 +214,7 @@ const ReceiptPage = ({
       );
       if (bankInfo) {
         const bankKey = bankInfo.bank_name.toLowerCase();
-        payload[bankKey] = total;
+        payload[bankKey] = payableTotal;
       }
     } else {
       // Original logic for when splitPayments has items
@@ -247,8 +275,8 @@ const ReceiptPage = ({
 
   // Set initial remaining amount when the component loads or when total changes
   useEffect(() => {
-    setRemainingAmount(total);
-  }, [total]);
+    setRemainingAmount(payableTotal);
+  }, [payableTotal]);
 
   // Reset payment method fields when customer selection changes
   useEffect(() => {
@@ -265,29 +293,51 @@ const ReceiptPage = ({
       (sum, payment) => sum + payment.amount,
       0,
     );
-    setRemainingAmount(total - paidAmount);
-  }, [splitPayments, total]);
+    setRemainingAmount(payableTotal - paidAmount);
+  }, [splitPayments, payableTotal]);
 
-  // Define payment method options based on customer presence
-  const paymentMethodOptions = customer
-    ? [
-        { label: "Cash", value: "CASH" },
-        { label: "Credit", value: "CREDIT" },
-        { label: "Partial", value: "PARTIAL" },
-        { label: "Bank Transfer", value: "BANK" },
-        { label: "Advance", value: "ADVANCE" },
-      ]
-    : [
-        { label: "Cash", value: "CASH" },
-        { label: "Bank Transfer", value: "BANK" },
-      ];
+  /**
+   * Nothing about a fully redeemed sale is a choice: there is one way it was
+   * settled, and asking a cashier how they want to collect ₦0 is a question
+   * with no answer. The selection is made for them, and released again the
+   * moment the reward comes off and a balance is back.
+   */
+  useEffect(() => {
+    if (settledByLoyalty) {
+      if (paymentMethod !== "LOYALTY") setPaymentMethod("LOYALTY");
+      if (isChecked) setIsChecked(false);
+      return;
+    }
+    if (paymentMethod === "LOYALTY") setPaymentMethod("");
+  }, [settledByLoyalty, paymentMethod, isChecked]);
 
-  // For split payments, filter out methods already used
+  // Define payment method options based on customer presence. A sale the
+  // reward covered has exactly one, so the picker has nothing to offer.
+  const paymentMethodOptions = settledByLoyalty
+    ? [{ label: "Loyalty Reward", value: "LOYALTY" }]
+    : customer
+      ? [
+          { label: "Cash", value: "CASH" },
+          { label: "Credit", value: "CREDIT" },
+          { label: "Partial", value: "PARTIAL" },
+          { label: "Bank Transfer", value: "BANK" },
+          { label: "Advance", value: "ADVANCE" },
+        ]
+      : [
+          { label: "Cash", value: "CASH" },
+          { label: "Bank Transfer", value: "BANK" },
+        ];
+
+  // For split payments, filter out methods already used. Loyalty is never one
+  // of them — it settles a sale outright or not at all, so it can't be a leg
+  // of a split.
   const availableSplitPaymentMethods = paymentMethodOptions.filter(
     (option) =>
       (option.value !== "BANK"
         ? !splitPayments.some((payment) => payment.method === option.value)
-        : true) && option.value !== "PARTIAL",
+        : true) &&
+      option.value !== "PARTIAL" &&
+      option.value !== "LOYALTY",
   );
 
   const handleAddSplitPayment = () => {
@@ -380,7 +430,7 @@ const ReceiptPage = ({
         if (
           !partialAmount ||
           parseFloat(partialAmount) <= 0 ||
-          parseFloat(partialAmount) >= total
+          parseFloat(partialAmount) >= payableTotal
         ) {
           console.log(
             "Valid partial amount is required (greater than 0 and less than total)",
@@ -430,8 +480,13 @@ const ReceiptPage = ({
           : format(new Date(), "yyyy-MM-dd"),
 
         description: "Sales transaction",
+        // A redeemed line goes up like any other: its real inventory id, its
+        // normal price. `id` on that line is synthetic — it keeps a free coffee
+        // and a bought one apart in the cart — so productId is what the API
+        // wants. loyalty_reward_id below is the only thing marking this sale as
+        // a redemption, and the backend zeroes the line from there.
         products: cart.map((item: any) => ({
-          id: item.id,
+          id: item.productId ?? item.id,
           quantity: item.cartQuantity || 1,
           type: item.type,
           unit_price:
@@ -459,11 +514,11 @@ const ReceiptPage = ({
             due_date: format(payment.dueDate, "yyyy-MM-dd"),
           }),
         }));
-        apiPayload.amount_paid = total.toString();
+        apiPayload.amount_paid = payableTotal.toString();
       } else {
         apiPayload.method = paymentMethod;
         apiPayload.amount_paid =
-          paymentMethod === "PARTIAL" ? partialAmount : total.toString();
+          paymentMethod === "PARTIAL" ? partialAmount : payableTotal.toString();
 
         if (paymentMethod === "PARTIAL") {
           apiPayload.partial_method = partialPaymentMethod;
@@ -501,7 +556,7 @@ const ReceiptPage = ({
         if (!partialAmount || !dueDate || !partialPaymentMethod) return true;
         if (
           parseFloat(partialAmount) <= 0 ||
-          parseFloat(partialAmount) >= total
+          parseFloat(partialAmount) >= payableTotal
         )
           return true;
         if (partialPaymentMethod === "BANK" && !selectedBank) return true;
@@ -654,6 +709,11 @@ const ReceiptPage = ({
                             <p className="font-medium text-[11px]">
                               {item.name}
                             </p>
+                            {item.isReward && (
+                              <span className="text-[8px] px-1 py-0.5 bg-primary-green-200 text-primary-green-300 rounded-full font-bold">
+                                FREE · Loyalty reward
+                              </span>
+                            )}
                             {item.category && (
                               <p className="text-[10px] text-gray-500">
                                 {item.category}
@@ -727,6 +787,22 @@ const ReceiptPage = ({
                       </tr>
                     </>
                   )}
+                  {/* This is the preview, before the sale exists. The printed
+                      receipt uses the backend's own loyalty_discount instead,
+                      once there is a response to read it from. */}
+                  {loyaltyRewardValue > 0 && (
+                    <tr className="bg-white">
+                      <td
+                        colSpan={4}
+                        className="p-2 border text-[11px] border-primary-green-300 text-right text-primary-green-300"
+                      >
+                        Loyalty reward:
+                      </td>
+                      <td className="p-2 text-[11px] border border-primary-green-300 font-semibold text-primary-green-300">
+                        -{formatToNaira(loyaltyRewardValue)}
+                      </td>
+                    </tr>
+                  )}
                   <tr className="bg-primary-green-200 font-bold">
                     <td
                       colSpan={4}
@@ -736,7 +812,11 @@ const ReceiptPage = ({
                     </td>
                     <td className="p-2 text-[11px] border border-primary-green-300">
                       {formatToNaira(
-                        vatInfo?.enabled ? vatInfo.totalWithVat : total,
+                        Math.max(
+                          0,
+                          (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+                            loyaltyRewardValue,
+                        ),
                       )}
                     </td>
                   </tr>
@@ -770,7 +850,8 @@ const ReceiptPage = ({
             </div>
           )}
 
-          {/* Split Bill Toggle */}
+          {/* Split Bill Toggle — nothing to split when the reward covered it */}
+          {!settledByLoyalty && (
           <div className="w-full bg-primary-green-200 flex flex-end p-1 rounded-lg">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -798,9 +879,29 @@ const ReceiptPage = ({
               </span>
             </label>
           </div>
+          )}
+
+          {/* Settled by the reward — shown in place of the picker, since the
+              method is not in question and there is nothing to collect. */}
+          {settledByLoyalty && (
+            <div className="w-full space-y-1">
+              <p className="text-xs mb-1">Payment Method</p>
+              <div className="flex items-center gap-2 rounded-lg border border-primary-green-300 bg-primary-green-200 p-3">
+                <Gift className="h-4 w-4 shrink-0 text-primary-green-300" />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-grey-1">
+                    Loyalty Reward
+                  </p>
+                  <p className="text-[10px] text-grey-3">
+                    Covered in full by the reward — nothing to collect.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Payment Method Section */}
-          {!isChecked && (
+          {!isChecked && !settledByLoyalty && (
             <div className="w-full space-y-4">
               <p className="text-xs mb-1">Payment Method</p>
               <Select
@@ -910,7 +1011,8 @@ const ReceiptPage = ({
                       placeholder="Enter amount"
                       className="w-full bg-white border border-primary-green-300"
                     />
-                    {partialAmount && parseFloat(partialAmount) >= total && (
+                    {partialAmount &&
+                      parseFloat(partialAmount) >= payableTotal && (
                       <p className="text-xs text-red-500 mt-1">
                         Partial amount must be less than total amount
                       </p>

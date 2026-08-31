@@ -1,3 +1,4 @@
+import { isRewardLine } from "@/app/(dashboard)/pos/loyaltyReward";
 import { CartItem } from "@/app/(dashboard)/pos/type";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -81,9 +82,24 @@ interface CartStore {
   removeFromCart: (id: string) => void;
   updateCartItemQuantity: (id: string, quantity: number) => void;
   updateCartItemPrice: (id: string, price: number) => void;
+  /** Full reset of the slot — items, customer, payment, the lot. */
   clearCart: () => void;
+  /**
+   * Empties the basket but keeps who is being served. The customer is chosen
+   * before anything is rung up now, so a cashier starting the basket over is
+   * not saying they have a different person in front of them. Any redemption
+   * does go, since the line it put in the cart is gone with it.
+   */
+  clearCartItems: () => void;
+  /** Drops every line a loyalty reward added, leaving what was rung up. */
+  clearRewardLines: () => void;
   getTotalItems: () => number;
   getSubtotal: () => number;
+  /**
+   * What the redeemed lines are worth at their normal price — the amount to
+   * take off the total, since the backend zeroes those lines on the sale.
+   */
+  getLoyaltyRewardValue: () => number;
   getAutomaticDiscountAmount: () => number;
   getTotalPrice: () => number;
   getEligibleItems: () => CartItem[];
@@ -309,11 +325,36 @@ export const useCartStore = create<CartStore>()(
           updateSlot(state, state.activeCartId, () => emptySlot()),
         ),
 
+      clearCartItems: () =>
+        set((state) =>
+          updateSlot(state, state.activeCartId, (slot) => ({
+            ...slot,
+            items: [],
+            saleCompleted: false,
+            state: { ...(slot.state ?? emptyState()), loyaltyReward: null },
+          })),
+        ),
+
+      clearRewardLines: () =>
+        set((state) =>
+          updateSlot(state, state.activeCartId, (slot) => ({
+            ...slot,
+            items: slot.items.filter((item) => !isRewardLine(item)),
+          })),
+        ),
+
       getTotalItems: () =>
         get().cartItems.reduce((total, item) => total + item.cartQuantity, 0),
 
       getSubtotal: () =>
         get().cartItems.reduce((total, item) => {
+          const price = item.amount || item.selling_price || 0;
+          return total + price * (item.cartQuantity || 1);
+        }, 0),
+
+      getLoyaltyRewardValue: () =>
+        get().cartItems.reduce((total, item) => {
+          if (!isRewardLine(item)) return total;
           const price = item.amount || item.selling_price || 0;
           return total + price * (item.cartQuantity || 1);
         }, 0),

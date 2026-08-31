@@ -61,6 +61,22 @@ export interface CartItem {
   low_stock_threshold?: number;
   sold?: number;
   unit?: string;
+  // Loyalty redemption. A reward puts its free product or service in the cart
+  // as its own line so the cashier hands over something they can see, rather
+  // than a discount that only appears at the total.
+  /** True on the line a loyalty reward added. */
+  isReward?: boolean;
+  /** The reward being redeemed — goes up as loyalty_reward_id on the sale. */
+  rewardId?: string;
+  /** What to call the reward on screen, e.g. "Free coffee after 5 visits". */
+  rewardLabel?: string;
+  /**
+   * Inventory id of the product or service this line sells. Only a reward line
+   * sets it: its `id` is synthetic, so that the same product bought AND won
+   * stays two separate lines instead of merging into one. Everything that
+   * talks to the API reads `productId ?? id`.
+   */
+  productId?: string;
 }
 
 export interface Customer {
