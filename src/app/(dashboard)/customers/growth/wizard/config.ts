@@ -96,6 +96,41 @@ export const TIME_LIMITS = [
   { value: -1, icon: "✏️", title: "Custom period", text: "Set your own number of days." },
 ] as const;
 
+/**
+ * How long after a sale before the next one counts as a separate visit.
+ *
+ * Without a gap, a five-visit streak is five taps at the same till: a customer
+ * splits one basket into five sales and walks out with the reward. The window
+ * is what makes a "visit" mean coming back.
+ */
+export const VISIT_WINDOWS = [
+  {
+    value: 0,
+    icon: "🧾",
+    title: "Every sale counts",
+    text: "No gap required. Best for programmes that reward spend rather than return trips.",
+  },
+  {
+    value: 12,
+    icon: "🕛",
+    title: "Once every 12 hours",
+    text: "A morning and an evening purchase count separately.",
+  },
+  {
+    value: 24,
+    icon: "📆",
+    title: "Once a day",
+    text: "One visit per day, however many times they buy. The usual choice.",
+  },
+  {
+    value: 168,
+    icon: "🗓️",
+    title: "Once a week",
+    text: "For programmes meant to bring customers back week after week.",
+  },
+  { value: -1, icon: "✏️", title: "Custom gap", text: "Set your own number of hours." },
+] as const;
+
 /** Maps 1:1 onto the timeout_action enum. */
 export const TIMEOUT_ACTIONS = [
   {
@@ -185,6 +220,9 @@ export interface WizardState {
   /** 0 = no limit, otherwise days. */
   timeLimitDays: number;
   customDays: string;
+  /** Hours that must pass before another sale counts. -1 = custom. */
+  visitWindowHours: number;
+  customVisitWindowHours: string;
   timeoutAction: (typeof TIMEOUT_ACTIONS)[number]["value"];
   notify_welcome: boolean;
   notify_progress: boolean;
@@ -213,6 +251,10 @@ export const INITIAL_STATE: WizardState = {
   spendThreshold: "",
   timeLimitDays: 0,
   customDays: "",
+  // A day between visits, which is what most shops mean by "came back" and
+  // what the older programme form already suggested.
+  visitWindowHours: 24,
+  customVisitWindowHours: "",
   timeoutAction: "RESTART",
   notify_welcome: true,
   notify_progress: true,
@@ -241,6 +283,11 @@ export const buildPayload = (s: WizardState) => {
   const days =
     s.timeLimitDays === -1 ? Number(s.customDays || 0) : s.timeLimitDays;
 
+  const visitWindowHours =
+    s.visitWindowHours === -1
+      ? Number(s.customVisitWindowHours || 0)
+      : s.visitWindowHours;
+
   return {
     name: s.name.trim(),
     description: s.description.trim() || undefined,
@@ -258,6 +305,9 @@ export const buildPayload = (s: WizardState) => {
     reward_style: s.rewardStyle,
     // Null rather than 0 — 0 would read as "must finish within zero days".
     completion_window_days: days > 0 ? days : null,
+    // 0 is meaningful here, unlike the completion window: it says every sale
+    // counts as its own visit, so it is sent rather than dropped.
+    visit_window_hours: Math.max(0, visitWindowHours),
     timeout_action: s.timeoutAction,
     notify_welcome: s.notify_welcome,
     notify_progress: s.notify_progress,
@@ -309,6 +359,16 @@ export const summaryRows = (s: WizardState) => [
           : `${s.timeLimitDays} days`,
   },
   {
+    label: "Visit Counts",
+    value:
+      s.visitWindowHours === 0
+        ? "Every sale"
+        : s.visitWindowHours === -1
+          ? `Once every ${s.customVisitWindowHours || 0} hours`
+          : (VISIT_WINDOWS.find((w) => w.value === s.visitWindowHours)?.title ??
+            `Once every ${s.visitWindowHours} hours`),
+  },
+  {
     label: "If Expired",
     value: TIMEOUT_ACTIONS.find((a) => a.value === s.timeoutAction)?.title ?? "—",
   },
@@ -348,7 +408,13 @@ export const stepError = (step: StepName, s: WizardState): string | null => {
     )
       return "Enter the spend target.";
   }
-  if (step === "Time" && s.timeLimitDays === -1 && !s.customDays.trim())
-    return "Enter the number of days.";
+  if (step === "Time") {
+    if (s.timeLimitDays === -1 && !s.customDays.trim())
+      return "Enter the number of days.";
+    // Left blank, a custom gap would go up as 0 — every sale counting, the
+    // opposite of what choosing "Custom gap" was asking for.
+    if (s.visitWindowHours === -1 && !s.customVisitWindowHours.trim())
+      return "Enter the number of hours between visits.";
+  }
   return null;
 };

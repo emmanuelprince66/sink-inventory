@@ -208,11 +208,14 @@ const ReferralProgrammeForm = ({
           <label className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
             Reward Rate (%)
           </label>
+          {/* Whole numbers only. The old filter kept every "." the field was
+              given, so "5.5.5" typed straight through and went up as the
+              percentage. */}
           <Input
             value={values.reward_percentage}
-            inputMode="decimal"
+            inputMode="numeric"
             onChange={(e) =>
-              set("reward_percentage", e.target.value.replace(/[^\d.]/g, ""))
+              set("reward_percentage", e.target.value.replace(/\D/g, ""))
             }
             placeholder="5"
             className="mt-2 h-11 rounded-xl"
