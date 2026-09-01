@@ -21,9 +21,19 @@ const ConfirmTransfer = ({
   transferDetails,
   beneficiaryInfo,
   onCancel,
+  /**
+   * The account the money leaves, when it is not the one the wallet screens
+   * are pointed at — the expenses page sends the expense account chosen there.
+   *
+   * It has to be passed through rather than read from a store: this screen
+   * builds its own useTransactionsHook, and without it the confirm step would
+   * quietly debit the main wallet after the previous screen had shown, and
+   * checked the balance of, a different account.
+   */
+  sourceBankId,
 }: any) => {
   const { handleSubmitTransferFunds, TransferFundsLoading } =
-    useTransactionsHook({ beneficiaryInfo });
+    useTransactionsHook({ beneficiaryInfo, sourceBankId });
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");

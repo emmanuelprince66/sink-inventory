@@ -17,7 +17,7 @@ import {
   useExpenseCategoryOptions,
 } from "@/hooks/useExpenseAccountsHook";
 import { cn } from "@/lib/utils";
-import { formatToNaira } from "@/utils/formatMoney";
+import { formatToNaira, getCurrencySymbol } from "@/utils/formatMoney";
 import {
   Calculator,
   CalendarRange,
@@ -224,7 +224,7 @@ const SetCategoryBudgetModal = ({
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-base font-semibold text-grey-3">
-              ₦
+              {getCurrencySymbol()}
             </span>
             <Input
               id="budget-amount"

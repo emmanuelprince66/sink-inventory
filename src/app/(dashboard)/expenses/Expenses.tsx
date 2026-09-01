@@ -13,7 +13,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
+import {
+  expenseAccountLabel,
+  useExpenseAccounts,
+} from "@/hooks/useExpenseAccounts";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { useReportGeneration } from "@/hooks/useReportGeneration";
 import { cn } from "@/lib/utils";
@@ -24,13 +35,13 @@ import {
   FileDown,
   PiggyBank,
   Plus,
-  Sparkles,
   TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import moment from "moment";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import AddExpenses from "./AddExpenses";
@@ -85,10 +96,17 @@ const ExpenseAccountBalanceCard = ({
   balance,
   bankName,
   accountNumber,
+  /** Whether a transfer has an account to come out of. */
+  canTransfer,
+  onCreateAccount,
+  onTransfer,
 }: {
   balance: number;
   bankName?: string;
   accountNumber?: string;
+  canTransfer: boolean;
+  onCreateAccount: () => void;
+  onTransfer: () => void;
 }) => {
   return (
     <CustomCard
@@ -124,26 +142,37 @@ const ExpenseAccountBalanceCard = ({
           Funds available for operational spending
         </p>
       </div>
+
+      {/* A plain button that navigates, rather than a Link wrapped in one:
+          asChild hands the styling to Radix's Slot, and this button sits on a
+          gradient where anything less than the solid fill every other primary
+          button gets reads as disabled. Transfers need an account to come out
+          of, so without one it offers to create that instead of opening a
+          screen whose only message would be "create an account first". */}
       <div className="relative flex items-center gap-2">
-        <Button
-          size="sm"
-          disabled
-          title="Transfer Money is coming soon"
-          className="w-fit gap-1.5"
-        >
-          <ArrowUpRight className="w-3.5 h-3.5" />
-          Transfer Money
-        </Button>
-        <span className="inline-flex items-center gap-1 rounded-full bg-warning-2 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-warning-1">
-          <Sparkles className="w-2.5 h-2.5" />
-          Coming soon
-        </span>
+        {canTransfer ? (
+          <Button size="sm" className="w-fit gap-1.5" onClick={onTransfer}>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+            Transfer Money
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-fit gap-1.5 bg-white"
+            onClick={onCreateAccount}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Create Expense Account
+          </Button>
+        )}
       </div>
     </CustomCard>
   );
 };
 
 const Expenses = () => {
+  const router = useRouter();
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const [createExpenseAccountOpen, setCreateExpenseAccountOpen] =
     useState(false);
@@ -178,6 +207,19 @@ const Expenses = () => {
 
   // Real bank-account data — results.summary on /expenses/business/{id}/.
   const accountSummary = ExpensesData?.data?.results?.summary;
+
+  // The expense accounts, and which one is being spent from. Read off the live
+  // business payload rather than the summary above, so an account created a
+  // moment ago counts immediately, and shared with the transfer route so the
+  // account named on this page is the one the money leaves.
+  const {
+    accounts: expenseAccounts,
+    selected: selectedExpenseAccount,
+    setSelectedId: setSelectedExpenseAccountId,
+    balance: expenseBalance,
+    hasExpenseAccount,
+    hasMultiple: hasMultipleExpenseAccounts,
+  } = useExpenseAccounts();
 
   // ─── Expense Account Management state ─────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ExpenseTab>("accounts");
@@ -248,9 +290,63 @@ const Expenses = () => {
         </div>
         {/* Overview Cards */}
         <div className="mb-4 sm:mb-6">
-          <p className="text-sm font-bold text-primary-green-300 border-b border-border-tint pb-3 mb-4 sm:mb-5">
-            Overview
-          </p>
+          {/* The section heading doubles as the row that says which expense
+              account is in play — right-aligned, so it sits directly over the
+              balance card it governs. Only rendered when there is a choice to
+              make: a picker holding one option is a question with one answer.
+
+              The choice is shared with the transfer screen, so the account
+              named here is the one Transfer Money spends from. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-tint pb-3 mb-4 sm:mb-5">
+            <p className="text-sm font-bold text-primary-green-300">Overview</p>
+
+            {hasMultipleExpenseAccounts && (
+              <div className="flex items-center gap-2">
+                <span className="hidden whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-grey-3 sm:inline">
+                  Spending from
+                </span>
+                {/* SelectValue stays a DIRECT child of the trigger: the
+                    trigger's own line-clamp is scoped to its immediate
+                    children, so wrapping it in anything lets a long account
+                    name run straight out of the box. */}
+                <Select
+                  value={selectedExpenseAccount?.id ?? ""}
+                  onValueChange={setSelectedExpenseAccountId}
+                >
+                  {/* min-h-9! overrides the trigger's own min-h-[50px]; both
+                      are min-height utilities, so class order alone would not
+                      decide it. */}
+                  <SelectTrigger className="h-9 min-h-9! w-[190px] max-w-full justify-start overflow-hidden rounded-xl border-primary-green-300/30 bg-white px-2.5 text-xs font-bold text-grey-1 *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1">
+                    <Wallet className="h-3.5 w-3.5 shrink-0 text-primary-green-300" />
+                    {/* Children override what Radix would otherwise render —
+                        the selected item's full two-line content, which does
+                        not belong in a 36px-tall trigger. */}
+                    <SelectValue placeholder="Select account">
+                      {expenseAccountLabel(selectedExpenseAccount)}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-w-[260px]">
+                    {expenseAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        <span className="flex min-w-0 flex-col">
+                          <span className="truncate text-xs font-bold text-grey-1">
+                            {expenseAccountLabel(account)}
+                          </span>
+                          <span className="truncate text-[10px] text-grey-3">
+                            {account.bank_name}
+                            {account.bank_name && account.account_number
+                              ? " · "
+                              : ""}
+                            {account.account_number}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
 
           {ExpensesLoading || !ExpensesData ? (
             <StatCardSkeletonRow
@@ -272,9 +368,26 @@ const Expenses = () => {
                 amount={formatToNaira(accountSummary?.spent_this_month ?? 0)}
               />
               <ExpenseAccountBalanceCard
-                balance={accountSummary?.account_balance ?? 0}
-                bankName={accountSummary?.bank_name}
-                accountNumber={accountSummary?.account_number}
+                // The selected account's own figures once there is one to
+                // select, so the card agrees with the picker above it and with
+                // the transfer screen. The summary is a single set of fields
+                // and cannot answer "which account?" once a business holds
+                // more than one, so it is only the fallback.
+                balance={
+                  hasExpenseAccount
+                    ? expenseBalance
+                    : (accountSummary?.account_balance ?? 0)
+                }
+                bankName={
+                  selectedExpenseAccount?.bank_name ?? accountSummary?.bank_name
+                }
+                accountNumber={
+                  selectedExpenseAccount?.account_number ??
+                  accountSummary?.account_number
+                }
+                canTransfer={hasExpenseAccount}
+                onCreateAccount={() => setCreateExpenseAccountOpen(true)}
+                onTransfer={() => router.push("/expenses/transfer")}
               />
             </div>
           )}

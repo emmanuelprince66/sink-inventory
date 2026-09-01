@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useQueryClient } from "@/lib/react-query";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import {
@@ -63,6 +64,23 @@ const BENEFITS = [
 
 type Step = "intro" | "setup" | "done";
 
+/**
+ * Every expense account's name starts with this, so transfers and statements
+ * read as an expense account rather than as another ordinary branch of the
+ * business. It used to be bolted on at submit time, out of sight — the merchant
+ * typed "Marketing" and an account called "Expense Marketing" came back. It is
+ * now shown as part of the field, so the name they approve is the name they get.
+ */
+const EXPENSE_PREFIX = "Expense";
+
+/**
+ * Drops a prefix the merchant typed themselves. Now that the field shows
+ * "Expense" in front of the box, someone typing "Expense Marketing" into it is
+ * asking for one prefix, not two.
+ */
+const withoutPrefix = (value: string) =>
+  value.replace(/^\s*expenses?\s+/i, "");
+
 const CreateExpenseAccountModal = ({
   open,
   onClose,
@@ -80,8 +98,13 @@ const CreateExpenseAccountModal = ({
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<any | null>(null);
 
-  const { data: businessRes, isLoading: businessLoading } =
-    useFetchBusinessById(business_id);
+  const {
+    data: businessRes,
+    isLoading: businessLoading,
+    refetch: refetchBusiness,
+  } = useFetchBusinessById(business_id);
+
+  const setBusinessData = useBusinessDataStore((state) => state.setBusinessData);
 
   /**
    * Only real business accounts can fund an expense account. is_sub marks the
@@ -98,7 +121,7 @@ const CreateExpenseAccountModal = ({
   }, [businessRes]);
 
   const { mutate: createSubAccount, isPending } = useCreateSubAccountMutation({
-    onSuccess: (response: any) => {
+    onSuccess: async (response: any) => {
       setCreated(response?.data ?? response ?? null);
       setStep("done");
       // The new account appears on the business payload and anywhere banks are
@@ -109,6 +132,21 @@ const CreateExpenseAccountModal = ({
       queryClient.invalidateQueries({
         queryKey: [queryKey.transactions.getAllTransactions],
       });
+
+      /**
+       * The business is read back before this modal closes, and the persisted
+       * copy is replaced with what comes back.
+       *
+       * Invalidating alone is not enough. useBusinessDataStore holds a snapshot
+       * written once, when a business was picked from the list, and everything
+       * that asks "which accounts does this business have?" — the wallet
+       * screens, the expense account picker — reads it. Left alone it would
+       * still describe a business with no expense account, and the merchant
+       * would be told to create the one they had just created.
+       */
+      const fresh = await refetchBusiness();
+      const business = fresh?.data?.data;
+      if (business) setBusinessData(business);
     },
   });
 
@@ -139,10 +177,8 @@ const CreateExpenseAccountModal = ({
         // The account NUMBER, which is what the wallet endpoint reports as
         // wallet_details.account_number — not the bank record's id.
         previous_account: fundFrom,
-        // "Expense" leads the branch so the name shown on transfers and
-        // statements reads as an expense account rather than as another
-        // ordinary branch of the business.
-        branch: `Expense ${accountName.trim()}`,
+        // The same prefix the field showed while they typed it.
+        branch: `${EXPENSE_PREFIX} ${accountName.trim()}`,
         // Without this the backend creates a plain sub-account and the
         // expense screens never see it.
         is_expenses: true,
@@ -271,23 +307,49 @@ const CreateExpenseAccountModal = ({
           </div>
 
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
+            <label
+              htmlFor="expense-account-name"
+              className="text-[10px] font-bold uppercase tracking-wider text-grey-3"
+            >
               Expense Account Name
             </label>
             <p className="mt-1 text-[11px] text-grey-3">
-              Enter the purpose of this account.
+              Name it after what the money is for. Every expense account starts
+              with &ldquo;{EXPENSE_PREFIX}&rdquo; — add your own word after it.
             </p>
-            <Input
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="e.g. Operations, Marketing, Staff Expenses"
-              className="mt-2 h-11 rounded-xl"
-            />
+
+            {/* The prefix sits inside the field rather than being added on
+                submit, so the merchant can see the whole name they are
+                creating while they type it. */}
+            <div className="mt-2 flex h-11 items-stretch overflow-hidden rounded-xl border border-grey-5 bg-white transition-colors focus-within:border-primary-green-300">
+              <span className="flex shrink-0 items-center border-r border-grey-5 bg-grey-6 px-3 text-sm font-bold text-grey-2">
+                {EXPENSE_PREFIX}
+              </span>
+              <input
+                id="expense-account-name"
+                value={accountName}
+                onChange={(e) => setAccountName(withoutPrefix(e.target.value))}
+                placeholder="Operations, Marketing, Staff…"
+                className="min-w-0 flex-1 px-3 text-sm text-grey-1 outline-none placeholder:text-grey-4"
+              />
+            </div>
           </div>
 
           <p className="rounded-xl bg-primary-green-500 px-3.5 py-3 text-[11px] leading-relaxed text-grey-2">
-            Your expense account name will be used as part of the account name
-            displayed for transactions and transfers.
+            {accountName.trim() ? (
+              <>
+                This account will show up on transactions and transfers as{" "}
+                <span className="font-extrabold text-grey-1">
+                  {EXPENSE_PREFIX} {accountName.trim()}
+                </span>
+                .
+              </>
+            ) : (
+              <>
+                Your expense account name will be used as part of the account
+                name displayed for transactions and transfers.
+              </>
+            )}
           </p>
 
           {error && <p className="text-xs font-medium text-error-1">{error}</p>}

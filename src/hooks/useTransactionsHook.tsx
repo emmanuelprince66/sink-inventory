@@ -20,6 +20,13 @@ export const useTransactionsHook = ({
   dateRange,
   recipientBank,
   accountNumber,
+  /**
+   * Spend from a specific account instead of the one the wallet screens are
+   * pointed at. The expenses page passes the expense account chosen there —
+   * money has to leave that account, not the business's main wallet, and the
+   * two are different wallets with different balances.
+   */
+  sourceBankId,
 }: any) => {
   console.log("recipientBank", recipientBank, accountNumber);
   const debouncedSearchTerm = useDebounce(searchInput, 500);
@@ -41,6 +48,11 @@ export const useTransactionsHook = ({
   // The wallet is keyed on a bank account, not the business — a business can
   // hold several, and each is its own wallet with its own balance and history.
   const { selectedBankId, selectedBank, hasBanks } = useBusinessBanks();
+
+  // Which wallet this instance of the hook is reading and spending from. Every
+  // wallet call is keyed on a bank id, so overriding this one value is all it
+  // takes to point the same screen at an expense account instead.
+  const walletBankId = sourceBankId ?? selectedBankId;
   const {
     data: BankData,
     isLoading: BankDataLoading,
@@ -93,7 +105,7 @@ export const useTransactionsHook = ({
   const handleSubmitTransferFunds = (data: any) => {
     // Guard rather than send a blank id: the URL would still be well formed
     // and the API would answer about some other wallet, or none.
-    if (!selectedBankId) {
+    if (!walletBankId) {
       showToast("Select an account before transferring", "error");
       return;
     }
@@ -109,7 +121,7 @@ export const useTransactionsHook = ({
     TransferFund(
       // Money leaves the wallet the screen is pointed at, so the transfer is
       // keyed on the same bank id the balance above it was read from.
-      { body: masterPayload, businessId: selectedBankId },
+      { body: masterPayload, businessId: walletBankId },
       {
         onSuccess: () => {
           TrxDataRefetch();
@@ -176,13 +188,13 @@ export const useTransactionsHook = ({
         ? moment(dateRange.to).format("YYYY-MM-DD")
         : undefined,
       limit: 20,
-      id: selectedBankId ?? "",
+      id: walletBankId ?? "",
       search: searchTerm,
       type: type,
     },
     // Nothing to read until a bank resolves — querying with the business id
     // would point at a wallet that is not this one.
-    enabled: !!selectedBankId,
+    enabled: !!walletBankId,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -199,6 +211,8 @@ export const useTransactionsHook = ({
   return {
     BankData,
     selectedBankId,
+    /** The wallet actually in play — the override where one was given. */
+    walletBankId,
     selectedBank,
     hasBanks,
     TrxData,
