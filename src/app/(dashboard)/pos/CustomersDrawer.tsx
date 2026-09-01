@@ -188,7 +188,7 @@ const CustomerDrawer = ({
                     className="flex w-full items-center rounded-xl border border-grey-5 bg-white p-3 text-left transition-colors hover:border-primary-green-300 hover:bg-primary-green-500/40 cursor-pointer"
                   >
                     <span
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${avatarTone(
+                      className={`flex h-11 w-11 shrink-0 mr-3 items-center justify-center rounded-full text-xs font-extrabold text-white ${avatarTone(
                         customer.id ?? customer.name ?? "",
                       )}`}
                     >

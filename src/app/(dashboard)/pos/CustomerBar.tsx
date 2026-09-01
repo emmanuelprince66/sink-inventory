@@ -379,7 +379,7 @@ const CustomerBar = () => {
             className="h-8 shrink-0 bg-white px-3 text-[11px] font-bold text-primary-green-300 hover:bg-white/90"
             onClick={() => applyReward(readyReward)}
           >
-            {rewardItemOf(readyReward) ? "Add free item to sale" : "Apply to sale"}
+            {rewardItemOf(readyReward) ? "Activate reward" : "Apply to sale"}
           </Button>
         </div>
       )}

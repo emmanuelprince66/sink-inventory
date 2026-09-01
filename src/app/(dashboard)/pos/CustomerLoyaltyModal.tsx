@@ -315,7 +315,7 @@ const CustomerLoyaltyModal = ({
                             {applied
                               ? "Remove"
                               : item
-                                ? "Add free item"
+                                ? "Activate reward"
                                 : "Apply to sale"}
                           </button>
                         ) : (
