@@ -3,6 +3,7 @@ import React from "react";
 import { User, Wallet } from "lucide-react";
 import moment from "moment";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomerWalletTrxData } from "../types";
 
 const TrxDetails = ({
@@ -39,21 +40,21 @@ const TrxDetails = ({
               <div>
                 <p className="text-sm text-grey-3">Initial Balance</p>
                 <p className="font-bold text-grey-1">
-                  {walletTrxDetails.initial.toLocaleString()}
+                  {formatToNaira(walletTrxDetails.initial)}
                 </p>
               </div>
 
               <div>
                 <p className="text-sm text-grey-3">Amount Added</p>
                 <p className="font-bold text-success-1">
-                  {walletTrxDetails.amount.toLocaleString()}
+                  {formatToNaira(walletTrxDetails.amount)}
                 </p>
               </div>
 
               <div>
                 <p className="text-sm text-grey-3">Balance After</p>
                 <p className="font-bold text-grey-1">
-                  {walletTrxDetails.balance.toLocaleString()}
+                  {formatToNaira(walletTrxDetails.balance)}
                 </p>
               </div>
 

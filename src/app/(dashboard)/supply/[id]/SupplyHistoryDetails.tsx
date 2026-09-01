@@ -67,9 +67,9 @@ const SupplyHistoryDetails = ({
                         {formatToNaira(supplierDetails.cost_price)}
                       </div>
                       <div className="col-span-2 text-right font-bold text-grey-1">
-                        {(
+                        {formatToNaira(
                           supplierDetails.cost_price * supplierDetails.quantity
-                        ).toLocaleString()}
+                        )}
                       </div>
                     </div>
                   </div>

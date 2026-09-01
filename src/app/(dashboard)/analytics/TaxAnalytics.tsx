@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
-import { formatToNaira } from "@/utils/formatMoney";
+import { formatCompactMoney, formatToNaira } from "@/utils/formatMoney";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -180,7 +180,7 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         backgroundColor: "rgba(0,0,0,0.8)",
         padding: 12,
         callbacks: {
-          label: (ctx: any) => `₦${ctx.parsed.y.toLocaleString()}`,
+          label: (ctx: any) => formatToNaira(ctx.parsed.y),
         },
       },
     },
@@ -189,10 +189,7 @@ const TaxAnalytics = ({ dateRange }: TaxAnalyticsProps) => {
         beginAtZero: true,
         ticks: {
           callback: (v: any) => {
-            if (v === 0) return "₦0";
-            if (v >= 1_000_000) return `₦${(v / 1_000_000).toFixed(1)}M`;
-            if (v >= 1_000) return `₦${(v / 1_000).toFixed(0)}K`;
-            return `₦${v}`;
+            return formatCompactMoney(v);
           },
         },
         grid: { color: "rgba(0,0,0,0.05)" },

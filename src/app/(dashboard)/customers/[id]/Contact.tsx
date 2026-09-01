@@ -1,4 +1,5 @@
 "use client";
+import { formatToNaira } from "@/utils/formatMoney";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -169,7 +170,7 @@ const Contact = ({ id }: { id: string }) => {
                 {!customer || CustomerLoading ? (
                   <Skeleton className="h-5 w-20 bg-white/60" />
                 ) : (
-                  (customer as any).totalPurchaseValue || "₦0"
+                  (customer as any).totalPurchaseValue || formatToNaira(0)
                 )}
               </p>
             </div>

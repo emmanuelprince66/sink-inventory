@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/toast/useToast";
-import { formatToNaira } from "@/utils/formatMoney";
+import { formatToNaira, getCurrencySymbol } from "@/utils/formatMoney";
 import { Banknote } from "lucide-react";
 import { useState } from "react";
 
@@ -88,7 +88,7 @@ const WithdrawModal = ({
           </Label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-grey-3">
-              ₦
+              {getCurrencySymbol()}
             </span>
             <Input
               id="withdraw-amount"

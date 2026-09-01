@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { DatePicker } from "@/components/app/DatePicker";
 import { Button } from "@/components/ui/button";
@@ -445,7 +446,7 @@ const CreateOrders = () => {
                           </div>
                           {!hasVariations(product) && (
                             <p className="text-xs sm:text-sm text-grey-4 mt-0.5">
-                              ₦{getProductPrice(product).toLocaleString()} per
+                              {formatToNaira(getProductPrice(product))} per
                               unit
                             </p>
                           )}
@@ -496,8 +497,9 @@ const CreateOrders = () => {
                                     <span>Stock: {variation.quantity}</span>
                                     <span>•</span>
                                     <span className="font-semibold text-primary-green-300">
-                                      ₦
-                                      {variation.selling_price?.toLocaleString()}
+                                      {formatToNaira(
+                                        Number(variation.selling_price ?? 0),
+                                      )}
                                     </span>
                                   </div>
                                 </div>
@@ -507,8 +509,8 @@ const CreateOrders = () => {
                         </Select>
                         {selectedVariations[product.id] && (
                           <div className="text-xs mt-2 text-primary-green-100 bg-secondary-5 p-2 rounded border border-secondary-4">
-                            Selected: {getSelectedVariation(product)?.name} - ₦
-                            {getProductPrice(product).toLocaleString()} per unit
+                            Selected: {getSelectedVariation(product)?.name} -{" "}
+                            {formatToNaira(getProductPrice(product))} per unit
                           </div>
                         )}
                       </div>
@@ -561,7 +563,7 @@ const CreateOrders = () => {
                             Discount Applied!
                           </p>
                           <p className="text-xs text-primary-green-300">
-                            ₦{getProductDiscount(product).toLocaleString()} off
+                            {formatToNaira(getProductDiscount(product))} off
                             per unit
                             {getSelectedVariation(product)
                               ?.discount_threshold && (
@@ -580,11 +582,10 @@ const CreateOrders = () => {
                         <div className="text-right">
                           <p className="text-xs text-grey-4">Total saved:</p>
                           <p className="text-sm font-semibold text-primary-green-300">
-                            ₦
-                            {(
+                            {formatToNaira(
                               getProductDiscount(product) *
-                              (product.quantity || 1)
-                            ).toLocaleString()}
+                                (product.quantity || 1),
+                            )}
                           </p>
                         </div>
                       </div>
@@ -601,10 +602,10 @@ const CreateOrders = () => {
                           Buy{" "}
                           {getSelectedVariation(product).discount_threshold -
                             (product.quantity || 1)}{" "}
-                          more to get ₦
-                          {getSelectedVariation(
-                            product,
-                          ).discount.toLocaleString()}{" "}
+                          more to get{" "}
+                          {formatToNaira(
+                            getSelectedVariation(product).discount,
+                          )}{" "}
                           off per unit
                         </p>
                       </div>
@@ -627,7 +628,7 @@ const CreateOrders = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Subtotal:</span>
                   <span className="text-sm">
-                    ₦{calculateSubtotal().toLocaleString()}
+                    {formatToNaira(calculateSubtotal())}
                   </span>
                 </div>
 
@@ -635,7 +636,7 @@ const CreateOrders = () => {
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Total Discount:</span>
                     <span className="text-sm text-primary-green-300">
-                      -₦{calculateTotalDiscount().toLocaleString()}
+                      -{formatToNaira(calculateTotalDiscount())}
                     </span>
                   </div>
                 )}
@@ -647,7 +648,7 @@ const CreateOrders = () => {
                       {tax > 0 ? (
                         <>
                           <span className="text-sm">
-                            ₦{tax.toLocaleString()}
+                            {formatToNaira(tax)}
                           </span>
                           <Button
                             type="button"
@@ -689,7 +690,7 @@ const CreateOrders = () => {
                           <>
                             <div className="flex flex-col items-end">
                               <span className="text-sm font-semibold">
-                                ₦{shippingFee.toLocaleString()}
+                                {formatToNaira(shippingFee)}
                               </span>
                               <span className="text-xs text-grey-4">
                                 {selectedCourier.location}
@@ -733,7 +734,7 @@ const CreateOrders = () => {
                         <>
                           <div className="flex flex-col items-end">
                             <span className="text-sm font-semibold">
-                              ₦{shippingFee.toLocaleString()}
+                              {formatToNaira(shippingFee)}
                             </span>
                             {selectedShippingMethod?.location && (
                               <span className="text-xs text-grey-4">
@@ -772,7 +773,7 @@ const CreateOrders = () => {
                 <div className="flex justify-between items-center pt-2 border-t border-grey-5">
                   <span className="font-bold">Total:</span>
                   <span className="font-bold text-base sm:text-lg">
-                    ₦{calculateTotal().toLocaleString()}
+                    {formatToNaira(calculateTotal())}
                   </span>
                 </div>
               </div>
@@ -881,7 +882,7 @@ const CreateOrders = () => {
                     Total Amount:
                   </span>
                   <span className="text-lg font-bold text-primary-green-100">
-                    ₦{calculateTotal().toLocaleString()}
+                    {formatToNaira(calculateTotal())}
                   </span>
                 </div>
                 {amountPaid > 0 && (
@@ -890,7 +891,7 @@ const CreateOrders = () => {
                       Remaining Balance:
                     </span>
                     <span className="font-semibold text-primary-green-100">
-                      ₦{(calculateTotal() - amountPaid).toLocaleString()}
+                      {formatToNaira(calculateTotal() - amountPaid)}
                     </span>
                   </div>
                 )}

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Button } from "@/components/ui/button";
@@ -59,14 +60,9 @@ const YEARS = Array.from(
   (_, i) => CURRENT_YEAR - i,
 );
 
-const fmt = (n: number) =>
-  typeof n === "number"
-    ? new Intl.NumberFormat("en-NG", {
-        style: "currency",
-        currency: "NGN",
-        maximumFractionDigits: 0,
-      }).format(n)
-    : "₦0";
+// Currency and locale come from the business, not from a hardcoded en-NG /
+// NGN pair — a business trading in USD was being shown its takings in naira.
+const fmt = (n: number) => formatToNaira(typeof n === "number" ? n : 0);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

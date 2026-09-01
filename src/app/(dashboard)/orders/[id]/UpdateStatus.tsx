@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
@@ -97,7 +98,7 @@ const UpdateStatusComp = ({
       // Check if amount exceeds remaining
       if (enteredAmount > remainingAmount) {
         showToast(
-          `Amount cannot exceed remaining balance of ₦${remainingAmount.toLocaleString()}`,
+          `Amount cannot exceed remaining balance of ${formatToNaira(remainingAmount)}`,
           "error"
         );
         return false;
@@ -106,7 +107,7 @@ const UpdateStatusComp = ({
       // For PAID status, amount must equal remaining amount
       if (status === "PAID" && enteredAmount < remainingAmount) {
         showToast(
-          `For PAID status, amount must be ₦${remainingAmount.toLocaleString()} (full remaining balance)`,
+          `For PAID status, amount must be ${formatToNaira(remainingAmount)} (full remaining balance)`,
           "error"
         );
         return false;
@@ -188,13 +189,13 @@ const UpdateStatusComp = ({
               <div className="flex justify-between">
                 <span className="text-green-700">Total Amount:</span>
                 <span className="font-semibold text-green-900">
-                  ₦{totalAmount.toLocaleString()}
+                  {formatToNaira(totalAmount)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-green-700">Amount Paid:</span>
                 <span className="font-semibold text-green-600">
-                  ₦{amountPaid.toLocaleString()}
+                  {formatToNaira(amountPaid)}
                 </span>
               </div>
               <div className="flex justify-between pt-1 border-t border-green-200">
@@ -202,7 +203,7 @@ const UpdateStatusComp = ({
                   Remaining Balance:
                 </span>
                 <span className="font-bold text-green-900">
-                  ₦{remainingAmount.toLocaleString()}
+                  {formatToNaira(remainingAmount)}
                 </span>
               </div>
             </div>
@@ -279,7 +280,7 @@ const UpdateStatusComp = ({
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={
                     status === "PAID"
-                      ? `Enter ₦${remainingAmount.toLocaleString()}`
+                      ? `Enter ${formatToNaira(remainingAmount)}`
                       : "Enter amount"
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
@@ -288,8 +289,7 @@ const UpdateStatusComp = ({
                 />
                 {status === "PARTIAL" && (
                   <p className="mt-1 text-xs text-gray-500">
-                    Enter partial amount (max: ₦
-                    {remainingAmount.toLocaleString()})
+                    Enter partial amount (max: {formatToNaira(remainingAmount)})
                   </p>
                 )}
                 {status === "PAID" && (
@@ -353,14 +353,14 @@ const UpdateStatusComp = ({
               {status === "PARTIAL" &&
                 amount &&
                 parseFloat(amount) > 0 &&
-                `Recording a partial payment of ₦${parseFloat(
-                  amount
-                ).toLocaleString()}. New remaining balance: ₦${(
-                  remainingAmount - parseFloat(amount)
-                ).toLocaleString()}`}
+                `Recording a partial payment of ${formatToNaira(
+                  parseFloat(amount),
+                )}. New remaining balance: ${formatToNaira(
+                  remainingAmount - parseFloat(amount),
+                )}`}
               {status === "PARTIAL" &&
                 (!amount || parseFloat(amount) <= 0) &&
-                `Enter the amount being paid now. Current remaining balance: ₦${remainingAmount.toLocaleString()}`}
+                `Enter the amount being paid now. Current remaining balance: ${formatToNaira(remainingAmount)}`}
               {status === "PAID" &&
                 "This will mark the order as fully paid and complete the payment history."}
             </p>

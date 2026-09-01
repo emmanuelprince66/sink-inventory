@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { formatToNaira } from "@/utils/formatMoney";
 
 import { CustomerHistoryData } from "../types";
 
@@ -78,10 +79,10 @@ const HistoryMoreDetails = ({
                         {product.quantity}
                       </div>
                       <div className="col-span-1 text-right">
-                        {product.price.toLocaleString()}
+                        {formatToNaira(product.price)}
                       </div>
                       <div className="col-span-2 text-right font-medium">
-                        {(product.price * product.quantity).toLocaleString()}
+                        {formatToNaira(product.price * product.quantity)}
                       </div>
                     </div>
                     {index < historyDetailsData.products.length - 1 && (
@@ -93,9 +94,9 @@ const HistoryMoreDetails = ({
                 <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t border-grey-6">
                   <div className="col-span-6 font-bold text-grey-1">Total</div>
                   <div className="col-span-2 text-right font-bold text-grey-1">
-                    {parseFloat(
-                      historyDetailsData.total_price
-                    ).toLocaleString()}
+                    {formatToNaira(
+                      parseFloat(historyDetailsData.total_price)
+                    )}
                   </div>
                 </div>
               </div>

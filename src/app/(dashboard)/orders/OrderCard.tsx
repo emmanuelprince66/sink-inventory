@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/app/StatusBadge";
 import { Clock, Phone, UserCheck } from "lucide-react";
 import Link from "next/link";
 import moment from "moment";
+import { formatToNaira } from "@/utils/formatMoney";
 import { OrderInfo } from "./type";
 
 interface OrderCardProps {
@@ -51,7 +52,7 @@ const OrderCard = ({ order, type, onAssignDelivery }: OrderCardProps) => {
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-sm font-extrabold text-grey-1">
-            ₦{Number(amount).toLocaleString()}
+            {formatToNaira(Number(amount))}
           </p>
           <p className="text-xs font-medium text-grey-4 flex items-center gap-1 justify-end mt-0.5">
             <Clock className="w-3 h-3" />

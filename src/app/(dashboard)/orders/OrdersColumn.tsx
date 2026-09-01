@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import moment from "moment";
@@ -89,12 +90,7 @@ export const useOrdersColumn = (type: string) => {
         const order = row.original;
         return (
           <span>
-            ₦
-            {order.amount
-              ? order?.amount
-              : order?.total_price
-                ? order?.total_price
-                : "₦0"}
+            {formatToNaira(Number(order.amount ?? order.total_price ?? 0))}
           </span>
         );
       },
@@ -190,7 +186,7 @@ export const useOrdersColumn = (type: string) => {
       header: "Shipping Fee",
       cell: ({ row }) => {
         const order = row.original;
-        return <span>₦{order.shipping_fee ?? "0"}</span>;
+        return <span>{formatToNaira(Number(order.shipping_fee ?? 0))}</span>;
       },
     };
 

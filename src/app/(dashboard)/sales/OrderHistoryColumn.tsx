@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import { useUserRole } from "@/lib/store/user-store";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
@@ -79,11 +80,9 @@ export const useOrderHistoryColumn = () => {
             cell: ({ row }: { row: any }) => {
               const order = row.original;
               // Format currency with proper symbols
-              const formattedAmount = order.total_price
-                ? `₦${parseFloat(order.total_price).toLocaleString("en-NG", {
-                    minimumFractionDigits: 2,
-                  })}`
-                : "₦0.00";
+              const formattedAmount = formatToNaira(
+                parseFloat(order.total_price || "0"),
+              );
               return (
                 <div className="font-medium">
                   <p className="text-sm font-bold text-grey-1 text-right">

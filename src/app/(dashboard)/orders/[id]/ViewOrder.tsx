@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomModal } from "@/components/app/CustomModal";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -456,13 +457,13 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                             {product?.name || "Nil"}
                           </td>
                           <td className="py-3 px-4 text-sm font-medium text-grey-1 text-right">
-                            ₦ {unitPrice.toLocaleString()}
+                            {formatToNaira(unitPrice)}
                           </td>
                           <td className="py-3 px-4 text-sm font-medium text-grey-1 text-center">
                             {quantity}
                           </td>
                           <td className="py-3 px-4 text-sm font-extrabold text-grey-1 text-right">
-                            ₦ {total.toLocaleString()}
+                            {formatToNaira(total)}
                           </td>
                         </tr>
                       );
@@ -521,7 +522,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-grey-1">
-                          ₦ {parseFloat(payment.amount || "0").toLocaleString()}
+                          {formatToNaira(parseFloat(payment.amount || "0"))}
                         </p>
                       </div>
                     </div>
@@ -549,8 +550,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-grey-3">Amount</span>
                   <span className="text-grey-1">
-                    ₦{" "}
-                    {parseFloat(orderData.total_price || "0").toLocaleString()}
+                    {formatToNaira(parseFloat(orderData.total_price || "0"))}
                   </span>
                 </div>
 
@@ -561,10 +561,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 <div className="flex justify-between text-sm">
                   <span className="text-grey-3">Shipping Fee</span>
                   <span className="text-grey-1">
-                    ₦{" "}
-                    {parseFloat(
-                      orderData.delivery?.shipping_fee || "0",
-                    ).toLocaleString()}
+                    {formatToNaira(
+                      parseFloat(orderData.delivery?.shipping_fee || "0"),
+                    )}
                   </span>
                 </div>
 
@@ -572,10 +571,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   <div className="flex justify-between text-base font-semibold">
                     <span className="text-grey-1">Total Amount Paid</span>
                     <span className="text-grey-1">
-                      ₦{" "}
-                      {parseFloat(
-                        orderData.amount_paid || "0",
-                      ).toLocaleString()}
+                      {formatToNaira(
+                        parseFloat(orderData.amount_paid || "0"),
+                      )}
                     </span>
                   </div>
                 </div>

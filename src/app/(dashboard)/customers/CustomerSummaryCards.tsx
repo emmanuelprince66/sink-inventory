@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useFormatMoney } from "@/utils/formatMoney";
+import { useFormatMoney, getCurrencySymbol } from "@/utils/formatMoney";
 import { ShoppingBag, Users, Wallet } from "lucide-react";
 import type { CustomerSummary } from "./types";
 
@@ -40,9 +40,9 @@ const Stat = ({
 const CustomerSummaryCards = ({ summary }: { summary?: CustomerSummary }) => {
   const formatMoney = useFormatMoney();
 
-  // Currency symbol from the shared formatter, so a non-NGN business is not
+  // Currency symbol from the shared helper, so a non-NGN business is not
   // hardcoded into the compact figures.
-  const symbol = formatMoney(0).replace(/[\d.,\s]/g, "") || "₦";
+  const symbol = getCurrencySymbol();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">

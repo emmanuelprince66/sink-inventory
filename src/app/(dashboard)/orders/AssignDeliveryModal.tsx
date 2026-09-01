@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -156,7 +157,7 @@ const AssignDeliveryModal = ({ isOpen, onClose, orderId, onAssigned }: Props) =>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="text-sm font-extrabold text-grey-1">
-                      ₦{partner.estimatedCost.toLocaleString()}
+                      {formatToNaira(partner.estimatedCost)}
                     </div>
                     <div className="text-xs font-medium text-grey-4">est. cost</div>
                   </div>

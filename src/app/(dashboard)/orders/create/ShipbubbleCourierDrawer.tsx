@@ -8,15 +8,20 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { NormalizedCourier } from "@/hooks/useOrderDeliveryHook";
+import { formatMoney } from "@/utils/formatMoney";
 import { AlertCircle, Star, Truck } from "lucide-react";
 
-const formatFee = (amount: string, currency = "NGN") => {
-  const symbol = currency === "NGN" ? "₦" : currency || "₦";
-  return `${symbol}${Number(amount || 0).toLocaleString("en-NG", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-};
+/**
+ * The rate's own currency, not the business's — Shipbubble quotes what it
+ * quotes, and relabelling a NGN rate as dollars because the business trades in
+ * dollars would misstate the price.
+ *
+ * Goes through the shared formatter so an unfamiliar currency still gets its
+ * real symbol and grouping. The local version this replaced only knew "₦", and
+ * fell back to pasting the code in front of the number — "USD1,000.00".
+ */
+const formatFee = (amount: string, currency = "NGN") =>
+  formatMoney(Number(amount || 0), currency);
 
 interface ShipbubbleCourierDrawerProps {
   open: boolean;

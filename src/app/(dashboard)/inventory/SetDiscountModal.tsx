@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,17 +97,15 @@ const SetDiscountModal = ({
                   This discount will result in a negative profit for this item.
                 </p>
                 <div className="text-xs font-medium text-error-1 space-y-1">
-                  <div>Cost Price: ₦{costPrice.toLocaleString()}</div>
-                  <div>Selling Price: ₦{sellingPrice.toLocaleString()}</div>
-                  <div>Current Profit: ₦{currentProfit.toLocaleString()}</div>
-                  <div>Discount: ₦{priceDiscount.toLocaleString()}</div>
+                  <div>Cost Price: {formatToNaira(costPrice)}</div>
+                  <div>Selling Price: {formatToNaira(sellingPrice)}</div>
+                  <div>Current Profit: {formatToNaira(currentProfit)}</div>
+                  <div>Discount: {formatToNaira(priceDiscount)}</div>
                   <div className="font-bold">
-                    Profit After Discount: ₦
-                    {profitAfterDiscount.toLocaleString()}
+                    Profit After Discount: {formatToNaira(profitAfterDiscount)}
                   </div>
                   <div className="pt-1 border-t border-error-1/30">
-                    Maximum recommended discount: ₦
-                    {maxDiscount.toLocaleString()}
+                    Maximum recommended discount: {formatToNaira(maxDiscount)}
                   </div>
                 </div>
               </div>

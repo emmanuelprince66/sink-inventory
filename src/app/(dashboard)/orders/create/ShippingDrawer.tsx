@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import {
@@ -122,7 +123,7 @@ const ShippingDrawer = ({
                           {shipping.location}
                         </h4>
                         <span className="text-base font-bold text-primary-green-300">
-                          ₦{parseFloat(shipping.amount).toLocaleString()}
+                          {formatToNaira(parseFloat(shipping.amount))}
                         </span>
                       </div>
 

@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import { Skeleton } from "@/components/ui/skeleton";
 import moment from "moment";
 
@@ -56,7 +57,7 @@ const PaymentDetails = ({
                       {payment?.attendant}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-grey-4">
-                      ₦{payment?.amount?.toLocaleString()}
+                      {formatToNaira(Number(payment?.amount ?? 0))}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-grey-1">
                       {moment(payment?.created_at).format("MMM DD, YYYY")}
@@ -90,7 +91,7 @@ const PaymentDetails = ({
                         Amount
                       </span>
                       <div className="text-lg font-semibold text-success-1 mt-1">
-                        ₦{payment?.amount?.toLocaleString()}
+                        {formatToNaira(Number(payment?.amount ?? 0))}
                       </div>
                     </div>
                   </div>

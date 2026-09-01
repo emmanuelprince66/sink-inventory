@@ -1,3 +1,4 @@
+import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -63,7 +64,7 @@ export default function TransactionDetails({
   if (transaction.charges) {
     rows.push({
       label: "Charges",
-      value: `₦${parseFloat(transaction.charges).toLocaleString()}`,
+      value: formatToNaira(parseFloat(transaction.charges)),
     });
   }
 
@@ -86,8 +87,7 @@ export default function TransactionDetails({
             <p
               className={`text-xl sm:text-2xl font-extrabold ${amountTint.text} truncate`}
             >
-              {isCredit ? "+" : "-"}₦
-              {parseFloat(transaction.amount).toLocaleString()}
+              {isCredit ? "+" : "-"}{formatToNaira(parseFloat(transaction.amount))}
             </p>
           </div>
         </div>

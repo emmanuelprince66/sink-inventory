@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { CustomCard } from "@/components/app/CustomCard";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
@@ -378,7 +379,7 @@ const DeliveryCard = ({ delivery, onReassign }: DeliveryCardProps) => {
         </div>
         <div className="text-right">
           <p className="text-sm font-semibold text-gray-900">
-            ₦{delivery.fee.toLocaleString()}
+            {formatToNaira(delivery.fee)}
           </p>
           <p className="text-xs text-gray-500 flex items-center gap-1 justify-end">
             <Clock className="w-3 h-3" />

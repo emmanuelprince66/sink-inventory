@@ -298,10 +298,10 @@ const OrderHistoryPDFDocument = ({
                 </View>
                 <Text style={styles.cellQty}>{product.quantity}</Text>
                 <Text style={styles.cellPrice}>
-                  {parseFloat(product?.unit_price).toLocaleString()}
+                  {formatToNaira(parseFloat(product?.unit_price))}
                 </Text>
                 <Text style={styles.cellTotal}>
-                  {parseFloat(product.price).toLocaleString()}
+                  {formatToNaira(parseFloat(product.price))}
                 </Text>
               </View>
             ))}
@@ -372,11 +372,11 @@ const OrderHistoryDetails = ({
 
   const tt =
     orderDetails &&
-    orderDetails?.products
-      ?.reduce((total, product) => {
+    formatToNaira(
+      orderDetails?.products?.reduce((total, product) => {
         return total + parseFloat(product.price) * product.quantity;
-      }, 0)
-      .toLocaleString();
+      }, 0) ?? 0,
+    );
 
   console.log("tt", tt);
 

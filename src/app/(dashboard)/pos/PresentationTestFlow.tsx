@@ -1,3 +1,4 @@
+import { formatToNaira as formatMoneyForBusiness } from "@/utils/formatMoney";
 import { useState } from "react";
 import { dummyInventoryData } from "../inventory/dummyInventory";
 
@@ -23,12 +24,9 @@ const pharmacyProducts = dummyInventoryData.filter(
   (p) => p.department === "Pharmacy",
 );
 
-const formatToNaira = (amount: number): string =>
-  new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    minimumFractionDigits: 0,
-  }).format(amount);
+// Re-exported rather than redefined: a local copy pinned to en-NG/NGN showed
+// this flow in naira regardless of what the business actually trades in.
+const formatToNaira = formatMoneyForBusiness;
 
 const generatePreSaleCode = (cartItems: CartItem[]): string => {
   const ids = cartItems.map((item) => `${item.id}:${item.cartQty}`).join("|");

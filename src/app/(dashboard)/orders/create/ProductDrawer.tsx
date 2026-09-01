@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira } from "@/utils/formatMoney";
 import { SearchInput } from "@/components/app/SearchInput";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,7 +131,7 @@ const ProductDrawer = ({
                         </p>
                         <p className="text-sm font-medium text-grey-4">-</p>
                         <p className="text-sm font-bold text-primary-green-300">
-                          ₦{product.selling_price ?? product.amount}
+                          {formatToNaira(Number(product.selling_price ?? product.amount ?? 0))}
                         </p>
                       </div>
                     </div>

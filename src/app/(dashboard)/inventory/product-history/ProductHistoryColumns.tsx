@@ -1,12 +1,11 @@
 import { ProductHistoryItem } from "@/api/products/fetch-product-history";
 import { cn } from "@/lib/utils";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { ArrowUpDown } from "lucide-react";
 
-const formatCurrency = (value: string) =>
-  "₦" +
-  parseFloat(value).toLocaleString("en-NG", { minimumFractionDigits: 2 });
+const formatCurrency = (value: string) => formatToNaira(parseFloat(value));
 
 export const createProductHistoryColumns =
   (): ColumnDef<ProductHistoryItem>[] => [

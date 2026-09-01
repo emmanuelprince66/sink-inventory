@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatToNaira } from "@/utils/formatMoney";
 import { useState } from "react";
 
 interface Product {
@@ -123,7 +124,7 @@ const ProductsInfo = ({ data }: { data: Product[] }) => {
                     </div>
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                    ₦{product.product__selling_price?.toLocaleString() ?? "0"}
+                    {formatToNaira(Number(product.product__selling_price ?? 0))}
                   </td>
                   <td className="px-2 py-4 whitespace-nowrap">
                     <span
