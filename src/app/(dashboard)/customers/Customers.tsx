@@ -308,9 +308,16 @@ const Customers = () => {
         title="Add Customer"
       >
         <div className="w-full ">
+          {/* Nothing to add them to here, so an existing match opens their
+              profile — which is where someone who reached for "Add Customer"
+              and found one already on file was trying to get to. */}
           <AddCustomer
             handleOpenNotSubscribeModal={handleOpenNotSubscribeModal}
             closeOpenCustomerModal={closeOpenCustomerModal}
+            onUseExisting={(customer: any) => {
+              closeOpenCustomerModal();
+              router.push(`/customers/${customer.id}`);
+            }}
           />
         </div>
       </CustomModal>

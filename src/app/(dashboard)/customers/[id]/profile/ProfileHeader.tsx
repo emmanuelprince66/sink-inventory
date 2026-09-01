@@ -1,5 +1,6 @@
 "use client";
 
+import SegmentTag from "@/components/SegmentTag";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Gift, MessageSquare, Pencil } from "lucide-react";
@@ -20,10 +21,37 @@ const ProfileHeader = ({
   profile: CustomerProfileData;
 }) => {
   const router = useRouter();
-  const { identity, purchase, loyalty, financial, row, risk, tier, symbol, tab, setTab } =
-    profile;
+  const {
+    identity,
+    purchase,
+    loyalty,
+    financial,
+    row,
+    risk,
+    tier,
+    segment,
+    segmentType,
+    segments,
+    symbol,
+    tab,
+    setTab,
+  } = profile;
 
   const location = [identity?.city, identity?.state].filter(Boolean).join(", ");
+
+  /**
+   * Every segment this customer falls into.
+   *
+   * The list only has room for the leading one, but the profile is where
+   * someone comes to understand a customer, and "VIP and At Risk at the same
+   * time" is precisely the combination worth acting on. Falls back to the
+   * single field for a payload that sent no array.
+   */
+  const segmentTags = segments?.length
+    ? segments
+    : segment
+      ? [{ name: segment, segment_type: segmentType ?? undefined }]
+      : [];
 
   // Figures come from purchase_behaviour / financial_details, which carry the
   // real totals; the nested list row can read 0.
@@ -137,6 +165,13 @@ const ProfileHeader = ({
                   {tier}
                 </span>
               )}
+              {segmentTags.map((s) => (
+                <SegmentTag
+                  key={s.name}
+                  name={s.name}
+                  segmentType={s.segment_type}
+                />
+              ))}
               {row?.customer_code && <span>{row.customer_code}</span>}
               {identity?.gender && <span>· {identity.gender}</span>}
               {location && <span>· {location}</span>}

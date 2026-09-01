@@ -54,6 +54,14 @@ export interface CustomerType {
   status?: "Active" | "At Risk" | "Inactive" | string;
   wallet_balance?: number;
   credit_balance?: number;
+  /**
+   * Segment membership, computed by the backend. `segment` is the one to lead
+   * with and `segment_type` its enum, which is what colours it; `segments`
+   * carries the rest, since a customer can match several rule sets at once.
+   */
+  segment?: string | null;
+  segment_type?: string | null;
+  segments?: Array<{ id?: string; name: string; segment_type?: string }>;
 }
 
 export interface CustomerSummary {

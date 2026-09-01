@@ -15,6 +15,15 @@ export interface CustomerIdentity {
   customer_since: string | null;
   state: string | null;
   city: string | null;
+  /**
+   * Segment membership, sent here and repeated on the nested `data` row.
+   * `segment` is the one to lead with, `segment_type` its enum (what the
+   * palette keys off), and `segments` the full set — the rules can match a
+   * customer several times over.
+   */
+  segment?: string | null;
+  segment_type?: string | null;
+  segments?: Array<{ id?: string; name: string; segment_type?: string }>;
 }
 
 /** ISO timestamps; null until the milestone happens. */

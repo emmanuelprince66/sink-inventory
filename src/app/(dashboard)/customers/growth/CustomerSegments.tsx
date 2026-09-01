@@ -1,5 +1,6 @@
 "use client";
 
+import { formatToNaira, getCurrencySymbol } from "@/utils/formatMoney";
 import { useDeleteSegmentMutation } from "@/api/segment/delete-segment";
 import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
 import { useUpdateSegmentMutation } from "@/api/segment/update-segment";
@@ -28,10 +29,13 @@ import { toneFor } from "./segmentTone";
 const compactMoney = (amount: number) => {
   if (!Number.isFinite(amount)) return UNAVAILABLE;
   const abs = Math.abs(amount);
-  if (abs >= 1_000_000) return `₦${(amount / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000_000)
+    return `${getCurrencySymbol()}${(amount / 1_000_000).toFixed(1)}M`;
   if (abs >= 1_000)
-    return `₦${(amount / 1_000).toFixed(abs < 10_000 ? 1 : 0)}K`;
-  return `₦${Math.round(amount).toLocaleString()}`;
+    return `${getCurrencySymbol()}${(amount / 1_000).toFixed(
+      abs < 10_000 ? 1 : 0,
+    )}K`;
+  return formatToNaira(Math.round(amount));
 };
 const UNAVAILABLE = "—";
 

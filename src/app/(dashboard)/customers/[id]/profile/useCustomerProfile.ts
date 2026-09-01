@@ -1,7 +1,7 @@
 "use client";
 
 import { useFetchCustomerById } from "@/api/customer/fetch-customer-by-id";
-import { useFormatMoney } from "@/utils/formatMoney";
+import { useFormatMoney, getCurrencySymbol } from "@/utils/formatMoney";
 import { useState } from "react";
 import type { CustomerDetail } from "../../customerDetail";
 import type { ProfileTab } from "./primitives";
@@ -17,8 +17,7 @@ export const useCustomerProfile = (id: string) => {
   const { data, isLoading } = useFetchCustomerById(id);
   const detail: CustomerDetail | undefined = data?.data ?? data;
 
-  // formatMoney has no symbol-only mode, so read it off a formatted zero.
-  const symbol = formatMoney(0).replace(/[\d.,\s]/g, "") || "₦";
+  const symbol = getCurrencySymbol();
 
   const engagement = detail?.engagement_metrics;
   const loyalty = detail?.loyalty_rewards;
@@ -71,6 +70,11 @@ export const useCustomerProfile = (id: string) => {
     // richer section wins where it has a value.
     risk: engagement?.churn_risk ?? row?.risk_level ?? "Low",
     tier: loyalty?.loyalty_tier ?? row?.tier_name,
+    // Sent in both places, identical in practice; identity leads for the same
+    // reason as above, and the row covers a payload that only filled one.
+    segment: detail?.identity?.segment ?? row?.segment ?? null,
+    segmentType: detail?.identity?.segment_type ?? row?.segment_type ?? null,
+    segments: detail?.identity?.segments ?? row?.segments ?? [],
   };
 };
 

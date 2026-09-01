@@ -22,6 +22,11 @@ export async function GET(
 
   const search = request.nextUrl.searchParams.get("search") || "";
   const status = request.nextUrl.searchParams.get("status") || "";
+  // Sent by the filter bar and, until now, dropped here — the selection
+  // travelled as far as this route and no further, so filtering by tier or
+  // segment quietly returned the unfiltered list.
+  const tier = request.nextUrl.searchParams.get("tier") || "";
+  const segment = request.nextUrl.searchParams.get("segment") || "";
   const end_date = request.nextUrl.searchParams.get("end_date") || "";
   const start_date = request.nextUrl.searchParams.get("start_date") || "";
 
@@ -32,6 +37,8 @@ export async function GET(
   const apiUrl = new URL(`${BaseUrl}customer/${id}/`);
   if (search) apiUrl.searchParams.append("search", search);
   if (status) apiUrl.searchParams.append("status", status);
+  if (tier) apiUrl.searchParams.append("tier", tier);
+  if (segment) apiUrl.searchParams.append("segment", segment);
   if (start_date) apiUrl.searchParams.append("start_date", start_date);
   if (end_date) apiUrl.searchParams.append("end_date", end_date);
 

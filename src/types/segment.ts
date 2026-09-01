@@ -105,4 +105,29 @@ export interface UserCustomer {
   total_sales?: string;
   addresses?: CustomerAddress[];
   address?: CustomerAddress;
+
+  /**
+   * Segment membership, computed by the backend and returned on both the list
+   * and the detail endpoint.
+   *
+   * `segment` is the display name of the one to lead with and `segment_type`
+   * its enum, which is what `toneFor` colours by — a renamed segment keeps its
+   * palette that way. `segments` is the full membership, since the rules can
+   * put one customer in several at once; anything showing a single tag should
+   * read `segment` rather than picking the first of the list.
+   */
+  segment?: string | null;
+  segment_type?: SegmentType | null;
+  segments?: Array<{
+    id?: string;
+    name: string;
+    segment_type?: SegmentType;
+  }>;
+
+  /** Loyalty, sent alongside on the same endpoints. */
+  tier_name?: string | null;
+  loyalty_code?: string | null;
+  reward_count?: number;
+  /** Decimal string or number depending on endpoint; coerce before display. */
+  wallet_balance?: string | number;
 }

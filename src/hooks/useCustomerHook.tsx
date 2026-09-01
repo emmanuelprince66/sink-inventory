@@ -116,8 +116,6 @@ export const useCustomerHook = ({
     (typeof filterOptions)[number]
   >(filterOptions[0]);
   const [activeTier, setActiveTier] = useState("");
-  // No segment query param on the customer endpoint yet; held so the control
-  // keeps its selection and is ready to send the moment one exists.
   const [activeSegment, setActiveSegment] = useState("");
 
   const { mutate: deleteCustomer, isPending: deleteCustomerLoading } =

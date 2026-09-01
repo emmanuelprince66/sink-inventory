@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 
+import SegmentTag from "@/components/SegmentTag";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { CustomerType } from "./types";
@@ -154,6 +155,29 @@ const COLUMN_DEFS = {
         >
           {tier}
         </span>
+      );
+    },
+  },
+  segment: {
+    accessorKey: "segment",
+    header: "Segment",
+    cell: ({ row }) => {
+      const customer = row.original;
+      if (!customer.segment) return <Blank />;
+      // Only the leading segment gets a pill; the rest are counted rather than
+      // listed, because a customer in four of them would otherwise blow the
+      // column's width out and push every money column off screen.
+      const extra = Math.max(0, (customer.segments?.length ?? 1) - 1);
+      return (
+        <div className="flex items-center gap-1 whitespace-nowrap">
+          <SegmentTag
+            name={customer.segment}
+            segmentType={customer.segment_type}
+          />
+          {extra > 0 && (
+            <span className="text-[10px] font-bold text-grey-4">+{extra}</span>
+          )}
+        </div>
       );
     },
   },
@@ -323,6 +347,10 @@ const LIST_COLUMNS = [
   "name",
   "phone",
   "tier",
+  // Earns its width because the filter bar can already filter by segment —
+  // without it, narrowing to "At Risk" gives back a list with nothing on it
+  // saying so, and a full list gives no way to spot them.
+  "segment",
   "wallet_credit",
   "orders",
   "total_spend",
