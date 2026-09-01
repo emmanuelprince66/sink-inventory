@@ -1,3 +1,8 @@
+import type {
+  LoyaltyRewardApplied,
+  LoyaltyRewardInfo,
+} from "@/app/(dashboard)/sales/types";
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -99,10 +104,20 @@ export interface CustomerHistoryProps {
 interface CustomerHistoryProductsProps {
   image: string;
   name: string;
+  /** Net line total — (quantity x unit_price) - discount — NOT the unit price. */
   price: number;
-  quantity: number;
+  unit_price?: number | string;
+  quantity: number | string;
+  discount?: string;
+  is_loyalty_reward?: boolean;
+  loyalty_reward_info?: LoyaltyRewardInfo | null;
 }
 
+/**
+ * Purchase history returns the same sale shape the business order history
+ * does, loyalty fields included, so the reward reads the same on a customer's
+ * own record as it does on the shop's.
+ */
 export interface CustomerHistoryData {
   attendance: string;
   attendant: string;
@@ -113,6 +128,9 @@ export interface CustomerHistoryData {
   payment_status: string;
   products: CustomerHistoryProductsProps[];
   total_price: string;
+  total_tax?: string;
+  loyalty_discount?: string;
+  loyalty_reward_applied?: LoyaltyRewardApplied | null;
 }
 
 export interface CustomerWalletTrxProps {

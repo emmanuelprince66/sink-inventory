@@ -5,10 +5,12 @@ import moment from "moment";
 
 import Image from "next/image";
 
+import LoyaltyRewardTag from "@/components/LoyaltyRewardTag";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { formatToNaira } from "@/utils/formatMoney";
 
+import { rewardBreakdownOf } from "@/app/(dashboard)/sales/types";
 import { CustomerHistoryData } from "../types";
 
 const HistoryMoreDetails = ({
@@ -26,6 +28,8 @@ const HistoryMoreDetails = ({
 
   // Extract transaction ID (first 6 characters)
   const transactionId = historyDetailsData.id.substring(0, 6);
+
+  const reward = rewardBreakdownOf(historyDetailsData);
 
   return (
     <div className=" flex items-center justify-center">
@@ -73,16 +77,31 @@ const HistoryMoreDetails = ({
                             className="rounded object-cover"
                           />
                         </div>
-                        <span className="text-sm">{product.name}</span>
+                        <div className="min-w-0">
+                          <span className="text-sm">{product.name}</span>
+                          {product.is_loyalty_reward && (
+                            <LoyaltyRewardTag
+                              label="Free · Loyalty"
+                              title={
+                                product.loyalty_reward_info?.reward_summary ??
+                                product.loyalty_reward_info?.program_name
+                              }
+                              className="mt-1"
+                            />
+                          )}
+                        </div>
                       </div>
                       <div className="col-span-1 text-center">
                         {product.quantity}
                       </div>
                       <div className="col-span-1 text-right">
-                        {formatToNaira(product.price)}
+                        {formatToNaira(Number(product.unit_price ?? 0) || 0)}
                       </div>
+                      {/* `price` is the net line total the backend already
+                          worked out; multiplying by quantity again was
+                          tripling every three-unit line. */}
                       <div className="col-span-2 text-right font-medium">
-                        {formatToNaira(product.price * product.quantity)}
+                        {formatToNaira(Number(product.price) || 0)}
                       </div>
                     </div>
                     {index < historyDetailsData.products.length - 1 && (
@@ -90,6 +109,32 @@ const HistoryMoreDetails = ({
                     )}
                   </div>
                 ))}
+
+                {reward && (
+                  <div className="space-y-1 pt-2">
+                    {reward.deducts && (
+                      <div className="grid grid-cols-8 gap-2 items-center text-sm text-grey-3">
+                        <div className="col-span-6">Subtotal</div>
+                        <div className="col-span-2 text-right font-medium">
+                          {formatToNaira(reward.subtotal)}
+                        </div>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-8 gap-2 items-center text-sm font-bold text-primary-green-300">
+                      <div className="col-span-6 flex items-center">
+                        <LoyaltyRewardTag
+                          label={reward.label}
+                          title={reward.program}
+                        />
+                      </div>
+                      <div className="col-span-2 text-right">
+                        {reward.saving > 0
+                          ? `-${formatToNaira(reward.saving)}`
+                          : "FREE"}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-8 gap-2 items-center pt-2 border-t border-grey-6">
                   <div className="col-span-6 font-bold text-grey-1">Total</div>

@@ -1,8 +1,9 @@
-import { formatToNaira } from "@/utils/formatMoney";
+import LoyaltyRewardTag from "@/components/LoyaltyRewardTag";
 import { useUserRole } from "@/lib/store/user-store";
+import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import moment from "moment";
-import { SalesOrder } from "./types";
+import { rewardSummaryOf, SalesOrder } from "./types";
 
 export const useOrderHistoryColumn = () => {
   const { user } = useUserRole();
@@ -18,11 +19,27 @@ export const useOrderHistoryColumn = () => {
         const shortId = order.id
           ? `${order.id.substring(0, 4)}...${order.id.slice(-4)}`
           : "N/A";
+        // Anchored to the ID rather than given a column of its own: most sales
+        // redeem nothing, and an extra column would be empty on nearly every
+        // row while narrowing the ones that carry data.
+        const reward = rewardSummaryOf(order);
+
         return (
           <div className="font-medium">
             <p className="text-sm font-medium text-grey-3" title={order.id}>
               {shortId}
             </p>
+            {reward && (
+              <LoyaltyRewardTag
+                label="Reward"
+                title={
+                  reward.program
+                    ? `${reward.label} · ${reward.program}`
+                    : reward.label
+                }
+                className="mt-1"
+              />
+            )}
           </div>
         );
       },

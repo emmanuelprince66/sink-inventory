@@ -14,11 +14,34 @@ import printJS from "print-js";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { SalesOrder } from "./types";
+import { rewardBreakdownOf, SalesOrder } from "./types";
 
 import { Spinner } from "@/components/app/Spinner";
+import LoyaltyRewardTag from "@/components/LoyaltyRewardTag";
 import { useSalesHook } from "@/hooks/useSalesHook";
 import { formatToNaira } from "@/utils/formatMoney";
+
+/**
+ * What was actually charged.
+ *
+ * `total_price` is the backend's own figure and is what the customer paid, so
+ * it wins — a percentage reward comes off the bill without touching any line,
+ * and summing the items would print more than was taken.
+ *
+ * The line sum stands in only where the field is missing. `price` is the net
+ * line total the backend already worked out, quantity and discount included,
+ * so the lines are summed as they are; multiplying by quantity again would
+ * triple a three-unit line.
+ */
+const totalOf = (order: SalesOrder): number => {
+  const stated = Number(order?.total_price);
+  if (Number.isFinite(stated)) return stated;
+
+  return (order?.products ?? []).reduce(
+    (total, product) => total + (Number(product?.price) || 0),
+    0,
+  );
+};
 
 // Register fonts for PDF
 Font.register({
@@ -117,6 +140,35 @@ const styles = StyleSheet.create({
   itemName: {
     fontWeight: "bold",
     fontSize: 10, // Reduced from 12
+  },
+  // Same green as the POS receipt's badge, so a reward reads the same on the
+  // paper the customer took home and on the copy reprinted from history.
+  rewardBadge: {
+    fontSize: 6,
+    fontWeight: "bold",
+    color: "#ffffff",
+    backgroundColor: "#0f7b4f",
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    borderRadius: 2,
+    marginTop: 2,
+    alignSelf: "flex-start",
+  },
+  rewardNote: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+    paddingHorizontal: 2,
+    fontSize: 9,
+    color: "#0f7b4f",
+  },
+  subtotalNote: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+    paddingHorizontal: 2,
+    fontSize: 9,
+    color: "#6b7280",
   },
   cellQty: {
     flex: 1,
@@ -229,13 +281,13 @@ const OrderHistoryPDFDocument = ({
   business: any;
   tt: any;
 }) => {
-  console.log("orderDetails", orderDetails);
   const shortOrderId = orderDetails.id.substring(0, 6);
-  const transactionId = orderDetails.id.substring(0, 6);
 
   const receiptNumber = `${business.name
     .slice(0, 2)
     .toUpperCase()}-${orderDetails?.id.slice(0, 8)}`;
+
+  const reward = rewardBreakdownOf(orderDetails);
 
   try {
     return (
@@ -295,17 +347,42 @@ const OrderHistoryPDFDocument = ({
               <View key={index} style={styles.tableRow}>
                 <View style={styles.cellItem}>
                   <Text style={styles.itemName}>{product.name}</Text>
+                  {product.is_loyalty_reward && (
+                    <Text style={styles.rewardBadge}>FREE · LOYALTY</Text>
+                  )}
                 </View>
                 <Text style={styles.cellQty}>{product.quantity}</Text>
                 <Text style={styles.cellPrice}>
                   {formatToNaira(parseFloat(product?.unit_price))}
                 </Text>
                 <Text style={styles.cellTotal}>
-                  {formatToNaira(parseFloat(product.price))}
+                  {formatToNaira(Number(product.price) || 0)}
                 </Text>
               </View>
             ))}
           </View>
+
+          {/* The reward, on the printed copy too — the subtotal row is what
+              makes a percentage add up on paper, where there is no line item
+              to point at. */}
+          {reward && (
+            <>
+              {reward.deducts && (
+                <View style={styles.subtotalNote}>
+                  <Text>Subtotal</Text>
+                  <Text>{formatToNaira(reward.subtotal)}</Text>
+                </View>
+              )}
+              <View style={styles.rewardNote}>
+                <Text>{reward.label}</Text>
+                <Text>
+                  {reward.saving > 0
+                    ? `-${formatToNaira(reward.saving)}`
+                    : "FREE"}
+                </Text>
+              </View>
+            </>
+          )}
 
           {/* Total */}
           <View style={styles.totalSection}>
@@ -358,27 +435,19 @@ const OrderHistoryDetails = ({
   business?: any; // Make it optional
   closeModal: () => void;
 }) => {
-  console.log("orderDetails", orderDetails);
   const { ReverseSalePending, handleReverseSale, loading } = useSalesHook({
     closeModal,
   });
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
-  console.log("business", business);
 
   const receiptNumber = `${business.name
     .slice(0, 2)
     .toUpperCase()}-${orderDetails?.id.slice(0, 4)}`;
 
-  const tt =
-    orderDetails &&
-    formatToNaira(
-      orderDetails?.products?.reduce((total, product) => {
-        return total + parseFloat(product.price) * product.quantity;
-      }, 0) ?? 0,
-    );
+  const tt = orderDetails && formatToNaira(totalOf(orderDetails));
 
-  console.log("tt", tt);
+  const reward = rewardBreakdownOf(orderDetails);
 
   // Format the date using moment.js
   const formattedDate = moment(orderDetails.created_at).format(
@@ -437,6 +506,26 @@ const OrderHistoryDetails = ({
           .detail-value { font-weight: bold; font-size: 10px; }
           .contact-info { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 1px; }
           .receipt-title { font-size: 13px; font-weight: bold; color: #329661; }
+          /* print-js copies the markup into a bare document, so none of the
+             utility classes come with it — the badge is restyled here or it
+             prints as unformatted text. The border keeps it readable on a
+             thermal printer, which drops background fills. */
+          .reward-badge {
+            font-size: 7px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: #0f7b4f;
+            border: 1px solid #0f7b4f;
+            padding: 1px 3px;
+            border-radius: 2px;
+            display: inline-block;
+            text-transform: uppercase;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .reward-badge svg { display: none; }
+          .reward-row { display: flex; justify-content: space-between; font-size: 10px; color: #0f7b4f; font-weight: bold; margin-top: 2px; }
+          .subtotal-row { display: flex; justify-content: space-between; font-size: 10px; color: #6b7280; margin-top: 2px; }
         `,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
@@ -500,6 +589,20 @@ const OrderHistoryDetails = ({
                               <p className="item-name font-bold text-grey-1">
                                 {product.name}
                               </p>
+                              {/* The line is priced at zero, which on its own
+                                  reads as a mistake. The badge is what says it
+                                  was given away on purpose. */}
+                              {product.is_loyalty_reward && (
+                                <LoyaltyRewardTag
+                                  label="Free · Loyalty"
+                                  title={
+                                    product.loyalty_reward_info
+                                      ?.reward_summary ??
+                                    product.loyalty_reward_info?.program_name
+                                  }
+                                  className="reward-badge mt-1"
+                                />
+                              )}
                             </div>
                           </div>
                         </td>
@@ -510,7 +613,7 @@ const OrderHistoryDetails = ({
                           {formatToNaira(parseFloat(product.unit_price))}
                         </td>
                         <td className="text-right py-3 px-1 font-bold text-grey-1">
-                          {parseFloat(product.price)}
+                          {formatToNaira(Number(product.price) || 0)}
                         </td>
                       </tr>
                     ))}
@@ -518,11 +621,50 @@ const OrderHistoryDetails = ({
                 </table>
               </div>
 
+              {/* The reward, spelled out.
+                  A percentage comes off the whole bill and leaves no line of
+                  its own, so without this the seller sees a total that does
+                  not match the items and nothing explaining the gap. Shown as
+                  Subtotal / less the reward / Total where the reward is still
+                  to come off, and as a plain "saved" note where the items were
+                  already comped. */}
+              {reward && (
+                <div className="mt-3 px-1 space-y-1 text-sm">
+                  {reward.deducts && (
+                    <div className="subtotal-row flex justify-between text-grey-3">
+                      <span>Subtotal</span>
+                      <span className="font-medium">
+                        {formatToNaira(reward.subtotal)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="reward-row flex justify-between font-bold text-primary-green-300">
+                    <span className="flex items-center gap-2">
+                      <LoyaltyRewardTag
+                        label={reward.label}
+                        title={reward.program}
+                        className="reward-badge"
+                      />
+                    </span>
+                    <span>
+                      {reward.saving > 0
+                        ? `-${formatToNaira(reward.saving)}`
+                        : "FREE"}
+                    </span>
+                  </div>
+                  {reward.program && (
+                    <p className="text-xs text-grey-4">
+                      Redeemed from {reward.program}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Payment summary */}
               <div className="total-row flex justify-between font-extrabold mt-4 pt-3 border-t-2 border-primary-green-300 text-base">
                 <span className="text-grey-1">TOTAL:</span>
                 <span className="text-primary-green-300 detail-value">
-                  {orderDetails?.total_price}
+                  {formatToNaira(parseFloat(orderDetails?.total_price ?? "0"))}
                 </span>
               </div>
 
@@ -567,7 +709,9 @@ const OrderHistoryDetails = ({
                   </div>
                   <div className="detail-row flex justify-between">
                     <span className="detail-label text-grey-4">VAT:</span>
-                    <span className="detail-value font-bold text-grey-1">{0}</span>
+                    <span className="detail-value font-bold text-grey-1">
+                      {formatToNaira(parseFloat(orderDetails?.total_tax ?? "0"))}
+                    </span>
                   </div>
                 </div>
               </div>
