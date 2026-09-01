@@ -93,6 +93,12 @@ interface CartStore {
   clearCartItems: () => void;
   /** Drops every line a loyalty reward added, leaving what was rung up. */
   clearRewardLines: () => void;
+  /**
+   * Rewards already being redeemed on the OTHER open sale tabs. A customer
+   * holds one of each reward, so the same one riding two sales would hand the
+   * item over twice and fail on whichever sale reached the backend second.
+   */
+  getRewardIdsInOtherCarts: () => string[];
   getTotalItems: () => number;
   getSubtotal: () => number;
   /**
@@ -342,6 +348,18 @@ export const useCartStore = create<CartStore>()(
             items: slot.items.filter((item) => !isRewardLine(item)),
           })),
         ),
+
+      getRewardIdsInOtherCarts: () => {
+        const state = get();
+        return Object.entries(state.carts)
+          .filter(([cartId]) => cartId !== state.activeCartId)
+          .flatMap(([, slot]) =>
+            (slot?.items ?? [])
+              .filter(isRewardLine)
+              .map((item) => String(item.rewardId ?? "")),
+          )
+          .filter(Boolean);
+      },
 
       getTotalItems: () =>
         get().cartItems.reduce((total, item) => total + item.cartQuantity, 0),

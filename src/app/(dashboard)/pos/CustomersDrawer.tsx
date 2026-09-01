@@ -9,10 +9,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import SegmentTag from "@/components/SegmentTag";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowRight, Crown, Plus, Sprout, Star } from "lucide-react";
+import { ArrowRight, Crown, Plus, Sprout, Star, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import AddCustomer from "../customers/AddCustomer";
 
@@ -221,6 +222,24 @@ const CustomerDrawer = ({
                         <span className="text-[10px] text-grey-4">
                           {Number(customer.reward_count ?? 0)} rewards
                         </span>
+
+                        {/* Which segment the rules put them in — "VIP", "At
+                            Risk" — so a cashier can see who they are dealing
+                            with before opening anything. */}
+                        <SegmentTag
+                          name={customer.segment}
+                          segmentType={customer.segment_type}
+                        />
+
+                        {/* Wallet credit, where a cashier needs it: it is money
+                            this customer can pay with, so it belongs beside
+                            their name at the till rather than only on their
+                            profile. Shown at zero too — "no credit" is exactly
+                            the thing the cashier is checking for. */}
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary-green-500 px-2 py-0.5 text-[10px] font-bold text-primary-green-300">
+                          <Wallet className="h-3 w-3" />
+                          {formatToNaira(Number(customer.wallet_balance ?? 0))}
+                        </span>
                       </span>
                       )}
                     </span>
@@ -270,7 +289,17 @@ const CustomerDrawer = ({
         title="Create Customer"
       >
         <div className="w-full ">
-          <AddCustomer closeOpenCustomerModal={closeOpenCustomerModal} />
+          {/* A phone number that turns out to belong to someone already on
+              file puts them on the sale directly — creating the duplicate and
+              then hunting for the original is how a customer ends up unable to
+              redeem the reward they have earned. */}
+          <AddCustomer
+            closeOpenCustomerModal={closeOpenCustomerModal}
+            onUseExisting={(customer: any) => {
+              closeOpenCustomerModal();
+              handleCardClick(customer);
+            }}
+          />
         </div>
       </CustomModal>
     </>

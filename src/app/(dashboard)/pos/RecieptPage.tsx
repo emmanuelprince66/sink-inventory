@@ -30,6 +30,7 @@ import { ArrowBigLeftDash, CalendarIcon, Gift, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { AddBankForm } from "../settings/bank/AddBankForm";
+import { isRewardLine } from "./loyaltyReward";
 
 // @react-pdf/renderer is browser-only and breaks under Next.js SSR + tab switches.
 // Lazy-loading on the client only avoids the "Eo is not a function" runtime error.
@@ -709,9 +710,12 @@ const ReceiptPage = ({
                             <p className="font-medium text-[11px]">
                               {item.name}
                             </p>
-                            {item.isReward && (
-                              <span className="text-[8px] px-1 py-0.5 bg-primary-green-200 text-primary-green-300 rounded-full font-bold">
-                                FREE · Loyalty reward
+                            {/* Same badge the printed receipt carries, so the
+                                cashier is checking the wording the customer
+                                will read rather than a different one. */}
+                            {isRewardLine(item) && (
+                              <span className="text-[8px] px-1 py-0.5 bg-primary-green-300 text-white rounded-full font-bold">
+                                FREE · LOYALTY
                               </span>
                             )}
                             {item.category && (
@@ -731,10 +735,9 @@ const ReceiptPage = ({
                         {item.cartQuantity || 1}
                       </td>
                       <td className="p-2 text-[10px]  border border-primary-green-300">
-                        ₦
-                        {item.amount?.toLocaleString() ||
-                          item.selling_price?.toLocaleString() ||
-                          "0"}
+                        {formatToNaira(
+                          Number(item.amount ?? item.selling_price ?? 0),
+                        )}
                       </td>
                       <td className="p-2 text-[10px]  border border-primary-green-300">
                         {(item.amount || item.selling_price || 0) *
@@ -1103,7 +1106,7 @@ const ReceiptPage = ({
                 } font-medium`}
               >
                 {remainingAmount > 0
-                  ? `Remaining Amount: ₦${remainingAmount.toLocaleString()}`
+                  ? `Remaining Amount: ${formatToNaira(remainingAmount)}`
                   : "All payments have been added ✓"}
               </div>
 
@@ -1257,7 +1260,7 @@ const ReceiptPage = ({
                             )?.label || payment.method}
                           </p>
                           <p className="text-sm text-gray-600">
-                            ₦{payment.amount.toLocaleString()}
+                            {formatToNaira(Number(payment.amount ?? 0))}
                           </p>
                           {payment.bank && (
                             <p className="text-xs text-gray-500">

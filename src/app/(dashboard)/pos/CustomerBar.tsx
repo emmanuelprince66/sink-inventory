@@ -2,6 +2,7 @@
 
 import { useFetchLoyaltyProgressQuery } from "@/api/loyalty/fetch-loyalty-progress";
 import { useFetchLoyaltyProgramsQuery } from "@/api/loyalty/fetch-loyalty-programs";
+import SegmentTag from "@/components/SegmentTag";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
 import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { toList, type Paginated } from "@/types/api";
 import type { LoyaltyProgram } from "@/types/loyalty";
 import { Gift, ScanLine, UserPlus, X } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import CustomerDrawer, { avatarTone, initialsOf, tierStyle } from "./CustomersDrawer";
 import CustomerLoyaltyModal from "./CustomerLoyaltyModal";
 import LoyaltyScanner from "./LoyaltyScanner";
@@ -43,6 +44,9 @@ const CustomerBar = () => {
 
   const addToCart = useCartStore((s) => s.addToCart);
   const clearRewardLines = useCartStore((s) => s.clearRewardLines);
+  const getRewardIdsInOtherCarts = useCartStore(
+    (s) => s.getRewardIdsInOtherCarts,
+  );
 
   const [isCustomerDrawerOpen, setIsCustomerDrawerOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -56,11 +60,14 @@ const CustomerBar = () => {
   const { showToast } = useToast();
 
   const loyaltyCode = customer?.loyalty_code ?? null;
-  const { data: walletResponse, isLoading: walletLoading } =
-    useFetchLoyaltyProgressQuery({
-      params: { loyaltyCode: loyaltyCode ?? "" },
-      enabled: Boolean(loyaltyCode),
-    } as any);
+  const {
+    data: walletResponse,
+    isLoading: walletLoading,
+    isSuccess: walletLoaded,
+  } = useFetchLoyaltyProgressQuery({
+    params: { loyaltyCode: loyaltyCode ?? "" },
+    enabled: Boolean(loyaltyCode),
+  } as any);
 
   const wallet = walletResponse?.data;
   const enrollment = wallet?.enrollment;
@@ -106,6 +113,36 @@ const CustomerBar = () => {
     [rewardItemOf, enrollment],
   );
 
+  /**
+   * Drops a reward the wallet no longer offers.
+   *
+   * A cart survives a refresh and the whole shift, so an applied reward can go
+   * stale underneath it — spent on another till, expired overnight, or already
+   * redeemed on the sale before this one. Leaving it attached would send a dead
+   * reward id and fail the sale at the moment of payment, with a queue waiting.
+   *
+   * Only ever acts on a wallet that actually loaded and belongs to this
+   * customer: `isSuccess` keeps a network blip from clearing a good reward, and
+   * the code check keeps a wallet still in flight for someone else from doing
+   * it. `available_rewards` lists what is unspent, so absence is the answer.
+   */
+  useEffect(() => {
+    if (!appliedReward?.id || !walletLoaded) return;
+    if (wallet?.loyalty_code && wallet.loyalty_code !== loyaltyCode) return;
+
+    const stillOffered = availableRewards.some(
+      (reward) => rewardIdOf(reward) === String(appliedReward.id),
+    );
+    if (stillOffered) return;
+
+    clearRewardLines();
+    updateCartState({ loyaltyReward: null });
+    showToast(
+      "That reward is no longer available and has been taken off this sale",
+      "error",
+    );
+  }, [appliedReward?.id, walletLoaded, wallet?.loyalty_code, availableRewards]);
+
   const [current, target] = parseProgress(enrollment?.progress_display);
   const progressPct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
 
@@ -132,6 +169,17 @@ const CustomerBar = () => {
     const rewardId = rewardIdOf(reward);
     if (!rewardId) {
       showToast("This reward can't be redeemed — it has no reward id", "error");
+      return;
+    }
+
+    // The customer holds one of each reward. Redeeming it on two sale tabs at
+    // once would hand the item over twice and fail on whichever sale reached
+    // the backend second, after the cashier had already given both away.
+    if (getRewardIdsInOtherCarts().includes(rewardId)) {
+      showToast(
+        "This reward is already on another open sale — finish or clear that one first",
+        "error",
+      );
       return;
     }
 
@@ -314,6 +362,14 @@ const CustomerBar = () => {
                 {wallet?.tier ?? customer.tier_name}
               </span>
             )}
+            {/* Segment sits next to tier because they answer different
+                questions: tier is what they have earned, segment is how they
+                behave. A cashier deciding whether to push an offer wants the
+                second one. */}
+            <SegmentTag
+              name={customer.segment}
+              segmentType={customer.segment_type}
+            />
           </div>
 
           <p className="mt-0.5 truncate text-[11px] text-grey-3">

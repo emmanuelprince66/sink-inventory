@@ -77,9 +77,32 @@ export const useCheckoutHook = ({
       showToast("Sale created successfully", "success");
       setCreateSaleResponse(data);
       setSaleCompleted(true);
-      queryClient.invalidateQueries({
-        queryKey: [queryKey.transactions.getAllTransactions],
-      });
+
+      /**
+       * Everything a sale moves.
+       *
+       * The loyalty ones are the reason this is a list rather than one key. A
+       * sale spends the reward it redeemed and advances the streak behind it,
+       * and the customer is usually still standing there — a second purchase
+       * right after redeeming is the normal case, not an edge one. Left cached,
+       * the next scan would show the reward they just handed over as still
+       * available, and the cashier would give it away twice.
+       *
+       * Stock, wallet credit, tier and reward counts all move on the same
+       * sale, so the customer list and the POS product grid go with them.
+       */
+      [
+        queryKey.transactions.getAllTransactions,
+        queryKey.loyalty.getLoyaltyProgress,
+        queryKey.loyalty.getLoyaltyRewards,
+        queryKey.loyalty.getLoyaltyCustomers,
+        queryKey.customers.getAllCustomers,
+        queryKey.inventory.getAllInventory,
+        queryKey.sales.getAllSalesHistory,
+      ].forEach((key) =>
+        queryClient.invalidateQueries({ queryKey: [key] }),
+      );
+
       closeSureModal();
       setShowPrintReceiptView(true);
     },

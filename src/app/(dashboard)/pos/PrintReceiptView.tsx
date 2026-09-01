@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { ArrowBigLeftDash, Download, PlusCircle, Printer } from "lucide-react";
 import printJS from "print-js";
 import { useRef, useState } from "react";
+import { isRewardLine } from "./loyaltyReward";
 
 // Register fonts with all necessary variants
 Font.register({
@@ -229,6 +230,16 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginTop: 2,
   },
+  rewardBadge: {
+    fontSize: 6,
+    fontWeight: "bold",
+    color: "#ffffff",
+    backgroundColor: "#0f7b4f",
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    borderRadius: 2,
+    marginTop: 2,
+  },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -303,11 +314,21 @@ const loyaltyFromSale = (createSaleResponse: any) => {
   const discount = Number(sale?.loyalty_discount ?? 0) || 0;
   const applied = sale?.loyalty_reward_applied;
 
-  // loyalty_reward_applied is documented only as "metadata", so it may come
-  // back as a flag or as an object describing the reward. Both are handled.
+  // loyalty_reward_applied may come back as a bare flag or as an object
+  // describing the reward. Both are handled.
+  //
+  // reward_summary leads the chain because the backend composes it for exactly
+  // this line — "Free Ultra HD 32-Inch Smart TV", "20% Off", "₦5,000 Wallet
+  // Credit" — so it already reads as a receipt line for every reward type,
+  // including the ones that put nothing in the cart. The named product and
+  // service come next, then the older description fields for sales that
+  // predate any of them.
   const label =
     (typeof applied === "object" && applied
-      ? applied.reward_description ??
+      ? applied.reward_summary ??
+        applied.reward_product_name ??
+        applied.reward_service_name ??
+        applied.reward_description ??
         applied.description ??
         applied.name ??
         applied.reward_type
@@ -322,10 +343,34 @@ const loyaltyFromSale = (createSaleResponse: any) => {
       ),
   );
 
+  // The reward names its own item now, so a giveaway is identifiable even
+  // when the line it landed on carries no flag — a free item bought outright
+  // on the same sale merges into one line, and only the flagged copy would
+  // otherwise be recognised.
+  if (typeof applied === "object" && applied) {
+    for (const id of [applied.reward_product_id, applied.reward_service_id]) {
+      if (id) rewardIds.add(String(id));
+    }
+  }
+
+  /**
+   * Whether this cart line was the reward.
+   *
+   * The cart already knows — the till is what put the line there — so that is
+   * the answer to trust, and it is the only one available while the sale is
+   * still being previewed. The response is a second opinion for older sales
+   * whose lines predate the flag, matched on productId: a reward line carries a
+   * synthetic id so it cannot merge with the same product bought outright, and
+   * matching on that would never hit.
+   */
+  const isRewardItem = (item: any) =>
+    isRewardLine(item) || rewardIds.has(String(item?.productId ?? item?.id));
+
   return {
     discount,
     label,
     rewardIds,
+    isRewardItem,
     /** A reward counts as applied only when it actually moved the total. */
     active: discount > 0 || rewardIds.size > 0 || applied === true,
   };
@@ -441,31 +486,25 @@ const ReceiptPDFDocument = ({
 
               const itemDiscount = hasItemDiscount ? item.discount : 0;
               const hasVat = item.allow_tax && vatInfo?.enabled;
-              const isReward = loyalty.rewardIds.has(String(item.id));
+              const isReward = loyalty.isRewardItem(item);
 
               return (
                 <View key={item.id} style={styles.tableRow}>
                   <View style={styles.cellItem}>
                     <Text style={styles.itemName}>{item.name}</Text>
                     {hasVat && <Text style={styles.vatBadge}>+VAT</Text>}
+                    {/* Says the item cost nothing, next to the name where the
+                        customer reads it — the line is still priced normally,
+                        because the reward comes off as its own deduction at
+                        the bottom rather than by zeroing the row. */}
                     {isReward && (
-                      <Text
-                        style={{
-                          fontSize: 6,
-                          fontStyle: "italic",
-                          color: "green",
-                        }}
-                      >
-                        Loyalty reward
-                      </Text>
+                      <Text style={styles.rewardBadge}>FREE · LOYALTY</Text>
                     )}
                   </View>
                   <Text style={styles.cellQty}>{item.cartQuantity || 1}</Text>
                   <View style={styles.cellPrice}>
                     <Text>
-                      {item?.selling_price
-                        ? item.selling_price.toLocaleString()
-                        : (item.amount.toLocaleString() ?? 0)}
+                      {formatToNaira(item?.selling_price ?? item.amount ?? 0)}
                     </Text>
                     {hasItemDiscount && (
                       <Text
@@ -475,15 +514,15 @@ const ReceiptPDFDocument = ({
                           color: "green",
                         }}
                       >
-                        Discount - ₦{itemDiscount.toLocaleString()} per unit
+                        Discount - {formatToNaira(itemDiscount)} per unit
                       </Text>
                     )}
                   </View>
                   <Text style={styles.cellTotal}>
-                    {(
+                    {formatToNaira(
                       (item.selling_price || item.amount || 0) *
-                      (item.cartQuantity || 1)
-                    ).toLocaleString()}
+                        (item.cartQuantity || 1),
+                    )}
                   </Text>
                 </View>
               );
@@ -496,19 +535,19 @@ const ReceiptPDFDocument = ({
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal:</Text>
                 <Text style={styles.summaryValue}>
-                  {subtotal.toLocaleString()}
+                  {formatToNaira(subtotal)}
                 </Text>
               </View>
               <View style={styles.discountRow}>
                 <Text style={styles.discountLabel}>
                   Discount (
                   {discount.type === "fixed"
-                    ? `₦${discount.value}`
+                    ? formatToNaira(Number(discount.value))
                     : `${discount.value}%`}
                   ):
                 </Text>
                 <Text style={styles.discountValue}>
-                  -{discountAmount.toLocaleString()}
+                  -{formatToNaira(discountAmount)}
                 </Text>
               </View>
             </View>
@@ -520,13 +559,13 @@ const ReceiptPDFDocument = ({
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal (before VAT):</Text>
                 <Text style={styles.summaryValue}>
-                  {total.toLocaleString()}
+                  {formatToNaira(total)}
                 </Text>
               </View>
               <View style={styles.vatRow}>
                 <Text style={styles.vatLabel}>VAT ({vatInfo.rate}%):</Text>
                 <Text style={styles.vatValue}>
-                  +{vatInfo.amount.toLocaleString()}
+                  +{formatToNaira(vatInfo.amount)}
                 </Text>
               </View>
             </View>
@@ -539,7 +578,7 @@ const ReceiptPDFDocument = ({
               <View style={styles.discountRow}>
                 <Text style={styles.discountLabel}>{loyalty.label}:</Text>
                 <Text style={styles.discountValue}>
-                  -{loyalty.discount.toLocaleString()}
+                  -{formatToNaira(loyalty.discount)}
                 </Text>
               </View>
             </View>
@@ -549,11 +588,13 @@ const ReceiptPDFDocument = ({
           <View style={styles.totalSection}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
             <Text style={styles.totalAmount}>
-              {Math.max(
-                0,
-                (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
-                  loyalty.discount,
-              ).toLocaleString()}
+              {formatToNaira(
+                Math.max(
+                  0,
+                  (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+                    loyalty.discount,
+                ),
+              )}
             </Text>
           </View>
 
@@ -604,7 +645,7 @@ const ReceiptPDFDocument = ({
                       <View key={index} style={styles.paymentMethodEntry}>
                         <Text>{method.replace("_", " ").toUpperCase()}:</Text>
                         <Text>
-                          {parseFloat(amount as string).toLocaleString()}
+                          {formatToNaira(parseFloat(amount as string))}
                         </Text>
                       </View>
                     ),
@@ -618,7 +659,7 @@ const ReceiptPDFDocument = ({
                       <Text>
                         {payment.name.replace("_", " ").toUpperCase()}:
                       </Text>
-                      <Text>{parseFloat(payment.amount).toLocaleString()}</Text>
+                      <Text>{formatToNaira(parseFloat(payment.amount))}</Text>
                     </View>
                   ))}
                 </View>
@@ -823,6 +864,21 @@ const PrintReceiptView = ({
           margin-top: 1px;
         }
 
+        .reward-badge {
+          font-size: 7px;
+          color: #ffffff;
+          background-color: #0f7b4f;
+          padding: 1px 3px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-top: 2px;
+          font-weight: bold;
+          /* Thermal printers drop background colour, so the badge keeps a
+             border to stay legible once the fill is gone. */
+          border: 1px solid #0f7b4f;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         .vat-badge {
           font-size: 7px;
           color: #2563eb;
@@ -958,7 +1014,7 @@ const PrintReceiptView = ({
                   (item.cartQuantity || 1) >= item.discount_threshold;
 
                 const itemDiscount = hasItemDiscount ? item.discount : 0;
-                const isReward = loyalty.rewardIds.has(String(item.id));
+                const isReward = loyalty.isRewardItem(item);
                 const hasVat = item.allow_tax && vatInfo?.enabled;
 
                 return (
@@ -967,6 +1023,11 @@ const PrintReceiptView = ({
                       <div>
                         {item.name}
                         {hasVat && <span className="vat-badge ml-1">+VAT</span>}
+                        {isReward && (
+                          <span className="reward-badge ml-1">
+                            FREE · LOYALTY
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="text-center text-[11px]">
@@ -977,13 +1038,8 @@ const PrintReceiptView = ({
                         <div className="price-main">
                           {item?.selling_price
                             ? formatToNaira(item.selling_price)
-                            : (formatToNaira(item.amount) ?? "₦0")}
+                            : formatToNaira(Number(item.amount ?? 0))}
                         </div>
-                        {isReward && (
-                          <span className="block text-[9px] italic text-primary-green-300">
-                            Loyalty reward
-                          </span>
-                        )}
                         {hasItemDiscount && (
                           <div className="discount-text">
                             Discount - {formatToNaira(itemDiscount)}
@@ -1017,7 +1073,7 @@ const PrintReceiptView = ({
               <span className="text-[11px] text-red-600">
                 Discount (
                 {discount.type === "fixed"
-                  ? `₦${discount.value}`
+                  ? formatToNaira(Number(discount.value))
                   : `${discount.value}%`}
                 ):
               </span>

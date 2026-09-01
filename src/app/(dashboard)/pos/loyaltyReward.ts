@@ -62,15 +62,18 @@ const humanise = (value: string): string =>
 /**
  * What to call this reward on screen.
  *
- * The wallet's rewards carry no description of their own, so a caller that has
- * the enrollment should pass its reward_description — "Free juice pack3-emma"
- * — which is the only place the giveaway is named in words.
+ * reward_summary leads because the backend composes it to be read as-is —
+ * "Free Ultra HD 32-Inch Smart TV", "20% Off", "₦5,000 Wallet Credit" — and it
+ * is the same string the receipt prints, so the till and the paper agree.
+ * Where it is absent the programme's own wording stands in, and a caller that
+ * has the enrollment should pass its reward_description — "Free juice
+ * pack3-emma" — as the last resort naming the giveaway in words.
  */
 export const rewardLabelOf = (reward: any, fallback?: string | null): string => {
   const named =
+    reward?.reward_summary ??
     reward?.reward_description ??
     reward?.description ??
-    reward?.reward_summary ??
     reward?.name ??
     fallback;
   if (named) return String(named);
@@ -158,14 +161,52 @@ const giveawaysOf = (program: any): Array<{ item: RewardItem; note: string }> =>
 };
 
 /**
+ * The inventory id and name a reward states outright, where it does.
+ *
+ * reward_product_id/reward_product_name — and the service pair — are the
+ * backend saying which item this is, rather than leaving it to be inferred.
+ * There is no price among them, which is why this returns an id and a name and
+ * not a RewardItem: the price has to come from somewhere that has it.
+ */
+const namedGiveawayOf = (
+  reward: any,
+): { id: string; name: string } | null => {
+  if (!reward) return null;
+
+  const productId = reward.reward_product_id ?? null;
+  if (productId) {
+    return {
+      id: String(productId),
+      name: String(reward.reward_product_name ?? rewardLabelOf(reward)),
+    };
+  }
+
+  const serviceId = reward.reward_service_id ?? null;
+  if (serviceId) {
+    return {
+      id: String(serviceId),
+      name: String(reward.reward_service_name ?? rewardLabelOf(reward)),
+    };
+  }
+
+  return null;
+};
+
+/**
  * Resolves a reward to the product or service it gives away.
  *
- * The wallet answers what someone has earned, not what to hand them: a
- * FREE_ITEM reward names its programme and nothing about the item. The
- * programme is where reward_product_detail lives, so the two are joined here on
- * programme name — the only link the wallet gives — and then on the reward
- * description, which separates a programme's own reward from its milestones'
- * when they give away different things.
+ * The wallet answers what someone has earned; what to hand over has to be
+ * joined to the programme, which is where the priced reward_product_detail
+ * lives. That join is made on reward_product_id where the reward states one —
+ * an exact match on the inventory id — and otherwise on programme name and
+ * reward description, which is all a reward carried before those fields
+ * existed and is still what older ones carry.
+ *
+ * A resolved item is always priced from the programme rather than zeroed here:
+ * the backend is what comps the line and reports what it took off as
+ * loyalty_discount, so an item priced at zero on this side would come off the
+ * receipt twice. An unpriceable item is therefore no item — the reward still
+ * goes up on the sale, the cashier just hands it over without a line.
  *
  * Returns null for POINTS, WALLET_CREDIT and PERCENTAGE rewards, which have
  * nothing to put in a cart: those ride on the sale as a reward id alone and the
@@ -186,12 +227,26 @@ export const resolveRewardItem = (
 
   if (!givesAnItem(reward)) return null;
 
-  const programName =
-    reward.program_name ?? context?.enrollment?.program_name ?? null;
   // Guarded rather than trusted: this runs at the till, and a paginated
   // envelope that unwrapped to something other than a list must not take the
   // whole POS down over a reward label.
   const programs = Array.isArray(context?.programs) ? context.programs : [];
+  const named = namedGiveawayOf(reward);
+
+  // With an id in hand the programme it belongs to is irrelevant — the item is
+  // looked up across all of them, which also covers a reward whose programme
+  // was renamed since it was earned.
+  if (named) {
+    const priced = programs
+      .flatMap((program) => giveawaysOf(program))
+      .find((candidate) => candidate.item.id === named.id);
+    // The backend's name wins over the programme's: it is the one that will
+    // appear on the receipt, so the till should show the same words.
+    if (priced) return { ...priced.item, name: named.name };
+  }
+
+  const programName =
+    reward.program_name ?? context?.enrollment?.program_name ?? null;
   const program = programs.find(
     (candidate) => candidate?.name && candidate.name === programName,
   );
