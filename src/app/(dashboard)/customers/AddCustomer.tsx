@@ -1,7 +1,8 @@
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, UserCheck } from "lucide-react";
 
 import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { Spinner } from "@/components/app/Spinner";
+import SegmentTag from "@/components/SegmentTag";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,13 +21,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
+import { useCustomerPhoneLookup } from "@/hooks/useCustomerPhoneLookup";
 
 const AddCustomer = ({
   closeOpenCustomerModal,
   handleOpenNotSubscribeModal,
+  onUseExisting,
 }: {
   closeOpenCustomerModal: any;
   handleOpenNotSubscribeModal?: () => void;
+  /**
+   * Given where a caller can put an existing customer straight to work — the
+   * till puts them on the sale. Without it the match is still shown and its
+   * details can still be pulled in; there is just nowhere to hand them off to.
+   */
+  onUseExisting?: (customer: any) => void;
 }) => {
   const {
     form,
@@ -45,6 +54,37 @@ const AddCustomer = ({
   const hasAddressCoordinates = Boolean(
     form.watch("latitude") && form.watch("longitude"),
   );
+
+  // The number is what the attendant asks for first, so it is also the first
+  // chance to notice this is not a new customer at all.
+  const { matches, isSearching } = useCustomerPhoneLookup(form.watch("phone"));
+
+  /**
+   * Copies an existing customer's details onto the form.
+   *
+   * Only ever on request. An automatic fill would fight whoever is typing, and
+   * a phone prefix can match several people — which one it filled from would
+   * be anyone's guess.
+   */
+  const fillFrom = (customer: any) => {
+    const address =
+      customer.addresses?.find((a: any) => a.is_default) ??
+      customer.addresses?.[0];
+    // The form holds the ISO code, the API sends the state's name.
+    const matchedState = stateList.find(
+      (s) => s.name.toLowerCase() === String(address?.state ?? "").toLowerCase(),
+    );
+
+    form.setValue("name", customer.name ?? "", { shouldValidate: true });
+    form.setValue("phone", customer.phone ?? "", { shouldValidate: true });
+    form.setValue("email", customer.email ?? "");
+    if (address?.address) form.setValue("address", address.address);
+    if (matchedState) form.setValue("state", matchedState.isoCode);
+    if (address?.city) form.setValue("city", address.city);
+    // Whatever coordinates the old address was saved with are not on this
+    // payload, so the autocomplete has to resolve them again if it is edited.
+    clearAddressCoordinates();
+  };
   return (
     <div>
       <Form {...form}>
@@ -73,10 +113,83 @@ const AddCustomer = ({
                 <FormControl>
                   <Input placeholder="Phone number...." {...field} />
                 </FormControl>
+                {isSearching && (
+                  <p className="text-[11px] text-grey-4">
+                    Checking for an existing customer…
+                  </p>
+                )}
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {/* Sits directly under the number that produced it, above the rest of
+              the form — the point is to be seen before the attendant fills in
+              details for a record that already exists. */}
+          {matches.length > 0 && (
+            <div className="rounded-xl border border-info-1/30 bg-info-2 p-3">
+              <p className="flex items-center gap-2 text-xs font-bold text-info-1">
+                <UserCheck className="h-4 w-4 shrink-0" />
+                {matches.length === 1
+                  ? "This number is already on file"
+                  : `${matches.length} customers have this number`}
+              </p>
+
+              <div className="mt-2 space-y-2">
+                {matches.map((customer: any) => (
+                  <div
+                    key={customer.id}
+                    className="flex flex-wrap items-center gap-2 rounded-lg bg-white p-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold text-grey-1">
+                        {customer.name}
+                      </p>
+                      <p className="truncate text-[11px] text-grey-3">
+                        {customer.phone}
+                        {customer.email ? ` · ${customer.email}` : ""}
+                      </p>
+                      {/* What the attendant would lose by starting a second
+                          record: the standing they have already built up. */}
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {customer.tier_name && (
+                          <span className="rounded-full bg-grey-6 px-2 py-0.5 text-[10px] font-bold text-grey-2">
+                            {customer.tier_name}
+                          </span>
+                        )}
+                        <SegmentTag
+                          name={customer.segment}
+                          segmentType={customer.segment_type}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex shrink-0 gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-[11px]"
+                        onClick={() => fillFrom(customer)}
+                      >
+                        Fill in details
+                      </Button>
+                      {onUseExisting && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 text-[11px]"
+                          onClick={() => onUseExisting(customer)}
+                        >
+                          Use this customer
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Email Field */}
           <FormField
