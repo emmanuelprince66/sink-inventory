@@ -46,6 +46,36 @@ export interface RealtimeOrderNotification {
   data: RealtimeOrderData;
 }
 
+/** Money landing in a business account, broadcast on the same socket. */
+export type RealtimePaymentEvent = "PAYMENT_RECEIVED" | (string & {});
+
+export interface RealtimePaymentData {
+  /** Same dedupe handle the order events carry. */
+  notification_id: string;
+  /** Decimal string, e.g. "25000.00". */
+  amount: string;
+  /** Who sent it, as the bank reported them. Absent on some rails. */
+  sender_name: string | null;
+  sender_account?: string | null;
+  bank_name?: string | null;
+  /** The business account credited — not the sender's. */
+  account_number?: string | null;
+  reference?: string | null;
+  narration?: string | null;
+  created_at: string;
+  unread_notifications_count: number;
+  pending_orders_count: number;
+}
+
+export interface RealtimePaymentNotification {
+  type: "payment_notification";
+  event: RealtimePaymentEvent;
+  business_id: string;
+  /** Pre-composed and already currency-formatted; used verbatim. */
+  message: string;
+  data: RealtimePaymentData;
+}
+
 /**
  * Sent when a notification is marked read — single or bulk — so every open tab
  * drops its badge without a refetch. Counts only: there is no notification_id,
@@ -69,6 +99,7 @@ export interface RealtimePong {
 
 export type RealtimeMessage =
   | RealtimeOrderNotification
+  | RealtimePaymentNotification
   | RealtimeBadgeUpdate
   | RealtimePong;
 
@@ -79,6 +110,15 @@ export const isOrderNotification = (
   message !== null &&
   (message as RealtimeOrderNotification).type === "order_notification" &&
   typeof (message as RealtimeOrderNotification).data?.notification_id ===
+    "string";
+
+export const isPaymentNotification = (
+  message: unknown,
+): message is RealtimePaymentNotification =>
+  typeof message === "object" &&
+  message !== null &&
+  (message as RealtimePaymentNotification).type === "payment_notification" &&
+  typeof (message as RealtimePaymentNotification).data?.notification_id ===
     "string";
 
 export const isBadgeUpdate = (

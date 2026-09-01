@@ -4,6 +4,7 @@ import { CustomNotificationModal } from "@/components/CustomNotificationModal";
 import { queryKey } from "@/constants/query-key";
 import { useNotificationModal } from "@/hooks/useNotificationHook";
 import { notificationService } from "@/lib/notification";
+import { markSeen } from "@/lib/realtime/seen";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
@@ -14,23 +15,27 @@ export function NotificationModalProvider() {
 
   // Function to handle query invalidation and show notification
   const handleNotificationWithInvalidation = (payload: any) => {
-    console.log("🔄 Invalidating queries before showing notification");
-
-    // Invalidate your transaction queries
+    /**
+     * A foreground push for an event the socket already announced.
+     *
+     * RealtimeProvider is mounted alongside this one, so an open till receives
+     * both, and the backend sends the same notification_id on each. Whichever
+     * arrives first raises the modal; this drops the second rather than
+     * stacking a duplicate on top of it.
+     *
+     * Queries are still invalidated on the way out: a push that lost the race
+     * is a repeat alert, not a repeat of the change behind it, and the socket
+     * path may have skipped a key this one covers.
+     */
+    const alreadyAlerted = !markSeen(payload?.data?.notification_id);
 
     console.log("Invalidating queries for new notification:", payload);
     queryClient.invalidateQueries({
       queryKey: [queryKey.transactions.getAllTransactions],
       exact: false, // This will match all queries that start with this key
     });
-    console.log(
-      "Invalidating queries for new notification:===============",
-      payload
-    );
 
-    // You can add more invalidations here if needed
-    // queryClient.invalidateQueries({ queryKey: [queryKey.sales.getAllSales] });
-    // queryClient.invalidateQueries({ queryKey: [queryKey.inventory.getAllInventory] });
+    if (alreadyAlerted) return;
 
     // Show the notification modal after invalidating queries
     showNotification(payload);

@@ -9,11 +9,17 @@ import { queryKey } from "@/constants/query-key";
 import { useRealtimeSocket } from "@/hooks/useRealtimeSocket";
 import { useQueryClient } from "@/lib/react-query";
 import { playChime, primeChime } from "@/lib/realtime/chime";
-import { isBadgeUpdate, isOrderNotification } from "@/lib/realtime/types";
+import { markSeen } from "@/lib/realtime/seen";
+import {
+  isBadgeUpdate,
+  isOrderNotification,
+  isPaymentNotification,
+} from "@/lib/realtime/types";
 import type {
   NotificationCounts,
   RealtimeMessage,
   RealtimeOrderNotification,
+  RealtimePaymentNotification,
 } from "@/lib/realtime/types";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import {
@@ -22,7 +28,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -32,6 +37,12 @@ interface RealtimeContextValue extends NotificationCounts {
   /** Most recent order event, for anything that wants to react to it. */
   lastEvent: RealtimeOrderNotification | null;
   /**
+   * Most recent money-in event. Kept apart from `lastEvent` rather than folded
+   * into it: the two carry different payloads, and every existing consumer of
+   * `lastEvent` reads order fields off it.
+   */
+  lastPayment: RealtimePaymentNotification | null;
+  /**
    * Lets a surface that has just shown these notifications zero the badge
    * without waiting for the next socket frame.
    */
@@ -40,9 +51,6 @@ interface RealtimeContextValue extends NotificationCounts {
 
 const RealtimeContext = createContext<RealtimeContextValue | null>(null);
 
-/** Keeps the dedupe set from growing without bound on a long-lived till tab. */
-const SEEN_LIMIT = 200;
-
 /**
  * The single live layer: one socket, one set of badge counts, one alert per
  * event.
@@ -50,9 +58,10 @@ const SEEN_LIMIT = 200;
  * Mounted in the dashboard shell rather than the root layout so it never opens
  * a socket on /login or the public /loyalty/join pages.
  *
- * FCM stays in place alongside this. They cover different states — the socket
- * while a tab is open, FCM when it is closed — and both carry the same
- * notification_id, which is what lets `markSeen` stop one order alerting twice.
+ * FCM stays in place alongside this. They mostly cover different states — the
+ * socket while a tab is open, FCM when it is closed — but they overlap on a
+ * foreground push, and both carry the same notification_id. The shared
+ * `markSeen` is what stops that overlap becoming two modals for one event.
  */
 export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -65,6 +74,8 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   const [lastEvent, setLastEvent] = useState<RealtimeOrderNotification | null>(
     null,
   );
+  const [lastPayment, setLastPayment] =
+    useState<RealtimePaymentNotification | null>(null);
   /**
    * A modal rather than a toast: a till is often unattended for a minute, and
    * a toast that auto-dismisses after five seconds is exactly the alert a
@@ -75,8 +86,6 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
     body: string;
     data?: any;
   } | null>(null);
-
-  const seenRef = useRef<Set<string>>(new Set());
 
   // Autoplay is blocked until the user has interacted with the page, so arm
   // the audio element on the first gesture rather than on the first order.
@@ -90,18 +99,6 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
     const seed = seedData?.data ?? seedData;
     if (seed) setCounts(normaliseCounts(seed));
   }, [seedData]);
-
-  /** True the first time an id is seen, false on every repeat. */
-  const markSeen = useCallback((id: string) => {
-    if (seenRef.current.has(id)) return false;
-    seenRef.current.add(id);
-    if (seenRef.current.size > SEEN_LIMIT) {
-      // Sets iterate in insertion order, so the first key is the oldest.
-      const oldest = seenRef.current.values().next().value;
-      if (oldest) seenRef.current.delete(oldest);
-    }
-    return true;
-  }, []);
 
   const handleMessage = useCallback(
     (message: RealtimeMessage) => {
@@ -122,6 +119,44 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
         queryClient.invalidateQueries({
           queryKey: [queryKey.notification.getNotification],
         });
+        return;
+      }
+
+      // Money landing in the account. Deliberately not folded into the order
+      // path below: a transfer moves the balance and the transaction ledger
+      // rather than the order book, and it always alerts — unlike an order,
+      // where only NEW_ORDER does — because there is no such thing as a
+      // payment arriving that the business does not want to know about.
+      if (isPaymentNotification(message)) {
+        if (business_id && message.business_id !== business_id) return;
+
+        setCounts({
+          unreadNotifications: Number(
+            message.data.unread_notifications_count ?? 0,
+          ),
+          pendingOrders: Number(message.data.pending_orders_count ?? 0),
+        });
+
+        [
+          queryKey.notification.getNotification,
+          queryKey.notification.getUnreadCount,
+          queryKey.transactions.getAllTransactions,
+          queryKey.analytics.getBankAnalyticsBreakdown,
+        ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+
+        setLastPayment(message);
+
+        if (markSeen(message.data.notification_id)) {
+          setAlert({
+            title: "Payment received",
+            // The backend composes and formats this — "₦25,000.00 received
+            // from Jane Doe." — so re-deriving it here would only risk
+            // disagreeing with the notification feed about the same event.
+            body: message.message,
+            data: message.data,
+          });
+          playChime();
+        }
         return;
       }
 
@@ -171,7 +206,7 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
         playChime();
       }
     },
-    [business_id, markSeen, queryClient],
+    [business_id, queryClient],
   );
 
   const { isConnected } = useRealtimeSocket(handleMessage);
@@ -182,8 +217,8 @@ export const RealtimeProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const value = useMemo(
-    () => ({ ...counts, isConnected, lastEvent, clearUnread }),
-    [counts, isConnected, lastEvent, clearUnread],
+    () => ({ ...counts, isConnected, lastEvent, lastPayment, clearUnread }),
+    [counts, isConnected, lastEvent, lastPayment, clearUnread],
   );
 
   return (
@@ -209,5 +244,6 @@ export const useRealtime = (): RealtimeContextValue =>
     pendingOrders: 0,
     isConnected: false,
     lastEvent: null,
+    lastPayment: null,
     clearUnread: () => {},
   };
