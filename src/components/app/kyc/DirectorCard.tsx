@@ -1,6 +1,5 @@
 "use client";
 
-import { PhoneInput } from "@/components/app/PhoneInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DirectorDetails, DirectorErrors } from "@/hooks/useKycHook";
@@ -34,15 +33,15 @@ interface DirectorCardProps {
   /** The first director is the primary contact and cannot be removed. */
   canRemove: boolean;
   errors?: DirectorErrors;
-  onChange: (field: "name" | "phone" | "email", value: string) => void;
+  onChange: (field: "name", value: string) => void;
   onFileChange: (key: DirectorDocKey, file: File | null) => void;
   onRemove: () => void;
 }
 
 /**
- * One director's record: contact details plus the four documents every
- * director has to supply. Rendered once per entry in the directors array, so
- * adding a director is just pushing another of these.
+ * One director's record: their name and the two documents the endpoint takes
+ * for them. Rendered once per entry in the directors array, so adding a
+ * director is just pushing another of these.
  */
 const DirectorCard = ({
   director,
@@ -57,8 +56,7 @@ const DirectorCard = ({
     (doc) => director.files[doc.key],
   ).length;
   const complete =
-    uploaded === DIRECTOR_DOCUMENTS.length &&
-    Boolean(director.name && director.phone && director.email);
+    uploaded === DIRECTOR_DOCUMENTS.length && Boolean(director.name.trim());
 
   return (
     <div
@@ -110,48 +108,14 @@ const DirectorCard = ({
         )}
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
+      <Field id={`${director.id}-name`} label="Full name" error={errors?.name}>
+        <Input
           id={`${director.id}-name`}
-          label="Full name"
-          error={errors?.name}
-        >
-          <Input
-            id={`${director.id}-name`}
-            placeholder="Enter the director's full name"
-            value={director.name}
-            onChange={(e) => onChange("name", e.target.value)}
-          />
-        </Field>
-
-        <Field
-          id={`${director.id}-email`}
-          label="Email address"
-          error={errors?.email}
-        >
-          <Input
-            id={`${director.id}-email`}
-            type="email"
-            placeholder="director@company.com"
-            value={director.email}
-            onChange={(e) => onChange("email", e.target.value)}
-          />
-        </Field>
-
-        <Field
-          id={`${director.id}-phone`}
-          label="Phone number"
-          error={errors?.phone}
-        >
-          <PhoneInput
-            id={`${director.id}-phone`}
-            defaultCountry="NG"
-            placeholder="Enter phone number"
-            value={director.phone}
-            onChange={(value) => onChange("phone", value ?? "")}
-          />
-        </Field>
-      </div>
+          placeholder="Enter the director's full name"
+          value={director.name}
+          onChange={(e) => onChange("name", e.target.value)}
+        />
+      </Field>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         {DIRECTOR_DOCUMENTS.map((doc) => (

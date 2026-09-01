@@ -12,18 +12,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useKycHook } from "@/hooks/useKycHook";
 import { useState } from "react";
-import FileUploadField from "./FileUploadField";
 import { CapturedSummary, Notice, SectionHeading } from "./KycUi";
-import { PROOF_OF_ADDRESS_TYPES } from "./tiers";
 
 interface Tier3FormProps {
   onComplete: () => void;
@@ -31,29 +22,17 @@ interface Tier3FormProps {
 }
 
 /**
- * Tier 3 is proof of address: the street address itself, captured through the
- * same geocoded autocomplete as the order flow, plus a utility bill or bank
- * statement backing it. Picking a suggestion is what fills city and state,
- * which the provider requires.
+ * Tier 3 is the residential address, captured through the same geocoded
+ * autocomplete as the order flow.
+ *
+ * No document upload: upgrade_account takes a single address string and has
+ * nowhere to put a utility bill, so asking for one would be asking for a file
+ * that goes straight in the bin. Picking a suggestion rather than typing a
+ * line is what keeps the address a real, resolvable place.
  */
 const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
-  const {
-    createIndividualAcctForm,
-    isPending,
-    submitTier,
-    proofOfAddressFile,
-    setProofOfAddressFile,
-    proofOfAddressError,
-    setProofOfAddressError,
-    verification,
-  } = kyc;
+  const { createIndividualAcctForm, isPending, submitTier, verification } = kyc;
   const [hasCoordinates, setHasCoordinates] = useState(false);
-
-  const documentType = createIndividualAcctForm.watch("proof_of_address_type");
-
-  const documentLabel =
-    PROOF_OF_ADDRESS_TYPES.find((type) => type.value === documentType)?.label ??
-    "document";
 
   const handleSubmit = async () => {
     const ok = await submitTier(3);
@@ -169,53 +148,9 @@ const Tier3Form = ({ onComplete, kyc }: Tier3FormProps) => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <SectionHeading
-            title="Proof of address"
-            description="A utility bill or bank statement in your name, issued within the last 3 months."
-          />
-
-          <FormField
-            control={createIndividualAcctForm.control}
-            name="proof_of_address_type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Document type</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="h-12! min-h-0 w-full rounded-md border-grey-5">
-                      <SelectValue placeholder="Select the document you are uploading" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {PROOF_OF_ADDRESS_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FileUploadField
-            id="individual-proof-of-address"
-            label={documentType ? `Upload ${documentLabel}` : "Upload document"}
-            hint="The name and address on the document must match the details above."
-            value={proofOfAddressFile}
-            onChange={(file) => {
-              setProofOfAddressFile(file);
-              setProofOfAddressError(null);
-            }}
-            error={proofOfAddressError ?? undefined}
-          />
-        </div>
-
         <Notice>
-          Documents are reviewed manually and usually clear within one business
-          day. You keep your Tier 2 limit while the review is running.
+          Your address is checked against the details already on file. You keep
+          your Tier 2 limit while that runs.
         </Notice>
 
         <Button type="submit" disabled={isPending} size="lg" className="w-full">

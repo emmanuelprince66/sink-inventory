@@ -5,6 +5,15 @@ import { z } from "zod";
 
 import { useCreateKycAcctMutation } from "@/api/kyc/create-acct";
 import {
+  useFetchCorporateUpgradeQuery,
+  useUpgradeCorporateAcctMutation,
+  useUpgradeIndividualAcctMutation,
+} from "@/api/kyc/upgrade-acct";
+import {
+  buildCorporateUpgradeBody,
+  buildIndividualUpgradeBody,
+} from "@/lib/kycUpgradePayload";
+import {
   CORPORATE_DOCUMENTS,
   CorporateDocKey,
   DIRECTOR_DOCUMENTS,
@@ -20,10 +29,6 @@ import moment from "moment";
 // NIN and BVN are both 11 digits in Nigeria; reject anything else early rather
 // than round-tripping to the provider for a guaranteed failure.
 const ELEVEN_DIGITS = /^\d{11}$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Accepts +234..., 0803..., and spaced/dashed variants — 10 to 18 characters
-// once formatting is allowed for.
-const PHONE = /^\+?[\d\s-]{10,18}$/;
 
 // One schema covers all three tiers. Tier-specific requirements are enforced at
 // submit time by validateTier() below, so a partially-filled form can still be
@@ -38,8 +43,6 @@ const individualAccountSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
-  /** Which document backs the address — see PROOF_OF_ADDRESS_TYPES. */
-  proof_of_address_type: z.string().optional(),
 });
 
 const corporateAccountSchema = z.object({
@@ -89,19 +92,21 @@ const parseTierNumber = (tier?: string | null) => {
 const otherIdentity = (method: IdentityMethod): IdentityMethod =>
   method === "nin" ? "bvn" : "nin";
 
-/** One director's record. `id` is local only — it keys the list in the UI. */
+/**
+ * One director's record. `id` is local only — it keys the list in the UI.
+ *
+ * Name and two documents, no more: POST /wallet/upgrade_corporate_account/{id}/
+ * takes fullname, identification and passport per director, so a phone number
+ * or email collected here would be asked for and then dropped.
+ */
 export interface DirectorDetails {
   id: string;
   name: string;
-  phone: string;
-  email: string;
   files: Record<DirectorDocKey, File | null>;
 }
 
 /** Per-director validation messages, keyed the same way as the fields. */
-export type DirectorErrors = Partial<
-  Record<"name" | "phone" | "email" | DirectorDocKey, string>
->;
+export type DirectorErrors = Partial<Record<"name" | DirectorDocKey, string>>;
 
 const emptyDirectorFiles = () =>
   DIRECTOR_DOCUMENTS.reduce(
@@ -120,7 +125,15 @@ export const useKycHook = () => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { mutate: CreateAcct, isPending } = useCreateKycAcctMutation();
+  const { mutate: CreateAcct, isPending: isCreating } =
+    useCreateKycAcctMutation();
+  const { mutate: UpgradeAcct, isPending: isUpgrading } =
+    useUpgradeIndividualAcctMutation();
+  const { mutate: UpgradeCorporateAcct, isPending: isUpgradingCorporate } =
+    useUpgradeCorporateAcctMutation();
+
+  // One flag for the forms: they only care that something is in flight.
+  const isPending = isCreating || isUpgrading || isUpgradingCorporate;
 
   // ──────────────────────────────────────────────────────────────────────
   // What the account has already verified.
@@ -131,7 +144,13 @@ export const useKycHook = () => {
   // here rather than from local state, so a merchant who verified last week
   // does not land back on Tier 1.
   // ──────────────────────────────────────────────────────────────────────
-  const { TrxData, TrxDataLoading } = useTransactionsHook({ page: 1 });
+  // selectedBankId, not business_id, keys the upgrade endpoints: they resolve
+  // an existing BankAccount from the path id and 404 with "No BankAccount
+  // matches the given query" when given a business. create_bank_account/{id}/
+  // still takes the business, because that is the one creating the account.
+  const { TrxData, TrxDataLoading, selectedBankId } = useTransactionsHook({
+    page: 1,
+  });
   const account = TrxData?.data?.results;
 
   const verification = useMemo(() => {
@@ -207,6 +226,43 @@ export const useKycHook = () => {
     };
   }, [account, TrxDataLoading]);
 
+  /**
+   * What the company has already filed — each document comes back as a URL
+   * once it is on record, so the form marks it done instead of asking again.
+   * Empty for an individual account, which has no corporate record.
+   */
+  const { data: corporateUpgradeResponse, refetch: refetchCorporateUpgrade } =
+    useFetchCorporateUpgradeQuery(selectedBankId ?? "");
+  const corporateUpgrade = corporateUpgradeResponse?.data ?? null;
+
+  const refreshCorporateUpgrade = useCallback(
+    () => refetchCorporateUpgrade(),
+    [refetchCorporateUpgrade],
+  );
+
+  /**
+   * Where the corporate documents stand.
+   *
+   * The wallet payload's tier only moves once a submission is approved, so on
+   * its own it cannot tell "never submitted" from "submitted, awaiting
+   * review" — and a merchant reloading after submitting would be handed an
+   * empty upload form and could file the whole set a second time. This record
+   * is what distinguishes them.
+   */
+  const corporateStatus = (corporateUpgrade?.status ?? "").toUpperCase();
+  const corporateReview = {
+    /** Documents are with the reviewers; nothing more to do. */
+    isPending: corporateStatus === "PENDING",
+    isApproved: corporateStatus === "APPROVED",
+    /** Sent back — the merchant has to file again. */
+    isRejected: corporateStatus === "REJECTED",
+    /** Anything on record at all, whatever its state. */
+    hasSubmitted: Boolean(corporateUpgrade),
+    status: corporateStatus || null,
+    submittedAt: corporateUpgrade?.created_at ?? null,
+    directors: corporateUpgrade?.directors ?? [],
+  };
+
   /** Re-reads the wallet payload after a tier is accepted. */
   const refreshVerification = useCallback(
     () =>
@@ -227,7 +283,6 @@ export const useKycHook = () => {
       address: "",
       city: "",
       state: "",
-      proof_of_address_type: "",
     },
     mode: "onChange",
   });
@@ -280,14 +335,6 @@ export const useKycHook = () => {
   // lets the tier components stay presentational.
   // ──────────────────────────────────────────────────────────────────────
 
-  /** Individual Tier 3 proof of address (utility bill / bank statement). */
-  const [proofOfAddressFile, setProofOfAddressFile] = useState<File | null>(
-    null,
-  );
-  const [proofOfAddressError, setProofOfAddressError] = useState<string | null>(
-    null,
-  );
-
   const [corporateDocs, setCorporateDocs] = useState(emptyCorporateDocs);
   const [corporateDocErrors, setCorporateDocErrors] = useState<
     Partial<Record<CorporateDocKey, string>>
@@ -313,13 +360,7 @@ export const useKycHook = () => {
   const nextDirectorId = useRef(1);
 
   const [directors, setDirectors] = useState<DirectorDetails[]>(() => [
-    {
-      id: "director-0",
-      name: "",
-      phone: "",
-      email: "",
-      files: emptyDirectorFiles(),
-    },
+    { id: "director-0", name: "", files: emptyDirectorFiles() },
   ]);
   const [directorErrors, setDirectorErrors] = useState<
     Record<string, DirectorErrors>
@@ -343,8 +384,6 @@ export const useKycHook = () => {
         {
           id: `director-${nextDirectorId.current++}`,
           name: "",
-          phone: "",
-          email: "",
           files: emptyDirectorFiles(),
         },
       ]),
@@ -364,7 +403,7 @@ export const useKycHook = () => {
   }, []);
 
   const updateDirector = useCallback(
-    (id: string, field: "name" | "phone" | "email", value: string) => {
+    (id: string, field: "name", value: string) => {
       setDirectors((prev) =>
         prev.map((d) => (d.id === id ? { ...d, [field]: value } : d)),
       );
@@ -451,16 +490,11 @@ export const useKycHook = () => {
         setError("address", "Select your address");
         ok = false;
       }
+      // State is not sent — upgrade_account takes one address string — but an
+      // empty one still means no suggestion was picked, and a hand-typed line
+      // has no guarantee of resolving to a real place.
       if (!values.state?.trim()) {
-        setError("state", "State is required — pick an address from the list");
-        ok = false;
-      }
-      if (!values.proof_of_address_type) {
-        setError("proof_of_address_type", "Pick the document you are uploading");
-        ok = false;
-      }
-      if (!proofOfAddressFile) {
-        setProofOfAddressError("Upload a utility bill or bank statement");
+        setError("state", "Pick your address from the list");
         ok = false;
       }
     }
@@ -491,7 +525,6 @@ export const useKycHook = () => {
       payload.address = values.address;
       payload.city = values.city;
       payload.state = values.state;
-      payload.proof_of_address_type = values.proof_of_address_type;
     }
 
     Object.keys(payload).forEach((key) => {
@@ -505,28 +538,55 @@ export const useKycHook = () => {
   /**
    * Submits one tier. Resolves true only when the API call succeeded, so the
    * caller can advance the flow without optimistically marking a tier done.
+   *
+   * Two endpoints, split by what the tier is doing. Tier 1 opens the account
+   * through create_bank_account, which is the only one that takes the name and
+   * date of birth. Tiers 2 and 3 raise an account that already exists, and go
+   * to upgrade_account — whose body is just bvn, nin and address.
    */
   const submitTier = (tier: KycTier): Promise<boolean> => {
     const values = createIndividualAcctForm.getValues();
 
     createIndividualAcctForm.clearErrors();
-    setProofOfAddressError(null);
-    if (!validateTier(tier, values)) return Promise.resolve(false);
+    if (!validateTier(tier, values)) {
+      showToast("Check the highlighted fields and try again", "error");
+      return Promise.resolve(false);
+    }
 
-    const insert = buildTierPayload(tier, values);
+    const onAccepted = (resolve: (ok: boolean) => void, response?: any) => {
+      showToast(`Tier ${tier} verification submitted`, "success");
+      // The account payload is what the tier rail reads, so pull it again
+      // rather than trusting local state to match the server.
+      refreshVerification();
+      if (response) openWalletUrl(response);
+      resolve(true);
+    };
+
+    if (tier === 1) {
+      const insert = buildTierPayload(tier, values);
+
+      return new Promise((resolve) => {
+        CreateAcct(
+          { body: insert, businessId: business_id },
+          {
+            onSuccess: (response: any) => onAccepted(resolve, response),
+            onError: () => resolve(false),
+          },
+        );
+      });
+    }
+
+    const body = buildIndividualUpgradeBody({
+      // Tier 2 adds the outstanding identifier; Tier 3 adds the address.
+      ...(tier === 2 ? { [tier2Identity]: values[tier2Identity] } : {}),
+      ...(tier === 3 ? { address: values.address } : {}),
+    });
 
     return new Promise((resolve) => {
-      CreateAcct(
-        { body: insert, businessId: business_id },
+      UpgradeAcct(
+        { businessId: selectedBankId ?? "", body },
         {
-          onSuccess: (response: any) => {
-            showToast(`Tier ${tier} verification submitted`, "success");
-            // The account payload is what the tier rail reads, so pull it
-            // again rather than trusting local state to match the server.
-            refreshVerification();
-            openWalletUrl(response);
-            resolve(true);
-          },
+          onSuccess: () => onAccepted(resolve),
           onError: () => resolve(false),
         },
       );
@@ -598,11 +658,7 @@ export const useKycHook = () => {
     const nextDirectorErrors: Record<string, DirectorErrors> = {};
     directors.forEach((director) => {
       const errors: DirectorErrors = {};
-      if (!director.name.trim()) errors.name = "Name is required";
-      if (!PHONE.test(director.phone.trim()))
-        errors.phone = "Enter a valid phone number";
-      if (!EMAIL.test(director.email.trim()))
-        errors.email = "Enter a valid email address";
+      if (!director.name.trim()) errors.name = "Full name is required";
       DIRECTOR_DOCUMENTS.forEach((doc) => {
         if (!director.files[doc.key]) errors[doc.key] = "This upload is required";
       });
@@ -635,18 +691,9 @@ export const useKycHook = () => {
       state: values.state,
     };
 
-    if (tier >= 2) {
-      payload.business_type = values.business_type;
-      payload.tin = values.tin;
-      // The uploads themselves stay in state until the endpoint accepts
-      // multipart; the payload carries the roster so the backend knows how
-      // many director records to expect.
-      payload.directors = directors.map((director) => ({
-        name: director.name,
-        phone: director.phone,
-        email: director.email,
-      }));
-    }
+    // Tier 2 no longer rides on this payload: its documents, TIN and
+    // directors go to upgrade_corporate_account as multipart.
+    if (tier >= 2) payload.business_type = values.business_type;
 
     Object.keys(payload).forEach((key) => {
       const value = payload[key];
@@ -661,15 +708,54 @@ export const useKycHook = () => {
     const values = createCorporateAcctForm.getValues();
 
     createCorporateAcctForm.clearErrors();
-    // Tier 2 is cumulative, so it re-runs the Tier 1 checks first.
+
+    // Only re-check Tier 1 while it is still outstanding. Its fields are not
+    // on the Tier 2 screen, and after a reload they are empty strings — so
+    // validating them for a business that cleared Tier 1 last week failed
+    // against inputs nobody could see, and the button did nothing at all.
+    const tier1OnFile = verification.corporateCompletedTiers.includes(1);
     const valid =
       tier === 1
         ? validateCorporateTier1(values)
-        : [validateCorporateTier1(values), validateCorporateTier2(values)].every(
-            Boolean,
-          );
+        : tier1OnFile
+          ? validateCorporateTier2(values)
+          : [
+              validateCorporateTier1(values),
+              validateCorporateTier2(values),
+            ].every(Boolean);
 
-    if (!valid) return Promise.resolve(false);
+    if (!valid) {
+      // Never fail silently: some of what a tier checks lives outside the form
+      // — uploads, the director list — and an inline message under a field the
+      // merchant cannot see reads as a dead button.
+      showToast("Check the highlighted fields and try again", "error");
+      return Promise.resolve(false);
+    }
+
+    // Tier 2 is documents, so it goes to the corporate upgrade endpoint as
+    // multipart rather than through create_bank_account.
+    if (tier === 2) {
+      const body = buildCorporateUpgradeBody({
+        tin: values.tin ?? "",
+        documents: corporateDocs,
+        directors,
+      });
+
+      return new Promise((resolve) => {
+        UpgradeCorporateAcct(
+          { businessId: selectedBankId ?? "", body },
+          {
+            onSuccess: () => {
+              showToast("Company documents submitted", "success");
+              refreshVerification();
+              refreshCorporateUpgrade();
+              resolve(true);
+            },
+            onError: () => resolve(false),
+          },
+        );
+      });
+    }
 
     const insert = buildCorporatePayload(tier, values);
 
@@ -737,15 +823,14 @@ export const useKycHook = () => {
     // what the account has already verified, read from the wallet payload
     verification,
     refreshVerification,
+    // what the company has already filed, from the corporate upgrade endpoint
+    corporateUpgrade,
+    corporateReview,
+    refreshCorporateUpgrade,
     // Tier 1's one-identifier choice, and the one Tier 2 is left asking for
     identityMethod,
     chooseIdentityMethod,
     tier2Identity,
-    // individual documents
-    proofOfAddressFile,
-    setProofOfAddressFile,
-    proofOfAddressError,
-    setProofOfAddressError,
     // corporate documents
     corporateDocs,
     setCorporateDoc,

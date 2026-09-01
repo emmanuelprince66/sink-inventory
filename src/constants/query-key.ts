@@ -38,6 +38,9 @@ export const queryKey = {
   },
   kyc: {
     createKycAcct: "create-kyc-acct",
+    upgradeAcct: "upgrade-kyc-acct",
+    upgradeCorporateAcct: "upgrade-corporate-kyc-acct",
+    corporateUpgradeState: "corporate-kyc-upgrade-state",
   },
   referral: {
     getDashboard: "get-referral-dashboard",

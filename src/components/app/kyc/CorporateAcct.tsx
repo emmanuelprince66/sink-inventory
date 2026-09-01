@@ -21,15 +21,29 @@ interface CorporateAcctProps {
 
 const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
   const [currentTier, setCurrentTier] = useState<Tier>(1);
-  const { verification } = kyc;
+  const { verification, corporateReview } = kyc;
 
   // Same shape as the individual flow: the account payload is the truth, and
   // tiers submitted in this session are merged in so the rail does not go
   // backwards while the refetch is in flight.
   const [justSubmitted, setJustSubmitted] = useState<number[]>([]);
+  // A submission that has been approved raises the account's tier; one still
+  // under review does not, so both are read — otherwise a merchant who filed
+  // yesterday is handed the upload form again.
   const completedTiers = Array.from(
-    new Set([...verification.corporateCompletedTiers, ...justSubmitted]),
+    new Set([
+      ...verification.corporateCompletedTiers,
+      ...(corporateReview.isApproved ? [2] : []),
+      ...justSubmitted,
+    ]),
   );
+
+  /**
+   * Filed and waiting. Takes precedence over the local "just submitted" mark:
+   * a submission is not verification, and telling a merchant their documents
+   * are approved the moment they upload them is a promise we cannot keep.
+   */
+  const awaitingReview = corporateReview.isPending;
 
   // Land once on the first tier that still needs something — a business
   // already on TIER 1 opens on Tier 2, not back at the business details it
@@ -38,9 +52,7 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
   useEffect(() => {
     if (landed.current || verification.isLoading) return;
     landed.current = true;
-    setCurrentTier(
-      verification.corporateCompletedTiers.includes(1) ? 2 : 1,
-    );
+    setCurrentTier(verification.corporateCompletedTiers.includes(1) ? 2 : 1);
   }, [verification.isLoading, verification.corporateCompletedTiers]);
 
   const handleTierComplete = (tier: number) => {
@@ -76,17 +88,21 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
       <div className="space-y-5">
         {completedTiers.length > 0 && (
           <Notice
-            tone="success"
+            tone={awaitingReview ? "info" : "success"}
             title={
-              completedTiers.includes(2)
-                ? "Corporate account fully verified"
-                : resuming
-                  ? "Welcome back — Tier 1 is verified"
-                  : "Tier 1 submitted"
+              awaitingReview
+                ? "Documents submitted — under review"
+                : completedTiers.includes(2)
+                  ? "Corporate account fully verified"
+                  : resuming
+                    ? "Welcome back — Tier 1 is verified"
+                    : "Tier 1 submitted"
             }
           >
-            {completedTiers.includes(2) ? (
-              "Your documents are with our review team. We will email you as soon as they clear."
+            {awaitingReview ? (
+              "We will email you as soon as they clear. Your Tier 1 limit stays in place until then."
+            ) : completedTiers.includes(2) ? (
+              "Your corporate documents have been approved."
             ) : (
               <div className="flex flex-wrap items-center gap-3">
                 <span>
@@ -122,6 +138,39 @@ const CorporateAcct = ({ kyc }: CorporateAcctProps) => {
             <div className="flex justify-center py-16">
               <Spinner className="text-primary-green-300" />
             </div>
+          ) : currentTier === 2 && awaitingReview ? (
+            <Notice tone="info" title="Documents are with our review team">
+              Filed{" "}
+              {corporateReview.submittedAt
+                ? new Date(corporateReview.submittedAt).toLocaleDateString(
+                    "en-NG",
+                    { day: "numeric", month: "long", year: "numeric" },
+                  )
+                : "recently"}
+              {corporateReview.directors.length > 0 &&
+                ` · ${corporateReview.directors.length} ${
+                  corporateReview.directors.length === 1
+                    ? "director"
+                    : "directors"
+                }`}
+              . Nothing further is needed from you — we will email you as soon
+              as they clear. Your Tier 1 limit stays in place until then.
+            </Notice>
+          ) : currentTier === 2 && corporateReview.isRejected ? (
+            <>
+              <Notice
+                tone="warning"
+                title="Your documents were sent back"
+                className="mb-5"
+              >
+                Something in the last submission could not be accepted. Check
+                your email for what needs changing, then file again below.
+              </Notice>
+              <CorporateTier2Form
+                kyc={kyc}
+                onComplete={() => handleTierComplete(2)}
+              />
+            </>
           ) : completedTiers.includes(currentTier) ? (
             <Notice tone="success" title="Already verified">
               This tier is complete. Pick the next one from the progress list to

@@ -63,15 +63,6 @@ export const CORPORATE_TIERS: KycTier[] = [
 /** "₦50,000 daily" — the limits are per day as well as per transaction. */
 export const dailyLimit = (tier: KycTier) => `${tier.limit} daily`;
 
-/**
- * Individual Tier 3 accepts either of these as proof of address. The value is
- * what gets sent; the label is what the merchant sees.
- */
-export const PROOF_OF_ADDRESS_TYPES = [
-  { value: "UTILITY_BILL", label: "Utility Bill" },
-  { value: "BANK_STATEMENT", label: "Bank Statement" },
-] as const;
-
 export interface DocumentSpec {
   key: string;
   label: string;
@@ -84,58 +75,72 @@ export interface DocumentSpec {
 /** Scans and photos of paperwork. */
 const PAPER = ".pdf,.jpg,.jpeg,.png";
 
-/** Company filings required at corporate Tier 2. */
+/**
+ * Company filings, keyed by the exact field name POST
+ * /wallet/upgrade_corporate_account/{id}/ expects — so the multipart body is
+ * built straight off these keys with nothing to map or mistype in between.
+ */
 export const CORPORATE_DOCUMENTS = [
   {
-    key: "cacCertificate",
+    key: "cac_certificate",
     label: "CAC Certificate of Incorporation",
     hint: "The certificate issued by the Corporate Affairs Commission.",
     accept: PAPER,
   },
   {
-    key: "proofOfBusinessAddress",
-    label: "Proof of Business / Office Address",
-    hint: "Utility bill or tenancy agreement, not older than 3 months.",
-    accept: PAPER,
-  },
-  {
-    key: "memart",
+    key: "cac_memorandum",
     label: "MEMART",
     hint: "Memorandum and Articles of Association.",
     accept: PAPER,
   },
   {
-    key: "statusReport",
-    label: "CAC Status Report / CAC Extract",
+    key: "rc_document",
+    label: "RC / BN Document",
+    hint: "The company registration document.",
+    accept: PAPER,
+  },
+  {
+    key: "status_report",
+    label: "CAC Status Report",
     hint: "The current status report or extract from CAC.",
+    accept: PAPER,
+  },
+  {
+    key: "board_resolution",
+    label: "Board Resolution",
+    hint: "The resolution authorising this account to be opened.",
+    accept: PAPER,
+  },
+  {
+    key: "proof_of_address",
+    label: "Proof of Business Address",
+    hint: "Tenancy agreement or similar showing the office address.",
+    accept: PAPER,
+  },
+  {
+    key: "utility_bill",
+    label: "Utility Bill",
+    hint: "For the business address, not older than 3 months.",
     accept: PAPER,
   },
 ] as const satisfies readonly DocumentSpec[];
 
-/** Every director submits this same set of four documents. */
+/**
+ * What each director supplies. Two documents, not four: the endpoint's
+ * director entries carry fullname, identification and passport only, so a
+ * proof of address or signature collected here would be dropped on the floor.
+ */
 export const DIRECTOR_DOCUMENTS = [
   {
-    key: "govId",
+    key: "identification",
     label: "Government-issued ID",
     hint: "NIN slip, voter's card, driver's licence or passport data page.",
-    accept: PAPER,
-  },
-  {
-    key: "proofOfAddress",
-    label: "Proof of Address",
-    hint: "Utility bill or bank statement, not older than 3 months.",
     accept: PAPER,
   },
   {
     key: "passport",
     label: "Passport Photograph",
     hint: "Recent passport-size photo on a plain background.",
-    accept: "image/*",
-  },
-  {
-    key: "signature",
-    label: "Signature",
-    hint: "A clear photo or scan of the signature on white paper.",
     accept: "image/*",
   },
 ] as const satisfies readonly DocumentSpec[];
