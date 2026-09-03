@@ -11,19 +11,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useKycHook } from "@/hooks/useKycHook";
 import { Plus } from "lucide-react";
 import DirectorCard from "./DirectorCard";
 import FileUploadField from "./FileUploadField";
 import { Notice, SectionHeading } from "./KycUi";
-import { BUSINESS_TYPES, CORPORATE_DOCUMENTS } from "./tiers";
+import { CORPORATE_DOCUMENTS } from "./tiers";
 
 interface CorporateTier2FormProps {
   onComplete: () => void;
@@ -31,9 +24,12 @@ interface CorporateTier2FormProps {
 }
 
 /**
- * Corporate Tier 2: the company's legal filings plus a full record for every
- * director. The director list is dynamic — one is required, and [Add director]
- * appends another card with its own contact fields and four uploads.
+ * Corporate Tier 2: the TIN, the company's legal filings, and a record for
+ * every director. The director list is dynamic — one is required, and
+ * [Add director] appends another card with its own name and two uploads.
+ *
+ * Business type is not here: create_bank_account needs it to open the account
+ * at Tier 1, so that is where it is asked for.
  */
 const CorporateTier2Form = ({ onComplete, kyc }: CorporateTier2FormProps) => {
   const {
@@ -68,36 +64,11 @@ const CorporateTier2Form = ({ onComplete, kyc }: CorporateTier2FormProps) => {
       >
         <div className="space-y-4">
           <SectionHeading
-            title="Registration"
-            description="How the business is registered, and its tax identification number."
+            title="Tax"
+            description="The business's tax identification number."
           />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField
-              control={createCorporateAcctForm.control}
-              name="business_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business type</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="h-12! min-h-0 w-full rounded-md border-grey-5">
-                        <SelectValue placeholder="Select business type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {BUSINESS_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+          <div>
             <FormField
               control={createCorporateAcctForm.control}
               name="tin"

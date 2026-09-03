@@ -21,7 +21,7 @@ import {
 import { useKycHook } from "@/hooks/useKycHook";
 import KycDateField from "./KycDateField";
 import { Notice, SectionHeading } from "./KycUi";
-import { NIGERIAN_STATES } from "./tiers";
+import { BUSINESS_TYPES, NIGERIAN_STATES } from "./tiers";
 
 interface CorporateTier1FormProps {
   onComplete: () => void;
@@ -136,6 +136,35 @@ const CorporateTier1Form = ({ onComplete, kyc }: CorporateTier1FormProps) => {
                 <FormControl>
                   <Input placeholder="Enter your business name" {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Asked for here, not at Tier 2: create_bank_account requires it to
+              open the account at all, and collecting it a tier later meant
+              every corporate Tier 1 was rejected for a field the merchant was
+              never shown. */}
+          <FormField
+            control={createCorporateAcctForm.control}
+            name="business_type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Business type</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="h-12! min-h-0 w-full rounded-md border-grey-5">
+                      <SelectValue placeholder="Select business type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {BUSINESS_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

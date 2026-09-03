@@ -611,6 +611,7 @@ export const useKycHook = () => {
       ["registration_number", "RC / BN number is required"],
       ["address", "Business address is required"],
       ["state", "State is required"],
+      ["business_type", "Select the business type"],
     ];
 
     required.forEach(([field, message]) => {
@@ -631,13 +632,6 @@ export const useKycHook = () => {
   const validateCorporateTier2 = (values: AddCorporateAcctFormValues) => {
     let ok = true;
 
-    if (!values.business_type) {
-      createCorporateAcctForm.setError("business_type", {
-        type: "manual",
-        message: "Select the business type",
-      });
-      ok = false;
-    }
     if (!values.tin?.trim()) {
       createCorporateAcctForm.setError("tin", {
         type: "manual",
@@ -689,11 +683,14 @@ export const useKycHook = () => {
         : undefined,
       address: values.address,
       state: values.state,
+      // create_bank_account requires this to open the account — it was only
+      // being sent from Tier 2, so every corporate Tier 1 was rejected with
+      // "business type ... required for business account".
+      business_type: values.business_type,
     };
 
-    // Tier 2 no longer rides on this payload: its documents, TIN and
+    // Tier 2 no longer rides on this payload at all: its documents, TIN and
     // directors go to upgrade_corporate_account as multipart.
-    if (tier >= 2) payload.business_type = values.business_type;
 
     Object.keys(payload).forEach((key) => {
       const value = payload[key];
