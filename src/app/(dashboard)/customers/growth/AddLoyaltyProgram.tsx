@@ -28,6 +28,11 @@ import {
   useLoyaltyHook,
 } from "@/hooks/useLoyaltyHook";
 import type { LoyaltyProgram } from "@/types/loyalty";
+import {
+  clampPercentage,
+  PERCENTAGE_MAX,
+  PERCENTAGE_MIN,
+} from "./loyaltyFormat";
 
 const NOTIFY_FIELDS = [
   { name: "notify_welcome", label: "Welcome message on join" },
@@ -193,15 +198,42 @@ const AddLoyaltyProgram = ({
             <FormField
               control={form.control}
               name="reward_value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Reward value</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. 2000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                // A percentage is a share of the bill, so it is held to 1-100
+                // as it is typed; the schema checks it again on submit for
+                // anything pasted straight in.
+                const isPercentage = form.watch("reward_type") === "PERCENTAGE";
+
+                return (
+                  <FormItem>
+                    <FormLabel>
+                      {isPercentage ? "Reward value (%)" : "Reward value"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={isPercentage ? "e.g. 15" : "e.g. 2000"}
+                        inputMode="decimal"
+                        {...(isPercentage
+                          ? {
+                              type: "number",
+                              min: PERCENTAGE_MIN,
+                              max: PERCENTAGE_MAX,
+                            }
+                          : {})}
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(
+                            isPercentage
+                              ? clampPercentage(e.target.value)
+                              : e.target.value,
+                          )
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           </div>
 

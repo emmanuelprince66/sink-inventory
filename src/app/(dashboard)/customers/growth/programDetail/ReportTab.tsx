@@ -9,19 +9,26 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
-import { asRate } from "../loyaltyFormat";
+import { asRate, formatRewardAmount } from "../loyaltyFormat";
 import { StatRow } from "./primitives";
 import type { ProgramDetailData } from "./useProgramDetail";
 
 const ReportTab = ({ detail }: { detail: ProgramDetailData }) => {
   const formatMoney = useFormatMoney();
-  const { report, overview } = detail;
+  const { report, overview, programInfo } = detail;
+
+  // What this programme rewards in. The three reward totals below are reported
+  // in that unit, so a 50%-off programme was showing "₦50.00" where it meant
+  // "50%". Retained revenue is money whatever the reward is, and stays money.
+  const rewardType = programInfo?.reward_type;
+  const inRewardUnit = (value: string | number | undefined | null) =>
+    formatRewardAmount(value, rewardType, formatMoney);
 
   const rows = [
     {
       icon: <Send className="h-4 w-4" />,
       label: "Total Rewards Sent",
-      value: formatMoney(Number(report?.total_rewards_sent ?? 0)),
+      value: inRewardUnit(report?.total_rewards_sent),
       tone: "text-primary-green-300",
       surface: "bg-primary-green-500",
       border: "border-primary-green-300/35",
@@ -29,7 +36,7 @@ const ReportTab = ({ detail }: { detail: ProgramDetailData }) => {
     {
       icon: <BadgeCheck className="h-4 w-4" />,
       label: "Total Redeemed",
-      value: formatMoney(Number(report?.total_redeemed ?? 0)),
+      value: inRewardUnit(report?.total_redeemed),
       tone: "text-primary-green-300",
       surface: "bg-primary-green-500",
       border: "border-primary-green-300/35",
@@ -37,7 +44,7 @@ const ReportTab = ({ detail }: { detail: ProgramDetailData }) => {
     {
       icon: <XCircle className="h-4 w-4" />,
       label: "Cancelled / Forfeited",
-      value: formatMoney(Number(report?.cancelled_forfeited ?? 0)),
+      value: inRewardUnit(report?.cancelled_forfeited),
       tone: "text-error-1",
       surface: "bg-error-2",
       border: "border-error-1/30",

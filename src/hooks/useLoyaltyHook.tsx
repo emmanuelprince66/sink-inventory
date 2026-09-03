@@ -1,3 +1,4 @@
+import { percentageError } from "@/app/(dashboard)/customers/growth/loyaltyFormat";
 import { useCreateLoyaltyProgramMutation } from "@/api/loyalty/create-loyalty-program";
 import { useCreateLoyaltyTierMutation } from "@/api/loyalty/create-loyalty-tier";
 import { useDeleteLoyaltyProgramMutation } from "@/api/loyalty/delete-loyalty-program";
@@ -35,7 +36,22 @@ const loyaltyProgramSchema = z.object({
   notify_progress: z.boolean().optional(),
   notify_reward_ready: z.boolean().optional(),
   notify_expiry_reminder: z.boolean().optional(),
-});
+})
+  // reward_value means a different thing per reward type, so the constraint
+  // cannot sit on the field alone. A percentage is a share of the bill and
+  // cannot exceed it; points and wallet credit are open-ended amounts.
+  .superRefine((values, ctx) => {
+    if (values.reward_type !== "PERCENTAGE") return;
+
+    const message = percentageError(values.reward_value ?? "");
+    if (message) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reward_value"],
+        message,
+      });
+    }
+  });
 
 const loyaltyTierSchema = z.object({
   name: z.string().min(1, "Tier name is required"),

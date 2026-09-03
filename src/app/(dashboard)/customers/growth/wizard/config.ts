@@ -2,6 +2,8 @@
 // component so the step list, option sets and payload builder can be read (and
 // changed) without wading through JSX.
 
+import { percentageError } from "../loyaltyFormat";
+
 export const STEPS = [
   "Name",
   "Goal",
@@ -392,6 +394,12 @@ export const stepError = (step: StepName, s: WizardState): string | null => {
       s.rewardType === "PERCENTAGE";
     if (needsValue && !s.rewardValue.trim())
       return "Enter how much the reward is worth.";
+    // Checked again here rather than trusting the input's clamp: a pasted or
+    // autofilled value can reach the state without passing through onChange.
+    if (s.rewardType === "PERCENTAGE") {
+      const bad = percentageError(s.rewardValue);
+      if (bad) return bad;
+    }
     // A give-away with nothing chosen would create a programme whose reward
     // the till cannot hand over.
     if (s.rewardType === "FREE_ITEM" && !s.rewardProductId)

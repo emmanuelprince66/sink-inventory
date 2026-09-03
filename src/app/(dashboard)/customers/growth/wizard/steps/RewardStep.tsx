@@ -4,6 +4,11 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Package, Scissors } from "lucide-react";
 import { useState } from "react";
+import {
+  clampPercentage,
+  PERCENTAGE_MAX,
+  PERCENTAGE_MIN,
+} from "../../loyaltyFormat";
 import { REWARDS } from "../config";
 import InventoryPickerSheet from "./InventoryPickerSheet";
 import { FieldLabel, StepShell, type StepProps } from "./StepShell";
@@ -123,16 +128,37 @@ const RewardStep = ({ state, set }: StepProps) => (
 
     {VALUED_REWARDS.includes(state.rewardType) && (
       <div>
-        <FieldLabel>Reward value</FieldLabel>
+        <FieldLabel>
+          {state.rewardType === "PERCENTAGE"
+            ? "Reward value (%)"
+            : "Reward value"}
+        </FieldLabel>
         <Input
           value={state.rewardValue}
           inputMode="decimal"
+          // A percentage is a share of the bill, so it is held to 1-100 as it
+          // is typed. The other two are open-ended amounts.
+          {...(state.rewardType === "PERCENTAGE"
+            ? { type: "number", min: PERCENTAGE_MIN, max: PERCENTAGE_MAX }
+            : {})}
           onChange={(e) =>
-            set("rewardValue", e.target.value.replace(/[^\d.]/g, ""))
+            set(
+              "rewardValue",
+              state.rewardType === "PERCENTAGE"
+                ? clampPercentage(e.target.value)
+                : // One decimal point at most; the old filter kept every "."
+                  // it was given, so "5.5.5" typed straight through.
+                  e.target.value.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1"),
+            )
           }
           placeholder={state.rewardType === "PERCENTAGE" ? "15" : "5000"}
           className="mt-2 h-11 rounded-xl"
         />
+        {state.rewardType === "PERCENTAGE" && (
+          <p className="mt-1.5 text-xs text-grey-4">
+            Between {PERCENTAGE_MIN}% and {PERCENTAGE_MAX}% off the bill.
+          </p>
+        )}
       </div>
     )}
 

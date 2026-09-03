@@ -92,6 +92,9 @@ export const useProgramDetail = (
     setFilter,
     overview: detail?.overview,
     report: detail?.reward_cost_report,
+    // The reward totals below are denominated in whatever this programme hands
+    // out, so every figure in the report needs its reward_type to render.
+    programInfo: detail?.program_info,
     qr,
     participants,
     filtered,

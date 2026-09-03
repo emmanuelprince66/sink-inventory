@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { LoyaltyProgram } from "@/types/loyalty";
 import { useFormatMoney } from "@/utils/formatMoney";
 import { Gift, Link2, QrCode, Ticket } from "lucide-react";
-import { asNumber, asRate } from "../loyaltyFormat";
+import { asNumber, asRate, formatRewardAmount } from "../loyaltyFormat";
 
 export interface CampaignCardProps {
   program: LoyaltyProgram;
@@ -29,13 +29,15 @@ const CampaignCard = ({
   // Sample rows carry a non-UUID id; only real programmes can be opened.
   const isPersisted = Boolean(program.id && program.id.length > 20);
 
-  // total_rewards_given_out_value is currency for credit-style rewards but a
-  // raw percentage for PERCENTAGE campaigns — rendering ₦15 for "15% off"
-  // would be wrong, so switch on the reward type.
-  const givenOut =
-    program.reward_type === "PERCENTAGE"
-      ? `${asRate(program.total_rewards_given_out_value)}%`
-      : formatMoney(asNumber(program.total_rewards_given_out_value));
+  // total_rewards_given_out_value is denominated in whatever the campaign
+  // hands out — currency for credit, a raw percentage for PERCENTAGE, a count
+  // for POINTS. Shared with the detail sheet's report so one campaign reads
+  // the same in the list and on the panel it opens.
+  const givenOut = formatRewardAmount(
+    program.total_rewards_given_out_value,
+    program.reward_type,
+    formatMoney,
+  );
 
   const cells = [
     { value: asNumber(program.enrolled_count), label: "Enrolled" },
