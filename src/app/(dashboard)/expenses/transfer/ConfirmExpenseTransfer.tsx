@@ -6,6 +6,7 @@ import TransactionPinDialog from "@/components/app/TransactionPinDialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
+import { useUserRole } from "@/lib/store/user-store";
 import {
   estimateCharges,
   type ExpenseSettings,
@@ -65,6 +66,7 @@ const ConfirmExpenseTransfer = ({
   onDone: () => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
+  const { user } = useUserRole();
   const [askingPin, setAskingPin] = useState(false);
   const [outcome, setOutcome] = useState<"SENT" | "QUEUED" | null>(null);
 
@@ -83,7 +85,15 @@ const ConfirmExpenseTransfer = ({
   const perTransactionCap = Number(settings?.max_amount_per_transaction ?? 0);
   const overCap = perTransactionCap > 0 && amount > perTransactionCap;
   const alwaysNeedsApproval = Boolean(settings?.require_approval_for_all);
-  const expectApproval = alwaysNeedsApproval || overCap;
+
+  /**
+   * The owner is the top authority: their PIN releases a payout there and
+   * then, and the "approval required" switch governs staff, not them. It is
+   * still the limits that bind — an amount over the cap is refused for
+   * everyone, which is a different answer from "this needs a signature".
+   */
+  const isOwner = user?.role === "OWNER";
+  const expectApproval = !isOwner && (alwaysNeedsApproval || overCap);
 
   const { mutate: initiate, isPending } = useInitiateExpenseTransferMutation({
     onSuccess: (response: any) => {
@@ -197,8 +207,22 @@ const ConfirmExpenseTransfer = ({
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning-1" />
             <p className="text-xs text-grey-2">
               {alwaysNeedsApproval
-                ? "This business requires approval for every payout, so this one will wait for an approver."
+                ? "This business requires approval for staff payouts, so this one will wait for an approver."
                 : `This is above the ${formatToNaira(perTransactionCap)} single-payout limit, so it will need approval.`}
+            </p>
+          </div>
+        )}
+
+        {/* The limits bind the owner too, but the answer is refusal rather
+            than a queue — no one can approve past the ceiling, so offering
+            "submit for approval" here would be sending it nowhere. */}
+        {isOwner && overCap && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-error-1/30 bg-error-2 p-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-error-1" />
+            <p className="text-xs text-grey-2">
+              This is above the {formatToNaira(perTransactionCap)} single-payout
+              limit and will be refused. Raise the limit in Settings › Expense
+              Controls, or split the payout.
             </p>
           </div>
         )}
@@ -218,18 +242,23 @@ const ConfirmExpenseTransfer = ({
             </Button>
           )}
 
-          <Button
-            variant={expectApproval ? "default" : "outline"}
-            className="h-11 rounded-xl"
-            disabled={isPending}
-            onClick={() => submit()}
-          >
-            {isPending && expectApproval ? (
-              <Spinner className="mr-2" size="sm" />
-            ) : (
-              "Submit for approval"
-            )}
-          </Button>
+          {/* Not offered to the owner: there is nobody above them to approve
+              it, so the button would queue a payout that only they could
+              release — an extra step to arrive back where they started. */}
+          {!isOwner && (
+            <Button
+              variant={expectApproval ? "default" : "outline"}
+              className="h-11 rounded-xl"
+              disabled={isPending}
+              onClick={() => submit()}
+            >
+              {isPending && expectApproval ? (
+                <Spinner className="mr-2" size="sm" />
+              ) : (
+                "Submit for approval"
+              )}
+            </Button>
+          )}
         </div>
       </div>
 

@@ -185,12 +185,19 @@ const ExpenseGovernance = () => {
           <div className="flex items-start justify-between gap-4 rounded-2xl border border-grey-5 bg-white p-5">
             <div className="min-w-0">
               <p className="text-sm font-bold text-grey-1">
-                Approval required for every payout
+                Approval required for staff payouts
               </p>
               <p className="mt-1 text-xs text-grey-3">
-                On, nothing is sent straight away — every transfer waits for an
-                approver, including ones the owner starts. Off, a payout within
-                the limits goes out as soon as the sender enters their PIN.
+                On, a staff transfer waits for an approver even when it is
+                within the limits. Off, it goes out as soon as the sender
+                enters their PIN.
+              </p>
+              {/* The owner is the top authority and this switch does not gate
+                  them — saying so here stops it being read as a lock on the
+                  whole business. */}
+              <p className="mt-1.5 text-xs text-grey-4">
+                This does not hold up the owner: an owner&apos;s PIN releases a
+                payout straight away, as long as it is within the limits above.
               </p>
             </div>
             <Switch
