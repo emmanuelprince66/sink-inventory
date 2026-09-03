@@ -189,8 +189,15 @@ export const NIGERIAN_STATES = [
   "Zamfara",
 ] as const;
 
-/** Registration classes CAC issues — drives the corporate Tier 2 selector. */
+/**
+ * Registration classes CAC issues.
+ *
+ * The values are the codes create_bank_account expects — "RC" or "BN", and
+ * nothing else. They read as abbreviations of the labels, which is exactly why
+ * they are easy to "tidy" into BUSINESS / LIMITED_LIABILITY; those were what
+ * this sent before, and the account could not be opened with them.
+ */
 export const BUSINESS_TYPES = [
-  { value: "BUSINESS", label: "Business Name (BN)" },
-  { value: "LIMITED_LIABILITY", label: "Limited Liability (RC)" },
+  { value: "BN", label: "Business Name (BN)" },
+  { value: "RC", label: "Limited Liability (RC)" },
 ] as const;

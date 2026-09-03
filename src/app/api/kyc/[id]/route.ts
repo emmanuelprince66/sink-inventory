@@ -1,4 +1,5 @@
 import { BaseUrl } from "@/constants/base-url";
+import { firstApiError } from "@/lib/apiError";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -56,7 +57,7 @@ export async function POST(
       const errorData = await response.json();
       return NextResponse.json(
         {
-          error: errorData.message || "Failed to create account",
+          error: firstApiError(errorData, "Failed to create account"),
           details: errorData,
         },
         { status: response.status }

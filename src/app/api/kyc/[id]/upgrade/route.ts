@@ -1,4 +1,5 @@
 import { BaseUrl } from "@/constants/base-url";
+import { firstApiError } from "@/lib/apiError";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -55,7 +56,7 @@ export async function POST(
     if (!response.ok) {
       return NextResponse.json(
         {
-          error: data?.error || data?.message || "Failed to upgrade account",
+          error: firstApiError(data, "Failed to upgrade account"),
           details: data,
         },
         { status: response.status },
