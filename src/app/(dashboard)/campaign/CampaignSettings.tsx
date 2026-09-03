@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
+import { Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import CampaignAutomationCard from "./CampaignAutomationCard";
 
@@ -404,15 +405,26 @@ const CampaignSettings = () => {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <p className="text-gray-600 text-sm leading-relaxed tracking-normal font-normal mb-4">
-        Unlock 80% Customer Retention with Our Marketing Automation Tools! Boost
-        your business growth and retain more customers with our powerful
-        marketing automation solutions. Setup the automation tools we built for
-        you.
-      </p>
+    <div className="w-full">
+      {/* The pitch for the tab, as a banner rather than a paragraph of grey
+          body copy — it is the first thing on an otherwise uniform grid. */}
+      <div className="mb-5 flex items-start gap-3 rounded-xl bg-primary-green-100 p-4">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15">
+          <Zap className="h-4 w-4 text-white" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-extrabold text-white">
+            Unlock 80% Customer Retention
+          </p>
+          <p className="mt-0.5 text-xs text-white/75">
+            Boost your business growth with powerful marketing automation. Set
+            it up once — we handle the rest, reaching customers at exactly the
+            right moment.
+          </p>
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         {/* Point of Purchase Message Card */}
         <CampaignAutomationCard
           title="Point of purchase message"
@@ -426,6 +438,8 @@ const CampaignSettings = () => {
           sendingMethods={sendingMethods}
           onSendingMethodChange={handleSendingMethodChange}
           placeholder="Enter your thank you message here..."
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
 
         {/* Auto-send to Inactive Customers Card */}
@@ -441,6 +455,8 @@ const CampaignSettings = () => {
           sendingMethods={activeCustomersSendingMethods}
           onSendingMethodChange={handleActiveCustomersSendingMethodChange}
           placeholder="Enter your message for inactive customers..."
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
 
         {/* Thank God It's Friday Message Card */}
@@ -456,6 +472,9 @@ const CampaignSettings = () => {
           sendingMethods={fridaySendingMethods}
           onSendingMethodChange={handleFridaySendingMethodChange}
           placeholder="Enter your Friday celebration message..."
+          highlight="+ 60% retention boost"
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
 
         {/* It's Monday Already Message Card */}
@@ -471,6 +490,8 @@ const CampaignSettings = () => {
           sendingMethods={mondaySendingMethods}
           onSendingMethodChange={handleMondaySendingMethodChange}
           placeholder="Enter your Monday motivation message..."
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
 
         {/* Happy New Month Message Card */}
@@ -486,6 +507,8 @@ const CampaignSettings = () => {
           sendingMethods={newMonthSendingMethods}
           onSendingMethodChange={handleNewMonthSendingMethodChange}
           placeholder="Enter your new month greeting message..."
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
 
         {/* Returning Customers Message Card */}
@@ -501,16 +524,21 @@ const CampaignSettings = () => {
           sendingMethods={returnedSendingMethods}
           onSendingMethodChange={handleReturnedSendingMethodChange}
           placeholder="Enter your returning customers greeting message..."
+          onSave={handleSave}
+          saving={CreateCampaignSettingLoading}
         />
       </div>
 
-      <div className="mt-8 flex justify-end">
+      {/* Kept alongside the per-card buttons: switching an automation OFF
+          collapses its card and takes its Save with it, so without this there
+          would be no way to persist a card being turned off. */}
+      <div className="mt-6 flex justify-end">
         <Button
           disabled={CreateCampaignSettingLoading}
           onClick={handleSave}
-          className="bg-green-600 hover:bg-green-700"
+          className="h-11 w-full rounded-xl sm:w-auto sm:min-w-[180px]"
         >
-          {CreateCampaignSettingLoading ? <Spinner /> : "Save Settings"}
+          {CreateCampaignSettingLoading ? <Spinner /> : "Save all settings"}
         </Button>
       </div>
     </div>

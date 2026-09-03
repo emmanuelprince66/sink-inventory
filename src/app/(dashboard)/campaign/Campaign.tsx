@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
 import { cn } from "@/lib/utils";
-import { AlertTriangle, PieChart, Plus } from "lucide-react";
+import { AlertTriangle, Plus, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import AddCampaign from "./AddCampaign";
 import AddGroup from "./AddGroup";
@@ -16,11 +17,16 @@ import AddSenderId from "./AddSenderId";
 import AllCampaigns from "./AllCampaigns";
 import AllGroups from "./AllGroups";
 import CampaignSettings from "./CampaignSettings";
-import FundCampaign from "./FundCampaign";
 import UnitUsage from "./UnitUsage";
 
 const Campaign = () => {
   const [searchInput, setSearchInput] = useState("");
+  const router = useRouter();
+
+  // Funding is a page of its own rather than a modal: it carries a balance,
+  // an amount, a payment method and an order summary, which is more than a
+  // dialog can show without scrolling.
+  const goToFundCampaign = () => router.push("/campaign/fund");
 
   const {
     CampaignData,
@@ -30,7 +36,6 @@ const Campaign = () => {
     businessData,
     CampaignGroupLoading,
   } = useCampaignHook({});
-  console.log("CampaignGroupData", CampaignGroupData);
 
   const [openAddCampaignModal, setOpenAddCampaignModal] = useState(false);
   const closeOpenCampaignModal = () => setOpenAddCampaignModal(false);
@@ -43,10 +48,6 @@ const Campaign = () => {
   const [openAddGroupModal, setOpenAddGroupModal] = useState(false);
   const closeAddGroupModal = () => setOpenAddGroupModal(false);
   const openAddGroupModalFunc = () => setOpenAddGroupModal(true);
-
-  const [openFundCampaignModal, setOpenFundCampaignModal] = useState(false);
-  const closeFundCampaignModal = () => setOpenFundCampaignModal(false);
-  const openFundCampaignModalFunc = () => setOpenFundCampaignModal(true);
 
   const [activeTab, setActiveTab] = useState<
     "campaigns" | "groups" | "usage" | "settings"
@@ -63,114 +64,102 @@ const Campaign = () => {
 
   const closeSenderModal = () => setOpenSenderModal(false);
 
-  console.log("businessData", businessData);
-
   return (
-    <div className="w-full h-full flex flex-col justify-start gap-3 sm:gap-5 items-start">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3 sm:gap-0">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-grey-1">
-          Campaign
-        </h1>
-
-        <Button
-          className="w-full sm:w-auto gap-1.5"
-          onClick={openCampaignModalFunc}
-        >
-          <Plus className="w-4 h-4" />
-          Send a Campaign
-        </Button>
-      </div>
-
-      {/* Message Credit Card */}
-      {!businessData || BusinessDataLoading ? (
-        <div className="flex w-full mt-3 sm:mt-5">
-          <CustomCard className="w-full max-w-full sm:max-w-[500px] border-grey-5">
-            <div className="flex flex-col gap-4 sm:gap-6 items-start p-3 sm:p-4">
-              <Skeleton className="h-3 sm:h-4 w-full bg-grey-5" />
-              <Skeleton className="h-5 sm:h-6 w-3/4 bg-grey-5" />
-              <Skeleton className="h-5 sm:h-6 w-1/2 bg-grey-5" />
-            </div>
-          </CustomCard>
-        </div>
-      ) : (
-        <CustomCard className="w-full max-w-full sm:max-w-[500px] min-h-[180px] sm:min-h-[150px] mt-3 sm:mt-5 flex flex-col gap-3 sm:gap-4 justify-between p-3 sm:p-4 bg-secondary-6 border-primary-green-300/20 rounded-2xl">
-          {/* Top Section */}
-          <div className="flex justify-between items-center w-full">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 bg-white rounded-full">
-                <PieChart className="w-4 h-4 sm:w-5 sm:h-5 text-primary-green-300" />
-              </div>
-              <span className="text-xs sm:text-sm font-bold text-grey-2">
-                Message Credit
-              </span>
-            </div>
-
-            <button className="flex items-center gap-1 group cursor-pointer">
-              <span className="text-xs sm:text-sm bg-white rounded-full px-2 py-1 sm:p-2 font-bold text-primary-green-300 group-hover:text-primary-green-600 transition-colors">
-                Active
-              </span>
-            </button>
+    // min-w-0 on the column and on each panel below: a flex child defaults to
+    // min-width:auto, so a table wider than the viewport refuses to shrink and
+    // pushes the whole page sideways instead of scrolling inside its own
+    // container. Clamped with min-width rather than overflow-hidden, which
+    // would also clip the row action menus.
+    <div className="w-full max-w-full min-w-0 h-full flex flex-col justify-start gap-3">
+      {/* Header — bare, like Invoices and Orders. Page titles in this app sit
+          directly on the page background; only the content below is carded. */}
+      <div className="w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">
+          <div>
+            <p className="text-2xl md:text-3xl text-grey-1 font-extrabold">
+              Campaign
+            </p>
+            <p className="text-sm text-grey-3 mt-1">
+              Reach your customers at scale
+            </p>
           </div>
 
-          {/* Bottom Section - Responsive Layout */}
-          <div className="w-full flex flex-col sm:flex-row gap-3 sm:gap-0 sm:justify-between items-start sm:items-center mt-2 sm:mt-4">
-            <div className="flex gap-6 sm:gap-8">
-              <div className="flex flex-col gap-1">
-                <span className="text-xs sm:text-sm text-grey-2">
-                  Available
-                </span>
-                <span className="text-lg sm:text-xl font-extrabold text-grey-1">
-                  {businessData?.message_credit} Credits
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-xs sm:text-sm text-grey-2">Used</span>
-                <span className="text-lg sm:text-xl font-extrabold text-grey-1">
-                  {businessData?.message_credit_used} Credits
-                </span>
-              </div>
-            </div>
-            <div className="w-full sm:w-auto">
-              <Button
-                onClick={openFundCampaignModalFunc}
-                className="w-full sm:w-auto text-sm px-4 py-2"
-              >
-                Get Credits
-              </Button>
-            </div>
+          <Button
+            className="w-full sm:w-auto gap-1.5"
+            onClick={openCampaignModalFunc}
+          >
+            <Plus className="w-4 h-4" />
+            Create Campaign
+          </Button>
+        </div>
+      </div>
+
+      {/* Credit balance — one row rather than a tall card, so the tabs below
+          stay above the fold on a laptop. */}
+      {!businessData || BusinessDataLoading ? (
+        <CustomCard className="w-full border-grey-5 rounded-2xl">
+          <div className="flex items-center gap-4 p-4">
+            <Skeleton className="h-9 w-9 rounded-full bg-grey-5" />
+            <Skeleton className="h-4 w-32 bg-grey-5" />
+            <Skeleton className="h-4 w-24 bg-grey-5 ml-auto" />
           </div>
         </CustomCard>
+      ) : (
+        <div className="w-full rounded-2xl bg-white border border-grey-5 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Everything on the left is one group, so the button is the only
+              other child and lands hard against the right edge — ml-auto on
+              the button alone left it trailing the Used column. */}
+          <div className="flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-secondary-6 rounded-full shrink-0">
+                <Zap className="w-4 h-4 text-primary-green-300" />
+              </div>
+              {/* Label over badge, not beside it. */}
+              <div className="flex flex-col items-start gap-1">
+                <span className="text-xs font-bold text-grey-2 whitespace-nowrap leading-none">
+                  Message Credit
+                </span>
+                <span className="text-[9px] bg-secondary-6 rounded-full px-1.5 py-0.5 font-bold text-primary-green-300 leading-none">
+                  Active
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-grey-3 leading-none">
+                  Available
+                </span>
+                <span className="text-sm font-extrabold text-primary-green-300 whitespace-nowrap leading-none">
+                  {businessData?.message_credit ?? 0} units
+                </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-grey-3 leading-none">
+                  Used
+                </span>
+                <span className="text-sm font-extrabold text-grey-1 whitespace-nowrap leading-none">
+                  {businessData?.message_credit_used ?? 0} units
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={goToFundCampaign}
+            className="w-full sm:w-auto gap-1.5 shrink-0"
+          >
+            <Zap className="w-4 h-4" />
+            Get Credits
+          </Button>
+        </div>
       )}
 
-      {/* Search and Create Group Section */}
-      <div className="flex flex-col sm:flex-row w-full justify-between items-start sm:items-center gap-3 sm:gap-4 mt-2 sm:mt-4">
-        <div className="w-full sm:w-1/2">
-          <SearchInput
-            placeholder="Search campaigns..."
-            value={searchInput}
-            onValueChange={() => {}}
-          />
-          {searchInput.length > 0 && searchInput.length < 3 && (
-            <div className="mt-1 text-xs sm:text-sm text-grey-4">
-              Type at least 3 characters to search
-            </div>
-          )}
-        </div>
-
-        <Button
-          onClick={openAddGroupModalFunc}
-          className="w-full sm:w-auto gap-1.5"
-        >
-          <Plus className="w-4 h-4" />
-          Create Group
-        </Button>
-      </div>
-
-      {/* Tabs Section */}
-      <div className="w-full mt-4 sm:mt-6">
-        <div className="overflow-x-auto border-b border-grey-5">
-          <div className="flex items-center gap-6 min-w-max">
+      {/* Tabs and their content share one panel, so switching tabs reads as
+          moving within a section rather than replacing the page. */}
+      <div className="w-full max-w-full min-w-0 rounded-2xl bg-white border border-grey-5">
+        <div className="overflow-x-auto border-b border-grey-5 px-6">
+          <div className="flex items-center gap-7 min-w-max">
             {(
               [
                 { key: "campaigns", label: "Campaigns" },
@@ -206,43 +195,79 @@ const Campaign = () => {
           </div>
         </div>
 
-        <div className="mt-4">
-          {activeTab === "campaigns" &&
-            (CampaignLoading || !CampaignData ? (
-              <TableSkeleton
-                rows={5}
-                columns={[
-                  { width: "w-28" },
-                  { width: "w-32", hiddenOnMobile: true },
-                  { width: "w-20", hiddenOnMobile: true },
-                  { width: "w-20" },
-                  { flex: true },
-                  { width: "w-8" },
-                ]}
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <AllCampaigns
-                  campaignsData={CampaignData}
-                  campaignsLoading={CampaignLoading}
+        <div className="p-4 sm:px-6 sm:py-5">
+          {activeTab === "campaigns" && (
+            <>
+              <div className="w-full sm:max-w-[280px] mb-4">
+                <SearchInput
+                  placeholder="Search campaigns..."
+                  value={searchInput}
+                  onValueChange={() => {}}
                 />
+                {searchInput.length > 0 && searchInput.length < 3 && (
+                  <div className="mt-1 text-xs text-grey-4">
+                    Type at least 3 characters to search
+                  </div>
+                )}
               </div>
-            ))}
 
-          {activeTab === "groups" &&
-            (CampaignGroupLoading || !CampaignGroupData ? (
-              <TableSkeleton
-                rows={5}
-                columns={[{ flex: true }, { width: "w-20" }, { width: "w-8" }]}
-              />
-            ) : (
-              <div className="overflow-x-auto">
-                <AllGroups
-                  groupData={CampaignGroupData}
-                  groupLoading={CampaignGroupLoading}
+              {CampaignLoading || !CampaignData ? (
+                <TableSkeleton
+                  rows={5}
+                  columns={[
+                    { width: "w-28" },
+                    { width: "w-32", hiddenOnMobile: true },
+                    { width: "w-20", hiddenOnMobile: true },
+                    { width: "w-20" },
+                    { flex: true },
+                    { width: "w-8" },
+                  ]}
                 />
+              ) : (
+                <div className="w-full max-w-full min-w-0 overflow-x-auto">
+                  <AllCampaigns
+                    campaignsData={CampaignData}
+                    campaignsLoading={CampaignLoading}
+                  />
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === "groups" && (
+            <>
+              {/* Creating a group belongs to the Groups tab, not the page —
+                  on every other tab the button had nothing to do with what
+                  was on screen. */}
+              <div className="w-full flex justify-end mb-4">
+                <Button
+                  onClick={openAddGroupModalFunc}
+                  className="w-full sm:w-auto gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Group
+                </Button>
               </div>
-            ))}
+
+              {CampaignGroupLoading || !CampaignGroupData ? (
+                <TableSkeleton
+                  rows={5}
+                  columns={[
+                    { flex: true },
+                    { width: "w-20" },
+                    { width: "w-8" },
+                  ]}
+                />
+              ) : (
+                <div className="w-full max-w-full min-w-0 overflow-x-auto">
+                  <AllGroups
+                    groupData={CampaignGroupData}
+                    groupLoading={CampaignGroupLoading}
+                  />
+                </div>
+              )}
+            </>
+          )}
 
           {activeTab === "usage" && <UnitUsage />}
 
@@ -276,15 +301,6 @@ const Campaign = () => {
         title="Create Group"
       >
         <AddGroup closeModal={closeAddGroupModal} />
-      </CustomModal>
-
-      <CustomModal
-        isOpen={openFundCampaignModal}
-        onClose={closeFundCampaignModal}
-        trigger={false}
-        title="Fund Campaign"
-      >
-        <FundCampaign closeModal={closeFundCampaignModal} />
       </CustomModal>
 
       <CustomModal
