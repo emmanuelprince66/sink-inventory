@@ -18,7 +18,7 @@ import { useMemo, useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import RecieptPage from "./RecieptPage";
 import VariationChangeModal from "./VariationChangeModal";
-import { isRewardLine } from "./loyaltyReward";
+import { isRewardLine, rewardEffectOf } from "./loyaltyReward";
 
 // Types
 interface Variation {
@@ -109,8 +109,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     addToCart,
   } = useCartStore();
 
-  console.log("cartItems in checkout", cartItems);
-
   const subtotal = getSubtotal();
   const automaticDiscountAmount = getAutomaticDiscountAmount();
   const totalBeforeTax = getTotalPrice();
@@ -120,7 +118,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
    * price — the sale sends them like any other item and the backend is what
    * zeroes them — so this is what comes off the amount the cashier collects.
    */
-  const loyaltyRewardValue = getLoyaltyRewardValue();
+  const rewardLineValue = getLoyaltyRewardValue();
+
 
   // VAT calculation logic - Per product basis
   const vatCalculation = useMemo(() => {
@@ -173,6 +172,40 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     };
   }, [businessData, totalBeforeTax, cartItems]);
 
+  /** The bill with tax on it — what a percentage reward is worked out from. */
+  const taxedTotal = vatCalculation.enabled
+    ? vatCalculation.totalWithVat
+    : totalBeforeTax;
+
+  /**
+   * The reward on this sale, whatever kind it is.
+   *
+   * Only a free item puts a line in the cart. A percentage, wallet credit or
+   * points reward left no trace at all before this — the basket looked normal,
+   * nothing said a reward was being spent, and the cashier collected the full
+   * amount.
+   *
+   * Worked out after VAT deliberately: the backend adds tax to the cart first
+   * and takes its percentage off the taxed total, so doing it before tax here
+   * would leave the till and the printed receipt a few naira apart.
+   */
+  const rewardEffect = useMemo(
+    () =>
+      rewardEffectOf(cartState?.loyaltyReward, {
+        // Comped lines are already priced at zero on the backend, so they
+        // contribute nothing to the base — a percentage cannot discount a
+        // giveaway.
+        eligibleTotal: Math.max(0, taxedTotal - rewardLineValue),
+        itemValue: rewardLineValue,
+        // The wallet's reward carries no wording of its own; the enrollment's
+        // reward_description ("10.00% Off") is where the programme names it.
+        fallbackLabel: cartState?.loyaltyReward?.reward_description ?? null,
+      }),
+    [cartState?.loyaltyReward, taxedTotal, rewardLineValue],
+  );
+
+  const loyaltyRewardValue = rewardEffect?.discount ?? rewardLineValue;
+
   /**
    * What the cashier actually collects.
    *
@@ -181,11 +214,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
    * backend zeroes that line, so the same amount has to come off here or the
    * customer would be asked to pay for their own reward.
    */
-  const payableTotal = Math.max(
-    0,
-    (vatCalculation.enabled ? vatCalculation.totalWithVat : totalBeforeTax) -
-      loyaltyRewardValue,
-  );
+  const payableTotal = Math.max(0, taxedTotal - loyaltyRewardValue);
 
   const hasBulkQuantityErrors = Object.values(bulkQuantityErrors).some(
     (error) => error !== "",
@@ -364,6 +393,57 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
               </Button>
             </div>
           </div>
+
+          {/* A reward with no cart line of its own. The free-item case already
+              shows as a row below; this is the only thing telling the cashier
+              a percentage, wallet credit or points reward is on this sale. */}
+          {rewardEffect && !rewardEffect.isItem && (
+            <div className="px-4 pt-2">
+              <div className="flex items-start gap-3 rounded-xl border border-primary-green-300/40 bg-primary-green-500/50 p-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary-green-300/40 bg-white">
+                  <Gift className="h-4 w-4 text-primary-green-300" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <h3 className="truncate text-sm font-bold text-grey-1">
+                      {rewardEffect.label}
+                    </h3>
+                    <span className="shrink-0 rounded-full bg-primary-green-300 px-1.5 py-0.5 text-[9px] font-extrabold text-white">
+                      REWARD
+                    </span>
+                  </div>
+                  <p className="mt-0.5 truncate text-[10px] text-grey-3">
+                    Loyalty reward
+                    {cartState?.loyaltyReward?.program_name
+                      ? ` · ${cartState.loyaltyReward.program_name}`
+                      : ""}
+                  </p>
+                  <p className="mt-0.5 text-xs font-bold text-primary-green-300">
+                    {rewardEffect.discount > 0
+                      ? `-${formatToNaira(rewardEffect.discount)} off this sale`
+                      : rewardEffect.credited
+                        ? `+${formatToNaira(rewardEffect.credited)} to their wallet`
+                        : "No money off this sale"}
+                    {rewardEffect.note ? (
+                      <span className="ml-1 font-medium text-grey-4">
+                        ({rewardEffect.note})
+                      </span>
+                    ) : null}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  className="shrink-0 cursor-pointer rounded-full p-1.5 text-error-1 hover:bg-error-2"
+                  aria-label="Remove this reward from the sale"
+                  onClick={() => updateCartState({ loyaltyReward: null })}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="p-4 pb-2">
             <div className="border rounded-xl bg-white overflow-hidden border-grey-5">
@@ -812,8 +892,10 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex min-w-0 items-center gap-1">
                     <Gift className="h-3 w-3 shrink-0 text-primary-green-300" />
+                    {/* Named, so a bill with two deductions on it says which
+                        one the reward was. */}
                     <span className="truncate text-[11px] text-grey-3">
-                      Loyalty reward
+                      {rewardEffect?.label ?? "Loyalty reward"}
                     </span>
                   </div>
                   <span className="text-[11px] font-bold text-primary-green-300">

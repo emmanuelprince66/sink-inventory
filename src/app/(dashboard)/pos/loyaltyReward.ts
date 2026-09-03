@@ -309,3 +309,146 @@ export const buildRewardCartLine = (
 /** True for a line a reward put in the cart. */
 export const isRewardLine = (item: any): boolean =>
   Boolean(item?.isReward) || String(item?.id ?? "").startsWith(REWARD_LINE_PREFIX);
+
+export interface RewardEffect {
+  reward_type: string;
+  /** What to call it on screen — "10% Off", "₦500 Wallet Credit". */
+  label: string;
+  /** Money off this bill. Zero for a reward that takes nothing off. */
+  discount: number;
+  /** How that figure was arrived at, for the cashier. Null when obvious. */
+  note: string | null;
+  /**
+   * Money paid into the customer's wallet instead of off this bill, so the
+   * cashier can tell them what they now hold. Not a discount.
+   */
+  credited?: number;
+  /** True when the reward is a line in the cart rather than a deduction. */
+  isItem: boolean;
+}
+
+/**
+ * What a redeemed reward actually does to this sale.
+ *
+ * A FREE_ITEM announces itself — it sits in the cart as its own line, priced at
+ * zero against a struck-through price. Every other type is invisible: it puts
+ * nothing in the cart, so without this the cashier saw an unchanged basket and
+ * no sign that a reward was riding on the sale at all, and the customer was
+ * asked for the full amount.
+ *
+ * `eligibleTotal` is the bill the reward applies against — the items rung up,
+ * excluding anything a reward already comped, since a percentage should not
+ * discount a giveaway.
+ *
+ * NOTE: the backend computes its own loyalty_discount and that figure is what
+ * the receipt prints. This works out the same deduction so the till can show
+ * what to collect before the sale is sent; if the two ever disagree it will be
+ * because the backend takes its percentage off a different base (VAT included,
+ * say), which is worth confirming rather than guessing at.
+ */
+/**
+ * The reward's own wording, where it has any.
+ *
+ * Deliberately not `rewardLabelOf`, which falls back to humanising the enum —
+ * that turns a 10% reward into the word "Percentage", which tells the cashier
+ * nothing. Here an absent name has to read as absent so the caller can compose
+ * something with the value in it.
+ */
+const namedLabelOf = (reward: any): string | null => {
+  const named =
+    reward?.reward_summary ??
+    reward?.reward_description ??
+    reward?.description ??
+    reward?.name;
+  return named ? String(named) : null;
+};
+
+/** "10.00" → "10", but "12.50" → "12.5". */
+const trimNumber = (value: number): string => String(Number(value.toFixed(2)));
+
+export const rewardEffectOf = (
+  reward: any,
+  {
+    eligibleTotal,
+    itemValue = 0,
+    fallbackLabel,
+  }: {
+    eligibleTotal: number;
+    itemValue?: number;
+    /** The enrollment's reward_description, where the caller has it. */
+    fallbackLabel?: string | null;
+  },
+): RewardEffect | null => {
+  if (!reward) return null;
+
+  const type = String(reward.reward_type ?? "").toUpperCase();
+  // `value` and not applied_value: the latter is only written onto the
+  // redemption record after the sale goes through, so at the till it is
+  // always null and reading it would zero every reward.
+  const value = asNumber(reward.value);
+  const named = namedLabelOf(reward) ?? fallbackLabel ?? null;
+
+  if (givesAnItem(reward)) {
+    return {
+      reward_type: type,
+      label: rewardLabelOf(reward, fallbackLabel),
+      discount: itemValue,
+      note: null,
+      isItem: true,
+    };
+  }
+
+  if (type === "PERCENTAGE") {
+    // Rounded to the kobo. An unrounded 10% of 2,000.05 leaves a fraction the
+    // drawer cannot make change for.
+    const discount = Math.round(eligibleTotal * (value / 100) * 100) / 100;
+    return {
+      reward_type: type,
+      label: named ?? `${trimNumber(value)}% Off`,
+      discount,
+      note: `${trimNumber(value)}% of ${eligibleTotal.toLocaleString()}`,
+      isItem: false,
+    };
+  }
+
+  if (type === "WALLET_CREDIT") {
+    // Not a discount. Redeeming this deposits the full amount into the
+    // customer's store wallet; it does not come off this bill at all. They
+    // can then pay from that wallet (ADVANCE), but that is a payment method,
+    // not a reduction — anything left over stays on their balance.
+    //
+    // Treating it as money off was wrong and undercharged: the cashier would
+    // have handed over a discount AND credited the wallet with the same sum.
+    return {
+      reward_type: type,
+      label: named ?? "Wallet Credit",
+      discount: 0,
+      note: "Added to their wallet, not off this bill",
+      credited: value,
+      isItem: false,
+    };
+  }
+
+  if (type === "POINTS") {
+    return {
+      reward_type: type,
+      label: named ?? `${trimNumber(value)} Points`,
+      discount: 0,
+      note: "Points, not money off this bill",
+      isItem: false,
+    };
+  }
+
+  // Anything added later that this build has not been taught: the reward still
+  // rides on the sale by id, but nothing here knows what it takes off, so it
+  // takes off nothing. Shown all the same — a cashier seeing the reward named
+  // and no discount can question it, where a silent omission looks like the
+  // customer simply had nothing waiting.
+  return {
+    reward_type: type || "REWARD",
+    label: named ?? rewardLabelOf(reward, fallbackLabel),
+    discount: 0,
+    note: null,
+    isItem: false,
+  };
+};
