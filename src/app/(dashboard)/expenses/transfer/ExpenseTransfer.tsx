@@ -77,7 +77,10 @@ const ExpenseTransfer = () => {
     if (BankTrxData) {
       setBankOptions(
         BankTrxData.map((bank: any) => ({
-          value: bank.bankCode,
+          // The endpoint sends bank_code and code, never bankCode — reading
+          // the camelCase name left every option with an undefined value,
+          // which the transfer then posted as a blank bank_code.
+          value: bank.bank_code ?? bank.code ?? "",
           label: bank.name,
           ...bank,
         })),
@@ -120,6 +123,19 @@ const ExpenseTransfer = () => {
       return;
     }
 
+    // Caught here rather than at the API, which answers a missing code with
+    // "This field may not be blank" and no clue as to which field it means.
+    if (
+      !(
+        (recipientBank as any)?.bank_code ??
+        (recipientBank as any)?.code ??
+        (recipientBank as any)?.value
+      )
+    ) {
+      setMessage("That bank is missing its code — pick it again.");
+      return;
+    }
+
     if (!beneficiaryInfo?.data?.name) {
       setMessage("Please wait for account name verification.");
       return;
@@ -142,7 +158,15 @@ const ExpenseTransfer = () => {
     return (
       <ConfirmExpenseTransfer
         details={{
-          bankCode: String((recipientBank as any)?.value ?? ""),
+          // bank_code first: it is the field the endpoint actually returns,
+          // and the one the account-name enquiry already reads. `value` is
+          // only a fallback for an option built somewhere else.
+          bankCode: String(
+            (recipientBank as any)?.bank_code ??
+              (recipientBank as any)?.code ??
+              (recipientBank as any)?.value ??
+              "",
+          ),
           bankName: String((recipientBank as any)?.label ?? ""),
           accountNumber,
           accountName: beneficiaryInfo?.data?.name || accountName,
