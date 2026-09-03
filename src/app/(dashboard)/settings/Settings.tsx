@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bank } from "./bank/Bank";
 import ChangePassword from "./change-password/ChangePassword";
+import ExpenseGovernance from "./expense-governance/ExpenseGovernance";
 import PinComp from "./pin/PinComp";
+import TransactionPinSettings from "./pin/TransactionPinSettings";
 import Subscription from "./premuim/Subscription";
 import VeiwStaff from "./staff/VeiwStaff";
 import Tax from "./tax/Tax";
@@ -24,6 +26,8 @@ const Settings = () => {
           "Bank",
           "HR",
           "Tax",
+          // Owner-only: these are the ceilings everyone else spends inside.
+          "Expense Controls",
           "Security & Privacy",
           "Subscription",
           "Notifications",
@@ -46,6 +50,7 @@ const Settings = () => {
       bank: "Bank",
       hr: "HR",
       tax: "Tax",
+      "expense-controls": "Expense Controls",
       security: "Security & Privacy",
       notifications: "Notifications",
       currency: "Currency & Localization",
@@ -84,6 +89,7 @@ const Settings = () => {
       Bank: "bank",
       HR: "hr",
       Tax: "tax",
+      "Expense Controls": "expense-controls",
       "Security & Privacy": "security",
       Notifications: "notifications",
       "Currency & Localization": "currency",
@@ -154,6 +160,14 @@ const Settings = () => {
             )}
 
             {user && user?.role === "OWNER" && (
+              <TabsContent value="Expense Controls" className="mt-0">
+                <div className="w-full overflow-hidden">
+                  <ExpenseGovernance />
+                </div>
+              </TabsContent>
+            )}
+
+            {user && user?.role === "OWNER" && (
               <TabsContent value="Security & Privacy" className="mt-0">
                 <div className="w-full overflow-hidden">
                   <SecurityPrivacyTabs />
@@ -201,6 +215,7 @@ const getShortTabName = (tabName: string): string => {
     Bank: "Bank",
     HR: "HR",
     Tax: "Tax",
+    "Expense Controls": "Expenses",
     "Security & Privacy": "Security",
     Subscription: "Plans",
     Notifications: "Alerts",
@@ -209,9 +224,18 @@ const getShortTabName = (tabName: string): string => {
   return shortNames[tabName] || tabName;
 };
 
+// Two PINs, deliberately named apart. "Wallet PIN" is the business-scoped one
+// securing wallet transfers; "Transaction PIN" is the personal one that
+// authorises expense payouts and approvals. Both existing under one label was
+// the fastest way to have someone type the wrong one at a counter.
 const SECURITY_TABS = [
   { value: "Password", label: "Password", shortLabel: "Password" },
-  { value: "Transaction Pin", label: "Transaction Pin", shortLabel: "Pin" },
+  { value: "Transaction Pin", label: "Wallet PIN", shortLabel: "Wallet" },
+  {
+    value: "User Transaction Pin",
+    label: "Transaction PIN",
+    shortLabel: "PIN",
+  },
 ] as const;
 
 const SecurityPrivacyTabs = () => {
@@ -247,6 +271,12 @@ const SecurityPrivacyTabs = () => {
         <TabsContent value="Transaction Pin" className="mt-0">
           <div className="w-full overflow-hidden">
             <PinComp />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="User Transaction Pin" className="mt-0">
+          <div className="w-full overflow-hidden">
+            <TransactionPinSettings />
           </div>
         </TabsContent>
       </Tabs>

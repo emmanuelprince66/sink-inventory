@@ -3,6 +3,7 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import StaffExpensePermissions from "./StaffExpensePermissions";
 import {
   Form,
   FormControl,
@@ -1049,6 +1050,14 @@ export const EditStaff = ({
             </Button>
           </form>
         </Form>
+
+        {/* Expense payout rights, kept as their own section with their own
+            save. They go to a different endpoint from the rest of this form,
+            and folding them into the one button would mean a failed permission
+            write silently discarding a successful profile edit. */}
+        <div className="mt-8 border-t border-grey-5 pt-6">
+          <StaffExpensePermissions attendantId={attendantId} />
+        </div>
       </div>
     </div>
   );

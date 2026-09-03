@@ -33,6 +33,7 @@ import {
   ArrowUpRight,
   ChevronDown,
   FileDown,
+  ClipboardCheck,
   PiggyBank,
   Plus,
   TrendingDown,
@@ -268,6 +269,19 @@ const Expenses = () => {
                   >
                     <PiggyBank className="w-4 h-4" />
                     Manage Budgets
+                  </Link>
+                </DropdownMenuItem>
+                {/* Reachable by everyone rather than owners only: whether a
+                    given person can act on a request is decided per request by
+                    can_current_user_approve, and someone who raised one still
+                    needs to see where it got to. */}
+                <DropdownMenuItem asChild className="rounded-lg py-1.5 focus:bg-secondary-6">
+                  <Link
+                    href="/expenses/approvals"
+                    className="font-semibold text-grey-2 flex items-center gap-2 cursor-pointer"
+                  >
+                    <ClipboardCheck className="w-4 h-4" />
+                    Transfer Approvals
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem

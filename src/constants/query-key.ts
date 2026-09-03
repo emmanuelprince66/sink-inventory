@@ -76,6 +76,13 @@ export const queryKey = {
     deleteAttendant: "delete-attendant",
     editAttendant: "edit-attendant",
     getAttendantById: "get-attendant-by-id",
+    getPermissions: "get-attendant-permissions",
+    updatePermissions: "update-attendant-permissions",
+  },
+  userPin: {
+    status: "user-pin-status",
+    set: "set-user-pin",
+    change: "change-user-pin",
   },
   customers: {
     getAllCustomers: "get-all-customers",
@@ -139,6 +146,13 @@ export const queryKey = {
     createBudget: "create-expense-budget",
     editBudget: "edit-expense-budget",
     deleteBudget: "delete-expense-budget",
+    getSettings: "get-expense-settings",
+    updateSettings: "update-expense-settings",
+    getTransfers: "get-expense-transfers",
+    getTransfer: "get-expense-transfer",
+    initiateTransfer: "initiate-expense-transfer",
+    approveTransfer: "approve-expense-transfer",
+    rejectTransfer: "reject-expense-transfer",
   },
   inventory: {
     getAllInventory: "get-all-inventory",

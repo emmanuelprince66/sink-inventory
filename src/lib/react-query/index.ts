@@ -45,4 +45,20 @@ export type MutationConfig<MutationFnType extends (...args: any) => any> =
     Parameters<MutationFnType>[0]
   >;
 
+/**
+ * MutationConfig with the callbacks loosened to the three arguments callers
+ * actually pass.
+ *
+ * React Query v5 gives onSuccess/onError a fourth parameter, so forwarding a
+ * caller's callback as `(data, variables, context)` fails to typecheck against
+ * the raw options type. Every api module here had grown its own interface
+ * redeclaring the two callbacks to work around it; this is that same
+ * declaration, written once.
+ */
+export type MutationCallbacks<MutationFnType extends (...args: any) => any> =
+  Omit<MutationConfig<MutationFnType>, "onSuccess" | "onError"> & {
+    onSuccess?: (data: any, variables: any, context: any) => void;
+    onError?: (error: any, variables: any, context: any) => void;
+  };
+
 export { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

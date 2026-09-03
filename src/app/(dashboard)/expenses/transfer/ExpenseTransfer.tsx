@@ -17,7 +17,7 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowLeft, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import ConfirmTransfer from "../../transactions/ConfirmTransfer";
+import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
 
 /**
  * Spending out of an expense account.
@@ -140,21 +140,31 @@ const ExpenseTransfer = () => {
 
   if (showConfirmTransfer) {
     return (
-      <ConfirmTransfer
-        transferDetails={{
-          bank: recipientBank,
-          category,
+      <ConfirmExpenseTransfer
+        details={{
+          bankCode: String((recipientBank as any)?.value ?? ""),
+          bankName: String((recipientBank as any)?.label ?? ""),
           accountNumber,
           accountName: beneficiaryInfo?.data?.name || accountName,
           amount,
           narration,
+          categoryId: (category as any)?.value
+            ? String((category as any).value)
+            : undefined,
+          categoryName: (category as any)?.label
+            ? String((category as any).label)
+            : undefined,
         }}
-        beneficiaryInfo={beneficiaryInfo}
-        // The account the previous screen showed the balance of, and checked
-        // the amount against. Without it the confirm step debits the main
-        // wallet instead.
-        sourceBankId={selectedId}
         onCancel={() => setShowConfirmTransfer(false)}
+        onDone={() => {
+          setShowConfirmTransfer(false);
+          setRecipientBank(null);
+          setCategory(null);
+          setAccountNumber("");
+          setAccountName("");
+          setAmount("");
+          setNarration("");
+        }}
       />
     );
   }
