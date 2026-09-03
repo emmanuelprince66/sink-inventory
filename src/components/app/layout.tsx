@@ -22,10 +22,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <RealtimeProvider>
         <RouteGuard requiredRole="OWNER">
           <AppSidebar />
-          <main className="w-full bg-[#F4F7F4]">
+          {/* min-w-0: the sidebar and this are flex siblings, and a flex child
+              defaults to min-width:auto — so a table wider than the space left
+              over grows main rather than scrolling inside it, and the whole
+              shell slides sideways. w-full alone does not prevent that. */}
+          <main className="w-full min-w-0 bg-[#F4F7F4]">
             <TopBar />
             {/* px-8 py-6 matches the Figma reference content gutter; pages must not add their own page-level padding. */}
-            <div className="px-4 md:px-8 py-6 min-h-[80vh] w-full">
+            <div className="px-4 md:px-8 py-6 min-h-[80vh] w-full min-w-0">
               {children}
             </div>
           </main>
