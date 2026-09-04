@@ -186,13 +186,9 @@ const StaffExpensePermissions = ({
   return (
     <div className="w-full">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-lg font-extrabold text-grey-1">Expense payouts</p>
-          <p className="mt-1 text-sm text-grey-3">
-            What this staff member can do with money leaving an expense
-            account.
-          </p>
-        </div>
+        <p className="text-lg font-extrabold text-grey-1">
+          Employee Expense Access
+        </p>
         {payload?.role && (
           <span className="mt-1 shrink-0 rounded-full bg-grey-6 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-grey-3">
             {payload.role.replace(/_/g, " ")}
@@ -200,105 +196,98 @@ const StaffExpensePermissions = ({
         )}
       </div>
 
-      <div className="mt-5 space-y-3">
-        <Row
-          title="Can log expenses"
-          caption="Lets them record money already spent, like a cash receipt."
-          checked={canLog}
-          onChange={setCanLog}
-          disabled={isPending}
-        />
+      <div className="mt-6 space-y-6">
+        <section>
+          <p className="text-sm font-extrabold text-grey-1">
+            How much can they spend?
+          </p>
 
-        <Row
-          title="Can start a transfer"
-          caption="Lets them request a payout from an expense account."
-          checked={canInitiate}
-          onChange={setCanInitiate}
-          disabled={isPending}
-        />
-
-        <Row
-          title="Can approve transfers"
-          caption="Lets them release someone else's request."
-          checked={canApprove}
-          onChange={setCanApprove}
-          disabled={isPending}
-        />
-
-        {/* Spending caps cover logging and transfers together, so they show as
-            soon as either is on — capping only transfers would leave the other
-            door open. */}
-        {(canLog || canInitiate) && (
-          <div className="rounded-2xl border border-grey-5 p-4">
-            <p className="text-sm font-bold text-grey-1">
-              What they may spend
-            </p>
-            <p className="mt-1 mb-4 text-xs text-grey-3">
-              Logging an expense and sending a payout draw on the same daily
-              allowance — a receipt recorded in the morning leaves that much
-              less to transfer in the afternoon. Leave a field blank to fall
-              back to the business limit.
-            </p>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <CapField
-                label="Most per transaction"
-                prefix={symbol}
-                value={spendCap}
-                onChange={setSpendCap}
-                disabled={isPending}
-                hint="The largest single expense or payout."
-              />
-              <CapField
-                label="Most per day"
-                prefix={symbol}
-                value={dailySpend}
-                onChange={setDailySpend}
-                disabled={isPending}
-                hint="Total across everything they do in a day."
-              />
-              <CapField
-                label="Transactions per day"
-                value={dailyCount}
-                onChange={setDailyCount}
-                disabled={isPending}
-                hint="How many expense actions, logged and sent together."
-              />
-            </div>
+          <div className="mt-3 grid gap-4 rounded-2xl border border-grey-5 p-4 sm:grid-cols-2">
+            <CapField
+              label="Maximum per transaction"
+              prefix={symbol}
+              value={spendCap}
+              onChange={setSpendCap}
+              disabled={isPending}
+              hint="The highest amount they can spend or request in one transaction."
+            />
+            <CapField
+              label="Maximum per day"
+              prefix={symbol}
+              value={dailySpend}
+              onChange={setDailySpend}
+              disabled={isPending}
+              hint="The total amount they can spend or request in one day."
+            />
+            <CapField
+              label="Daily transaction limit"
+              value={dailyCount}
+              onChange={setDailyCount}
+              disabled={isPending}
+              hint="The maximum number of expense transactions they can make in one day."
+            />
           </div>
-        )}
+        </section>
 
-        {/* Only meaningful once they can approve at all. Deliberately separate
-            from the spending caps above: approving is oversight, not spending,
-            and the two are set independently — an accountant can be trusted to
-            sign off far more than they may send themselves. */}
-        {canApprove && (
-          <div className="rounded-2xl border border-grey-5 p-4">
-            <p className="text-sm font-bold text-grey-1">What they may approve</p>
-            <p className="mt-1 mb-4 text-xs text-grey-3">
-              Separate from their own spending limit above.
-            </p>
+        <section>
+          <p className="text-sm font-extrabold text-grey-1">
+            What can they do?
+          </p>
 
-            <div className="max-w-xs">
-              <CapField
-                label="Approval cap"
-                prefix={symbol}
-                value={cap}
-                onChange={setCap}
-                disabled={isPending}
-                hint=""
-              />
-            </div>
-            <p className="mt-2.5 flex items-start gap-1.5 text-xs text-grey-4">
-              <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>
-                Requests above this go to the owner instead of being refused.
-                Leave it blank for no cap. They can never approve a request
-                they started themselves, whatever this is set to.
-              </span>
-            </p>
+          <div className="mt-3 space-y-3">
+            <Row
+              title="Log expenses"
+              caption="Allow them to record expenses they have already paid for."
+              checked={canLog}
+              onChange={setCanLog}
+              disabled={isPending}
+            />
+
+            <Row
+              title="Request a payout"
+              caption="Allow them to request money from the business for an expense."
+              checked={canInitiate}
+              onChange={setCanInitiate}
+              disabled={isPending}
+            />
+
+            <Row
+              title="Approve payouts"
+              caption="Allow them to approve and release payout requests from other employees."
+              checked={canApprove}
+              onChange={setCanApprove}
+              disabled={isPending}
+            />
+
+            {/* Sits under the toggle it belongs to rather than with the limits
+                above: what someone may approve is oversight, not spending, and
+                the two are set independently — an accountant can sign off far
+                more than they are trusted to send themselves. */}
+            {canApprove && (
+              <div className="rounded-2xl border border-grey-5 p-4">
+                <div className="max-w-xs">
+                  <CapField
+                    label="Approval limit"
+                    prefix={symbol}
+                    value={cap}
+                    onChange={setCap}
+                    disabled={isPending}
+                    hint=""
+                  />
+                </div>
+                <p className="mt-2.5 flex items-start gap-1.5 text-xs text-grey-4">
+                  <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    Requests above this go to the owner instead of being
+                    refused. Leave it blank for no limit. They can never
+                    approve a request they made themselves, whatever this is
+                    set to.
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
-        )}
+        </section>
       </div>
 
       {error && (
