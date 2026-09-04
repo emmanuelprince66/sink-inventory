@@ -48,9 +48,24 @@ export interface ExpenseSettingsUpdate {
 export interface AttendantPermissions {
   view_transactions?: boolean;
   view_orders?: boolean;
+  /** Recording an expense that was already paid, e.g. a cash receipt. */
+  can_log_expenses?: boolean;
   can_initiate_expense_transfer?: boolean;
   can_approve_expenses?: boolean;
-  /** Above this, an approval escalates to the owner. null means no cap set. */
+  /**
+   * The most this person can move in one go, whether logged or transferred.
+   * null falls back to the business ceiling rather than meaning "no limit".
+   */
+  max_expense_transfer_amount?: string | null;
+  /** Their share of a day, across logging and transfers together. */
+  daily_expense_transfer_limit?: string | null;
+  /** How many expense actions they get in a day, logging and transfers together. */
+  daily_expense_transaction_limit?: number | null;
+  /**
+   * The most they can approve — independent of what they may spend, so an
+   * accountant can sign off a million while being unable to send fifty
+   * thousand themselves.
+   */
   max_expense_approval_amount?: string | null;
 }
 
@@ -104,6 +119,17 @@ export interface ExpenseTransfer {
 }
 
 export interface InitiateTransferBody {
+  /**
+   * Also in the URL, deliberately.
+   *
+   * The deployed endpoint takes the business in the path
+   * (`transfers/initiate/<business_id>/`); the newer integration guide moves
+   * it into the body against a bare `transfers/initiate/`, which is not live
+   * yet — it still 404s while the path form answers. Sending it both ways
+   * costs one redundant field today and means only the URL has to change when
+   * the new route lands, rather than the payload breaking on the day.
+   */
+  business_id?: string;
   amount: string;
   account_number: string;
   bank_code: string;
@@ -197,4 +223,59 @@ export const estimateCharges = (amount: number): number => {
   if (amount <= 50_000) return 25;
   if (amount < 500_000) return 50;
   return 100;
+};
+
+/**
+ * A day's allowance cannot be smaller than a single transaction's.
+ *
+ * The backend rejects this on both the business ceiling and a staff member's
+ * own caps, so it is checked here first — the API answers with a field-keyed
+ * error that never reaches the input it belongs to, and the owner is left
+ * looking at a form that appears to have saved.
+ *
+ * Zero and blank both mean "not enforced" and so can never conflict.
+ */
+export const dailyBelowPerTransaction = (
+  daily: string | number | null | undefined,
+  perTransaction: string | number | null | undefined,
+): boolean => {
+  const dailyValue = Number(daily ?? 0);
+  const perValue = Number(perTransaction ?? 0);
+
+  if (!Number.isFinite(dailyValue) || !Number.isFinite(perValue)) return false;
+  if (dailyValue <= 0 || perValue <= 0) return false;
+
+  return dailyValue < perValue;
+};
+
+export const DAILY_BELOW_PER_TRANSACTION_MESSAGE =
+  "The daily limit cannot be lower than the single-transaction limit.";
+
+/**
+ * Why the signed-in user cannot act on a transfer they can see.
+ *
+ * `can_current_user_approve` is one flag covering several different reasons,
+ * and "no buttons, no explanation" reads as a broken screen. The commonest
+ * reason by far is separation of duties: whoever asked for the money is never
+ * the one who releases it.
+ */
+export const approvalBlockReason = (
+  transfer: Pick<
+    ExpenseTransfer,
+    "can_current_user_approve" | "initiated_by" | "status"
+  >,
+  currentUserId?: string | null,
+): string | null => {
+  if (transfer.can_current_user_approve) return null;
+  if (!isPending(transfer.status)) return null;
+
+  if (currentUserId && transfer.initiated_by === currentUserId) {
+    return "You started this one, so someone else has to approve it.";
+  }
+
+  if (transfer.status === "PENDING_OWNER_APPROVAL") {
+    return "Above the staff approval cap — only the owner can release it.";
+  }
+
+  return "Waiting on someone with approval rights.";
 };

@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
-import type {
-  ExpenseSettings,
-  ExpenseSettingsUpdate,
+import {
+  DAILY_BELOW_PER_TRANSACTION_MESSAGE,
+  dailyBelowPerTransaction,
+  type ExpenseSettings,
+  type ExpenseSettingsUpdate,
 } from "@/types/expense-governance";
 import { getCurrencySymbol } from "@/utils/formatMoney";
 import { ShieldCheck } from "lucide-react";
@@ -85,6 +87,7 @@ const ExpenseGovernance = () => {
   const [dailyTransferLimit, setDailyTransferLimit] = useState("");
   const [dailyTransactionLimit, setDailyTransactionLimit] = useState("");
   const [requireApproval, setRequireApproval] = useState(false);
+  const [error, setError] = useState("");
 
   // Seeded from the server rather than held as the source of truth, so a
   // refetch after saving does not fight what is on screen.
@@ -98,6 +101,14 @@ const ExpenseGovernance = () => {
 
   const handleSave = () => {
     if (!business_id) return;
+
+    // The API rejects this with a field-keyed error that never reaches the
+    // input it belongs to, so the owner sees a form that looks like it saved.
+    if (dailyBelowPerTransaction(dailyTransferLimit, maxPerTransaction)) {
+      setError(DAILY_BELOW_PER_TRANSACTION_MESSAGE);
+      return;
+    }
+    setError("");
 
     const body: ExpenseSettingsUpdate = {
       // Sent as fixed decimals: the API takes these as decimal strings, and
@@ -207,6 +218,8 @@ const ExpenseGovernance = () => {
             />
           </div>
         </section>
+
+        {error && <p className="text-xs font-bold text-error-1">{error}</p>}
 
         <Button
           onClick={handleSave}

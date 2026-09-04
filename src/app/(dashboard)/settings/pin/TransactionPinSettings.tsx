@@ -2,6 +2,7 @@
 
 import {
   hasPinFrom,
+  pinRequiredFrom,
   useChangeUserPinMutation,
   useSetUserPinMutation,
   useUserPinStatusQuery,
@@ -24,6 +25,14 @@ import { useState } from "react";
 const TransactionPinSettings = () => {
   const { data, isLoading } = useUserPinStatusQuery();
   const hasPin = hasPinFrom(data);
+  /**
+   * Someone with no payout rights needs no PIN.
+   *
+   * The panel still lets them set one — they may be granted the rights
+   * tomorrow, and a hidden setting is harder to find than an unnecessary one —
+   * but it stops telling them they are missing something they are not.
+   */
+  const pinRequired = pinRequiredFrom(data);
 
   const [oldPin, setOldPin] = useState("");
   const [pin, setPin] = useState("");
@@ -100,6 +109,14 @@ const TransactionPinSettings = () => {
             wallet PIN, and it follows you across businesses. Between{" "}
             {PIN_MIN_LENGTH} and 10 digits.
           </p>
+
+          {!pinRequired && !hasPin && (
+            <p className="mb-5 rounded-xl bg-grey-6 p-3 text-xs text-grey-3">
+              You don&apos;t need one right now — your account can&apos;t send
+              or approve expense payouts. Setting one anyway does no harm if
+              that changes later.
+            </p>
+          )}
 
           <div className="space-y-5">
             {hasPin && (

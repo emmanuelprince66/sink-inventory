@@ -109,6 +109,9 @@ const ConfirmExpenseTransfer = ({
     initiate({
       id: business_id,
       body: {
+        // In the body as well as the URL — see InitiateTransferBody. The live
+        // route reads it from the path; the one replacing it reads the body.
+        business_id,
         amount: amount.toFixed(2),
         account_number: details.accountNumber,
         bank_code: details.bankCode,

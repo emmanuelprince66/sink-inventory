@@ -54,6 +54,23 @@ export const useUserPinStatusQuery = (
 export const hasPinFrom = (data: any): boolean =>
   Boolean(data?.data?.has_pin ?? data?.has_pin);
 
+/**
+ * Whether this user needs a transaction PIN at all.
+ *
+ * Only someone who can move money does. A cashier who will never initiate or
+ * approve a payout should not be nagged to set one, so the prompt is gated on
+ * this rather than on `has_pin` alone.
+ *
+ * Absent means yes. The field is newer than the endpoint, so a response
+ * without it is one from before the distinction existed — and prompting
+ * someone who did not need to is a smaller failure than silently hiding the
+ * prompt from someone who cannot pay out without it.
+ */
+export const pinRequiredFrom = (data: any): boolean => {
+  const value = data?.data?.pin_required ?? data?.pin_required;
+  return value === undefined || value === null ? true : Boolean(value);
+};
+
 // ─── Set ──────────────────────────────────────────────────────────────────────
 
 const setPin = ({ pin }: { pin: string }) =>

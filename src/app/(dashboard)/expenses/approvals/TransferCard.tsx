@@ -2,7 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { type ExpenseTransfer, isPending } from "@/types/expense-governance";
+import { useUserRole } from "@/lib/store/user-store";
+import {
+  approvalBlockReason,
+  type ExpenseTransfer,
+  isPending,
+} from "@/types/expense-governance";
 import { formatToNaira } from "@/utils/formatMoney";
 import { AlertTriangle, Check, Landmark, X } from "lucide-react";
 import moment from "moment";
@@ -43,6 +48,7 @@ const TransferCard = ({
   onReject: (transfer: ExpenseTransfer) => void;
   deciding?: boolean;
 }) => {
+  const { id: currentUserId } = useUserRole();
   const amount = Number(transfer.amount ?? 0);
   const charges = Number(transfer.charges ?? 0);
   const actionable =
@@ -165,12 +171,22 @@ const TransferCard = ({
       )}
 
       {/* Explains the absence of buttons rather than leaving a reviewer
-          wondering whether the page is broken. */}
-      {isPending(transfer.status) && !canApprove(transfer.can_current_user_approve) && (
-        <p className="mt-4 rounded-xl bg-grey-6 px-3 py-2 text-xs text-grey-4">
-          Waiting on someone with approval rights for this amount.
-        </p>
-      )}
+          wondering whether the page is broken. The commonest reason is
+          separation of duties — whoever asked for the money never releases
+          it — and that reads as a bug unless it is said out loud. */}
+      {isPending(transfer.status) &&
+        !canApprove(transfer.can_current_user_approve) && (
+          <p className="mt-4 rounded-xl bg-grey-6 px-3 py-2 text-xs text-grey-4">
+            {approvalBlockReason(
+              {
+                can_current_user_approve: false,
+                initiated_by: transfer.initiated_by,
+                status: transfer.status,
+              },
+              currentUserId,
+            ) ?? "Waiting on someone with approval rights for this amount."}
+          </p>
+        )}
     </div>
   );
 };
