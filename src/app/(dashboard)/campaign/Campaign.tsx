@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { AlertTriangle, Plus, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import AddCampaign from "./AddCampaign";
 import AddGroup from "./AddGroup";
 import AddSenderId from "./AddSenderId";
 import AllCampaigns from "./AllCampaigns";
@@ -28,6 +27,10 @@ const Campaign = () => {
   // dialog can show without scrolling.
   const goToFundCampaign = () => router.push("/campaign/fund");
 
+  // Same reasoning for composing: the channel picker, the composer and the
+  // live preview beside it do not fit a dialog.
+  const goToNewCampaign = () => router.push("/campaign/new");
+
   const {
     CampaignData,
     CampaignLoading,
@@ -36,10 +39,6 @@ const Campaign = () => {
     businessData,
     CampaignGroupLoading,
   } = useCampaignHook({});
-
-  const [openAddCampaignModal, setOpenAddCampaignModal] = useState(false);
-  const closeOpenCampaignModal = () => setOpenAddCampaignModal(false);
-  const openCampaignModalFunc = () => setOpenAddCampaignModal(true);
 
   const [openSenderIdModal, setOpenSenderIdModal] = useState(false);
   const closeSenderIdModal = () => setOpenSenderIdModal(false);
@@ -86,7 +85,7 @@ const Campaign = () => {
 
           <Button
             className="w-full sm:w-auto gap-1.5"
-            onClick={openCampaignModalFunc}
+            onClick={goToNewCampaign}
           >
             <Plus className="w-4 h-4" />
             Create Campaign
@@ -276,15 +275,6 @@ const Campaign = () => {
       </div>
 
       {/* Modals */}
-      <CustomModal
-        isOpen={openAddCampaignModal}
-        onClose={closeOpenCampaignModal}
-        trigger={false}
-        title="Add New Campaign"
-      >
-        <AddCampaign closeModal={closeOpenCampaignModal} />
-      </CustomModal>
-
       <CustomModal
         isOpen={openSenderIdModal}
         onClose={closeSenderIdModal}

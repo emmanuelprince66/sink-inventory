@@ -34,6 +34,13 @@ const addCampaignSchema = z.object({
     .min(1, "Title is required")
     .max(100, "Title must not exceed 100 characters"),
   message: z.string().min(1, "Message is required"),
+  // Email only — the teaser inbox clients show under the subject. Optional
+  // because SMS has no equivalent, and dropped from the payload when blank so
+  // an SMS send never carries a field it has no use for.
+  preview_text: z
+    .string()
+    .max(150, "Preview text must not exceed 150 characters")
+    .optional(),
   customer_ids: z.array(z.string().uuid()).optional(),
   group_ids: z.array(z.string().uuid()).optional(),
 });
@@ -136,6 +143,7 @@ export const useCampaignHook = ({
       channel: editData ? editData.channel : "",
       title: "",
       message: "",
+      preview_text: "",
       customer_ids: [],
       group_ids: [],
     },
@@ -191,6 +199,7 @@ export const useCampaignHook = ({
         channel: editData.channel,
         title: editData?.title || "",
         message: editData?.message || "",
+        preview_text: editData?.preview_text || "",
         customer_ids: customerIds,
         group_ids: groupIds,
       });
@@ -344,6 +353,10 @@ export const useCampaignHook = ({
       message: values.message,
       customer_ids: values.customer_ids || [],
       group_ids: values.group_ids || [],
+      // Only sent when the merchant actually wrote one.
+      ...(values.preview_text?.trim()
+        ? { preview_text: values.preview_text.trim() }
+        : {}),
     };
 
     if (isEditMode) {
