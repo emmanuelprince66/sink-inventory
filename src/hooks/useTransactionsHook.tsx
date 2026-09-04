@@ -167,7 +167,6 @@ export const useTransactionsHook = ({
         });
       }
     } else {
-      // Clear beneficiary info when account number or bank is cleared
       setBeneficiaryInfo(null);
     }
   }, [recipientBank, accountNumber]);
