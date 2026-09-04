@@ -11,13 +11,20 @@ import { Mail, MessageSquare } from "lucide-react";
 export type CampaignChannel = "SMS" | "EMAIL";
 
 /**
- * One unit buys one SMS; an email costs two. Kept beside the channel rather
- * than inline in the estimate panel because the same numbers appear on the
- * picker cards, in the credit estimate and in the pre-send check.
+ * What one recipient costs on each channel.
+ *
+ * Email is the cheaper of the two, not the dearer — 0.30 against an SMS's
+ * 1.00. This read EMAIL: 2 until the pricing was confirmed, which overstated
+ * an email campaign by nearly seven times and would have talked merchants out
+ * of the channel they should be using.
+ *
+ * A fallback, not the source of truth: the estimate endpoint returns
+ * `unit_cost` for the channel, and that figure is the one shown once it
+ * arrives. These are what the picker cards quote before an audience exists.
  */
 export const CREDITS_PER_MESSAGE: Record<CampaignChannel, number> = {
   SMS: 1,
-  EMAIL: 2,
+  EMAIL: 0.3,
 };
 
 /** A single SMS segment. Longer messages would bill as multiple segments, so
@@ -54,7 +61,7 @@ export const CHANNELS = [
     cta: "Compose Email",
     features: [
       "Unlimited message length",
-      "2 credits per email",
+      "0.3 credits per email — 70% cheaper than SMS",
       "Subject & preview text",
       "Live email preview",
     ],

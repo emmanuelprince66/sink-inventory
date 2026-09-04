@@ -182,7 +182,7 @@ const FundMessageCredits = () => {
             <p className="mt-2 flex items-center gap-1.5 text-xs text-grey-4">
               <Zap className="w-3.5 h-3.5 text-warning-1 shrink-0" />
               Rate: {symbol}
-              {NAIRA_PER_UNIT} = 1 unit · 1 unit = 1 SMS or ½ email
+              {NAIRA_PER_UNIT} = 1 unit · 1 unit = 1 SMS, or 3 emails
             </p>
           </div>
 
@@ -306,8 +306,8 @@ const FundMessageCredits = () => {
                 1 unit = 1 SMS (up to 160 chars)
               </li>
               <li className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 shrink-0 text-grey-4" />2 units = 1
-                Email campaign
+                <Mail className="w-3.5 h-3.5 shrink-0 text-grey-4" />
+                0.3 units = 1 email — 70% cheaper than SMS
               </li>
               <li className="flex items-center gap-2">
                 <Zap className="w-3.5 h-3.5 shrink-0 text-primary-green-300" />

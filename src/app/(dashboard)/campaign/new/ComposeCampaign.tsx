@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  estimateFrom,
+  useCampaignEstimateQuery,
+  type CampaignEstimateRequest,
+} from "@/api/campaign/estimate-campaign";
+import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,10 +20,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { useCampaignHook } from "@/hooks/useCampaignHook";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AudienceSelector from "./AudienceSelector";
 import { EmailPreview, SmsPreview } from "./CampaignPreview";
 import CreditEstimate from "./CreditEstimate";
@@ -47,6 +54,7 @@ const ComposeCampaign = ({
 }) => {
   const router = useRouter();
   const { showToast } = useToast();
+  const business_id = useBusinessStore((state) => state.business_id);
   const [searchInput, setSearchInput] = useState("");
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -81,6 +89,23 @@ const ComposeCampaign = ({
   const customerIds = form.watch("customer_ids") || [];
   const groupIds = form.watch("group_ids") || [];
 
+  /**
+   * Held outside the form because neither is a field the composer writes.
+   *
+   * "Everyone" is a shortcut the backend expands for itself — sending
+   * thousands of ids would be slower and would still have to be deduped — and
+   * segments are dynamic, so their membership is only settled at send time.
+   */
+  const [sendToAll, setSendToAll] = useState(false);
+  const [segmentIds, setSegmentIds] = useState<string[]>([]);
+
+  const { data: segmentsData } = useFetchSegmentsQuery({
+    params: { id: business_id ?? "" },
+  });
+  // Not `segments` — that name is already the SMS segment count above, and
+  // these are customer segments. Two different things one letter apart.
+  const customerSegments = (segmentsData?.data ?? []) as any[];
+
   // The registered Sender ID is what the gateway actually stamps on the
   // message; the business name is only a fallback for accounts still waiting
   // on approval. Either way it is displayed, not edited, here.
@@ -109,8 +134,31 @@ const ComposeCampaign = ({
     );
 
   const recipients = customerIds.length + groupRecipients;
-  const totalCredits = recipients * creditsPerMessage;
   const availableCredits = Number(businessData?.message_credit ?? 0);
+
+  /**
+   * The audience, as the backend will read it.
+   *
+   * Sent on every change so the panel always describes the current selection.
+   * The local `recipients` count above is only used to decide whether anything
+   * is selected at all — what it would reach and cost is not knowable here,
+   * because a customer in both a group and the picked list is one recipient,
+   * and anyone with no email or phone is none.
+   */
+  const audience: CampaignEstimateRequest = useMemo(
+    () => ({
+      channel,
+      send_to_all: sendToAll,
+      customer_ids: sendToAll ? [] : customerIds,
+      group_ids: sendToAll ? [] : groupIds,
+      segment_ids: sendToAll ? [] : segmentIds,
+    }),
+    [channel, sendToAll, customerIds, groupIds, segmentIds],
+  );
+
+  const { data: estimateData, isFetching: estimating } =
+    useCampaignEstimateQuery(business_id ?? null, audience);
+  const estimate = estimateFrom(estimateData);
 
   /** Wrap whatever is selected in the body with a tag pair, leaving the
    *  selection in place so the merchant can keep typing. */
@@ -142,17 +190,31 @@ const ComposeCampaign = ({
   };
 
   const handleSend = form.handleSubmit((values) => {
-    // The hook already refuses an empty audience and a zero balance; this
-    // catches the case in between — credits available, but not enough of them.
-    if (recipients > 0 && totalCredits > availableCredits) {
+    // Checked against the backend's own estimate rather than a local sum: it
+    // is the same calculation the send will run, so a campaign that passes
+    // here cannot be refused for cost a moment later.
+    if (estimate && !estimate.sufficient_credit) {
       showToast(
-        `This campaign needs ${totalCredits} credits — you have ${availableCredits}.`,
+        `This campaign needs ${estimate.credits_required} credits — you have ${estimate.current_balance}.`,
         "error",
       );
       return;
     }
 
-    onSubmit(values);
+    // Everyone picked is uncontactable on this channel. The send would fail
+    // upstream with "No customer in campaign has registered Email"; saying so
+    // here names the actual problem.
+    if (estimate && estimate.reachable_recipients === 0) {
+      showToast(
+        `None of the customers selected have ${
+          channel === "EMAIL" ? "an email address" : "a usable phone number"
+        } on file.`,
+        "error",
+      );
+      return;
+    }
+
+    onSubmit({ ...values, send_to_all: sendToAll, segment_ids: segmentIds });
   });
 
   return (
@@ -424,6 +486,11 @@ const ComposeCampaign = ({
               groupsLoading={CampaignGroupLoading}
               searchInput={searchInput}
               onSearchChange={setSearchInput}
+              sendToAll={sendToAll}
+              onSendToAllChange={setSendToAll}
+              segments={customerSegments}
+              segmentIds={segmentIds}
+              onSegmentIdsChange={setSegmentIds}
             />
           </div>
 
@@ -443,10 +510,10 @@ const ComposeCampaign = ({
 
             <CreditEstimate
               channelLabel={config.label}
-              recipients={recipients}
-              creditsPerMessage={creditsPerMessage}
-              totalCredits={totalCredits}
-              availableCredits={availableCredits}
+              estimate={estimate}
+              isLoading={estimating}
+              hasSelection={sendToAll || recipients > 0}
+              fallbackUnitCost={creditsPerMessage}
             />
           </div>
 

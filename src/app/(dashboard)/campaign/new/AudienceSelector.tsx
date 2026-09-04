@@ -41,6 +41,11 @@ const AudienceSelector = ({
   groupsLoading,
   searchInput,
   onSearchChange,
+  sendToAll,
+  onSendToAllChange,
+  segments,
+  segmentIds,
+  onSegmentIdsChange,
 }: {
   form: UseFormReturn<AddCampaignFormValues>;
   customers: Customer[];
@@ -49,9 +54,21 @@ const AudienceSelector = ({
   groupsLoading: boolean;
   searchInput: string;
   onSearchChange: (value: string) => void;
+  sendToAll: boolean;
+  onSendToAllChange: (value: boolean) => void;
+  segments: { id: string; name?: string; customer_count?: number }[];
+  segmentIds: string[];
+  onSegmentIdsChange: (ids: string[]) => void;
 }) => {
   const selectedCustomerIds = form.watch("customer_ids") || [];
   const selectedGroupIds = form.watch("group_ids") || [];
+
+  const toggleSegment = (id: string) =>
+    onSegmentIdsChange(
+      segmentIds.includes(id)
+        ? segmentIds.filter((existing) => existing !== id)
+        : [...segmentIds, id],
+    );
 
   // The list endpoint is already searched server-side once the term reaches
   // three characters; this second pass covers the shorter terms, which never
@@ -127,6 +144,78 @@ const AudienceSelector = ({
           {selectedCustomerIds.length} / {customers.length} selected
         </span>
       </div>
+
+      {/* The shortcut, first and on its own: it overrides everything below,
+          so offering it after the pickers invites someone to choose carefully
+          and then have that selection quietly ignored. */}
+      <label
+        className={cn(
+          "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors",
+          sendToAll
+            ? "border-primary-green-300 bg-primary-green-500"
+            : "border-grey-5 bg-white",
+        )}
+      >
+        <Checkbox
+          checked={sendToAll}
+          onCheckedChange={(checked) => onSendToAllChange(checked === true)}
+          className="mt-0.5"
+        />
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-grey-1">
+            Send to all customers
+          </span>
+          <span className="mt-0.5 block text-xs text-grey-3">
+            Everyone on file who can be reached on this channel. Anything
+            picked below is ignored.
+          </span>
+        </span>
+      </label>
+
+      {/* Everything below selects a subset, which "everyone" has already
+          settled — dimmed rather than unmounted so the selection survives
+          unticking the box. */}
+      <div
+        className={cn(
+          "space-y-3 transition-opacity",
+          sendToAll && "pointer-events-none opacity-40",
+        )}
+      >
+        {segments.length > 0 && (
+          <div className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-5">
+            <p className="text-sm font-extrabold text-grey-1">Segments</p>
+            <p className="mt-0.5 text-xs text-grey-3">
+              Membership is worked out when the campaign sends, so a segment
+              always reaches whoever qualifies at that moment.
+            </p>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {segments.map((segment) => {
+                const selected = segmentIds.includes(segment.id);
+                return (
+                  <button
+                    key={segment.id}
+                    type="button"
+                    onClick={() => toggleSegment(segment.id)}
+                    className={cn(
+                      "cursor-pointer rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
+                      selected
+                        ? "border-primary-green-300 bg-secondary-6 text-primary-green-300"
+                        : "border-grey-5 text-grey-2 hover:border-primary-green-300/50",
+                    )}
+                  >
+                    {segment.name ?? "Segment"}
+                    {segment.customer_count != null && (
+                      <span className="ml-1 font-medium text-grey-4">
+                        {segment.customer_count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
       <div className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -271,6 +360,7 @@ const AudienceSelector = ({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      </div>
     </div>
   );
 };

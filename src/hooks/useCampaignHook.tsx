@@ -43,6 +43,12 @@ const addCampaignSchema = z.object({
     .optional(),
   customer_ids: z.array(z.string().uuid()).optional(),
   group_ids: z.array(z.string().uuid()).optional(),
+  // Dynamic audiences. A segment's membership is only settled when the send
+  // runs, so ids go up rather than the customers they currently resolve to.
+  segment_ids: z.array(z.string().uuid()).optional(),
+  // "Everyone", expanded server-side. Posting thousands of customer ids to say
+  // the same thing would be slower and would still need deduping.
+  send_to_all: z.boolean().optional(),
 });
 
 const addSenderIdSchema = z.object({
@@ -333,11 +339,16 @@ export const useCampaignHook = ({
     useEditGroupMutation();
 
   const onSubmit = (values: AddCampaignFormValues) => {
+    // "Everyone" and a segment are both audiences, so neither counts as an
+    // empty selection — this used to refuse a send that had a segment picked
+    // and nothing else.
     if (
+      !values.send_to_all &&
       (!values.customer_ids || values.customer_ids.length === 0) &&
-      (!values.group_ids || values.group_ids.length === 0)
+      (!values.group_ids || values.group_ids.length === 0) &&
+      (!values.segment_ids || values.segment_ids.length === 0)
     ) {
-      showToast("Please select at least one customer or group", "error");
+      showToast("Please select at least one customer, group or segment", "error");
       return;
     }
 
@@ -346,13 +357,20 @@ export const useCampaignHook = ({
       return;
     }
 
+    const sendToAll = Boolean(values.send_to_all);
+
     const payload = {
       name: values.name,
       channel: values.channel,
       title: values.title,
       message: values.message,
-      customer_ids: values.customer_ids || [],
-      group_ids: values.group_ids || [],
+      send_to_all: sendToAll,
+      // Cleared when sending to everyone: the flag overrides them upstream, so
+      // leaving a stale selection in the payload only invites confusion when
+      // the campaign is read back.
+      customer_ids: sendToAll ? [] : values.customer_ids || [],
+      group_ids: sendToAll ? [] : values.group_ids || [],
+      segment_ids: sendToAll ? [] : values.segment_ids || [],
       // Only sent when the merchant actually wrote one.
       ...(values.preview_text?.trim()
         ? { preview_text: values.preview_text.trim() }
