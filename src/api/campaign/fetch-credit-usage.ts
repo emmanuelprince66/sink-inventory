@@ -21,9 +21,11 @@ export type CampaignUsageType =
 /**
  * One row of the campaign credit ledger — GET /campaign/credit-usage/{id}/.
  *
- * This is a record of credit being spent, not of a message being delivered:
- * there is no recipient and no message body on it, which is why the Usage tab
- * shows what was charged rather than who received what.
+ * A charge, and now also what that charge bought: the channel it went out on
+ * and who it reached. `channel_display` and `recipient` are the pre-formatted
+ * pair to render — the serializer fills them for every row, including the
+ * top-ups that have no channel of their own ("Top-Up" / "N/A (Wallet)"), so
+ * neither column has to invent a fallback for a null.
  */
 export interface CampaignCreditUsageLog {
   id: string;
@@ -34,11 +36,57 @@ export interface CampaignCreditUsageLog {
   units_used: number;
   /** Credit balance immediately after this charge. */
   balance_after?: number;
+  /** Raw channel; prefer `channel_display`, which is filled for every row. */
+  channel?: string | null;
+  channel_display?: string | null;
+  /** Ready to print — "142 recipients", an address, or "N/A (Wallet)". */
+  recipient?: string | null;
+  recipients_count?: number | null;
+  message_body?: string | null;
   created_at?: string;
 }
 
-export const fetchCampaignCreditUsage = async (id: string) => {
-  const response = await fetch(`/api/campaign/${id}/credit-usage`);
+/**
+ * Totals across every page, not just the one fetched.
+ *
+ * `total` is the paginator's count of ledger rows — charges, not messages. One
+ * broadcast charge can carry 142 messages, so the two are different numbers
+ * and reading `total` as a message count understates sending by whatever the
+ * average audience size is.
+ */
+export interface CampaignCreditUsageStats {
+  total_messages_sent?: number;
+  sms_messages_sent?: number;
+  email_messages_sent?: number;
+  total_credits_used?: string;
+  current_balance?: string;
+}
+
+export type CampaignCreditUsagePage = Paginated<CampaignCreditUsageLog> & {
+  stats?: CampaignCreditUsageStats;
+  total_messages_sent?: number;
+};
+
+export interface CampaignCreditUsageFilters {
+  channel?: string;
+  usage_type?: string;
+}
+
+export const fetchCampaignCreditUsage = async (
+  id: string,
+  filters: CampaignCreditUsageFilters = {},
+) => {
+  const search = new URLSearchParams();
+  // "ALL" is the tab's own default and means no filter, so it is dropped
+  // rather than sent as a channel the backend would have to special-case.
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value !== "ALL") search.append(key, value);
+  });
+
+  const query = search.toString();
+  const response = await fetch(
+    `/api/campaign/${id}/credit-usage${query ? `?${query}` : ""}`,
+  );
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -49,15 +97,14 @@ export const fetchCampaignCreditUsage = async (id: string) => {
     throw error;
   }
 
-  return response.json() as Promise<
-    ApiResponse<Paginated<CampaignCreditUsageLog>>
-  >;
+  return response.json() as Promise<ApiResponse<CampaignCreditUsagePage>>;
 };
 
 type QueryFnType = typeof fetchCampaignCreditUsage;
 
 export const useFetchCampaignCreditUsageQuery = (
   id: string,
+  filters: CampaignCreditUsageFilters = {},
   config?: QueryConfigType<QueryFnType>,
 ) =>
   useQuery<ExtractFnReturnType<QueryFnType>>({
@@ -65,8 +112,26 @@ export const useFetchCampaignCreditUsageQuery = (
     // the empty state.
     retry: (failureCount, error: any) =>
       [401, 404].includes(error?.status) ? false : failureCount < 1,
-    queryKey: [queryKey.campaign.getCreditUsage, id],
-    queryFn: () => fetchCampaignCreditUsage(id),
+    queryKey: [
+      queryKey.campaign.getCreditUsage,
+      id,
+      filters.channel ?? "",
+      filters.usage_type ?? "",
+    ],
+    queryFn: () => fetchCampaignCreditUsage(id, filters),
     enabled: Boolean(id),
     ...config,
   });
+
+/**
+ * Messages sent, from wherever this deployment puts it.
+ *
+ * Offered at two levels — `stats.total_messages_sent` and a top-level
+ * duplicate — so both are read before giving up. Undefined rather than 0 when
+ * absent: an older backend that sends neither should leave the tile blank, not
+ * claim nothing was ever sent.
+ */
+export const messagesSentFrom = (
+  page?: CampaignCreditUsagePage,
+): number | undefined =>
+  page?.stats?.total_messages_sent ?? page?.total_messages_sent;

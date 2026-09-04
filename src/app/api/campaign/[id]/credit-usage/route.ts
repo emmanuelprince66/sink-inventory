@@ -10,7 +10,7 @@ export async function GET(
   const { id } = await params;
   return proxyToApi(request, {
     path: `campaign/credit-usage/${id}/`,
-    forwardParams: ["page", "limit", "search"],
+    forwardParams: ["page", "limit", "search", "channel", "usage_type"],
     label: "fetch campaign credit usage",
   });
 }

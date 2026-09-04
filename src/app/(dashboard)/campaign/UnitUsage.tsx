@@ -1,11 +1,11 @@
 "use client";
 
 import {
+  messagesSentFrom,
   useFetchCampaignCreditUsageQuery,
   type CampaignCreditUsageLog,
 } from "@/api/campaign/fetch-credit-usage";
 import { CustomModal } from "@/components/app/CustomModal";
-import DataGapBadge from "@/components/app/DataGapBadge";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -66,29 +66,65 @@ const csvCell = (value: unknown) => {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
+/** The channel filter, as tabs. "" is the unfiltered default. */
+const CHANNEL_FILTERS = [
+  { value: "", label: "All channels" },
+  { value: "SMS", label: "SMS" },
+  { value: "EMAIL", label: "Email" },
+] as const;
+
 const UnitUsage = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const [selected, setSelected] = useState<CampaignCreditUsageLog | null>(null);
+  const [channel, setChannel] = useState("");
 
   const { data, isLoading } = useFetchCampaignCreditUsageQuery(
     business_id ?? "",
+    { channel },
   );
 
-  const rows = toList<CampaignCreditUsageLog>(data?.data as any);
+  const page = data?.data;
+  const rows = toList<CampaignCreditUsageLog>(page as any);
+  const stats = page?.stats;
 
-  // A top-up credits the account, so units_used comes back negative on those
-  // rows. Spend is what this tab reports, so only positive charges are summed.
-  const totalUnits = rows.reduce(
-    (sum, row) => sum + Math.max(0, Number(row.units_used ?? 0)),
-    0,
-  );
-  const charges = rows.filter((row) => Number(row.units_used ?? 0) > 0).length;
+  /**
+   * Spend and balance come from the server's totals where it sends them.
+   *
+   * The row maths below only ever saw one page, so a business past its first
+   * fifteen charges was shown a figure that shrank as it paged. The fallbacks
+   * are for a backend that predates `stats`.
+   */
+  const totalUnits =
+    stats?.total_credits_used != null
+      ? Number(stats.total_credits_used)
+      : // A top-up credits the account, so units_used comes back negative on
+        // those rows. Spend is what this tab reports, so only positive
+        // charges are summed.
+        rows.reduce(
+          (sum, row) => sum + Math.max(0, Number(row.units_used ?? 0)),
+          0,
+        );
 
-  // balance_after is the balance immediately after each charge, so the newest
-  // row carries the current one. Rows come back newest first.
-  const currentBalance = rows.find(
-    (row) => row.balance_after !== undefined && row.balance_after !== null,
-  )?.balance_after;
+  /** Charges, which is not the same number as messages — see below. */
+  const charges =
+    page?.total ?? rows.filter((row) => Number(row.units_used ?? 0) > 0).length;
+
+  /**
+   * Messages actually sent, across every page.
+   *
+   * One broadcast charge can carry 142 messages, so this tile used to count
+   * charges and read low by whatever the average audience size was.
+   */
+  const messagesSent = messagesSentFrom(page);
+
+  const currentBalance =
+    stats?.current_balance != null
+      ? Number(stats.current_balance)
+      : // balance_after is the balance immediately after each charge, so the
+        // newest row carries the current one. Rows come back newest first.
+        rows.find(
+          (row) => row.balance_after !== undefined && row.balance_after !== null,
+        )?.balance_after;
 
   // Built from the rows already on screen rather than a second request, so
   // the file always matches what the user is looking at.
@@ -96,6 +132,8 @@ const UnitUsage = () => {
     const header = [
       "Date",
       "Campaign",
+      "Channel",
+      "Recipients",
       "Type",
       "Units Used",
       "Balance After",
@@ -103,6 +141,8 @@ const UnitUsage = () => {
     const body = rows.map((row) => [
       row.created_at ? moment(row.created_at).format("YYYY-MM-DD HH:mm") : "",
       row.title,
+      row.channel_display ?? "",
+      row.recipient ?? row.recipients_count ?? "",
       typeLabel(row),
       row.units_used ?? "",
       row.balance_after ?? "",
@@ -132,13 +172,6 @@ const UnitUsage = () => {
 
   return (
     <div className="space-y-4">
-      {/* The ledger records credit being spent, not messages being delivered —
-          it has no recipient and no message body, so neither can be shown. */}
-      <DataGapBadge
-        label="No per-recipient detail"
-        needs="Campaign › Usage — GET /campaign/credit-usage/{id}/ is wired and its figures are live. The approved design for this tab shows CHANNEL and RECIPIENTS columns and a 'Total Sent — N Messages' tile; none of the three can be filled, because CampaignCreditUsageLog records a charge rather than a delivery. It has no recipient count, no message body, and usage_type (CAMPAIGN_BROADCAST, MARKET_AUTOMATION, POST_SALE_RECEIPT, LOYALTY_ALERT, BIRTHDAY_WISH, CREDIT_TOPUP) does not say whether a message went by SMS or email. The table therefore shows Type in place of Channel and drops Recipients, and the middle tile counts charges rather than messages. To match the design, add recipient_count and channel to the log, or expose a per-message send log keyed to the campaign."
-      />
-
       {/* Summary strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatTile
@@ -147,14 +180,18 @@ const UnitUsage = () => {
           label="Total Spent"
           value={`${totalUnits} Units`}
         />
-        {/* The log records charges, not deliveries — it has no recipient
-            count — so this counts what was billed rather than claiming a
-            number of messages the API never sends. */}
+        {/* Messages, not charges. One broadcast is a single ledger row
+            carrying however many recipients, so the paginator's count reads
+            far lower than what actually went out. */}
         <StatTile
           icon={<Send className="w-4 h-4" />}
           tone="text-info-1"
-          label="Charges Logged"
-          value={`${charges} Charges`}
+          label="Total Sent"
+          value={
+            messagesSent === undefined
+              ? `${charges} Charges`
+              : `${messagesSent.toLocaleString()} Messages`
+          }
         />
         <StatTile
           icon={<CheckCircle2 className="w-4 h-4" />}
@@ -168,24 +205,47 @@ const UnitUsage = () => {
 
       {/* Usage table */}
       <div className="border border-grey-5 rounded-2xl overflow-hidden bg-white">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-grey-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-grey-5">
           <p className="text-sm font-extrabold text-grey-1">
             Credit Usage Log
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={rows.length === 0}
-            onClick={handleExportCsv}
-            className="gap-1.5 text-xs h-8"
-          >
-            <Download className="w-3.5 h-3.5" />
-            Export CSV
-          </Button>
+
+          <div className="flex items-center gap-3">
+            {/* Filtered server-side, so the totals above move with it rather
+                than describing rows that are no longer on screen. */}
+            <div className="flex items-center gap-1 rounded-full bg-grey-6 p-1">
+              {CHANNEL_FILTERS.map((option) => (
+                <button
+                  key={option.value || "all"}
+                  type="button"
+                  onClick={() => setChannel(option.value)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-bold transition-colors cursor-pointer",
+                    channel === option.value
+                      ? "bg-white text-primary-green-300 shadow-sm"
+                      : "text-grey-3 hover:text-grey-2",
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={rows.length === 0}
+              onClick={handleExportCsv}
+              className="gap-1.5 text-xs h-8"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px]">
+          <table className="w-full min-w-[900px]">
             <thead>
               <tr className="bg-grey-6 border-b border-grey-5 text-left">
                 <th className="py-2.5 px-4 text-[11px] font-bold uppercase tracking-wide text-grey-3">
@@ -193,6 +253,12 @@ const UnitUsage = () => {
                 </th>
                 <th className="py-2.5 px-4 text-[11px] font-bold uppercase tracking-wide text-grey-3">
                   Campaign
+                </th>
+                <th className="py-2.5 px-4 text-[11px] font-bold uppercase tracking-wide text-grey-3">
+                  Channel
+                </th>
+                <th className="py-2.5 px-4 text-[11px] font-bold uppercase tracking-wide text-grey-3">
+                  Recipients
                 </th>
                 <th className="py-2.5 px-4 text-[11px] font-bold uppercase tracking-wide text-grey-3">
                   Type
@@ -223,6 +289,17 @@ const UnitUsage = () => {
                     </td>
                     <td className="py-3 px-4 text-sm font-medium text-grey-1">
                       {row.title}
+                    </td>
+                    {/* channel_display and recipient are filled for every row,
+                        top-ups included ("Top-Up" / "N/A (Wallet)"), so
+                        neither needs a fallback of its own. The raw fields
+                        stand in only for rows written before the serializer
+                        started composing them. */}
+                    <td className="py-3 px-4 text-sm text-grey-3 whitespace-nowrap">
+                      {row.channel_display ?? row.channel ?? "—"}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-grey-3 whitespace-nowrap">
+                      {row.recipient ?? row.recipients_count ?? "—"}
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -312,6 +389,22 @@ const UnitUsage = () => {
                   {selected.units_used}
                 </p>
               </div>
+              <div className="border border-gray-200 rounded-md p-3">
+                <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                  Channel
+                </p>
+                <p className="font-medium text-gray-900 mt-1">
+                  {selected.channel_display ?? selected.channel ?? "—"}
+                </p>
+              </div>
+              <div className="border border-gray-200 rounded-md p-3">
+                <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                  Recipients
+                </p>
+                <p className="font-medium text-gray-900 mt-1">
+                  {selected.recipient ?? selected.recipients_count ?? "—"}
+                </p>
+              </div>
               {selected.balance_after !== undefined &&
                 selected.balance_after !== null && (
                   <div className="border border-gray-200 rounded-md p-3 col-span-2">
@@ -323,6 +416,18 @@ const UnitUsage = () => {
                     </p>
                   </div>
                 )}
+              {/* What actually went out. The reason this panel was removed
+                  once — the log had no body to show — no longer holds. */}
+              {selected.message_body && (
+                <div className="border border-gray-200 rounded-md p-3 col-span-2">
+                  <p className="text-[11px] uppercase tracking-wide text-gray-500">
+                    Message
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-gray-900">
+                    {selected.message_body}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end">
