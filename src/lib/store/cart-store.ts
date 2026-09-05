@@ -19,6 +19,17 @@ export interface CartSlotState {
   selectedBank: string;
   selectedAccount: string;
   selectedDate: Date | undefined;
+  /**
+   * Whether the cashier picked this date themselves.
+   *
+   * A cart survives the shift and the night, so the date it was created with
+   * gets replayed the next morning — a sale rung up today lands on yesterday
+   * unless someone notices the field. `selectedDate` alone cannot tell the
+   * two apart: a default that happens to be yesterday and a deliberate
+   * back-date look identical once stored. This is what separates them, so
+   * only the untouched ones are moved forward.
+   */
+  dateManuallySet: boolean;
   dueDate: Date | undefined;
   isChecked: boolean;
   partialAmount: string;
@@ -39,6 +50,7 @@ const emptyState = (): CartSlotState => ({
   selectedBank: "",
   selectedAccount: "",
   selectedDate: new Date(),
+  dateManuallySet: false,
   dueDate: undefined,
   isChecked: false,
   partialAmount: "",
@@ -75,6 +87,8 @@ interface CartStore {
   // Per-sale flow state — operates on the active slot
   updateActiveCartState: (updates: Partial<CartSlotState>) => void;
   resetActiveCartState: () => void;
+  /** Moves every sale date the cashier did not set themselves to today. */
+  refreshUntouchedSaleDates: () => void;
 
   // Active cart actions (operate on the active slot)
   setSaleCompleted: (completed: boolean) => void;
@@ -242,6 +256,51 @@ export const useCartStore = create<CartStore>()(
           })),
         );
       },
+
+      /**
+       * Moves every untouched sale date to today.
+       *
+       * Runs when the till is opened or returned to, not once at startup: a
+       * shop leaves this screen up all day and across midnight, so a date set
+       * only at mount is stale by the first sale of the next morning.
+       *
+       * Applies to every cart tab rather than the active one. Tabs are
+       * switched between, not reloaded, so refreshing only the visible one
+       * leaves yesterday sitting on the others.
+       *
+       * A date the cashier chose is left exactly as it is — back-dating a
+       * sale is a real thing to want, and silently undoing it would be worse
+       * than the bug this fixes.
+       */
+      refreshUntouchedSaleDates: () =>
+        set((state) => {
+          const today = new Date();
+          const isToday = (value: unknown) =>
+            value instanceof Date &&
+            value.toDateString() === today.toDateString();
+
+          let changed = false;
+          const carts = Object.fromEntries(
+            Object.entries(state.carts).map(([id, slot]) => {
+              const slotState = slot?.state;
+              if (!slotState || slotState.dateManuallySet) return [id, slot];
+              if (isToday(slotState.selectedDate)) return [id, slot];
+
+              changed = true;
+              return [
+                id,
+                { ...slot, state: { ...slotState, selectedDate: today } },
+              ];
+            }),
+          );
+
+          // Returning a new object every call would re-render every subscriber
+          // on each focus event, cart untouched or not. Only `carts` needs
+          // replacing — `useActiveCartState` reads the slot's state through
+          // it, and the cartItems/saleCompleted mirrors are untouched here.
+          if (!changed) return {};
+          return { carts };
+        }),
 
       resetActiveCartState: () =>
         set((state) =>

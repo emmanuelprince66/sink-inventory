@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
+import { useFreshSaleDate } from "@/hooks/useFreshSaleDate";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
@@ -105,6 +106,10 @@ const Pos: React.FC = () => {
     getTotalItems,
     getTotalPrice,
   } = useCartStore();
+
+  // The cart is remembered between visits; the date it was created with must
+  // not be. Anything the cashier did not pick themselves moves to today.
+  useFreshSaleDate();
 
   const {
     ProductData,

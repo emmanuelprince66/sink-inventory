@@ -102,8 +102,11 @@ const ReceiptPage = ({
   const tempSplitPayment = cartState.tempSplitPayment;
   const remainingAmount = cartState.remainingAmount;
 
+  // Only reached from the calendar, so anything arriving here was chosen by
+  // the cashier — which is what stops it being moved to today on the next
+  // visit, the way an untouched default is.
   const setSelectedDate = (v: Date | undefined) =>
-    updateCartState({ selectedDate: v });
+    updateCartState({ selectedDate: v, dateManuallySet: true });
   const setDueDate = (v: Date | undefined) => updateCartState({ dueDate: v });
   const setIsChecked = (v: boolean) => updateCartState({ isChecked: v });
   const setPaymentMethod = (v: string) => updateCartState({ paymentMethod: v });
