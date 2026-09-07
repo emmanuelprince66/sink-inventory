@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import type { ExpenseTransfer } from "@/types/expense-governance";
-import { ArrowLeft, Inbox, Search } from "lucide-react";
+import { formatToNaira } from "@/utils/formatMoney";
+import { ArrowLeft, Inbox, Lock, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import RejectTransferDialog from "./RejectTransferDialog";
@@ -37,6 +39,7 @@ const FILTERS = [
 ] as const;
 
 const ExpenseApprovals = () => {
+  const { canApprove, canTransfer, approvalCap } = useExpensePermissions();
   const business_id = useBusinessStore((state) => state.business_id);
 
   const [status, setStatus] = useState<string>("PENDING_APPROVAL");
@@ -79,6 +82,31 @@ const ExpenseApprovals = () => {
     setPage(1);
   };
 
+  // Someone who can neither approve nor raise a request has nothing to read
+  // here, and the URL is reachable whatever the menu shows.
+  if (!canApprove && !canTransfer) {
+    return (
+      <div className="w-full max-w-md mx-auto rounded-2xl border border-grey-5 bg-white p-8 text-center">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-grey-6 text-grey-3">
+          <Lock className="h-5 w-5" />
+        </span>
+        <p className="mt-4 text-lg font-extrabold text-grey-1">
+          Nothing to see here
+        </p>
+        <p className="mt-1 text-sm text-grey-3">
+          Your account doesn&apos;t handle expense payouts. The business owner
+          can grant that from Settings.
+        </p>
+        <Link
+          href="/expenses"
+          className="mt-4 inline-block text-sm font-bold text-primary-green-300"
+        >
+          Back to Expenses
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full space-y-5">
       <div className="flex items-center gap-3">
@@ -93,10 +121,26 @@ const ExpenseApprovals = () => {
             Transfer approvals
           </p>
           <p className="text-sm text-grey-3">
-            Payouts waiting on a decision, and everything already decided.
+            {/* Someone who can raise a request but not decide one is here to
+                track their own, so the subtitle says what the page is for
+                them rather than promising a decision they cannot make. */}
+            {canApprove
+              ? "Payouts waiting on a decision, and everything already decided."
+              : "Where your requests got to. Someone with approval rights decides them."}
           </p>
         </div>
       </div>
+
+      {/* What this person may release, said once at the top rather than
+          discovered request by request. `can_current_user_approve` already
+          hides the buttons on anything above it; this explains why. */}
+      {canApprove && approvalCap !== null && (
+        <p className="flex items-center gap-1.5 rounded-xl bg-grey-6 px-3 py-2 text-xs text-grey-3">
+          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-grey-4" />
+          You can approve up to {formatToNaira(approvalCap)}. Anything above
+          that goes to the business owner.
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {FILTERS.map((filter) => (

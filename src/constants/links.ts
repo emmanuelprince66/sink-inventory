@@ -68,8 +68,21 @@ export const links = [
         title: "Expenses",
         url: "/expenses",
         icon: DollarSign,
-        roles: ["OWNER", "ACCOUNTANT"],
+        // Widened past OWNER/ACCOUNTANT: expense rights are granted per staff
+        // member now, and an ADMIN-ATTENDANT given the right to raise a payout
+        // could not reach the screen to use it.
+        roles: ["OWNER", "ACCOUNTANT", "ADMIN-ATTENDANT", "ATTENDANT"],
         permission: null,
+        /**
+         * Hidden unless at least one of these is granted. Everything on the
+         * page is one of the three, so without any of them it is a link to a
+         * screen of disabled buttons.
+         */
+        anyPermission: [
+          "can_log_expenses",
+          "can_initiate_expense_transfer",
+          "can_approve_expenses",
+        ],
       },
       {
         title: "Orders",

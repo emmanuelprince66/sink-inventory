@@ -42,6 +42,9 @@ export const getUserPermissions = (
       "view_orders",
       "view_prescriptions",
       "view_transactions",
+      "can_log_expenses",
+      "can_initiate_expense_transfer",
+      "can_approve_expenses",
     ];
   }
 

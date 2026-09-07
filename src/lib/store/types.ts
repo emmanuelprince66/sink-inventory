@@ -34,7 +34,12 @@ export type Permission =
   | "transfer_items"
   | "view_orders"
   | "view_prescriptions"
-  | "view_transactions";
+  | "view_transactions"
+  // Expense governance. Three separate doors: recording money already spent,
+  // asking for money to go out, and releasing someone else's request.
+  | "can_log_expenses"
+  | "can_initiate_expense_transfer"
+  | "can_approve_expenses";
 
 // Permissions can be an object with boolean flags for each permission
 export type Permissions = {
@@ -54,6 +59,21 @@ export type Permissions = {
   view_orders?: boolean;
   view_prescriptions?: boolean;
   view_transactions?: boolean;
+  can_log_expenses?: boolean;
+  can_initiate_expense_transfer?: boolean;
+  can_approve_expenses?: boolean;
+  /**
+   * Spending and approval ceilings. Decimal strings, not booleans, so they sit
+   * here but never in `Permission` — `hasPermission` tests for `=== true` and
+   * would read "30000.00" as no permission at all.
+   *
+   * null means no personal ceiling, which falls back to the business one
+   * rather than meaning unlimited.
+   */
+  max_expense_transfer_amount?: string | null;
+  daily_expense_transfer_limit?: string | null;
+  daily_expense_transaction_limit?: number | null;
+  max_expense_approval_amount?: string | null;
 };
 
 export type Subscription = {

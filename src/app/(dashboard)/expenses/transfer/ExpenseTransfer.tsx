@@ -11,10 +11,11 @@ import {
   expenseAccountLabel,
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
+import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowLeft, Wallet } from "lucide-react";
+import { ArrowLeft, Lock, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
@@ -34,6 +35,7 @@ import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
  * choice at all.
  */
 const ExpenseTransfer = () => {
+  const { canTransfer, transferCap } = useExpensePermissions();
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
 
   const [recipientBank, setRecipientBank] = useState<SelectValue>(null);
@@ -151,6 +153,16 @@ const ExpenseTransfer = () => {
       return;
     }
 
+    // The backend refuses this outright rather than escalating it, so there is
+    // nothing to gain by letting the request go and reporting the 400 after
+    // the beneficiary has been resolved and confirmed.
+    if (transferCap !== null && parseFloat(amount) > transferCap) {
+      setMessage(
+        `That is above your ${formatToNaira(transferCap)} limit for a single payout. Ask the business owner to raise it, or send less.`,
+      );
+      return;
+    }
+
     setShowConfirmTransfer(true);
   };
 
@@ -204,9 +216,25 @@ const ExpenseTransfer = () => {
           <span>Back</span>
         </button>
 
-        {/* Nothing on this screen works without an account to spend from, so
-            that is the whole page until one exists. */}
-        {!accountsLoading && !hasExpenseAccount ? (
+        {/* Hiding the button elsewhere is presentation, not access control —
+            the URL is still typeable and the page would otherwise render a
+            working form that the API refuses at the last step. Checked before
+            the account, so someone without the right is not sent off to
+            create an account they cannot spend from. */}
+        {!canTransfer ? (
+          <div className="w-full rounded-2xl border border-grey-5 bg-white p-8 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-grey-6 text-grey-3">
+              <Lock className="h-5 w-5" />
+            </span>
+            <p className="mt-4 text-lg font-extrabold text-grey-1">
+              You can&apos;t transfer money
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-grey-3">
+              Your account doesn&apos;t have permission to move money out of an
+              expense account. The business owner can grant it from Settings.
+            </p>
+          </div>
+        ) : !accountsLoading && !hasExpenseAccount ? (
           <div className="w-full rounded-2xl border border-grey-5 bg-white p-8 text-center">
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-secondary-6 text-primary-green-300">
               <Wallet className="h-5 w-5" />
@@ -376,6 +404,14 @@ const ExpenseTransfer = () => {
                     step="0.01"
                     required
                   />
+                  {/* Stated up front rather than only on rejection — a limit
+                      discovered after filling the whole form reads as the
+                      form being broken. */}
+                  {transferCap !== null && (
+                    <p className="text-xs text-grey-4">
+                      Your limit is {formatToNaira(transferCap)} per payout.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

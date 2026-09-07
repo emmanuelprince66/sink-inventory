@@ -25,6 +25,9 @@ import {
   expenseAccountLabel,
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
+import NoAccessTag from "@/components/app/NoAccessTag";
+import SetPinBanner from "@/components/app/SetPinBanner";
+import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { useReportGeneration } from "@/hooks/useReportGeneration";
 import { cn } from "@/lib/utils";
@@ -98,14 +101,17 @@ const ExpenseAccountBalanceCard = ({
   bankName,
   accountNumber,
   /** Whether a transfer has an account to come out of. */
-  canTransfer,
+  hasAccount,
+  /** Whether this person is allowed to raise one at all. */
+  mayTransfer,
   onCreateAccount,
   onTransfer,
 }: {
   balance: number;
   bankName?: string;
   accountNumber?: string;
-  canTransfer: boolean;
+  hasAccount: boolean;
+  mayTransfer: boolean;
   onCreateAccount: () => void;
   onTransfer: () => void;
 }) => {
@@ -151,7 +157,18 @@ const ExpenseAccountBalanceCard = ({
           of, so without one it offers to create that instead of opening a
           screen whose only message would be "create an account first". */}
       <div className="relative flex items-center gap-2">
-        {canTransfer ? (
+        {/* Permission is checked before the account: someone who may not
+            raise a payout should not be told to go and create an account
+            for one. */}
+        {!mayTransfer ? (
+          <>
+            <Button size="sm" className="w-fit gap-1.5" disabled>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              Transfer Money
+            </Button>
+            <NoAccessTag reason="You don't have permission to transfer money. Ask the business owner." />
+          </>
+        ) : hasAccount ? (
           <Button size="sm" className="w-fit gap-1.5" onClick={onTransfer}>
             <ArrowUpRight className="w-3.5 h-3.5" />
             Transfer Money
@@ -174,6 +191,11 @@ const ExpenseAccountBalanceCard = ({
 
 const Expenses = () => {
   const router = useRouter();
+  const {
+    canLog,
+    canTransfer,
+    canApprove,
+  } = useExpensePermissions();
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const [createExpenseAccountOpen, setCreateExpenseAccountOpen] =
     useState(false);
@@ -255,12 +277,18 @@ const Expenses = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-52 p-1.5">
+                {/* Left in place rather than hidden when not permitted: a
+                    menu that changes shape per person is harder to give help
+                    with over the phone than one where the row is visibly
+                    unavailable. */}
                 <DropdownMenuItem
                   onClick={openAddExpensesModal}
+                  disabled={!canLog}
                   className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2 cursor-pointer gap-2"
                 >
                   <Plus className="w-4 h-4" />
                   Add Expenses
+                  {!canLog && <NoAccessTag className="ml-auto" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild className="rounded-lg py-1.5 focus:bg-secondary-6">
                   <Link
@@ -271,19 +299,22 @@ const Expenses = () => {
                     Manage Budgets
                   </Link>
                 </DropdownMenuItem>
-                {/* Reachable by everyone rather than owners only: whether a
-                    given person can act on a request is decided per request by
-                    can_current_user_approve, and someone who raised one still
-                    needs to see where it got to. */}
-                <DropdownMenuItem asChild className="rounded-lg py-1.5 focus:bg-secondary-6">
-                  <Link
-                    href="/expenses/approvals"
-                    className="font-semibold text-grey-2 flex items-center gap-2 cursor-pointer"
-                  >
-                    <ClipboardCheck className="w-4 h-4" />
-                    Transfer Approvals
-                  </Link>
-                </DropdownMenuItem>
+                {/* Shown to approvers and to anyone who can raise a request:
+                    whether a given person can act on one is decided per
+                    request by can_current_user_approve, and someone who
+                    raised one still needs to see where it got to. Someone who
+                    can do neither has nothing to read there. */}
+                {(canApprove || canTransfer) && (
+                  <DropdownMenuItem asChild className="rounded-lg py-1.5 focus:bg-secondary-6">
+                    <Link
+                      href="/expenses/approvals"
+                      className="font-semibold text-grey-2 flex items-center gap-2 cursor-pointer"
+                    >
+                      <ClipboardCheck className="w-4 h-4" />
+                      Transfer Approvals
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={openGenerateReport}
                   className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2 cursor-pointer gap-2"
@@ -399,7 +430,8 @@ const Expenses = () => {
                   selectedExpenseAccount?.account_number ??
                   accountSummary?.account_number
                 }
-                canTransfer={hasExpenseAccount}
+                hasAccount={hasExpenseAccount}
+                mayTransfer={canTransfer}
                 onCreateAccount={() => setCreateExpenseAccountOpen(true)}
                 onTransfer={() => router.push("/expenses/transfer")}
               />
@@ -409,6 +441,9 @@ const Expenses = () => {
       </div>
 
       {/* ─── Expense Account Management tabs ─── */}
+      {/* Only for people who will actually be asked for a PIN. */}
+      <SetPinBanner relevant={canTransfer || canApprove} />
+
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as ExpenseTab)}

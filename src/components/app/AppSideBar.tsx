@@ -25,7 +25,7 @@ import { useState } from "react";
 export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
-  const { role } = useUserRole(); // Only need role now
+  const { role, canAny } = useUserRole();
   const { unreadNotifications } = useRealtime();
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
@@ -39,9 +39,12 @@ export function AppSidebar() {
     logout();
   };
 
-  // Simple role-based check
+  // Role first, then any permission the link declares. `anyPermission` is
+  // opt-in per link, so every existing entry keeps behaving as it did.
   const canSeeLink = (item: any) => {
-    return item.roles.includes(role);
+    if (!item.roles.includes(role)) return false;
+    if (!item.anyPermission?.length) return true;
+    return canAny(item.anyPermission);
   };
 
   // Filter links based on role only
