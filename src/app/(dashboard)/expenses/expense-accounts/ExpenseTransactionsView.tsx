@@ -17,11 +17,18 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ChevronRight, FilterX, Inbox } from "lucide-react";
+import { Check, ChevronRight, Copy, FilterX, Inbox } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
-import { getCategoryMeta, getRefLabel, unwrapPaginated } from "./expense-ui-meta";
+import {
+  getCategoryMeta,
+  getDecidedBy,
+  getExpenseReference,
+  getRefLabel,
+  getStatusMeta,
+  unwrapPaginated,
+} from "./expense-ui-meta";
 
 interface ExpenseTransactionsViewProps {
   onSelectTransaction: (txn: any) => void;
@@ -48,6 +55,23 @@ const ExpenseTransactionsView = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(initialCategory || ALL);
+  // Which row was just copied, so the tick shows on that row alone.
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyReference = (row: any) => {
+    const reference = getExpenseReference(row);
+    if (!reference || reference === "—") return;
+
+    // Fire and forget: a clipboard the browser refuses is not worth an error
+    // dialog over, and the reference is on screen to read either way.
+    navigator.clipboard?.writeText(reference).then(
+      () => {
+        setCopiedId(row.id);
+        setTimeout(() => setCopiedId(null), 1500);
+      },
+      () => {},
+    );
+  };
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -152,7 +176,9 @@ const ExpenseTransactionsView = ({
               { flex: true, thumbnail: true },
               { width: "w-24", hiddenOnMobile: true },
               { width: "w-20", hiddenOnMobile: true },
+              { width: "w-20", hiddenOnMobile: true },
               { width: "w-16", alignRight: true },
+              { width: "w-20", hiddenOnMobile: true },
               { width: "w-20", hiddenOnMobile: true, alignRight: true },
             ]}
           />
@@ -164,16 +190,22 @@ const ExpenseTransactionsView = ({
                 <thead className="bg-grey-6 border-b border-grey-5">
                   <tr className="text-left">
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
-                      Expense
+                      Reference
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
                       Category
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
-                      Added By
+                      Initiated By
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
+                      Approved By
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3 text-right">
                       Amount
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
+                      Status
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3 text-right">
                       Date
@@ -188,6 +220,8 @@ const ExpenseTransactionsView = ({
                     );
                     const catMeta = getCategoryMeta(categoryLabel);
                     const CatIcon = catMeta.icon;
+                    const decidedBy = getDecidedBy(t);
+                    const statusMeta = getStatusMeta(t.status);
                     return (
                       <tr
                         key={t.id}
@@ -195,9 +229,29 @@ const ExpenseTransactionsView = ({
                         className="border-b border-grey-5 hover:bg-secondary-6/40 cursor-pointer"
                       >
                         <td className="py-3 px-4">
-                          <span className="text-sm font-bold text-grey-1">
-                            {t.name || "—"}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-grey-1">
+                              {getExpenseReference(t)}
+                            </span>
+                            <button
+                              type="button"
+                              aria-label="Copy reference"
+                              title="Copy reference"
+                              // The row opens the detail panel, so a click on
+                              // the copy button must not also navigate.
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyReference(t);
+                              }}
+                              className="shrink-0 rounded p-0.5 text-grey-4 hover:bg-grey-6 hover:text-grey-2 cursor-pointer"
+                            >
+                              {copiedId === t.id ? (
+                                <Check className="w-3 h-3 text-primary-green-300" />
+                              ) : (
+                                <Copy className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -217,8 +271,40 @@ const ExpenseTransactionsView = ({
                         <td className="py-3 px-4 text-sm text-grey-2">
                           {getRefLabel(t.added_by)}
                         </td>
+                        {/* Rejections read in red: the same column carries
+                            whoever decided it, and the name of someone who
+                            turned an expense down should not sit there
+                            looking like an approval. */}
+                        <td
+                          className={cn(
+                            "py-3 px-4 text-sm whitespace-nowrap",
+                            decidedBy.decision === "rejected"
+                              ? "text-error-1"
+                              : decidedBy.decision === "approved"
+                                ? "text-grey-2"
+                                : "text-grey-4",
+                          )}
+                        >
+                          {decidedBy.name}
+                        </td>
                         <td className="py-3 px-4 text-sm font-bold text-error-1 text-right whitespace-nowrap">
                           {formatToNaira(t.amount)}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold whitespace-nowrap",
+                              statusMeta.pill,
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "h-1.5 w-1.5 rounded-full",
+                                statusMeta.dot,
+                              )}
+                            />
+                            {statusMeta.label}
+                          </span>
                         </td>
                         <td className="py-3 px-4 text-xs text-grey-3 text-right whitespace-nowrap">
                           {t.date ? moment(t.date).format("MMM D, YYYY") : "—"}
@@ -241,6 +327,8 @@ const ExpenseTransactionsView = ({
                 const categoryLabel = getRefLabel(t.category, "Uncategorised");
                 const catMeta = getCategoryMeta(categoryLabel);
                 const CatIcon = catMeta.icon;
+                const decidedBy = getDecidedBy(t);
+                const statusMeta = getStatusMeta(t.status);
                 return (
                   <li key={t.id}>
                     <button
@@ -257,19 +345,35 @@ const ExpenseTransactionsView = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <span className="text-sm font-bold text-grey-1 truncate block">
-                          {t.name || "—"}
+                          {getExpenseReference(t)}
                         </span>
                         <p className="text-[11px] text-grey-3 truncate mt-0.5">
                           {categoryLabel} · {getRefLabel(t.added_by)}
                         </p>
                         <p className="text-[11px] text-grey-3 mt-0.5">
                           {t.date ? moment(t.date).format("MMM D, YYYY") : "—"}
+                          {decidedBy.decision !== "pending" &&
+                            ` · ${decidedBy.decision === "rejected" ? "Rejected" : "Approved"} by ${decidedBy.name}`}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-error-1">
                           {formatToNaira(t.amount)}
                         </p>
+                        <span
+                          className={cn(
+                            "mt-1 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold whitespace-nowrap",
+                            statusMeta.pill,
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-1 w-1 rounded-full",
+                              statusMeta.dot,
+                            )}
+                          />
+                          {statusMeta.label}
+                        </span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-grey-4 shrink-0" />
                     </button>

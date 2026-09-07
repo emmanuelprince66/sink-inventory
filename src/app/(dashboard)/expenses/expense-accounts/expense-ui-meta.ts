@@ -43,24 +43,50 @@ const FALLBACK_CATEGORY_META: Omit<CategoryMeta, "name"> = {
 export const getCategoryMeta = (name: string): CategoryMeta =>
   CATEGORY_META[name] || { ...FALLBACK_CATEGORY_META, name };
 
-// The transactions endpoint currently only ever returns "COMPLETED", but the
-// pill map is left open so a future status renders sensibly (grey) instead
-// of crashing.
+/**
+ * Statuses for a LOGGED expense — not for an expense transfer.
+ *
+ * The money here was already spent in the real world, so the approval is
+ * internal sign-off and nothing is disbursed afterwards. That makes APPROVED
+ * the terminal success state, and it reads green for the same reason a
+ * settled transfer does; there is no COMPLETED to move on to.
+ *
+ * Transfers use their own map in types/expense-governance, where APPROVED is
+ * a middle state and SUCCESS is the end. Colouring APPROVED green here and
+ * amber-ish there is deliberate — the same word means different things on
+ * either side and the colour follows the meaning, not the word.
+ */
 export const STATUS_META: Record<string, { label: string; pill: string; dot: string }> = {
-  COMPLETED: {
-    label: "Completed",
+  APPROVED: {
+    label: "Approved",
     pill: "bg-emerald-50 text-emerald-700 border border-emerald-100",
     dot: "bg-emerald-500",
   },
-  PENDING: {
-    label: "Pending",
+  PENDING_APPROVAL: {
+    label: "Pending approval",
     pill: "bg-amber-50 text-amber-700 border border-amber-100",
     dot: "bg-amber-500",
+  },
+  PENDING_OWNER_APPROVAL: {
+    label: "Awaiting owner",
+    pill: "bg-orange-50 text-orange-700 border border-orange-100",
+    dot: "bg-orange-500",
   },
   REJECTED: {
     label: "Rejected",
     pill: "bg-rose-50 text-rose-700 border border-rose-100",
     dot: "bg-rose-500",
+  },
+  // Kept for older rows written before the approval flow existed.
+  PENDING: {
+    label: "Pending",
+    pill: "bg-amber-50 text-amber-700 border border-amber-100",
+    dot: "bg-amber-500",
+  },
+  COMPLETED: {
+    label: "Completed",
+    pill: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+    dot: "bg-emerald-500",
   },
 };
 export const getStatusMeta = (status?: string | null) =>
@@ -70,6 +96,43 @@ export const getStatusMeta = (status?: string | null) =>
     dot: "bg-slate-400",
   };
 export const StatusIcon = CheckCircle2;
+
+/**
+ * Who decided this expense, and which way.
+ *
+ * One column in the design, two fields in the payload — an expense carries
+ * both approved_by_name and rejected_by_name, and only one is ever filled.
+ * Returning the decision alongside the name lets the cell colour a rejection
+ * differently instead of quietly presenting the person who turned it down as
+ * the one who approved it.
+ */
+export const getDecidedBy = (
+  row: any,
+): { name: string; decision: "approved" | "rejected" | "pending" } => {
+  if (row?.rejected_by_name) {
+    return { name: String(row.rejected_by_name), decision: "rejected" };
+  }
+  if (row?.approved_by_name) {
+    return { name: String(row.approved_by_name), decision: "approved" };
+  }
+  return { name: "—", decision: "pending" };
+};
+
+/**
+ * The reference to show and copy — "EXP-2026-00432".
+ *
+ * `reference` is the human-quotable one and always present; the search
+ * endpoint matches on it, so what a merchant copies from here is what they
+ * can read out to support and what support can paste back to find it.
+ *
+ * `payment_reference` is the bank's own reference on an expense paid by
+ * transfer, and mirrors `reference` on a logged expense — so it is only a
+ * fallback, never the first choice: preferring it would show a merchant
+ * SYNC-EXP-TRF-A1B2C3D4E5F6 where the readable one exists. The name is the
+ * last resort, for rows written before the column did.
+ */
+export const getExpenseReference = (row: any): string =>
+  row?.reference ?? row?.payment_reference ?? row?.name ?? "—";
 
 // The API isn't fully settled on whether related fields (category,
 // initiated_by, approved_by) come back as a bare string or a
