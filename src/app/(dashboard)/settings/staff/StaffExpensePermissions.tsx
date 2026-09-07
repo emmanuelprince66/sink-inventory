@@ -244,16 +244,16 @@ const StaffExpensePermissions = ({
             />
 
             <Row
-              title="Request a payout"
-              caption="Allow them to request money from the business for an expense."
+              title="Request a transfer"
+              caption="Allow them to request a transfer from the business for an expense."
               checked={canInitiate}
               onChange={setCanInitiate}
               disabled={isPending}
             />
 
             <Row
-              title="Approve payouts"
-              caption="Allow them to approve and release payout requests from other employees."
+              title="Approve transfers"
+              caption="Allow them to approve and release transfer requests from other employees."
               checked={canApprove}
               onChange={setCanApprove}
               disabled={isPending}

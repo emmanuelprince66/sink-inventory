@@ -1,12 +1,25 @@
 "use client";
 
+import {
+  useApproveExpenseMutation,
+  useRejectExpenseMutation,
+} from "@/api/expenses/expense-decisions";
 import { CustomModal } from "@/components/app/CustomModal";
+import TransactionPinDialog from "@/components/app/TransactionPinDialog";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ClipboardList, User } from "lucide-react";
+import { Check, ClipboardList, User, X } from "lucide-react";
 import moment from "moment";
-import { getCategoryMeta, getRefLabel, getStatusMeta } from "./expense-ui-meta";
+import { useState } from "react";
+import RejectTransferDialog from "../approvals/RejectTransferDialog";
+import {
+  getCategoryMeta,
+  getDecidedBy,
+  getRefLabel,
+  getStatusMeta,
+} from "./expense-ui-meta";
 
 interface TransactionDetailsModalProps {
   isOpen: boolean;
@@ -24,7 +37,35 @@ const TransactionDetailsModal = ({
   onClose,
   transaction,
 }: TransactionDetailsModalProps) => {
+  const [approving, setApproving] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+
+  const { mutate: approve, isPending: approvePending } =
+    useApproveExpenseMutation({
+      onSuccess: () => {
+        setApproving(false);
+        onClose();
+      },
+    });
+
+  const { mutate: reject, isPending: rejectPending } = useRejectExpenseMutation(
+    {
+      onSuccess: () => {
+        setRejecting(false);
+        onClose();
+      },
+    },
+  );
+
+  // Hooks must run on every render, so the early return waits until after them.
   if (!transaction) return null;
+
+  const busy = approvePending || rejectPending;
+  // Comes back as a boolean, but the schema types it as a string — a literal
+  // "false" would otherwise be truthy and offer an Approve button that 403s.
+  const canDecide =
+    transaction.can_current_user_approve === true ||
+    transaction.can_current_user_approve === "true";
 
   const categoryLabel = getRefLabel(transaction.category, "Uncategorised");
   const catMeta = getCategoryMeta(categoryLabel);
@@ -33,8 +74,11 @@ const TransactionDetailsModal = ({
     transaction.added_by ?? transaction.initiated_by,
     "—",
   );
-  const hasApprovedByField = "approved_by" in transaction;
-  const approvedBy = getRefLabel(transaction.approved_by, "—");
+  // The *_name fields, not the raw *_by ids — those are UUIDs, which would
+  // render as a UUID under a "Approved by" heading.
+  const decidedBy = getDecidedBy(transaction);
+  const hasApprovedByField =
+    "approved_by" in transaction || "approved_by_name" in transaction;
   const hasStatus = Boolean(transaction.status);
   const status = getStatusMeta(transaction.status);
 
@@ -51,7 +95,32 @@ const TransactionDetailsModal = ({
         </div>
       }
       footer={
-        <div className="flex justify-end">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* Trusted as the single source of whether this person may decide
+              this expense: the backend works it out from role, permission and
+              the approval cap, and separately refuses anyone approving their
+              own. Re-deriving it here could only ever disagree with it. */}
+          {canDecide && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setRejecting(true)}
+                disabled={busy}
+                className="border-error-1/40 text-error-1 hover:bg-error-2"
+              >
+                <X className="mr-1.5 h-4 w-4" />
+                Reject
+              </Button>
+              <Button onClick={() => setApproving(true)} disabled={busy}>
+                {busy ? (
+                  <Spinner className="mr-1.5" size="sm" />
+                ) : (
+                  <Check className="mr-1.5 h-4 w-4" />
+                )}
+                Approve
+              </Button>
+            </>
+          )}
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
@@ -112,10 +181,35 @@ const TransactionDetailsModal = ({
               }
             />
             {hasApprovedByField && (
-              <PersonRow label="Approved by" name={approvedBy} />
+              <PersonRow
+                label={
+                  decidedBy.decision === "rejected"
+                    ? "Rejected by"
+                    : "Approved by"
+                }
+                name={decidedBy.name}
+                timestamp={
+                  transaction.rejected_at || transaction.approved_at
+                    ? moment(
+                        transaction.rejected_at || transaction.approved_at,
+                      ).format("MMM D, YYYY")
+                    : undefined
+                }
+              />
             )}
           </div>
         </Section>
+
+        {/* Why it was turned down. Without this a rejected expense shows a
+            red pill and no explanation, and whoever logged it has to go and
+            ask what was wrong with it. */}
+        {transaction.rejection_reason && (
+          <Section title="Reason for rejection">
+            <p className="rounded-lg border border-error-1/30 bg-error-2 p-3 text-sm leading-relaxed text-error-1">
+              {transaction.rejection_reason}
+            </p>
+          </Section>
+        )}
 
         {/* Note */}
         {transaction.note && (
@@ -126,6 +220,30 @@ const TransactionDetailsModal = ({
           </Section>
         )}
       </div>
+
+      {/* Approving signs the company's books, so it takes the same PIN a
+          payout does. */}
+      <TransactionPinDialog
+        open={approving}
+        onClose={() => setApproving(false)}
+        onSubmit={(pin) => approve({ id: transaction.id, pin })}
+        title="Approve this expense"
+        description={`${formatToNaira(transaction.amount)} — ${
+          transaction.reference || transaction.name || "expense"
+        }. This records it in the books; no money moves.`}
+        actionLabel="Approve"
+        loading={approvePending}
+      />
+
+      <RejectTransferDialog
+        open={rejecting}
+        onClose={() => setRejecting(false)}
+        onConfirm={(rejection_reason) =>
+          reject({ id: transaction.id, rejection_reason })
+        }
+        loading={rejectPending}
+        reference={transaction.reference || transaction.name}
+      />
     </CustomModal>
   );
 };

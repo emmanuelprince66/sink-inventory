@@ -51,6 +51,9 @@ const Settings = () => {
       hr: "HR",
       tax: "Tax",
       "expense-controls": "Expense Controls",
+      // Without this the tab had no URL of its own, so nothing could link
+      // someone straight to setting the PIN they were just told they need.
+      "transaction-pin": "User Transaction Pin",
       security: "Security & Privacy",
       notifications: "Notifications",
       currency: "Currency & Localization",
@@ -66,8 +69,6 @@ const Settings = () => {
 
   const [activeTab, setActiveTab] =
     useState<(typeof SettingsOptionsTab)[number]>(initialTab);
-
-  console.log("activeTab", activeTab);
 
   // Update activeTab when URL changes
   useEffect(() => {
@@ -90,6 +91,7 @@ const Settings = () => {
       HR: "hr",
       Tax: "tax",
       "Expense Controls": "expense-controls",
+      "User Transaction Pin": "transaction-pin",
       "Security & Privacy": "security",
       Notifications: "notifications",
       "Currency & Localization": "currency",

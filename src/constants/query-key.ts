@@ -142,6 +142,8 @@ export const queryKey = {
     getSpendByUser: "get-expense-spend-by-user",
     getExpenseCategories: "get-expense-categories",
     getExpenseCategoryById: "get-expense-category-by-id",
+    approveExpense: "approve-expense",
+    rejectExpense: "reject-expense",
     getBudgets: "get-expense-budgets",
     createBudget: "create-expense-budget",
     editBudget: "edit-expense-budget",
