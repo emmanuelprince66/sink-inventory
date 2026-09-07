@@ -93,7 +93,7 @@ const CustomExpenseCard = ({
   );
 };
 
-/** Real bank-account data — results.summary on /expenses/business/{id}/
+/** Real bank.summary on /expenses/business/{id}/
  * (account_balance, bank_name, account_number). No "pending" count is
  * shown — there's no pending-approvals field in that data yet. */
 const ExpenseAccountBalanceCard = ({
