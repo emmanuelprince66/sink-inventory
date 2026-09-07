@@ -44,9 +44,15 @@ const SetPinBanner = ({ relevant }: { relevant: boolean }) => {
         </div>
       </div>
 
+      {/* Dark text on white. White on amber was barely readable, and the
+          banner is already the loud element — the button only has to be
+          legible and obviously clickable, not compete with it.
+
+          `section` opens the PIN panel rather than dropping the reader on
+          the Password form inside the same tab. */}
       <Link
-        href="/settings?tab=transaction-pin"
-        className="shrink-0 rounded-xl bg-grey-1 px-4 py-2 text-center text-xs font-bold text-white hover:bg-grey-2"
+        href="/settings?tab=security&section=transaction-pin"
+        className="shrink-0 rounded-xl border border-warning-1/40 bg-white px-4 py-2.5 text-center text-xs font-bold text-grey-1 transition-colors hover:bg-grey-6"
       >
         Set PIN
       </Link>

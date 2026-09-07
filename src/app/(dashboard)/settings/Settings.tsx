@@ -18,8 +18,6 @@ const Settings = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  console.log("user", user);
-
   const SettingsOptionsTab =
     user?.role === "OWNER"
       ? [
@@ -34,8 +32,12 @@ const Settings = () => {
           "Currency & Localization",
         ]
       : ([
-          // "Security & Privacy",
           "HR",
+          // Everyone needs somewhere to set their transaction PIN — they are
+          // told to go and set one before they can approve a payout. What
+          // they see inside is narrowed to that; the password and wallet PIN
+          // sub-tabs stay owner-only.
+          "Security & Privacy",
           "Notifications",
           "Currency & Localization",
         ] as const);
@@ -51,9 +53,6 @@ const Settings = () => {
       hr: "HR",
       tax: "Tax",
       "expense-controls": "Expense Controls",
-      // Without this the tab had no URL of its own, so nothing could link
-      // someone straight to setting the PIN they were just told they need.
-      "transaction-pin": "User Transaction Pin",
       security: "Security & Privacy",
       notifications: "Notifications",
       currency: "Currency & Localization",
@@ -91,7 +90,6 @@ const Settings = () => {
       HR: "hr",
       Tax: "tax",
       "Expense Controls": "expense-controls",
-      "User Transaction Pin": "transaction-pin",
       "Security & Privacy": "security",
       Notifications: "notifications",
       "Currency & Localization": "currency",
@@ -169,13 +167,14 @@ const Settings = () => {
               </TabsContent>
             )}
 
-            {user && user?.role === "OWNER" && (
-              <TabsContent value="Security & Privacy" className="mt-0">
-                <div className="w-full overflow-hidden">
-                  <SecurityPrivacyTabs />
-                </div>
-              </TabsContent>
-            )}
+            <TabsContent value="Security & Privacy" className="mt-0">
+              <div className="w-full overflow-hidden">
+                <SecurityPrivacyTabs
+                  isOwner={user?.role === "OWNER"}
+                  initialSection={searchParams.get("section")}
+                />
+              </div>
+            </TabsContent>
 
             {user && user?.role === "OWNER" && (
               <TabsContent value="Subscription" className="mt-0">
@@ -230,23 +229,67 @@ const getShortTabName = (tabName: string): string => {
 // securing wallet transfers; "Transaction PIN" is the personal one that
 // authorises expense payouts and approvals. Both existing under one label was
 // the fastest way to have someone type the wrong one at a counter.
+/**
+ * `ownerOnly` marks what belongs to the business rather than the person.
+ *
+ * The wallet PIN secures the business's own wallet and the password panel is
+ * the owner's account, so neither is a staff member's to change from here.
+ * The transaction PIN is personal — it travels with them across businesses,
+ * and they are told to go and set one before they can approve a payout, so
+ * they need a way in.
+ */
+/** The ?section= value that opens each panel. */
+const SECTION_PARAMS: Record<string, string> = {
+  Password: "password",
+  "Transaction Pin": "wallet-pin",
+  "User Transaction Pin": "transaction-pin",
+};
+
 const SECURITY_TABS = [
-  { value: "Password", label: "Password", shortLabel: "Password" },
-  { value: "Transaction Pin", label: "Wallet PIN", shortLabel: "Wallet" },
+  { value: "Password", label: "Password", shortLabel: "Password", ownerOnly: true },
+  { value: "Transaction Pin", label: "Wallet PIN", shortLabel: "Wallet", ownerOnly: true },
   {
     value: "User Transaction Pin",
     label: "Transaction PIN",
     shortLabel: "PIN",
+    ownerOnly: false,
   },
 ] as const;
 
-const SecurityPrivacyTabs = () => {
-  const [activeSubTab, setActiveSubTab] = useState<string>("Password");
+const SecurityPrivacyTabs = ({
+  isOwner,
+  initialSection,
+}: {
+  isOwner: boolean;
+  /** ?section= — lets a link open a specific panel, not just the tab. */
+  initialSection?: string | null;
+}) => {
+  const visibleTabs = SECURITY_TABS.filter((tab) => isOwner || !tab.ownerOnly);
+
+  /**
+   * Which panel to land on.
+   *
+   * `section` first, so "go and set your PIN" arrives at the PIN rather than
+   * at a Password form the reader then has to look past. Ignored when it
+   * names something this person cannot see, which keeps a stale or hand-typed
+   * link from opening a blank tab.
+   */
+  const requested = SECURITY_TABS.find(
+    (tab) => SECTION_PARAMS[tab.value] === initialSection,
+  );
+  const allowed = requested && (isOwner || !requested.ownerOnly);
+
+  const [activeSubTab, setActiveSubTab] = useState<string>(
+    allowed ? requested.value : isOwner ? "Password" : "User Transaction Pin",
+  );
 
   return (
     <div className="w-full">
+      {/* A single tab is a heading, not a choice — hidden so the panel does
+          not present one thing to pick between. */}
+      {visibleTabs.length > 1 && (
       <div className="flex items-center border-b border-border-tint mb-4">
-        {SECURITY_TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.value}
             onClick={() => setActiveSubTab(tab.value)}
@@ -262,19 +305,26 @@ const SecurityPrivacyTabs = () => {
           </button>
         ))}
       </div>
+      )}
 
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsContent value="Password" className="mt-0">
-          <div className="w-full overflow-hidden">
-            <ChangePassword />
-          </div>
-        </TabsContent>
+        {/* Rendered only for an owner. Hiding the trigger alone would leave
+            the panel reachable by setting the sub-tab any other way. */}
+        {isOwner && (
+          <>
+            <TabsContent value="Password" className="mt-0">
+              <div className="w-full overflow-hidden">
+                <ChangePassword />
+              </div>
+            </TabsContent>
 
-        <TabsContent value="Transaction Pin" className="mt-0">
-          <div className="w-full overflow-hidden">
-            <PinComp />
-          </div>
-        </TabsContent>
+            <TabsContent value="Transaction Pin" className="mt-0">
+              <div className="w-full overflow-hidden">
+                <PinComp />
+              </div>
+            </TabsContent>
+          </>
+        )}
 
         <TabsContent value="User Transaction Pin" className="mt-0">
           <div className="w-full overflow-hidden">
