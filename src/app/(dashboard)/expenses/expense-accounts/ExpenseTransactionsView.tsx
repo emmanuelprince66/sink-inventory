@@ -1,8 +1,13 @@
 "use client";
 
+import {
+  useApproveExpenseMutation,
+  useRejectExpenseMutation,
+} from "@/api/expenses/expense-decisions";
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
 import CustomPagination from "@/components/app/CustomPagination";
 import { SearchInput } from "@/components/app/SearchInput";
+import TransactionPinDialog from "@/components/app/TransactionPinDialog";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +22,11 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { Check, ChevronRight, Copy, FilterX, Inbox } from "lucide-react";
+import { Check, ChevronRight, Copy, FilterX, Inbox, X } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
+import RejectTransferDialog from "../approvals/RejectTransferDialog";
 import {
   getCategoryMeta,
   getDecidedBy,
@@ -55,6 +61,31 @@ const ExpenseTransactionsView = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(initialCategory || ALL);
+  // The row a decision is being taken on. Held as the row rather than a
+  // boolean so the dialogs can name what is being decided.
+  const [approving, setApproving] = useState<any | null>(null);
+  const [rejecting, setRejecting] = useState<any | null>(null);
+
+  const { mutate: approve, isPending: approvePending } =
+    useApproveExpenseMutation({ onSuccess: () => setApproving(null) });
+
+  const { mutate: reject, isPending: rejectPending } = useRejectExpenseMutation(
+    { onSuccess: () => setRejecting(null) },
+  );
+
+  /**
+   * Whether this row can be decided by the person looking at it.
+   *
+   * The backend's own answer, which already accounts for role, permission,
+   * the approval cap and the rule that nobody approves what they raised.
+   * Re-deriving any of that here could only disagree with it.
+   */
+  const canDecide = (row: any) => row?.can_current_user_approve === true;
+
+  const deciding = (row: any) =>
+    (approvePending && approving?.id === row.id) ||
+    (rejectPending && rejecting?.id === row.id);
+
   // Which row was just copied, so the tick shows on that row alone.
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -180,6 +211,7 @@ const ExpenseTransactionsView = ({
               { width: "w-16", alignRight: true },
               { width: "w-20", hiddenOnMobile: true },
               { width: "w-20", hiddenOnMobile: true, alignRight: true },
+              { width: "w-24", hiddenOnMobile: true, alignRight: true },
             ]}
           />
         ) : (
@@ -209,6 +241,9 @@ const ExpenseTransactionsView = ({
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3 text-right">
                       Date
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-bold text-grey-3 text-right">
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -309,6 +344,41 @@ const ExpenseTransactionsView = ({
                         <td className="py-3 px-4 text-xs text-grey-3 text-right whitespace-nowrap">
                           {t.date ? moment(t.date).format("MMM D, YYYY") : "—"}
                         </td>
+                        {/* The row opens the details panel, so every control
+                            in here stops the click travelling — otherwise
+                            approving also navigates. */}
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          {canDecide(t) ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                disabled={deciding(t)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setRejecting(t);
+                                }}
+                                className="rounded-lg border border-error-1/30 px-2 py-1 text-[11px] font-bold text-error-1 hover:bg-error-2 disabled:opacity-50 cursor-pointer"
+                              >
+                                <X className="mr-1 inline h-3 w-3" />
+                                Reject
+                              </button>
+                              <button
+                                type="button"
+                                disabled={deciding(t)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setApproving(t);
+                                }}
+                                className="rounded-lg bg-primary-green-300 px-2 py-1 text-[11px] font-bold text-white hover:bg-primary-green-300/90 disabled:opacity-50 cursor-pointer"
+                              >
+                                <Check className="mr-1 inline h-3 w-3" />
+                                Approve
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-grey-4">—</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
@@ -377,6 +447,30 @@ const ExpenseTransactionsView = ({
                       </div>
                       <ChevronRight className="w-4 h-4 text-grey-4 shrink-0" />
                     </button>
+
+                    {/* Outside the row button rather than inside it — a
+                        button within a button is invalid markup and taps
+                        land on whichever the browser decides. */}
+                    {canDecide(t) && (
+                      <div className="flex items-center gap-2 px-3 pb-3">
+                        <button
+                          type="button"
+                          disabled={deciding(t)}
+                          onClick={() => setRejecting(t)}
+                          className="flex-1 rounded-lg border border-error-1/30 py-1.5 text-[11px] font-bold text-error-1 disabled:opacity-50 cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          type="button"
+                          disabled={deciding(t)}
+                          onClick={() => setApproving(t)}
+                          className="flex-1 rounded-lg bg-primary-green-300 py-1.5 text-[11px] font-bold text-white disabled:opacity-50 cursor-pointer"
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -412,6 +506,34 @@ const ExpenseTransactionsView = ({
           </>
         )}
       </div>
+
+      {/* Approving records it in the books — same PIN gate as a payout, and
+          the dialog creates one first if this person has none. */}
+      <TransactionPinDialog
+        open={Boolean(approving)}
+        onClose={() => setApproving(null)}
+        onSubmit={(pin) => approving && approve({ id: approving.id, pin })}
+        title="Approve this expense"
+        description={
+          approving
+            ? `${formatToNaira(approving.amount)} — ${getExpenseReference(
+                approving,
+              )}. This signs it off; no money moves.`
+            : undefined
+        }
+        actionLabel="Approve"
+        loading={approvePending}
+      />
+
+      <RejectTransferDialog
+        open={Boolean(rejecting)}
+        onClose={() => setRejecting(null)}
+        onConfirm={(rejection_reason) =>
+          rejecting && reject({ id: rejecting.id, rejection_reason })
+        }
+        loading={rejectPending}
+        reference={rejecting ? getExpenseReference(rejecting) : undefined}
+      />
     </div>
   );
 };
