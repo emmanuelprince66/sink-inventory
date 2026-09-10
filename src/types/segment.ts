@@ -14,6 +14,10 @@ export type SegmentType =
   | "AT_RISK"
   | "INACTIVE_CUSTOMERS"
   | "REGULAR_BUYERS"
+  // Seeded by the backend for every business as "Birthdays This Month", with
+  // conditions { birthday_month: "current" }. Evaluated dynamically, so it is
+  // empty rather than absent for a business with no captured birthdays.
+  | "BIRTHDAY"
   | "CUSTOM"
   | (string & {});
 

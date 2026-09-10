@@ -38,14 +38,18 @@ const BankSelector = ({ className }: { className?: string }) => {
         value={selectedBankId ?? undefined}
         onValueChange={setSelectedBankId}
       >
+        {/* The icon and the value are direct children on purpose. SelectTrigger
+            truncates its value with `*:data-[slot=select-value]:line-clamp-1`,
+            which only reaches a direct child — wrapping them in a span skips
+            it, and the trigger's `whitespace-nowrap` then lets a long bank name
+            push the pill past the card edge. min-w-0/flex-1 give it something
+            to shrink into. */}
         <SelectTrigger
-          className="h-10 w-full rounded-xl border-white/20 bg-white/10 text-xs font-bold text-white sm:w-[240px]"
+          className="h-10 w-full min-w-0 max-w-full rounded-xl border-white/20 bg-white/10 text-xs font-bold text-white sm:w-[240px] [&>[data-slot=select-value]]:min-w-0 [&>[data-slot=select-value]]:flex-1"
           aria-label="Choose which account to view"
         >
-          <span className="flex min-w-0 items-center gap-2">
-            <Landmark className="h-3.5 w-3.5 shrink-0 opacity-70" />
-            <SelectValue placeholder="Select account" />
-          </span>
+          <Landmark className="h-3.5 w-3.5 shrink-0 opacity-70" />
+          <SelectValue placeholder="Select account" />
         </SelectTrigger>
 
         <SelectContent>

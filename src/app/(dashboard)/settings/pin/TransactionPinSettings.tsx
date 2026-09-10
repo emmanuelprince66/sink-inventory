@@ -7,7 +7,10 @@ import {
   useSetUserPinMutation,
   useUserPinStatusQuery,
 } from "@/api/user/pin";
-import PinField, { isValidPin, PIN_MIN_LENGTH } from "@/components/app/PinField";
+import CreatePinFields, {
+  PinOtpField,
+} from "@/components/app/CreatePinFields";
+import { isValidNewPin, PIN_CREATE_LENGTH } from "@/components/app/pin-rules";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ShieldCheck } from "lucide-react";
@@ -58,8 +61,8 @@ const TransactionPinSettings = () => {
   const handleSubmit = () => {
     setError("");
 
-    if (!isValidPin(pin)) {
-      setError(`Choose a PIN of at least ${PIN_MIN_LENGTH} digits.`);
+    if (!isValidNewPin(pin)) {
+      setError(`Choose a ${PIN_CREATE_LENGTH}-digit PIN.`);
       return;
     }
     if (pin !== confirmPin) {
@@ -68,8 +71,8 @@ const TransactionPinSettings = () => {
     }
 
     if (hasPin) {
-      if (!isValidPin(oldPin)) {
-        setError("Enter your current PIN.");
+      if (!isValidNewPin(oldPin)) {
+        setError(`Enter your current ${PIN_CREATE_LENGTH}-digit PIN.`);
         return;
       }
       changePin({ old_pin: oldPin, new_pin: pin });
@@ -106,8 +109,7 @@ const TransactionPinSettings = () => {
         <div className="mt-6 rounded-2xl border border-grey-5 bg-white p-6">
           <p className="mb-5 rounded-xl bg-primary-green-500 p-3 text-xs text-grey-3">
             This is your own PIN, not the business&apos;s — separate from the
-            wallet PIN, and it follows you across businesses. Between{" "}
-            {PIN_MIN_LENGTH} and 10 digits.
+            wallet PIN, and it follows you across businesses.
           </p>
 
           {!pinRequired && !hasPin && (
@@ -120,30 +122,26 @@ const TransactionPinSettings = () => {
 
           <div className="space-y-5">
             {hasPin && (
-              <PinField
-                label="Current PIN"
+              <PinOtpField
+                label={`Current ${PIN_CREATE_LENGTH}-digit PIN`}
                 value={oldPin}
                 onChange={setOldPin}
                 disabled={busy}
-                placeholder="Enter current PIN"
               />
             )}
 
-            <PinField
-              label={hasPin ? "New PIN" : "PIN"}
-              value={pin}
-              onChange={setPin}
+            <CreatePinFields
+              pin={pin}
+              confirmPin={confirmPin}
+              onPinChange={setPin}
+              onConfirmChange={setConfirmPin}
               disabled={busy}
-              placeholder="4 to 10 digits"
-            />
-
-            <PinField
-              label="Confirm PIN"
-              value={confirmPin}
-              onChange={setConfirmPin}
-              disabled={busy}
-              placeholder="Repeat it"
-              onEnter={handleSubmit}
+              pinLabel={
+                hasPin
+                  ? `New ${PIN_CREATE_LENGTH}-digit PIN`
+                  : `Choose a ${PIN_CREATE_LENGTH}-digit PIN`
+              }
+              confirmLabel={`Confirm ${PIN_CREATE_LENGTH}-digit PIN`}
             />
           </div>
 

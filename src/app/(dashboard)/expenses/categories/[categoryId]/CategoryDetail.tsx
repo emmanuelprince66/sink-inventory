@@ -28,7 +28,8 @@ import { DateRange } from "react-day-picker";
 import SetCategoryBudgetModal from "../../expense-accounts/SetCategoryBudgetModal";
 import TransactionDetailsModal from "../../expense-accounts/TransactionDetailsModal";
 import {
-  getRefLabel,
+  getDecidedBy,
+  getPersonName,
   unwrapPaginated,
 } from "../../expense-accounts/expense-ui-meta";
 
@@ -301,6 +302,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
               { flex: true },
               { width: "w-24", hiddenOnMobile: true },
               { width: "w-20", hiddenOnMobile: true },
+              { width: "w-20", hiddenOnMobile: true },
               { width: "w-16", alignRight: true },
             ]}
           />
@@ -322,7 +324,10 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
                       Date
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
-                      Added By
+                      Initiated By
+                    </th>
+                    <th className="py-2.5 px-4 text-xs font-bold text-grey-3">
+                      Approved By
                     </th>
                     <th className="py-2.5 px-4 text-xs font-bold text-grey-3 text-right">
                       Amount
@@ -344,8 +349,18 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
                       <td className="py-3 px-4 text-xs text-grey-2 whitespace-nowrap">
                         {t.date ? moment(t.date).format("MMM D, YYYY") : "—"}
                       </td>
+                      {/* `added_by` and `initiated_by_name` carry the name;
+                          `initiated_by` is a UUID since the backend aligned
+                          this endpoint with the transfer list, so it is only
+                          read for its older `{ id, name }` form. */}
                       <td className="py-3 px-4 text-sm text-grey-2">
-                        {getRefLabel(t.added_by)}
+                        {getPersonName(
+                          t.added_by ?? t.initiated_by_name,
+                          t.initiated_by,
+                        ) || "—"}
+                      </td>
+                      <td className="py-3 px-4 text-sm whitespace-nowrap">
+                        <DecidedBy row={t} />
                       </td>
                       <td className="py-3 px-4 text-sm font-bold text-error-1 text-right whitespace-nowrap">
                         {formatToNaira(t.amount)}
@@ -374,7 +389,13 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
                       </span>
                       <p className="text-[11px] text-grey-3 mt-0.5">
                         {t.date ? moment(t.date).format("MMM D, YYYY") : "—"} ·{" "}
-                        {getRefLabel(t.added_by)}
+                        {getPersonName(
+                          t.added_by ?? t.initiated_by_name,
+                          t.initiated_by,
+                        ) || "—"}
+                      </p>
+                      <p className="text-[11px] text-grey-4 mt-0.5">
+                        <DecidedBy row={t} />
                       </p>
                     </div>
                     <div className="text-right shrink-0">
@@ -440,6 +461,36 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
 // Matches the flat tinted-card pattern used for overview KPIs across the app
 // (see CustomExpenseCard in Expenses.tsx / CustomSalesCard in Sales.tsx) —
 // icon+label row, big value below, no gradients or off-palette colors.
+
+/**
+ * Who signed the expense off, and which way.
+ *
+ * One cell rather than two, because an expense is either approved or rejected
+ * and never both — and a rejection shown in the same neutral grey as an
+ * approval reads as though the person who turned it down signed it off,
+ * which is the opposite of what happened. Still waiting says so instead of
+ * showing a bare dash, which is indistinguishable from missing data.
+ */
+const DecidedBy = ({ row }: { row: any }) => {
+  const { name, decision } = getDecidedBy(row);
+
+  if (decision === "pending") {
+    return <span className="text-grey-4">Awaiting approval</span>;
+  }
+
+  return (
+    <span
+      className={cn(
+        decision === "rejected" ? "text-error-1" : "text-grey-2",
+      )}
+    >
+      {name}
+      {decision === "rejected" && (
+        <span className="ml-1 text-[11px] font-bold">(rejected)</span>
+      )}
+    </span>
+  );
+};
 
 const STAT_TONE_STYLES: Record<string, { bg: string; iconColor: string }> = {
   info: { bg: "bg-info-2", iconColor: "text-info-1" },

@@ -29,9 +29,10 @@ import type { MetricPercentage, MetricPoint } from "@/types/loyalty";
 import DataGapBadge from "@/components/app/DataGapBadge";
 import { useFormatMoney } from "@/utils/formatMoney";
 import ChartEmptyState from "./ChartEmptyState";
+import ChartSkeleton from "./ChartSkeleton";
 import { cn } from "@/lib/utils";
 import { AI_INSIGHTS, OVERVIEW_KPIS, type AiInsight } from "./dummyGrowthData";
-import { GrowthStatCard } from "./GrowthStatCard";
+import { GrowthStatCard, GrowthStatCardSkeleton } from "./GrowthStatCard";
 
 Chart.register(
   CategoryScale,
@@ -126,15 +127,17 @@ const InsightTile = ({ insight }: { insight: AiInsight }) => {
 const CustomerGrowthOverview = ({ month }: { month?: string }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const formatMoney = useFormatMoney();
-  const { data: dashboardRes } = useFetchCustomerDashboardQuery({
+  const { data: dashboardRes, isLoading } = useFetchCustomerDashboardQuery({
     params: { id: business_id ?? "", month },
   });
 
   const overview = dashboardRes?.data?.overview;
   const charts = dashboardRes?.data?.charts;
 
-  // KPI cards still fall back to the designed sample set before the first
-  // payload lands, but the charts below do not — see ChartEmptyState.
+  // Loading is handled by skeletons below; this fallback covers the payload
+  // arriving without an overview block — placeholders rather than the sample
+  // figures, since a fabricated "₦95K" is indistinguishable from a real one
+  // on a metrics screen.
   const kpis = overview
     ? [
         { label: "Total Customers", value: asCount(overview.total_customers.value), delta: pctDelta(overview.total_customers) },
@@ -146,10 +149,7 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
         { label: "Avg Lifetime Value", value: formatMoney(Number(overview.avg_lifetime_value.value ?? 0)), delta: pctDelta(overview.avg_lifetime_value) },
         { label: "Loyalty Members", value: asCount(overview.loyalty_members.value), delta: pctDelta(overview.loyalty_members) },
       ]
-    : // Keep the designed card grid, but show placeholders rather than the
-      // sample figures — a fabricated "₦95K" is indistinguishable from a real
-      // one on a metrics screen.
-      OVERVIEW_KPIS.map((kpi) => ({ ...kpi, value: "—", delta: "" }));
+    : OVERVIEW_KPIS.map((kpi) => ({ ...kpi, value: "—", delta: "" }));
 
   // An empty series renders an empty state rather than a sample trend — a
   // fabricated line on an analytics chart reads as real data.
@@ -232,16 +232,20 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
     <div className="space-y-4">
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {kpis.map((kpi, idx) => (
-          <GrowthStatCard
-            key={kpi.label}
-            icon={KPI_ICONS[idx].icon}
-            iconTone={KPI_ICONS[idx].tone}
-            label={kpi.label}
-            value={kpi.value}
-            delta={kpi.delta}
-          />
-        ))}
+        {isLoading
+          ? OVERVIEW_KPIS.map((kpi) => (
+              <GrowthStatCardSkeleton key={kpi.label} />
+            ))
+          : kpis.map((kpi, idx) => (
+              <GrowthStatCard
+                key={kpi.label}
+                icon={KPI_ICONS[idx].icon}
+                iconTone={KPI_ICONS[idx].tone}
+                label={kpi.label}
+                value={kpi.value}
+                delta={kpi.delta}
+              />
+            ))}
       </div>
 
       {/* Charts */}
@@ -250,7 +254,9 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
           <h3 className="text-sm font-extrabold text-grey-1">Customer Retention</h3>
           <p className="text-xs text-grey-4 mb-3">Monthly retention rate %</p>
           <div className="h-[180px]">
-            {hasRetention ? (
+            {isLoading ? (
+              <ChartSkeleton />
+            ) : hasRetention ? (
               <Line data={retentionData} options={lineChartOptions} />
             ) : (
               <ChartEmptyState />
@@ -271,7 +277,9 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
             </div>
           </div>
           <div className="h-[180px]">
-            {hasNvr ? (
+            {isLoading ? (
+              <ChartSkeleton />
+            ) : hasNvr ? (
               <Bar data={newVsReturningData} options={lineChartOptions} />
             ) : (
               <ChartEmptyState />
@@ -288,7 +296,9 @@ const CustomerGrowthOverview = ({ month }: { month?: string }) => {
             </span>
           </p>
           <div className="h-[150px] mt-2">
-            {hasGrowth ? (
+            {isLoading ? (
+              <ChartSkeleton />
+            ) : hasGrowth ? (
               <Line data={totalGrowthData} options={lineChartOptions} />
             ) : (
               <ChartEmptyState height={150} />

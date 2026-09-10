@@ -131,7 +131,7 @@ const ExpenseGovernance = () => {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-6">
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col gap-6">
       {/* Header — same shape as the Tax and Bank settings screens. */}
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
@@ -145,7 +145,7 @@ const ExpenseGovernance = () => {
         </div>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="space-y-6">
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-grey-1">

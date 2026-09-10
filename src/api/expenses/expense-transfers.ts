@@ -50,6 +50,8 @@ export type FetchTransfersParams = {
   user?: string;
   search?: string;
   page?: number;
+  /** Rows per page. The envelope echoes it back as `limit`. */
+  limit?: number;
 };
 
 export const fetchExpenseTransfers = async ({

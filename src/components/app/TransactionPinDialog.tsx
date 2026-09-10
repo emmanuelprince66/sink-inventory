@@ -6,7 +6,10 @@ import {
   useUserPinStatusQuery,
 } from "@/api/user/pin";
 import { CustomModal } from "@/components/app/CustomModal";
-import PinField, { isValidPin, PIN_MIN_LENGTH } from "@/components/app/PinField";
+import CreatePinFields, {
+  PinOtpField,
+} from "@/components/app/CreatePinFields";
+import { isValidNewPin, PIN_CREATE_LENGTH } from "@/components/app/pin-rules";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ShieldCheck } from "lucide-react";
@@ -71,8 +74,12 @@ const TransactionPinDialog = ({
   const handleSubmit = () => {
     setError("");
 
-    if (!isValidPin(pin)) {
-      setError(`Your PIN is at least ${PIN_MIN_LENGTH} digits.`);
+    if (!isValidNewPin(pin)) {
+      setError(
+        hasPin
+          ? `Enter your ${PIN_CREATE_LENGTH}-digit PIN.`
+          : `Choose a ${PIN_CREATE_LENGTH}-digit PIN.`,
+      );
       return;
     }
 
@@ -116,24 +123,22 @@ const TransactionPinDialog = ({
               </p>
             </div>
 
-            <PinField
-              value={pin}
-              onChange={setPin}
-              autoFocus
-              disabled={busy}
-              label={hasPin ? "Transaction PIN" : "New PIN"}
-              placeholder={hasPin ? "Enter PIN" : "4 to 10 digits"}
-              onEnter={hasPin ? handleSubmit : undefined}
-            />
-
-            {!hasPin && (
-              <PinField
-                value={confirmPin}
-                onChange={setConfirmPin}
+            {hasPin ? (
+              <PinOtpField
+                label={`Enter ${PIN_CREATE_LENGTH}-digit transaction PIN`}
+                value={pin}
+                onChange={setPin}
                 disabled={busy}
-                label="Confirm PIN"
-                placeholder="Repeat it"
-                onEnter={handleSubmit}
+              />
+            ) : (
+              <CreatePinFields
+                pin={pin}
+                confirmPin={confirmPin}
+                onPinChange={setPin}
+                onConfirmChange={setConfirmPin}
+                disabled={busy}
+                pinLabel={`New ${PIN_CREATE_LENGTH}-digit PIN`}
+                confirmLabel={`Confirm ${PIN_CREATE_LENGTH}-digit PIN`}
               />
             )}
 
@@ -151,7 +156,7 @@ const TransactionPinDialog = ({
               <Button
                 className="flex-1"
                 onClick={handleSubmit}
-                disabled={busy || !pin}
+                disabled={busy || pin.length !== PIN_CREATE_LENGTH}
               >
                 {busy ? (
                   <Spinner className="mr-2" size="sm" />

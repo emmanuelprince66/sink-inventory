@@ -279,3 +279,109 @@ export const approvalBlockReason = (
 
   return "Waiting on someone with approval rights.";
 };
+
+/**
+ * `can_current_user_approve`, read defensively.
+ *
+ * The OpenAPI schema types this as a string rather than a boolean — the shape
+ * of an untyped SerializerMethodField. If it ever arrives as the string
+ * "false", a plain truthiness test would offer Approve and Reject to someone
+ * the backend will refuse with a 403, so the string forms are handled
+ * explicitly.
+ */
+export const canCurrentUserApprove = (value: unknown): boolean => {
+  if (typeof value === "string") {
+    return !["false", "0", "", "null", "none", "undefined"].includes(
+      value.toLowerCase().trim(),
+    );
+  }
+  return Boolean(value);
+};
+
+/**
+ * The PIN-shaped failures the initiate/approve endpoints answer with.
+ *
+ * All three arrive as a 400 with a human sentence in `message`, so they are
+ * told apart by matching that sentence. Worth doing rather than showing the
+ * raw text: "you have not set your PIN yet" is not an error the person can do
+ * anything about from a toast — it needs the create-PIN flow opened for them —
+ * while a wrong PIN just needs the box cleared and focused.
+ */
+export type TransferPinFault = "missing" | "not-set" | "invalid";
+
+export const classifyPinFault = (error: unknown): TransferPinFault | null => {
+  const raw =
+    (error as any)?.details?.message ??
+    (error as any)?.message ??
+    (error as any)?.error ??
+    "";
+  const text = String(raw).toLowerCase();
+
+  if (!text) return null;
+  // Order matters: "have not set your personal transaction PIN" also contains
+  // "transaction pin ... required"-ish wording in some phrasings, and the
+  // not-set case is the one with a different remedy.
+  if (text.includes("not set") || text.includes("have not set")) {
+    return "not-set";
+  }
+  if (text.includes("invalid transaction pin") || text.includes("incorrect")) {
+    return "invalid";
+  }
+  if (text.includes("pin is required") || text.includes("pin required")) {
+    return "missing";
+  }
+  return null;
+};
+
+/**
+ * Where a payout of this size will land, for the person about to submit it.
+ *
+ * Mirrors the backend's two-metric routing so the button can say what it will
+ * actually do. The backend decides for real — it also knows the day's running
+ * total and the business ceiling — so apart from OVER_LIMIT this sets
+ * expectations rather than gating the request.
+ *
+ * - Someone who cannot approve never self-releases, whatever the amount, and
+ *   is refused outright above their own cap (OVER_LIMIT).
+ * - An approver releases up to their own direct-payment limit.
+ * - Above that but within their approval limit, another approver signs it.
+ * - Above their approval limit, only the owner can.
+ *
+ * A null cap means no personal ceiling — the owner, or someone whose limit is
+ * unset and governed by the business ceiling instead.
+ */
+export type TransferRoute =
+  | "EXECUTES"
+  | "NEEDS_APPROVAL"
+  | "NEEDS_OWNER"
+  | "OVER_LIMIT";
+
+export const routeForAmount = ({
+  amount,
+  canApprove,
+  transferCap,
+  approvalCap,
+}: {
+  amount: number;
+  canApprove: boolean;
+  transferCap: number | null;
+  approvalCap: number | null;
+}): TransferRoute => {
+  // The same field means two different things either side of this line, which
+  // is why the tiers cannot share a branch. For someone who cannot approve,
+  // max_expense_transfer_amount is a hard initiation cap and the backend
+  // refuses anything above it with a 400; for an approver it is a direct-payment
+  // threshold, and going above it routes for a second signature instead.
+  if (!canApprove) {
+    if (transferCap !== null && amount > transferCap) return "OVER_LIMIT";
+    return "NEEDS_APPROVAL";
+  }
+
+  // No personal direct-payment ceiling: nothing here can say it will be
+  // stopped, so it is presented as going out.
+  if (transferCap === null) return "EXECUTES";
+  if (amount <= transferCap) return "EXECUTES";
+
+  if (approvalCap !== null && amount > approvalCap) return "NEEDS_OWNER";
+  return "NEEDS_APPROVAL";
+};

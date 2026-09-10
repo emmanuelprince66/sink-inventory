@@ -5,11 +5,15 @@ import { useInitiateExpenseTransferMutation } from "@/api/expenses/expense-trans
 import TransactionPinDialog from "@/components/app/TransactionPinDialog";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { useExpensePermissions } from "@/hooks/useExpensePermissions";
+import { queryKey } from "@/constants/query-key";
+import { useQueryClient } from "@/lib/react-query";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
-import { useUserRole } from "@/lib/store/user-store";
 import {
+  classifyPinFault,
   estimateCharges,
   type ExpenseSettings,
+  routeForAmount,
 } from "@/types/expense-governance";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowLeft, CheckCircle2, Clock, Info } from "lucide-react";
@@ -66,7 +70,9 @@ const ConfirmExpenseTransfer = ({
   onDone: () => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
-  const { user } = useUserRole();
+  const { canApprove, transferCap, approvalCap, isOwner } =
+    useExpensePermissions();
+  const queryClient = useQueryClient();
   const [askingPin, setAskingPin] = useState(false);
   const [outcome, setOutcome] = useState<"SENT" | "QUEUED" | null>(null);
 
@@ -78,22 +84,48 @@ const ConfirmExpenseTransfer = ({
   const amount = Number(details.amount) || 0;
   const charges = estimateCharges(amount);
 
-  // Whether this one can go out instantly, worked out before submitting so the
-  // buttons can say what they will actually do. The backend decides for real —
-  // it also knows the caller's permissions and the day's running total — so
-  // this is about setting expectations, never about gating the request.
+  // The business ceiling, which binds everyone including the owner. Distinct
+  // from the personal limits below: over this, the payout is refused outright
+  // rather than queued, because nobody can approve past it.
   const perTransactionCap = Number(settings?.max_amount_per_transaction ?? 0);
   const overCap = perTransactionCap > 0 && amount > perTransactionCap;
   const alwaysNeedsApproval = Boolean(settings?.require_approval_for_all);
 
   /**
-   * The owner is the top authority: their PIN releases a payout there and
-   * then, and the "approval required" switch governs staff, not them. It is
-   * still the limits that bind — an amount over the cap is refused for
-   * everyone, which is a different answer from "this needs a signature".
+   * Where this payout lands, on the backend's two-metric model.
+   *
+   * `transferCap` is the direct-payment limit — what this person releases on
+   * their own PIN. `approvalCap` is what they may sign off on someone else's
+   * request. Between the two, another approver has to sign; above the second,
+   * only the owner can.
+   *
+   * Read off permissions rather than off `role === "OWNER"`: the backend now
+   * sends owners the real flags with null ceilings, so the role check was a
+   * second source of truth that could only ever drift from it.
    */
-  const isOwner = user?.role === "OWNER";
-  const expectApproval = !isOwner && (alwaysNeedsApproval || overCap);
+  const route = routeForAmount({
+    amount,
+    canApprove,
+    transferCap,
+    approvalCap,
+  });
+
+  // The business-wide "approval for everything" switch overrides a personal
+  // limit that would otherwise let this straight out.
+  const expectApproval =
+    route !== "EXECUTES" || (alwaysNeedsApproval && !isOwner);
+  const needsOwner = route === "NEEDS_OWNER";
+
+  /**
+   * Someone who cannot approve, over their own initiation cap.
+   *
+   * For them `max_expense_transfer_amount` is a hard limit the backend refuses
+   * past — unlike an approver, for whom the same number only means "another
+   * signature required". Submitting would 400, so it is stopped here with the
+   * reason rather than after a PIN and a failed request.
+   */
+  const overPersonalCap = route === "OVER_LIMIT";
+  const blocked = overCap || overPersonalCap;
 
   const { mutate: initiate, isPending } = useInitiateExpenseTransferMutation({
     onSuccess: (response: any) => {
@@ -101,9 +133,41 @@ const ConfirmExpenseTransfer = ({
       setAskingPin(false);
       setOutcome(status === "SUCCESS" ? "SENT" : "QUEUED");
     },
+    /**
+     * The PIN-shaped refusals, handled rather than just toasted.
+     *
+     * "You have not set your PIN" is not something the person can act on from
+     * a toast, so the status query is dropped and the dialog left open — it
+     * reads `has_pin` and switches itself to creating one, then carries
+     * straight on into the payout. A wrong PIN keeps the dialog open too, so
+     * they can retype without rebuilding the whole transfer.
+     */
+    onError: (error: unknown) => {
+      const fault = classifyPinFault(error);
+
+      if (fault === "not-set") {
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.userPin.status],
+        });
+        setAskingPin(true);
+        return;
+      }
+
+      if (fault === "invalid" || fault === "missing") {
+        setAskingPin(true);
+        return;
+      }
+
+      setAskingPin(false);
+    },
   });
 
-  const submit = (pin?: string) => {
+  /**
+   * A PIN is mandatory on every payout now, whether it goes out immediately or
+   * queues for approval — the backend refuses the request without one. There
+   * is deliberately no path here that submits without it.
+   */
+  const submit = (pin: string) => {
     if (!business_id) return;
 
     initiate({
@@ -115,9 +179,9 @@ const ConfirmExpenseTransfer = ({
         amount: amount.toFixed(2),
         account_number: details.accountNumber,
         bank_code: details.bankCode,
+        pin,
         ...(details.categoryId ? { category_id: details.categoryId } : {}),
         ...(details.narration ? { narration: details.narration } : {}),
-        ...(pin ? { pin } : {}),
       },
     });
   };
@@ -205,21 +269,45 @@ const ConfirmExpenseTransfer = ({
           The bank charge is an estimate and is confirmed when the payout runs.
         </p>
 
-        {expectApproval && (
+        {/* Says which of the three routes this amount takes, and why, before
+            the PIN is asked for rather than after the outcome screen. */}
+        {expectApproval && !blocked && (
           <div className="mt-4 flex items-start gap-2 rounded-xl border border-warning-1/30 bg-warning-2 p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-warning-1" />
             <p className="text-xs text-grey-2">
-              {alwaysNeedsApproval
-                ? "This business requires approval for staff payouts, so this one will wait for an approver."
-                : `This is above the ${formatToNaira(perTransactionCap)} single-payout limit, so it will need approval.`}
+              {needsOwner
+                ? `This is above your ${approvalCap !== null ? `${formatToNaira(approvalCap)} approval limit` : "approval limit"}, so only the business owner can release it.`
+                : alwaysNeedsApproval && route === "EXECUTES"
+                  ? "This business requires approval for staff payouts, so this one will wait for an approver."
+                  : !canApprove
+                    ? "Your payouts go to an approver before any money moves."
+                    : transferCap !== null
+                      ? `This is above the ${formatToNaira(transferCap)} you can pay out on your own, so another approver has to sign it off.`
+                      : "This one will wait for an approver."}
             </p>
           </div>
         )}
 
-        {/* The limits bind the owner too, but the answer is refusal rather
-            than a queue — no one can approve past the ceiling, so offering
-            "submit for approval" here would be sending it nowhere. */}
-        {isOwner && overCap && (
+        {/* Their own initiation cap, which only bites for someone who cannot
+            approve. Worded as "ask the owner" rather than the business-ceiling
+            note below, because this limit is on their staff permissions and
+            Settings › Expense Controls is not theirs to open. */}
+        {overPersonalCap && !overCap && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-error-1/30 bg-error-2 p-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-error-1" />
+            <p className="text-xs text-grey-2">
+              You can request up to{" "}
+              {transferCap !== null ? formatToNaira(transferCap) : "your limit"}{" "}
+              at a time, so this one will be refused. Ask the business owner to
+              raise your limit, or split the payout.
+            </p>
+          </div>
+        )}
+
+        {/* The business ceiling binds everyone, owner included, and the answer
+            is refusal rather than a queue — no one can approve past it, so
+            offering "submit for approval" here would send it nowhere. */}
+        {overCap && (
           <div className="mt-4 flex items-start gap-2 rounded-xl border border-error-1/30 bg-error-2 p-3">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-error-1" />
             <p className="text-xs text-grey-2">
@@ -230,38 +318,25 @@ const ConfirmExpenseTransfer = ({
           </div>
         )}
 
+        {/* One button, and it always goes through the PIN dialog.
+            "Submit for approval" used to post straight through with no PIN,
+            which the backend now refuses outright — a PIN is mandatory on
+            every payout whether it executes or queues. The label carries the
+            difference instead. */}
         <div className="mt-6 flex flex-col gap-3">
-          {!expectApproval && (
-            <Button
-              className="h-11 rounded-xl"
-              disabled={isPending}
-              onClick={() => setAskingPin(true)}
-            >
-              {isPending ? (
-                <Spinner className="mr-2" size="sm" />
-              ) : (
-                "Send now"
-              )}
-            </Button>
-          )}
-
-          {/* Not offered to the owner: there is nobody above them to approve
-              it, so the button would queue a payout that only they could
-              release — an extra step to arrive back where they started. */}
-          {!isOwner && (
-            <Button
-              variant={expectApproval ? "default" : "outline"}
-              className="h-11 rounded-xl"
-              disabled={isPending}
-              onClick={() => submit()}
-            >
-              {isPending && expectApproval ? (
-                <Spinner className="mr-2" size="sm" />
-              ) : (
-                "Submit for approval"
-              )}
-            </Button>
-          )}
+          <Button
+            className="h-11 rounded-xl"
+            disabled={isPending || blocked}
+            onClick={() => setAskingPin(true)}
+          >
+            {isPending ? (
+              <Spinner className="mr-2" size="sm" />
+            ) : expectApproval ? (
+              "Submit for approval"
+            ) : (
+              "Send now"
+            )}
+          </Button>
         </div>
       </div>
 
@@ -269,9 +344,13 @@ const ConfirmExpenseTransfer = ({
         open={askingPin}
         onClose={() => setAskingPin(false)}
         loading={isPending}
-        title="Authorise this payout"
-        description={`${formatToNaira(amount + charges)} will leave the expense account.`}
-        actionLabel="Send now"
+        title={expectApproval ? "Confirm this request" : "Authorise this payout"}
+        description={
+          expectApproval
+            ? `${formatToNaira(amount)} to ${details.accountName} goes to an approver. Nothing leaves the account yet.`
+            : `${formatToNaira(amount + charges)} will leave the expense account.`
+        }
+        actionLabel={expectApproval ? "Submit for approval" : "Send now"}
         onSubmit={(pin) => submit(pin)}
       />
     </div>

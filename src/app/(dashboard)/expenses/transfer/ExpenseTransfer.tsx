@@ -11,6 +11,7 @@ import {
   expenseAccountLabel,
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
+import { routeForAmount } from "@/types/expense-governance";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { cn } from "@/lib/utils";
@@ -35,7 +36,8 @@ import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
  * choice at all.
  */
 const ExpenseTransfer = () => {
-  const { canTransfer, transferCap } = useExpensePermissions();
+  const { canApprove, canTransfer, transferCap, approvalCap } =
+    useExpensePermissions();
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
 
   const [recipientBank, setRecipientBank] = useState<SelectValue>(null);
@@ -153,12 +155,30 @@ const ExpenseTransfer = () => {
       return;
     }
 
-    // The backend refuses this outright rather than escalating it, so there is
-    // nothing to gain by letting the request go and reporting the 400 after
-    // the beneficiary has been resolved and confirmed.
-    if (transferCap !== null && parseFloat(amount) > transferCap) {
+    /**
+     * Blocked only for someone who cannot approve.
+     *
+     * `max_expense_transfer_amount` means two different things by tier. For
+     * them it is a hard initiation cap the backend refuses past, so stopping
+     * here saves a round trip that can only 400. For an approver the same
+     * number is their *direct payment* limit: above it the payout routes to a
+     * second signature, and blocking would stop a manager ever raising the
+     * larger request the model expects them to raise.
+     *
+     * The confirm step names the route before the PIN is asked for.
+     */
+    if (
+      routeForAmount({
+        amount: parseFloat(amount),
+        canApprove,
+        transferCap,
+        approvalCap,
+      }) === "OVER_LIMIT"
+    ) {
       setMessage(
-        `That is above your ${formatToNaira(transferCap)} limit for a single payout. Ask the business owner to raise it, or send less.`,
+        `You can request up to ${formatToNaira(
+          transferCap as number,
+        )} at a time. Ask the business owner to raise your limit, or split the payout.`,
       );
       return;
     }
@@ -404,12 +424,14 @@ const ExpenseTransfer = () => {
                     step="0.01"
                     required
                   />
-                  {/* Stated up front rather than only on rejection — a limit
-                      discovered after filling the whole form reads as the
-                      form being broken. */}
+                  {/* Stated up front rather than only at the confirm step, and
+                      worded by tier: the same limit routes an approver's payout
+                      to a second signature, but refuses a non-approver's. */}
                   {transferCap !== null && (
                     <p className="text-xs text-grey-4">
-                      Your limit is {formatToNaira(transferCap)} per payout.
+                      {canApprove
+                        ? `You can pay out up to ${formatToNaira(transferCap)} on your own. Above that goes to an approver.`
+                        : `You can request up to ${formatToNaira(transferCap)} at a time. Every request goes to an approver.`}
                     </p>
                   )}
                 </div>

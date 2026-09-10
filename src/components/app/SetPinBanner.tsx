@@ -30,14 +30,19 @@ const SetPinBanner = ({ relevant }: { relevant: boolean }) => {
   if (hasPinFrom(data) || !pinRequiredFrom(data)) return null;
 
   return (
-    <div className="flex w-full flex-col gap-3 rounded-2xl border border-warning-1/30 bg-warning-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+    // Solid amber border and a filled icon chip. The /30 border and bare icon
+    // it replaced left the banner reading as a washed-out block rather than
+    // something asking to be acted on.
+    <div className="flex w-full flex-col gap-3 rounded-2xl border border-warning-1 bg-warning-2 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning-1" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning-1 text-white">
+          <ShieldAlert className="h-[18px] w-[18px]" />
+        </span>
         <div className="min-w-0">
           <p className="text-sm font-bold text-grey-1">
             Set your transaction PIN
           </p>
-          <p className="mt-0.5 text-xs text-grey-3">
+          <p className="mt-0.5 text-xs text-grey-2">
             You&apos;ll need one to send or approve a payout. Setting it now
             saves doing it with someone waiting at the counter.
           </p>
@@ -52,7 +57,7 @@ const SetPinBanner = ({ relevant }: { relevant: boolean }) => {
           the Password form inside the same tab. */}
       <Link
         href="/settings?tab=security&section=transaction-pin"
-        className="shrink-0 rounded-xl border border-warning-1/40 bg-white px-4 py-2.5 text-center text-xs font-bold text-grey-1 transition-colors hover:bg-grey-6"
+        className="shrink-0 rounded-xl bg-warning-1 px-4 py-2.5 text-center text-xs font-bold text-white transition-opacity hover:opacity-90"
       >
         Set PIN
       </Link>

@@ -30,6 +30,13 @@ const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
   phone: z.string().min(1, "Phone number is required"),
   email: z.string().optional(),
+  // Both optional and nullable on the backend. Empty string is the "not
+  // answered" value in the form and is dropped from the payload rather than
+  // sent as "", which the serializer rejects for a choice field.
+  gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional().or(z.literal("")),
+  // YYYY-MM-DD. Feeds the automatic "Birthdays This Month" segment, so it is
+  // worth asking for even though nothing here requires it.
+  date_of_birth: z.string().optional(),
   // State holds the NG state's ISO code (matches the order delivery address
   // flow) — translated to its full name in the submit payload below.
   state: z.string().optional(),
@@ -185,6 +192,8 @@ export const useCustomerHook = ({
       name: "",
       phone: "",
       email: "",
+      gender: "",
+      date_of_birth: "",
       state: "",
       city: "",
       address: "",
@@ -264,6 +273,9 @@ export const useCustomerHook = ({
       name: values.name,
       phone: values.phone,
       email: values.email,
+      // Omitted entirely when unanswered — a choice field will not take "".
+      ...(values.gender ? { gender: values.gender } : {}),
+      ...(values.date_of_birth ? { date_of_birth: values.date_of_birth } : {}),
       ...(values.address?.trim() && {
         address: {
           address: values.address.trim(),

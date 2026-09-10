@@ -27,6 +27,7 @@ import {
 } from "@/hooks/useExpenseAccounts";
 import NoAccessTag from "@/components/app/NoAccessTag";
 import SetPinBanner from "@/components/app/SetPinBanner";
+import PendingApprovalsBanner from "./PendingApprovalsBanner";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useExpensesHook } from "@/hooks/useExpensesHook";
 import { useReportGeneration } from "@/hooks/useReportGeneration";
@@ -443,6 +444,13 @@ const Expenses = () => {
       {/* ─── Expense Account Management tabs ─── */}
       {/* Only for people who will actually be asked for a PIN. */}
       <SetPinBanner relevant={canTransfer || canApprove} />
+
+      {/* The approvals queue announcing itself, instead of hiding behind the
+          ⋯ menu. Renders nothing when the queue is empty. */}
+      <PendingApprovalsBanner
+        canApprove={canApprove}
+        relevant={canApprove || canTransfer}
+      />
 
       <Tabs
         value={activeTab}

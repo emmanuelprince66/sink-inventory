@@ -2,6 +2,7 @@
 import { getUserPermissions, hasPermission } from "@/utils/permissions";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { resetBusinessScopedStores } from "./reset-business-scope";
 import { Permission, Permissions, User, UserRole } from "./types";
 
 // Cookie helper functions
@@ -68,6 +69,22 @@ export const useUserStore = create<UserStore>()(
 
       // Actions
       login: (userData) => {
+        /**
+         * A different person is signing in on this browser, so nothing the
+         * last one selected may survive into their session.
+         *
+         * Checked here rather than relying on logout alone because a session
+         * can end without one — an expired token, a closed tab, a cleared
+         * cookie — and in every one of those cases the business-scoped
+         * localStorage entries are still sitting there when the next person
+         * signs in. Comparing ids means signing back into the same account
+         * keeps your selection, which is the common case.
+         */
+        const previousUserId = get().user?.id;
+        if (previousUserId && previousUserId !== userData.id) {
+          resetBusinessScopedStores({ includeCart: true });
+        }
+
         // Set cookies
         cookieHelpers.set("accessToken", userData.tokens.access);
         cookieHelpers.set("userRole", userData.role);
@@ -88,6 +105,10 @@ export const useUserStore = create<UserStore>()(
         cookieHelpers.remove("accessToken");
         cookieHelpers.remove("refreshToken");
         cookieHelpers.remove("userRole");
+
+        // The selected business and everything hanging off it belong to the
+        // session that just ended, not to the browser.
+        resetBusinessScopedStores();
 
         set({
           user: null,

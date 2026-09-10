@@ -12,6 +12,10 @@ export interface CustomerItem {
   name: string;
   phone: string;
   email: string;
+  /** Optional. "MALE" | "FEMALE" | "OTHER", blank when not supplied. */
+  gender?: string;
+  /** Optional, YYYY-MM-DD. Feeds the birthday segment. */
+  date_of_birth?: string;
   [key: string]: any;
 }
 
@@ -190,10 +194,14 @@ export const useUploadCustomerCsvHook = () => {
 
       setValidationErrors(errors);
 
+      // gender/date_of_birth are optional columns: a file without them
+      // uploads exactly as before, and one with them carries them through.
       const customers = parsedData.map((item: any) => ({
         name: item.name || "",
         phone: item.phone || "",
         email: item.email || "",
+        ...(item.gender ? { gender: String(item.gender).toUpperCase() } : {}),
+        ...(item.date_of_birth ? { date_of_birth: item.date_of_birth } : {}),
       }));
 
       setPreviewData(customers);
@@ -258,16 +266,22 @@ export const useUploadCustomerCsvHook = () => {
         name: "John Doe",
         phone: "+2345554567890",
         email: "john@example.com",
+        gender: "MALE",
+        date_of_birth: "1990-04-12",
       },
       {
         name: "Jane Smith",
         phone: "+234557654321",
         email: "jane@example.com",
+        gender: "FEMALE",
+        date_of_birth: "1988-11-03",
       },
       {
         name: "Bob Johnson",
         phone: "+23444334455",
         email: "bob@example.com",
+        gender: "",
+        date_of_birth: "",
       },
     ];
 

@@ -9,6 +9,7 @@ const FORWARDED = [
   "user",
   "search",
   "page",
+  "limit",
 ] as const;
 
 /** A business's expense transfers, newest first, paginated. */

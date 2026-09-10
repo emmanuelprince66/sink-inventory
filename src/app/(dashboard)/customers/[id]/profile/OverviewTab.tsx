@@ -40,7 +40,7 @@ const OverviewTab = ({ profile }: { profile: CustomerProfileData }) => {
             <Cell label="Email" value={identity?.email} />
             <Cell
               label="Birthday"
-              value={identity?.birthday}
+              value={identity?.date_of_birth}
               tone="text-violet-600"
             />
             <Cell label="Customer Since" value={identity?.customer_since} />

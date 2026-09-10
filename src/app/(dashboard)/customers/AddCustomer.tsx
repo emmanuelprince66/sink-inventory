@@ -206,6 +206,61 @@ const AddCustomer = ({
             )}
           />
 
+          {/* Gender and date of birth, side by side — both optional, and
+              neither worth a full row of its own. The birthday is what feeds
+              the automatic "Birthdays This Month" segment, so the hint says
+              what it is for rather than leaving it looking like data
+              collection for its own sake. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender</FormLabel>
+                  <Select
+                    value={field.value || ""}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="MALE">Male</SelectItem>
+                      <SelectItem value="FEMALE">Female</SelectItem>
+                      <SelectItem value="OTHER">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="date_of_birth"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date of birth</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      // Nobody being added to a customer list was born
+                      // tomorrow, and a stray future date quietly breaks the
+                      // birthday segment for a whole month.
+                      max={new Date().toISOString().slice(0, 10)}
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
           {/* Address search sits above State/City on purpose: picking a
               suggestion fills both of them and pins the coordinates saved on
               the customer, so asking for them first makes the user do work

@@ -5,49 +5,59 @@ import {
   useFetchExpenseTransfersQuery,
   useRejectExpenseTransferMutation,
 } from "@/api/expenses/expense-transfers";
+import { CustomTable } from "@/components/app/CutomTable";
 import TransactionPinDialog from "@/components/app/TransactionPinDialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Spinner } from "@/components/ui/spinner";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import type { ExpenseTransfer } from "@/types/expense-governance";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowLeft, Inbox, Lock, Search, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Lock, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import RejectTransferDialog from "./RejectTransferDialog";
-import TransferCard from "./TransferCard";
+import { buildTransferColumns } from "./TransferColumns";
+import TransferDetailsModal from "./TransferDetailsModal";
 
 /**
  * The approval queue for expense payouts.
  *
- * Opens on what needs a decision rather than on everything: an approver comes
- * here because something is waiting, and a list led by last month's completed
- * payouts buries it. The other states are a tab away.
+ * Opens on everything rather than on the pending slice. Landing on a filtered
+ * view made an empty queue ambiguous — nothing waiting and nothing at all look
+ * identical — and someone who came to check where their own request got to had
+ * to find the filter before they could see it. "Needs approval" is one click
+ * away for an approver working through the queue.
+ *
+ * Rows are a table rather than cards. The queue is a list of like-for-like
+ * requests compared on the same handful of fields — amount against amount,
+ * requester against requester — and a grid of cards makes that comparison
+ * happen by eye across two axes instead of down one column. Everything a card
+ * used to carry inline now lives in the details modal, one click away.
  */
 
 const FILTERS = [
+  { label: "All", value: "ALL" },
   { label: "Needs approval", value: "PENDING_APPROVAL" },
   { label: "Awaiting owner", value: "PENDING_OWNER_APPROVAL" },
   { label: "Paid", value: "SUCCESS" },
   { label: "Rejected", value: "REJECTED" },
   { label: "Failed", value: "FAILED" },
-  { label: "All", value: "ALL" },
 ] as const;
 
 const ExpenseApprovals = () => {
   const { canApprove, canTransfer, approvalCap } = useExpensePermissions();
   const business_id = useBusinessStore((state) => state.business_id);
 
-  const [status, setStatus] = useState<string>("PENDING_APPROVAL");
+  const [status, setStatus] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const debouncedSearch = useDebounce(search, 500);
 
+  const [viewing, setViewing] = useState<ExpenseTransfer | null>(null);
   const [approving, setApproving] = useState<ExpenseTransfer | null>(null);
   const [rejecting, setRejecting] = useState<ExpenseTransfer | null>(null);
 
@@ -57,6 +67,7 @@ const ExpenseApprovals = () => {
       status,
       search: debouncedSearch,
       page,
+      limit: pageSize,
     },
   });
 
@@ -75,6 +86,24 @@ const ExpenseApprovals = () => {
   const payload = data?.data;
   const transfers: ExpenseTransfer[] = payload?.results ?? [];
   const totalPages = Number(payload?.pages ?? 1);
+
+  // Deciding happens from the details modal, so a decision starts by closing
+  // it — the PIN and reject dialogs would otherwise stack on top of an open
+  // modal and trap focus behind it.
+  const startApprove = (transfer: ExpenseTransfer) => {
+    setViewing(null);
+    setApproving(transfer);
+  };
+
+  const startReject = (transfer: ExpenseTransfer) => {
+    setViewing(null);
+    setRejecting(transfer);
+  };
+
+  const columns = useMemo(
+    () => buildTransferColumns({ onView: setViewing }),
+    [],
+  );
 
   const changeFilter = (value: string) => {
     setStatus(value);
@@ -108,11 +137,11 @@ const ExpenseApprovals = () => {
   }
 
   return (
-    <div className="w-full space-y-5">
+    <div className="w-full min-w-0 space-y-5">
       <div className="flex items-center gap-3">
         <Link
           href="/expenses"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-grey-5 text-grey-3 hover:text-grey-1"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-grey-5 text-grey-3 hover:text-grey-1"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
@@ -142,99 +171,73 @@ const ExpenseApprovals = () => {
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => changeFilter(filter.value)}
-            className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
-              status === filter.value
-                ? "border-primary-green-300 bg-primary-green-300 text-white"
-                : "border-grey-5 text-grey-3 hover:text-grey-1",
-            )}
-          >
-            {filter.label}
-          </button>
-        ))}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          {FILTERS.map((filter) => (
+            <button
+              key={filter.value}
+              onClick={() => changeFilter(filter.value)}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-bold transition-colors",
+                status === filter.value
+                  ? "border-primary-green-300 bg-primary-green-300 text-white"
+                  : "border-grey-5 text-grey-3 hover:text-grey-1",
+              )}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full lg:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-grey-4" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Reference, beneficiary or narration"
+            className="h-11 rounded-xl pl-9"
+          />
+        </div>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-grey-4" />
-        <Input
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
+      {/* Dimmed while a background refetch is in flight, so a stale list does
+          not look interactive mid-update. */}
+      <div className={cn("min-w-0", isFetching && !isLoading && "opacity-60")}>
+        <CustomTable
+          loading={isLoading}
+          columns={columns}
+          data={transfers}
+          showSerialNumber={false}
+          onRowClick={(row) => setViewing(row.original)}
+          noDataText={
+            status === "PENDING_APPROVAL"
+              ? "No payouts are waiting on a decision."
+              : "No transfers match this filter."
+          }
+          pagination={{
+            currentPage: page,
+            totalPages,
+            pageSize,
+            onPageChange: setPage,
+            onPageSizeChange: (size) => {
+              setPageSize(size);
+              // Page 4 of the old size is usually past the end of the new one.
+              setPage(1);
+            },
           }}
-          placeholder="Reference, beneficiary, account or narration"
-          className="h-11 rounded-xl pl-9"
         />
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-16">
-          <Spinner />
-        </div>
-      ) : transfers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-grey-5 py-16 text-center">
-          <Inbox className="h-8 w-8 text-grey-4" />
-          <p className="mt-3 text-sm font-bold text-grey-2">
-            Nothing here
-          </p>
-          <p className="mt-1 max-w-xs text-xs text-grey-4">
-            {status === "PENDING_APPROVAL"
-              ? "No payouts are waiting on a decision."
-              : "No transfers match this filter."}
-          </p>
-        </div>
-      ) : (
-        <div
-          className={cn(
-            "grid gap-3 lg:grid-cols-2",
-            // Dimmed while a background refetch is in flight, so a stale list
-            // does not look interactive mid-update.
-            isFetching && "opacity-60",
-          )}
-        >
-          {transfers.map((transfer) => (
-            <TransferCard
-              key={transfer.id}
-              transfer={transfer}
-              onApprove={setApproving}
-              onReject={setRejecting}
-              deciding={
-                (approvePending && approving?.id === transfer.id) ||
-                (rejectPending && rejecting?.id === transfer.id)
-              }
-            />
-          ))}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            Previous
-          </Button>
-          <span className="text-xs text-grey-3">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
-        </div>
-      )}
+      <TransferDetailsModal
+        transfer={viewing}
+        onClose={() => setViewing(null)}
+        onApprove={startApprove}
+        onReject={startReject}
+        deciding={approvePending || rejectPending}
+      />
 
       <TransactionPinDialog
         open={Boolean(approving)}

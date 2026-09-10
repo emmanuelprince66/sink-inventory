@@ -10,7 +10,17 @@ export interface CustomerIdentity {
   gender: string | null;
   phone: string | null;
   email: string | null;
-  birthday: string | null;
+  /** Canonical, and the name the write endpoints use. */
+  date_of_birth: string | null;
+  /**
+   * The old spelling of the field above.
+   *
+   * Still returned with an identical value for backwards compatibility, so it
+   * is typed but not read — `date_of_birth` is the one to use.
+   *
+   * @deprecated
+   */
+  birthday?: string | null;
   /** Pre-formatted, e.g. "Aug 2026". */
   customer_since: string | null;
   state: string | null;

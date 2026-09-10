@@ -106,15 +106,32 @@ export const StatusIcon = CheckCircle2;
  * differently instead of quietly presenting the person who turned it down as
  * the one who approved it.
  */
+/**
+ * A person's name from the two shapes these endpoints use.
+ *
+ * `flat` is the `_name` field; `ref` is the id-bearing field beside it. The
+ * distinction matters since the backend aligned category-detail with the
+ * transfer list: `approved_by` and `initiated_by` are now UUID strings, where
+ * category-detail used to send `{ id, name }` objects. So a bare string in
+ * `ref` is an id and must never be rendered — `getRefLabel` would happily
+ * print it, putting a raw UUID where a name belongs. Only the object form's
+ * `.name` is still read, for payloads served before the change.
+ */
+export const getPersonName = (flat: unknown, ref?: RelatedRef): string => {
+  if (typeof flat === "string" && flat.trim()) return flat;
+  if (ref && typeof ref === "object" && ref.name) return ref.name;
+  return "";
+};
+
 export const getDecidedBy = (
   row: any,
 ): { name: string; decision: "approved" | "rejected" | "pending" } => {
-  if (row?.rejected_by_name) {
-    return { name: String(row.rejected_by_name), decision: "rejected" };
-  }
-  if (row?.approved_by_name) {
-    return { name: String(row.approved_by_name), decision: "approved" };
-  }
+  const rejected = getPersonName(row?.rejected_by_name, row?.rejected_by);
+  if (rejected) return { name: rejected, decision: "rejected" };
+
+  const approved = getPersonName(row?.approved_by_name, row?.approved_by);
+  if (approved) return { name: approved, decision: "approved" };
+
   return { name: "—", decision: "pending" };
 };
 

@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { ArrowDown, ArrowUp } from "lucide-react";
 
@@ -52,3 +53,23 @@ export const GrowthStatCard = ({
     </div>
   );
 };
+
+/**
+ * The loading shape of the tile above, mirroring it line for line: icon
+ * circle, label, value, delta.
+ *
+ * A generic two-bar stat skeleton would reflow the moment real cards arrive,
+ * and the alternative this replaced was worse — real tiles rendering an em
+ * dash for every figure, which reads as "we looked, there is nothing" rather
+ * than "still loading".
+ */
+export const GrowthStatCardSkeleton = () => (
+  <div className="bg-white rounded-2xl border border-grey-5 p-4">
+    <div className="flex items-center gap-2 mb-3">
+      <Skeleton className="w-8 h-8 rounded-full bg-grey-5 shrink-0" />
+      <Skeleton className="h-3 w-20 bg-grey-5" />
+    </div>
+    <Skeleton className="h-7 w-24 bg-grey-5" />
+    <Skeleton className="h-3 w-28 bg-grey-5 mt-2" />
+  </div>
+);

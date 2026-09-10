@@ -137,7 +137,13 @@ const CustomersUpload = () => {
             </p>
             <div className="bg-grey-6 rounded-lg p-3 text-xs font-mono overflow-x-auto text-grey-2">
               name, phone, email
+              <span className="text-grey-4">, gender, date_of_birth</span>
             </div>
+            <p className="mt-2 text-xs text-grey-4">
+              The greyed columns are optional. <code>gender</code> takes MALE,
+              FEMALE or OTHER; <code>date_of_birth</code> takes YYYY-MM-DD and
+              is what puts a customer in the birthday segment.
+            </p>
             <div className="flex gap-4 justify-center mt-4">
               <button
                 onClick={downloadExampleCsv}

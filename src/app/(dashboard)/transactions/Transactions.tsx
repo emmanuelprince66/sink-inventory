@@ -194,18 +194,21 @@ const Transactions = () => {
           <Skeleton className="h-36 w-full rounded-2xl bg-grey-5" />
         ) : (
           <div className="w-full p-4 sm:p-5 bg-primary-green-100 text-white rounded-2xl">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white/10 rounded-full">
+            <div className="flex min-w-0 flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* min-w-0 on both the row and this column: without it flex's
+                  default min-width:auto pins the column to its text width and
+                  the account pill beside it is pushed outside the card. */}
+              <div className="flex min-w-0 items-center gap-3 sm:flex-1">
+                <div className="p-2 bg-white/10 rounded-full shrink-0">
                   <Landmark className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-bold">
                     {selectedBank && primaryBank && selectedBank.id !== primaryBank.id
                       ? "Sub Account"
                       : "Main Account"}
                   </p>
-                  <p className="text-xs text-white/70 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5 truncate">
                     {`${
                       TrxData?.data?.results?.wallet_details?.bank_name || "Nil"
                     }`}{" "}
@@ -215,7 +218,7 @@ const Transactions = () => {
                       "Nil"
                     }`}
                   </p>
-                  <p className="text-xs text-white/70 mt-0.5">
+                  <p className="text-xs text-white/70 mt-0.5 truncate">
                     Account Name:{" "}
                     <span className="font-medium text-white">{`${
                       TrxData?.data?.results?.wallet_details?.account_name ||
@@ -236,7 +239,7 @@ const Transactions = () => {
                 </div>
               </div>
 
-              <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:items-end">
+              <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:w-auto sm:shrink-0 sm:items-end">
                 <BankSelector />
 
                 {user?.role === "OWNER" && (
