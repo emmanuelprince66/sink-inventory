@@ -2,6 +2,7 @@
 
 import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useSelectedBankStore } from "@/lib/store/useSelectedBankStore";
+import { useUserRole } from "@/lib/store/user-store";
 import { useEffect, useMemo } from "react";
 
 export interface BusinessBankAccount {
@@ -23,6 +24,7 @@ export interface BusinessBankAccount {
  * original one, not a sub-account.
  */
 export const useBusinessBanks = () => {
+  const { isOwner } = useUserRole();
   const businessData = useBusinessDataStore((state: any) => state.businessData);
   const selectedBankId = useSelectedBankStore((state) => state.selectedBankId);
   const setSelectedBankId = useSelectedBankStore(
@@ -39,20 +41,24 @@ export const useBusinessBanks = () => {
     [banks],
   );
 
-  const selectedBank = useMemo(
-    () => banks.find((bank) => bank.id === selectedBankId) ?? primaryBank,
-    [banks, selectedBankId, primaryBank],
-  );
+  // Only the owner picks an account. Everyone else reads the primary one,
+  // resolved here rather than only hiding the switcher: the stored id decides
+  // which wallet every call reads, so a non-owner left holding a sub-account
+  // id would sit on it with no control to get back.
+  const selectedBank = useMemo(() => {
+    if (!isOwner) return primaryBank;
+    return banks.find((bank) => bank.id === selectedBankId) ?? primaryBank;
+  }, [banks, selectedBankId, primaryBank, isOwner]);
 
   // Settle the stored id onto a bank that actually exists. Covers the first
   // visit, and the case where a persisted id belongs to a bank that has since
   // been removed or to a business the user has switched away from — without
   // this the wallet would be queried with an id the business does not own.
   useEffect(() => {
-    if (!banks.length) return;
+    if (!isOwner || !banks.length) return;
     const stillValid = banks.some((bank) => bank.id === selectedBankId);
     if (!stillValid && primaryBank?.id) setSelectedBankId(primaryBank.id);
-  }, [banks, selectedBankId, primaryBank, setSelectedBankId]);
+  }, [banks, selectedBankId, primaryBank, setSelectedBankId, isOwner]);
 
   return {
     banks,
@@ -63,6 +69,8 @@ export const useBusinessBanks = () => {
     setSelectedBankId,
     hasBanks: banks.length > 0,
     hasMultipleBanks: banks.length > 1,
+    /** Whether to offer the account switcher at all — owner-only. */
+    canSwitchBanks: isOwner && banks.length > 1,
     isPrimary: (bank: BusinessBankAccount) => bank.id === primaryBank?.id,
   };
 };

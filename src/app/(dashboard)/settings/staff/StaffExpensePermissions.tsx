@@ -17,6 +17,7 @@ import {
 } from "@/types/expense-governance";
 import { getCurrencySymbol } from "@/utils/formatMoney";
 import { ArrowUpRight } from "lucide-react";
+import { useUserRole } from "@/lib/store/user-store";
 import { useEffect, useState } from "react";
 
 /**
@@ -99,6 +100,7 @@ const StaffExpensePermissions = ({
 }: {
   attendantId: string;
 }) => {
+  const { isOwner } = useUserRole();
   const symbol = getCurrencySymbol();
 
   const { data, isLoading } = useFetchAttendantPermissionsQuery({
@@ -174,6 +176,12 @@ const StaffExpensePermissions = ({
 
     save({ id: attendantId, body });
   };
+
+  // Spending ceilings and approval rights are the owner's to set. EditStaff
+  // gates this section too, which is what stops the fetch above from firing;
+  // this second check keeps the rule with the component if it is ever
+  // rendered somewhere new.
+  if (!isOwner) return null;
 
   if (isLoading) {
     return (

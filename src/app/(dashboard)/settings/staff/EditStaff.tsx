@@ -4,6 +4,7 @@ import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import StaffExpensePermissions from "./StaffExpensePermissions";
+import { useUserRole } from "@/lib/store/user-store";
 import {
   Form,
   FormControl,
@@ -30,6 +31,7 @@ export const EditStaff = ({
   closeModal: () => void;
   attendantId: string;
 }) => {
+  const { isOwner } = useUserRole();
   const {
     editform,
     onSubmitEditForm,
@@ -1054,10 +1056,17 @@ export const EditStaff = ({
         {/* Expense payout rights, kept as their own section with their own
             save. They go to a different endpoint from the rest of this form,
             and folding them into the one button would mean a failed permission
-            write silently discarding a successful profile edit. */}
-        <div className="mt-8 border-t border-grey-5 pt-6">
-          <StaffExpensePermissions attendantId={attendantId} />
-        </div>
+            write silently discarding a successful profile edit.
+
+            Owner-only. Gated here rather than only inside the section so it
+            never mounts for anyone else: the permissions endpoint behind it is
+            the owner's, and an admin-attendant editing staff would otherwise
+            fire a request they are not entitled to make. */}
+        {isOwner && (
+          <div className="mt-8 border-t border-grey-5 pt-6">
+            <StaffExpensePermissions attendantId={attendantId} />
+          </div>
+        )}
       </div>
     </div>
   );

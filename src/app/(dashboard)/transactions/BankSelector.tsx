@@ -18,19 +18,22 @@ const maskAccount = (accountNumber?: string) =>
 /**
  * Picks which wallet the screen is reading.
  *
- * Hidden when there is only one account: a select with a single option is
- * furniture, and the account it would name is already on the card beside it.
+ * Owner-only, and hidden when there is only one account: a select with a
+ * single option is furniture, and the account it would name is already on the
+ * card beside it. `canSwitchBanks` carries both conditions, and the hook also
+ * pins non-owners to the primary account so this is a matching view rather
+ * than the sole thing keeping them off a sub-account.
  */
 const BankSelector = ({ className }: { className?: string }) => {
   const {
     banks,
     selectedBankId,
     setSelectedBankId,
-    hasMultipleBanks,
+    canSwitchBanks,
     isPrimary,
   } = useBusinessBanks();
 
-  if (!hasMultipleBanks) return null;
+  if (!canSwitchBanks) return null;
 
   return (
     <div className={cn("min-w-0", className)}>
