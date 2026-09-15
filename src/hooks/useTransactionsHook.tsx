@@ -102,7 +102,16 @@ export const useTransactionsHook = ({
 
   console.log("beneficairy_info", beneficiaryInfo);
 
-  const handleSubmitTransferFunds = (data: any) => {
+  /**
+   * @param options.onSuccess Takes over what happens after the money moves.
+   * Without it the screen closes, as it always has; the wallet transfer passes
+   * one so it can show the receipt instead of dropping the person back on the
+   * list with only a toast to say it worked.
+   */
+  const handleSubmitTransferFunds = (
+    data: any,
+    options?: { onSuccess?: (response: any) => void },
+  ) => {
     // Guard rather than send a blank id: the URL would still be well formed
     // and the API would answer about some other wallet, or none.
     if (!walletBankId) {
@@ -123,10 +132,16 @@ export const useTransactionsHook = ({
       // keyed on the same bank id the balance above it was read from.
       { body: masterPayload, businessId: walletBankId },
       {
-        onSuccess: () => {
+        onSuccess: (response: any) => {
           TrxDataRefetch();
           // Clear beneficiary info after successful transfer
           setBeneficiaryInfo(null);
+
+          if (options?.onSuccess) {
+            options.onSuccess(response);
+            return;
+          }
+
           router.back();
         },
         onError: (error) => {},

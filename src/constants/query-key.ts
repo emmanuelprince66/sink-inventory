@@ -121,6 +121,8 @@ export const queryKey = {
     fetchShipmentRate: "fetch-shipment-rate",
     createOrderInhouse: "create-order-inhouse",
     createOrderShipbubble: "create-order-shipbubble",
+    lookupInstoreDraft: "lookup-instore-draft",
+    finalizeInstoreDraft: "finalize-instore-draft",
   },
   analytics: {
     getSalesAnalytics: "get-sales-analytics",

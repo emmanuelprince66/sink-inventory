@@ -21,6 +21,7 @@ import {
   ChevronRight,
   FileText,
   Package,
+  QrCode,
   ShoppingCart,
   Star,
 } from "lucide-react";
@@ -29,7 +30,9 @@ import Image from "next/image";
 import { useState } from "react";
 import CartTabs from "./CartTabs";
 import CustomerBar from "./CustomerBar";
+import SelfCheckoutOrderModal from "./SelfCheckoutOrderModal";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
+import { isOrderCode } from "./instoreDraft";
 import LoadPresaleModal from "./LoadPresaleModal";
 import { ScannerButton } from "./ScannerButton";
 import VariationSelectorModal from "./VariationSelectorModal";
@@ -88,6 +91,9 @@ const Pos: React.FC = () => {
   const [showLoadPresaleModal, setShowLoadPresaleModal] =
     useState<boolean>(false);
   const [showCartDrawer, setShowCartDrawer] = useState<boolean>(false);
+  const [showSelfCheckoutModal, setShowSelfCheckoutModal] =
+    useState<boolean>(false);
+  const [scannedOrderCode, setScannedOrderCode] = useState<string>("");
 
   // Below lg (1024px — phones + tablets), the cart doesn't fit as a side
   // column, so it moves into a bottom-sheet triggered by a floating bar.
@@ -237,12 +243,36 @@ const Pos: React.FC = () => {
   const isPharmacist = userRole === "PHARMACIST";
   const isAttendant = userRole === "ATTENDANT";
   const isAdminAttendant = userRole === "ADMIN-ATTENDANT";
+  const isOwner = userRole === "OWNER";
 
   // Show generate code button for pharmacist
   const showGenerateCodeButton = isPharmacist && cartItems.length > 0;
 
   // Show load presale button for attendant
   const showLoadPresaleButton = isAttendant;
+
+  // Anyone who works a till can serve a self checkout order, so can the owner
+  // — in a small shop they're often the one on the till. A pharmacist has no
+  // checkout UI at all in this POS, so releasing goods from here would leave
+  // them holding a sale they cannot complete.
+  const showSelfCheckoutButton = isAttendant || isAdminAttendant || isOwner;
+
+  /**
+   * Routes a scan to the right place.
+   *
+   * The storefront encodes its order code as a raw string, so the same
+   * scanner picks up both product barcodes and self checkout codes. Without
+   * this split an "INS-" scan would be fired at product search, come back
+   * empty, and read to the cashier as a broken scanner.
+   */
+  const handlePosScan = (scanned: string): void => {
+    if (showSelfCheckoutButton && isOrderCode(scanned)) {
+      setScannedOrderCode(scanned.trim().toUpperCase());
+      setShowSelfCheckoutModal(true);
+      return;
+    }
+    handleScanResult(scanned);
+  };
 
   // Rendered once, either inside the desktop/tablet-landscape side column
   // (aside) or inside the mobile bottom-sheet drawer — never both at once,
@@ -367,6 +397,20 @@ const Pos: React.FC = () => {
             Load Presale
           </Button>
         )}
+
+        {/* Self checkout — a basket the customer built on their own phone */}
+        {showSelfCheckoutButton && (
+          <Button
+            onClick={() => {
+              setScannedOrderCode("");
+              setShowSelfCheckoutModal(true);
+            }}
+            variant="outline"
+          >
+            <QrCode className="h-4 w-4 mr-2" />
+            Self Checkout Order
+          </Button>
+        )}
       </header>
 
       {/* Cart Tabs — supports multiple simultaneous sales */}
@@ -399,7 +443,7 @@ const Pos: React.FC = () => {
                   </Button>
                 ) : (
                   <ScannerButton
-                    onScanResult={handleScanResult}
+                    onScanResult={handlePosScan}
                     variant="outline"
                     size="default"
                   />
@@ -628,6 +672,16 @@ const Pos: React.FC = () => {
           onAddVariations={handleAddVariations}
         />
       </CustomModal>
+
+      <SelfCheckoutOrderModal
+        key={scannedOrderCode || "manual"}
+        isOpen={showSelfCheckoutModal}
+        onClose={() => {
+          setShowSelfCheckoutModal(false);
+          setScannedOrderCode("");
+        }}
+        initialCode={scannedOrderCode}
+      />
 
       <GeneratePresaleCodeModal
         isOpen={showGeneratePresaleModal}

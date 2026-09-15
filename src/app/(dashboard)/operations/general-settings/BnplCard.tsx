@@ -15,10 +15,23 @@ import { useState } from "react";
 import BnplTerms from "./BnplTerms";
 
 /**
+ * Minimum wallet tier a sole trader needs before BNPL can be switched on.
+ *
+ * TEMPORARY — lowered from 3 to 1 so Akawopay can be tested with Tier 1 test
+ * wallets, matching the same relaxation on the backend. Tier 3 (BVN, NIN and
+ * address) is the real lending bar: PUT THIS BACK TO 3 BEFORE PRODUCTION, or
+ * unverified merchants can offer credit in your name.
+ *
+ * Typed as number rather than inferred as 1 so the messages below can still
+ * compare against 3 without the literal type collapsing the check.
+ */
+const MIN_BNPL_TIER: number = 1;
+
+/**
  * Why a merchant may or may not offer BNPL.
  *
  * Akawopay lends against the merchant's verified identity, so the bar is a
- * fully upgraded wallet — Tier 3 for a sole trader, approved documents for a
+ * sufficiently upgraded wallet for a sole trader, or approved documents for a
  * company. Worked out here as well as upstream so the card can say what is
  * missing before the merchant flips a switch and is refused; the API's answer
  * is still the one that decides, and its message is shown verbatim when the
@@ -50,7 +63,14 @@ const eligibilityOf = ({
     };
   }
 
-  if (accountType === "corporate") {
+  // While the tier bar is relaxed for testing, tier alone decides for everyone.
+  // Corporate approval is a separate ladder that ignores tier completely, so
+  // leaving it in place would still refuse a Tier 1 company with documents
+  // pending — the exact account being tested. Restoring MIN_BNPL_TIER to 3
+  // brings this rule back with it.
+  const enforceCorporateApproval = MIN_BNPL_TIER >= 3;
+
+  if (accountType === "corporate" && enforceCorporateApproval) {
     return corporateApproved
       ? { ready: true, reason: null }
       : {
@@ -62,12 +82,14 @@ const eligibilityOf = ({
 
   // Individual, and anything not yet typed — the stricter of the two rules is
   // the safer default when the account type has not come back.
-  return tier >= 3
+  return tier >= MIN_BNPL_TIER
     ? { ready: true, reason: null }
     : {
         ready: false,
         reason:
-          "Your wallet must be upgraded to Tier 3 (BVN, NIN, and Address verified) to offer BNPL.",
+          MIN_BNPL_TIER >= 3
+            ? "Your wallet must be upgraded to Tier 3 (BVN, NIN, and Address verified) to offer BNPL."
+            : `Your wallet must be upgraded to Tier ${MIN_BNPL_TIER} to offer BNPL.`,
       };
 };
 
@@ -162,8 +184,8 @@ const BnplCard = () => {
           <div className="mb-3 flex items-start gap-2 rounded-lg border border-warning-1/30 bg-warning-2 p-2.5">
             <ShieldAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-1" />
             <p className="text-[11px] text-grey-2">
-              Upgrade your KYC verification to Tier 3 to unlock Buy Now Pay
-              Later for your customers.{" "}
+              Upgrade your KYC verification to Tier {MIN_BNPL_TIER} to unlock
+              Buy Now Pay Later for your customers.{" "}
               <Link
                 href="/kyc"
                 className="font-bold text-primary-green-300 hover:underline"

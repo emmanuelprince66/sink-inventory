@@ -4,7 +4,12 @@ import { Spinner } from "@/components/ui/spinner";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import TransferReceipt, {
+  extractTransactionId,
+  type TransferReceiptDetails,
+} from "./TransferReceipt";
 
 const calculateCharges = (amount: number) => {
   if (amount <= 5000) return 10;
@@ -32,11 +37,13 @@ const ConfirmTransfer = ({
    */
   sourceBankId,
 }: any) => {
-  const { handleSubmitTransferFunds, TransferFundsLoading } =
+  const { handleSubmitTransferFunds, TransferFundsLoading, TrxData } =
     useTransactionsHook({ beneficiaryInfo, sourceBankId });
+  const router = useRouter();
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [receipt, setReceipt] = useState<TransferReceiptDetails | null>(null);
 
   const charges = calculateCharges(transferDetails?.amount || 0);
   const stampDuty = calculateStampDuty(transferDetails?.amount || 0);
@@ -53,15 +60,39 @@ const ConfirmTransfer = ({
     setIsSubmitting(true);
 
     try {
-      await handleSubmitTransferFunds({
-        ...transferDetails,
-        pin: pin,
-        beneficiaryRef: beneficiaryInfo?.data?.ref,
-      });
+      await handleSubmitTransferFunds(
+        {
+          ...transferDetails,
+          pin: pin,
+          beneficiaryRef: beneficiaryInfo?.data?.ref,
+        },
+        {
+          // The receipt is built from what was just sent plus the reference
+          // that comes back — the transfer response carries the provider's
+          // reference, not a re-statement of the beneficiary.
+          onSuccess: (response: any) =>
+            setReceipt({
+              amount: transferDetails?.amount,
+              senderName:
+                TrxData?.data?.results?.wallet_details?.account_name ?? "",
+              beneficiaryName: transferDetails?.accountName,
+              beneficiaryAccount: transferDetails?.accountNumber,
+              beneficiaryBank: transferDetails?.bank?.name,
+              narration: transferDetails?.narration,
+              transactionId: extractTransactionId(response),
+            }),
+        },
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Leaving the receipt goes back to where the transfer started from, not to
+  // the form behind it — that flow is finished and its state is spent.
+  if (receipt) {
+    return <TransferReceipt details={receipt} onBack={() => router.back()} />;
+  }
 
   return (
     <div className="w-full flex flex-col gap-6 items-center">

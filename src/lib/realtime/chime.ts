@@ -10,10 +10,7 @@
  * Every failure path is swallowed: a missing file or a denied autoplay policy
  * must never take out the notification it was announcing.
  */
-// WAV rather than MP3: it is generated from a script that lives in the repo
-// history, so the asset can be regenerated instead of being an opaque binary
-// nobody can reproduce. Short enough that the size difference is irrelevant.
-const CHIME_SRC = "/sounds/order-chime.wav";
+const CHIME_SRC = "/sounds/sync-sound.mpeg";
 
 let element: HTMLAudioElement | null = null;
 let unlocked = false;
