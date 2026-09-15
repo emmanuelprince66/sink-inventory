@@ -1,51 +1,42 @@
 "use client";
 
+import blackSendIcon from "@/assets/black-send-icon.png";
+import bottomGraySnake from "@/assets/bottom-gray-snake.png";
+import orangeSendIcon from "@/assets/orange-send-icon.png";
+import logo from "@/assets/sink2.png";
+import topGraySnake from "@/assets/top-gray-snake.png";
+import transferIdeaIcon from "@/assets/transfer-idea-icon.png";
+import yellowBgBehindQr from "@/assets/yellow-bg-behind-qr.png";
+import yellowSnake from "@/assets/yellow-snake.png";
+import { AppStoreGlyph, GooglePlayGlyph } from "@/components/app/StoreGlyphs";
 import { Button } from "@/components/ui/button";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { Download } from "lucide-react";
+import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import QRCodeModule from "react-qr-code";
 
 const QRCode = QRCodeModule as any;
 
-interface BusinessData {
-  name: string;
-  store_url?: string;
-  tag_line?: string;
-  logo?: string;
-}
+/**
+ * The printed "I accept payments with" poster.
+ *
+ * Same 595px reference width as the payment terminal, and the same three
+ * curves — they are 595px assets, so at w-full they land where the design puts
+ * them at any card width. Only type and vertical rhythm step down on mobile.
+ */
+
+/** Sparkle at the top left — the one mark not supplied as an asset. */
+const StarBurst = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="#292D32" className={className} aria-hidden>
+    <path d="M12 0c.62 6.24 5.76 11.38 12 12-6.24.62-11.38 5.76-12 12-.62-6.24-5.76-11.38-12-12C6.24 11.38 11.38 6.24 12 0Z" />
+  </svg>
+);
 
 export default function HomePage(): React.ReactElement {
   const { TrxData, businessData } = useTransactionsHook({});
-
-  console.log("businessData---7", businessData);
-
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"INSTORE" | "OUTSTORE">("INSTORE");
-
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white flex items-center justify-center p-4">
-  //       <div className="text-center space-y-6">
-  //         <div className="flex justify-center">
-  //           <div className="relative w-16 h-16">
-  //             <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-full animate-spin" />
-  //             <div className="absolute inset-1 bg-white rounded-full" />
-  //           </div>
-  //         </div>
-  //         <div>
-  //           <p className="text-gray-900 font-semibold text-lg mb-2">
-  //             Loading QR Poster...
-  //           </p>
-  //           <p className="text-gray-500 text-sm">
-  //             Preparing your e-pricing display
-  //           </p>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   if (!businessData) {
     return (
@@ -59,14 +50,13 @@ export default function HomePage(): React.ReactElement {
     const slug = businessData.store_url || "store";
     const baseUrl = "https://store.sync360.africa";
 
-    if (activeTab === "INSTORE") {
-      return `${baseUrl}/i/${slug}`;
-    } else {
-      return `${baseUrl}/o/${slug}`;
-    }
+    return activeTab === "INSTORE"
+      ? `${baseUrl}/i/${slug}`
+      : `${baseUrl}/o/${slug}`;
   };
 
   const storeUrl = getStoreUrl();
+  const cliqId = TrxData?.data?.results?.wallet_details?.account_number ?? "";
 
   const handleDownload = async () => {
     const element = document.getElementById("qr-poster-content");
@@ -133,7 +123,7 @@ export default function HomePage(): React.ReactElement {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-[595px] mx-auto">
       {/* Header Section */}
       <div className="mb-6 text-center">
         <h1 className="text-2xl md:text-3xl font-extrabold text-grey-1">
@@ -171,99 +161,156 @@ export default function HomePage(): React.ReactElement {
           : "Display online, in emails, or for remote customers to check prices"}
       </p>
 
-      {/* QR Poster Preview — this is the downloadable/printable in-store asset;
-          intentionally keeps its own branded poster look (dark green header,
-          "SCAN TO CHECK PRICE" signage) rather than the admin dashboard's
-          grey/primary-green-300 tokens. The "Powered by" pill and Download
-          button share one white card so they read as a single unit, but only
-          #qr-poster-content (header + main content + Powered-by pill) is
-          captured into the downloaded image — the Download button itself
-          must never appear inside its own screenshot. */}
-      <div className="mb-6 w-full bg-white rounded-2xl border border-grey-5 overflow-hidden">
-        <div id="qr-poster-content" className="bg-white">
-          {/* Dark Green Header Bar */}
-          <div className="bg-gradient-to-r from-emerald-700 to-emerald-800 px-6 py-4 md:px-8 md:py-6">
-            <h2 className="text-white text-xl md:text-2xl font-bold mt-1">
-              {businessData.name}
-            </h2>
+      {/* The poster. Only this node is captured — the Download button below
+          must never end up inside its own screenshot. */}
+      <div
+        id="qr-poster-content"
+        className="relative w-full overflow-hidden rounded-[8px] border border-[#E5E5E5] bg-white"
+      >
+        {/* Decorative curves — full bleed, behind the content */}
+        <Image
+          src={topGraySnake}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-0 top-0 w-full h-auto"
+        />
+        <Image
+          src={bottomGraySnake}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-0 bottom-0 w-full h-auto"
+        />
+        <Image
+          src={yellowSnake}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-0 bottom-0 w-full h-auto"
+        />
+
+        {/* Scattered marks. Offsets are in px from the top edge rather than
+            percentages — the poster's content is fixed, but a percentage would
+            still drift the moment anything in it reflowed. */}
+        <StarBurst className="pointer-events-none absolute left-[22.5%] top-[49px] sm:top-[86px] w-[11px] sm:w-[20px] rotate-[12deg]" />
+        <Image
+          src={transferIdeaIcon}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-[72.6%] top-[130px] sm:top-[229px] w-[16px] sm:w-[29px] h-auto"
+        />
+        <Image
+          src={blackSendIcon}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-[8.6%] top-[241px] sm:top-[426px] w-[15px] sm:w-[26px] h-auto"
+        />
+        <Image
+          src={orangeSendIcon}
+          alt=""
+          aria-hidden
+          priority
+          className="pointer-events-none absolute left-[87.7%] top-[388px] sm:top-[686px] w-[21px] sm:w-[37px] h-auto"
+        />
+
+        {/* Content */}
+        <div className="relative px-[10%] pt-[31px] pb-[54px] sm:pt-[55px] sm:pb-[95px]">
+          {/* Sized so "PAYMENTS WITH" spans ~62% of the poster, as the design
+              has it — it is the widest thing on the page after the QR block. */}
+          <h1 className="text-center text-[26px] sm:text-[46px] font-extrabold uppercase leading-[1.1] tracking-tight text-[#FF7D00]">
+            I accept
+            <br />
+            payments with
+          </h1>
+
+          {/* The logo asset carries ~28% transparent padding top and bottom. */}
+          <Image
+            src={logo}
+            alt="Sync360"
+            priority
+            className="mx-auto w-[136px] sm:w-[240px] h-auto -my-[18px] sm:-my-[33px]"
+          />
+
+          {/* QR block: the cream square sits behind the white card, larger and
+              already tilted in the asset itself. */}
+          <div className="relative mx-auto mt-[28px] sm:mt-[50px] w-[145px] sm:w-[256px]">
+            {/* Centred on the white card: the asset is ~square, so the offsets
+                are half its overhang on each axis — not the same number. */}
+            <Image
+              src={yellowBgBehindQr}
+              alt=""
+              aria-hidden
+              priority
+              className="pointer-events-none absolute -left-[10px] -top-[11px] sm:-left-[17px] sm:-top-[20px] w-[165px] sm:w-[290px] max-w-none h-auto"
+            />
+            <div className="relative rounded-[8px] sm:rounded-[12px] bg-white p-[13px] sm:p-[23px] shadow-[0_4px_18px_rgba(0,0,0,0.06)]">
+              <QRCode
+                value={storeUrl}
+                size={256}
+                viewBox="0 0 256 256"
+                style={{ width: "100%", height: "auto" }}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="H"
+              />
+            </div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="px-6 py-8 md:px-12 md:py-12 flex flex-col items-center justify-center text-center space-y-8">
-            {/* Headline */}
-            <div className="space-y-2">
-              <p className="text-gray-600 text-sm md:text-base font-medium">
-                {activeTab === "INSTORE" ? "In-Store" : "Out-Store"} Pricing
-                Access
-              </p>
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                <span className="block">SCAN TO</span>
-                <span className="block text-emerald-600">CHECK PRICE</span>
-              </h1>
-            </div>
+          <div className="mt-[14px] sm:mt-[24px] flex justify-center">
+            <span className="border-[1.5px] border-[#292D32] rounded-[2px] px-[12px] py-[5px] sm:px-[22px] sm:py-[8px] text-[11px] sm:text-[20px] font-extrabold uppercase tracking-tight text-[#1D1F22]">
+              Scan to pay
+            </span>
+          </div>
 
-            {/* QR Code Container */}
-            <div className="bg-white p-8 md:p-10 rounded-xl border border-grey-5">
-              <div className="relative bg-white p-6 md:p-8 rounded-lg inline-block">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 bg-primary-black-100 text-white text-[10px] md:text-xs font-bold rounded-full px-3 py-1.5 whitespace-nowrap">
-                  {businessData.name}
+          <p className="mt-[10px] sm:mt-[17px] text-center text-[11px] sm:text-[19px] font-medium text-[#1D1F22]">
+            CliqID: {cliqId || "-"}
+          </p>
+
+          <p className="mt-[18px] sm:mt-[31px] text-center text-[8px] sm:text-[13px] font-medium text-[#4A4A4A]">
+            Payment with the Sync360 App is a Breeze!
+          </p>
+
+          <div className="mx-auto mt-[11px] sm:mt-[20px] h-px w-[210px] sm:w-[370px] max-w-full bg-[#E6E6E6]" />
+
+          {/* Store badges */}
+          <div className="mt-[11px] sm:mt-[19px] flex items-center justify-center gap-[7px] sm:gap-[12px]">
+            <div className="flex items-center gap-1.5 sm:gap-2 rounded-[4px] sm:rounded-[6px] bg-black px-[7px] py-[4px] sm:px-[12px] sm:py-[7px]">
+              <GooglePlayGlyph className="w-[12px] h-[12px] sm:w-[21px] sm:h-[21px] flex-shrink-0" />
+              <div className="text-left">
+                <div className="text-[4px] sm:text-[7px] uppercase text-white leading-none tracking-wide">
+                  Get it on
                 </div>
-                <QRCode
-                  value={storeUrl}
-                  size={200}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  level="H"
-                  includeMargin={true}
-                  imageSettings={{
-                    src: businessData.logo,
-                    height: 40,
-                    width: 40,
-                    excavate: true,
-                  }}
-                />
+                <div className="text-[8px] sm:text-[14px] text-white font-semibold leading-tight">
+                  Google Play
+                </div>
               </div>
             </div>
 
-            {/* URL Section */}
-            <div className="space-y-2">
-              <p className="text-gray-500 text-xs md:text-sm uppercase tracking-widest">
-                or visit
-              </p>
-              <p className="text-emerald-600 font-bold text-base md:text-lg break-all">
-                {storeUrl.replace("https://", "")}
-              </p>
-            </div>
-
-            {/* Alternative Text */}
-            <div className="pt-4 border-t border-gray-200 w-full">
-              <p className="text-gray-600 text-xs md:text-sm leading-relaxed">
-                Use your phone camera or any QR code reader to scan and access
-                instant pricing information
-              </p>
-            </div>
-          </div>
-
-          {/* Powered by pill — inset, full width, matches the Download button below */}
-          <div className="px-6 pb-6 md:px-8 md:pb-8">
-            <div className="w-full bg-primary-black-100 text-white rounded-full py-3 text-center text-xs md:text-sm font-bold tracking-wider">
-              Powered by sync360.africa
+            <div className="flex items-center gap-1.5 sm:gap-2 rounded-[4px] sm:rounded-[6px] bg-black px-[7px] py-[4px] sm:px-[12px] sm:py-[7px]">
+              <AppStoreGlyph className="w-[12px] h-[12px] sm:w-[21px] sm:h-[21px] flex-shrink-0" />
+              <div className="text-left">
+                <div className="text-[4px] sm:text-[7px] text-white leading-none">
+                  Download on the
+                </div>
+                <div className="text-[8px] sm:text-[14px] text-white font-semibold leading-tight">
+                  App Store
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Download Button — same card, same pill shape/width as "Powered by",
-            deliberately outside #qr-poster-content so it isn't captured in its own screenshot */}
-        <div className="px-6 pb-6 md:px-8 md:pb-8">
-          <Button
-            onClick={handleDownload}
-            className="w-full rounded-full py-3 h-auto"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download {activeTab === "INSTORE" ? "In-Store" : "Out-Store"} QR
-            Poster
-          </Button>
-        </div>
+      {/* Download Button — deliberately outside #qr-poster-content */}
+      <div className="mt-6">
+        <Button onClick={handleDownload} className="w-full rounded-full py-3 h-auto">
+          <Download className="w-4 h-4 mr-2" />
+          Download {activeTab === "INSTORE" ? "In-Store" : "Out-Store"} QR
+          Poster
+        </Button>
       </div>
     </div>
   );
