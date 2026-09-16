@@ -96,10 +96,20 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
   // built it and `items` is never sent.
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
-  // Opens the payment buttons on a transfer that hasn't landed. Deliberately
-  // a separate action: taking cash for an order the customer already
-  // transferred for should be a decision, not the default screen.
-  const [showCounterFallback, setShowCounterFallback] = useState(false);
+  /**
+    * How an unconfirmed transfer is being resolved, once the attendant says.
+    *
+    *   "verified" — the customer paid into one of the business's own accounts,
+    *                the attendant has checked it arrived, and is recording it.
+    *   "failed"   — no money arrived; they're collecting by another method.
+    *
+    * Null keeps the payment buttons hidden, because for a transfer the default
+    * assumption must NOT be "collect again" — that is how a customer who has
+    * already paid ends up paying twice.
+    */
+  const [paymentFallback, setPaymentFallback] = useState<
+    null | "verified" | "failed"
+  >(null);
 
   const { data: bankResponse } = useFetchBankQuery(business_id);
   const banks: any[] = bankResponse?.data ?? [];
@@ -165,7 +175,7 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
     setAttendant(null);
     setCompleted(null);
     setQuantities({});
-    setShowCounterFallback(false);
+    setPaymentFallback(null);
   };
 
   const handleClose = () => {
@@ -180,7 +190,7 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
     }
     setCompleted(null);
     setQuantities({});
-    setShowCounterFallback(false);
+    setPaymentFallback(null);
     setActiveCode(normaliseOrderCode(codeInput));
   };
 
@@ -266,7 +276,21 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
     !draft.can_release_items &&
     !draft.is_collected;
 
-  const takingPaymentHere = !onlinePending || showCounterFallback;
+  const takingPaymentHere = !onlinePending || paymentFallback !== null;
+
+  // What the buyer was shown to pay into. The storefront displays the virtual
+  // account when there is one and the first static account otherwise, so this
+  // mirrors that exactly — the attendant needs the account the CUSTOMER saw,
+  // not every account the business owns.
+  const staticAccounts = draft?.bank_accounts ?? [];
+  const virtualAccount = draft?.vfd_virtual_account ?? null;
+  const paidIntoAccount = virtualAccount ?? staticAccounts[0] ?? null;
+
+  /** No virtual account means no webhook, so refreshing will never settle it. */
+  const isStaticTransfer = !!onlinePending && !virtualAccount;
+
+  const expectedAmount =
+    virtualAccount?.amount ?? draft?.payable_amount ?? draft?.total_amount;
   const bnplPending = draft?.bnpl_status === "PENDING";
   const canComplete =
     !!draft &&
@@ -396,19 +420,71 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
                   }
                 />
 
-                {/* An unconfirmed transfer hides the payment buttons until
-                    the cashier says the transfer failed — see onlinePending. */}
-                <div className="w-full mt-3">
-                  {onlinePending && !showCounterFallback && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCounterFallback(true)}
-                      className="w-full cursor-pointer rounded-xl border border-dashed border-grey-4 p-3 text-center text-xs font-bold text-grey-2 transition-colors hover:bg-grey-6"
-                    >
-                      Transfer didn&apos;t arrive? Take payment here instead
-                    </button>
-                  )}
-                </div>
+                {/* An unconfirmed transfer keeps the payment buttons hidden
+                    until the attendant says how it's being resolved. */}
+                {onlinePending && paymentFallback === null && (
+                  <div className="space-y-3 rounded-xl border border-grey-5 p-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-grey-3">
+                        Ask the customer which account they paid into
+                      </p>
+                      {paidIntoAccount && (
+                        <div className="mt-2 rounded-lg bg-grey-6 p-2.5 text-xs">
+                          <p className="font-bold text-grey-1">
+                            {paidIntoAccount.account_number}
+                            {paidIntoAccount.bank_name
+                              ? ` - ${paidIntoAccount.bank_name}`
+                              : ""}
+                          </p>
+                          {paidIntoAccount.account_name && (
+                            <p className="text-grey-3">
+                              {paidIntoAccount.account_name}
+                            </p>
+                          )}
+                          {expectedAmount && (
+                            <p className="mt-1 font-bold text-grey-2">
+                              Look for {formatToNaira(Number(expectedAmount) || 0)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {isStaticTransfer ? (
+                      <p className="rounded-lg border border-warning-1/30 bg-warning-2 p-2.5 text-[11px] text-grey-2">
+                        This is one of your own accounts, so we never get an
+                        automatic confirmation for it — refreshing will not
+                        change that. Check the account yourself before you
+                        release anything.
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-grey-3">
+                        This order has its own account, so Refresh above checks
+                        the bank directly. Try that first.
+                      </p>
+                    )}
+
+                    <div className="grid gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPaymentFallback("verified");
+                          setMethod("BANK");
+                        }}
+                        className="w-full cursor-pointer rounded-xl border border-grey-5 p-3 text-center text-xs font-bold text-grey-1 transition-colors hover:bg-grey-6"
+                      >
+                        I&apos;ve checked — the money arrived
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentFallback("failed")}
+                        className="w-full cursor-pointer rounded-xl border border-dashed border-grey-4 p-3 text-center text-xs font-bold text-grey-2 transition-colors hover:bg-grey-6"
+                      >
+                        No money arrived - take payment another way
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Payment — only when there's something left to collect */}
                 {!draft.can_release_items &&
@@ -416,7 +492,9 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
                   takingPaymentHere && (
                     <div className="space-y-3 rounded-xl border border-grey-5 p-3">
                       <p className="text-xs font-bold uppercase tracking-wider text-grey-3">
-                        Take payment
+                        {paymentFallback === "verified"
+                          ? "Record the transfer"
+                          : "Take payment"}
                       </p>
 
                       <div className="grid grid-cols-2 gap-2">

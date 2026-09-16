@@ -29,6 +29,17 @@ export interface InStoreDraftItem {
   type?: "PRODUCT" | "COMBO";
 }
 
+/** An account the buyer may have transferred into. */
+export interface DraftBankAccount {
+  bank_name?: string;
+  account_number?: string;
+  account_name?: string;
+  /** What the account was opened for — only set on a virtual account. */
+  amount?: string;
+  charges?: string;
+  reference?: string;
+}
+
 export interface InStoreDraft {
   business_id: string;
   order_code: string;
@@ -65,6 +76,23 @@ export interface InStoreDraft {
   expires_in_ms?: number;
   /** Absolute expiry, server time. */
   expires_at?: string;
+  /**
+   * Where the buyer was told to send the money, and the crux of whether a
+   * transfer can be confirmed automatically at all.
+   *
+   * A virtual account is per-order and webhooked, so payment verifies itself.
+   * When one can't be generated the backend falls back to the business's own
+   * static accounts — and those receive NO webhooks, so nothing will ever mark
+   * the draft paid no matter how many times the till refreshes. That case has
+   * to be settled by a human checking the bank, which is why the two are kept
+   * apart here rather than collapsed into one "account" field.
+   */
+  vfd_virtual_account?: DraftBankAccount | null;
+  bank_accounts?: DraftBankAccount[] | null;
+  /** Fee and the total the buyer was actually asked to send. */
+  charges?: string;
+  payable_amount?: string;
+  pay_charges?: boolean;
   payment_type: InStorePaymentType;
   created_at: string;
 }
