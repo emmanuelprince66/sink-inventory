@@ -106,14 +106,10 @@ const PaymentTerminal = () => {
         logging: false,
         useCORS: true,
         allowTaint: true,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
+        windowWidth: Math.max(element.scrollWidth, 800), // force sm: breakpoint on
+        windowHeight: Math.max(element.scrollHeight, 800),
         imageTimeout: 15000,
         removeContainer: true,
-        x: -60,
-        y: -60,
-        width: element.scrollWidth + 120,
-        height: element.scrollHeight + 120,
       });
 
       canvas.toBlob(
@@ -208,7 +204,7 @@ const PaymentTerminal = () => {
 
             {/* Headline is a hair wider than the panel below it, so it reaches
                 back over the horizontal inset rather than wrapping. */}
-            <h1 className="-mx-[30px] sm:-mx-[42px] mt-[18px] sm:mt-[28px] text-center text-[25px] sm:text-[44px] font-extrabold uppercase leading-none tracking-tight text-[#FF7D00] whitespace-nowrap">
+            <h1 className="-mx-[30px] sm:-mx-[42px] mt-[18px] sm:mt-[28px] text-center text-[25px] text-[#329661] sm:text-[44px] font-extrabold uppercase leading-none tracking-tight whitespace-nowrap">
               Pay with transfer
             </h1>
 

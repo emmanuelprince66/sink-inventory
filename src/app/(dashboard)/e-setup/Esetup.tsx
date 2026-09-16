@@ -56,7 +56,7 @@ export default function HomePage(): React.ReactElement {
   };
 
   const storeUrl = getStoreUrl();
-  const cliqId = TrxData?.data?.results?.wallet_details?.account_number ?? "";
+  // const cliqId = TrxData?.data?.results?.wallet_details?.account_number ?? "";
 
   const handleDownload = async () => {
     const element = document.getElementById("qr-poster-content");
@@ -68,14 +68,40 @@ export default function HomePage(): React.ReactElement {
     try {
       const html2canvas = (await import("html2canvas-pro")).default;
 
+      // Make sure every image (esp. the Next/Image assets) is fully decoded
+      // before html2canvas paints — otherwise it can capture a partially
+      // loaded frame (the broken-looking yellow QR backdrop you saw).
+      const images = Array.from(element.querySelectorAll("img"));
+      await Promise.all(
+        images.map((img) =>
+          img.complete
+            ? img.decode().catch(() => {})
+            : new Promise<void>((resolve) => {
+                img.onload = () =>
+                  img
+                    .decode()
+                    .then(() => resolve())
+                    .catch(() => resolve());
+                img.onerror = () => resolve();
+              }),
+        ),
+      );
+
       const canvas = await html2canvas(element, {
         scale: 3,
         backgroundColor: "#ffffff",
         logging: false,
         useCORS: true,
         allowTaint: true,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
+        // html2canvas re-evaluates your CSS media queries inside a cloned
+        // off-screen iframe sized to windowWidth/windowHeight. Your `sm:`
+        // classes need viewport width >= 640px to apply. element.scrollWidth
+        // (~595px) is under that, so the clone was silently falling back to
+        // the mobile-size classes. Forcing >= 640 here matches what you
+        // actually see on screen.
+        windowWidth: Math.max(element.scrollWidth, 800),
+        windowHeight: Math.max(element.scrollHeight, 800),
+        imageTimeout: 15000, // give slow-loading assets more room before html2canvas gives up on them
       });
 
       const paddingSize = 80;
@@ -220,7 +246,7 @@ export default function HomePage(): React.ReactElement {
         <div className="relative px-[10%] pt-[31px] pb-[54px] sm:pt-[55px] sm:pb-[95px]">
           {/* Sized so "PAYMENTS WITH" spans ~62% of the poster, as the design
               has it — it is the widest thing on the page after the QR block. */}
-          <h1 className="text-center text-[26px] sm:text-[46px] font-extrabold uppercase leading-[1.1] tracking-tight text-[#FF7D00]">
+          <h1 className="text-center text-[26px] sm:text-[46px] font-extrabold uppercase leading-[1.1] tracking-tight text-green-500">
             I accept
             <br />
             payments with
@@ -264,10 +290,10 @@ export default function HomePage(): React.ReactElement {
               Scan to pay
             </span>
           </div>
-
+          {/* 
           <p className="mt-[10px] sm:mt-[17px] text-center text-[11px] sm:text-[19px] font-medium text-[#1D1F22]">
             CliqID: {cliqId || "-"}
-          </p>
+          </p> */}
 
           <p className="mt-[18px] sm:mt-[31px] text-center text-[8px] sm:text-[13px] font-medium text-[#4A4A4A]">
             Payment with the Sync360 App is a Breeze!
@@ -306,7 +332,10 @@ export default function HomePage(): React.ReactElement {
 
       {/* Download Button — deliberately outside #qr-poster-content */}
       <div className="mt-6">
-        <Button onClick={handleDownload} className="w-full rounded-full py-3 h-auto">
+        <Button
+          onClick={handleDownload}
+          className="w-full rounded-full py-3 h-auto"
+        >
           <Download className="w-4 h-4 mr-2" />
           Download {activeTab === "INSTORE" ? "In-Store" : "Out-Store"} QR
           Poster
