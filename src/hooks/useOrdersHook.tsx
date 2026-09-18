@@ -26,6 +26,7 @@ export const useOrdersHook = ({
   order_type,
   shipping_status,
   payment_status,
+  payment_method,
   dateRange,
 }: {
   page?: number;
@@ -36,6 +37,7 @@ export const useOrdersHook = ({
   order_type?: string;
   shipping_status?: string;
   payment_status?: string;
+  payment_method?: string;
 }) => {
   const { user } = useUserRole();
   const router = useRouter();
@@ -166,6 +168,7 @@ export const useOrdersHook = ({
       order_type: order_type || undefined,
       shipping_status: shipping_status || undefined,
       payment_status: payment_status || undefined,
+      payment_method: payment_method || undefined,
     },
     enabled: !!business_id,
     staleTime: 1000 * 60 * 5,

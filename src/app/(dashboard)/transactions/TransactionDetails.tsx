@@ -47,7 +47,9 @@ export default function TransactionDetails({
     ? { bg: "bg-success-2", text: "text-success-1" }
     : { bg: "bg-error-2", text: "text-error-1" };
 
-  const status = STATUS_STYLES[transaction.status];
+  // Providers can return a status outside the three documented values. Keep
+  // the details modal renderable instead of dereferencing an undefined style.
+  const status = STATUS_STYLES[transaction.status] ?? STATUS_STYLES.PENDING;
   const StatusIcon = status.icon;
 
   const rows: { label: string; value: React.ReactNode }[] = [

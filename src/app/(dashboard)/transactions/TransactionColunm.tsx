@@ -76,6 +76,29 @@ export const columns: ColumnDef<any>[] = [
     },
   },
   {
+    accessorKey: "mode",
+    header: "Channel",
+    cell: ({ row }) => {
+      const trx = row.original;
+      return (
+        <div className="font-medium">
+          <span className="inline-flex items-center rounded-full bg-secondary-6 px-2.5 py-0.5 text-xs font-medium text-grey-2">
+            {trx.mode || trx.source || "-"}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "is_bnpl",
+    header: "BNPL",
+    cell: ({ row }) => (
+      <span className="text-sm text-grey-3">
+        {row.original.is_bnpl ? "Yes" : "No"}
+      </span>
+    ),
+  },
+  {
     accessorKey: "amount",
     header: "Amount ",
     cell: ({ row }) => {

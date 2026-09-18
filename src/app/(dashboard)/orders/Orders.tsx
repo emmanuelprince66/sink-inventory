@@ -50,6 +50,7 @@ interface FilterState {
   order_type: string;
   shipping_status: string;
   payment_status: string;
+  payment_method: string;
   sales_staff: string;
   delivery_company: string;
 }
@@ -189,6 +190,7 @@ const Orders = () => {
     order_type: "",
     shipping_status: "",
     payment_status: "",
+    payment_method: "",
     sales_staff: "",
     delivery_company: "",
   });
@@ -197,6 +199,7 @@ const Orders = () => {
     order_type: "",
     shipping_status: "",
     payment_status: "",
+    payment_method: "",
     sales_staff: "",
     delivery_company: "",
   });
@@ -240,6 +243,7 @@ const Orders = () => {
       order_type: activeTab,
       shipping_status: "",
       payment_status: "",
+      payment_method: "",
       sales_staff: "",
       delivery_company: "",
     };
@@ -253,6 +257,7 @@ const Orders = () => {
     let count = 0;
     if (filters.shipping_status) count++;
     if (filters.payment_status) count++;
+    if (filters.payment_method) count++;
     if (filters.sales_staff) count++;
     if (filters.delivery_company) count++;
     return count;
@@ -292,6 +297,7 @@ const Orders = () => {
     order_type: activeTab, // Use active tab for order_type
     shipping_status: filters.shipping_status,
     payment_status: filters.payment_status,
+    payment_method: filters.payment_method,
     dateRange,
   });
 
@@ -603,6 +609,7 @@ const Orders = () => {
           {/* Active Filters Display */}
           {(filters.shipping_status ||
             filters.payment_status ||
+            filters.payment_method ||
             filters.sales_staff ||
             filters.delivery_company) && (
             <div className="flex flex-wrap gap-2 mt-3">
@@ -626,6 +633,19 @@ const Orders = () => {
                   <button
                     onClick={() =>
                       setFilters((prev) => ({ ...prev, payment_status: "" }))
+                    }
+                    className="hover:bg-secondary-5 rounded-full p-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {filters.payment_method && (
+                <div className="flex items-center gap-2 bg-secondary-6 border border-secondary-3 text-primary-green-100 px-3 py-1 rounded-full text-xs font-bold">
+                  <span>Method: {filters.payment_method}</span>
+                  <button
+                    onClick={() =>
+                      setFilters((prev) => ({ ...prev, payment_method: "" }))
                     }
                     className="hover:bg-secondary-5 rounded-full p-0.5"
                   >
@@ -760,6 +780,26 @@ const Orders = () => {
             </select>
           </div>
 
+          {/* Payment Method Filter */}
+          <div>
+            <label className="block text-sm font-bold text-grey-2 mb-2">
+              Payment Method
+            </label>
+            <select
+              value={tempFilters.payment_method}
+              onChange={(e) =>
+                setTempFilters((prev) => ({
+                  ...prev,
+                  payment_method: e.target.value,
+                }))
+              }
+              className="w-full px-3 py-2 border border-grey-5 rounded-lg focus:outline-none focus:ring-2 focus:ring-grey-4"
+            >
+              <option value="">All Payment Methods</option>
+              <option value="BNPL">BNPL</option>
+            </select>
+          </div>
+
           {/* Sales Staff Filter (mock list) */}
           <div>
             <label className="block text-sm font-bold text-grey-2 mb-2">
@@ -818,6 +858,7 @@ const Orders = () => {
                   order_type: activeTab,
                   shipping_status: "",
                   payment_status: "",
+                  payment_method: "",
                   sales_staff: "",
                   delivery_company: "",
                 });

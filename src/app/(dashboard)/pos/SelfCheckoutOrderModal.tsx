@@ -97,16 +97,16 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
   /**
-    * How an unconfirmed transfer is being resolved, once the attendant says.
-    *
-    *   "verified" — the customer paid into one of the business's own accounts,
-    *                the attendant has checked it arrived, and is recording it.
-    *   "failed"   — no money arrived; they're collecting by another method.
-    *
-    * Null keeps the payment buttons hidden, because for a transfer the default
-    * assumption must NOT be "collect again" — that is how a customer who has
-    * already paid ends up paying twice.
-    */
+   * How an unconfirmed transfer is being resolved, once the attendant says.
+   *
+   *   "verified" — the customer paid into one of the business's own accounts,
+   *                the attendant has checked it arrived, and is recording it.
+   *   "failed"   — no money arrived; they're collecting by another method.
+   *
+   * Null keeps the payment buttons hidden, because for a transfer the default
+   * assumption must NOT be "collect again" — that is how a customer who has
+   * already paid ends up paying twice.
+   */
   const [paymentFallback, setPaymentFallback] = useState<
     null | "verified" | "failed"
   >(null);
@@ -331,7 +331,7 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
               <div className="flex gap-2">
                 <Input
                   autoFocus
-                  placeholder="INS-6290"
+                  placeholder="6290"
                   className="h-11 font-mono uppercase"
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
@@ -443,7 +443,8 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
                           )}
                           {expectedAmount && (
                             <p className="mt-1 font-bold text-grey-2">
-                              Look for {formatToNaira(Number(expectedAmount) || 0)}
+                              Look for{" "}
+                              {formatToNaira(Number(expectedAmount) || 0)}
                             </p>
                           )}
                         </div>

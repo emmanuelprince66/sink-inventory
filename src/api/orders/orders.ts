@@ -18,6 +18,7 @@ interface FetchOrdersParams {
   search?: string;
   status?: string;
   order_type?: string;
+  payment_method?: string;
   shipping_status?: string;
   payment_status?: string;
 }
@@ -30,6 +31,7 @@ export const fetchAllOrders = async ({
   order_type = "",
   shipping_status = "",
   payment_status = "",
+  payment_method = "",
   start_date = "",
   end_date = "",
 }: FetchOrdersParams) => {
@@ -40,6 +42,7 @@ export const fetchAllOrders = async ({
     ...(order_type && { order_type }),
     ...(shipping_status && { shipping_status }),
     ...(payment_status && { payment_status }),
+    ...(payment_method && { payment_method }),
     ...(start_date && { start_date }),
     ...(end_date && { end_date }),
   });

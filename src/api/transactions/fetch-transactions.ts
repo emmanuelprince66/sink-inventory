@@ -14,6 +14,8 @@ type fetchTransactionsProps = {
   page?: number;
   limit?: number;
   type: string;
+  mode?: string;
+  is_bnpl?: boolean;
 };
 
 export const FetchTransaction = async ({
@@ -24,6 +26,8 @@ export const FetchTransaction = async ({
   page = 1,
   type = "",
   limit = 30,
+  mode = "",
+  is_bnpl,
 }: fetchTransactionsProps) => {
   const url = new URL(`/api/transactions/${id}`, window.location.origin);
 
@@ -32,9 +36,10 @@ export const FetchTransaction = async ({
   if (type) params.append("type", type);
   if (start_date) params.append("start_date", start_date);
   if (end_date) params.append("end_date", end_date);
-  url.searchParams.append("page", page.toString());
-  url.searchParams.append("limit", limit.toString());
-
+  if (mode) params.append("mode", mode);
+  if (typeof is_bnpl === "boolean") params.append("is_bnpl", String(is_bnpl));
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
   url.search = params.toString();
 
   const response = await fetch(url.toString(), {
@@ -89,6 +94,8 @@ export const useFetchTransactionQuery = ({
       params.search,
       params.start_date,
       params.type,
+      params.mode,
+      params.is_bnpl,
       params.end_date,
       params.limit,
       params.page,
