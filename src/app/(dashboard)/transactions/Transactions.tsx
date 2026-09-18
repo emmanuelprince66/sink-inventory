@@ -40,6 +40,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import NoTransactions from "./NoTransactions";
 import TransactionTable from "./TransactionTable";
+import TransferSummary from "./TransferSummary";
 import TransferReceipt, {
   extractTransactionId,
   type TransferReceiptDetails,
@@ -77,7 +78,6 @@ const Transactions = () => {
   const [showKycModal, setShowKycModal] = useState(false);
   const [receiptDetails, setReceiptDetails] =
     useState<TransferReceiptDetails | null>(null);
-  const [showAllAccounts, setShowAllAccounts] = useState(false);
   const [transferStep, setTransferStep] = useState<1 | 2>(1);
   const [recipientBank, setRecipientBank] = useState<SelectValue>(null);
   const [category, setCategory] = useState<SelectValue>(null);
@@ -111,6 +111,8 @@ const Transactions = () => {
     beneficiaryInfo,
     enquiryLoading,
     TransferFundsLoading,
+    transferCharge,
+    transferTotal,
     handleSubmitTransferFunds,
   } = useTransactionsHook({
     searchInput,
@@ -120,6 +122,7 @@ const Transactions = () => {
     setShowPinModal: () => {},
     recipientBank,
     accountNumber,
+    transferAmount,
   });
   const { response: unifiedTransactions, loading: unifiedTransactionsLoading } =
     useUnifiedTransactionsHook({
@@ -297,49 +300,6 @@ const Transactions = () => {
           </header>
 
           <section className="scrollbar-thin flex w-full items-stretch gap-3 overflow-x-auto pb-2">
-            <button
-              type="button"
-              onClick={() => setShowAllAccounts(true)}
-              className={cn(
-                "flex min-h-[164px] w-[260px] shrink-0 cursor-pointer flex-col justify-between rounded-2xl p-5 text-left text-white shadow-sm transition lg:w-[calc((100%-3rem)/5)]",
-                showAllAccounts
-                  ? "bg-[#17251e] ring-2 ring-primary-green-300/40"
-                  : "bg-[#1e2d25] hover:bg-[#263b2f]",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-white/70">
-                  All Accounts
-                </span>
-                <span className="rounded-full bg-white/10 px-2 py-1 text-xs">
-                  {accountList.length}
-                </span>
-              </div>
-              <div>
-                <div className="mb-2 flex -space-x-2">
-                  {accountList.slice(0, 4).map((account, index) => (
-                    <span
-                      key={account.id}
-                      className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#1e2d25] text-[9px] font-bold text-grey-1"
-                      style={{
-                        backgroundColor: [
-                          "#b9dfc4",
-                          "#9ed5ef",
-                          "#f3c17c",
-                          "#c7a9db",
-                        ][index % 4],
-                      }}
-                    >
-                      {accountInitials(account.bank_name)}
-                    </span>
-                  ))}
-                </div>
-                <span className="text-xs text-white/70">
-                  {accountList.length} accounts connected
-                </span>
-              </div>
-            </button>
-
             {accountList.map((account) => {
               const selected = selectedBank?.id === account.id;
               return (
@@ -347,19 +307,18 @@ const Transactions = () => {
                   type="button"
                   key={account.id}
                   onClick={() => {
-                    setShowAllAccounts(false);
                     if (canSwitchBanks) setSelectedBankId(account.id);
                   }}
                   className={cn(
-                    "min-h-[164px] w-[260px] shrink-0 cursor-pointer rounded-2xl border p-5 text-left shadow-sm transition hover:border-primary-green-300 hover:shadow-md lg:w-[calc((100%-3rem)/5)]",
-                    selected && !showAllAccounts
+                    "min-h-[180px] w-[310px] shrink-0 cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition hover:border-primary-green-300 hover:shadow-md sm:w-[360px] lg:w-[calc((100%-2rem)/4)]",
+                    selected
                       ? "border-[#b8d9c0] bg-[#dfeee3] shadow-sm"
                       : "border-grey-5 bg-white hover:border-primary-green-300",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-[10px] font-bold text-white ring-2 ring-primary-green-300/15">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-xs font-bold text-white ring-2 ring-primary-green-300/15">
                         {accountInitials(account.bank_name)}
                       </span>
                       <span
@@ -371,7 +330,7 @@ const Transactions = () => {
                     </div>
                     <Wallet className="h-5 w-5 shrink-0 text-grey-3" />
                   </div>
-                  <p className="mt-4 text-lg font-extrabold text-grey-1">
+                  <p className="mt-6 text-xl font-extrabold text-grey-1">
                     {amount(selected ? balance : 0)}
                   </p>
                   <p
@@ -389,75 +348,7 @@ const Transactions = () => {
             })}
           </section>
 
-          {showAllAccounts ? (
-            <section className="rounded-2xl bg-[#223329] p-5 text-white shadow-[0_12px_30px_rgba(20,45,31,0.14)] sm:p-6">
-              <div className="flex flex-col gap-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
-                      All Accounts
-                    </p>
-                    <h2 className="mt-2 text-lg font-extrabold">
-                      Select an account to transfer, fund or generate statements
-                    </h2>
-                  </div>
-                  <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-                    <Button
-                      onClick={() => setShowReportModal(true)}
-                      className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      Report
-                    </Button>
-                    <Button
-                      onClick={() => setShowSubAccountModal(true)}
-                      className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Account
-                    </Button>
-                  </div>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {accountList.map((account) => (
-                    <button
-                      type="button"
-                      key={account.id}
-                      onClick={() => {
-                        setShowAllAccounts(false);
-                        if (canSwitchBanks) setSelectedBankId(account.id);
-                      }}
-                      className="cursor-pointer rounded-2xl border border-white/10 bg-white/10 p-4 text-left transition hover:border-white/25 hover:bg-white/15 hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-white/55">
-                            {account.bank_name || "Bank"}
-                          </p>
-                          <p className="mt-4 text-lg font-extrabold">
-                            {amount(
-                              selectedBank?.id === account.id ? balance : 0,
-                            )}
-                          </p>
-                        </div>
-                        <span className="h-4 w-4 rounded-full bg-primary-green-300" />
-                      </div>
-                      <p
-                        title={account.account_name || "Bank account"}
-                        className="mt-2 truncate text-xs text-white/80"
-                      >
-                        {account.account_name || "Bank account"}
-                      </p>
-                      <p className="mt-1 truncate text-[10px] text-white/55">
-                        Select →
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-          ) : (
-            <section className="rounded-2xl bg-[#223329] p-5 text-white shadow-[0_12px_30px_rgba(20,45,31,0.14)] sm:p-6">
+          <section className="rounded-2xl bg-[#223329] p-5 text-white shadow-[0_12px_30px_rgba(20,45,31,0.14)] sm:p-6">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10">
@@ -531,8 +422,7 @@ const Transactions = () => {
                   </Button>
                 </div>
               </div>
-            </section>
-          )}
+          </section>
 
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-info-1/20 bg-info-2 p-5">
@@ -1021,24 +911,14 @@ const Transactions = () => {
                 />
               </label>
 
-              <div className="rounded-xl bg-grey-6 px-4 py-3 text-sm">
-                <div className="flex justify-between gap-4">
-                  <span className="text-grey-3">Sending to</span>
-                  <span className="font-semibold text-right">
-                    {beneficiaryInfo?.data?.name} · {recipientBank?.label}
-                  </span>
-                </div>
-                <div className="mt-2 flex justify-between gap-4">
-                  <span className="text-grey-3">Account No.</span>
-                  <span className="font-semibold">{accountNumber}</span>
-                </div>
-                <div className="mt-2 flex justify-between gap-4">
-                  <span className="text-grey-3">You send</span>
-                  <span className="font-semibold">
-                    {amount(transferAmount)}
-                  </span>
-                </div>
-              </div>
+              <TransferSummary
+                beneficiaryName={beneficiaryInfo?.data?.name}
+                bankName={recipientBank?.label}
+                accountNumber={accountNumber}
+                amount={transferAmount}
+                charge={transferCharge}
+                total={transferTotal}
+              />
 
               <div>
                 <p className="mb-2 text-xs font-bold uppercase tracking-wide text-grey-3">

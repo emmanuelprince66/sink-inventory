@@ -20,6 +20,7 @@ export const useTransactionsHook = ({
   dateRange,
   recipientBank,
   accountNumber,
+  transferAmount,
   /**
    * Spend from a specific account instead of the one the wallet screens are
    * pointed at. The expenses page passes the expense account chosen there —
@@ -53,6 +54,16 @@ export const useTransactionsHook = ({
   // wallet call is keyed on a bank id, so overriding this one value is all it
   // takes to point the same screen at an expense account instead.
   const walletBankId = sourceBankId ?? selectedBankId;
+  const transferCharge = (() => {
+    const value = Number(transferAmount);
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    const minimum = Number(selectedBank?.min_fee ?? 0);
+    const maximum = Number(selectedBank?.max_fee ?? 0);
+    const percentage = Number(selectedBank?.percentage ?? 0);
+    const calculated = value * percentage;
+    const withMinimum = Math.max(calculated, minimum);
+    return maximum > 0 ? Math.min(withMinimum, maximum) : withMinimum;
+  })();
   const {
     data: BankData,
     isLoading: BankDataLoading,
@@ -237,6 +248,8 @@ export const useTransactionsHook = ({
     businessData,
     CategoriesData,
     TransferFundsLoading,
+    transferCharge,
+    transferTotal: Number(transferAmount || 0) + transferCharge,
     handleSubmitTransferFunds,
     CategoriesDataLoading,
     beneficiaryInfo,

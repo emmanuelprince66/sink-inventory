@@ -10,6 +10,9 @@ export interface BusinessBankAccount {
   bank_name?: string;
   account_number?: string;
   account_name?: string;
+  min_fee?: number | string | null;
+  max_fee?: number | string | null;
+  percentage?: number | string | null;
   /** True on sub-accounts; the primary account is the one where this is false. */
   is_sub?: boolean;
 }

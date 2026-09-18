@@ -1,4 +1,5 @@
 import { CustomModal } from "@/components/app/CustomModal";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +11,10 @@ import { MoreHorizontal } from "lucide-react";
 import moment from "moment";
 import { useState } from "react";
 import TransactionDetails from "./TransactionDetails";
+import TransferReceipt, {
+  extractTransactionId,
+  type TransferReceiptDetails,
+} from "./TransferReceipt";
 
 export const columns: ColumnDef<any>[] = [
   //   {
@@ -36,7 +41,9 @@ export const columns: ColumnDef<any>[] = [
       const trx = row.original;
       return (
         <div className="font-medium">
-          <p className="text-sm font-medium text-primary-green-300">{trx.id?.slice(0, 10)}</p>
+          <p className="text-sm font-medium text-primary-green-300">
+            {trx.id?.slice(0, 10)}
+          </p>
         </div>
       );
     },
@@ -150,8 +157,8 @@ export const columns: ColumnDef<any>[] = [
                 trx.status === "SUCCESS"
                   ? "bg-success-2 text-success-1"
                   : trx.status === "PENDING"
-                  ? "bg-warning-2 text-warning-1"
-                  : "bg-error-2 text-error-1"
+                    ? "bg-warning-2 text-warning-1"
+                    : "bg-error-2 text-error-1"
               }`}
             >
               {trx.status}
@@ -168,6 +175,17 @@ export const columns: ColumnDef<any>[] = [
     cell: ({ row }) => {
       const trx = row.original;
       const [showTrxDetails, setShowTrxDetails] = useState(false);
+      const [showReceipt, setShowReceipt] = useState(false);
+      const receipt: TransferReceiptDetails = {
+        amount: trx.amount,
+        beneficiaryName: trx.account_name,
+        beneficiaryAccount: trx.account_number,
+        beneficiaryBank: trx.bank_name,
+        narration: trx.description,
+        transactionId: extractTransactionId(trx),
+        date: trx.created_at,
+        status: trx.status,
+      };
 
       return (
         <>
@@ -199,6 +217,27 @@ export const columns: ColumnDef<any>[] = [
             title="Transaction Details"
           >
             <TransactionDetails transaction={trx} />
+            <div className="w-full mt-4">
+              <Button
+                type="button"
+                className="mt-4 h-11 w-full"
+                onClick={() => setShowReceipt(true)}
+              >
+                Download Receipt
+              </Button>
+            </div>
+          </CustomModal>
+          <CustomModal
+            isOpen={showReceipt}
+            onClose={() => setShowReceipt(false)}
+            title=""
+            size="lg"
+            className="rounded-2xl p-4 sm:p-6"
+          >
+            <TransferReceipt
+              details={receipt}
+              onBack={() => setShowReceipt(false)}
+            />
           </CustomModal>
           {/* transfer product */}
         </>
