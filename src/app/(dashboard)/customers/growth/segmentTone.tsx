@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  Cake,
   Crown,
   Heart,
   RotateCcw,
@@ -61,11 +62,18 @@ const TONES: Record<string, SegmentTone> = {
     badgeBg: "bg-emerald-100 text-emerald-700",
     buttonBg: "bg-emerald-100 text-emerald-700 hover:bg-emerald-200",
   },
+  BIRTHDAY: {
+    icon: <Cake className="w-4 h-4" />,
+    iconBg: "bg-pink-100 text-pink-600",
+    badgeBg: "bg-pink-100 text-pink-700",
+    buttonBg: "bg-pink-100 text-pink-700 hover:bg-pink-200",
+  },
 };
 
 // Ordered: first pattern to match wins, so AT_RISK is tested before the
 // looser "regular"/custom fallback.
 const NAME_FALLBACKS: Array<{ match: RegExp; tone: string }> = [
+  { match: /birthday/i, tone: "BIRTHDAY" },
   { match: /vip|top spend|high value/i, tone: "VIP_CUSTOMERS" },
   { match: /frequent|loyal/i, tone: "FREQUENT_BUYERS" },
   { match: /new/i, tone: "NEW_CUSTOMERS" },

@@ -118,6 +118,53 @@ export const fetchAddressDetails = async (
 };
 
 /**
+ * Forward-geocodes an address the merchant typed field by field, for when
+ * there is no picked suggestion to take coordinates from.
+ *
+ * Only a result inside the given state counts. The provider will happily
+ * return a same-named street in another state, and pinning that would be
+ * worse than no pin at all. Returns null on no match or any failure.
+ */
+export const geocodeAddress = async (
+  street: string,
+  city: string,
+  state: string,
+  stateIso?: string,
+): Promise<AddressSuggestion | null> => {
+  const bareState = (name: string) =>
+    name.replace(/\s+state$/i, "").trim().toLowerCase();
+  const sessionToken = newSessionToken();
+
+  try {
+    const res = await fetchAddressSuggestions(
+      [street, city, state].filter((part) => part.trim()).join(", "),
+      { limit: 5, sessionToken },
+    );
+    const inState = (s: AddressSuggestion) =>
+      bareState(s.state || "") === bareState(state) ||
+      (!!stateIso && s.stateCode === stateIso);
+    // Google predictions carry no structured state, only display text, so
+    // they are matched on that and checked properly once Details resolves.
+    const match = res.data?.find(
+      (s) =>
+        inState(s) ||
+        (!s.state &&
+          (s.secondary || s.label || "").toLowerCase().includes(bareState(state))),
+    );
+    if (!match) return null;
+    if (match.latitude && match.longitude) return inState(match) ? match : null;
+    if (!match.placeId) return null;
+
+    const resolved = await fetchAddressDetails(match.placeId, sessionToken);
+    return resolved?.latitude && resolved.longitude && inState(resolved)
+      ? resolved
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Turns a device GPS fix into a readable address. Returns null when the
  * provider has nothing at those coordinates, when geocoding is unconfigured,
  * or on any failure — callers treat a null as "let the merchant type it",

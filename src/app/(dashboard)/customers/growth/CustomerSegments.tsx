@@ -12,10 +12,17 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { toList } from "@/types/api";
 import type { CustomerSegment } from "@/types/segment";
-import { Pause, Play, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Play, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import AddCampaign from "../../campaign/AddCampaign";
 import AddSegment from "./AddSegment";
+import BirthdayCustomers from "./BirthdayCustomers";
+import {
+  birthdayOfferMessage,
+  isBirthdaySegment,
+  windowDays,
+  windowLabel,
+} from "./birthday";
 import SegmentCustomers from "./SegmentCustomers";
 import { asRate } from "./loyaltyFormat";
 import { toneFor } from "./segmentTone";
@@ -50,6 +57,7 @@ const SegmentCard = ({
 }) => {
   const tone = toneFor(segment.segment_type, segment.name);
   const isActive = segment.is_active !== false;
+  const isBirthday = isBirthdaySegment(segment);
 
   const { mutate: updateSegment, isPending: toggling } =
     useUpdateSegmentMutation({
@@ -100,8 +108,25 @@ const SegmentCard = ({
         )}
       </div>
 
-      {/* Live off the segment list now. A field the endpoint omits still
-          falls back to the em dash rather than printing a confident zero. */}
+      {/* Birthdays are about dates, not spend: the card shows the window the
+          segment currently covers instead of the three money tiles. */}
+      {isBirthday ? (
+        <div className="flex items-center gap-2.5 bg-grey-6 rounded-lg px-3 py-2 mb-3">
+          <CalendarDays className="w-4 h-4 shrink-0 text-pink-600" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-extrabold text-grey-1">
+              {windowLabel(segment) ?? UNAVAILABLE}
+            </p>
+            <p className="truncate text-[10px] text-grey-3">
+              {windowDays(segment)
+                ? `Birthdays in the next ${windowDays(segment)} days`
+                : "Upcoming birthdays"}
+            </p>
+          </div>
+        </div>
+      ) : (
+      /* Live off the segment list now. A field the endpoint omits still
+          falls back to the em dash rather than printing a confident zero. */
       <div className="grid grid-cols-3 gap-2 mb-3">
         {[
           {
@@ -134,6 +159,7 @@ const SegmentCard = ({
           </div>
         ))}
       </div>
+      )}
 
       <button
         onClick={onView}
@@ -142,7 +168,7 @@ const SegmentCard = ({
           tone.buttonBg,
         )}
       >
-        View Customers
+        {isBirthday ? "View Birthdays" : "View Customers"}
         <span aria-hidden>›</span>
       </button>
 
@@ -193,9 +219,14 @@ const CustomerSegments = () => {
   const [selected, setSelected] = useState<CustomerSegment | null>(null);
   const [editing, setEditing] = useState<CustomerSegment | null>(null);
   const [creating, setCreating] = useState(false);
-  // Customer ids the outreach campaign opens with — captured from the segment
-  // view so the audience is exactly the membership that was on screen.
-  const [messaging, setMessaging] = useState<string[] | null>(null);
+  // The outreach campaign's starting point — ids captured from the segment
+  // view so the audience is exactly the membership that was on screen, plus
+  // pre-filled text for a birthday offer.
+  const [messaging, setMessaging] = useState<{
+    customerIds: string[];
+    title: string;
+    message?: string;
+  } | null>(null);
 
   const { data, isLoading } = useFetchSegmentsQuery({
     params: { id: business_id ?? "" },
@@ -259,19 +290,42 @@ const CustomerSegments = () => {
           title={selected.name ?? "Segment"}
         >
           <div className="w-full">
-            <SegmentCustomers
-              segmentId={selected.id}
-              // One overlay at a time: close this before opening the next,
-              // rather than stacking two Radix dialogs.
-              onEditConditions={() => {
-                setEditing(selected);
-                setSelected(null);
-              }}
-              onMessage={(customerIds) => {
-                setMessaging(customerIds);
-                setSelected(null);
-              }}
-            />
+            {/* One overlay at a time: each action closes this before opening
+                the next, rather than stacking two Radix dialogs. */}
+            {isBirthdaySegment(selected) ? (
+              <BirthdayCustomers
+                segment={selected}
+                onEditConditions={() => {
+                  setEditing(selected);
+                  setSelected(null);
+                }}
+                onSendOffer={(customerIds, name) => {
+                  setMessaging({
+                    customerIds,
+                    title:
+                      customerIds.length === 1 && name
+                        ? `Birthday Offer for ${name}`
+                        : "Send Birthday Offer",
+                    message: birthdayOfferMessage(
+                      customerIds.length === 1 ? name : undefined,
+                    ),
+                  });
+                  setSelected(null);
+                }}
+              />
+            ) : (
+              <SegmentCustomers
+                segmentId={selected.id}
+                onEditConditions={() => {
+                  setEditing(selected);
+                  setSelected(null);
+                }}
+                onMessage={(customerIds) => {
+                  setMessaging({ customerIds, title: "Message Segment" });
+                  setSelected(null);
+                }}
+              />
+            )}
           </div>
         </CustomModal>
       )}
@@ -281,13 +335,14 @@ const CustomerSegments = () => {
           isOpen
           onClose={() => setMessaging(null)}
           trigger={false}
-          title="Message Segment"
+          title={messaging.title}
           size="lg"
         >
           <div className="w-full">
             <AddCampaign
               closeModal={() => setMessaging(null)}
-              preselectedCustomerIds={messaging}
+              preselectedCustomerIds={messaging.customerIds}
+              initialMessage={messaging.message}
             />
           </div>
         </CustomModal>

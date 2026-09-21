@@ -35,6 +35,7 @@ import { useEffect, useMemo, useState } from "react";
 const AddCampaign = ({
   closeModal,
   preselectedCustomerIds,
+  initialMessage,
 }: {
   closeModal: () => void;
   /**
@@ -43,6 +44,8 @@ const AddCampaign = ({
    * Left editable: this is a starting point, not a lock.
    */
   preselectedCustomerIds?: string[];
+  /** Pre-filled message text, e.g. a birthday offer. Left editable. */
+  initialMessage?: string;
 }) => {
   const [searchInput, setSearchInput] = useState("");
 
@@ -95,6 +98,11 @@ const AddCampaign = ({
     if (preselectKey) form.setValue("customer_ids", preselectKey.split(","));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preselectKey]);
+
+  useEffect(() => {
+    if (initialMessage) form.setValue("message", initialMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialMessage]);
 
   useEffect(() => {
     const currentLength = watchedMessage.length; // Get the length of the string (character count)

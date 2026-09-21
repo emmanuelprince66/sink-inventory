@@ -14,9 +14,11 @@ export type SegmentType =
   | "AT_RISK"
   | "INACTIVE_CUSTOMERS"
   | "REGULAR_BUYERS"
-  // Seeded by the backend for every business as "Birthdays This Month", with
-  // conditions { birthday_month: "current" }. Evaluated dynamically, so it is
-  // empty rather than absent for a business with no captured birthdays.
+  // Seeded by the backend for every business as "Upcoming Birthdays", with
+  // conditions { birthday_window_days: 21 } — a rolling window starting today,
+  // described by window_start_date / window_end_date on the segment. Evaluated
+  // dynamically, so it is empty rather than absent for a business with no
+  // captured birthdays.
   | "BIRTHDAY"
   | "CUSTOM"
   | (string & {});
@@ -48,6 +50,7 @@ export const CONDITION_FIELDS: Array<{
   { key: "no_purchase_days", label: "No purchase for", suffix: "days" },
   { key: "min_spend", label: "Minimum total spend" },
   { key: "visits", label: "Number of visits" },
+  { key: "birthday_window_days", label: "Birthday within the next", suffix: "days" },
 ];
 
 /** "no_purchase_days" → "No purchase days" for keys not in the list above. */
@@ -73,6 +76,14 @@ export interface CustomerSegment {
   avg_spend?: number | string;
   created_at?: string;
   updated_at?: string;
+
+  /**
+   * BIRTHDAY segments only. The rolling window the segment currently covers,
+   * as YYYY-MM-DD, plus the backend's pre-formatted label ("Sep 21 - Oct 12").
+   */
+  window_start_date?: string;
+  window_end_date?: string;
+  birthday_window?: string;
 }
 
 /** Payload for POST/PATCH — read-only fields omitted. */
@@ -127,6 +138,20 @@ export interface UserCustomer {
     name: string;
     segment_type?: SegmentType;
   }>;
+
+  /**
+   * YYYY-MM-DD. Needed by the BIRTHDAY segment view for the date and the
+   * countdown; absent on endpoints that don't send it.
+   */
+  date_of_birth?: string | null;
+  /**
+   * Whole days until the next birthday, 0 on the day itself. Preferred over a
+   * client-side count when sent, since the backend owns the window's "today".
+   * The backend's own name; `days_to_birthday` is an alias of it.
+   */
+  days_until_birthday?: number | null;
+  /** Alias of `days_until_birthday`, sent with the same value. */
+  days_to_birthday?: number | null;
 
   /** Loyalty, sent alongside on the same endpoints. */
   tier_name?: string | null;

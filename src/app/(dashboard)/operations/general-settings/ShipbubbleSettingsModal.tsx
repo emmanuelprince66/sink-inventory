@@ -1,5 +1,6 @@
 "use client";
 
+import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { CustomModal } from "@/components/app/CustomModal";
 import { PhoneInput } from "@/components/app/PhoneInput";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useShipbubbleHook } from "@/hooks/useShipbubbleHook";
-import { fetchAddressFromCoordinates } from "@/utils/address";
+import { cn } from "@/lib/utils";
+import {
+  fetchAddressFromCoordinates,
+  geocodeAddress,
+  type AddressSuggestion,
+} from "@/utils/address";
 import { City, State } from "country-state-city";
 import {
   CheckCircle2,
@@ -24,10 +30,12 @@ import {
   Layers,
   Loader2,
   LocateFixed,
+  Lock,
   MapPin,
   Package,
   Pencil,
   Save,
+  Search,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -87,13 +95,49 @@ const ShipbubbleSettingsModal = ({
     hasCoordinates,
   } = useShipbubbleHook();
 
-  // This flow pins the pickup point from the device's own GPS rather than by
-  // geocoding a typed address. That inversion is deliberate and specific to
-  // this screen: the merchant is physically standing at the pickup location
-  // they're configuring, so the device knows it more precisely than any
-  // geocoder can infer from "beside the filling station, Ikeja". The order
-  // form still uses the autocomplete — there the merchant is at the shop and
-  // GPS would pin the customer's delivery to the wrong place.
+  // The pickup point can be pinned two ways, and each is the fallback for the
+  // other:
+  //   - "search": geocode the address the merchant picks from the
+  //     autocomplete. Works on any device, including desktop, where GPS is
+  //     usually unavailable and the browser guesses from the IP.
+  //   - "gps": the device's own fix. More precise than any geocoder when the
+  //     merchant is actually standing at the pickup point, but it depends on
+  //     permissions and signal, so it fails often.
+  // The order form only offers search: there GPS would pin the customer's
+  // delivery to the merchant's shop.
+  //
+  // Behind both sits a third, automatic source: when the merchant fills
+  // street/city/state by hand, that address is geocoded quietly so the save
+  // still carries coordinates that agree with the text.
+  const [pinMethod, setPinMethod] = useState<"search" | "gps">("search");
+  // Which method produced the coordinates currently held. Null means they
+  // came from a previous save, or there are none.
+  const [pinSource, setPinSource] = useState<
+    "search" | "gps" | "typed" | null
+  >(null);
+  // The merchant pressed "Change" on a locked state/city. The pin stays until
+  // they actually edit something, then it is re-derived from the new address.
+  const [regionUnlocked, setRegionUnlocked] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState<
+    "idle" | "loading" | "failed"
+  >("idle");
+  const geocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Bumped by every new lookup and by every pin from elsewhere, so a slow
+  // answer can never overwrite something the merchant did after asking.
+  const geocodeRequestRef = useRef(0);
+  // A suggestion was picked, but the provider returned no coordinates for it.
+  const [searchPinFailed, setSearchPinFailed] = useState(false);
+  // Which of state/city the pin itself supplied. Those are locked while the
+  // pin stands: a city edited away from its coordinates sends Shipbubble an
+  // address that contradicts itself, which misquotes rates and misroutes
+  // riders. Whatever the pin did not supply stays editable, so an incomplete
+  // lookup never leaves the merchant unable to save. Captured at pin time
+  // rather than derived from the current values, or a city being typed into
+  // an empty field would lock after its first keystroke.
+  const [pinLock, setPinLock] = useState({ state: false, city: false });
+  // Set on open; the snapshot is taken on the next render, once
+  // resetFromBusiness has landed the saved values.
+  const [snapshotPending, setSnapshotPending] = useState(false);
   const [gpsStatus, setGpsStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
@@ -159,7 +203,13 @@ const ShipbubbleSettingsModal = ({
 
     // The pin is what riders navigate to, so commit it before the lookup — a
     // slow or failed reverse geocode must never cost the merchant their fix.
+    cancelGeocode();
+    setRegionUnlocked(false);
     setCoordinates(latitude, longitude);
+    setPinSource("gps");
+    setSearchPinFailed(false);
+    // Nothing is vouched for until the reverse lookup answers.
+    setPinLock({ state: false, city: false });
     setGpsAccuracy(Number.isFinite(accuracy) ? Math.round(accuracy) : null);
     setGpsStatus("success");
 
@@ -177,6 +227,7 @@ const ShipbubbleSettingsModal = ({
           latitude: latitude.toFixed(6),
           longitude: longitude.toFixed(6),
         });
+        setPinLock(regionLockFor(suggestion));
         if (suggestion.city) setCustomCityMode(true);
       })
       .finally(() => setResolvingAddress(false));
@@ -227,11 +278,135 @@ const ShipbubbleSettingsModal = ({
     watchTimerRef.current = setTimeout(applyBestFix, GPS_WATCH_WINDOW_MS);
   };
 
+  // A provider state only counts if it is one the dropdown knows — anything
+  // else ("Lagos State", a typo) is left editable for the merchant to fix.
+  const regionLockFor = (suggestion: AddressSuggestion) => {
+    const state = NG_STATES.some((s) => s.name === suggestion.state);
+    return { state, city: state && Boolean(suggestion.city?.trim()) };
+  };
+
+  // "Change" on a locked state/city. The pin is kept for now, since the
+  // merchant may only be checking. The first real edit replaces it.
+  const unlockRegion = () => {
+    setPinLock({ state: false, city: false });
+    setRegionUnlocked(true);
+  };
+
+  const cancelGeocode = () => {
+    if (geocodeTimerRef.current) {
+      clearTimeout(geocodeTimerRef.current);
+      geocodeTimerRef.current = null;
+    }
+    geocodeRequestRef.current += 1;
+    setGeocodeStatus("idle");
+  };
+
+  const scheduleGeocode = (
+    street: string,
+    city: string,
+    state: string,
+    delayMs: number,
+  ) => {
+    cancelGeocode();
+    const stateIso = NG_STATES.find((s) => s.name === state)?.isoCode;
+    if (!stateIso || !city.trim() || street.trim().length < 3) return;
+
+    const request = geocodeRequestRef.current;
+    geocodeTimerRef.current = setTimeout(async () => {
+      geocodeTimerRef.current = null;
+      setGeocodeStatus("loading");
+      const match = await geocodeAddress(street, city, state, stateIso);
+      if (request !== geocodeRequestRef.current) return;
+      if (!match) {
+        setGeocodeStatus("failed");
+        return;
+      }
+      // Coordinates only: the merchant's own city/state wording stands.
+      setCoordinates(Number(match.latitude), Number(match.longitude));
+      setPinSource("typed");
+      setRegionUnlocked(false);
+      setResolvedAddress(match.label || match.address || null);
+      setGeocodeStatus("idle");
+    }, delayMs);
+  };
+
+  // State or city was edited. Coordinates that no longer describe the address
+  // are dropped and looked up again from the new text. The exception is a
+  // search/GPS pin that simply didn't resolve this field: filling the gap
+  // mustn't throw away a good fix.
+  const handleRegionEdited = (state: string, city: string, delayMs = 300) => {
+    const replacesPin = !hasCoordinates || pinSource === "typed" || regionUnlocked;
+    if (!replacesPin) return;
+    if (hasCoordinates) {
+      clearCoordinates();
+      setPinSource(null);
+      setResolvedAddress(null);
+      setGpsAccuracy(null);
+    }
+    scheduleGeocode(settings.street, city, state, delayMs);
+  };
+
+  const handleAddressPicked = (suggestion: AddressSuggestion) => {
+    cancelGeocode();
+    setRegionUnlocked(false);
+    // Overwrites the coordinates too, so a pick with no coordinates clears
+    // an older pin instead of leaving it attached to a different address.
+    applyAddressSuggestion(suggestion);
+    const pinned = Boolean(suggestion.latitude && suggestion.longitude);
+    setPinLock(pinned ? regionLockFor(suggestion) : { state: false, city: false });
+    setPinSource(pinned ? "search" : null);
+    setSearchPinFailed(!pinned);
+    setResolvedAddress(pinned ? suggestion.address || suggestion.label : null);
+    setGpsStatus("idle");
+    setGpsAccuracy(null);
+    setGpsError(null);
+  };
+
+  const handleStreetTyped = (value: string) => {
+    updateSetting("street", value);
+    setSearchPinFailed(false);
+    // Coordinates taken from address text stop matching once it is edited. A
+    // GPS pin stays: there the street field is only a note for the rider.
+    const derivedFromText = pinSource === "search" || pinSource === "typed";
+    if (derivedFromText) {
+      clearCoordinates();
+      setPinSource(null);
+      setResolvedAddress(null);
+    }
+    // In search mode the autocomplete dropdown is already looking the text
+    // up; a second, silent lookup would race it. The plain street field
+    // under GPS has no dropdown, so it geocodes on a pause in typing.
+    if (pinMethod === "gps" && (derivedFromText || !hasCoordinates)) {
+      scheduleGeocode(value, settings.city, settings.state, 900);
+    } else {
+      cancelGeocode();
+    }
+  };
+
+  const switchPinMethod = (method: "search" | "gps") => {
+    if (method === "search") {
+      stopWatching();
+      if (gpsStatus === "loading" || gpsStatus === "error") setGpsStatus("idle");
+      setGpsError(null);
+    }
+    setPinMethod(method);
+  };
+
   // Never leave a watch running — it keeps the GPS radio active and drains a
   // phone battery long after the modal is gone.
-  useEffect(() => stopWatching, []);
+  useEffect(
+    () => () => {
+      stopWatching();
+      if (geocodeTimerRef.current) clearTimeout(geocodeTimerRef.current);
+    },
+    [],
+  );
   useEffect(() => {
-    if (!open) stopWatching();
+    if (!open) {
+      stopWatching();
+      cancelGeocode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
   const { showToast } = useToast();
 
@@ -267,21 +442,45 @@ const ShipbubbleSettingsModal = ({
     updateSetting("state", name);
     updateSetting("city", "");
     setCustomCityMode(false);
-    // Changing the state by hand means the pinned point is in the wrong state
-    // entirely, so drop it and send the merchant back to the capture prompt
-    // rather than letting a stale pin be saved against the new state.
-    clearCoordinates();
-    setGpsStatus("idle");
-    setGpsAccuracy(null);
-    setGpsError(null);
-    setResolvedAddress(null);
+    handleRegionEdited(name, "");
   };
+
+  const handleCityChange = (city: string, delayMs?: number) => {
+    updateSetting("city", city);
+    handleRegionEdited(settings.state, city, delayMs);
+  };
+
+  const stateLocked = hasCoordinates && pinLock.state && Boolean(selectedStateIso);
+  const cityLocked = stateLocked && pinLock.city && Boolean(settings.city.trim());
+
+  // Snapshot the lock for coordinates that were already saved, once the
+  // hydrated values are in.
+  useEffect(() => {
+    if (!snapshotPending) return;
+    setSnapshotPending(false);
+    setPinLock({
+      state: hasCoordinates && Boolean(selectedStateIso),
+      city: hasCoordinates && Boolean(selectedStateIso) && Boolean(settings.city.trim()),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshotPending]);
 
   // Re-hydrate from the live business object every time the modal re-opens.
   useEffect(() => {
     if (open) {
       resetFromBusiness();
       setCustomCityMode(false);
+      setPinMethod("search");
+      setPinSource(null);
+      setSearchPinFailed(false);
+      setGpsStatus("idle");
+      setGpsAccuracy(null);
+      setGpsError(null);
+      setResolvedAddress(null);
+      setPinLock({ state: false, city: false });
+      setSnapshotPending(true);
+      setRegionUnlocked(false);
+      cancelGeocode();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -360,213 +559,355 @@ const ShipbubbleSettingsModal = ({
             description="Where Shipbubble riders should collect every shipment."
           >
             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Pinned coordinates — the primary input for this flow. */}
               <div className="sm:col-span-2">
-                <Field label="Pickup Coordinates">
-                  {hasCoordinates ? (
-                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2 min-w-0">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-emerald-900">
-                              Pickup point pinned
+                <Field label="Pin your pickup point">
+                  {/* Two ways to pin the point. Neither works every time, so
+                      each one links to the other when it fails. */}
+                  <div className="grid grid-cols-2 gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1">
+                    <PinMethodButton
+                      active={pinMethod === "search"}
+                      onClick={() => switchPinMethod("search")}
+                      icon={<Search className="h-3.5 w-3.5" />}
+                      title="Search address"
+                      hint="Works on any device"
+                    />
+                    <PinMethodButton
+                      active={pinMethod === "gps"}
+                      onClick={() => switchPinMethod("gps")}
+                      icon={<LocateFixed className="h-3.5 w-3.5" />}
+                      title="Current location"
+                      hint="Best on a phone, at the shop"
+                    />
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    {pinMethod === "search" ? (
+                      <div>
+                        <AddressAutocomplete
+                          value={settings.street}
+                          onChange={handleStreetTyped}
+                          onSelect={handleAddressPicked}
+                          placeholder="Search your pickup address, e.g. 14 Allen Avenue, Ikeja"
+                          hasCoordinates={hasCoordinates && pinSource === "search"}
+                          hideHint
+                          renderNoResults={() => (
+                            <p className="mt-1.5 text-[11px] text-grey-3">
+                              No match for that address.{" "}
+                              <button
+                                type="button"
+                                onClick={() => switchPinMethod("gps")}
+                                className="font-semibold text-emerald-700 hover:text-emerald-800"
+                              >
+                                Use your current location instead
+                              </button>
                             </p>
-                            {/* The address leads: it is the only part a
-                                merchant can actually check. A lat/long pair
-                                reads as noise — nobody can tell whether
-                                6.471680 is their street or the next state.
-                                Coordinates appear only as the fallback when
-                                the lookup returns nothing, so the card still
-                                confirms that something was pinned. */}
-                            {resolvingAddress ? (
-                              <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700">
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                                Looking up the address…
-                              </p>
-                            ) : resolvedAddress ? (
-                              <p className="mt-1 text-[13px] font-semibold leading-snug text-emerald-900">
-                                {resolvedAddress}
-                              </p>
+                          )}
+                        />
+                        {searchPinFailed ? (
+                          <p className="mt-1.5 text-[11px] font-medium text-amber-700">
+                            We found this address but couldn&apos;t pin its exact
+                            location. Pick another suggestion, or{" "}
+                            <button
+                              type="button"
+                              onClick={() => switchPinMethod("gps")}
+                              className="font-semibold underline underline-offset-2"
+                            >
+                              use your current location
+                            </button>
+                            .
+                          </p>
+                        ) : (
+                          !hasCoordinates && (
+                            <p className="mt-1.5 text-[11px] text-grey-3">
+                              Pick a suggestion from the list so riders get the
+                              exact point.
+                            </p>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      !hasCoordinates && (
+                        <div className="rounded-lg border border-dashed border-grey-5 bg-grey-6/40 p-4 text-center">
+                          <MapPin className="mx-auto h-5 w-5 text-grey-4" />
+                          <p className="mt-2 text-xs leading-relaxed text-grey-3">
+                            Stand at your pickup location and capture its
+                            coordinates. Riders are routed to this exact point.
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleCaptureGps}
+                            disabled={gpsStatus === "loading"}
+                            className="mt-3 text-xs font-semibold"
+                          >
+                            {gpsStatus === "loading" ? (
+                              <>
+                                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                                {liveAccuracy != null
+                                  ? `Improving fix… ±${formatAccuracy(liveAccuracy)}`
+                                  : "Getting location…"}
+                              </>
                             ) : (
-                              <p className="mt-1 font-mono text-[11px] text-emerald-800 break-all">
-                                {settings.latitude}, {settings.longitude}
-                              </p>
+                              <>
+                                <LocateFixed className="mr-2 h-3.5 w-3.5" />
+                                Use my current location
+                              </>
                             )}
-                            <p className="mt-1 text-[11px] text-emerald-700">
-                              {gpsAccuracy != null
-                                ? `Accurate to about ${formatAccuracy(gpsAccuracy)}`
-                                : "Saved from a previous capture"}
-                            </p>
-                          </div>
+                          </Button>
                         </div>
+                      )
+                    )}
+
+                    {hasCoordinates && (
+                      <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-emerald-900">
+                                Pickup point pinned
+                              </p>
+                              {/* The address leads: it is the only part a
+                                  merchant can actually check. A lat/long pair
+                                  reads as noise, so coordinates appear only
+                                  when there is no address to show. */}
+                              {resolvingAddress ? (
+                                <p className="mt-1 flex items-center gap-1.5 text-xs text-emerald-700">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Looking up the address…
+                                </p>
+                              ) : resolvedAddress ? (
+                                <p className="mt-1 text-[13px] font-semibold leading-snug text-emerald-900">
+                                  {resolvedAddress}
+                                </p>
+                              ) : (
+                                <p className="mt-1 font-mono text-[11px] text-emerald-800 break-all">
+                                  {settings.latitude}, {settings.longitude}
+                                </p>
+                              )}
+                              <p className="mt-1 text-[11px] text-emerald-700">
+                                {pinSource === "gps"
+                                  ? gpsAccuracy != null
+                                    ? `From your device's location, accurate to about ${formatAccuracy(gpsAccuracy)}`
+                                    : "From your device's location"
+                                  : pinSource === "search"
+                                    ? "From the address you picked"
+                                    : pinSource === "typed"
+                                      ? "Found from the address you entered"
+                                      : "Saved from a previous setup"}
+                              </p>
+                            </div>
+                          </div>
+                          {pinMethod === "gps" && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCaptureGps}
+                              disabled={gpsStatus === "loading"}
+                              className="shrink-0 border-emerald-400 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold"
+                            >
+                              {gpsStatus === "loading" ? (
+                                <>
+                                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                  {liveAccuracy != null
+                                    ? `±${formatAccuracy(liveAccuracy)}`
+                                    : "Updating"}
+                                </>
+                              ) : (
+                                <>
+                                  <LocateFixed className="mr-1.5 h-3.5 w-3.5" />
+                                  {pinSource === "gps" ? "Recapture" : "Use my location"}
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                        {/* Accepted, but wide enough to be worth flagging — a
+                            few hundred metres is wifi/cell triangulation rather
+                            than a satellite fix. */}
+                        {pinSource === "gps" &&
+                          gpsAccuracy != null &&
+                          gpsAccuracy > GOOD_ACCURACY_M && (
+                            <p className="mt-2 text-[11px] font-medium text-amber-700">
+                              This pin is approximate. Step outside and recapture
+                              for a tighter fix, or search your address instead.
+                            </p>
+                          )}
+                      </div>
+                    )}
+
+                    {pinMethod === "gps" && gpsStatus === "error" && gpsError && (
+                      <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                        <p className="text-xs font-medium text-red-700">
+                          {gpsError}
+                        </p>
                         <Button
                           type="button"
                           size="sm"
                           variant="outline"
-                          onClick={handleCaptureGps}
-                          disabled={gpsStatus === "loading"}
-                          className="shrink-0 border-emerald-400 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold"
+                          onClick={() => switchPinMethod("search")}
+                          className="mt-2 border-red-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50"
                         >
-                          {gpsStatus === "loading" ? (
-                            <>
-                              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                              {liveAccuracy != null
-                                ? `±${formatAccuracy(liveAccuracy)}`
-                                : "Updating"}
-                            </>
-                          ) : (
-                            <>
-                              <LocateFixed className="mr-1.5 h-3.5 w-3.5" />
-                              Recapture
-                            </>
-                          )}
+                          <Search className="mr-1.5 h-3.5 w-3.5" />
+                          Search your address instead
                         </Button>
                       </div>
-                      {/* Accepted, but wide enough to be worth flagging — a
-                          few hundred metres is wifi/cell triangulation rather
-                          than a satellite fix. */}
-                      {gpsAccuracy != null && gpsAccuracy > GOOD_ACCURACY_M && (
-                        <p className="mt-2 text-[11px] font-medium text-amber-700">
-                          This pin is approximate. Step outside and recapture
-                          for a tighter fix.
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="rounded-lg border border-dashed border-grey-5 bg-grey-6/40 p-4 text-center">
-                      <MapPin className="mx-auto h-5 w-5 text-grey-4" />
-                      <p className="mt-2 text-xs leading-relaxed text-grey-3">
-                        Stand at your pickup location and capture its
-                        coordinates. Riders are routed to this exact point.
-                      </p>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleCaptureGps}
-                        disabled={gpsStatus === "loading"}
-                        className="mt-3 text-xs font-semibold"
-                      >
-                        {gpsStatus === "loading" ? (
-                          <>
-                            <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            {liveAccuracy != null
-                              ? `Improving fix… ±${formatAccuracy(liveAccuracy)}`
-                              : "Getting location…"}
-                          </>
-                        ) : (
-                          <>
-                            <LocateFixed className="mr-2 h-3.5 w-3.5" />
-                            Use my current location
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  )}
-
-                  {gpsStatus === "error" && gpsError && (
-                    <p className="mt-2 text-xs font-medium text-red-600">
-                      {gpsError}
-                    </p>
-                  )}
-                </Field>
-              </div>
-
-              <div className="sm:col-span-2">
-                <Field label="Street">
-                  <Input
-                    value={settings.street}
-                    onChange={(e) => updateSetting("street", e.target.value)}
-                    placeholder="e.g. 14 Allen Avenue, Ikeja"
-                  />
-                  <p className="mt-1.5 text-[11px] text-grey-3">
-                    Written for the rider to read — the coordinates above are
-                    what they navigate to.
-                  </p>
-                </Field>
-              </div>
-              <Field label="State">
-                <Select
-                  value={selectedStateIso}
-                  onValueChange={handleStateChange}
-                >
-                  <SelectTrigger className="bg-white w-full">
-                    <SelectValue placeholder="Pick a state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NG_STATES.map((s) => (
-                      <SelectItem key={s.isoCode} value={s.isoCode}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="City">
-                {useCustomCityInput ? (
-                  <div className="space-y-1.5">
-                    <Input
-                      value={settings.city}
-                      onChange={(e) => updateSetting("city", e.target.value)}
-                      placeholder={
-                        selectedStateIso
-                          ? "Enter your city"
-                          : "Pick a state first"
-                      }
-                      disabled={!selectedStateIso}
-                    />
-                    {cityOptions.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomCityMode(false);
-                          updateSetting("city", "");
-                        }}
-                        className="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
-                      >
-                        <Pencil className="w-3 h-3" />
-                        Back to city list
-                      </button>
                     )}
                   </div>
-                ) : (
-                  <Select
-                    value={settings.city}
-                    onValueChange={(v) => {
-                      if (v === "__other__") {
-                        setCustomCityMode(true);
-                        updateSetting("city", "");
-                      } else {
-                        updateSetting("city", v);
-                      }
-                    }}
-                    disabled={!selectedStateIso}
-                  >
-                    <SelectTrigger className="bg-white w-full">
-                      <SelectValue
-                        placeholder={
-                          selectedStateIso
-                            ? "Pick a city"
-                            : "Pick a state first"
-                        }
+                </Field>
+              </div>
+
+              {/* In search mode the autocomplete above is the street field. */}
+              {pinMethod === "gps" && (
+                <div className="sm:col-span-2">
+                  <Field label="Street">
+                    <Input
+                      value={settings.street}
+                      onChange={(e) => handleStreetTyped(e.target.value)}
+                      placeholder="e.g. 14 Allen Avenue, Ikeja"
+                    />
+                    <p className="mt-1.5 text-[11px] text-grey-3">
+                      Written for the rider to read. The pinned point above is
+                      what they navigate to.
+                    </p>
+                  </Field>
+                </div>
+              )}
+              {/* State and city come from the pin when it resolved them, and
+                  are locked to it — see pinLock. */}
+              {cityLocked ? (
+                <div className="sm:col-span-2">
+                  <Field label="City & State">
+                    <LockedValue
+                      value={`${settings.city}, ${settings.state}`}
+                      onChange={unlockRegion}
+                    />
+                  </Field>
+                </div>
+              ) : (
+                <>
+                  <Field label="State">
+                    {stateLocked ? (
+                      <LockedValue
+                        value={settings.state}
+                        onChange={unlockRegion}
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cityOptions.map((c) => (
-                        <SelectItem key={c.name} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                      <SelectItem
-                        value="__other__"
-                        className="text-emerald-700 font-semibold"
+                    ) : (
+                      <Select
+                        value={selectedStateIso}
+                        onValueChange={handleStateChange}
                       >
-                        Other (type your own)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              </Field>
+                        <SelectTrigger className="bg-white w-full">
+                          <SelectValue placeholder="Pick a state" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {NG_STATES.map((s) => (
+                            <SelectItem key={s.isoCode} value={s.isoCode}>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </Field>
+                  <Field label="City">
+                    {useCustomCityInput ? (
+                      <div className="space-y-1.5">
+                        <Input
+                          value={settings.city}
+                          // Longer pause than the dropdown: this fires on
+                          // every keystroke, and "Ib" is not a city yet.
+                          onChange={(e) => handleCityChange(e.target.value, 900)}
+                          placeholder={
+                            selectedStateIso
+                              ? "Enter your city"
+                              : "Pick a state first"
+                          }
+                          disabled={!selectedStateIso}
+                        />
+                        {cityOptions.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomCityMode(false);
+                              handleCityChange("");
+                            }}
+                            className="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Back to city list
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <Select
+                        value={settings.city}
+                        onValueChange={(v) => {
+                          if (v === "__other__") {
+                            setCustomCityMode(true);
+                            handleCityChange("");
+                          } else {
+                            handleCityChange(v);
+                          }
+                        }}
+                        disabled={!selectedStateIso}
+                      >
+                        <SelectTrigger className="bg-white w-full">
+                          <SelectValue
+                            placeholder={
+                              selectedStateIso
+                                ? "Pick a city"
+                                : "Pick a state first"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {cityOptions.map((c) => (
+                            <SelectItem key={c.name} value={c.name}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                          <SelectItem
+                            value="__other__"
+                            className="text-emerald-700 font-semibold"
+                          >
+                            Other (type your own)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </Field>
+                </>
+              )}
+              {geocodeStatus !== "idle" && (
+                <div className="sm:col-span-2 -mt-1">
+                  {geocodeStatus === "loading" ? (
+                    <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Finding this address on the map…
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-amber-700">
+                      We couldn&apos;t find this address on the map, so it
+                      isn&apos;t pinned. You can still save, and riders will
+                      use the written address. For an exact pin,{" "}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          switchPinMethod(pinMethod === "gps" ? "search" : "gps")
+                        }
+                        className="font-semibold underline underline-offset-2"
+                      >
+                        {pinMethod === "gps"
+                          ? "search for it"
+                          : "use your current location"}
+                      </button>
+                      .
+                    </p>
+                  )}
+                </div>
+              )}
               {/* Full width — the country-code selector plus a Nigerian
                   number crowds a half-width column on smaller screens. */}
               <div className="sm:col-span-2">
@@ -699,6 +1040,67 @@ const ShipbubbleSettingsModal = ({
 };
 
 // ─── Layout helpers ─────────────────────────────────────────────────────────
+
+/** A state/city value supplied by the pin. "Change" drops the pin. */
+const LockedValue = ({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: () => void;
+}) => (
+  <div>
+    <div className="flex h-10 items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3">
+      <span className="flex min-w-0 items-center gap-2 text-sm text-slate-800">
+        <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+        <span className="truncate">{value}</span>
+      </span>
+      <button
+        type="button"
+        onClick={onChange}
+        className="shrink-0 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+      >
+        Change
+      </button>
+    </div>
+    <p className="mt-1.5 text-[11px] text-grey-3">
+      Set from your pinned location. If you change it, we&apos;ll re-pin
+      from the new address.
+    </p>
+  </div>
+);
+
+const PinMethodButton = ({
+  active,
+  onClick,
+  icon,
+  title,
+  hint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  title: string;
+  hint: string;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={active}
+    className={cn(
+      "rounded-md px-2.5 py-2 text-left transition-colors",
+      active
+        ? "bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-200"
+        : "text-slate-600 hover:bg-white/60",
+    )}
+  >
+    <span className="flex items-center gap-1.5 text-xs font-semibold">
+      {icon}
+      {title}
+    </span>
+    <span className="mt-0.5 block text-[10px] text-slate-500">{hint}</span>
+  </button>
+);
 
 const Field = ({
   label,
