@@ -17,20 +17,27 @@ import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { AUTO_BATCH } from "@/app/(dashboard)/inventory/BatchSelect";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
 const AddReturnProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
+  /** Which batch the units come out of. Omitted, the backend uses FEFO. */
+  batch_id: z.string().optional(),
   note: z.string().optional(),
 });
 
 const AddDamagedProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
+  /** Which batch the units come out of. Omitted, the backend uses FEFO. */
+  batch_id: z.string().optional(),
   note: z.string().optional(),
 });
 const AddWasteProductSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
+  /** Which batch the units come out of. Omitted, the backend uses FEFO. */
+  batch_id: z.string().optional(),
   note: z.string().optional(),
 });
 const AddMoveToProductionSchema = z.object({
@@ -153,6 +160,10 @@ export const useInventoryHook = ({
       });
       queryClient.invalidateQueries({
         queryKey: [queryKey.products.productHistory],
+      });
+      // The batch list on the product page is now one write-off out of date.
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.products.getProductsById, productId],
       });
       if (closeModal) closeModal();
     },
@@ -333,18 +344,18 @@ export const useInventoryHook = ({
 
   const addReturnedProductForm = useForm<AddReturnedFormValues>({
     resolver: zodResolver(AddReturnProductSchema) as any,
-    defaultValues: { quantity: "", note: "" },
+    defaultValues: { quantity: "", batch_id: "", note: "" },
     mode: "onChange",
   });
   const addWasteProductForm = useForm<AddWasteFormValues>({
     resolver: zodResolver(AddWasteProductSchema) as any,
-    defaultValues: { quantity: "", note: "" },
+    defaultValues: { quantity: "", batch_id: "", note: "" },
     mode: "onChange",
   });
 
   const addDamagedProductForm = useForm<AddDamagedFormValues>({
     resolver: zodResolver(AddDamagedProductSchema) as any,
-    defaultValues: { quantity: "", note: "" },
+    defaultValues: { quantity: "", batch_id: "", note: "" },
     mode: "onChange",
   });
   const addMoveToProductionForm = useForm<AddMoveToProductionFormValues>({
@@ -387,27 +398,54 @@ export const useInventoryHook = ({
   }, [product]);
 
   const onSubmitAddReturnedProduct = (values: AddReturnedFormValues) => {
-    const payload: { quantity: number; type: string; note?: string } = {
+    const payload: {
+      quantity: number;
+      type: string;
+      batch_id?: string;
+      note?: string;
+    } = {
       quantity: Number(values.quantity),
       type: "RETURN",
     };
+    // Left out when the cashier kept the automatic choice — the backend then
+    // deducts from the earliest-expiring batch.
+    if (values.batch_id && values.batch_id !== AUTO_BATCH)
+      payload.batch_id = values.batch_id;
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });
   };
   const onSubmitAddWasteProduct = (values: AddWasteFormValues) => {
-    const payload: { quantity: number; type: string; note?: string } = {
+    const payload: {
+      quantity: number;
+      type: string;
+      batch_id?: string;
+      note?: string;
+    } = {
       quantity: Number(values.quantity),
       type: "WASTE",
     };
+    // Left out when the cashier kept the automatic choice — the backend then
+    // deducts from the earliest-expiring batch.
+    if (values.batch_id && values.batch_id !== AUTO_BATCH)
+      payload.batch_id = values.batch_id;
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });
   };
 
   const onSubmitAddDamagedProduct = (values: AddDamagedFormValues) => {
-    const payload: { quantity: number; type: string; note?: string } = {
+    const payload: {
+      quantity: number;
+      type: string;
+      batch_id?: string;
+      note?: string;
+    } = {
       quantity: Number(values.quantity),
       type: "DAMAGE",
     };
+    // Left out when the cashier kept the automatic choice — the backend then
+    // deducts from the earliest-expiring batch.
+    if (values.batch_id && values.batch_id !== AUTO_BATCH)
+      payload.batch_id = values.batch_id;
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     addReturnedOrDamagedProduct({ payload, productId });
   };

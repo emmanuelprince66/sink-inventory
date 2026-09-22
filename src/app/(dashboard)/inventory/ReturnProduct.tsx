@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
+import BatchSelect from "./BatchSelect";
 const ReturnedProduct = ({
   productId,
   closeModal,
@@ -33,6 +34,16 @@ const ReturnedProduct = ({
           )}
           className="space-y-5"
         >
+          {/* RETURN deducts stock: it records goods sent back to a supplier.
+              A customer refund goes through reversing the sale instead, which
+              puts the units back — recording it here would take the same
+              stock off twice. */}
+          <p className="rounded-xl bg-info-2 px-3 py-2.5 text-xs text-info-1">
+            For stock sent back to your supplier. This takes the units out of
+            your inventory. A customer returning what they bought is handled by
+            reversing that sale in Sales History.
+          </p>
+
           {/* First Name and Last Name in same row */}
           <FormField
             control={addReturnedProductForm.control}
@@ -45,6 +56,19 @@ const ReturnedProduct = ({
                 </FormControl>
                 <FormMessage />
               </FormItem>
+            )}
+          />
+
+          {/* Only rendered for products that have batches. */}
+          <FormField
+            control={addReturnedProductForm.control}
+            name="batch_id"
+            render={({ field }) => (
+              <BatchSelect
+                productId={productId}
+                value={field.value}
+                onChange={field.onChange}
+              />
             )}
           />
 

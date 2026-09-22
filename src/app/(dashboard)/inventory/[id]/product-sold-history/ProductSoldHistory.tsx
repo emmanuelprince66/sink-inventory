@@ -9,6 +9,7 @@ import {
   ArrowUp,
   RotateCcw,
   ShoppingCart,
+  Trash2,
   Truck,
 } from "lucide-react";
 import { useState } from "react";
@@ -144,6 +145,14 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
                     </span>
                     <span className="text-sm font-bold text-grey-1">
                       {productData?.damaged || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-grey-3 flex items-center">
+                      <Trash2 className="h-3 w-3 mr-1" /> Waste
+                    </span>
+                    <span className="text-sm font-bold text-grey-1">
+                      {productData?.waste || 0}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

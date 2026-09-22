@@ -65,6 +65,36 @@ export const useProductSoldHistoryColumns = () => {
       },
     },
     {
+      accessorKey: "batch_number",
+      header: "Batch",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          <p
+            className="text-sm font-medium text-grey-3 max-w-[12rem] truncate"
+            title={transfer.batch_number || ""}
+          >
+            {transfer.batch_number || "-"}
+          </p>
+        );
+      },
+    },
+    {
+      accessorKey: "note",
+      header: "Note",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          <p
+            className="text-sm font-medium text-grey-3 max-w-[12rem] truncate"
+            title={transfer.note || ""}
+          >
+            {transfer.note || "-"}
+          </p>
+        );
+      },
+    },
+    {
       accessorKey: "sold_by",
       header: "Sold By",
       cell: ({ row }) => {

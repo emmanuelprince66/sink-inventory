@@ -78,6 +78,9 @@ const ProductBatches = ({ productId }: { productId: string }) => {
               </p>
               <p className="text-[11px] text-grey-3 truncate">
                 {[
+                  // Named only on a product with variants, where the list
+                  // covers every variant at once.
+                  batch.product_name,
                   batch.date_received &&
                     `Received ${moment(batch.date_received).format("D MMM YYYY")}`,
                   batch.cost_price != null &&

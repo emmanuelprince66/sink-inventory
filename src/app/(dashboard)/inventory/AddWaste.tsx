@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
+import BatchSelect from "./BatchSelect";
 const AddWaste = ({
   productId,
   closeModal,
@@ -43,6 +44,19 @@ const AddWaste = ({
                 </FormControl>
                 <FormMessage />
               </FormItem>
+            )}
+          />
+
+          {/* Only rendered for products that have batches. */}
+          <FormField
+            control={addWasteProductForm.control}
+            name="batch_id"
+            render={({ field }) => (
+              <BatchSelect
+                productId={productId}
+                value={field.value}
+                onChange={field.onChange}
+              />
             )}
           />
 

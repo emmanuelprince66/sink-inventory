@@ -36,6 +36,13 @@ export interface ProductBatch {
   urgency: BatchUrgency;
   supplier?: string | null;
   date_received?: string | null;
+  /**
+   * Which variant the batch belongs to. The product's `batches` covers the
+   * parent and every variant, so these say them apart; on a product with no
+   * variants they simply repeat the product.
+   */
+  product_id?: string | null;
+  product_name?: string | null;
 }
 
 /** 40.0 → "40", 2.5 → "2.5". */
