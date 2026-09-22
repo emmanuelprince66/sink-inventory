@@ -19,13 +19,8 @@ import {
 import { useToast } from "@/hooks/toast/useToast";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { formatToNaira } from "@/utils/formatMoney";
-import {
-  CheckCircle2,
-  Download,
-  Printer,
-  RefreshCw,
-  ScanLine,
-} from "lucide-react";
+import { RefreshCw, ScanLine } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import AttendantDrawer from "./AttendantDrawer";
 import {
@@ -38,7 +33,16 @@ import {
   type InStoreDraft,
   type InStoreDraftItem,
 } from "./instoreDraft";
-import { downloadReceiptPdf } from "./receiptPdf";
+
+// Browser-only: @react-pdf/renderer breaks under SSR, as on the POS receipt.
+const SelfCheckoutReceipt = dynamic(() => import("./SelfCheckoutReceipt"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-10">
+      <Spinner />
+    </div>
+  ),
+});
 
 interface SelfCheckoutOrderModalProps {
   isOpen: boolean;
@@ -316,8 +320,9 @@ const SelfCheckoutOrderModal: React.FC<SelfCheckoutOrderModalProps> = ({
         size="lg"
       >
         {completed ? (
-          <CompletedPanel
+          <SelfCheckoutReceipt
             result={completed}
+            attendant={attendant}
             onDone={handleClose}
             onNext={resetAll}
           />
@@ -758,165 +763,5 @@ const ItemChecklist = ({
     )}
   </div>
 );
-
-/**
- * Shown once the order is settled.
- *
- * Prints from its own markup rather than routing through PrintReceiptView,
- * which reads a createSale response shape and the live cart. Building a fake
- * sale response to satisfy it would couple this flow to the multi-cart state
- * it is specifically designed to stay out of.
- */
-const CompletedPanel = ({
-  result,
-  onDone,
-  onNext,
-}: {
-  result: FinalizeDraftResponse;
-  onDone: () => void;
-  onNext: () => void;
-}) => {
-  const receipt = result.receipt;
-  const { showToast } = useToast();
-
-  // Print goes to whatever printer the till has; this is for the customer who
-  // wants the receipt on their phone, or when the printer is out of paper.
-  const handleDownloadPdf = () => {
-    try {
-      downloadReceiptPdf(result);
-    } catch (error) {
-      console.error("Receipt PDF failed:", error);
-      showToast("Couldn't build the PDF. Use Print instead.", "error");
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* window.print() prints the whole document — the POS grid, the cart,
-          the modal backdrop. This hides everything but the receipt block for
-          the duration of the print, and nothing on screen changes. */}
-      <style>{`
-        @media print {
-          body * { visibility: hidden !important; }
-          #customer-order-receipt,
-          #customer-order-receipt * { visibility: visible !important; }
-          #customer-order-receipt {
-            position: absolute; left: 0; top: 0; width: 100%;
-            border: none !important;
-          }
-        }
-      `}</style>
-
-      <div className="flex flex-col items-center py-4 text-center">
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-success-2">
-          <CheckCircle2 className="h-6 w-6 text-success-1" />
-        </div>
-        <h3 className="text-lg font-extrabold text-grey-1">
-          {result.message || "Order completed"}
-        </h3>
-        <p className="mt-1 font-mono text-sm text-grey-3">
-          {result.order_code}
-        </p>
-      </div>
-
-      <div
-        id="customer-order-receipt"
-        className="rounded-xl border border-grey-5 p-4"
-      >
-        {(receipt?.business_name || receipt?.business_phone) && (
-          <div className="mb-2 text-center">
-            {receipt?.business_name && (
-              <p className="text-sm font-extrabold text-grey-1">
-                {receipt.business_name}
-              </p>
-            )}
-            {receipt?.business_phone && (
-              <p className="text-[11px] text-grey-3">
-                {receipt.business_phone}
-              </p>
-            )}
-          </div>
-        )}
-        {receipt?.customer_name && (
-          <p className="mb-3 text-center text-[11px] text-grey-3">
-            {receipt.customer_name}
-            {receipt.customer_phone ? ` · ${receipt.customer_phone}` : ""}
-          </p>
-        )}
-
-        <div className="space-y-1.5">
-          {(receipt?.items ?? []).map((item, index) => (
-            <div key={index} className="flex justify-between gap-3 text-xs">
-              <span className="min-w-0 flex-1 truncate text-grey-2">
-                {item.name} ×{Number(item.quantity)}
-              </span>
-              <span className="shrink-0 font-bold text-grey-1">
-                {formatToNaira(Number(item.line_total) || 0)}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 space-y-1 border-t border-grey-5 pt-3 text-xs">
-          <Row
-            label="Total"
-            value={result.total_price ?? receipt?.total_amount}
-          />
-          <Row label="Paid" value={receipt?.amount_paid} />
-          {result.balance && result.balance !== "0.00" && (
-            <Row label="Balance" value={result.balance} />
-          )}
-          <div className="flex justify-between">
-            <span className="text-grey-3">Method</span>
-            <span className="font-bold text-grey-1">
-              {result.payment_method || receipt?.payment_method || "—"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Two rows: four buttons on one line squeezes the labels to the
-          point where a cashier mis-taps Done instead of Print. */}
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="h-11 flex-1 gap-2"
-            onClick={() => window.print()}
-          >
-            <Printer className="h-4 w-4" />
-            Print
-          </Button>
-          <Button
-            variant="outline"
-            className="h-11 flex-1 gap-2"
-            onClick={handleDownloadPdf}
-          >
-            <Download className="h-4 w-4" />
-            Download PDF
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="h-11 flex-1" onClick={onNext}>
-            Next Order
-          </Button>
-          <Button className="h-11 flex-1" onClick={onDone}>
-            Done
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Row = ({ label, value }: { label: string; value?: string }) =>
-  value ? (
-    <div className="flex justify-between">
-      <span className="text-grey-3">{label}</span>
-      <span className="font-bold text-grey-1">
-        {formatToNaira(Number(value) || 0)}
-      </span>
-    </div>
-  ) : null;
 
 export default SelfCheckoutOrderModal;

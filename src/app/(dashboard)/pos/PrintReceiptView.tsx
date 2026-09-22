@@ -47,8 +47,138 @@ Font.register({
   ],
 });
 
+/**
+ * The printed receipt's stylesheet. print-js prints into its own frame, where
+ * none of the app's Tailwind exists, so every class the receipt markup uses is
+ * styled here. Exported so the self-checkout receipt prints identically.
+ */
+export const RECEIPT_PRINT_STYLE = `
+        @page { size: auto; margin: 2mm; }
+        body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
+        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
+        table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
+        th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4;  }
+       
+        .text-green-600 { color: #16a34a !important; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
+        .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
+        .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
+
+         .payment-method {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            background-color: #f0fdf4;
+            padding: 2px;
+            border-radius: 3px;
+            margin: 2px 0;
+            line-height: 1.2;
+        }
+        .payment-method-entry {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 8px;
+            color: #000;
+            font-weight: bold;
+            padding-bottom: 1px;
+        }
+        .payment-method-title {
+            font-size: 8px;
+            color: #000;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+        .payment-method-value {
+            font-size: 8px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+
+        .price-cell-container {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          justify-content: flex-start;
+          min-height: 20px;
+        }
+
+        .price-main {
+          font-size: 10px;
+          font-weight: bold;
+          color: #000;
+          line-height: 1.2;
+        }
+
+        .discount-text {
+          font-size: 7px;
+          font-style: italic;
+          color: #000 !important;
+          font-weight: normal;
+          line-height: 1;
+          font-weight: bold;
+          margin-top: 1px;
+        }
+
+        .reward-badge {
+          font-size: 7px;
+          color: #ffffff;
+          background-color: #0f7b4f;
+          padding: 1px 3px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-top: 2px;
+          font-weight: bold;
+          /* Thermal printers drop background colour, so the badge keeps a
+             border to stay legible once the fill is gone. */
+          border: 1px solid #0f7b4f;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .vat-badge {
+          font-size: 7px;
+          color: #2563eb;
+          background-color: #dbeafe;
+          padding: 1px 3px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-top: 2px;
+          font-weight: bold;
+        }
+
+        td {
+          padding: 1px; 
+          font-size: 10px; 
+          border-bottom: 0.5px solid #f3f4f6;
+          vertical-align: top;
+        }
+
+        .total-value { font-weight: bolder; font-size: 15px; color:#000;}
+        .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
+        .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
+        .summary-row, .discount-row, .vat-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
+        .vat-row { color: #2563eb; }
+        .vat-label { color: #2563eb; font-size: 10px; }
+        .vat-value { font-weight: bold; font-size: 10px; color: #2563eb; }
+        .item-name { font-weight: bold; font-size: 10px; }
+        .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
+        .detail-label { color: #000; font-size: 10px; font-weight: bold; }
+        .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
+        .powered-by { font-size: 8px;  text-align: center; }
+        .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
+        .price-cell { font-weight: bold !important; font-size: 10px; }
+        .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
+        .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
+        .receipt-little { font-size: 10px; font-weight: semibold; margin: 1px 0; }
+        .receipt-little-one { font-size: 8px; font-weight: semibold; margin: 1px 0; }
+        .business-info { margin-bottom: 3px; }
+      `;
+
 // Updated PDF Styles with VAT styles
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   page: {
     padding: 4,
     fontSize: 10,
@@ -793,130 +923,7 @@ const PrintReceiptView = ({
       printJS({
         printable: printContent.innerHTML,
         type: "raw-html",
-        style: `
-        @page { size: auto; margin: 2mm; }
-        body { padding: 0; margin: 0; font-family: Arial, sans-serif; font-size: 10px; }
-        .receipt-container { width: 80mm; max-width: 80mm; margin: 0 auto; padding: 2px; }
-        table { width: 100%; border-collapse: collapse; margin: 2px 0; font-size: 10px; }
-        th { padding: 2px 1px; font-size: 10px; font-weight: bold; background-color: #f0fdf4;  }
-       
-        .text-green-600 { color: #16a34a !important; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .receipt-header { border-bottom: 0.5px solid #e5e7eb; padding-bottom: 3px; margin-bottom: 3px; }
-        .receipt-footer { display: flex; justify-content: center; flex-direction: column; align-items: center;  border-top: 0.5px solid #e5e7eb; padding-top: 2px; margin-top: 2px; }
-        .transaction-details { background-color: #f9fafb; padding: 1px; border-radius: 3px; margin: 1px 0; font-size: 10px; }
-
-         .payment-method {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            background-color: #f0fdf4;
-            padding: 2px;
-            border-radius: 3px;
-            margin: 2px 0;
-            line-height: 1.2;
-        }
-        .payment-method-entry {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            font-size: 8px;
-            color: #000;
-            font-weight: bold;
-            padding-bottom: 1px;
-        }
-        .payment-method-title {
-            font-size: 8px;
-            color: #000;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-        .payment-method-value {
-            font-size: 8px;
-            font-weight: bold;
-            color: #16a34a;
-        }
-
-        .price-cell-container {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          justify-content: flex-start;
-          min-height: 20px;
-        }
-
-        .price-main {
-          font-size: 10px;
-          font-weight: bold;
-          color: #000;
-          line-height: 1.2;
-        }
-
-        .discount-text {
-          font-size: 7px;
-          font-style: italic;
-          color: #000 !important;
-          font-weight: normal;
-          line-height: 1;
-          font-weight: bold;
-          margin-top: 1px;
-        }
-
-        .reward-badge {
-          font-size: 7px;
-          color: #ffffff;
-          background-color: #0f7b4f;
-          padding: 1px 3px;
-          border-radius: 2px;
-          display: inline-block;
-          margin-top: 2px;
-          font-weight: bold;
-          /* Thermal printers drop background colour, so the badge keeps a
-             border to stay legible once the fill is gone. */
-          border: 1px solid #0f7b4f;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .vat-badge {
-          font-size: 7px;
-          color: #2563eb;
-          background-color: #dbeafe;
-          padding: 1px 3px;
-          border-radius: 2px;
-          display: inline-block;
-          margin-top: 2px;
-          font-weight: bold;
-        }
-
-        td {
-          padding: 1px; 
-          font-size: 10px; 
-          border-bottom: 0.5px solid #f3f4f6;
-          vertical-align: top;
-        }
-
-        .total-value { font-weight: bolder; font-size: 15px; color:#000;}
-        .total-row { font-weight: bold; font-size: 12px; border-top: 1px solid #16a34a; padding-top: 3px; margin-top: 5px; }
-        .summary-section { border-top: 0.5px solid #e5e7eb; padding-top: 3px; margin-top: 3px; }
-        .summary-row, .discount-row, .vat-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 10px; }
-        .vat-row { color: #2563eb; }
-        .vat-label { color: #2563eb; font-size: 10px; }
-        .vat-value { font-weight: bold; font-size: 10px; color: #2563eb; }
-        .item-name { font-weight: bold; font-size: 10px; }
-        .detail-row { display: flex; justify-content: space-between; margin-bottom: 1px; font-size: 10px; }
-        .detail-label { color: #000; font-size: 10px; font-weight: bold; }
-        .detail-value { font-weight: bold; font-size: 10px;text-transform: capitalize; }
-        .powered-by { font-size: 8px;  text-align: center; }
-        .contact-info { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 1px; }
-        .price-cell { font-weight: bold !important; font-size: 10px; }
-        .receipt-title { font-size: 12px; font-weight: bold; color: #16a34a; margin-bottom: 2px; }
-        .receipt-subtitle { font-size: 10px; font-weight: semibold; color: #16a34a; margin-bottom: 2px; }
-        .receipt-little { font-size: 10px; font-weight: semibold; margin: 1px 0; }
-        .receipt-little-one { font-size: 8px; font-weight: semibold; margin: 1px 0; }
-        .business-info { margin-bottom: 3px; }
-      `,
+        style: RECEIPT_PRINT_STYLE,
         onPrintDialogClose: () => {
           clearTimeout(timeoutId);
           setIsPrinting(false);
