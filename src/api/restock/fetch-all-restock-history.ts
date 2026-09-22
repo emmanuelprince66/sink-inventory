@@ -16,6 +16,11 @@ export type RestockHistoryItem = {
     name: string;
   };
   remark: string | null;
+  /** Batch & expiry fields — absent on records from before batches. */
+  batch_name?: string | null;
+  expiry_date?: string | null;
+  /** What is left of this batch after sales, decimals allowed. */
+  remaining_quantity?: number | string | null;
 };
 
 export type RestockHistoryResponse = {

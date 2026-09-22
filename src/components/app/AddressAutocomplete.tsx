@@ -103,7 +103,10 @@ const AddressAutocomplete = ({
   // boolean flag: a flag set for a debounce tick that never fires (because
   // the text didn't actually change) stays set and silently swallows the
   // user's next real search.
-  const suppressedQuery = useRef<string | null>(null);
+  // Seeded with the initial value: a field that mounts already filled (the
+  // saved pickup address, or remounting when the pin-method tab switches back)
+  // is hydration too, not a search the user asked for.
+  const suppressedQuery = useRef<string | null>(value);
 
   const debouncedQuery = useDebounce(query, 350);
 

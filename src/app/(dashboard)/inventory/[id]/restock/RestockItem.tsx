@@ -27,6 +27,7 @@ import { useGetRestockHistory } from "@/hooks/useGetRestockHistory";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import PriceAlertPanel from "./PriceAlertPanel";
 
 const RestockItem = ({
   data,
@@ -45,10 +46,26 @@ const RestockItem = ({
     paymentMethodOptions,
     hasVariations,
     variations,
+    priceAlert,
+    alertForVariation,
+    applyRecommendedPrice,
+    applyingPrice,
+    finishPriceAlert,
   } = useGetRestockHistory({ data, closeModal });
 
-  console.log("data", data);
-  console.log("form", form.getValues());
+  if (priceAlert) {
+    return (
+      <PriceAlertPanel
+        alert={priceAlert}
+        // The price just submitted with the restock is the one now in force.
+        currentSellingPrice={Number(form.getValues("selling_price")) || undefined}
+        forVariation={alertForVariation}
+        applying={applyingPrice}
+        onApply={applyRecommendedPrice}
+        onKeep={finishPriceAlert}
+      />
+    );
+  }
 
   return (
     <div className="w-full">
@@ -183,6 +200,28 @@ const RestockItem = ({
                     />
                   </PopoverContent>
                 </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Batch Number — optional; left blank, the backend names the batch
+              itself, e.g. "Batch A • Emzor (21 Sep 2026)". */}
+          <FormField
+            control={form.control}
+            name="batch_number"
+            render={({ field }) => (
+              <FormItem className="flex-1">
+                <FormLabel>
+                  Batch Number{" "}
+                  <span className="font-normal text-grey-3">(optional)</span>
+                </FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. BATCH-001" {...field} />
+                </FormControl>
+                <p className="text-[11px] text-grey-3">
+                  Leave blank and we&apos;ll name it for you.
+                </p>
                 <FormMessage />
               </FormItem>
             )}

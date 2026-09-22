@@ -3,6 +3,7 @@ import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
+import ProductBatches from "./ProductBatches";
 
 const ViewDetails = ({
   data,
@@ -107,6 +108,13 @@ const ViewDetails = ({
               <DetailItem label="Total Stock Value" value="N/A" spanFull />
             </div>
           </div>
+
+          {/* Stock by batch and expiry, when the product has any. */}
+          {data?.id && (
+            <div className="col-span-1 md:col-span-2">
+              <ProductBatches productId={data.id} />
+            </div>
+          )}
 
           {/* History Buttons - Stack on mobile */}
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full col-span-1 md:col-span-2">

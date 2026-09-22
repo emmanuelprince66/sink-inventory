@@ -1,5 +1,6 @@
 import { useFetchRestockHistoryQuery } from "@/api/restock/fetch-restock-history";
 import { useRestockProductMutation } from "@/api/restock/restock-product";
+import { useEditProductMutation } from "@/api/products/edit-product";
 import { useFetchSupplierDataQuery } from "@/api/supply/fetch-all-supplier";
 import { queryKey } from "@/constants/query-key";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -7,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
@@ -18,6 +19,7 @@ const RestockSchema = z
     qty: z.coerce.number().min(1, "Stock Quantity is required"),
     supplier: z.string().optional(),
     expiry_date: z.string().optional(),
+    batch_number: z.string().optional(),
     cost_price: z.coerce.number().min(1, "Unit Cost Price is required"),
     selling_price: z.coerce.number().min(1, "Unit Selling Price is required"),
     payment_method: z.string().min(1, "Payment Method is required"),
@@ -57,6 +59,20 @@ const RestockSchema = z
 
 export type RestockFormValues = z.infer<typeof RestockSchema>;
 
+/**
+ * Sent on the restock response when the purchase cost rose 3% or more, or the
+ * margin fell below 15%. recommended_selling_price keeps the product's
+ * previous gross margin.
+ */
+export interface RestockPriceAlert {
+  has_fluctuation: boolean;
+  previous_cost_price: number;
+  new_cost_price: number;
+  percentage_change: number;
+  recommended_selling_price: number;
+  message?: string;
+}
+
 export const useGetRestockHistory = ({
   id,
   data,
@@ -84,22 +100,72 @@ export const useGetRestockHistory = ({
     enabled: !!pId,
   });
 
+  // Held after a successful restock whose cost moved. The form stays open and
+  // shows the alert in its place — closing it here would drop the warning
+  // with the modal.
+  const [priceAlert, setPriceAlert] = useState<RestockPriceAlert | null>(null);
+  // A variant's price lives on the variant, which the product-level PATCH
+  // the backend points to doesn't reach. Captured at submit time.
+  const [alertForVariation, setAlertForVariation] = useState(false);
+
+  const refreshProduct = () => {
+    queryClient.invalidateQueries({
+      queryKey: [queryKey.inventory.getAllInventory],
+    });
+    // Batches and the new stock level show on View Details.
+    queryClient.invalidateQueries({
+      queryKey: [queryKey.products.getProductsById, pId],
+    });
+  };
+
   const { mutate: restockProduct, isPending: restockProductPending } =
     useRestockProductMutation({
       productId: pId,
       onSuccess: (data) => {
-        console.log("data", data);
         showToast(data.message, "success");
         refetch();
-        queryClient.invalidateQueries({
-          queryKey: [queryKey.inventory.getAllInventory],
-        });
+        refreshProduct();
         queryClient.invalidateQueries({
           queryKey: [queryKey.products.fetchAllRestockHistory],
         });
+
+        // The proxy wraps the backend body in { data }; the backend may wrap
+        // its own payload once more.
+        const alert: RestockPriceAlert | undefined =
+          data?.data?.price_alert ?? data?.data?.data?.price_alert;
+        if (alert?.has_fluctuation) {
+          setPriceAlert(alert);
+          return;
+        }
         if (closeModal) closeModal();
       },
     });
+
+  const finishPriceAlert = () => {
+    setPriceAlert(null);
+    if (closeModal) closeModal();
+  };
+
+  const { mutate: editProduct, isPending: applyingPrice } =
+    useEditProductMutation(pId, {
+      onSuccess: () => {
+        showToast("Selling price updated", "success");
+        refreshProduct();
+        finishPriceAlert();
+      },
+    });
+
+  // POS and checkout read the price off the product, so this is all it takes
+  // for the next sale to use it.
+  const applyRecommendedPrice = () => {
+    if (!priceAlert) return;
+    const payload = new FormData();
+    payload.append(
+      "selling_price",
+      String(Math.round(priceAlert.recommended_selling_price)),
+    );
+    editProduct({ productId: pId, payload });
+  };
 
   const form = useForm<RestockFormValues>({
     resolver: zodResolver(RestockSchema),
@@ -107,6 +173,7 @@ export const useGetRestockHistory = ({
       name: data?.name || "",
       qty: undefined,
       expiry_date: "",
+      batch_number: "",
       supplier: "",
       cost_price: data?.cost_price || undefined,
       selling_price: data?.selling_price || undefined,
@@ -148,6 +215,9 @@ export const useGetRestockHistory = ({
   }, [selectedVariationId, hasVariations, data, form]);
 
   const onSubmit = (values: RestockFormValues) => {
+    setAlertForVariation(Boolean(hasVariations && values.variation_id));
+    // Left out when blank: the backend then names the batch itself.
+    const batchNumber = values.batch_number?.trim();
     const payload = {
       quantity: values.qty,
       cost_price: Math.round(Number(values.cost_price)),
@@ -156,6 +226,7 @@ export const useGetRestockHistory = ({
       ...(values.expiry_date && {
         expiry_date: moment(values.expiry_date).format("YYYY-MM-DD").toString(),
       }),
+      ...(batchNumber && { batch_number: batchNumber }),
       ...(values.supplier && { supplier_id: values.supplier }),
       ...(hasVariations &&
         values.variation_id && { variation_id: values.variation_id }), // Add variation_id if exists
@@ -168,7 +239,6 @@ export const useGetRestockHistory = ({
       }),
       ...(values.remark && { remark: values.remark }),
     };
-    console.log("payload----5", payload);
 
     restockProduct({
       payload,
@@ -187,5 +257,10 @@ export const useGetRestockHistory = ({
     paymentMethodOptions,
     hasVariations,
     variations: data?.variations || [],
+    priceAlert,
+    alertForVariation,
+    applyRecommendedPrice,
+    applyingPrice,
+    finishPriceAlert,
   };
 };

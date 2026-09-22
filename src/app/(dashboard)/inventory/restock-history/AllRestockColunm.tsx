@@ -9,6 +9,7 @@ import {
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { UrgencyPill, daysUntil, formatQty } from "../batch";
 
 export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
   {
@@ -58,6 +59,49 @@ export const allRestockHistoryColumns: ColumnDef<RestockHistoryItem>[] = [
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-2 text-info-1">
           {quantity} units
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "batch_name",
+    header: "Batch",
+    cell: ({ row }) => (
+      <div className="text-sm text-grey-2 max-w-[12rem] truncate" title={row.original.batch_name || ""}>
+        {row.original.batch_name || "-"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "expiry_date",
+    header: "Expiry",
+    cell: ({ row }) => {
+      const expiry = row.original.expiry_date;
+      if (!expiry) return <span className="text-sm text-grey-4">-</span>;
+      return (
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-sm text-grey-2">
+            {format(new Date(`${expiry}T00:00:00`), "MMM dd, yyyy")}
+          </span>
+          {/* Only while stock remains: an emptied batch has nothing left to expire. */}
+          {Number(row.original.remaining_quantity) > 0 && (
+            <UrgencyPill days={daysUntil(expiry)} />
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "remaining_quantity",
+    header: "Remaining",
+    cell: ({ row }) => {
+      const left = row.original.remaining_quantity;
+      if (left === undefined || left === null)
+        return <span className="text-sm text-grey-4">-</span>;
+      return (
+        <span className="text-sm text-grey-2">
+          {formatQty(left)}
+          <span className="text-grey-4"> / {formatQty(row.original.quantity)}</span>
         </span>
       );
     },
