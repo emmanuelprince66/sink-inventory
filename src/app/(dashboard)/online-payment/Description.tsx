@@ -8,7 +8,9 @@ const Description = () => {
         Complete your KYC verification to enable online payments.
       </p>
       <Button asChild size="lg">
-        <Link href="/kyc">Complete KYC Now</Link>
+        <Link href="/kyc">
+          <p className="text-white">Complete KYC Now</p>
+        </Link>
       </Button>
     </div>
   );
