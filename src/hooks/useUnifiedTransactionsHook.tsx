@@ -3,7 +3,12 @@ import { useBusinessBanks } from "@/hooks/useBusinessBanks";
 import { DateRange } from "react-day-picker";
 import moment from "moment";
 
-export type UnifiedTransactionFilter = "ALL" | "CREDIT" | "DEBIT" | "ONLINE" | "BNPL";
+/**
+ * BNPL is not one of these on purpose. A pending settlement is not a wallet
+ * transaction — the money has not arrived — so it has its own section and its
+ * own endpoint rather than a filter over this list.
+ */
+export type UnifiedTransactionFilter = "ALL" | "CREDIT" | "DEBIT" | "ONLINE";
 
 export const useUnifiedTransactionsHook = ({
   page,
@@ -18,7 +23,6 @@ export const useUnifiedTransactionsHook = ({
 }) => {
   const { selectedBankId } = useBusinessBanks();
   const isOnline = filter === "ONLINE";
-  const isBnpl = filter === "BNPL";
   const walletType = filter === "CREDIT" || filter === "DEBIT" ? filter : "";
 
   const walletQuery = useFetchTransactionQuery({
@@ -29,7 +33,6 @@ export const useUnifiedTransactionsHook = ({
       search: searchInput,
       type: walletType,
       mode: isOnline ? "ONLINE" : "",
-      is_bnpl: isBnpl ? true : undefined,
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
         : undefined,

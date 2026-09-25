@@ -240,7 +240,7 @@ const BnplCard = () => {
           </div>
 
           <p className="rounded-lg border border-primary-green-300/30 bg-primary-green-500 p-3 text-xs font-bold text-grey-1">
-            Fee: 1.5% per successful disbursement, capped at ₦1,000.
+            Fee: 3% per successful disbursement.
           </p>
 
           {!ready ? (

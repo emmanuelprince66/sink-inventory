@@ -54,16 +54,24 @@ export const useTransactionsHook = ({
   // wallet call is keyed on a bank id, so overriding this one value is all it
   // takes to point the same screen at an expense account instead.
   const walletBankId = sourceBankId ?? selectedBankId;
-  const transferCharge = (() => {
-    const value = Number(transferAmount);
-    if (!Number.isFinite(value) || value <= 0) return 0;
-    const minimum = Number(selectedBank?.min_fee ?? 0);
-    const maximum = Number(selectedBank?.max_fee ?? 0);
-    const percentage = Number(selectedBank?.percentage ?? 0);
-    const calculated = value * percentage;
-    const withMinimum = Math.max(calculated, minimum);
-    return maximum > 0 ? Math.min(withMinimum, maximum) : withMinimum;
-  })();
+  // const transferCharge = (() => {
+  //   const value = Number(transferAmount);
+  //   if (!Number.isFinite(value) || value <= 0) return 0;
+  //   const minimum = Number(selectedBank?.min_fee ?? 0);
+  //   const maximum = Number(selectedBank?.max_fee ?? 0);
+  //   const percentage = Number(selectedBank?.percentage ?? 0);
+  //   const calculated = value * percentage;
+  //   const withMinimum = Math.max(calculated, minimum);
+  //   return maximum > 0 ? Math.min(withMinimum, maximum) : withMinimum;
+  // })();
+  const transferCharge = (amount: any) => {
+    if (amount === "" || !amount) return 0;
+    if (Number(amount) <= 5000) return 10;
+    if (Number(amount) <= 50000) return 25;
+    return 50;
+  };
+
+  // console.log("transferCharge", transferCharge, transferAmount, selectedBank);
   const {
     data: BankData,
     isLoading: BankDataLoading,
@@ -156,7 +164,7 @@ export const useTransactionsHook = ({
           router.back();
         },
         onError: (error) => {},
-      }
+      },
     );
   };
 
@@ -174,7 +182,7 @@ export const useTransactionsHook = ({
         });
       }
     },
-    [beneficiaryEnquiryMutation]
+    [beneficiaryEnquiryMutation],
   );
 
   useEffect(() => {
@@ -249,7 +257,7 @@ export const useTransactionsHook = ({
     CategoriesData,
     TransferFundsLoading,
     transferCharge,
-    transferTotal: Number(transferAmount || 0) + transferCharge,
+    transferTotal: Number(transferAmount) + transferCharge(transferAmount),
     handleSubmitTransferFunds,
     CategoriesDataLoading,
     beneficiaryInfo,

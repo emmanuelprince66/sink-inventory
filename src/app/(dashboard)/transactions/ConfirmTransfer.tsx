@@ -39,6 +39,8 @@ const ConfirmTransfer = ({
 }: any) => {
   const { handleSubmitTransferFunds, TransferFundsLoading, TrxData } =
     useTransactionsHook({ beneficiaryInfo, sourceBankId });
+
+  console.log("hello thisostran");
   const router = useRouter();
   const [pin, setPin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +48,7 @@ const ConfirmTransfer = ({
   const [receipt, setReceipt] = useState<TransferReceiptDetails | null>(null);
 
   const charges = calculateCharges(transferDetails?.amount || 0);
+  console.log("charges", charges);
   const stampDuty = calculateStampDuty(transferDetails?.amount || 0);
   const totalAmount =
     (parseInt(transferDetails?.amount) || 0) + charges + stampDuty;
@@ -118,19 +121,25 @@ const ConfirmTransfer = ({
           <div className="bg-grey-6/60 rounded-xl p-4 mb-6 border border-grey-5">
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-grey-2">Bank Name:</span>
+                <span className="text-sm font-medium text-grey-2">
+                  Bank Name:
+                </span>
                 <span className="text-sm text-grey-3">
                   {transferDetails?.bank?.name}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-grey-2">Account Number:</span>
+                <span className="text-sm font-medium text-grey-2">
+                  Account Number:
+                </span>
                 <span className="text-sm text-grey-3">
                   {transferDetails?.accountNumber}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-grey-2">Account Name:</span>
+                <span className="text-sm font-medium text-grey-2">
+                  Account Name:
+                </span>
                 <span className="text-sm text-grey-3">
                   {transferDetails?.accountName || "N/A"}
                 </span>
@@ -142,14 +151,18 @@ const ConfirmTransfer = ({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-sm font-medium text-grey-2">System Charges:</span>
+                <span className="text-sm font-medium text-grey-2">
+                  System Charges:
+                </span>
                 <span className="text-sm text-grey-2 font-medium">
                   {formatToNaira(charges)}
                 </span>
               </div>
               {stampDuty > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-grey-2">Stamp Duty:</span>
+                  <span className="text-sm font-medium text-grey-2">
+                    Stamp Duty:
+                  </span>
                   <span className="text-sm text-grey-2 font-medium">
                     {formatToNaira(stampDuty)}
                   </span>
@@ -163,7 +176,9 @@ const ConfirmTransfer = ({
               </div>
               {transferDetails?.narration && (
                 <div className="flex justify-between pt-2 border-t border-grey-5">
-                  <span className="text-sm font-medium text-grey-2">Narration:</span>
+                  <span className="text-sm font-medium text-grey-2">
+                    Narration:
+                  </span>
                   <span className="text-sm text-grey-3">
                     {transferDetails.narration}
                   </span>

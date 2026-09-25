@@ -5,6 +5,7 @@ export const queryKey = {
     getBusinessById: "get-business-by-id",
     updateBusiness: "update-business",
     getStoreThemes: "get-store-themes",
+    getPendingBnpl: "get-pending-bnpl",
   },
   auth: {
     login: "login",

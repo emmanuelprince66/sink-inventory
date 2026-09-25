@@ -107,10 +107,10 @@ const BnplTerms = () => (
         For each successful BNPL transaction that has been approved and
         successfully disbursed to the Merchant, a transaction fee of{" "}
         <span className="font-bold text-grey-1">
-          1.5% of the transaction value, capped at ₦1,000 per transaction
+          3% of the transaction value
         </span>
-        , shall apply. The applicable fee shall be deducted in accordance with
-        the agreed settlement process.
+        {" "}shall apply. The applicable fee shall be deducted in accordance
+        with the agreed settlement process.
       </p>
       <p>
         No transaction fee shall be charged for an application that is

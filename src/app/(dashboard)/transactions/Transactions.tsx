@@ -38,13 +38,15 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
+import CollapsibleSection from "./CollapsibleSection";
 import NoTransactions from "./NoTransactions";
+import PendingBnplPanel from "./PendingBnplPanel";
 import TransactionTable from "./TransactionTable";
-import TransferSummary from "./TransferSummary";
 import TransferReceipt, {
   extractTransactionId,
   type TransferReceiptDetails,
 } from "./TransferReceipt";
+import TransferSummary from "./TransferSummary";
 
 type ReportFormat = "PDF" | "Excel" | "CSV";
 
@@ -90,12 +92,12 @@ const Transactions = () => {
   const [branchName, setBranchName] = useState("");
   const [reportFormat, setReportFormat] = useState<ReportFormat>("PDF");
 
+  console.log("transferAMount" , transferAmount)
   const filterMapping = {
     ALL: "",
     CREDIT: "CREDIT",
     DEBIT: "DEBIT",
     ONLINE: "",
-    BNPL: "",
   } as const;
 
   const { banks, selectedBank, setSelectedBankId, canSwitchBanks, isPrimary } =
@@ -349,79 +351,79 @@ const Transactions = () => {
           </section>
 
           <section className="rounded-2xl bg-[#223329] p-5 text-white shadow-[0_12px_30px_rgba(20,45,31,0.14)] sm:p-6">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10">
-                    <Landmark className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p
-                        title={selectedBank?.account_name || "Main Account"}
-                        className="max-w-[280px] truncate text-sm font-bold"
-                      >
-                        {selectedBank?.account_name || "Main Account"}
-                      </p>
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">
-                        {selectedBank && isPrimary(selectedBank)
-                          ? "Current"
-                          : "Sub Account"}
-                      </span>
-                    </div>
-                    <p className="mt-1 truncate text-xs text-white/70">
-                      {selectedBank?.bank_name ||
-                        wallet?.bank_name ||
-                        "Bank account"}{" "}
-                      ·{" "}
-                      {selectedBank?.account_number ||
-                        wallet?.account_number ||
-                        "Nil"}
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10">
+                  <Landmark className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p
+                      title={selectedBank?.account_name || "Main Account"}
+                      className="max-w-[280px] truncate text-sm font-bold"
+                    >
+                      {selectedBank?.account_name || "Main Account"}
                     </p>
-                    <p className="mt-1 truncate text-xs text-white/60">
-                      {selectedBank?.account_name ||
-                        wallet?.account_name ||
-                        "Account name"}
-                    </p>
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px]">
+                      {selectedBank && isPrimary(selectedBank)
+                        ? "Current"
+                        : "Sub Account"}
+                    </span>
                   </div>
-                </div>
-
-                <div className="lg:text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
-                    Available Balance
+                  <p className="mt-1 truncate text-xs text-white/70">
+                    {selectedBank?.bank_name ||
+                      wallet?.bank_name ||
+                      "Bank account"}{" "}
+                    ·{" "}
+                    {selectedBank?.account_number ||
+                      wallet?.account_number ||
+                      "Nil"}
                   </p>
-                  <p className="mt-1 text-3xl font-extrabold tracking-tight">
-                    {amount(balance)}
+                  <p className="mt-1 truncate text-xs text-white/60">
+                    {selectedBank?.account_name ||
+                      wallet?.account_name ||
+                      "Account name"}
                   </p>
-                </div>
-
-                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto lg:justify-end">
-                  <Button
-                    onClick={() => setShowTransferModal(true)}
-                    className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    Transfer
-                  </Button>
-                  <Button
-                    className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                    onClick={() => setShowFundModal(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Fund
-                  </Button>
-                  <Button
-                    className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                    onClick={() => setShowReportModal(true)}
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Report
-                  </Button>
-                  <Button className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Manage
-                  </Button>
                 </div>
               </div>
+
+              <div className="lg:text-right">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/60">
+                  Available Balance
+                </p>
+                <p className="mt-1 text-3xl font-extrabold tracking-tight">
+                  {amount(balance)}
+                </p>
+              </div>
+
+              <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto lg:justify-end">
+                <Button
+                  onClick={() => setShowTransferModal(true)}
+                  className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Transfer
+                </Button>
+                <Button
+                  className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
+                  onClick={() => setShowFundModal(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Fund
+                </Button>
+                <Button
+                  className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
+                  onClick={() => setShowReportModal(true)}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Report
+                </Button>
+                <Button className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Manage
+                </Button>
+              </div>
+            </div>
           </section>
 
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -451,53 +453,19 @@ const Transactions = () => {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-2xl border border-grey-5 bg-white">
-            <div className="flex flex-col gap-4 border-b border-grey-5 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-info-2 text-info-1">
-                  <CreditCardIcon />
-                </span>
-                <div>
-                  <h2 className="font-bold text-grey-1">Buy Now Pay Later</h2>
-                  <p className="text-xs text-grey-3">
-                    Akawopay instalment loans — click any row to view or approve
-                  </p>
-                </div>
-              </div>
-              <Link
-                href="/operations/general-settings"
-                className="text-sm font-bold text-primary-green-300 hover:underline"
-              >
-                Settings
-              </Link>
-            </div>
-            <div className="grid grid-cols-1  border-b border-grey-5 md:grid-cols-3 ">
-              {[
-                ["Active loans", "0", "text-info-1"],
-                ["Total outstanding", amount(0), "text-error-1"],
-                ["Total paid", amount(0), "text-success-1"],
-              ].map(([label, value, color]) => (
-                <div key={label} className="p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-grey-3">
-                    {label}
-                  </p>
-                  <p className={cn("mt-2 text-2xl font-extrabold", color)}>
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-            {/* <div className="p-5 text-center">
-              <p className="text-sm font-semibold text-grey-2">
-                No BNPL transactions yet
-              </p>
-              <p className="mt-1 text-xs text-grey-3">
-                Instalment plans will appear here once a customer uses Akawopay.
-              </p>
-            </div> */}
-          </section>
+          {/* Pending Akawopay settlements. Kept out of the wallet cards above
+              on purpose — none of it is in the balance yet. */}
+          <PendingBnplPanel
+            businessId={businessData?.id}
+            dateRange={dateRange}
+          />
 
-          <section className="overflow-hidden rounded-2xl border border-grey-5 bg-white">
+          <CollapsibleSection
+            value="wallet-transactions"
+            icon={<Wallet className="h-5 w-5" />}
+            title="Transactions"
+            subtitle="Money in and out of the selected account"
+          >
             <div className="flex flex-col gap-4 border-b border-grey-5 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="w-full sm:w-80">
                 <SearchInput
@@ -511,13 +479,15 @@ const Transactions = () => {
                 />
               </div>
               <div className="flex flex-wrap gap-2">
+                {/* BNPL is deliberately not a filter here — it has its own
+                    section above, and a settlement that has not landed is not
+                    a wallet transaction at all. */}
                 {(
                   [
                     ["ALL", "All"],
                     ["CREDIT", "Credit"],
                     ["DEBIT", "Debit"],
                     ["ONLINE", "Online"],
-                    ["BNPL", "BNPL"],
                   ] as const
                 ).map(([filter, label]) => (
                   <button
@@ -564,7 +534,7 @@ const Transactions = () => {
             ) : (
               <NoTransactions />
             )}
-          </section>
+          </CollapsibleSection>
 
           {needsKyc && (
             <div className="flex justify-center pb-2">
@@ -916,7 +886,7 @@ const Transactions = () => {
                 bankName={recipientBank?.label}
                 accountNumber={accountNumber}
                 amount={transferAmount}
-                charge={transferCharge}
+                charge={transferCharge(transferAmount)}
                 total={transferTotal}
               />
 
@@ -989,18 +959,5 @@ const Transactions = () => {
     </>
   );
 };
-
-const CreditCardIcon = () => (
-  <svg
-    viewBox="0 0 24 24"
-    className="h-5 w-5"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-  >
-    <rect x="3" y="5" width="18" height="14" rx="2" />
-    <path d="M3 10h18" />
-  </svg>
-);
 
 export default Transactions;

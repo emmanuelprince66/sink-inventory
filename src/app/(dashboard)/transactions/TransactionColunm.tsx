@@ -99,11 +99,25 @@ export const columns: ColumnDef<any>[] = [
   {
     accessorKey: "is_bnpl",
     header: "BNPL",
-    cell: ({ row }) => (
-      <span className="text-sm text-grey-3">
-        {row.original.is_bnpl ? "Yes" : "No"}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const trx = row.original;
+      if (!trx.is_bnpl) return <span className="text-sm text-grey-3">No</span>;
+
+      // The order reference is what ties this credit back to the sale it
+      // settled — "Yes" on its own left the merchant with no way to tell which
+      // of the day's BNPL orders had just been paid out.
+      const details = trx.bnpl_details;
+      return (
+        <div>
+          <span className="text-sm font-bold text-grey-2">Yes</span>
+          {details?.order_reference && (
+            <p className="text-xs text-primary-green-300">
+              {details.order_reference}
+            </p>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "amount",

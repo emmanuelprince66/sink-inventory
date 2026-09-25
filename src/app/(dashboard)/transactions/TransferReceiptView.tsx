@@ -1,120 +1,61 @@
 "use client";
 
-import { useFetchBusinessById } from "@/api/business/get-business-by-id";
+import logo from "@/assets/sink2.png";
+import { AppStoreGlyph, GooglePlayGlyph } from "@/components/app/StoreGlyphs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
-import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
-import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { formatToNaira } from "@/utils/formatMoney";
-import {
-  Document,
-  Page,
-  PDFDownloadLink,
-  Text,
-  View,
-} from "@react-pdf/renderer";
-import { ChevronLeft, Download, Printer, Share2 } from "lucide-react";
+import { ChevronLeft, Download, Share2 } from "lucide-react";
 import moment from "moment";
-import printJS from "print-js";
+import Image from "next/image";
 import { useRef, useState } from "react";
-import { RECEIPT_PRINT_STYLE, styles } from "../pos/PrintReceiptView";
 import type { TransferReceiptDetails } from "./TransferReceipt";
 
 /**
- * A wallet transfer's receipt, in the POS receipt's design and structure
- * (see PrintReceiptView): business header, the amount where the POS puts its
- * total, the transaction details block, the payment method box and the same
- * footer — printed with the same stylesheet, saved with the same PDF styles.
- * A transfer has no line items, so the items table is the one section left
- * out.
+ * The transfer receipt card.
+ *
+ * Download and Share both hand over the same picture of the card below, so
+ * what is saved or sent is exactly what is on screen — no second layout to
+ * keep in step with this one.
  */
 
-const orDash = (value?: string) => (value?.trim() ? value : "-");
+/** Card colours are literal hex, not theme tokens — see the note in `capture()`. */
+const INK = "#1D1F22";
+const MUTED = "#6B7280";
+const HAIRLINE = "#EFEFEF";
 
-const detailRows = (details: TransferReceiptDetails) => [
-  { label: "Transaction Type:", value: "Outward" },
-  { label: "Sender:", value: orDash(details.senderName) },
-  { label: "Beneficiary:", value: orDash(details.beneficiaryName) },
-  { label: "Account No:", value: orDash(details.beneficiaryAccount) },
-  { label: "Bank:", value: orDash(details.beneficiaryBank) },
-  { label: "Narration:", value: orDash(details.narration) },
-  { label: "Transaction ID:", value: orDash(details.transactionId) },
-  { label: "Status:", value: details.status ?? "Successful" },
-  {
-    label: "Date:",
-    value: moment(details.date ?? undefined).format("MMMM D, YYYY, h:mm A"),
-  },
-];
+const Row = ({ label, value }: { label: string; value?: string }) => (
+  <div className="flex items-start justify-between gap-4 border-b border-[#F0F0F0] py-3 last:border-b-0">
+    <span className="shrink-0 text-[15px] text-[#6B7280]">{label}</span>
+    {/* min-w-0 plus anywhere-wrapping: a provider reference is one unbroken
+        48-character run, which a flex item will happily push past the card
+        edge rather than break on its own. */}
+    <span className="min-w-0 text-right text-[15px] font-semibold text-[#1D1F22] [overflow-wrap:anywhere]">
+      {value?.trim() ? value : "-"}
+    </span>
+  </div>
+);
 
-const TransferReceiptPDF = ({
-  details,
-  business,
+/** One of the two black pills under "Generated from Sync360 App." */
+const StoreBadge = ({
+  glyph,
+  line,
+  name,
 }: {
-  details: TransferReceiptDetails;
-  business: any;
-}) => {
-  const contactEmail = business?.email || business?.owner?.email || "";
-  const contactPhone = business?.phone || business?.owner?.phone || "";
-
-  return (
-    <Document>
-      <Page size="A5" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.title}>TRANSACTION RECEIPT</Text>
-          <Text style={styles.subtitle}>
-            TRANSFER {(details.status ?? "Successful").toUpperCase()}
-          </Text>
-          <Text style={styles.businessName}>{business?.name || "STORE"}</Text>
-          {(business?.street || business?.city) && (
-            <Text style={styles.businessAddress}>
-              {business?.street && `${business.street}, `}
-              {business?.city}, {business?.state}, {business?.country}
-            </Text>
-          )}
-          <View style={styles.contactInfo}>
-            {contactEmail && (
-              <Text style={styles.contactText}>{contactEmail}</Text>
-            )}
-            {contactEmail && contactPhone && (
-              <Text style={styles.separator}>|</Text>
-            )}
-            {contactPhone && (
-              <Text style={styles.contactText}>{contactPhone}</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.totalSection}>
-          <Text style={styles.totalLabel}>AMOUNT:</Text>
-          <Text style={styles.totalAmount}>
-            {formatToNaira(Number(details.amount) || 0)}
-          </Text>
-        </View>
-
-        <View style={styles.transactionDetails}>
-          {detailRows(details).map((row) => (
-            <View key={row.label} style={styles.detailRow}>
-              <Text style={styles.detailLabel}>{row.label}</Text>
-              <Text style={styles.detailValue}>{row.value}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.paymentMethodBox}>
-          <Text style={styles.paymentMethodTitle}>PAYMENT METHOD(S):</Text>
-          <Text style={styles.paymentMethodValue}>BANK TRANSFER</Text>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.thankyou}>THANK YOU!</Text>
-          <Text style={styles.poweredBy}>
-            Powered by Sync360 | www.sync360.africa
-          </Text>
-        </View>
-      </Page>
-    </Document>
-  );
-};
+  glyph: React.ReactNode;
+  line: string;
+  name: string;
+}) => (
+  <div className="flex items-center gap-2 rounded-[6px] bg-black px-[12px] py-[7px]">
+    {glyph}
+    <div className="text-left">
+      <div className="text-[8px] leading-none text-white">{line}</div>
+      <div className="text-[13px] font-semibold leading-tight text-white">
+        {name}
+      </div>
+    </div>
+  </div>
+);
 
 const TransferReceiptView = ({
   details,
@@ -123,91 +64,152 @@ const TransferReceiptView = ({
   details: TransferReceiptDetails;
   onBack: () => void;
 }) => {
-  const receiptRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
-  const [isPrinting, setIsPrinting] = useState(false);
-  const [sharing, setSharing] = useState(false);
+  const [busy, setBusy] = useState<"download" | "share" | null>(null);
 
-  // The sender is the business, so its details head the receipt — read the
-  // same way the POS receipt does: live profile, then the cached copy.
-  const business_id = useBusinessStore((s) => s.business_id);
-  const { data: liveBusinessQuery } = useFetchBusinessById(business_id, {
-    staleTime: 0,
-    refetchOnMount: "always",
-  });
-  const { businessData: cachedBusinessData } = useBusinessDataStore();
-  const business = liveBusinessQuery?.data || cachedBusinessData;
+  const rows = [
+    { label: "Transaction Type", value: "Outward" },
+    { label: "Sender Name", value: details.senderName },
+    { label: "Beneficiary Name", value: details.beneficiaryName },
+    { label: "Beneficiary Account", value: details.beneficiaryAccount },
+    { label: "Beneficiary Bank", value: details.beneficiaryBank },
+    { label: "Transaction Status", value: details.status ?? "Successful" },
+    { label: "Narration", value: details.narration },
+    { label: "Transaction ID", value: details.transactionId },
+    {
+      label: "Date & Time",
+      value: moment(details.date ?? undefined).format("DD-MM-YYYY [at] hh:mm A"),
+    },
+  ];
 
-  const rows = detailRows(details);
-  const amount = formatToNaira(Number(details.amount) || 0);
   const fileName = `receipt-${details.transactionId || moment().format("YYYYMMDD-HHmmss")}`;
 
-  const handlePrint = () => {
-    if (isPrinting || !receiptRef.current) return;
-    setIsPrinting(true);
-    const timeoutId = setTimeout(() => setIsPrinting(false), 5000);
+  /**
+   * Paints the card to a canvas.
+   *
+   * html2canvas-pro rather than plain html2canvas: Tailwind v4 emits oklch()
+   * colours, which the original parser chokes on. The card's own colours are
+   * written as hex here so the capture never depends on that support being
+   * perfect.
+   */
+  const capture = async () => {
+    const node = cardRef.current;
+    if (!node) return null;
+
+    // A half-loaded logo captures as a blank box.
+    await Promise.all(
+      Array.from(node.querySelectorAll("img")).map(
+        (img) =>
+          new Promise((resolve) => {
+            if (img.complete) return resolve(img);
+            img.onload = () => resolve(img);
+            img.onerror = () => resolve(img);
+          }),
+      ),
+    );
+
+    const html2canvas = (await import("html2canvas-pro")).default;
+
+    return html2canvas(node, {
+      scale: 3,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+      imageTimeout: 15000,
+    });
+  };
+
+  /** Saves the card as a PDF the same size as itself — no A4 letterboxing. */
+  const handleDownload = async () => {
+    setBusy("download");
     try {
-      printJS({
-        printable: receiptRef.current.innerHTML,
-        type: "raw-html",
-        style: RECEIPT_PRINT_STYLE,
-        onPrintDialogClose: () => {
-          clearTimeout(timeoutId);
-          setIsPrinting(false);
-        },
-        onError: (err) => {
-          clearTimeout(timeoutId);
-          setIsPrinting(false);
-          console.error("Print error:", err);
-        },
-        modalMessage: "Preparing print...",
+      const canvas = await capture();
+      if (!canvas) return;
+
+      const { jsPDF } = await import("jspdf");
+      // CSS pixels, so the page is exactly the card.
+      const width = canvas.width / 3;
+      const height = canvas.height / 3;
+
+      const pdf = new jsPDF({
+        unit: "px",
+        format: [width, height],
+        orientation: height >= width ? "portrait" : "landscape",
       });
+      pdf.addImage(
+        canvas.toDataURL("image/png", 1.0),
+        "PNG",
+        0,
+        0,
+        width,
+        height,
+      );
+      pdf.save(`${fileName}.pdf`);
     } catch (error) {
-      clearTimeout(timeoutId);
-      console.error("Print failed:", error);
-      setIsPrinting(false);
+      console.error("Receipt download failed:", error);
+      showToast("Couldn't download the receipt.", "error");
+    } finally {
+      setBusy(null);
     }
   };
 
+  /** The receipt as plain text, for the share targets that take no image. */
+  const summaryText = () =>
+    [
+      "Transaction Receipt",
+      `Amount: ${formatToNaira(Number(details.amount) || 0)}`,
+      `Transaction Type: Outward`,
+      ...rows
+        .slice(1)
+        .map((row) => `${row.label}: ${row.value?.trim() ? row.value : "-"}`),
+      "",
+      "Generated from Sync360 App.",
+    ].join("\n");
+
   /**
-   * Shares the receipt, best available way first: as an image where the share
-   * sheet takes files (phones), as text where it doesn't, and onto the
-   * clipboard where there's no share sheet at all.
+   * Shares the receipt, best available way first.
+   *
+   * The image is what someone actually wants to send, but only a share sheet
+   * that accepts files can carry it — phones and tablets, essentially. Two
+   * steps down from there is the fallback the rest of the app already uses for
+   * sharing (see Referral.tsx): put it on the clipboard and say so, rather
+   * than leave a dead button.
    */
   const handleShare = async () => {
-    setSharing(true);
+    setBusy("share");
     try {
-      const text = [
-        "Transaction Receipt",
-        `Amount: ${amount}`,
-        ...rows.map((row) => `${row.label} ${row.value}`),
-        "",
-        "Powered by Sync360 | www.sync360.africa",
-      ].join("\n");
+      const text = summaryText();
+      const canvas = await capture();
 
-      let file: File | null = null;
-      if (receiptRef.current) {
-        // html2canvas-pro: Tailwind v4's oklch() colours break the original.
-        const html2canvas = (await import("html2canvas-pro")).default;
-        const canvas = await html2canvas(receiptRef.current, {
-          scale: 3,
-          backgroundColor: "#ffffff",
-          logging: false,
-        });
-        const blob = await new Promise<Blob | null>((resolve) =>
-          canvas.toBlob(resolve, "image/png", 1.0),
-        );
-        if (blob) file = new File([blob], `${fileName}.png`, { type: "image/png" });
-      }
+      const blob = canvas
+        ? await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, "image/png", 1.0),
+          )
+        : null;
 
+      const file = blob
+        ? new File([blob], `${fileName}.png`, { type: "image/png" })
+        : null;
+
+      // 1. Share sheet, with the receipt image and nothing else.
+      //
+      // No `text` alongside it, deliberately. WhatsApp and the rest treat it as
+      // the message body, so the recipient got the image AND every line of it
+      // again as text underneath — the receipt twice over. The image already
+      // says all of this, so the file goes on its own.
       if (file && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Transaction Receipt", text });
+        await navigator.share({ files: [file] });
         return;
       }
-      if (navigator.share) {
+
+      // 2. Share sheet without file support — send the details as text.
+      if (typeof navigator !== "undefined" && navigator.share) {
         await navigator.share({ title: "Transaction Receipt", text });
         return;
       }
+
+      // 3. No share sheet at all: clipboard, as elsewhere in the app.
       await navigator.clipboard.writeText(text);
       showToast("Receipt details copied to clipboard", "success");
     } catch (error) {
@@ -216,14 +218,14 @@ const TransferReceiptView = ({
       console.error("Receipt share failed:", error);
       showToast("Couldn't share the receipt.", "error");
     } finally {
-      setSharing(false);
+      setBusy(null);
     }
   };
 
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-full max-w-[460px]">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <button
             onClick={onBack}
             aria-label="Back"
@@ -236,132 +238,95 @@ const TransferReceiptView = ({
           </h1>
         </div>
 
-        <div className="flex justify-center rounded-xl border border-grey-5 bg-grey-6/40 p-3">
-          {/* Same markup and class names as PrintReceiptView — the print
-              stylesheet targets these classes. */}
-          <div
-            ref={receiptRef}
-            className="receipt-container bg-white rounded-lg w-full max-w-[380px] p-2"
+        {/* Everything inside this node is what Download and Share capture.
+            Sizes are the reference design's, scaled from its 269px card to
+            this one, so the proportions survive the jump off the phone. */}
+        <div
+          ref={cardRef}
+          className="rounded-[18px] border border-[#ECECEC] bg-white p-6 sm:p-[30px]"
+        >
+          <div className="flex items-center justify-between gap-3">
+            {/* The asset carries ~28% transparent padding top and bottom. */}
+            <Image
+              src={logo}
+              alt="Sync360"
+              priority
+              className="w-[150px] h-auto -my-[20px]"
+            />
+            <span
+              className="text-[13px] font-extrabold uppercase tracking-[0.02em]"
+              style={{ color: INK }}
+            >
+              Transaction Receipt
+            </span>
+          </div>
+
+          <div className="mt-[30px] h-px" style={{ backgroundColor: HAIRLINE }} />
+
+          <p className="mt-[32px] text-center text-[13px]" style={{ color: MUTED }}>
+            Transaction Amount
+          </p>
+          <p
+            className="mt-1.5 text-center text-[32px] font-extrabold tracking-tight"
+            style={{ color: INK }}
           >
-            <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
-              <h2 className="receipt-title text-[13px] detail-value">
-                TRANSACTION RECEIPT
-              </h2>
-              <p className="business-name receipt-little font-semibold">
-                {business?.name}
-              </p>
-              {(business?.street || business?.city) && (
-                <p className="business-address text-[11px] receipt-little text-gray-500">
-                  {business?.street && `${business.street}, `}
-                  {business?.city}, {business?.state}, {business?.country}
-                </p>
-              )}
-              {(business?.email || business?.owner?.email) && (
-                <p className="business-email text-[11px]  receipt-little text-gray-500">
-                  {business?.email || business?.owner?.email}
-                </p>
-              )}
-              {(business?.phone || business?.owner?.phone) && (
-                <p className="business-phone text-[11px]  receipt-little text-gray-500">
-                  {business?.phone || business?.owner?.phone}
-                </p>
-              )}
-            </div>
+            {formatToNaira(Number(details.amount) || 0)}
+          </p>
 
-            <div className="total-row flex justify-between">
-              <span className="text-[11px]">AMOUNT:</span>
-              <span className=" text-[11px] detail-value">{amount}</span>
-            </div>
+          <div className="mt-4">
+            {rows.map((row) => (
+              <Row key={row.label} label={row.label} value={row.value} />
+            ))}
+          </div>
 
-            <div className="transaction-details">
-              {rows.map((row) => (
-                <div
-                  key={row.label}
-                  className="detail-row flex justify-between items-start gap-3"
-                >
-                  <span className="detail-label text-[11px] shrink-0">
-                    {row.label}
-                  </span>
-                  {/* A provider reference is one unbroken run; let it wrap
-                      rather than push past the receipt edge. */}
-                  <span className="detail-value text-[11px] text-right min-w-0 [overflow-wrap:anywhere]">
-                    {row.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="payment-method">
-              <span className="payment-method-title text-[11px]">
-                PAYMENT METHOD(S):
-              </span>
-              <span className="payment-method-value text-[11px]">
-                BANK TRANSFER
+          <div className="mt-6 rounded-[12px] border border-[#EEEEEE] p-5">
+            <div className="flex items-center justify-center gap-2">
+              <Image
+                src={logo}
+                alt=""
+                aria-hidden
+                priority
+                className="w-[80px] h-auto -my-[11px]"
+              />
+              <span className="text-[13px]" style={{ color: MUTED }}>
+                Generated from Sync360 App.
               </span>
             </div>
 
-            <div className="receipt-footer flex justify-between flex-col items-center">
-              <p className="thank-you text-[13px] ">THANK YOU!</p>
-              <p className="powered-by text-[9px] ">
-                Powered by Sync360 | www.sync360.africa
-              </p>
+            <div className="mt-4 h-px" style={{ backgroundColor: "#F0F0F0" }} />
+
+            <div className="mt-4 flex items-center justify-center gap-2.5">
+              <StoreBadge
+                glyph={<GooglePlayGlyph className="w-[20px] h-[20px] shrink-0" />}
+                line="GET IT ON"
+                name="Google Play"
+              />
+              <StoreBadge
+                glyph={<AppStoreGlyph className="w-[20px] h-[20px] shrink-0" />}
+                line="Download on the"
+                name="App Store"
+              />
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2">
-          <div className="flex gap-2">
-            <Button
-              onClick={handlePrint}
-              variant="outline"
-              className="h-11 flex-1 gap-2 hover:bg-gray-50 border-green-200"
-              disabled={isPrinting}
-            >
-              {isPrinting ? (
-                "Printing..."
-              ) : (
-                <>
-                  <Printer size={18} className="text-green-600" />
-                  <span className="text-green-600">Print Receipt</span>
-                </>
-              )}
-            </Button>
-
-            <PDFDownloadLink
-              className="flex-1"
-              document={
-                <TransferReceiptPDF details={details} business={business} />
-              }
-              fileName={`${fileName}.pdf`}
-            >
-              {({ loading, error }) => (
-                <Button
-                  variant="outline"
-                  className="h-11 w-full gap-2 hover:bg-gray-50 border-green-200"
-                  disabled={loading || !!error}
-                >
-                  {error ? (
-                    "Error generating PDF"
-                  ) : loading ? (
-                    "Generating PDF..."
-                  ) : (
-                    <>
-                      <Download size={18} className="text-green-600" />
-                      <span className="text-green-600">Save as PDF</span>
-                    </>
-                  )}
-                </Button>
-              )}
-            </PDFDownloadLink>
-          </div>
-
+        <div className="mt-5 flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleDownload}
+            disabled={busy !== null}
+            className="flex-1 h-12 rounded-[10px] border-[#E3E3E3] text-grey-1"
+          >
+            <Download className="h-4 w-4" />
+            {busy === "download" ? "Preparing..." : "Download"}
+          </Button>
           <Button
             onClick={handleShare}
-            disabled={sharing}
-            className="h-11 w-full gap-2"
+            disabled={busy !== null}
+            className="flex-1 h-12 rounded-[10px] bg-primary-green-100 border-primary-green-100 text-white hover:bg-primary-green-100/90"
           >
             <Share2 className="h-4 w-4" />
-            {sharing ? "Preparing..." : "Share"}
+            {busy === "share" ? "Preparing..." : "Share"}
           </Button>
         </div>
       </div>

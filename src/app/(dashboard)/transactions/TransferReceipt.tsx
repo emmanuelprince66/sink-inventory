@@ -4,7 +4,7 @@ import { Spinner } from "@/components/app/Spinner";
 import dynamic from "next/dynamic";
 
 export interface TransferReceiptDetails {
-  amount: number | string;
+  amount: number | string | null;
   senderName?: string;
   beneficiaryName?: string;
   beneficiaryAccount?: string;
@@ -38,9 +38,8 @@ export const extractTransactionId = (response: any): string => {
   );
 };
 
-// The receipt itself (TransferReceiptView) builds its PDF with
-// @react-pdf/renderer, which is browser-only and breaks under SSR — loaded on
-// the client only, as the POS receipt is.
+// The receipt card captures itself to a canvas (html2canvas-pro, then jsPDF),
+// all of it browser-only — loaded on the client, as the POS receipt is.
 const TransferReceiptView = dynamic(() => import("./TransferReceiptView"), {
   ssr: false,
   loading: () => (
