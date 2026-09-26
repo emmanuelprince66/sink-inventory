@@ -230,25 +230,13 @@ const NewAddProduct = ({
     const filteredValues = newVariationValues.filter((v) => v.trim());
     if (!selectedVariationType || filteredValues.length === 0) return;
 
-    // Validation for Color - no numbers allowed
-    if (selectedVariationType === "Color") {
-      for (const value of filteredValues) {
-        if (/\d/.test(value)) {
-          showToast("Color values cannot contain numbers", "error");
-          return;
-        }
-      }
-    }
-
-    // Validation for Size - no letters allowed
-    if (selectedVariationType === "Size") {
-      for (const value of filteredValues) {
-        if (/[a-zA-Z]/.test(value)) {
-          showToast("Size values cannot contain letters", "error");
-          return;
-        }
-      }
-    }
+    // Color and size both take free text.
+    //
+    // Size used to reject letters and color used to reject digits, which ruled
+    // out most of what shops actually sell: "XL", "UK 9", "42 EU", "One size",
+    // and colors like "Blue 2" or "Pantone 300". The variation value is a
+    // label the merchant chooses and the till prints — nothing measures or
+    // sorts it — so there is nothing for a format rule to protect.
 
     // Check for duplicates (case-insensitive)
     const lowerCaseValues = filteredValues.map((v) => v.toLowerCase());
