@@ -82,6 +82,23 @@ export const useTransferHistoryColumns = () => {
       },
     },
     {
+      accessorKey: "batch_number",
+      header: "Batch",
+      cell: ({ row }) => {
+        const transfer = row.original;
+        return (
+          // Present on both directions — the batch number follows the stock
+          // into the receiving branch, so both sides name the same batch.
+          <p
+            className="max-w-[12rem] truncate text-sm font-medium text-grey-3"
+            title={transfer.batch_number || ""}
+          >
+            {transfer.batch_number || "-"}
+          </p>
+        );
+      },
+    },
+    {
       accessorKey: "source_business",
       header: "Source Business",
       cell: ({ row }) => {

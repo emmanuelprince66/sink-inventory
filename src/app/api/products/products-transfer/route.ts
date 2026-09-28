@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       target_business_id,
       target_product_id,
       quantity,
+      batch_id,
     } = body;
 
     if (!source_product_id || !target_business_id || !quantity) {
@@ -35,6 +36,8 @@ export async function POST(request: Request) {
       target_business_id,
       quantity,
       ...(target_product_id ? { target_product_id } : {}),
+      // Optional. Without it the backend picks the earliest-expiring batch.
+      ...(batch_id ? { batch_id } : {}),
     };
 
     const response = await fetch(apiUrl.toString(), {
@@ -48,9 +51,14 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
+      // Under `message` as well as `error`: the backend's refusals are worth
+      // reading — "Only 5.00 units available in batch 'BATCH-A'" tells the
+      // merchant exactly what to change, where "Failed to transfer product"
+      // tells them nothing.
+      const message = errorData.message || "Failed to transfer product";
       return NextResponse.json(
-        { error: errorData.message || "Failed to transfer product" },
+        { error: message, message, details: errorData },
         { status: response.status }
       );
     }

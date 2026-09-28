@@ -1,3 +1,4 @@
+import { AUTO_BATCH } from "@/app/(dashboard)/inventory/BatchSelect";
 import { useGetAllBusinessQuery } from "@/api/business/get-business";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useTransferProductMutation } from "@/api/products/transfer-product";
@@ -22,6 +23,15 @@ export const transferProductSchema = z.object({
     .number()
     .min(1, "Quantity must be at least 1")
     .max(10000, "Quantity cannot exceed 10,000"),
+  /**
+   * Which batch the units leave from. Omitted, the backend deducts FEFO.
+   *
+   * Worth choosing by hand here more than anywhere else: the batch travels
+   * with the stock, so the receiving branch inherits its batch number, expiry,
+   * cost price and supplier. Send the wrong one and the other shop's shelf
+   * carries the wrong expiry date.
+   */
+  batch_id: z.string().optional(),
 });
 
 export type TransferProductFormValues = z.infer<typeof transferProductSchema>;
@@ -48,6 +58,7 @@ export const useTransferProductHook = ({
       target_business_id: "",
       target_product_id: null,
       quantity: 1,
+      batch_id: "",
     },
   });
 
@@ -80,8 +91,13 @@ export const useTransferProductHook = ({
         closeModal();
         form.reset();
       },
-      onError: (error) => {
-        showToast(error.message || "Failed to transfer product", "error");
+      onError: (error: any) => {
+        // The proxy reports a refused transfer under both keys; a thrown Error
+        // (network, bad JSON) carries only `message`, so that one leads.
+        showToast(
+          error?.message || error?.error || "Failed to transfer product",
+          "error",
+        );
       },
     });
 
@@ -122,6 +138,11 @@ export const useTransferProductHook = ({
       target_business_id: values.target_business_id,
       target_product_id: hasProducts ? values.target_product_id : null,
       quantity: values.quantity,
+      // Left out when the automatic choice was kept, which is the backend's
+      // cue to take the earliest-expiring batch.
+      ...(values.batch_id && values.batch_id !== AUTO_BATCH
+        ? { batch_id: values.batch_id }
+        : {}),
     });
   };
 

@@ -60,9 +60,9 @@ const Login = () => {
 
             {/* Welcome Message */}
             <div className="mb-4 mt-2">
-              <h1 className="text-xl font-bold text-grey-1">
+              <h3 className=" font-bold text-grey-1">
                 Welcome to Sync360 Admin
-              </h1>
+              </h3>
             </div>
 
             {/* Login Form */}
@@ -82,7 +82,7 @@ const Login = () => {
                       <FormControl>
                         <Input
                           placeholder="Enter your email"
-                          className="rounded-full bg-[#EEF4EF] h-10"
+                          className="rounded-full bg-[#EEF4EF] h-8"
                           {...field}
                         />
                       </FormControl>
@@ -103,7 +103,7 @@ const Login = () => {
                           type="password"
                           showPasswordToggle
                           placeholder="Enter your password"
-                          className="rounded-full bg-[#EEF4EF] h-10"
+                          className="rounded-full bg-[#EEF4EF] h-8"
                           {...field}
                         />
                       </FormControl>
@@ -111,18 +111,21 @@ const Login = () => {
                     </FormItem>
                   )}
                 />
-                <Button
-                  type="submit"
-                  className="w-full h-10 rounded-full"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? <Spinner /> : "Continue"}
-                </Button>
+
+                <div className="mt-6">
+                  <Button
+                    type="submit"
+                    className="w-full h-8 rounded-full"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? <Spinner /> : "Continue"}
+                  </Button>
+                </div>
               </form>
             </Form>
 
             {/* Additional Links */}
-            <div className="mt-3 space-y-2 text-center">
+            <div className=" space-y-2 text-center">
               <div className="flex justify-center items-center gap-2">
                 <p className="text-xs text-grey-3">
                   Don't have an account yet?

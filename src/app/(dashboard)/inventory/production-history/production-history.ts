@@ -9,6 +9,8 @@ export interface ProductionHistoryItem {
   note: string;
   move_id: string;
   moved_by: string;
+  /** Null on unbatched stock and on movements recorded before batches existed. */
+  batch_number?: string | null;
 }
 
 export interface ProductionHistoryResponse {

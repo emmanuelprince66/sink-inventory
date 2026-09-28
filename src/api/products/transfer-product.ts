@@ -7,6 +7,8 @@ const transferProduct = async (data: {
   target_business_id: string;
   target_product_id?: string | null;
   quantity: number;
+  /** Optional. Omitted, the backend deducts from the earliest-expiring batch. */
+  batch_id?: string;
 }) => {
   const response = await fetch("/api/products/products-transfer", {
     method: "POST",
@@ -46,14 +48,17 @@ export const useTransferProductMutation = (
       return transferProduct(data);
     },
     retry: false,
+    // Copy-paste leftovers said "deleting product". Only reachable when a
+    // caller passes no handler of its own — `...config` below replaces both.
     onError: (error: any, variables: any, context: any) => {
-      console.log("Error deleting product:", error);
-      const errorMessage = error?.message || "Error deleting product";
+      console.log("Error transferring product:", error);
+      const errorMessage =
+        error?.message || error?.error || "Error transferring product";
       showToast(errorMessage, "error");
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {
-      showToast("Product deleted successfully", "success");
+      showToast("Product transferred successfully", "success");
       config?.onSuccess?.(data, variables, context);
     },
     ...config,

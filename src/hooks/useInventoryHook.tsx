@@ -42,6 +42,8 @@ const AddWasteProductSchema = z.object({
 });
 const AddMoveToProductionSchema = z.object({
   quantity: z.string().min(1, " Quantity is required"),
+  /** Which batch the raw material comes out of. Omitted, the backend uses FEFO. */
+  batch_id: z.string().optional(),
   note: z.string().optional(),
 });
 
@@ -360,7 +362,7 @@ export const useInventoryHook = ({
   });
   const addMoveToProductionForm = useForm<AddMoveToProductionFormValues>({
     resolver: zodResolver(AddMoveToProductionSchema) as any,
-    defaultValues: { quantity: "", note: "" },
+    defaultValues: { quantity: "", batch_id: "", note: "" },
     mode: "onChange",
   });
 
@@ -453,9 +455,17 @@ export const useInventoryHook = ({
   const onSubmitAddMoveToProduction = (
     values: AddMoveToProductionFormValues,
   ) => {
-    const payload: { quantity: number; note?: string } = {
+    const payload: {
+      quantity: number;
+      batch_id?: string;
+      note?: string;
+    } = {
       quantity: Number(values.quantity),
     };
+    // Left out when the automatic choice was kept — the backend then draws
+    // from the earliest-expiring batch.
+    if (values.batch_id && values.batch_id !== AUTO_BATCH)
+      payload.batch_id = values.batch_id;
     if (values.note && values.note.trim() !== "") payload.note = values.note;
     moveToProduction({ payload, productId });
   };

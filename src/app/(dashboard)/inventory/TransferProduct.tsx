@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import { useTransferProductHook } from "@/hooks/useTransferProductHook";
 import { Loader2 } from "lucide-react";
+import { formatQty } from "./batch";
+import BatchSelect, { useProductBatches } from "./BatchSelect";
 
 const TransferProductForm = ({
   inventory,
@@ -37,6 +39,22 @@ const TransferProductForm = ({
     isTransferring,
     handleBusinessChange,
   } = useTransferProductHook({ id: inventory?.id, closeModal });
+
+  /**
+   * How much can actually go, and where that ceiling comes from.
+   *
+   * With a batch chosen the limit is that batch, not the product — the backend
+   * refuses "Cannot transfer 20.00 units. Only 5.00 units available in batch
+   * 'BATCH-A'.", and finding that out after filling in the whole form is a
+   * worse way to learn it than the input simply not accepting 20.
+   */
+  const batches = useProductBatches(inventory?.id);
+  const selectedBatch = batches.find(
+    (batch) => batch.id === form.watch("batch_id"),
+  );
+  const maxQuantity = selectedBatch
+    ? Number(selectedBatch.quantity)
+    : Number(inventory?.quantity ?? 0);
 
   return (
     <Form {...form}>
@@ -126,16 +144,36 @@ const TransferProductForm = ({
                 <Input
                   type="number"
                   min={1}
-                  max={inventory?.quantity}
+                  max={maxQuantity}
                   {...field}
                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                 />
               </FormControl>
               <FormMessage />
               <p className="text-sm text-grey-3">
-                Available: {inventory?.quantity}
+                {selectedBatch
+                  ? `Available in ${selectedBatch.batch_name}: ${formatQty(
+                      selectedBatch.quantity,
+                    )}`
+                  : `Available: ${inventory?.quantity}`}
               </p>
             </FormItem>
+          )}
+        />
+
+        {/* Only rendered for products that have batches. What is picked here
+            travels with the stock: the receiving branch keeps this batch's
+            number, expiry, cost price and supplier. */}
+        <FormField
+          control={form.control}
+          name="batch_id"
+          render={({ field }) => (
+            <BatchSelect
+              productId={inventory?.id}
+              value={field.value}
+              onChange={field.onChange}
+              label="Batch to transfer from"
+            />
           )}
         />
 

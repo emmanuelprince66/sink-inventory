@@ -121,6 +121,23 @@ export const createProductionHistoryColumns = ({
     },
   },
   {
+    accessorKey: "batch_number",
+    header: "Batch",
+    cell: ({ row }) => {
+      const item = row.original;
+      return (
+        // Null for unbatched stock and for movements predating batches, so a
+        // dash here is normal rather than missing data.
+        <div
+          className="max-w-[12rem] truncate text-sm font-medium text-grey-3"
+          title={item.batch_number || ""}
+        >
+          {item.batch_number || "-"}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "note",
     header: "Note",
     cell: ({ row }) => {

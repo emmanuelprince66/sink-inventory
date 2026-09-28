@@ -57,6 +57,8 @@ export async function POST(
     const insert = {
       quantity: payload.quantity,
       note: payload.note,
+      // Optional. Without it the backend draws from the earliest-expiring batch.
+      ...(payload.batch_id ? { batch_id: payload.batch_id } : {}),
     };
 
     // Validate required fields

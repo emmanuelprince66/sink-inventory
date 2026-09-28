@@ -19,6 +19,20 @@ import { ProductBatch, expiryLabel, formatQty } from "./batch";
 export const AUTO_BATCH = "AUTO";
 
 /**
+ * A product's batches, for a caller that needs the numbers rather than the
+ * picker — capping a quantity input at what the chosen batch actually holds,
+ * say. Shares react-query's cache with the picker, so asking for both costs
+ * one request.
+ */
+export const useProductBatches = (productId?: string | null): ProductBatch[] => {
+  const { data } = useFetchProductByIdQuery(productId, {
+    enabled: Boolean(productId),
+  });
+  const product = data?.data?.data ?? data?.data;
+  return Array.isArray(product?.batches) ? product.batches : [];
+};
+
+/**
  * The variant a batch belongs to, when the product has variants — the list
  * covers the parent and all of them, so an unlabelled "Batch A" would be
  * ambiguous. Empty when the name just repeats the product's own.
@@ -50,16 +64,7 @@ const BatchSelect = ({
   onChange: (value: string) => void;
   label?: string;
 }) => {
-  const { data } = useFetchProductByIdQuery(productId, {
-    enabled: Boolean(productId),
-  });
-
-  // The proxy wraps the backend body in { data }; the backend may wrap the
-  // product once more.
-  const product = data?.data?.data ?? data?.data;
-  const batches: ProductBatch[] = Array.isArray(product?.batches)
-    ? product.batches
-    : [];
+  const batches = useProductBatches(productId);
 
   if (batches.length === 0) return null;
 

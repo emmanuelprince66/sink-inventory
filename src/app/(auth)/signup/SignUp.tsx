@@ -47,7 +47,7 @@ const SignUp = () => {
           <Image src="/asset/sink2.png" alt="Logo" width={90} height={90} />
 
           <div className="mb-4">
-            <h1 className="text-xl font-bold text-grey-1">Create Account</h1>
+            <h3 className=" font-bold text-grey-1">Create Account</h3>
           </div>
           {/* Signup Form */}
           <Form {...form}>
@@ -68,7 +68,7 @@ const SignUp = () => {
                       <FormControl>
                         <Input
                           placeholder="John"
-                          className="rounded-full bg-[#EEF4EF] h-10"
+                          className="rounded-full bg-[#EEF4EF] h-8"
                           {...field}
                         />
                       </FormControl>
@@ -87,7 +87,7 @@ const SignUp = () => {
                       <FormControl>
                         <Input
                           placeholder="Doe"
-                          className="rounded-full bg-[#EEF4EF] h-10"
+                          className="rounded-full bg-[#EEF4EF] h-8"
                           {...field}
                         />
                       </FormControl>
@@ -114,7 +114,7 @@ const SignUp = () => {
                         onChange={field.onChange}
                         onBlur={field.onBlur}
                         placeholder="Enter phone number"
-                        className="rounded-full bg-[#EEF4EF] h-10"
+                        className="rounded-full bg-[#EEF4EF] h-8"
                       />
                     </FormControl>
                     <FormMessage />
@@ -134,7 +134,7 @@ const SignUp = () => {
                     <FormControl>
                       <Input
                         placeholder="example@email.com"
-                        className="rounded-full bg-[#EEF4EF] h-10"
+                        className="rounded-full bg-[#EEF4EF] h-8"
                         {...field}
                       />
                     </FormControl>
@@ -157,7 +157,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="At least 8 characters"
                         showPasswordToggle
-                        className="rounded-full bg-[#EEF4EF] h-10"
+                        className="rounded-full bg-[#EEF4EF] h-8"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -181,7 +181,7 @@ const SignUp = () => {
                         type="password"
                         placeholder="Confirm your password"
                         showPasswordToggle
-                        className="rounded-full bg-[#EEF4EF] h-10"
+                        className="rounded-full bg-[#EEF4EF] h-8"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -206,7 +206,7 @@ const SignUp = () => {
                     <FormControl>
                       <Input
                         placeholder="Enter referral code"
-                        className="rounded-full bg-[#EEF4EF] h-10"
+                        className="rounded-full bg-[#EEF4EF] h-8"
                         {...field}
                         value={field.value ?? ""}
                       />
@@ -216,13 +216,15 @@ const SignUp = () => {
                 )}
               />
 
-              <Button
-                type="submit"
-                className="w-full h-10 rounded-full"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? <Spinner /> : "Create Account"}
-              </Button>
+              <div className="mt-6">
+                <Button
+                  type="submit"
+                  className="w-full h-8 mt-4 rounded-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? <Spinner /> : "Create Account"}
+                </Button>
+              </div>
             </form>
           </Form>
 
