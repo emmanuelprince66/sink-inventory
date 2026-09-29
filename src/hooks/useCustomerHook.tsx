@@ -34,8 +34,9 @@ const CustomerSchema = z.object({
   // answered" value in the form and is dropped from the payload rather than
   // sent as "", which the serializer rejects for a choice field.
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional().or(z.literal("")),
-  // YYYY-MM-DD. Feeds the automatic "Birthdays This Month" segment, so it is
-  // worth asking for even though nothing here requires it.
+  // "YYYY-MM-DD", or "MM-DD" when the customer gave no year — the segment it
+  // feeds ("Birthdays This Month") only reads the day and the month, so the
+  // year is not worth losing a birthday over.
   date_of_birth: z.string().optional(),
   // State holds the NG state's ISO code (matches the order delivery address
   // flow) — translated to its full name in the submit payload below.

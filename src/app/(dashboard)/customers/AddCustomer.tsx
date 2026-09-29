@@ -1,6 +1,7 @@
 import { CircleAlert, UserCheck } from "lucide-react";
 
 import AddressAutocomplete from "@/components/app/AddressAutocomplete";
+import BirthdayField from "@/components/app/BirthdayField";
 import { Spinner } from "@/components/app/Spinner";
 import SegmentTag from "@/components/SegmentTag";
 import { Button } from "@/components/ui/button";
@@ -245,14 +246,12 @@ const AddCustomer = ({
                 <FormItem>
                   <FormLabel>Date of birth</FormLabel>
                   <FormControl>
-                    <Input
-                      type="date"
-                      // Nobody being added to a customer list was born
-                      // tomorrow, and a stray future date quietly breaks the
-                      // birthday segment for a whole month.
-                      max={new Date().toISOString().slice(0, 10)}
-                      {...field}
-                      value={field.value || ""}
+                    {/* Day and month are enough — the year is optional, since
+                        what this feeds is the birthday segment. */}
+                    <BirthdayField
+                      className="h-9"
+                      value={field.value}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />

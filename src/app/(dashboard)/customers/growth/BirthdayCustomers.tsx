@@ -9,8 +9,8 @@ import { Cake, Gift, Pencil } from "lucide-react";
 import {
   countdownLabel,
   countdownTone,
+  customerMonthDayLabel,
   daysToBirthday,
-  formatMonthDay,
   windowDays,
   windowLabel,
 } from "./birthday";
@@ -146,8 +146,8 @@ const BirthdayCustomers = ({
                     {customer.phone}
                     {/* On mobile the date column folds into this line. */}
                     <span className="md:hidden">
-                      {formatMonthDay(customer.date_of_birth)
-                        ? ` · ${formatMonthDay(customer.date_of_birth)}`
+                      {customerMonthDayLabel(customer)
+                        ? ` · ${customerMonthDayLabel(customer)}`
                         : ""}
                     </span>
                   </p>
@@ -155,7 +155,7 @@ const BirthdayCustomers = ({
               </div>
 
               <p className="hidden md:block text-sm font-bold text-grey-1">
-                {formatMonthDay(customer.date_of_birth) ?? "—"}
+                {customerMonthDayLabel(customer) ?? "—"}
               </p>
 
               <span

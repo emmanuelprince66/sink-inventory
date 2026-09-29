@@ -1,4 +1,5 @@
 import type { CustomerSegment, UserCustomer } from "@/types/segment";
+import { parseBirthday } from "@/utils/birthday";
 
 const MONTHS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -12,11 +13,33 @@ export const isBirthdaySegment = (segment?: CustomerSegment | null) =>
 /**
  * "YYYY-MM-DD" → [month (0-11), day]. Split by hand rather than `new Date()`,
  * which reads a bare date as UTC and can slip a day west of Greenwich.
+ *
+ * `parseBirthday` also accepts the year-less "MM-DD" a customer leaves when
+ * they give a birthday but not their age. Everything below only ever wanted
+ * the month and the day, so those birthdays count here like any other.
  */
 const monthDay = (ymd?: string | null): [number, number] | null => {
-  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd ?? "");
-  if (!match) return null;
-  return [Number(match[2]) - 1, Number(match[3])];
+  const { month, day } = parseBirthday(ymd);
+  if (!month || !day) return null;
+  return [Number(month) - 1, Number(day)];
+};
+
+/**
+ * A customer's birthday, from whichever form the endpoint sent.
+ *
+ * `birth_month` / `birth_day` are the backend's own split and are taken as
+ * given; the string is the fallback for the endpoints that only send that one.
+ */
+const customerMonthDay = (customer: UserCustomer): [number, number] | null => {
+  const { birth_month: month, birth_day: day } = customer;
+  if (month && day) return [month - 1, day];
+  return monthDay(customer.date_of_birth ?? customer.birthday);
+};
+
+/** "Sep 21" for a customer, year or no year. Null when no birthday is on file. */
+export const customerMonthDayLabel = (customer: UserCustomer) => {
+  const md = customerMonthDay(customer);
+  return md ? `${MONTHS[md[0]]} ${md[1]}` : null;
 };
 
 const isLeap = (year: number) =>
@@ -32,8 +55,10 @@ export const formatMonthDay = (ymd?: string | null) => {
  * Days from today to the next occurrence of the birthday, 0 on the day.
  * A 29 Feb birthday falls on 28 Feb in non-leap years.
  */
-const countDaysTo = (ymd?: string | null, today = new Date()) => {
-  const md = monthDay(ymd);
+const countDaysFrom = (
+  md: [number, number] | null,
+  today = new Date(),
+) => {
   if (!md) return null;
   const [month, day] = md;
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -48,11 +73,13 @@ const countDaysTo = (ymd?: string | null, today = new Date()) => {
 
 /**
  * The backend's count when sent — under either of its two names — otherwise
- * one worked out here from date_of_birth.
+ * one worked out here from the birthday itself.
  */
 export const daysToBirthday = (customer: UserCustomer) => {
   const sent = customer.days_until_birthday ?? customer.days_to_birthday;
-  return typeof sent === "number" ? sent : countDaysTo(customer.date_of_birth);
+  return typeof sent === "number"
+    ? sent
+    : countDaysFrom(customerMonthDay(customer));
 };
 
 export const countdownLabel = (days: number | null) => {

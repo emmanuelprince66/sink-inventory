@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { birthdayLabel } from "@/utils/birthday";
 // import { Sparkles } from "lucide-react";
 import { Cell, asDate } from "./primitives";
 import type { CustomerProfileData } from "./useCustomerProfile";
@@ -40,7 +41,9 @@ const OverviewTab = ({ profile }: { profile: CustomerProfileData }) => {
             <Cell label="Email" value={identity?.email} />
             <Cell
               label="Birthday"
-              value={identity?.date_of_birth}
+              // Read rather than printed raw: a customer who gave no year is
+              // stored as "03-12", which says nothing on its own.
+              value={birthdayLabel(identity?.date_of_birth) || null}
               tone="text-violet-600"
             />
             <Cell label="Customer Since" value={identity?.customer_since} />

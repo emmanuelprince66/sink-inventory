@@ -1,5 +1,6 @@
 "use client";
 
+import BirthdayField from "@/components/app/BirthdayField";
 import { Spinner } from "@/components/app/Spinner";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -115,11 +116,14 @@ const JoinForm = ({ join }: { join: JoinLoyaltyApi }) => {
           optional
           hint="🎁 Sharing your birthday lets us surprise you with exclusive birthday offers and special treats — just for you! Completely optional."
         >
-          <input
+          {/* Day and month are all a birthday offer needs, so the year can be
+              left out — and three labelled selects beat a native date input,
+              which renders as a blank box on the phones this page is opened
+              on. */}
+          <BirthdayField
             value={form.birthday}
-            onChange={(e) => setField("birthday", e.target.value)}
-            type="date"
-            className={inputClass}
+            onChange={(value) => setField("birthday", value)}
+            className="h-11"
           />
         </Field>
 

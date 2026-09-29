@@ -140,10 +140,26 @@ export interface UserCustomer {
   }>;
 
   /**
-   * YYYY-MM-DD. Needed by the BIRTHDAY segment view for the date and the
-   * countdown; absent on endpoints that don't send it.
+   * "YYYY-MM-DD", or "MM-DD" from a customer who gave no birth year. Needed by
+   * the BIRTHDAY segment view for the date and the countdown; absent on
+   * endpoints that don't send it.
    */
   date_of_birth?: string | null;
+  /** Mirror of `date_of_birth`, sent with the same value. */
+  birthday?: string | null;
+  /**
+   * The same birthday already broken up, sent alongside the string. Saves
+   * parsing, and says outright whether a year was given — a customer with none
+   * has `birth_year: null` rather than a stand-in nobody should read as real.
+   */
+  has_birth_year?: boolean;
+  birth_year?: number | null;
+  /** 1-12. */
+  birth_month?: number | null;
+  /** 1-31. */
+  birth_day?: number | null;
+  /** YYYY-MM-DD of the next celebration, year-less birthdays included. */
+  upcoming_birthday?: string | null;
   /**
    * Whole days until the next birthday, 0 on the day itself. Preferred over a
    * client-side count when sent, since the backend owns the window's "today".
