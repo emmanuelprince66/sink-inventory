@@ -196,7 +196,14 @@ export const useTransactionsHook = ({
         console.log("recipientBank", recipientBank);
         // bank code to test 000002
         beneficiaryEnquiryMutation.mutate({
-          bank_code: recipientBank?.bank_code,
+          // `bank_code` is what the bank list returns, `code` its older
+          // spelling, and `value` is whichever of the two the option was built
+          // from. Reading only the first posted an undefined code whenever the
+          // list came back in the older shape.
+          bank_code:
+            recipientBank?.bank_code ??
+            recipientBank?.code ??
+            recipientBank?.value,
           account_number: accountNumber,
         });
       }

@@ -218,6 +218,7 @@ export const queryKey = {
     verifyToken: "verify-token",
     resetPin: "reset-pin",
     createSubAccount: "create-sub-account",
+    recentBeneficiaries: "recent-beneficiaries",
   },
   loyalty: {
     getLoyaltyDashboard: "get-loyalty-dashboard",

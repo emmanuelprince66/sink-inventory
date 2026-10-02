@@ -6,11 +6,13 @@ import CustomSelect, {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import type { RecentBeneficiary } from "@/api/transactions/recent-beneficiaries";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import ConfirmTransfer from "../ConfirmTransfer";
+import RecentBeneficiaries from "../RecentBeneficiaries";
 
 const Transfer = () => {
   const [showConfirmTransfer, setShowConfirmTransfer] = useState(false);
@@ -34,22 +36,50 @@ const Transfer = () => {
     beneficiaryInfo,
     CategoriesDataLoading,
     enquiryLoading,
+    walletBankId,
   } = useTransactionsHook({ recipientBank, accountNumber });
 
   const trxBalance = trxData?.data?.results?.wallet_details?.balance || 0;
 
-  // Transform bank data to select options
+  // Transform bank data to select options.
+  //
+  // bank_code first: that is the field the endpoint actually returns, with
+  // `code` as its older spelling. Reading only the camelCase name left every
+  // option with an undefined value, which the transfer then posted as a blank
+  // bank_code.
   useEffect(() => {
     if (BankTrxData) {
       setBankOptions(
         BankTrxData.map((bank: any) => ({
-          value: bank.bankCode,
+          value: bank.bank_code ?? bank.code ?? bank.bankCode,
           label: bank.name,
           ...bank,
         })),
       );
     }
   }, [BankTrxData]);
+
+  /**
+   * Fills the form from a recipient this wallet has paid before.
+   *
+   * Only the bank and the number are taken. The name is left to the enquiry
+   * that follows, so what is confirmed on screen is what the bank says today
+   * — not what it said the last time this account was paid.
+   */
+  const applyBeneficiary = (beneficiary: RecentBeneficiary) => {
+    const match = bankOptions.find(
+      (option: any) =>
+        option.value &&
+        beneficiary.bank_code &&
+        String(option.value) === String(beneficiary.bank_code),
+    );
+
+    // An older row may carry no bank code, and the list is not guaranteed to
+    // hold every bank. Fill what is known and leave the merchant to pick the
+    // bank rather than silently selecting the wrong one.
+    if (match) setRecipientBank(match as SelectValue);
+    setAccountNumber(beneficiary.account_number);
+  };
 
   // Transform category data to select options
   useEffect(() => {
@@ -163,6 +193,15 @@ const Transfer = () => {
                 Send money to another account securely.
               </p>
             </div>
+
+            {/* Above the fields, not inside the form: picking one fills the
+                two inputs below rather than submitting anything. */}
+            <RecentBeneficiaries
+              walletId={walletBankId}
+              onSelect={applyBeneficiary}
+              selectedAccountNumber={accountNumber}
+              className="mb-5"
+            />
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">

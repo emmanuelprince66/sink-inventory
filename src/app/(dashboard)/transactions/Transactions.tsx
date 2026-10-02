@@ -1,6 +1,7 @@
 "use client";
 
 import { useCreateSubAccountMutation } from "@/api/transactions/create-sub-account";
+import type { RecentBeneficiary } from "@/api/transactions/recent-beneficiaries";
 import { CustomModal } from "@/components/app/CustomModal";
 import CustomSelect, {
   SelectOption,
@@ -41,6 +42,7 @@ import { DateRange } from "react-day-picker";
 import CollapsibleSection from "./CollapsibleSection";
 import NoTransactions from "./NoTransactions";
 import PendingBnplPanel from "./PendingBnplPanel";
+import RecentBeneficiaries from "./RecentBeneficiaries";
 import TransactionTable from "./TransactionTable";
 import TransferReceipt, {
   extractTransactionId,
@@ -92,7 +94,7 @@ const Transactions = () => {
   const [branchName, setBranchName] = useState("");
   const [reportFormat, setReportFormat] = useState<ReportFormat>("PDF");
 
-  console.log("transferAMount" , transferAmount)
+  console.log("transferAMount", transferAmount);
   const filterMapping = {
     ALL: "",
     CREDIT: "CREDIT",
@@ -167,13 +169,36 @@ const Transactions = () => {
   const inflow = TrxData?.data?.results?.inflow || 0;
   const outflow = TrxData?.data?.results?.outflow || 0;
   const needsKyc = Boolean(businessData) && !businessData?.kyc;
+  // bank_code first: that is the field the endpoint actually returns, with
+  // `code` as its older spelling. Reading only the camelCase name left every
+  // option with an undefined value, which the transfer then posted as a blank
+  // bank_code.
   const bankOptions: SelectOption[] = Array.isArray(BankTrxData)
     ? BankTrxData.map((bank: any) => ({
-        value: bank.bankCode,
+        value: bank.bank_code ?? bank.code ?? bank.bankCode,
         label: bank.name,
         ...bank,
       }))
     : [];
+
+  /**
+   * Fills the transfer form from someone this wallet has paid before.
+   *
+   * Bank and number only — the name comes from the enquiry that follows, so
+   * what is confirmed is what the bank says now rather than what it said last
+   * time. A row with no bank code fills the number and leaves the bank to the
+   * merchant rather than guessing it.
+   */
+  const applyBeneficiary = (beneficiary: RecentBeneficiary) => {
+    const match = bankOptions.find(
+      (option: any) =>
+        option.value &&
+        beneficiary.bank_code &&
+        String(option.value) === String(beneficiary.bank_code),
+    );
+    if (match) setRecipientBank(match as SelectValue);
+    setAccountNumber(beneficiary.account_number);
+  };
   const categoryOptions: SelectOption[] = Array.isArray(CategoriesData?.data)
     ? CategoriesData.data.map((item: any) => ({
         value: item.id,
@@ -575,9 +600,7 @@ const Transactions = () => {
               className="h-10 sm:min-w-28 hover:bg-primary-green-300/90"
             >
               <Link href="/kyc" onClick={() => setShowKycModal(false)}>
-                <p className="text-sm font-bold  text-primary-green-300 ">
-                  Complete KYC
-                </p>
+                <p className="text-sm font-bold text-white">Complete KYC</p>
               </Link>
             </Button>
           </div>
@@ -763,6 +786,13 @@ const Transactions = () => {
 
           {transferStep === 1 ? (
             <div className="space-y-5 px-5 py-5">
+              {/* Paid before? Fill the two fields below in one tap. */}
+              <RecentBeneficiaries
+                walletId={selectedBank?.id}
+                onSelect={applyBeneficiary}
+                selectedAccountNumber={accountNumber}
+              />
+
               <CustomSelect
                 label="Beneficiary Bank"
                 options={bankOptions}
