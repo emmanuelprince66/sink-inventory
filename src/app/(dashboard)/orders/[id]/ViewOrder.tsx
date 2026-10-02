@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Mail,
   MessageCircle,
+  Package,
   Phone,
   Printer,
   Share2,
@@ -51,6 +52,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const orderData = OrderIdData?.data;
+  const isInStoreOrder = orderData?.channel?.toUpperCase() === "INSTORE";
+  const isInHouseDelivery =
+    orderData?.delivery?.type?.toUpperCase() === "IN-HOUSE";
 
   const handleContactCustomer = () => {
     const phone = orderData?.customer_info?.phone;
@@ -239,15 +243,17 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 {/* Disabled — delivery-partner assignment isn't backed by a
                     real endpoint yet (AssignDeliveryModal used a mock
                     partner list), so it stays visible but inert. */}
-                <Button
-                  size="sm"
-                  disabled
-                  title="Delivery partner assignment is coming soon"
-                  className="text-xs"
-                >
-                  <Truck className="w-3 h-3 mr-1" />
-                  Assign Delivery
-                </Button>
+                {!isInStoreOrder && (
+                  <Button
+                    size="sm"
+                    disabled
+                    title="Delivery partner assignment is coming soon"
+                    className="text-xs"
+                  >
+                    <Truck className="w-3 h-3 mr-1" />
+                    Assign Delivery
+                  </Button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -323,16 +329,20 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     status={orderData.payment_status}
                     type="payment"
                   />
-                  <span className="text-sm font-medium text-grey-3">
-                    Shipping:
-                  </span>
-                  <StatusBadge
-                    status={
-                      orderData.delivery?.shipping_status ||
-                      orderData.shipping_status
-                    }
-                    type="shipping"
-                  />
+                  {!isInStoreOrder && (
+                    <>
+                      <span className="text-sm font-medium text-grey-3">
+                        Shipping:
+                      </span>
+                      <StatusBadge
+                        status={
+                          orderData.delivery?.shipping_status ||
+                          orderData.shipping_status
+                        }
+                        type="shipping"
+                      />
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -454,7 +464,25 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                             {index + 1}
                           </td>
                           <td className="py-3 px-4 text-sm font-bold text-grey-1">
-                            {product?.name || "Nil"}
+                            <div className="flex min-w-[180px] items-center gap-3">
+                              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-grey-5 bg-grey-6">
+                                <Package className="h-5 w-5 text-grey-4" />
+                                {product?.image && (
+                                  <img
+                                    src={product.image}
+                                    alt={product?.name || "Product"}
+                                    loading="lazy"
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                    onError={(event) => {
+                                      event.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              <span className="line-clamp-2">
+                                {product?.name || "Nil"}
+                              </span>
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-sm font-medium text-grey-1 text-right">
                             {formatToNaira(unitPrice)}
@@ -476,23 +504,29 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
             {/* Delivery flow timeline — steps beyond "Order Placed" only show
                 a timestamp once the real delivery.{rider_assigned,picked_up,
                 out_for_delivery,delivered} field is actually set. */}
-            <OrderFlowTimeline
-              currentStepIndex={stepIndexFromShipping(
-                orderData?.delivery?.shipping_status ||
-                  orderData?.shipping_status,
-              )}
-              timestamps={{
-                ORDER: formatFlowTimestamp(orderData?.created_at),
-                RIDER_ASSIGNED: formatFlowTimestamp(
-                  orderData?.delivery?.rider_assigned,
-                ),
-                PICKED_UP: formatFlowTimestamp(orderData?.delivery?.picked_up),
-                OUT_FOR_DELIVERY: formatFlowTimestamp(
-                  orderData?.delivery?.out_for_delivery,
-                ),
-                DELIVERED: formatFlowTimestamp(orderData?.delivery?.delivered),
-              }}
-            />
+            {!isInStoreOrder && !isInHouseDelivery && (
+              <OrderFlowTimeline
+                currentStepIndex={stepIndexFromShipping(
+                  orderData?.delivery?.shipping_status ||
+                    orderData?.shipping_status,
+                )}
+                timestamps={{
+                  ORDER: formatFlowTimestamp(orderData?.created_at),
+                  RIDER_ASSIGNED: formatFlowTimestamp(
+                    orderData?.delivery?.rider_assigned,
+                  ),
+                  PICKED_UP: formatFlowTimestamp(
+                    orderData?.delivery?.picked_up,
+                  ),
+                  OUT_FOR_DELIVERY: formatFlowTimestamp(
+                    orderData?.delivery?.out_for_delivery,
+                  ),
+                  DELIVERED: formatFlowTimestamp(
+                    orderData?.delivery?.delivered,
+                  ),
+                }}
+              />
+            )}
 
             {/* Transactions */}
             <div className="bg-white rounded-2xl border border-grey-5 p-6">
@@ -558,14 +592,16 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     backing field (the old code hardcoded "N/A" and read a
                     non-existent orderData.tax). */}
 
-                <div className="flex justify-between text-sm">
-                  <span className="text-grey-3">Shipping Fee</span>
-                  <span className="text-grey-1">
-                    {formatToNaira(
-                      parseFloat(orderData.delivery?.shipping_fee || "0"),
-                    )}
-                  </span>
-                </div>
+                {!isInStoreOrder && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-grey-3">Shipping Fee</span>
+                    <span className="text-grey-1">
+                      {formatToNaira(
+                        parseFloat(orderData.delivery?.shipping_fee || "0"),
+                      )}
+                    </span>
+                  </div>
+                )}
 
                 <div className="border-t border-grey-5 pt-3">
                   <div className="flex justify-between text-base font-semibold">
@@ -606,6 +642,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
             </div>
 
             {/* Shipping */}
+            {!isInStoreOrder && (
             <div className="bg-white rounded-2xl border border-grey-5 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-extrabold text-grey-1">Shipping</h3>
@@ -716,12 +753,13 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                 )}
               </div>
             </div>
+            )}
 
             {/* Delivery Company — only the real fields the API actually
                 returns (delivery.type, delivery.rider_assigned). The old
                 logo/rating/contact/estimated-cost card was a mock partner
                 lookup with no real backing field, so it's gone. */}
-            {orderData.delivery?.type && (
+            {!isInStoreOrder && orderData.delivery?.type && (
               <div className="bg-white rounded-2xl border border-grey-5 p-6">
                 <h3 className="text-lg font-extrabold text-grey-1 mb-4">
                   Delivery
