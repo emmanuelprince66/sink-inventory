@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import CustomDomainSetup from "./CustomDomainSetup";
 import StoreEditForm from "./StoreEditForm";
 import StoreUrlCard from "./StoreUrlCard";
 
@@ -81,9 +82,13 @@ const getInitials = (name?: string) => {
 
 export default function StoreInfo() {
   const [isEditing, setIsEditing] = useState(false);
-  const { BusinessDataLoading, storeData, storeThemeOptions } = useStoreHook({
-    setIsEditing,
-  });
+  const {
+    BusinessDataLoading,
+    BusinessData,
+    business_id,
+    storeData,
+    storeThemeOptions,
+  } = useStoreHook({ setIsEditing });
   // storeData.storeTheme is a hex brand color. If it happens to match one of
   // the preset swatches, show that preset's name; otherwise show the hex.
   const themeColor = storeData.storeTheme || "#047857";
@@ -203,6 +208,12 @@ export default function StoreInfo() {
               <div className="space-y-4">
                 {/* Store URL Card */}
                 <StoreUrlCard storeData={storeData} />
+
+                <CustomDomainSetup
+                  businessId={business_id}
+                  customDomain={BusinessData?.data?.custom_domain}
+                  isApproved={BusinessData?.data?.custom_domain_approved}
+                />
 
                 {/* Contact & Details Card */}
                 <div className="bg-white rounded-2xl border border-border-tint p-5 space-y-4">

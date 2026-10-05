@@ -16,6 +16,7 @@ import {
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
+import { getStoreUrl as buildStoreUrl } from "@/utils/storeUrl";
 import {
   ArrowDownLeft,
   CheckCircle,
@@ -268,14 +269,12 @@ const Orders = () => {
 
   // Get store URL based on active tab
   const getStoreUrl = () => {
-    const slug = findBusiness?.store_url || "";
-    const baseUrl = "https://store.sync360.africa";
-
-    if (activeTab === "INSTORE") {
-      return `${baseUrl}/i/${slug}`;
-    } else {
-      return `${baseUrl}/o/${slug}`;
-    }
+    return buildStoreUrl({
+      channel: activeTab,
+      storeSlug: findBusiness?.store_url,
+      customDomain: findBusiness?.custom_domain,
+      customDomainApproved: findBusiness?.custom_domain_approved,
+    });
   };
 
   // Copy store URL to clipboard

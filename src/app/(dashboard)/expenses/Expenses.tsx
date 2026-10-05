@@ -143,12 +143,29 @@ const ExpenseAccountBalanceCard = ({
         </div>
       </div>
       <div className="relative">
-        <p className="text-2xl font-extrabold text-grey-1">
-          {formatToNaira(balance)}
-        </p>
-        <p className="text-[11px] text-grey-3 mt-0.5">
-          Funds available for operational spending
-        </p>
+        {/* A business with no expense account has no float to report, and a
+            ₦0.00 under this heading reads as an account that happens to be
+            empty rather than one that was never created. */}
+        {hasAccount ? (
+          <>
+            <p className="text-2xl font-extrabold text-grey-1">
+              {formatToNaira(balance)}
+            </p>
+            <p className="text-[11px] text-grey-3 mt-0.5">
+              Funds available for operational spending
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-extrabold text-grey-2">
+              No expense account yet
+            </p>
+            <p className="text-[11px] text-grey-3 mt-0.5">
+              Create one to hold a float your team can spend from, separately
+              from your takings.
+            </p>
+          </>
+        )}
       </div>
 
       {/* A plain button that navigates, rather than a Link wrapped in one:
@@ -414,22 +431,24 @@ const Expenses = () => {
                 amount={formatToNaira(accountSummary?.spent_this_month ?? 0)}
               />
               <ExpenseAccountBalanceCard
-                // The selected account's own figures once there is one to
-                // select, so the card agrees with the picker above it and with
-                // the transfer screen. The summary is a single set of fields
-                // and cannot answer "which account?" once a business holds
-                // more than one, so it is only the fallback.
-                balance={
-                  hasExpenseAccount
-                    ? expenseBalance
-                    : (accountSummary?.account_balance ?? 0)
-                }
+                // The selected account's own figures, so the card agrees with
+                // the picker above it and with the transfer screen.
+                //
+                // Nothing is shown when the business has no expense account.
+                // The summary falls back to the main business account, and
+                // printing that under "Expense Account Balance" told a
+                // merchant with no expense account that they had thousands of
+                // naira of float — against the account their takings sit in.
+                balance={hasExpenseAccount ? expenseBalance : 0}
                 bankName={
-                  selectedExpenseAccount?.bank_name ?? accountSummary?.bank_name
+                  hasExpenseAccount
+                    ? selectedExpenseAccount?.bank_name
+                    : undefined
                 }
                 accountNumber={
-                  selectedExpenseAccount?.account_number ??
-                  accountSummary?.account_number
+                  hasExpenseAccount
+                    ? selectedExpenseAccount?.account_number
+                    : undefined
                 }
                 hasAccount={hasExpenseAccount}
                 mayTransfer={canTransfer}

@@ -1,6 +1,5 @@
 "use client";
 
-import { formatToNaira } from "@/utils/formatMoney";
 import { CustomModal } from "@/components/app/CustomModal";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
+import { formatToNaira } from "@/utils/formatMoney";
 import {
   ArrowLeft,
   ChevronDown,
@@ -223,9 +223,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </button>
-          <h1 className="text-xl  font-extrabold text-grey-1">
-            Order Details
-          </h1>
+          <h1 className="text-xl  font-extrabold text-grey-1">Order Details</h1>
         </div>
         <button className="flex items-center space-x-2 px-3 py-2 text-sm font-bold text-grey-3 hover:bg-grey-6 rounded-lg transition-colors">
           <Share2 className="h-4 w-4" />
@@ -409,9 +407,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
               </div>
 
               <div className="mt-6 pt-6 border-t border-grey-5">
-                <h3 className="text-sm font-bold text-grey-2 mb-1">
-                  Created
-                </h3>
+                <h3 className="text-sm font-bold text-grey-2 mb-1">Created</h3>
                 <p className="text-sm text-grey-1">
                   {formatDateTime(orderData.created_at) || "N/A"}
                 </p>
@@ -441,6 +437,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       <th className="text-left py-3 px-4 text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
                         Name
                       </th>
+                      <th className="text-left py-3 px-4 text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
+                        SKU
+                      </th>
                       <th className="text-right py-3 px-4 text-xs font-extrabold uppercase tracking-wide text-primary-green-300">
                         Unit Price
                       </th>
@@ -459,7 +458,10 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       const total = unitPrice * quantity;
 
                       return (
-                        <tr key={`${product.name}-${index}`} className="border-t border-grey-6">
+                        <tr
+                          key={`${product.name}-${index}`}
+                          className="border-t border-grey-6"
+                        >
                           <td className="py-3 px-4 text-sm font-medium text-grey-3">
                             {index + 1}
                           </td>
@@ -474,7 +476,8 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                                     loading="lazy"
                                     className="absolute inset-0 h-full w-full object-cover"
                                     onError={(event) => {
-                                      event.currentTarget.style.display = "none";
+                                      event.currentTarget.style.display =
+                                        "none";
                                     }}
                                   />
                                 )}
@@ -483,6 +486,9 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                                 {product?.name || "Nil"}
                               </span>
                             </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm font-medium text-grey-1 ">
+                            {product?.sku || "N/A"}
                           </td>
                           <td className="py-3 px-4 text-sm font-medium text-grey-1 text-right">
                             {formatToNaira(unitPrice)}
@@ -607,9 +613,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   <div className="flex justify-between text-base font-semibold">
                     <span className="text-grey-1">Total Amount Paid</span>
                     <span className="text-grey-1">
-                      {formatToNaira(
-                        parseFloat(orderData.amount_paid || "0"),
-                      )}
+                      {formatToNaira(parseFloat(orderData.amount_paid || "0"))}
                     </span>
                   </div>
                 </div>
@@ -643,116 +647,118 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
 
             {/* Shipping */}
             {!isInStoreOrder && (
-            <div className="bg-white rounded-2xl border border-grey-5 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-extrabold text-grey-1">Shipping</h3>
-                <div className="flex items-center space-x-2">
-                  <StatusBadge
-                    status={
-                      orderData.delivery?.shipping_status ||
-                      orderData.shipping_status
-                    }
-                    type="shipping"
-                  />
-                  <button className="flex items-center space-x-1 text-sm font-bold text-grey-3 hover:text-grey-2">
-                    <span>Action</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
+              <div className="bg-white rounded-2xl border border-grey-5 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-extrabold text-grey-1">
+                    Shipping
+                  </h3>
+                  <div className="flex items-center space-x-2">
+                    <StatusBadge
+                      status={
+                        orderData.delivery?.shipping_status ||
+                        orderData.shipping_status
+                      }
+                      type="shipping"
+                    />
+                    <button className="flex items-center space-x-1 text-sm font-bold text-grey-3 hover:text-grey-2">
+                      <span>Action</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                {/* "Shipping Date" removed — no such field on the order or
+                <div className="space-y-4">
+                  {/* "Shipping Date" removed — no such field on the order or
                     delivery object. The delivery address fields below were
                     also reading a nested delivery.delivery_address object
                     that doesn't exist; the real API returns them flat on
                     delivery itself (delivery.shipping_address, delivery.city,
                     etc). */}
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-2">
-                    Delivery To
-                  </h4>
-                  <p className="text-sm text-grey-1 mb-1">
-                    {orderData.customer_info?.name || "N/A"}
-                  </p>
-                  {orderData.customer_info?.phone && (
-                    <p className="text-sm text-grey-4">
-                      {orderData.delivery?.phone ||
-                        orderData.customer_info?.phone}
+                  <div>
+                    <h4 className="text-sm font-bold text-grey-2 mb-2">
+                      Delivery To
+                    </h4>
+                    <p className="text-sm text-grey-1 mb-1">
+                      {orderData.customer_info?.name || "N/A"}
                     </p>
-                  )}
-                </div>
+                    {orderData.customer_info?.phone && (
+                      <p className="text-sm text-grey-4">
+                        {orderData.delivery?.phone ||
+                          orderData.customer_info?.phone}
+                      </p>
+                    )}
+                  </div>
 
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-2">
-                    Delivery Address
-                  </h4>
-                  <p className="text-sm text-grey-1 mb-1">
-                    {`${orderData.delivery?.shipping_address || "N/A"}`}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-grey-2 mb-2">
-                    Delivery Location
-                  </h4>
-                  <p className="text-sm text-grey-1 mb-1">
-                    {`${orderData.delivery?.city || ""}, ${
-                      orderData.delivery?.state || ""
-                    }, ${orderData.delivery?.country || ""}`
-                      .replace(/^, |, $|, , /g, "")
-                      .trim() || "N/A"}
-                  </p>
-                </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-grey-2 mb-2">
+                      Delivery Address
+                    </h4>
+                    <p className="text-sm text-grey-1 mb-1">
+                      {`${orderData.delivery?.shipping_address || "N/A"}`}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-grey-2 mb-2">
+                      Delivery Location
+                    </h4>
+                    <p className="text-sm text-grey-1 mb-1">
+                      {`${orderData.delivery?.city || ""}, ${
+                        orderData.delivery?.state || ""
+                      }, ${orderData.delivery?.country || ""}`
+                        .replace(/^, |, $|, , /g, "")
+                        .trim() || "N/A"}
+                    </p>
+                  </div>
 
-                {/* Manual status-update action — Shipbubble orders get their
+                  {/* Manual status-update action — Shipbubble orders get their
                     shipping_status from Shipbubble's webhooks, so this
                     flow only makes sense for manual deliveries. */}
-                {orderData.delivery?.type !== "SHIPBUBBLE" && (
-                  <div>
-                    <h4 className="text-sm font-bold text-grey-2 mb-3">
-                      Update shipping status:
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 mb-5">
-                      <ShippingStatusButton
-                        status="PENDING"
-                        active={selectedShippingStatus === "PENDING"}
-                        onClick={setSelectedShippingStatus}
-                      />
-
-                      {orderData?.channel === "OUTSTORE" && (
+                  {orderData.delivery?.type !== "SHIPBUBBLE" && (
+                    <div>
+                      <h4 className="text-sm font-bold text-grey-2 mb-3">
+                        Update shipping status:
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 mb-5">
                         <ShippingStatusButton
-                          status="SHIPPED"
-                          active={selectedShippingStatus === "SHIPPED"}
+                          status="PENDING"
+                          active={selectedShippingStatus === "PENDING"}
                           onClick={setSelectedShippingStatus}
                         />
-                      )}
 
-                      <ShippingStatusButton
-                        status="DELIVERED"
-                        active={selectedShippingStatus === "DELIVERED"}
-                        onClick={setSelectedShippingStatus}
-                      />
-                      <ShippingStatusButton
-                        status="RETURNED"
-                        active={selectedShippingStatus === "RETURNED"}
-                        onClick={setSelectedShippingStatus}
-                      />
+                        {orderData?.channel === "OUTSTORE" && (
+                          <ShippingStatusButton
+                            status="SHIPPED"
+                            active={selectedShippingStatus === "SHIPPED"}
+                            onClick={setSelectedShippingStatus}
+                          />
+                        )}
+
+                        <ShippingStatusButton
+                          status="DELIVERED"
+                          active={selectedShippingStatus === "DELIVERED"}
+                          onClick={setSelectedShippingStatus}
+                        />
+                        <ShippingStatusButton
+                          status="RETURNED"
+                          active={selectedShippingStatus === "RETURNED"}
+                          onClick={setSelectedShippingStatus}
+                        />
+                      </div>
+                      <Button
+                        disabled={editOrderShippingStatusLoading}
+                        onClick={() =>
+                          handleUpdateOrderStatus(selectedShippingStatus)
+                        }
+                        className="w-full mt-3"
+                      >
+                        {editOrderShippingStatusLoading
+                          ? "Updating..."
+                          : "Update Status"}
+                      </Button>
                     </div>
-                    <Button
-                      disabled={editOrderShippingStatusLoading}
-                      onClick={() =>
-                        handleUpdateOrderStatus(selectedShippingStatus)
-                      }
-                      className="w-full mt-3"
-                    >
-                      {editOrderShippingStatusLoading
-                        ? "Updating..."
-                        : "Update Status"}
-                    </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
             )}
 
             {/* Delivery Company — only the real fields the API actually

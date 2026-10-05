@@ -25,6 +25,7 @@ const resolveStoreThemeHex = (value?: string | null): string => {
 };
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { compressImage } from "@/utils/compressImage";
+import { getStoreUrl } from "@/utils/storeUrl";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
@@ -189,10 +190,19 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
   // Initialize store data from API
   useEffect(() => {
     if (findBusiness) {
-      const baseUrl = "https://store.sync360.africa";
       const slugUrl = findBusiness.store_url || "";
-      const outStoreUrl = `${baseUrl}/o/${slugUrl}`;
-      const inStoreUrl = `${baseUrl}/i/${slugUrl}`;
+      const outStoreUrl = getStoreUrl({
+        channel: "OUTSTORE",
+        storeSlug: slugUrl,
+        customDomain: findBusiness.custom_domain,
+        customDomainApproved: findBusiness.custom_domain_approved,
+      });
+      const inStoreUrl = getStoreUrl({
+        channel: "INSTORE",
+        storeSlug: slugUrl,
+        customDomain: findBusiness.custom_domain,
+        customDomainApproved: findBusiness.custom_domain_approved,
+      });
 
       const data = {
         logo: findBusiness.logo || "/placeholder.svg?height=120&width=120",
