@@ -40,6 +40,8 @@ export interface CustomerType {
   // Growth fields — all returned by the list endpoint.
   initials?: string;
   gender?: string | null;
+  date_of_birth?: string | null;
+  birthday?: string | null;
   tier_name?: string | null;
   loyalty_code?: string | null;
   points?: number;

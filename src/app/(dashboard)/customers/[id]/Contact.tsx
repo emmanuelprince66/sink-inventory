@@ -26,6 +26,7 @@ import { useGetCustomerByIdHook } from "@/hooks/useGetCustomerByIdHook";
 
 import DeleteCustomer from "../DeleteCustomer";
 import { CustomerAddress } from "../types";
+import EditCustomer from "./EditCustomer";
 import CustomerHistory from "./CustomerHistory";
 import { CustomerTransactions } from "./CustomerTransactions";
 import UpdateCustomerWallet from "./UpdateCustomerWallet";
@@ -41,6 +42,7 @@ const Contact = ({ id }: { id: string }) => {
     useState(false);
   const [openDeleteCustomerModal, setOpenDeleteCustomerModal] =
     useState(false);
+  const [openEditCustomerModal, setOpenEditCustomerModal] = useState(false);
 
   const closeOpenUpdateCustomerWalletModal = () =>
     setOpenUpdateCustomerWalletModal(false);
@@ -106,7 +108,11 @@ const Contact = ({ id }: { id: string }) => {
               align="end"
               className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
             >
-              <DropdownMenuItem className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors">
+              <DropdownMenuItem
+                onClick={() => setOpenEditCustomerModal(true)}
+                disabled={!customer}
+                className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Customer
               </DropdownMenuItem>
@@ -314,6 +320,14 @@ const Contact = ({ id }: { id: string }) => {
           />
         </div>
       </CustomModal>
+
+      {customer && (
+        <EditCustomer
+          customer={customer}
+          isOpen={openEditCustomerModal}
+          onClose={() => setOpenEditCustomerModal(false)}
+        />
+      )}
     </div>
   );
 };

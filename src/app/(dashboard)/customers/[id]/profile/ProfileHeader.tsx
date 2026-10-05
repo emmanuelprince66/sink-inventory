@@ -17,8 +17,10 @@ import type { CustomerProfileData } from "./useCustomerProfile";
 
 const ProfileHeader = ({
   profile,
+  onEdit,
 }: {
   profile: CustomerProfileData;
+  onEdit: () => void;
 }) => {
   const router = useRouter();
   const {
@@ -136,6 +138,8 @@ const ProfileHeader = ({
           <Button
             size="sm"
             className="h-9 flex-1 gap-1.5 rounded-lg text-xs font-bold sm:h-8 sm:flex-none"
+            onClick={onEdit}
+            disabled={!row}
           >
             <Pencil className="h-3.5 w-3.5" />
             Edit

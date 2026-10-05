@@ -89,6 +89,7 @@ export const queryKey = {
     getAllCustomers: "get-all-customers",
     createCustomer: "create-customer",
     getCustomerById: "get-customer-by-id",
+    updateCustomer: "update-customer",
     customerPurchaseHistory: "customer-purchase-history",
     getCustomerTransactions: "get-customer-transactions",
     customerWalletTrx: "customer-wallet-trx",

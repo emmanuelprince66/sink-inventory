@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { City, State } from "country-state-city";
@@ -9,6 +9,7 @@ import { useToast } from "./toast/useToast";
 import { useRouter } from "next/navigation";
 
 import { useCreateCustomerMutation } from "@/api/customer/create-customer";
+import { useUpdateCustomerMutation } from "@/api/customer/update-customer";
 import { useDeleteCustomerMutation } from "@/api/customer/delete-customer";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -25,6 +26,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { useDebounce } from "./useDebounce";
+import type { CustomerType } from "@/app/(dashboard)/customers/types";
 
 const CustomerSchema = z.object({
   name: z.string().min(1, "Customer name is required"),
@@ -38,6 +40,7 @@ const CustomerSchema = z.object({
   // feeds ("Birthdays This Month") only reads the day and the month, so the
   // year is not worth losing a birthday over.
   date_of_birth: z.string().optional(),
+  address_phone: z.string().optional(),
   // State holds the NG state's ISO code (matches the order delivery address
   // flow) — translated to its full name in the submit payload below.
   state: z.string().optional(),
@@ -58,11 +61,13 @@ export const useCustomerHook = ({
   handleOpenNotSubscribeModal,
   dateRange,
   page,
+  customer,
 }: {
   closeModal?: () => void;
   handleOpenNotSubscribeModal?: () => void;
   dateRange?: any;
   page?: number;
+  customer?: CustomerType;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
   const isUserSubscribed = useIsUserSubscribeStore(
@@ -93,6 +98,12 @@ export const useCustomerHook = ({
     },
 
     // You can add other callbacks here if needed
+  });
+  const {
+    mutate: updateCustomer,
+    isPending: updateCustomerLoading,
+  } = useUpdateCustomerMutation({
+    onSuccess: () => closeModal?.(),
   });
 
   const [customerId, setCustomerId] = useState<string | null>(null);
@@ -195,6 +206,7 @@ export const useCustomerHook = ({
       email: "",
       gender: "",
       date_of_birth: "",
+      address_phone: "",
       state: "",
       city: "",
       address: "",
@@ -203,11 +215,59 @@ export const useCustomerHook = ({
     },
     mode: "onChange",
   });
+  const { reset } = form;
+
+  const existingAddress =
+    customer?.addresses?.find((address) => address.is_default) ??
+    customer?.addresses?.[0];
 
   // Same NG state/city source as the order delivery address flow
   // (useOrderDeliveryHook) — state is stored as its ISO code, city list
   // depends on the selected state.
   const stateList = useMemo(() => State.getStatesOfCountry("NG"), []);
+  useEffect(() => {
+    if (!customer) return;
+    const matchedState = stateList.find(
+      (item) =>
+        item.name.toLowerCase() ===
+        String(existingAddress?.state ?? "").toLowerCase(),
+    );
+    const gender =
+      customer.gender === "MALE" ||
+      customer.gender === "FEMALE" ||
+      customer.gender === "OTHER"
+        ? customer.gender
+        : "";
+    reset({
+      name: customer.name ?? "",
+      phone: customer.phone ?? "",
+      email: customer.email ?? "",
+      gender,
+      date_of_birth: customer.date_of_birth ?? customer.birthday ?? "",
+      address_phone: existingAddress?.phone ?? "",
+      state: matchedState?.isoCode ?? "",
+      city: existingAddress?.city ?? "",
+      address: existingAddress?.address ?? "",
+      latitude: existingAddress?.latitude ?? "",
+      longitude: existingAddress?.longitude ?? "",
+    });
+  }, [
+    customer?.id,
+    customer?.name,
+    customer?.phone,
+    customer?.email,
+    customer?.gender,
+    customer?.date_of_birth,
+    customer?.birthday,
+    existingAddress?.address,
+    existingAddress?.city,
+    existingAddress?.state,
+    existingAddress?.phone,
+    existingAddress?.latitude,
+    existingAddress?.longitude,
+    reset,
+    stateList,
+  ]);
   const selectedState = form.watch("state");
   const cityList = useMemo(
     () => (selectedState ? City.getCitiesOfState("NG", selectedState) : []),
@@ -256,6 +316,12 @@ export const useCustomerHook = ({
       });
       return;
     }
+    if (customer && existingAddress && !values.address?.trim()) {
+      form.setError("address", {
+        message: "The customer's default address cannot be blank",
+      });
+      return;
+    }
 
     const stateName =
       stateList.find((s) => s.isoCode === values.state)?.name || values.state;
@@ -270,35 +336,54 @@ export const useCustomerHook = ({
       cityCentroid(values.state, values.city),
     );
 
+    const addressPayload = values.address?.trim()
+      ? {
+          address: values.address.trim(),
+          city: values.city || undefined,
+          state: stateName || undefined,
+          country: existingAddress?.country || "Nigeria",
+          ...(customer
+            ? { phone: values.address_phone?.trim() || null }
+            : {}),
+          is_default: existingAddress?.is_default ?? true,
+          ...coordinatesPayload(coords),
+        }
+      : undefined;
     const payload = {
       name: values.name,
       phone: values.phone,
       email: values.email,
       // Omitted entirely when unanswered — a choice field will not take "".
-      ...(values.gender ? { gender: values.gender } : {}),
-      ...(values.date_of_birth ? { date_of_birth: values.date_of_birth } : {}),
-      ...(values.address?.trim() && {
-        address: {
-          address: values.address.trim(),
-          city: values.city || undefined,
-          state: stateName || undefined,
-          country: "Nigeria",
-          is_default: true,
-          ...coordinatesPayload(coords),
-        },
-      }),
+      ...(customer
+        ? {
+            gender: values.gender || null,
+            date_of_birth: values.date_of_birth || null,
+            birthday: values.date_of_birth || null,
+          }
+        : {
+            ...(values.gender ? { gender: values.gender } : {}),
+            ...(values.date_of_birth
+              ? { date_of_birth: values.date_of_birth }
+              : {}),
+          }),
+      ...(addressPayload ? { address: addressPayload } : {}),
     };
 
-    if (!isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
+    if (!customer && !isUserSubscribed?.is_subscribed && user?.role === "OWNER") {
       handleOpenNotSubscribeModal?.();
       return;
     }
-    // console.log("payload", payload);
-
-    createCustomer({
-      payload,
-      businessId: business_id,
-    });
+    if (customer) {
+      updateCustomer({
+        id: customer.id,
+        payload,
+      });
+    } else {
+      createCustomer({
+        payload,
+        businessId: business_id,
+      });
+    }
   };
 
   const handleSearchChange = (value: string) => {
@@ -329,7 +414,7 @@ export const useCustomerHook = ({
     handleRowClick,
     CustomerData,
     deleteCustomerLoading,
-    createCustomerLoading,
+    createCustomerLoading: createCustomerLoading || updateCustomerLoading,
     CustomerLoading,
     CustomerError,
     searchInput,

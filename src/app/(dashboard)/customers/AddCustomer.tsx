@@ -23,14 +23,17 @@ import {
 } from "@/components/ui/select";
 import { useCustomerHook } from "@/hooks/useCustomerHook";
 import { useCustomerPhoneLookup } from "@/hooks/useCustomerPhoneLookup";
+import type { CustomerType } from "./types";
 
 const AddCustomer = ({
   closeOpenCustomerModal,
   handleOpenNotSubscribeModal,
   onUseExisting,
+  customer,
 }: {
   closeOpenCustomerModal: any;
   handleOpenNotSubscribeModal?: () => void;
+  customer?: CustomerType;
   /**
    * Given where a caller can put an existing customer straight to work — the
    * till puts them on the sale. Without it the match is still shown and its
@@ -50,6 +53,7 @@ const AddCustomer = ({
   } = useCustomerHook({
     closeModal: closeOpenCustomerModal,
     handleOpenNotSubscribeModal,
+    customer,
   });
   const selectedState = form.watch("state");
   const hasAddressCoordinates = Boolean(
@@ -58,7 +62,10 @@ const AddCustomer = ({
 
   // The number is what the attendant asks for first, so it is also the first
   // chance to notice this is not a new customer at all.
-  const { matches, isSearching } = useCustomerPhoneLookup(form.watch("phone"));
+  const { matches, isSearching } = useCustomerPhoneLookup(
+    form.watch("phone"),
+    customer?.id,
+  );
 
   /**
    * Copies an existing customer's details onto the form.
@@ -79,7 +86,13 @@ const AddCustomer = ({
     form.setValue("name", customer.name ?? "", { shouldValidate: true });
     form.setValue("phone", customer.phone ?? "", { shouldValidate: true });
     form.setValue("email", customer.email ?? "");
+    form.setValue("gender", customer.gender ?? "");
+    form.setValue(
+      "date_of_birth",
+      customer.date_of_birth ?? customer.birthday ?? "",
+    );
     if (address?.address) form.setValue("address", address.address);
+    form.setValue("address_phone", address?.phone ?? "");
     if (matchedState) form.setValue("state", matchedState.isoCode);
     if (address?.city) form.setValue("city", address.city);
     // Whatever coordinates the old address was saved with are not on this
@@ -220,8 +233,10 @@ const AddCustomer = ({
                 <FormItem>
                   <FormLabel>Gender</FormLabel>
                   <Select
-                    value={field.value || ""}
-                    onValueChange={field.onChange}
+                    value={customer ? field.value || "__empty__" : field.value || ""}
+                    onValueChange={(value) =>
+                      field.onChange(value === "__empty__" ? "" : value)
+                    }
                   >
                     <FormControl>
                       <SelectTrigger className="w-full">
@@ -229,6 +244,9 @@ const AddCustomer = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {customer && (
+                        <SelectItem value="__empty__">Not specified</SelectItem>
+                      )}
                       <SelectItem value="MALE">Male</SelectItem>
                       <SelectItem value="FEMALE">Female</SelectItem>
                       <SelectItem value="OTHER">Other</SelectItem>
@@ -372,19 +390,27 @@ const AddCustomer = ({
             className="w-full h-[48px] "
             disabled={createCustomerLoading}
           >
-            {createCustomerLoading ? <Spinner /> : "Save"}
+            {createCustomerLoading ? (
+              <Spinner />
+            ) : customer ? (
+              "Save changes"
+            ) : (
+              "Save"
+            )}
           </Button>
         </form>
       </Form>
 
-      <div className="flex w-full border border-info-1/30 mt-4 rounded-xl items-start gap-3 bg-info-2 text-info-1 p-3">
-        <CircleAlert className="h-5 w-5 shrink-0 mt-0.5" />
+      {!customer && (
+        <div className="flex w-full border border-info-1/30 mt-4 rounded-xl items-start gap-3 bg-info-2 text-info-1 p-3">
+          <CircleAlert className="h-5 w-5 shrink-0 mt-0.5" />
 
-        <p className="text-info-1 text-sm font-medium">
-          You should ask your customers for permission before you subscribe them
-          to your marketing emails or SMS
-        </p>
-      </div>
+          <p className="text-info-1 text-sm font-medium">
+            You should ask your customers for permission before you subscribe them
+            to your marketing emails or SMS
+          </p>
+        </div>
+      )}
     </div>
   );
 };

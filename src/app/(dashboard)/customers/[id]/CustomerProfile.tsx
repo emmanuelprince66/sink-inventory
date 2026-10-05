@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Spinner } from "@/components/app/Spinner";
+import EditCustomer from "./EditCustomer";
 import EngagementTab from "./profile/EngagementTab";
 import FinancialTab from "./profile/FinancialTab";
 import LoyaltyTab from "./profile/LoyaltyTab";
@@ -32,6 +34,7 @@ const TAB_VIEWS: Record<ProfileTab, (props: TabViewProps) => React.ReactElement>
 
 const CustomerProfile = ({ id }: { id: string }) => {
   const profile = useCustomerProfile(id);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
   if (profile.isLoading) {
     return (
@@ -45,11 +48,32 @@ const CustomerProfile = ({ id }: { id: string }) => {
 
   return (
     <div className="w-full min-w-0">
-      <ProfileHeader profile={profile} />
+      <ProfileHeader
+        profile={profile}
+        onEdit={() => setIsEditOpen(true)}
+      />
 
       <div className="mt-4 space-y-4">
         <TabView profile={profile} id={id} />
       </div>
+
+      {profile.row && (
+        <EditCustomer
+          customer={{
+            ...profile.row,
+            name: profile.identity?.name ?? profile.row.name,
+            phone: profile.identity?.phone ?? profile.row.phone,
+            email: profile.identity?.email ?? profile.row.email,
+            gender: profile.identity?.gender ?? profile.row.gender,
+            date_of_birth:
+              profile.identity?.date_of_birth ??
+              profile.row.date_of_birth ??
+              profile.row.birthday,
+          }}
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+        />
+      )}
     </div>
   );
 };

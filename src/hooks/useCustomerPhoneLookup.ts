@@ -22,7 +22,10 @@ const MIN_DIGITS = 6;
 
 const digitsOf = (value: string) => value.replace(/\D/g, "");
 
-export const useCustomerPhoneLookup = (phone: string) => {
+export const useCustomerPhoneLookup = (
+  phone: string,
+  excludeCustomerId?: string,
+) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
   // Longer than a keystroke, shorter than the 500ms list search: this runs
@@ -32,7 +35,12 @@ export const useCustomerPhoneLookup = (phone: string) => {
   const enabled = Boolean(business_id) && digits.length >= MIN_DIGITS;
 
   const { data, isFetching } = useGetCustomerQuery({
-    params: { id: business_id, search: digits, limit: 5, page: 1 },
+    params: {
+      id: business_id,
+      search: digits,
+      limit: excludeCustomerId ? 10 : 5,
+      page: 1,
+    },
     enabled,
     staleTime: 1000 * 60 * 5,
   });
@@ -42,8 +50,10 @@ export const useCustomerPhoneLookup = (phone: string) => {
   // The endpoint searches name and email as well, so a number that happens to
   // appear in someone's email would come back too. Only a real phone match is
   // worth interrupting the attendant over.
-  const matches = results.filter((customer) =>
-    digitsOf(String(customer?.phone ?? "")).includes(digits),
+  const matches = results.filter(
+    (customer) =>
+      customer?.id !== excludeCustomerId &&
+      digitsOf(String(customer?.phone ?? "")).includes(digits),
   );
 
   return {
