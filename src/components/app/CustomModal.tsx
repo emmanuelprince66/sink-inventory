@@ -42,6 +42,12 @@ interface ModalProps {
    * Extra classes for the content container (rarely needed).
    */
   className?: string;
+  /**
+   * Keep this dialog open when another dialog or popover is interacting above
+   * it. Useful for nested modal flows; the topmost modal still handles its
+   * own outside interactions.
+   */
+  preventOutsideClose?: boolean;
 }
 
 const SIZE_MAX_WIDTH: Record<ModalSize, string> = {
@@ -64,6 +70,7 @@ export function CustomModal({
   footer,
   size = "md",
   className,
+  preventOutsideClose = false,
 }: ModalProps) {
   const isPinnedLayout = Boolean(footer);
 
@@ -77,6 +84,9 @@ export function CustomModal({
         </DialogTrigger>
       )}
       <DialogContent
+        onInteractOutside={(event) => {
+          if (preventOutsideClose) event.preventDefault();
+        }}
         className={cn(
           // Base sizing — width caps step up at sm/md.
           "w-full max-w-[90vw] sm:max-w-[425px]",

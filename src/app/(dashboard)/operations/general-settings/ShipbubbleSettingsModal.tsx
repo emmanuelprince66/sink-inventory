@@ -514,6 +514,7 @@ const ShipbubbleSettingsModal = ({
       <CustomModal
         isOpen={open}
         onClose={onClose}
+        preventOutsideClose={openBoxPicker}
         title="Shipbubble Settings"
         description="Tell Shipbubble where to collect parcels and what a default shipment looks like."
         size="lg"
