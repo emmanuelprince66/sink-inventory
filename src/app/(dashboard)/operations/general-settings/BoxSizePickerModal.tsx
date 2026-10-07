@@ -1,7 +1,6 @@
 "use client";
 
 import { BoxSizeOption } from "@/api/shipping/shipbubble";
-import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -9,7 +8,6 @@ import { Check, Package } from "lucide-react";
 import { useEffect, useState } from "react";
 
 interface BoxSizePickerModalProps {
-  isOpen: boolean;
   onClose: () => void;
   value: BoxSizeOption | null;
   onChange: (size: BoxSizeOption) => void;
@@ -19,7 +17,6 @@ interface BoxSizePickerModalProps {
 }
 
 const BoxSizePickerModal = ({
-  isOpen,
   onClose,
   value,
   onChange,
@@ -28,10 +25,9 @@ const BoxSizePickerModal = ({
 }: BoxSizePickerModalProps) => {
   const [selectedName, setSelectedName] = useState<string>(value?.name || "");
 
-  // Sync selection when re-opened.
   useEffect(() => {
-    if (isOpen) setSelectedName(value?.name || "");
-  }, [isOpen, value]);
+    setSelectedName(value?.name || "");
+  }, [value]);
 
   const handleSave = () => {
     const picked = options.find((o) => o.name === selectedName);
@@ -41,37 +37,7 @@ const BoxSizePickerModal = ({
   };
 
   return (
-    <CustomModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Shipping Box Size"
-      description="Pick a default parcel size — used when a product hasn't set its own weight."
-      size="xl"
-      headerIcon={
-        <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center">
-          <Package className="w-4 h-4 text-slate-700" />
-        </div>
-      }
-      footer={
-        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-          <Button
-            variant="outline"
-            className="border-slate-200"
-            onClick={onClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!selectedName}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            <Check className="w-4 h-4 mr-1.5" />
-            Save selection
-          </Button>
-        </div>
-      }
-    >
+    <div className="space-y-4">
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -84,8 +50,7 @@ const BoxSizePickerModal = ({
             No box sizes available
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            We couldn't load the box catalogue. Try closing and re-opening this
-            modal.
+            We couldn't load the box catalogue. Close this view and try again.
           </p>
         </div>
       ) : (
@@ -100,7 +65,26 @@ const BoxSizePickerModal = ({
           ))}
         </div>
       )}
-    </CustomModal>
+      <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          className="border-slate-200"
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={!selectedName || loading || options.length === 0}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+        >
+          <Check className="w-4 h-4 mr-1.5" />
+          Save selection
+        </Button>
+      </div>
+    </div>
   );
 };
 

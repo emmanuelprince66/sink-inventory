@@ -513,45 +513,66 @@ const ShipbubbleSettingsModal = ({
     <>
       <CustomModal
         isOpen={open}
-        onClose={onClose}
-        preventOutsideClose={openBoxPicker}
-        title="Shipbubble Settings"
-        description="Tell Shipbubble where to collect parcels and what a default shipment looks like."
-        size="lg"
+        onClose={() => {
+          if (openBoxPicker) setOpenBoxPicker(false);
+          else onClose();
+        }}
+        title={openBoxPicker ? "Shipping Box Size" : "Shipbubble Settings"}
+        description={
+          openBoxPicker
+            ? "Pick a default parcel size — used when a product hasn't set its own dimensions."
+            : "Tell Shipbubble where to collect parcels and what a default shipment looks like."
+        }
+        size={openBoxPicker ? "xl" : "lg"}
         headerIcon={
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-            <SettingsIcon className="w-4 h-4" />
+            {openBoxPicker ? (
+              <Package className="w-4 h-4" />
+            ) : (
+              <SettingsIcon className="w-4 h-4" />
+            )}
           </div>
         }
         footer={
-          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:items-center sm:justify-between">
-            <p className="text-[11px] text-slate-500">
-              Changes apply to new shipments only.
-            </p>
-            <div className="flex gap-2 sm:gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="border-slate-200 flex-1 sm:flex-none"
-                onClick={onClose}
-                disabled={isSaving}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex-1 sm:flex-none"
-              >
-                <Save className="w-4 h-4 mr-1.5" />
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
+          openBoxPicker ? undefined : (
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:items-center sm:justify-between">
+              <p className="text-[11px] text-slate-500">
+                Changes apply to new shipments only.
+              </p>
+              <div className="flex gap-2 sm:gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-slate-200 flex-1 sm:flex-none"
+                  onClick={onClose}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white flex-1 sm:flex-none"
+                >
+                  <Save className="w-4 h-4 mr-1.5" />
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             </div>
-          </div>
+          )
         }
       >
-        <div className="space-y-4">
+        {openBoxPicker ? (
+          <BoxSizePickerModal
+            onClose={() => setOpenBoxPicker(false)}
+            value={settings.packageSize}
+            onChange={(size) => updateSetting("packageSize", size)}
+            options={boxSizes}
+            loading={boxSizesLoading}
+          />
+        ) : (
+          <div className="space-y-4">
           {/* Step 1 — Pickup Address */}
           <SettingsTile
             step={1}
@@ -1025,17 +1046,9 @@ const ShipbubbleSettingsModal = ({
               <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0" />
             </button>
           </SettingsTile>
-        </div>
+          </div>
+        )}
       </CustomModal>
-
-      <BoxSizePickerModal
-        isOpen={openBoxPicker}
-        onClose={() => setOpenBoxPicker(false)}
-        value={settings.packageSize}
-        onChange={(size) => updateSetting("packageSize", size)}
-        options={boxSizes}
-        loading={boxSizesLoading}
-      />
     </>
   );
 };
