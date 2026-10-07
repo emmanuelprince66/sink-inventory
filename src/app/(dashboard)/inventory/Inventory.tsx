@@ -39,7 +39,8 @@ import {
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 // Download Report temporarily disabled — re-enable when ready.
 // import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
@@ -163,7 +164,40 @@ const Inventory = () => {
   const [activeTab, setActiveTab] = useState<"PRODUCT" | "SERVICE" | "COMBO">(
     "PRODUCT",
   );
-  const [page, setPage] = useState(1);
+  /**
+   * The page lives in the URL, not in state.
+   *
+   * Editing a product leaves this screen for /new-add-product/{id}/edit-product
+   * and comes back with router.back(). With the page in state that return
+   * landed on page 1, so a merchant correcting a price on page 4 was dropped at
+   * the top of the list each time. In the URL it simply comes back with the
+   * history entry — and a refresh, a bookmark or a shared link keep the page
+   * too, which state could never do.
+   */
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const pageParam = Number(searchParams.get("page"));
+  const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  const setPage = useCallback(
+    (next: number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      // Page 1 is the default, so it stays out of the URL rather than
+      // following the merchant around as ?page=1.
+      if (next <= 1) params.delete("page");
+      else params.set("page", String(next));
+
+      const query = params.toString();
+      // replace, not push: paging is not a destination, and pushing would make
+      // Back walk through every page the merchant flicked past.
+      router.replace(query ? `${pathname}?${query}` : pathname, {
+        scroll: false,
+      });
+    },
+    [router, pathname, searchParams],
+  );
+
   const [searchInput, setSearchInput] = useState("");
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);

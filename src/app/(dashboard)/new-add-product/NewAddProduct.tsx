@@ -65,6 +65,7 @@ import { useFieldArray } from "react-hook-form";
 import AddCategory from "../categories/AddCategory";
 import AddDepartments from "../departments/AddDepartments";
 import MediaUploader from "./MediaUploader";
+import ScanToFill, { type ScannedFill } from "./ScanToFill";
 import { ProductFormSkeleton } from "./ProductSkeleton";
 
 interface NewAddProductProps {
@@ -121,6 +122,46 @@ const NewAddProduct = ({
     editProductPending,
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
+
+  /**
+   * Writes a scanned catalogue match into the form.
+   *
+   * Only fills what is still empty, except for the SKU — that is the barcode
+   * just scanned, and it is the one field the scan knows better than the
+   * merchant does. Anything already typed stays, so a half-filled form plus a
+   * late scan ends up with both rather than the scan winning.
+   *
+   * The photo is appended rather than replacing the list: someone who has
+   * already added their own shelf photo keeps it, and the catalogue's goes
+   * alongside it.
+   */
+  const applyScannedProduct = (fill: ScannedFill) => {
+    const setIfEmpty = (
+      field: "item_name" | "weight" | "product_unit" | "description",
+      value: string,
+    ) => {
+      if (!value) return;
+      const current = String(form.getValues(field) ?? "").trim();
+      if (current) return;
+      form.setValue(field, value, { shouldDirty: true, shouldValidate: true });
+    };
+
+    setIfEmpty("item_name", fill.name);
+    setIfEmpty("weight", fill.weight);
+    setIfEmpty("product_unit", fill.productUnit);
+    setIfEmpty("description", fill.description);
+
+    if (fill.sku) {
+      form.setValue("sku", fill.sku, { shouldDirty: true, shouldValidate: true });
+    }
+
+    if (fill.image) {
+      const images = form.getValues("images") ?? [];
+      form.setValue("images", [...images, fill.image], { shouldDirty: true });
+    }
+
+    showToast("Product details filled in from the scan", "success");
+  };
 
   const [createCategoryModal, setCreateCategoryModal] = useState(false);
 
@@ -601,6 +642,11 @@ const NewAddProduct = ({
 
             {/* Main Content */}
             <div className="order-2 lg:order-1 lg:col-span-7 space-y-6">
+              {/* Above the form, and only when adding: scanning fills the
+                  fields below, so offering it after they have been typed would
+                  be offering to overwrite the work. */}
+              {!isEditMode && <ScanToFill onApply={applyScannedProduct} />}
+
               {/* Card 1: Product Information */}
               <Card className="border-grey-5 shadow-sm bg-white py-5">
                 <CardHeader>

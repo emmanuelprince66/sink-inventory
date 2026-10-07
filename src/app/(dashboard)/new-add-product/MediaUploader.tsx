@@ -158,18 +158,23 @@ const MediaUploader = ({
                 preload="metadata"
               />
             )}
+            {/* Always visible, never hover-only: a phone has no hover, so the
+                only way to remove a wrong photo was to guess it was there.
+                Sized for a thumb (28px) and filled red, because it sits on top
+                of photographs and has to read against any of them. */}
             <button
               type="button"
               onClick={() => removeAt(index)}
               disabled={disabled}
               className={cn(
-                "absolute top-1 right-1 bg-white/95 hover:bg-white rounded-full p-1 shadow",
-                "opacity-0 group-hover:opacity-100 transition-opacity",
+                "absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full",
+                "bg-error-1 text-white shadow-md ring-2 ring-white",
+                "transition-transform hover:scale-105 active:scale-95",
                 disabled && "cursor-not-allowed opacity-50",
               )}
               aria-label={`Remove ${kind} ${index + 1}`}
             >
-              <X className="w-3 h-3 text-gray-700" />
+              <X className="h-4 w-4" strokeWidth={2.5} />
             </button>
           </div>
         ))}

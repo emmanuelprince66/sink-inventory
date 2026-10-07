@@ -14,10 +14,10 @@ import { useEditServiceMutation } from "@/api/products/edit-service";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useReturnDamagedProductMutation } from "@/api/products/product-return";
 import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
+import { AUTO_BATCH } from "@/app/(dashboard)/inventory/BatchSelect";
 import { queryKey } from "@/constants/query-key";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { AUTO_BATCH } from "@/app/(dashboard)/inventory/BatchSelect";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
 
@@ -298,7 +298,7 @@ export const useInventoryHook = ({
   } = useGetInventoryQuery({
     params: {
       page,
-      limit: 20,
+      limit: 100,
       id: business_id,
       search: searchTerm,
       category_id: selectedCategoryId,

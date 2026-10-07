@@ -155,6 +155,21 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         ],
         rememberLastUsedCamera: true,
         showTorchButtonIfSupported: true,
+        /**
+         * Hands decoding to the phone's own BarcodeDetector where it exists.
+         *
+         * This is what makes a product barcode readable on Android at all:
+         * the JavaScript fallback was written for QR codes and struggles with
+         * the long thin EAN-13 on a bottle, especially under shop lighting.
+         * The storefront's in-store scanner has run with this since it
+         * shipped, and it is the only material difference between the two.
+         *
+         * Safari has no BarcodeDetector, so iOS quietly keeps the JS decoder
+         * and behaves exactly as before.
+         */
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true,
+        },
       };
 
       const onScanSuccess = (decodedText: string) => {
