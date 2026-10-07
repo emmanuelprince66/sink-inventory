@@ -65,8 +65,8 @@ import { useFieldArray } from "react-hook-form";
 import AddCategory from "../categories/AddCategory";
 import AddDepartments from "../departments/AddDepartments";
 import MediaUploader from "./MediaUploader";
-import ScanToFill, { type ScannedFill } from "./ScanToFill";
 import { ProductFormSkeleton } from "./ProductSkeleton";
+import ScanToFill, { type ScannedFill } from "./ScanToFill";
 
 interface NewAddProductProps {
   id?: string;
@@ -152,7 +152,10 @@ const NewAddProduct = ({
     setIfEmpty("description", fill.description);
 
     if (fill.sku) {
-      form.setValue("sku", fill.sku, { shouldDirty: true, shouldValidate: true });
+      form.setValue("sku", fill.sku, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     }
 
     if (fill.image) {
@@ -419,7 +422,6 @@ const NewAddProduct = ({
       }
     }
 
-    // ✅ CLEAR ERROR IMMEDIATELY AFTER VALIDATION PASSES
     setBulkEditError(null);
 
     // Apply to only selected product variations
