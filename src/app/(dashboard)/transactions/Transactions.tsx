@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBusinessBanks } from "@/hooks/useBusinessBanks";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
+import { useUserRole } from "@/lib/store/user-store";
 import {
   useUnifiedTransactionsHook,
   type UnifiedTransactionFilter,
@@ -69,6 +70,8 @@ const amount = (value: unknown) => {
 };
 
 const Transactions = () => {
+  const { can } = useUserRole();
+  const canInitiateTransfer = can("can_initiate_expense_transfer");
   const [searchInput, setSearchInput] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [page, setPage] = useState(1);
@@ -422,13 +425,15 @@ const Transactions = () => {
               </div>
 
               <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto lg:justify-end">
-                <Button
-                  onClick={() => setShowTransferModal(true)}
-                  className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  Transfer
-                </Button>
+                {canInitiateTransfer && (
+                  <Button
+                    onClick={() => setShowTransferModal(true)}
+                    className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Transfer
+                  </Button>
+                )}
                 <Button
                   className="w-full border border-white/20 bg-white/10 text-white hover:bg-white/20 sm:w-auto"
                   onClick={() => setShowFundModal(true)}
