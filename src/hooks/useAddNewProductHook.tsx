@@ -201,7 +201,7 @@ const createProductSchema = (isEditMode: boolean) => {
             path: ["product_variations", index, "selling_price"],
           });
         }
-        if (!variation.quantity || variation.quantity === "") {
+        if (!isEditMode && !variation.quantity) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Quantity is required for all variations",
@@ -634,7 +634,10 @@ export const useAddNewProductHook = ({
             combination: combinationWithoutParent,
             cost_price: v.cost_price ? String(v.cost_price) : "",
             selling_price: v.selling_price ? String(v.selling_price) : "",
-            quantity: v.quantity ? String(v.quantity) : "",
+            quantity:
+              v.quantity !== null && v.quantity !== undefined
+                ? String(v.quantity)
+                : "",
             status: v.status || "IN-STOCK",
             discount: v.discount ? String(v.discount) : "",
             low_stock_threshold: v.low_stock_threshold
@@ -926,9 +929,13 @@ export const useAddNewProductHook = ({
             name: variationNameWithParent,
             cost_price: variation.cost_price.trim(),
             selling_price: variation.selling_price.trim(),
-            quantity: variation.quantity.trim(),
             status: variation.status,
           };
+          // Quantity is read-only in edit mode. Omitting it from this PATCH
+          // preserves the server value, including a valid zero quantity.
+          if (!isEditMode) {
+            baseVariation.quantity = variation.quantity.trim();
+          }
 
           if (variation.low_stock_threshold?.trim()) {
             baseVariation.low_stock_threshold =

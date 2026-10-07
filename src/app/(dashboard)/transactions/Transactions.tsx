@@ -72,6 +72,7 @@ const amount = (value: unknown) => {
 const Transactions = () => {
   const { can } = useUserRole();
   const canInitiateTransfer = can("can_initiate_expense_transfer");
+  const canManageBankDetails = can("manage_bank_details");
   const [searchInput, setSearchInput] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [page, setPage] = useState(1);
@@ -302,11 +303,13 @@ const Transactions = () => {
               <h1 className="text-2xl font-extrabold tracking-tight text-grey-1 sm:text-3xl">
                 Transactions
               </h1>
-              <div className="mt-2 flex items-center gap-3">
-                <p className="text-sm text-grey-3">
-                  {accountList.length || 0} connected accounts
-                </p>
-              </div>
+              {canManageBankDetails && (
+                <div className="mt-2 flex items-center gap-3">
+                  <p className="text-sm text-grey-3">
+                    {accountList.length || 0} connected accounts
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -318,66 +321,71 @@ const Transactions = () => {
                 }}
                 className="w-full sm:w-auto"
               />
-              <Button
-                type="button"
-                className="h-9 rounded-md px-4"
-                onClick={() => setShowSubAccountModal(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add account
-              </Button>
+              {canManageBankDetails && (
+                <Button
+                  type="button"
+                  className="h-9 rounded-md px-4"
+                  onClick={() => setShowSubAccountModal(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add account
+                </Button>
+              )}
             </div>
           </header>
 
-          <section className="scrollbar-thin flex w-full items-stretch gap-3 overflow-x-auto pb-2">
-            {accountList.map((account) => {
-              const selected = selectedBank?.id === account.id;
-              return (
-                <button
-                  type="button"
-                  key={account.id}
-                  onClick={() => {
-                    if (canSwitchBanks) setSelectedBankId(account.id);
-                  }}
-                  className={cn(
-                    "min-h-[180px] w-[310px] shrink-0 cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition hover:border-primary-green-300 hover:shadow-md sm:w-[360px] lg:w-[calc((100%-2rem)/4)]",
-                    selected
-                      ? "border-[#b8d9c0] bg-[#dfeee3] shadow-sm"
-                      : "border-grey-5 bg-white hover:border-primary-green-300",
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-xs font-bold text-white ring-2 ring-primary-green-300/15">
-                        {accountInitials(account.bank_name)}
-                      </span>
-                      <span
-                        title={accountLabel(account)}
-                        className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-grey-3"
-                      >
-                        {accountLabel(account)}
-                      </span>
-                    </div>
-                    <Wallet className="h-5 w-5 shrink-0 text-grey-3" />
-                  </div>
-                  <p className="mt-6 text-xl font-extrabold text-grey-1">
-                    {amount(selected ? balance : 0)}
-                  </p>
-                  <p
-                    title={account.account_name || "Bank account"}
-                    className="mt-1 max-w-full truncate text-xs text-grey-2"
+          {canManageBankDetails && (
+            <section className="scrollbar-thin flex w-full items-stretch gap-3 overflow-x-auto pb-2">
+              {accountList.map((account) => {
+                const selected = selectedBank?.id === account.id;
+                return (
+                  <button
+                    type="button"
+                    key={account.id}
+                    onClick={() => {
+                      if (canSwitchBanks) setSelectedBankId(account.id);
+                    }}
+                    className={cn(
+                      "min-h-[180px] w-[310px] shrink-0 cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition hover:border-primary-green-300 hover:shadow-md sm:w-[360px] lg:w-[calc((100%-2rem)/4)]",
+                      selected
+                        ? "border-[#b8d9c0] bg-[#dfeee3] shadow-sm"
+                        : "border-grey-5 bg-white hover:border-primary-green-300",
+                    )}
                   >
-                    {account.account_name || "Bank account"}
-                  </p>
-                  <p className="mt-1 truncate text-[10px] text-grey-3">
-                    {account.bank_name || "Bank"} ·{" "}
-                    {maskAccount(account.account_number)}
-                  </p>
-                </button>
-              );
-            })}
-          </section>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-green-300 text-xs font-bold text-white ring-2 ring-primary-green-300/15">
+                          {accountInitials(account.bank_name)}
+                        </span>
+                        <span
+                          title={accountLabel(account)}
+                          className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-grey-3"
+                        >
+                          {accountLabel(account)}
+                        </span>
+                      </div>
+                      <Wallet className="h-5 w-5 shrink-0 text-grey-3" />
+                    </div>
+                    <p className="mt-6 text-xl font-extrabold text-grey-1">
+                      {amount(selected ? balance : 0)}
+                    </p>
+                    <p
+                      title={account.account_name || "Bank account"}
+                      className="mt-1 max-w-full truncate text-xs text-grey-2"
+                    >
+                      {account.account_name || "Bank account"}
+                    </p>
+                    <p className="mt-1 truncate text-[10px] text-grey-3">
+                      {account.bank_name || "Bank"} ·{" "}
+                      {maskAccount(account.account_number)}
+                    </p>
+                  </button>
+                );
+              })}
+            </section>
+          )}
 
+          {canManageBankDetails && (
           <section className="rounded-2xl bg-[#223329] p-5 text-white shadow-[0_12px_30px_rgba(20,45,31,0.14)] sm:p-6">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex min-w-0 items-center gap-3">
@@ -455,6 +463,7 @@ const Transactions = () => {
               </div>
             </div>
           </section>
+          )}
 
           <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-info-1/20 bg-info-2 p-5">

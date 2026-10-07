@@ -85,6 +85,23 @@ type VariationField =
   | "expiry_date"
   | "discount_threshold";
 
+const collectValidationMessages = (errors: unknown): string[] => {
+  if (!errors || typeof errors !== "object") return [];
+
+  const entries = Object.entries(errors);
+  const message = entries.find(
+    ([key, value]) => key === "message" && typeof value === "string",
+  )?.[1];
+
+  if (typeof message === "string") return [message];
+
+  return entries.flatMap(([key, value]) =>
+    ["ref", "type", "types", "message"].includes(key)
+      ? []
+      : collectValidationMessages(value),
+  );
+};
+
 // Helper function to format field labels
 const formatFieldLabel = (field: VariationField): string => {
   const fieldLabels: Record<VariationField, string> = {
@@ -513,7 +530,20 @@ const NewAddProduct = ({
       </div>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            const messages = [...new Set(collectValidationMessages(errors))];
+            const visibleMessages = messages.slice(0, 3);
+            const remainingCount = messages.length - visibleMessages.length;
+            const summary = visibleMessages.join("; ");
+            showToast(
+              `${summary || "Please review the highlighted fields."}${
+                remainingCount > 0
+                  ? ` (+${remainingCount} more issue${remainingCount === 1 ? "" : "s"})`
+                  : ""
+              }`,
+              "error",
+            );
+          })}
           className="max-w-7xl mx-auto"
         >
           <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
