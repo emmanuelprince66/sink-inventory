@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { Camera, Keyboard, ScanLine, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -23,13 +23,45 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
   enableHardwareScanner = true,
   autoCloseOnScan = true, // Default to auto-close
 }) => {
+  /**
+   * Shuts the camera down.
+   *
+   * The headless scanner has to be stopped before it can be cleared — calling
+   * clear() while it is still running throws, and the camera light stays on.
+   * Both steps tolerate failure: by the time this runs the scanner may already
+   * have stopped itself, and the only thing worse than a redundant stop is an
+   * exception on the way out.
+   */
+  const stopScanner = async (scanner: Html5Qrcode | null) => {
+    if (!scanner) return;
+    try {
+      if (scanner.isScanning) await scanner.stop();
+    } catch (error) {
+      console.error("Failed to stop scanner", error);
+    }
+    try {
+      scanner.clear();
+    } catch (error) {
+      console.error("Failed to clear scanner", error);
+    }
+  };
+
   const [error, setError] = useState<string>("");
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [useCameraMode, setUseCameraMode] = useState(false);
+  /**
+   * Opens straight into the camera, the way the storefront's in-store scanner
+   * does. It used to open on the keyboard panel and ask the cashier to press a
+   * button before the camera appeared — fine at a till with a USB scanner,
+   * an extra tap and a puzzle on a phone, which is where most scanning happens.
+   *
+   * The USB/keyboard listener below is global and runs either way, so a till
+   * scanner still works while the camera is open.
+   */
+  const [useCameraMode, setUseCameraMode] = useState(true);
   const [hardwareScannerDetected, setHardwareScannerDetected] = useState(false);
   const [scannedCode, setScannedCode] = useState<string>("");
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const hasInitialized = useRef(false);
   const barcodeBuffer = useRef<string>("");
   const scanTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -60,10 +92,8 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
             barcodeBuffer.current = "";
 
             // Stop camera scanner if running
-            if (scannerRef.current) {
-              scannerRef.current.clear().catch(console.error);
-              scannerRef.current = null;
-            }
+            void stopScanner(scannerRef.current);
+            scannerRef.current = null;
 
             // Call the result callback
             onScanResult(code);
@@ -145,63 +175,40 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
         return;
       }
 
-      // Initialize scanner
+      // How the camera runs once it is open. `qrbox` is a wide rectangle, not
+      // the library's default square: a product barcode is long and flat, and
+      // a square reticle invites people to frame it from too far back.
       const config = {
         fps: 10,
-        qrbox: 250,
-        aspectRatio: 1.0,
-        formatsToSupport: [
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-        ],
-        rememberLastUsedCamera: true,
-        showTorchButtonIfSupported: true,
         /**
-         * Hands decoding to the phone's own BarcodeDetector where it exists.
+         * A wide, flat reticle sized from the actual viewfinder.
          *
-         * This is what makes a product barcode readable on Android at all:
-         * the JavaScript fallback was written for QR codes and struggles with
-         * the long thin EAN-13 on a bottle, especially under shop lighting.
-         * The storefront's in-store scanner has run with this since it
-         * shipped, and it is the only material difference between the two.
-         *
-         * Safari has no BarcodeDetector, so iOS quietly keeps the JS decoder
-         * and behaves exactly as before.
+         * Wide because a product barcode is long and flat, and the library's
+         * default square invites people to frame it from too far back.
+         * Measured rather than fixed because a fixed box larger than the video
+         * is rejected outright — which is exactly what a 280px box does on a
+         * narrow phone held in portrait.
          */
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true,
+        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
+          const width = Math.floor(Math.min(viewfinderWidth * 0.85, 320));
+          const height = Math.floor(
+            Math.min(viewfinderHeight * 0.5, Math.max(130, width * 0.6)),
+          );
+          return { width, height };
         },
+        aspectRatio: 1.0,
+        disableFlip: false,
       };
 
       const onScanSuccess = (decodedText: string) => {
         console.log("Camera scanned:", decodedText);
         setScannedCode(decodedText);
 
-        // Stop scanner and call callback
-        if (scannerRef.current) {
-          scannerRef.current
-            .clear()
-            .then(() => {
-              scannerRef.current = null;
-              onScanResult(decodedText);
-
-              // Auto-close after scan if enabled
-              if (autoCloseOnScan) {
-                setTimeout(() => {
-                  onClose();
-                }, 500);
-              }
-            })
-            .catch((err) => {
-              console.error("Failed to clear scanner", err);
-              onScanResult(decodedText);
-
-              if (autoCloseOnScan) {
-                setTimeout(() => {
-                  onClose();
-                }, 500);
-              }
-            });
-        } else {
+        // The camera is released before the result is handed over: whatever
+        // happens next may navigate or open a modal, and a camera still
+        // running behind it keeps the indicator light on.
+        void stopScanner(scannerRef.current).finally(() => {
+          scannerRef.current = null;
           onScanResult(decodedText);
 
           if (autoCloseOnScan) {
@@ -209,7 +216,7 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
               onClose();
             }, 500);
           }
-        }
+        });
       };
 
       const onScanError = (errorMessage: string) => {
@@ -223,13 +230,61 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       };
 
       try {
-        const html5QrcodeScanner = new Html5QrcodeScanner(
-          qrcodeRegionId,
-          config,
-          false
-        );
-        scannerRef.current = html5QrcodeScanner;
-        html5QrcodeScanner.render(onScanSuccess, onScanError);
+        const html5QrCode = new Html5Qrcode(qrcodeRegionId, {
+          formatsToSupport: [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+          ],
+          /**
+           * Hands decoding to the phone's own BarcodeDetector where it exists.
+           *
+           * This is what makes a product barcode readable on Android at all:
+           * the JavaScript fallback was written for QR codes and struggles
+           * with the long thin EAN-13 on a bottle under shop lighting. The
+           * storefront's in-store scanner has run with this since it shipped.
+           *
+           * Safari has no BarcodeDetector, so iOS keeps the JS decoder.
+           */
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+          verbose: false,
+        });
+        scannerRef.current = html5QrCode;
+
+        /**
+         * The rear camera, asked for by constraint rather than by name.
+         *
+         * The widget this replaced had no way to choose a camera: it listed
+         * them and opened whichever came first, which on most Android phones
+         * is the selfie camera. Matching on a label containing "back" is the
+         * other common fix and it breaks on any device that words it
+         * differently — "camera2 0, facing back", or anything non-English.
+         * `facingMode: environment` is the browser's own answer to the same
+         * question.
+         */
+        try {
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanError,
+          );
+        } catch {
+          // A laptop with one webcam has no "environment" camera to give, and
+          // the constraint is refused outright. Fall back to whatever exists,
+          // preferring anything that calls itself a back camera.
+          const cameras = await Html5Qrcode.getCameras();
+          if (!cameras?.length) throw new Error("No camera found");
+
+          const back = cameras.find((camera) =>
+            /back|rear|environment/i.test(camera.label),
+          );
+          await html5QrCode.start(
+            (back ?? cameras[0]).id,
+            config,
+            onScanSuccess,
+            onScanError,
+          );
+        }
+
         setIsLoading(false);
       } catch (err: any) {
         console.error("Scanner initialization error:", err);
@@ -243,24 +298,15 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
 
     // Cleanup on unmount
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch((error) => {
-          console.error("Failed to clear scanner", error);
-        });
-      }
+      void stopScanner(scannerRef.current);
+      scannerRef.current = null;
     };
   }, [useCameraMode, onScanResult, autoCloseOnScan, onClose]);
 
   const handleClose = async () => {
     // Properly stop the scanner and camera
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.clear();
-        scannerRef.current = null;
-      } catch (error) {
-        console.error("Failed to clear scanner on close", error);
-      }
-    }
+    await stopScanner(scannerRef.current);
+    scannerRef.current = null;
 
     // Force stop all video tracks
     const videoElements = document.querySelectorAll("video");
@@ -280,6 +326,24 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
 
   const handleUseCameraMode = () => {
     setUseCameraMode(true);
+  };
+
+  /**
+   * Back to typing, or to a USB scanner.
+   *
+   * Now that the camera opens first this is the only way to reach the keyboard
+   * panel, and it has to exist: a torn or smudged barcode cannot be scanned at
+   * all, and a cashier holding the item still needs to get the code in.
+   *
+   * The camera is released on the way out, and `hasInitialized` is reset so
+   * that switching back starts it again rather than showing a dead frame.
+   */
+  const handleUseKeyboardMode = async () => {
+    await stopScanner(scannerRef.current);
+    scannerRef.current = null;
+    hasInitialized.current = false;
+    setIsLoading(false);
+    setUseCameraMode(false);
   };
 
   // Permission denied state (only for camera mode)
@@ -411,15 +475,28 @@ export const BarCodeScanner: React.FC<BarcodeScannerProps> = ({
       )}
     >
       <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col">
-        {/* Close button */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleClose}
-          className="absolute -top-12 right-0 z-50 rounded-full shadow-lg"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        {/* Close, and the way back to typing the code by hand. */}
+        <div className="absolute -top-12 right-0 z-50 flex items-center gap-2">
+          {enableHardwareScanner && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleUseKeyboardMode}
+              className="gap-1.5 rounded-full shadow-lg"
+            >
+              <Keyboard className="h-4 w-4" />
+              Enter code
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleClose}
+            className="rounded-full shadow-lg"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Scanner container */}
         <div className="w-full bg-white rounded-lg overflow-hidden shadow-2xl flex flex-col">
