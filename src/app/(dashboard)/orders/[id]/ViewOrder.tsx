@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRefreshOrderTrackingMutation } from "@/api/orders/refresh-tracking";
 import { useOrdersHook } from "@/hooks/useOrdersHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -20,6 +21,7 @@ import {
   Package,
   Phone,
   Printer,
+  RefreshCw,
   Share2,
   Truck,
   XCircle,
@@ -52,7 +54,13 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const orderData = OrderIdData?.data;
+  const {
+    mutate: refreshTracking,
+    isPending: isRefreshingTracking,
+  } = useRefreshOrderTrackingMutation(id);
   const isInStoreOrder = orderData?.channel?.toUpperCase() === "INSTORE";
+  const isShipbubbleDelivery =
+    orderData?.delivery?.type?.toUpperCase() === "SHIPBUBBLE";
   const isInHouseDelivery =
     orderData?.delivery?.type?.toUpperCase() === "IN-HOUSE";
 
@@ -648,11 +656,11 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
             {/* Shipping */}
             {!isInStoreOrder && (
               <div className="bg-white rounded-2xl border border-grey-5 p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                   <h3 className="text-lg font-extrabold text-grey-1">
                     Shipping
                   </h3>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge
                       status={
                         orderData.delivery?.shipping_status ||
@@ -660,10 +668,25 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       }
                       type="shipping"
                     />
-                    <button className="flex items-center space-x-1 text-sm font-bold text-grey-3 hover:text-grey-2">
-                      <span>Action</span>
-                      <ChevronDown className="h-4 w-4" />
-                    </button>
+                    {isShipbubbleDelivery && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5"
+                        disabled={isRefreshingTracking}
+                        onClick={() => refreshTracking()}
+                      >
+                        <RefreshCw
+                          className={`h-3.5 w-3.5 ${
+                            isRefreshingTracking ? "animate-spin" : ""
+                          }`}
+                        />
+                        {isRefreshingTracking
+                          ? "Refreshing..."
+                          : "Refresh tracking"}
+                      </Button>
+                    )}
                   </div>
                 </div>
 

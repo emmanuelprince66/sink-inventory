@@ -120,6 +120,7 @@ export const queryKey = {
     getOrderById: "get-order-by-id",
     updateOrderStatus: "update-order-status",
     updateOrderPaymentStatus: "update-order-payment-status",
+    refreshOrderTracking: "refresh-order-tracking",
     fetchShipmentRate: "fetch-shipment-rate",
     createOrderInhouse: "create-order-inhouse",
     createOrderShipbubble: "create-order-shipbubble",

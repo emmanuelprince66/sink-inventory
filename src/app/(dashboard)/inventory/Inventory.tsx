@@ -44,6 +44,7 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 // Download Report temporarily disabled — re-enable when ready.
 // import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
+import GenerateReportButton from "@/components/app/GenerateReportButton";
 import ComboTable from "./ComboTable";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
@@ -301,12 +302,10 @@ const Inventory = () => {
 
           {canManageInventory && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              {/* Generate Report temporarily disabled — re-enable when ready.
               <GenerateReportButton
                 reportType="inventory"
                 className="w-full sm:w-auto"
               />
-              */}
               {/* Add New dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -344,7 +343,6 @@ const Inventory = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
               {/* More actions dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -356,10 +354,7 @@ const Inventory = () => {
                     <span className="hidden sm:inline">More</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="min-w-[200px] p-0"
-                >
+                <DropdownMenuContent align="end" className="min-w-[200px] p-0">
                   {/* Download Report temporarily disabled — re-enable when ready.
                   <div className="px-2 py-1.5">
                     <DownloadInventoryButton business_id={business_id} />
