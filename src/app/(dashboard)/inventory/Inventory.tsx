@@ -2,8 +2,7 @@
 
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
-// Generate Report temporarily disabled — re-enable when ready.
-// import GenerateReportButton from "@/components/app/GenerateReportButton";
+import GenerateReportModal from "@/components/app/GenerateReportModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductFilters, useInventoryHook } from "@/hooks/useInventoryHook";
+import { useReportGeneration } from "@/hooks/useReportGeneration";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 
@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Cloud,
   DollarSign,
+  FileDown,
   Filter,
   Layers,
   MoreHorizontal,
@@ -44,7 +45,6 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import AddService from "./AddService";
 // Download Report temporarily disabled — re-enable when ready.
 // import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
-import GenerateReportButton from "@/components/app/GenerateReportButton";
 import ComboTable from "./ComboTable";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
@@ -149,6 +149,13 @@ const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
   const closeAddServiceModal = () => setAddServiceModal(false);
   const openddServiceModal = () => setAddServiceModal(true);
+  const {
+    isConfigOpen: isGenerateReportOpen,
+    openConfig: openGenerateReport,
+    closeConfig: closeGenerateReport,
+    isStarting: isGenerateReportStarting,
+    handleGenerate: handleGenerateReport,
+  } = useReportGeneration("inventory");
   const { role, can } = useUserRole();
   const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
   const canManageInventory = role ? allowedRoles.includes(role) : false;
@@ -302,10 +309,6 @@ const Inventory = () => {
 
           {canManageInventory && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <GenerateReportButton
-                reportType="inventory"
-                className="w-full sm:w-auto"
-              />
               {/* Add New dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -360,6 +363,13 @@ const Inventory = () => {
                     <DownloadInventoryButton business_id={business_id} />
                   </div>
                   */}
+                  <DropdownMenuItem
+                    onClick={openGenerateReport}
+                    className="cursor-pointer px-4 py-2.5 hover:bg-grey-6 transition-colors"
+                  >
+                    <FileDown className="w-4 h-4 mr-2" />
+                    Generate Report
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-grey-6 transition-colors"
@@ -819,6 +829,14 @@ const Inventory = () => {
       >
         <AddService closeModal={closeAddServiceModal} />
       </CustomModal>
+
+      <GenerateReportModal
+        isOpen={isGenerateReportOpen}
+        onClose={closeGenerateReport}
+        reportType="inventory"
+        onSubmit={handleGenerateReport}
+        isSubmitting={isGenerateReportStarting}
+      />
     </div>
   );
 };
