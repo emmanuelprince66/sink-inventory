@@ -8,10 +8,7 @@ export async function POST(
 ) {
   const { id } = await params;
   if (!id) {
-    return NextResponse.json(
-      { error: "Sale ID is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Sale ID is required" }, { status: 400 });
   }
 
   const cookieStore = await cookies();
@@ -25,7 +22,7 @@ export async function POST(
 
   try {
     const response = await fetch(
-      `${BaseUrl}order/track/${encodeURIComponent(id)}/`,
+      `${BaseUrl}order/track_shipment/${encodeURIComponent(id)}/`,
       {
         method: "POST",
         headers: {
