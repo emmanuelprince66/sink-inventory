@@ -40,7 +40,7 @@ type ServiceForm = {
   categoryId: string;
   description: string;
   amount: string;
-  depositAmount: string;
+  minDepositPercentage: string;
   duration: string;
   capacity: string;
   staffIds: string[];
@@ -53,12 +53,13 @@ const VALID_DURATIONS = new Set([
   15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 210, 240, 270, 300,
   360, 420, 480,
 ]);
+const DEFAULT_MIN_DEPOSIT_PERCENTAGE = 30;
 const EMPTY_FORM: ServiceForm = {
   name: "",
   categoryId: "",
   description: "",
   amount: "",
-  depositAmount: "",
+  minDepositPercentage: String(DEFAULT_MIN_DEPOSIT_PERCENTAGE),
   duration: "30",
   capacity: "1",
   staffIds: [],
@@ -148,7 +149,9 @@ const BookingServicesManager = ({
     categoryId: resolveServiceCategoryId(service),
     description: service.description ?? "",
     amount: String(service.amount ?? ""),
-    depositAmount: service.deposit_amount ? String(service.deposit_amount) : "",
+    minDepositPercentage: String(
+      service.min_deposit_percentage ?? DEFAULT_MIN_DEPOSIT_PERCENTAGE,
+    ),
     duration: String(service.duration),
     capacity: String(service.max_capacity ?? 1),
     staffIds: service.assigned_staff_ids ?? [],
@@ -199,9 +202,9 @@ const BookingServicesManager = ({
       return;
     }
     const amount = Number(form.amount);
-    const depositAmount = form.depositAmount.trim()
-      ? Number(form.depositAmount)
-      : undefined;
+    const minDepositPercentage = form.minDepositPercentage.trim()
+      ? Number(form.minDepositPercentage)
+      : DEFAULT_MIN_DEPOSIT_PERCENTAGE;
     const capacity = Number(form.capacity);
     if (!form.name.trim() || !form.categoryId) {
       showToast("Enter a service name and choose a category.", "error");
@@ -225,10 +228,11 @@ const BookingServicesManager = ({
       return;
     }
     if (
-      depositAmount !== undefined &&
-      (!Number.isFinite(depositAmount) || depositAmount < 0)
+      !Number.isInteger(minDepositPercentage) ||
+      minDepositPercentage < 1 ||
+      minDepositPercentage > 100
     ) {
-      showToast("Enter a valid service deposit amount.", "error");
+      showToast("Enter a minimum deposit between 1% and 100%.", "error");
       return;
     }
     const payload = {
@@ -236,7 +240,7 @@ const BookingServicesManager = ({
       category_id: form.categoryId,
       description: form.description.trim(),
       amount: amount.toFixed(2),
-      deposit_amount: depositAmount?.toFixed(2) ?? "0.00",
+      min_deposit_percentage: minDepositPercentage,
       duration,
       max_capacity: capacity,
       assigned_staff_ids: form.staffIds,
@@ -288,6 +292,17 @@ const BookingServicesManager = ({
         cell: ({ row }) => (
           <span className="font-semibold text-grey-1">
             {amountLabel(row.original.amount)}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "min_deposit_percentage",
+        header: "Min. deposit",
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap text-sm text-grey-2">
+            {row.original.min_deposit_percentage ??
+              DEFAULT_MIN_DEPOSIT_PERCENTAGE}
+            %
           </span>
         ),
       },
@@ -407,7 +422,7 @@ const BookingServicesManager = ({
         isOpen={isDialogOpen}
         onClose={closeDialog}
         title={editing ? "Edit service" : "Add booking service"}
-        description="Set pricing, duration, capacity, and qualified staff."
+        description="Set pricing, deposit, duration, capacity, and qualified staff."
         size="lg"
         footer={
           <div className="flex justify-end gap-2">
@@ -457,19 +472,29 @@ const BookingServicesManager = ({
                 <Input required type="number" min="0" step="0.01" value={form.amount} onChange={(event) => setForm({ ...form, amount: event.target.value })} />
               </label>
               <label className="block space-y-1.5 text-sm font-medium text-grey-2">
-                Custom deposit
+                Minimum deposit (%)
                 <Input
                   type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.depositAmount}
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={form.minDepositPercentage}
                   onChange={(event) =>
-                    setForm({ ...form, depositAmount: event.target.value })
+                    setForm({
+                      ...form,
+                      minDepositPercentage: event.target.value,
+                    })
                   }
-                  placeholder="Uses the business default"
+                  placeholder={String(DEFAULT_MIN_DEPOSIT_PERCENTAGE)}
                 />
                 <span className="block text-xs font-normal text-grey-3">
-                  Optional. Leave blank to use the default deposit in Payment & availability.
+                  {Number(form.amount) > 0 &&
+                  Number(form.minDepositPercentage) >= 1 &&
+                  Number(form.minDepositPercentage) <= 100
+                    ? `Customers pay at least ${amountLabel(
+                        (Number(form.amount) * Number(form.minDepositPercentage)) / 100,
+                      )} to secure a booking.`
+                    : "Share of the price customers pay upfront (1–100, default 30%)."}
                 </span>
               </label>
               <label className="block space-y-1.5 text-sm font-medium text-grey-2">

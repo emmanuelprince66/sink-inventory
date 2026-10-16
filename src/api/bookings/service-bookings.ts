@@ -27,6 +27,8 @@ export type BookingServiceRecord = {
   selling_price?: string | number;
   duration: number;
   deposit_amount?: string | number | null;
+  /** Minimum deposit as a percentage of the price (1-100, backend default 30). */
+  min_deposit_percentage?: number | null;
   max_capacity: number;
   assigned_staff_ids: string[];
   is_active: boolean;
@@ -161,7 +163,9 @@ export type BookingPolicy = {
   allow_full_payment: boolean;
   allow_deposit: boolean;
   allow_pay_at_business: boolean;
-  default_deposit_amount: string | number;
+  /** Legacy business-wide default; deposits are now set per service via
+   * `min_deposit_percentage`. Only round-tripped, never edited here. */
+  default_deposit_amount?: string | number;
 };
 
 export type ServiceBlockedTime = {
@@ -512,7 +516,7 @@ export const useUpdateServiceMutation = () =>
       payload: Partial<BookingServiceRecord>;
     }) =>
       request<BookingServiceRecord>(`single_service/${serviceId}`, {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify(payload),
       }),
   );

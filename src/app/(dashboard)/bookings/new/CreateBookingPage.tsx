@@ -154,8 +154,7 @@ const CreateBookingPage = () => {
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <BookingPageHeader
-        title="Create a booking"
-        description="Book an appointment on behalf of a customer."
+        title="Create a booking"
       />
 
       <div className="flex items-start gap-3 rounded-xl border border-info-1/20 bg-info-2 px-4 py-3">

@@ -30,7 +30,7 @@ const ServicesPage = () => {
     <div className="mx-auto w-full max-w-5xl space-y-6">
       <BookingPageHeader
         title="Services & setup"
-        description="Services here come from Inventory and can be added to customer bookings."
+
         trailing={
           <Button
             type="button"
@@ -45,9 +45,8 @@ const ServicesPage = () => {
 
       <div className="flex items-start gap-3 rounded-xl border border-info-1/20 bg-info-2 px-4 py-3 text-xs leading-5 text-grey-2 sm:text-sm">
         <Scissors className="mt-0.5 h-4 w-4 shrink-0 text-info-1" />
-        The booking flow uses your existing Inventory service list and endpoint.
-        Configure service names, categories, descriptions, and prices in
-        Inventory. Booking duration and staff are selected for each appointment.
+        Services are managed in Inventory. Set each service&apos;s price,
+        duration, minimum deposit, and staff there.
       </div>
 
       {error ? (
@@ -114,7 +113,9 @@ const ServicesPage = () => {
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs text-grey-3">
                     <Clock3 className="h-3.5 w-3.5" />
-                    Duration is set per booking
+                    {service.duration ? `${service.duration} min` : "—"}
+                    {" · "}
+                    {service.min_deposit_percentage ?? 30}% deposit
                   </span>
                 </div>
               </article>

@@ -4,6 +4,7 @@ import { InitialsAvatar } from "@/components/app/InitialsAvatar";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import {
   normalizeMerchantBooking,
@@ -85,6 +86,63 @@ const DetailRow = ({
   </div>
 );
 
+// Same shape as the loaded page (header, appointment rows, customer card) so
+// nothing jumps when data arrives — follows ViewOrder's loading approach.
+const DETAIL_ROW_WIDTHS = [
+  "w-28", "w-36", "w-40", "w-32", "w-20", "w-24",
+  "w-20", "w-20", "w-20", "w-16", "w-20",
+];
+
+const BookingDetailsSkeleton = () => (
+  <div className="w-full min-w-0 space-y-5 sm:space-y-6">
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-9 w-20 rounded-lg bg-grey-6" />
+        <Skeleton className="h-6 w-36 bg-grey-6" />
+      </div>
+      <Skeleton className="h-7 w-24 rounded-full bg-grey-6" />
+    </div>
+
+    <div className="mx-auto grid w-full max-w-5xl gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.9fr)]">
+      <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
+        <Skeleton className="mb-4 h-3 w-24 bg-grey-6" />
+        {DETAIL_ROW_WIDTHS.map((width, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4 border-b border-grey-6 py-3.5 last:border-0"
+          >
+            <Skeleton className="h-3.5 w-24 bg-grey-6" />
+            <Skeleton className={`h-3.5 ${width} bg-grey-6`} />
+          </div>
+        ))}
+      </section>
+
+      <section className="h-fit rounded-2xl border border-grey-5 bg-white p-4 sm:p-5">
+        <div className="flex items-center gap-3 border-b border-grey-6 pb-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-full bg-grey-6" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-32 bg-grey-6" />
+            <Skeleton className="h-3 w-16 bg-grey-6" />
+          </div>
+        </div>
+        {["w-32", "w-44", "w-36"].map((width, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2 border-b border-grey-6 py-4 last:border-0"
+          >
+            <Skeleton className="h-4 w-4 shrink-0 rounded bg-grey-6" />
+            <Skeleton className={`h-3.5 ${width} bg-grey-6`} />
+          </div>
+        ))}
+        <div className="mt-1 flex items-center gap-2">
+          <Skeleton className="h-9 flex-1 rounded-lg bg-grey-6" />
+          <Skeleton className="h-9 w-9 shrink-0 rounded-lg bg-grey-6" />
+        </div>
+      </section>
+    </div>
+  </div>
+);
+
 const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
   const router = useRouter();
   const { showToast } = useToast();
@@ -151,12 +209,7 @@ const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
   }, [booking?.startsAt, booking?.balanceDue]);
 
   if (isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl animate-pulse space-y-4">
-        <div className="h-10 w-64 rounded-lg bg-grey-5" />
-        <div className="h-64 rounded-2xl bg-grey-5" />
-      </div>
-    );
+    return <BookingDetailsSkeleton />;
   }
 
   if (error) {
@@ -290,7 +343,6 @@ const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
     <div className="w-full min-w-0 space-y-5 sm:space-y-6">
       <BookingPageHeader
         title="Booking details"
-        description={`Booking #${booking.reference || booking.id}`}
         trailing={
           <span
             className={`rounded-full px-3 py-1.5 text-xs font-extrabold capitalize ${STATUS_CLASS[booking.status]}`}

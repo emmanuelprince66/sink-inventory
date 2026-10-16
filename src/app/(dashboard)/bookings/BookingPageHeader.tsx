@@ -1,42 +1,32 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
+// Mirrors ViewOrder's header: a plain bordered back button + title, no
+// subtitle copy.
 const BookingPageHeader = ({
   title,
-  description,
   trailing,
 }: {
   title: string;
-  description?: string;
   trailing?: ReactNode;
 }) => {
   const router = useRouter();
 
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border-tint pb-5">
-      <div className="flex min-w-0 items-start gap-3">
-        <Button
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-4">
+        <button
           type="button"
-          variant="outline"
-          size="sm"
-          className="mt-0.5 shrink-0"
           onClick={() => router.push("/bookings")}
+          className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-grey-5 px-3 py-2 text-sm font-bold text-grey-2 transition-colors hover:border-grey-4 hover:bg-grey-6"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-        <div className="min-w-0">
-          <h1 className="text-2xl font-extrabold text-grey-1 sm:text-3xl">
-            {title}
-          </h1>
-          {description && (
-            <p className="mt-1 text-sm text-grey-3">{description}</p>
-          )}
-        </div>
+          <span className="hidden sm:inline">Back</span>
+        </button>
+        <h1 className="truncate text-xl font-extrabold text-grey-1">{title}</h1>
       </div>
       {trailing}
     </header>

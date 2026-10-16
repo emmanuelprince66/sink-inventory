@@ -75,15 +75,35 @@ export const proxyToApi = async (
     });
 
     // 204s and empty bodies are legitimate on PATCH/DELETE.
-    const data = await response.json().catch(() => null);
+    const raw = await response.text().catch(() => "");
+    let data = null;
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      data = null;
+    }
 
     if (!response.ok) {
+      // Non-JSON error bodies (e.g. a Django 500 HTML page) would otherwise
+      // surface only as "Failed to …" — keep the status and a snippet so the
+      // real cause is visible in the network tab and server log.
+      if (data === null) {
+        console.error(
+          `${label} failed: ${method} ${apiUrl.toString()} → ${response.status}`,
+          raw.slice(0, 2000),
+        );
+      }
       return NextResponse.json(
         {
           success: false,
           error: data?.error ?? `Failed to ${label}`,
-          message: data?.message ?? `Failed to ${label}`,
+          message:
+            data?.message ??
+            `Failed to ${label} (backend returned ${response.status})`,
           data,
+          ...(data === null
+            ? { status: response.status, raw: raw.slice(0, 500) }
+            : {}),
         },
         { status: response.status },
       );

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getBlockedTimeRecords,
   useCreateBlockedTimeMutation,
@@ -40,6 +41,25 @@ const BlockedTimesPage = () => {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [note, setNote] = useState("");
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const handleRemove = async (id: string) => {
+    if (!businessId) return;
+    setRemovingId(id);
+    try {
+      await deleteBlock({ businessId, id });
+      showToast("Blocked time removed.", "success");
+    } catch (deleteError) {
+      showToast(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Could not remove blocked time.",
+        "error",
+      );
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   const handleAdd = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,10 +102,7 @@ const BlockedTimesPage = () => {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      <BookingPageHeader
-        title="Block time"
-        description="Prevent customers from booking during selected periods."
-      />
+      <BookingPageHeader title="Block time" />
 
       <div className="flex items-start gap-3 rounded-xl border border-info-1/20 bg-info-2 px-4 py-3 text-xs leading-5 text-grey-2 sm:text-sm">
         <CalendarOff className="mt-0.5 h-4 w-4 shrink-0 text-info-1" />
@@ -145,90 +162,114 @@ const BlockedTimesPage = () => {
         </form>
       </section>
 
-      {error ? (
-        <div className="rounded-xl border border-error-1/20 bg-error-2 p-4 text-center text-sm text-error-1">
-          <p>Could not load blocked periods.</p>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="mt-3"
-            onClick={() => refetch()}
-          >
-            Try again
-          </Button>
-        </div>
-      ) : isLoading ? (
-        <section className="rounded-2xl border border-grey-5 bg-white p-6">
-          <p className="py-4 text-center text-sm text-grey-3">
-            Loading blocked periods...
-          </p>
-        </section>
-      ) : blockedTimes.length > 0 ? (
       <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <h2 className="font-extrabold text-grey-1">Blocked periods</h2>
             <p className="mt-1 text-xs text-grey-3">
-              {blockedTimes.length} scheduled{" "}
-              {blockedTimes.length === 1 ? "period" : "periods"}
+              {isLoading
+                ? "Loading periods..."
+                : `${blockedTimes.length} scheduled ${
+                    blockedTimes.length === 1 ? "period" : "periods"
+                  } on ${format(parseISO(selectedDate), "EEE, MMM d")}`}
             </p>
           </div>
           <Input
             type="date"
             value={selectedDate}
-            onChange={(event) => setSelectedDate(event.target.value)}
+            onChange={(event) =>
+              event.target.value && setSelectedDate(event.target.value)
+            }
             aria-label="Filter blocked periods by date"
-            className="h-10 w-full sm:w-44"
+            className="h-10 w-full rounded-lg text-sm sm:w-44"
           />
         </div>
-        <div className="space-y-3">
+
+        {error ? (
+          <div className="rounded-xl border border-error-1/20 bg-error-2 p-4 text-center text-sm text-error-1">
+            <p>Could not load blocked periods.</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="mt-3"
+              onClick={() => refetch()}
+            >
+              Try again
+            </Button>
+          </div>
+        ) : isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 2 }).map((_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 rounded-xl border border-grey-5 p-4"
+              >
+                <Skeleton className="h-10 w-10 shrink-0 rounded-xl bg-grey-6" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40 bg-grey-6" />
+                  <Skeleton className="h-3 w-52 bg-grey-6" />
+                </div>
+                <Skeleton className="h-8 w-24 shrink-0 rounded-lg bg-grey-6" />
+              </div>
+            ))}
+          </div>
+        ) : blockedTimes.length > 0 ? (
+          <div className="space-y-3">
             {blockedTimes.map((block) => (
               <article
                 key={block.id}
-                className="flex flex-col gap-3 rounded-xl border border-grey-5 p-4 sm:flex-row sm:items-center"
+                className="flex items-center gap-3 rounded-xl border border-grey-5 p-3 sm:p-4"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-2 text-warning-1">
                   <CalendarOff className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-bold text-grey-1">{block.reason}</h3>
+                  <h3 className="truncate text-sm font-bold text-grey-1">
+                    {block.reason}
+                  </h3>
                   <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-grey-3">
-                    <Clock3 className="h-3.5 w-3.5" />
-                    {format(parseISO(`${block.date}T${block.start_time}`), "EEE, MMM d · h:mm a")}
+                    <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                    {format(
+                      parseISO(`${block.date}T${block.start_time}`),
+                      "EEE, MMM d · h:mm a",
+                    )}
                     {" – "}
                     {format(parseISO(`${block.date}T${block.end_time}`), "h:mm a")}
                   </p>
-                  {block.staff_name && <p className="mt-1 text-xs text-grey-3">{block.staff_name}</p>}
+                  {block.staff_name && (
+                    <p className="mt-1 text-xs text-grey-3">{block.staff_name}</p>
+                  )}
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="text-error-1 hover:bg-error-2 hover:text-error-1"
-                  onClick={async () => {
-                    if (!businessId) return;
-                    try {
-                      await deleteBlock({ businessId, id: block.id });
-                      showToast("Blocked time removed.", "success");
-                    } catch (deleteError) {
-                      showToast(
-                        deleteError instanceof Error
-                          ? deleteError.message
-                          : "Could not remove blocked time.",
-                        "error",
-                      );
-                    }
-                  }}
+                  aria-label={`Remove ${block.reason}`}
+                  disabled={removingId === block.id}
+                  className="shrink-0 text-error-1 hover:bg-error-2 hover:text-error-1"
+                  onClick={() => void handleRemove(block.id)}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Remove
+                  <span className="hidden sm:inline">
+                    {removingId === block.id ? "Removing..." : "Remove"}
+                  </span>
                 </Button>
               </article>
             ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center rounded-xl border border-dashed border-grey-5 px-4 py-8 text-center">
+            <CalendarOff className="h-6 w-6 text-grey-4" />
+            <p className="mt-2 text-sm font-semibold text-grey-2">
+              No blocked periods on this day
+            </p>
+            <p className="mt-1 text-xs text-grey-3">
+              Pick another date or add a blocked period above.
+            </p>
+          </div>
+        )}
       </section>
-      ) : null}
     </div>
   );
 };

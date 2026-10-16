@@ -4,7 +4,9 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { CustomTable } from "@/components/app/CutomTable";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
+import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { BookingStatusFilter, useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types/booking";
 import { format } from "date-fns";
@@ -76,6 +78,38 @@ const MetricCard = ({
     </CustomCard>
   );
 };
+
+// Same shell as MetricCard (icon tile + label + value) so the overview row
+// doesn't resize when bookings finish loading.
+const MetricCardSkeleton = () => (
+  <CustomCard className="rounded-2xl border border-grey-5 p-0">
+    <div className="flex min-h-[92px] items-center gap-3 p-4 sm:gap-4 sm:p-5">
+      <Skeleton className="h-10 w-10 shrink-0 rounded-xl bg-grey-5" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-3 w-24 bg-grey-5" />
+        <Skeleton className="h-6 w-16 bg-grey-5" />
+      </div>
+    </div>
+  </CustomCard>
+);
+
+// Matches the booking columns: time, customer, service, source, amount,
+// payment pill, status pill.
+const BookingsTableSkeleton = () => (
+  <TableSkeleton
+    className="p-4 sm:p-5"
+    rows={6}
+    columns={[
+      { width: "w-14" },
+      { flex: true },
+      { width: "w-28", hiddenOnMobile: true },
+      { pill: true, hiddenOnMobile: true },
+      { width: "w-16", hiddenOnMobile: true },
+      { pill: true, hiddenOnMobile: true },
+      { pill: true },
+    ]}
+  />
+);
 
 const Bookings = () => {
   const router = useRouter();
@@ -161,42 +195,50 @@ const Bookings = () => {
         aria-label="Booking overview"
         className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3"
       >
-        <MetricCard
-          label="Bookings in range"
-          value={stats.total}
-          icon={CalendarDays}
-          tone="blue"
-        />
-        <MetricCard
-          label="Upcoming"
-          value={stats.upcoming}
-          icon={CalendarCheck2}
-          tone="purple"
-        />
-        <MetricCard
-          label="Collected in range"
-          value={formatCurrency(stats.revenue)}
-          icon={WalletCards}
-          tone="green"
-        />
-        <MetricCard
-          label="Pending bookings"
-          value={stats.pending}
-          icon={Clock3}
-          tone="amber"
-        />
-        <MetricCard
-          label="Pending refunds"
-          value={stats.pendingRefunds}
-          icon={CircleAlert}
-          tone="amber"
-        />
-        <MetricCard
-          label="Refund amount due"
-          value={formatCurrency(stats.pendingRefundAmount)}
-          icon={Banknote}
-          tone="purple"
-        />
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <MetricCardSkeleton key={index} />
+          ))
+        ) : (
+          <>
+            <MetricCard
+              label="Bookings in range"
+              value={stats.total}
+              icon={CalendarDays}
+              tone="blue"
+            />
+            <MetricCard
+              label="Upcoming"
+              value={stats.upcoming}
+              icon={CalendarCheck2}
+              tone="purple"
+            />
+            <MetricCard
+              label="Collected in range"
+              value={formatCurrency(stats.revenue)}
+              icon={WalletCards}
+              tone="green"
+            />
+            <MetricCard
+              label="Pending bookings"
+              value={stats.pending}
+              icon={Clock3}
+              tone="amber"
+            />
+            <MetricCard
+              label="Pending refunds"
+              value={stats.pendingRefunds}
+              icon={CircleAlert}
+              tone="amber"
+            />
+            <MetricCard
+              label="Refund amount due"
+              value={formatCurrency(stats.pendingRefundAmount)}
+              icon={Banknote}
+              tone="purple"
+            />
+          </>
+        )}
       </section>
 
       <section className="overflow-hidden rounded-2xl border border-grey-5 bg-white">
@@ -222,9 +264,13 @@ const Bookings = () => {
                   : "All dates"}
               </h2>
             </div>
-            <p className="shrink-0 text-xs font-semibold text-grey-3">
-              {totalBookings} {totalBookings === 1 ? "booking" : "bookings"}
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-3.5 w-16 shrink-0 bg-grey-5" />
+            ) : (
+              <p className="shrink-0 text-xs font-semibold text-grey-3">
+                {totalBookings} {totalBookings === 1 ? "booking" : "bookings"}
+              </p>
+            )}
           </div>
         </div>
 
@@ -273,47 +319,50 @@ const Bookings = () => {
           </Button>
         </div>
 
-        <CustomTable
-          columns={columns}
-          data={bookings}
-          loading={isLoading}
-          noDataText={
-            <div className="flex flex-col items-center px-5 py-8 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-6 text-primary-green-300">
-                <CalendarDays className="h-5 w-5" />
-              </span>
-              <h3 className="mt-4 text-base font-extrabold text-grey-1">
-                No bookings found
-              </h3>
-              <p className="mt-1 max-w-sm text-sm leading-6 text-grey-3">
-                {searchTerm
-                  ? "Try a different search or clear the filters."
-                  : "There are no bookings for this date and status."}
-              </p>
-              {searchTerm && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-4"
-                  onClick={() => setSearchTerm("")}
-                >
-                  Clear search
-                </Button>
-              )}
-            </div>
-          }
-          onRowClick={handleRowClick}
-          bordered={false}
-          showSerialNumber={false}
-          pagination={{
-            currentPage: page,
-            totalPages,
-            pageSize,
-            onPageChange: setPage,
-            onPageSizeChange: setPageSize,
-          }}
-        />
+        {isLoading ? (
+          <BookingsTableSkeleton />
+        ) : (
+          <CustomTable
+            columns={columns}
+            data={bookings}
+            noDataText={
+              <div className="flex flex-col items-center px-5 py-8 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-6 text-primary-green-300">
+                  <CalendarDays className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 text-base font-extrabold text-grey-1">
+                  No bookings found
+                </h3>
+                <p className="mt-1 max-w-sm text-sm leading-6 text-grey-3">
+                  {searchTerm
+                    ? "Try a different search or clear the filters."
+                    : "There are no bookings for this date and status."}
+                </p>
+                {searchTerm && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => setSearchTerm("")}
+                  >
+                    Clear search
+                  </Button>
+                )}
+              </div>
+            }
+            onRowClick={handleRowClick}
+            bordered={false}
+            showSerialNumber={false}
+            pagination={{
+              currentPage: page,
+              totalPages,
+              pageSize,
+              onPageChange: setPage,
+              onPageSizeChange: setPageSize,
+            }}
+          />
+        )}
       </section>
 
       <section
