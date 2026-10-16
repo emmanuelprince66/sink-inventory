@@ -16,7 +16,13 @@ import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
 import { useRealtime } from "../providers/RealtimeProvider";
 import { deleteCookie } from "cookies-next";
-import { ChevronDown, LogOut, Package, Settings, Store } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  Package,
+  Settings,
+  Store,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,7 +33,9 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { role, canAny } = useUserRole();
   const { unreadNotifications } = useRealtime();
-  const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [isStoreOpen, setIsStoreOpen] = useState(() =>
+    pathname.startsWith("/bookings"),
+  );
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const [isOperationsOpen, setIsOperationsOpen] = useState(false);
 
@@ -104,7 +112,10 @@ export function AppSidebar() {
                       )}
                     >
                       {storeItems.map((item) => {
-                        const isActive = pathname === item.url;
+                        const isActive =
+                          pathname === item.url ||
+                          (item.url !== "/store-info" &&
+                            pathname.startsWith(`${item.url}/`));
 
                         return (
                           <SidebarMenuItem

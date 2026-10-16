@@ -9,13 +9,25 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useGetAllCategories } from "@/hooks/useGetAllCategories";
+
+type CategoryType = "PRODUCT" | "SERVICE" | "EXPENSES";
+
 const AddCategory = ({
   type,
   closeModal,
+  allowTypeSelection = false,
 }: {
-  type: string;
+  type?: CategoryType;
   closeModal: any;
+  allowTypeSelection?: boolean;
 }) => {
   const {
     AddCategoryForm: form,
@@ -44,6 +56,34 @@ const AddCategory = ({
                 </FormItem>
               )}
             />
+
+            {allowTypeSelection && (
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select category type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white">
+                        <SelectItem value="PRODUCT">Product</SelectItem>
+                        <SelectItem value="SERVICE">Service</SelectItem>
+                        <SelectItem value="EXPENSES">Expense</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <Button
               type="submit"

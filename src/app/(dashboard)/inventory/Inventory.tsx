@@ -1,7 +1,6 @@
 "use client";
 
 import { CustomCard } from "@/components/app/CustomCard";
-import { CustomModal } from "@/components/app/CustomModal";
 import GenerateReportModal from "@/components/app/GenerateReportModal";
 import { SearchInput } from "@/components/app/SearchInput";
 import { StatCardSkeletonRow } from "@/components/app/StatCardSkeleton";
@@ -42,13 +41,12 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import AddService from "./AddService";
+import BookingServicesManager from "./BookingServicesManager";
 // Download Report temporarily disabled — re-enable when ready.
 // import { DownloadInventoryButton } from "./DownloadInventoryReportsButton";
 import ComboTable from "./ComboTable";
 import InventoryTable from "./InventoryTable";
 import NoInventory from "./NoInventory";
-import ServiceTable from "./ServiceTable";
 
 interface Category {
   id: string;
@@ -147,8 +145,10 @@ const InventoryTableSkeleton = () => (
 
 const Inventory = () => {
   const [addServiceModal, setAddServiceModal] = useState(false);
-  const closeAddServiceModal = () => setAddServiceModal(false);
-  const openddServiceModal = () => setAddServiceModal(true);
+  const handleCreateRequestHandled = useCallback(
+    () => setAddServiceModal(false),
+    [],
+  );
   const {
     isConfigOpen: isGenerateReportOpen,
     openConfig: openGenerateReport,
@@ -159,6 +159,7 @@ const Inventory = () => {
   const { role, can } = useUserRole();
   const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
   const canManageInventory = role ? allowedRoles.includes(role) : false;
+  const canManageServices = role === "OWNER" || role === "ADMIN-ATTENDANT";
   console.log("can", can("damage_items"));
   console.log("can-1", can("transfer_items"));
   console.log("role", role);
@@ -187,6 +188,9 @@ const Inventory = () => {
   const pathname = usePathname();
   const pageParam = Number(searchParams.get("page"));
   const page = Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
+  useEffect(() => {
+    if (searchParams.get("tab") === "services") setActiveTab("SERVICE");
+  }, [searchParams]);
 
   const setPage = useCallback(
     (next: number) => {
@@ -328,13 +332,18 @@ const Inventory = () => {
                       New Product
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={openddServiceModal}
-                    className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
-                  >
-                    <Wrench className="w-4 h-4 mr-2" />
-                    New Service
-                  </DropdownMenuItem>
+                  {canManageServices && (
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveTab("SERVICE");
+                        setAddServiceModal(true);
+                      }}
+                      className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
+                    >
+                      <Wrench className="w-4 h-4 mr-2" />
+                      New Service
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -615,7 +624,7 @@ const Inventory = () => {
           </div>
 
           {/* Departments + Categories Filters */}
-          {activeTab && (
+          {activeTab !== "SERVICE" && (
             <>
               {CategoriesDataLoading || !CategoriesData ? (
                 <div className="space-y-4">
@@ -799,36 +808,16 @@ const Inventory = () => {
                 )}
               </>
             )
-          ) : InventoryDataLoading || !InventoryData ? (
-            <InventoryTableSkeleton />
           ) : (
-            <>
-              {InventoryData?.data?.results?.data?.length > 0 ? (
-                <ServiceTable
-                  setPage={setPage}
-                  page={page}
-                  response={InventoryData}
-                  loading={false}
-                />
-              ) : (
-                <div className="w-full h-64 flex flex-col justify-center items-center">
-                  <NoInventory />
-                </div>
-              )}
-            </>
+            <BookingServicesManager
+              search={searchInput}
+              canManage={canManageServices}
+              createRequested={addServiceModal}
+              onCreateRequestHandled={handleCreateRequestHandled}
+            />
           )}
         </div>
       </div>
-
-      {/* Add Service Modal */}
-      <CustomModal
-        isOpen={addServiceModal}
-        onClose={closeAddServiceModal}
-        trigger={false}
-        title="Add New Service"
-      >
-        <AddService closeModal={closeAddServiceModal} />
-      </CustomModal>
 
       <GenerateReportModal
         isOpen={isGenerateReportOpen}

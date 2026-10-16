@@ -120,9 +120,19 @@ export type ProductFormValues = z.infer<ReturnType<typeof createProductSchema>>;
 export const useProductHook = ({
   id,
   page,
+  variantId,
+  transactionType,
+  transactionStartDate,
+  transactionEndDate,
+  transactionLimit,
   handleOpenNotSubscribeModal,
 }: {
   id?: string;
+  variantId?: string;
+  transactionType?: string;
+  transactionStartDate?: string;
+  transactionEndDate?: string;
+  transactionLimit?: number;
   handleOpenNotSubscribeModal?: () => void;
   page?: any;
 }) => {
@@ -150,15 +160,17 @@ export const useProductHook = ({
   } = useFetchProductTransactionsQuery({
     params: {
       page,
-      limit: 30,
+      limit: transactionLimit ?? 10,
       id: productId,
+      variant_id: variantId,
+      type: transactionType,
+      start_date: transactionStartDate,
+      end_date: transactionEndDate,
     },
     enabled: isEditMode,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // const { data: ProductTransactionData, isLoading: ProductTransactionLoading } =
-  //   useFetchProductTransactionsQuery(productId, { enabled: isEditMode });
   const { data: TransferHistoryData, isLoading: TransferHistoryLoading } =
     useFetchTransferHistoryQuery(productId, { enabled: !!productId });
 

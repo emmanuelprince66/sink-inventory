@@ -3,6 +3,7 @@ import {
   Activity,
   BadgeDollarSignIcon,
   BellIcon,
+  CalendarDays,
   ClipboardList,
   CreditCard,
   DollarSign,
@@ -247,6 +248,13 @@ export const links = [
   {
     title: "Store Management",
     items: [
+      {
+        title: "Bookings",
+        url: "/bookings",
+        icon: CalendarDays,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+        permission: null,
+      },
       {
         title: "Store Information",
         url: "/store-info",

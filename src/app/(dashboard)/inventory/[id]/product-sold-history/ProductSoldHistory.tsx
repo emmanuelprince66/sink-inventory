@@ -1,7 +1,19 @@
 "use client";
 
+import {
+  type ProductTransactionVariation,
+} from "@/api/products/get-transactions-history";
+import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useProductHook } from "@/hooks/useProductHook";
+import { format } from "date-fns";
 import {
   AlertTriangle,
   ArrowDown,
@@ -13,17 +25,70 @@ import {
   Truck,
 } from "lucide-react";
 import { useState } from "react";
+import type { DateRange } from "react-day-picker";
 import ProductSoldData from "./ProductSoldData";
+
+const PARENT_PRODUCT = "parent";
+const TRANSACTION_TYPES = [
+  "SOLD",
+  "PURCHASE",
+  "RETURN",
+  "DAMAGE",
+  "WASTE",
+  "TRANSFER_IN",
+  "TRANSFER_OUT",
+  "MOVE_TO_PROD",
+] as const;
+
+const formatTransactionType = (type: string) =>
+  type
+    .toLowerCase()
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
 const ProductSoldHistory = ({ id }: { id: string }) => {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [variantId, setVariantId] = useState<string | undefined>();
+  const [transactionType, setTransactionType] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
-  const { ProductTransactionData, ProductTransactionLoading } = useProductHook({
+  const {
+    ProductTransactionData,
+    ProductTransactionLoading,
+  } = useProductHook({
     id,
     page,
+    variantId,
+    transactionLimit: pageSize,
+    transactionType: transactionType || undefined,
+    transactionStartDate: dateRange?.from
+      ? format(dateRange.from, "yyyy-MM-dd")
+      : undefined,
+    transactionEndDate: dateRange?.to
+      ? format(dateRange.to, "yyyy-MM-dd")
+      : undefined,
   });
 
-  const productData = ProductTransactionData?.data?.results;
+  const productData = ProductTransactionData?.data.results;
+  const variations = productData?.variations ?? [];
+  const selectedVariantId = variantId ?? productData?.selected_variant_id;
+
+  const handleVariantChange = (value: string) => {
+    setVariantId(value === PARENT_PRODUCT ? undefined : value);
+    setPage(1);
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTransactionType(value === "all" ? "" : value);
+    setPage(1);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    setPage(1);
+  };
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -38,6 +103,70 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
         <h1 className="text-xl ml-3 sm:text-2xl font-extrabold text-grey-1">
           Product Sold History
         </h1>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        {variations.length > 0 && (
+          <div className="w-full max-w-sm">
+            <label
+              htmlFor="product-transaction-variant"
+              className="mb-1.5 block text-sm font-semibold text-grey-2"
+            >
+              Product variant
+            </label>
+            <Select
+              value={selectedVariantId || PARENT_PRODUCT}
+              onValueChange={handleVariantChange}
+            >
+              <SelectTrigger id="product-transaction-variant">
+                <SelectValue placeholder="Select a product variant" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={PARENT_PRODUCT}>Main product</SelectItem>
+                {variations.map((variation: ProductTransactionVariation) => (
+                  <SelectItem key={variation.id} value={variation.id}>
+                    {variation.name}
+                    {variation.sku ? ` (${variation.sku})` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="w-full max-w-sm">
+          <label
+            htmlFor="product-transaction-type"
+            className="mb-1.5 block text-sm font-semibold text-grey-2"
+          >
+            Transaction type
+          </label>
+          <Select
+            value={transactionType || "all"}
+            onValueChange={handleTypeChange}
+          >
+            <SelectTrigger id="product-transaction-type">
+              <SelectValue placeholder="All transaction types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All transaction types</SelectItem>
+              {TRANSACTION_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {formatTransactionType(type)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-full max-w-sm">
+          <label className="mb-1.5 block text-sm font-semibold text-grey-2">
+            Date range
+          </label>
+          <DatePickerWithRange
+            date={dateRange}
+            onDateChange={handleDateRangeChange}
+            triggerClassName="min-h-[50px]"
+          />
+        </div>
       </div>
 
       {/* Product Details + Quantities */}
@@ -102,6 +231,22 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
                       {productData?.purchase || 0}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-grey-3">
+                      Opening stock
+                    </span>
+                    <span className="text-sm font-bold text-grey-1">
+                      {productData?.initial_stock ?? 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-grey-3">
+                      Restocked
+                    </span>
+                    <span className="text-sm font-bold text-grey-1">
+                      {productData?.restocked ?? 0}
+                    </span>
+                  </div>
 
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-medium text-grey-3 flex items-center">
@@ -163,6 +308,14 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
                       {productData?.transfer_out || 0}
                     </span>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-grey-3 flex items-center">
+                      <Truck className="h-3 w-3 mr-1" /> Moved to production
+                    </span>
+                    <span className="text-sm font-bold text-grey-1">
+                      {productData?.move_to_prod || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -192,6 +345,11 @@ const ProductSoldHistory = ({ id }: { id: string }) => {
             <ProductSoldData
               setPage={setPage}
               page={page}
+              pageSize={pageSize}
+              setPageSize={(size: number) => {
+                setPageSize(size);
+                setPage(1);
+              }}
               productSoldLoading={ProductTransactionLoading}
               productSoldData={ProductTransactionData}
             />

@@ -9,7 +9,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useGetAllCategories } from "@/hooks/useGetAllCategories";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CategoryType,
+  useGetAllCategories,
+} from "@/hooks/useGetAllCategories";
 
 const EditCategory = ({
   categoryObj,
@@ -18,7 +28,7 @@ const EditCategory = ({
 }: {
   categoryObj: any;
   closeModal?: any;
-  type: string;
+  type: CategoryType;
 }) => {
   const { form, onSubmit, isEditing } = useGetAllCategories({
     categoryObj,
@@ -40,6 +50,29 @@ const EditCategory = ({
                 <FormControl>
                   <Input placeholder="Customer Name...." {...field} />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category type</FormLabel>
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select category type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="bg-white">
+                    <SelectItem value="PRODUCT">Product</SelectItem>
+                    <SelectItem value="SERVICE">Service</SelectItem>
+                    <SelectItem value="EXPENSES">Expense</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

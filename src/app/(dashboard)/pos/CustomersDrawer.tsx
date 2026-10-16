@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import SegmentTag from "@/components/SegmentTag";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCheckoutHook } from "@/hooks/useCheckoutHook";
+import { useCustomerOptions } from "@/hooks/useCustomerOptions";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowRight, Crown, Plus, Sprout, Star, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -85,10 +85,14 @@ const CustomerDrawer = ({
   const closeOpenCustomerModal = () => setOpenAddCustomerModal(false);
   const openCustomerModalFunc = () => setOpenAddCustomerModal(true);
   const [page, setPage] = useState<number>(1);
-  const { CustomerData, CustomerLoading } = useCheckoutHook({
-    searchInput,
-    page,
-  }); // Pass 'page' to the hook
+  const {
+    customers,
+    totalPages,
+    isLoading: CustomerLoading,
+    error: customerError,
+    refetch: refetchCustomers,
+    hasBusiness,
+  } = useCustomerOptions(searchInput, page);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -105,10 +109,6 @@ const CustomerDrawer = ({
   const handleCardClick = (customer: any) =>
     isPos ? onViewLoyalty?.(customer) : handleSelectCustomer(customer);
 
-  // Initialize pageSize with the limit from API response or default to 15
-  const [pageSize, setPageSize] = useState<number>(
-    CustomerData?.data?.limit || 15
-  );
   const [currentPage, setCurrentPage] = useState<number>(page || 1); // Local page state
 
   // Sync local page state with parent page prop
@@ -116,22 +116,11 @@ const CustomerDrawer = ({
     setCurrentPage(page || 1);
   }, [page]);
 
-  // Calculate pagination values
-  const totalPages = CustomerData?.data?.pages || 1;
-  const totalItems = CustomerData?.data?.total || 0;
-
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage); // Update local state immediately for UI responsiveness
       setPage(newPage); // Update parent state (which will trigger re-fetch in useCheckoutHook)
     }
-  };
-
-  const handlePageSizeChange = (newSize: number) => {
-    setPageSize(newSize);
-    const newPage = 1;
-    setCurrentPage(newPage); // Update local state
-    setPage(newPage); // Update parent state
   };
 
   return (
@@ -170,9 +159,28 @@ const CustomerDrawer = ({
                   <Skeleton className="bg-grey-5 h-4 w-1/2" />
                 </div>
               ))
-            ) : CustomerData?.data?.results?.data?.length > 0 ? (
+            ) : customerError ? (
+              <div className="rounded-xl border border-error-1/20 bg-error-2 p-4 text-center">
+                <p className="text-sm font-semibold text-error-1">
+                  Could not load customers from this business.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => refetchCustomers()}
+                >
+                  Try again
+                </Button>
+              </div>
+            ) : !hasBusiness ? (
+              <div className="p-4 text-center text-sm text-gray-500">
+                Select a business to load its customers.
+              </div>
+            ) : customers.length > 0 ? (
               // Show actual customer data when loaded
-              CustomerData.data.results.data.map((customer: any) => {
+              customers.map((customer: any) => {
                 const tier = tierStyle(customer.tier_name);
                 const TierIcon = tier.icon;
 

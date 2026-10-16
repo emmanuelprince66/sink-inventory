@@ -21,10 +21,12 @@ export async function GET(
   }
 
   const type = request.nextUrl.searchParams.get("type") || "";
+  const limit = request.nextUrl.searchParams.get("limit");
 
   // Build the API URL
   const apiUrl = new URL(`${BaseUrl}category/business/${id}/`);
   if (type) apiUrl.searchParams.append("type", type);
+  if (limit) apiUrl.searchParams.append("limit", limit);
 
   try {
     const response = await fetch(apiUrl.toString(), {

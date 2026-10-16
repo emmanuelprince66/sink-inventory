@@ -9,7 +9,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useGetAllCategories } from "@/hooks/useGetAllCategories";
+import {
+  CategoryType,
+  useGetAllCategories,
+} from "@/hooks/useGetAllCategories";
 
 const EditExpensesCategory = ({
   categoryObj,
@@ -18,7 +21,7 @@ const EditExpensesCategory = ({
 }: {
   categoryObj: any;
   closeModal?: any;
-  type: string;
+  type: CategoryType;
 }) => {
   const { form, onSubmit, isEditing } = useGetAllCategories({
     categoryObj,

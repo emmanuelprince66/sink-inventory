@@ -16,21 +16,28 @@ import { cn } from "@/lib/utils";
 
 interface DatePickerWithRangeProps {
   className?: string;
+  triggerClassName?: string;
   date: DateRange | undefined;
   onDateChange: (date: DateRange | undefined) => void;
+  singleDay?: boolean;
 }
 
 export function DatePickerWithRange({
   className,
+  triggerClassName,
   date,
   onDateChange,
+  singleDay = false,
 }: DatePickerWithRangeProps) {
   const currentYear = new Date().getFullYear();
   const formatCompact = (d: Date) =>
     format(d, d.getFullYear() === currentYear ? "MMM d" : "MMM d, yy");
+  const hasSingleDate =
+    date?.from &&
+    (!date.to || date.from.toDateString() === date.to.toDateString());
 
   const label = date?.from
-    ? date.to
+    ? date.to && !hasSingleDate
       ? `${formatCompact(date.from)} – ${formatCompact(date.to)}`
       : formatCompact(date.from)
     : "Date range";
@@ -45,12 +52,15 @@ export function DatePickerWithRange({
             title={
               date?.from
                 ? `${format(date.from, "LLL dd, y")}${
-                    date.to ? ` – ${format(date.to, "LLL dd, y")}` : ""
+                    date.to && !hasSingleDate
+                      ? ` – ${format(date.to, "LLL dd, y")}`
+                      : ""
                   }`
                 : undefined
             }
             className={cn(
               "w-full justify-start text-left font-normal bg-white hover:bg-secondary-6 border-grey-5",
+              triggerClassName,
               !date && "text-grey-3",
             )}
           >
@@ -62,36 +72,58 @@ export function DatePickerWithRange({
           className="w-auto p-0 bg-white border-grey-5 shadow-lg"
           align="start"
         >
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={date?.from}
-            selected={date}
-            onSelect={onDateChange}
-            numberOfMonths={2}
-            className="bg-white rounded-md"
-            modifiersStyles={{
-              selected: {
-                backgroundColor: "#329661",
-                color: "white",
-                borderRadius: "6px",
-              },
-              range_start: {
-                backgroundColor: "#329661",
-                color: "white",
-                borderRadius: "6px",
-              },
-              range_end: {
-                backgroundColor: "#329661",
-                color: "white",
-                borderRadius: "6px",
-              },
-              range_middle: {
-                backgroundColor: "rgba(50, 150, 97, 0.2)",
-                color: "#329661",
-              },
-            }}
-          />
+          {singleDay ? (
+            <Calendar
+              initialFocus
+              mode="single"
+              defaultMonth={date?.from}
+              selected={date?.from}
+              onSelect={(selected) =>
+                onDateChange(
+                  selected ? { from: selected, to: selected } : undefined,
+                )
+              }
+              className="bg-white rounded-md"
+              modifiersStyles={{
+                selected: {
+                  backgroundColor: "#329661",
+                  color: "white",
+                  borderRadius: "6px",
+                },
+              }}
+            />
+          ) : (
+            <Calendar
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
+              selected={date}
+              onSelect={onDateChange}
+              numberOfMonths={2}
+              className="bg-white rounded-md"
+              modifiersStyles={{
+                selected: {
+                  backgroundColor: "#329661",
+                  color: "white",
+                  borderRadius: "6px",
+                },
+                range_start: {
+                  backgroundColor: "#329661",
+                  color: "white",
+                  borderRadius: "6px",
+                },
+                range_end: {
+                  backgroundColor: "#329661",
+                  color: "white",
+                  borderRadius: "6px",
+                },
+                range_middle: {
+                  backgroundColor: "rgba(50, 150, 97, 0.2)",
+                  color: "#329661",
+                },
+              }}
+            />
+          )}
         </PopoverContent>
       </Popover>
     </div>

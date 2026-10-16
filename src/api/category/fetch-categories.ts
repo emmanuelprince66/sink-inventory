@@ -8,12 +8,18 @@ import {
 type CategoryProps = {
   id: string;
   type?: string;
+  limit?: number;
 };
 
-export const fetchCategories = async ({ id, type = "" }: CategoryProps) => {
+export const fetchCategories = async ({
+  id,
+  type = "",
+  limit,
+}: CategoryProps) => {
   // Safely construct URL with search params
   const url = new URL(`/api/categories/${id}`, window.location.origin);
   if (type) url.searchParams.append("type", type);
+  if (limit) url.searchParams.append("limit", String(limit));
 
   const response = await fetch(url.toString(), { method: "GET" });
 
@@ -43,7 +49,12 @@ export const useGetCategoriesQuery = ({
       return failureCount < 2;
     },
     // Include all parameters in the query key
-    queryKey: [queryKey.categories.getAllCategories, params.id, params.type],
+    queryKey: [
+      queryKey.categories.getAllCategories,
+      params.id,
+      params.type,
+      params.limit,
+    ],
     queryFn: () => fetchCategories(params),
     ...config,
   });

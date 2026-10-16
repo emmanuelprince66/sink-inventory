@@ -2,24 +2,30 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-interface createCategoryPayload {
-  // Define your bank creation payload type here
-  [key: string]: any;
+interface CreateCategoryPayload {
+  name: string;
+  type: "PRODUCT" | "SERVICE" | "EXPENSES";
 }
+
+type CreateCategoryVariables = {
+  businessId: string | null;
+  payload: CreateCategoryPayload;
+};
 
 const createCategory = async ({
   businessId,
   payload,
-}: {
-  businessId: any;
-  payload: createCategoryPayload;
-}) => {
+}: CreateCategoryVariables) => {
+  if (!businessId) {
+    throw new Error("Business ID is required to create a category");
+  }
+
   const response = await fetch(`/api/categories/${businessId}/create`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ payload }),
   });
 
   if (!response.ok) {
@@ -45,8 +51,8 @@ export const useCreateCategoryMutation = ({
 
   return useMutation({
     mutationKey: [queryKey.categories.createCategory, businessId],
-    mutationFn: (payload: createCategoryPayload) =>
-      createCategory({ businessId, payload }),
+    mutationFn: (variables: CreateCategoryVariables) =>
+      createCategory({ businessId, payload: variables.payload }),
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error creating bank:", error);

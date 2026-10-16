@@ -1,4 +1,8 @@
 import { CustomTable } from "@/components/app/CutomTable";
+import type {
+  ProductTransactionItem,
+  ProductTransactionQueryResponse,
+} from "@/api/products/get-transactions-history";
 
 import { useProductSoldHistoryColumns } from "./ProductSoldHistoryColumn";
 const ProductSoldHistoryTable = ({
@@ -10,8 +14,8 @@ const ProductSoldHistoryTable = ({
   onPageChange,
   onPageSizeChange,
 }: {
-  response: any;
-  loading: any;
+  response: ProductTransactionQueryResponse;
+  loading: boolean;
   currentPage: number;
   totalPages: number;
 

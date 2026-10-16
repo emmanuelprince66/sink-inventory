@@ -8,12 +8,16 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
 
+export type CategoryType = "PRODUCT" | "SERVICE" | "EXPENSES";
+
 const CategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
+  type: z.enum(["PRODUCT", "SERVICE", "EXPENSES"]),
 });
 
 const AddCategorySchema = z.object({
   name: z.string().min(1, "Category name is required"),
+  type: z.enum(["PRODUCT", "SERVICE", "EXPENSES"]),
 });
 
 export type CategoryFormValues = z.infer<typeof CategorySchema>;
@@ -25,7 +29,7 @@ export const useGetAllCategories = ({
   closeModal,
 }: {
   categoryObj?: any;
-  type?: string;
+  type?: CategoryType;
   closeModal?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -38,11 +42,7 @@ export const useGetAllCategories = ({
 
   useEffect(() => {
     if (isEditingSuccess) {
-      if (type === "EXPENSES") {
-        ExpensesRefetch();
-      } else {
-        refetch();
-      }
+      void refetchAllCategories();
       if (closeModal) closeModal();
     }
   }, [isEditingSuccess]);
@@ -74,15 +74,28 @@ export const useGetAllCategories = ({
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
+  const {
+    data: ServiceCategoriesData,
+    isLoading: ServiceCategoriesDataLoading,
+    refetch: ServiceCategoriesRefetch,
+  } = useGetCategoriesQuery({
+    params: {
+      id: business_id,
+      type: "SERVICE",
+    },
+    enabled: !!business_id,
+    staleTime: 1000 * 60 * 5,
+  });
+
   const { mutate: createCategory, isPending: createCategoryLoading } =
     useCreateCategoryMutation({
       businessId: business_id,
-      onSuccess: (data) => {
-        console.log("data---4", data);
-        showToast(data.message, "success");
-
-        if (type === "EXPENSES") {
+      onSuccess: (_data, variables) => {
+        const categoryType = variables?.payload?.type ?? type;
+        if (categoryType === "EXPENSES") {
           ExpensesRefetch();
+        } else if (categoryType === "SERVICE") {
+          ServiceCategoriesRefetch();
         } else {
           refetch();
         }
@@ -95,6 +108,7 @@ export const useGetAllCategories = ({
     resolver: zodResolver(CategorySchema),
     defaultValues: {
       name: categoryObj?.name || "",
+      type: categoryObj?.type ?? type ?? "PRODUCT",
     },
     mode: "onChange",
   });
@@ -103,6 +117,7 @@ export const useGetAllCategories = ({
     resolver: zodResolver(AddCategorySchema),
     defaultValues: {
       name: categoryObj?.name || "",
+      type: type === "SERVICE" || type === "EXPENSES" ? type : "PRODUCT",
     },
     mode: "onChange",
   });
@@ -112,10 +127,9 @@ export const useGetAllCategories = ({
       catId: categoryObj.id,
       payload: {
         name: values.name,
+        type: values.type,
       },
     });
-
-    refetch();
   };
 
   const onAddCategorySubmit = (values: AddCategoryFormValues) => {
@@ -123,14 +137,37 @@ export const useGetAllCategories = ({
       businessId: business_id,
       payload: {
         name: values.name,
-        type: type,
+        type: type ?? values.type,
       },
     });
+  };
+
+  const AllCategoriesData = {
+    ...(CategoriesData ?? {}),
+    data: [
+      ...(CategoriesData?.data ?? []),
+      ...(ServiceCategoriesData?.data ?? []),
+      ...(ExpensesCategoriesData?.data ?? []),
+    ],
+  };
+
+  const refetchAllCategories = async () => {
+    await Promise.all([
+      refetch(),
+      ServiceCategoriesRefetch(),
+      ExpensesRefetch(),
+    ]);
   };
 
   return {
     CategoriesData,
     CategoriesDataLoading,
+    AllCategoriesData,
+    AllCategoriesDataLoading:
+      CategoriesDataLoading ||
+      ServiceCategoriesDataLoading ||
+      ExpensesCategoriesDataLoading,
+    refetchAllCategories,
     onSubmit,
     ExpensesCategoriesDataLoading,
     form,

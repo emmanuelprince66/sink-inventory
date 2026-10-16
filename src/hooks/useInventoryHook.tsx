@@ -331,7 +331,7 @@ export const useInventoryHook = ({
     useGetCategoriesQuery({
       params: {
         id: business_id,
-        type: "PRODUCT",
+        type: selectedType === "SERVICE" ? "SERVICE" : "PRODUCT",
       },
       enabled: !!business_id,
       staleTime: 1000 * 60 * 5,

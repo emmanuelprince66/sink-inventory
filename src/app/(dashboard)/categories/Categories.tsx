@@ -41,7 +41,11 @@ const Categories = () => {
     name: string;
   } | null>(null);
 
-  const { CategoriesData, CategoriesDataLoading, refetch } =
+  const {
+    AllCategoriesData,
+    AllCategoriesDataLoading,
+    refetchAllCategories,
+  } =
     useGetAllCategories({ categoryObj });
 
   const handleSearchChange = (value: string) => {
@@ -65,10 +69,10 @@ const Categories = () => {
 
   const handleDeleteSuccess = () => {
     showToast("Category deleted successfully", "success");
-    refetch(); // Refresh the categories list after deletion
+    void refetchAllCategories();
   };
 
-  const filteredCategories = (CategoriesData?.data ?? []).filter(
+  const filteredCategories = (AllCategoriesData?.data ?? []).filter(
     (category: any) =>
       category.name.toLowerCase().includes(searchInput.toLowerCase()),
   );
@@ -146,7 +150,7 @@ const Categories = () => {
             <CustomTable
               columns={columns}
               data={filteredCategories}
-              loading={CategoriesDataLoading}
+              loading={AllCategoriesDataLoading}
               noDataText="No categories found"
               showSerialNumber={false}
               bordered={false}
@@ -167,7 +171,7 @@ const Categories = () => {
         title="Edit Category"
       >
         <EditCategory
-          type="PRODUCT"
+          type={categoryObj?.type ?? "PRODUCT"}
           closeModal={closeEditModal}
           categoryObj={categoryObj}
         />
@@ -180,7 +184,10 @@ const Categories = () => {
         trigger={false}
         title="Create Category"
       >
-        <AddCategory closeModal={handleCloseCreateModal} type="PRODUCT" />
+        <AddCategory
+          closeModal={handleCloseCreateModal}
+          allowTypeSelection
+        />
       </CustomModal>
 
       {/* Delete Category Modal */}
