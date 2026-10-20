@@ -115,7 +115,9 @@ const ServicesPage = () => {
                     <Clock3 className="h-3.5 w-3.5" />
                     {service.duration ? `${service.duration} min` : "—"}
                     {" · "}
-                    {service.min_deposit_percentage ?? 30}% deposit
+                    {service.min_deposit_percentage != null
+                      ? `${service.min_deposit_percentage}% deposit`
+                      : "Default deposit"}
                   </span>
                 </div>
               </article>

@@ -30,6 +30,34 @@ import { isValidPhoneNumber } from "react-phone-number-input";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 
+// One storefront hero banner. Saved banners have only a URL; new uploads also
+// carry the file to send.
+export interface BannerItem {
+  id: string;
+  url: string;
+  file?: File;
+}
+
+export const MAX_BANNERS = 6;
+
+const toBannerItems = (business: {
+  banners?: unknown;
+  banner?: string | null;
+}): BannerItem[] => {
+  const urls = Array.isArray(business?.banners)
+    ? business.banners.filter(
+        (url): url is string => typeof url === "string" && Boolean(url),
+      )
+    : [];
+  // Businesses from before multi-banner support only have the single
+  // `banner` (and `banners: []`). Keep it as the first saved banner so it's
+  // sent back in existing_banners instead of being dropped on save.
+  if (business?.banner && !urls.includes(business.banner)) {
+    urls.unshift(business.banner);
+  }
+  return urls.map((url) => ({ id: url, url }));
+};
+
 interface StoreData {
   logo: string;
   headerImage: string;
@@ -163,11 +191,12 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
 
   // Image handling states
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [savedBanners, setSavedBanners] = useState<BannerItem[]>([]);
+  const [bannerItems, setBannerItems] = useState<BannerItem[]>([]);
+  // Only send banner fields when the merchant actually touched them, so a
+  // plain text edit can never clear the saved banners.
+  const [bannersDirty, setBannersDirty] = useState(false);
   const [logoPreview, setLogoPreview] = useState(initialStoreData.logo);
-  const [bannerPreview, setBannerPreview] = useState(
-    initialStoreData.headerImage
-  );
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -241,7 +270,10 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       setStoreData(data);
       setFormData(data);
       setLogoPreview(data.logo);
-      setBannerPreview(data.headerImage);
+      const banners = toBannerItems(findBusiness);
+      setSavedBanners(banners);
+      setBannerItems(banners);
+      setBannersDirty(false);
     }
   }, [findBusiness, business_id]);
 
@@ -424,44 +456,89 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     handleInputChange("logo", previewUrl);
   };
 
-  // Handle banner change with compression
+  // Add one or more banners (compressed). New uploads always sit after the
+  // saved ones: the API takes kept URLs (existing_banners) and new files
+  // (banners) as separate lists, so mixed ordering can't be expressed.
   const handleBannerChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (!files.length) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
+    const room = MAX_BANNERS - bannerItems.length;
+    if (room <= 0) {
       setErrors((prev) => ({
         ...prev,
-        headerImage: "Please upload a valid image file",
+        headerImage: `You can add up to ${MAX_BANNERS} banners`,
       }));
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (files.some((file) => !file.type.startsWith("image/"))) {
       setErrors((prev) => ({
         ...prev,
-        headerImage: "Image size must be less than 5MB",
+        headerImage: "Please upload valid image files",
       }));
       return;
     }
 
-    try {
-      const compressed = await compressImage(file, 1200, 0.7);
-      setBannerFile(compressed);
-      const previewUrl = URL.createObjectURL(compressed);
-      setBannerPreview(previewUrl);
-      handleInputChange("headerImage", previewUrl);
-    } catch {
-      // Fallback to original if compression fails
-      setBannerFile(file);
-      const previewUrl = URL.createObjectURL(file);
-      setBannerPreview(previewUrl);
-      handleInputChange("headerImage", previewUrl);
+    if (files.some((file) => file.size > 5 * 1024 * 1024)) {
+      setErrors((prev) => ({
+        ...prev,
+        headerImage: "Each image must be less than 5MB",
+      }));
+      return;
     }
+
+    const added = await Promise.all(
+      files.slice(0, room).map(async (file) => {
+        const upload = await compressImage(file, 1200, 0.7).catch(() => file);
+        return {
+          id: `new-${crypto.randomUUID()}`,
+          url: URL.createObjectURL(upload),
+          file: upload,
+        };
+      }),
+    );
+    setBannerItems((current) => [...current, ...added]);
+    setBannersDirty(true);
+    setErrors((prev) => ({
+      ...prev,
+      headerImage:
+        files.length > room
+          ? `Only ${room} more banner${room === 1 ? "" : "s"} could be added (max ${MAX_BANNERS})`
+          : "",
+    }));
+  };
+
+  const removeBanner = (id: string) => {
+    setBannerItems((current) => {
+      const removed = current.find((item) => item.id === id);
+      if (removed?.file) URL.revokeObjectURL(removed.url);
+      return current.filter((item) => item.id !== id);
+    });
+    setBannersDirty(true);
+  };
+
+  // Moves within its own group (saved or new) only — see handleBannerChange.
+  const moveBanner = (id: string, direction: -1 | 1) => {
+    setBannerItems((current) => {
+      const index = current.findIndex((item) => item.id === id);
+      const target = index + direction;
+      if (
+        index < 0 ||
+        target < 0 ||
+        target >= current.length ||
+        Boolean(current[target].file) !== Boolean(current[index].file)
+      ) {
+        return current;
+      }
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+    setBannersDirty(true);
   };
 
   // Handle form submission
@@ -545,8 +622,16 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       if (logoFile) {
         formDataToSend.append("logo", logoFile);
       }
-      if (bannerFile) {
-        formDataToSend.append("banner", bannerFile);
+      if (bannersDirty) {
+        formDataToSend.append(
+          "existing_banners",
+          JSON.stringify(
+            bannerItems.filter((item) => !item.file).map((item) => item.url),
+          ),
+        );
+        bannerItems.forEach((item) => {
+          if (item.file) formDataToSend.append("banners", item.file);
+        });
       }
 
       console.log("Submitting form data:", formData);
@@ -589,9 +674,10 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     setFormData(storeData);
     setErrors({});
     setLogoFile(null);
-    setBannerFile(null);
     setLogoPreview(storeData.logo);
-    setBannerPreview(storeData.headerImage);
+    bannerItems.forEach((item) => item.file && URL.revokeObjectURL(item.url));
+    setBannerItems(savedBanners);
+    setBannersDirty(false);
   };
 
   // Handle edit mode
@@ -606,9 +692,10 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     copySuccess,
     isSubmitting: isSubmitting || isPending,
     logoFile,
-    bannerFile,
     logoPreview,
-    bannerPreview,
+    bannerItems,
+    removeBanner,
+    moveBanner,
     logoInputRef,
     bannerInputRef,
     handleInputChange,

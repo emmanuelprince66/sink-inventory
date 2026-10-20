@@ -9,7 +9,9 @@ import {
   getServiceCategoryId,
   getServiceCategoryName,
   getServiceCategoryRecords,
+  getBookingPolicy,
   getServiceRecords,
+  useBookingPolicyQuery,
   useCreateServiceMutation,
   useServiceCatalogueQuery,
   useUpdateServiceMutation,
@@ -53,13 +55,12 @@ const VALID_DURATIONS = new Set([
   15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 210, 240, 270, 300,
   360, 420, 480,
 ]);
-const DEFAULT_MIN_DEPOSIT_PERCENTAGE = 30;
 const EMPTY_FORM: ServiceForm = {
   name: "",
   categoryId: "",
   description: "",
   amount: "",
-  minDepositPercentage: String(DEFAULT_MIN_DEPOSIT_PERCENTAGE),
+  minDepositPercentage: "",
   duration: "30",
   capacity: "1",
   staffIds: [],
@@ -85,6 +86,9 @@ const BookingServicesManager = ({
 }) => {
   const businessId = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
+  const { data: policyResponse } = useBookingPolicyQuery(businessId ?? "");
+  const businessDepositPercentage =
+    getBookingPolicy(policyResponse)?.min_deposit_percentage ?? null;
   const { data: catalogueResponse, isLoading, isError, refetch } =
     useServiceCatalogueQuery(businessId ?? "");
   const {
@@ -149,9 +153,10 @@ const BookingServicesManager = ({
     categoryId: resolveServiceCategoryId(service),
     description: service.description ?? "",
     amount: String(service.amount ?? ""),
-    minDepositPercentage: String(
-      service.min_deposit_percentage ?? DEFAULT_MIN_DEPOSIT_PERCENTAGE,
-    ),
+    minDepositPercentage:
+      service.min_deposit_percentage != null
+        ? String(service.min_deposit_percentage)
+        : "",
     duration: String(service.duration),
     capacity: String(service.max_capacity ?? 1),
     staffIds: service.assigned_staff_ids ?? [],
@@ -202,9 +207,14 @@ const BookingServicesManager = ({
       return;
     }
     const amount = Number(form.amount);
+    // Blank = inherit the business default. On create the backend applies it
+    // when the field is omitted; on edit omitting keeps the old override, so
+    // send null to clear it (the service then tracks future default changes).
     const minDepositPercentage = form.minDepositPercentage.trim()
       ? Number(form.minDepositPercentage)
-      : DEFAULT_MIN_DEPOSIT_PERCENTAGE;
+      : editing
+        ? null
+        : undefined;
     const capacity = Number(form.capacity);
     if (!form.name.trim() || !form.categoryId) {
       showToast("Enter a service name and choose a category.", "error");
@@ -228,9 +238,10 @@ const BookingServicesManager = ({
       return;
     }
     if (
-      !Number.isInteger(minDepositPercentage) ||
-      minDepositPercentage < 1 ||
-      minDepositPercentage > 100
+      minDepositPercentage != null &&
+      (!Number.isInteger(minDepositPercentage) ||
+        minDepositPercentage < 1 ||
+        minDepositPercentage > 100)
     ) {
       showToast("Enter a minimum deposit between 1% and 100%.", "error");
       return;
@@ -240,7 +251,9 @@ const BookingServicesManager = ({
       category_id: form.categoryId,
       description: form.description.trim(),
       amount: amount.toFixed(2),
-      min_deposit_percentage: minDepositPercentage,
+      ...(minDepositPercentage !== undefined && {
+        min_deposit_percentage: minDepositPercentage,
+      }),
       duration,
       max_capacity: capacity,
       assigned_staff_ids: form.staffIds,
@@ -300,9 +313,9 @@ const BookingServicesManager = ({
         header: "Min. deposit",
         cell: ({ row }) => (
           <span className="whitespace-nowrap text-sm text-grey-2">
-            {row.original.min_deposit_percentage ??
-              DEFAULT_MIN_DEPOSIT_PERCENTAGE}
-            %
+            {row.original.min_deposit_percentage != null
+              ? `${row.original.min_deposit_percentage}%`
+              : "Default"}
           </span>
         ),
       },
@@ -485,7 +498,7 @@ const BookingServicesManager = ({
                       minDepositPercentage: event.target.value,
                     })
                   }
-                  placeholder={String(DEFAULT_MIN_DEPOSIT_PERCENTAGE)}
+                  placeholder="Business default"
                 />
                 <span className="block text-xs font-normal text-grey-3">
                   {Number(form.amount) > 0 &&
@@ -494,7 +507,11 @@ const BookingServicesManager = ({
                     ? `Customers pay at least ${amountLabel(
                         (Number(form.amount) * Number(form.minDepositPercentage)) / 100,
                       )} to secure a booking.`
-                    : "Share of the price customers pay upfront (1–100, default 30%)."}
+                    : `Optional (1–100). Leave blank to use the business default${
+                        businessDepositPercentage != null
+                          ? ` (${businessDepositPercentage}%)`
+                          : ""
+                      } from Payment & availability.`}
                 </span>
               </label>
               <label className="block space-y-1.5 text-sm font-medium text-grey-2">

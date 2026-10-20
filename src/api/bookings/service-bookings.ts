@@ -89,7 +89,8 @@ export type MerchantPaymentStatus =
   | "PAID"
   | "DEPOSIT_PAID"
   | "REFUND_PENDING"
-  | "REFUNDED";
+  | "REFUNDED"
+  | "DEPOSIT_FORFEITED";
 
 export type MerchantBooking = {
   id: string;
@@ -163,6 +164,11 @@ export type BookingPolicy = {
   allow_full_payment: boolean;
   allow_deposit: boolean;
   allow_pay_at_business: boolean;
+  /** Business-wide fallback deposit % (1-100, default 30); a service's own
+   * min_deposit_percentage takes precedence. */
+  min_deposit_percentage?: number;
+  is_deposit_non_refundable?: boolean;
+  custom_policy_text?: string | null;
   /** Legacy business-wide default; deposits are now set per service via
    * `min_deposit_percentage`. Only round-tripped, never edited here. */
   default_deposit_amount?: string | number;
@@ -310,8 +316,11 @@ export const useServiceScheduleQuery = (
     ...config,
   });
 
+// Canonical per backend (the `settings/<id>/` path in their notes was a typo).
+const BOOKING_SETTINGS_PATH = "booking-settings";
+
 const fetchBookingSettings = (businessId: string) =>
-  request<BookingPolicy>(`booking-settings/${businessId}`);
+  request<BookingPolicy>(`${BOOKING_SETTINGS_PATH}/${businessId}`);
 
 export const useBookingPolicyQuery = (
   businessId: string,
@@ -461,7 +470,7 @@ export const useSaveBookingPolicyMutation = () =>
       businessId: string;
       payload: Partial<BookingPolicy>;
     }) =>
-      request<BookingPolicy>(`booking-settings/${businessId}`, {
+      request<BookingPolicy>(`${BOOKING_SETTINGS_PATH}/${businessId}`, {
         method: "PATCH",
         body: JSON.stringify(payload),
       }),

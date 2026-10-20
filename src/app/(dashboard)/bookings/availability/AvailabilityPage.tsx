@@ -14,6 +14,8 @@ import {
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { Check, Clock3, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -22,7 +24,9 @@ import BookingPageHeader from "../BookingPageHeader";
 const INTERVALS = [15, 30, 45, 60] as const;
 const NOTICE_OPTIONS = [0, 1, 2, 4, 12, 24] as const;
 const ADVANCE_OPTIONS = [7, 14, 30, 60, 90] as const;
-const CANCELLATION_OPTIONS = [0, 1, 2, 6, 24] as const;
+// 0 means no cancellations are permitted (backend semantics).
+const CANCELLATION_OPTIONS = [0, 2, 24, 48, 72] as const;
+const DEFAULT_MIN_DEPOSIT_PERCENTAGE = 30;
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DEFAULT_SCHEDULE: ServiceScheduleDay[] = DAYS.map((_, day_of_week) => ({
   day_of_week,
@@ -39,6 +43,9 @@ const DEFAULT_POLICY: BookingPolicy = {
   allow_full_payment: true,
   allow_deposit: true,
   allow_pay_at_business: true,
+  min_deposit_percentage: DEFAULT_MIN_DEPOSIT_PERCENTAGE,
+  is_deposit_non_refundable: false,
+  custom_policy_text: "",
 };
 
 const AvailabilityPage = () => {
@@ -54,6 +61,10 @@ const AvailabilityPage = () => {
     useSaveBookingPolicyMutation();
   const [schedule, setSchedule] = useState<ServiceScheduleDay[]>(DEFAULT_SCHEDULE);
   const [policy, setPolicy] = useState<BookingPolicy>(DEFAULT_POLICY);
+  // Kept as text so the field can be cleared while typing.
+  const [depositPercentInput, setDepositPercentInput] = useState(
+    String(DEFAULT_MIN_DEPOSIT_PERCENTAGE),
+  );
 
   useEffect(() => {
     const loaded = getServiceScheduleDays(scheduleResponse);
@@ -70,7 +81,12 @@ const AvailabilityPage = () => {
 
   useEffect(() => {
     const loaded = getBookingPolicy(policyResponse);
-    if (loaded) setPolicy({ ...DEFAULT_POLICY, ...loaded });
+    if (loaded) {
+      setPolicy({ ...DEFAULT_POLICY, ...loaded });
+      setDepositPercentInput(
+        String(loaded.min_deposit_percentage ?? DEFAULT_MIN_DEPOSIT_PERCENTAGE),
+      );
+    }
   }, [policyResponse]);
 
   const updatePolicy = (update: Partial<BookingPolicy>) => {
@@ -142,10 +158,26 @@ const AvailabilityPage = () => {
       showToast("Select a business before changing availability.", "error");
       return;
     }
+    const minDepositPercentage = Number(depositPercentInput);
+    if (
+      !Number.isInteger(minDepositPercentage) ||
+      minDepositPercentage < 1 ||
+      minDepositPercentage > 100
+    ) {
+      showToast("Enter a default deposit between 1% and 100%.", "error");
+      return;
+    }
     try {
       await Promise.all([
         saveSchedule({ businessId, schedules: schedule }),
-        savePolicy({ businessId, payload: policy }),
+        savePolicy({
+          businessId,
+          payload: {
+            ...policy,
+            min_deposit_percentage: minDepositPercentage,
+            custom_policy_text: policy.custom_policy_text?.trim() || null,
+          },
+        }),
       ]);
       showToast("Payment and availability settings saved.", "success");
     } catch (error) {
@@ -371,7 +403,7 @@ const AvailabilityPage = () => {
                 value={policy.cancellation_window_hours}
                 options={CANCELLATION_OPTIONS.map((value) => ({
                   value,
-                  label: value === 0 ? "Any time" : `${value} hours`,
+                  label: value === 0 ? "No cancellations" : `${value} hours before`,
                 }))}
                 onChange={(value) =>
                   updateDraft({ cancellation_window_hours: value })
@@ -437,8 +469,66 @@ const AvailabilityPage = () => {
                 );
               })}
             </div>
+
+            {policy.allow_deposit && (
+              <div className="mt-4 grid gap-4 rounded-xl border border-grey-5 bg-grey-6/50 p-4 sm:grid-cols-2 sm:items-start">
+                <label className="block space-y-1.5 text-sm font-semibold text-grey-2">
+                  Default deposit (%)
+                  <Input
+                    type="number"
+                    min="1"
+                    max="100"
+                    step="1"
+                    value={depositPercentInput}
+                    onChange={(event) =>
+                      setDepositPercentInput(event.target.value)
+                    }
+                    className="h-10 bg-white"
+                  />
+                  <span className="block text-xs font-normal text-grey-3">
+                    Used when a service doesn&apos;t set its own minimum
+                    deposit.
+                  </span>
+                </label>
+                <div className="flex items-start justify-between gap-3 sm:pt-6">
+                  <span>
+                    <span className="block text-sm font-semibold text-grey-2">
+                      Non-refundable deposit
+                    </span>
+                    <span className="mt-0.5 block text-xs text-grey-3">
+                      Customers lose their deposit when they cancel.
+                    </span>
+                  </span>
+                  <Switch
+                    checked={Boolean(policy.is_deposit_non_refundable)}
+                    onCheckedChange={(checked) =>
+                      updateDraft({ is_deposit_non_refundable: checked })
+                    }
+                    aria-label="Make deposits non-refundable"
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
+          <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
+            <h2 className="mb-1 font-extrabold text-grey-1">
+              Additional policy terms
+            </h2>
+            <p className="mb-4 text-xs text-grey-3">
+              Optional. Shown to customers with your booking policy before they
+              pay, e.g. a late-arrival grace period.
+            </p>
+            <Textarea
+              value={policy.custom_policy_text ?? ""}
+              onChange={(event) =>
+                updateDraft({ custom_policy_text: event.target.value })
+              }
+              placeholder="A 15-minute grace period is allowed for late arrivals."
+              rows={4}
+              aria-label="Additional policy terms"
+            />
+          </section>
         </>
       )}
 
@@ -476,14 +566,14 @@ const AvailabilitySkeleton = () => (
         ))}
       </div>
     </section>
-    {[4, 3, 3].map((count, index) => (
+    {[4, 3, 3, 1].map((count, index) => (
       <section
         key={index}
         className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6"
       >
         <Skeleton className="h-5 w-40 bg-grey-6" />
         <div
-          className={`mt-4 grid gap-3 ${count === 4 ? "grid-cols-2 sm:grid-cols-4" : "sm:grid-cols-3"}`}
+          className={`mt-4 grid gap-3 ${count === 4 ? "grid-cols-2 sm:grid-cols-4" : count === 3 ? "sm:grid-cols-3" : ""}`}
         >
           {Array.from({ length: count }).map((_, item) => (
             <Skeleton key={item} className="h-11 rounded-xl bg-grey-6" />
@@ -512,7 +602,10 @@ const NumberSelect = ({
       onChange={(event) => onChange(Number(event.target.value))}
       className="h-10 w-full cursor-pointer rounded-lg border border-grey-5 bg-white px-3 text-sm font-normal text-grey-1 outline-none focus:border-primary-green-300"
     >
-      {options.map((option) => (
+      {(options.some((option) => option.value === value)
+        ? options
+        : [...options, { value, label: `${value} (current)` }]
+      ).map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
         </option>

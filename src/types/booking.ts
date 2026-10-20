@@ -12,6 +12,7 @@ export type BookingPaymentStatus =
   | "deposit_paid"
   | "refund_pending"
   | "refunded"
+  | "deposit_forfeited"
   | "pending";
 export type BookingSource = "storefront" | "staff";
 

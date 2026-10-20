@@ -18,6 +18,7 @@ const PAYMENT_STYLES: Record<Booking["paymentStatus"], string> = {
   deposit_paid: "bg-warning-2 text-warning-1",
   refund_pending: "bg-error-2 text-error-1",
   refunded: "bg-info-2 text-info-1",
+  deposit_forfeited: "bg-grey-6 text-grey-2",
 };
 
 const Pill = ({ label, className }: { label: string; className: string }) => (

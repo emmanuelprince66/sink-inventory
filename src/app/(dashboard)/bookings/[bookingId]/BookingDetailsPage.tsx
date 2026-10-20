@@ -377,7 +377,7 @@ const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
           <DetailRow label="Balance due" value={currency(booking.balanceDue ?? 0)} />
           <DetailRow
             label="Payment"
-            value={booking.paymentStatus.replace("_", " ")}
+            value={booking.paymentStatus.replaceAll("_", " ")}
           />
           <DetailRow
             label="Booking source"

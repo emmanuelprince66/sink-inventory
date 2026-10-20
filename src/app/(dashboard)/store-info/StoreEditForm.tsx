@@ -13,11 +13,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useStoreHook } from "@/hooks/useStoreHook";
+import { MAX_BANNERS, useStoreHook } from "@/hooks/useStoreHook";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Image as ImageIconLucide,
   Palette,
   Save,
@@ -51,7 +53,9 @@ export default function StoreEditForm({ setIsEditing }: any) {
     handleBannerChange,
     logoPreview,
     handleCancel,
-    bannerPreview,
+    bannerItems,
+    removeBanner,
+    moveBanner,
     logoInputRef,
     bannerInputRef,
     CURRENCY_OPTIONS,
@@ -88,44 +92,113 @@ export default function StoreEditForm({ setIsEditing }: any) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 p-6">
-            {/* Header Image */}
+            {/* Banners */}
             <div className="space-y-3">
-              <Label htmlFor="headerImage" className="text-sm font-bold">
-                Header Image
+              <Label htmlFor="bannerUpload" className="text-sm font-bold">
+                Store Banners
                 <span className="text-xs font-normal text-grey-3 ml-2">
-                  (Recommended: 1200x300px)
+                  (Up to {MAX_BANNERS} · Recommended: 1200x300px)
                 </span>
               </Label>
-              <div className="space-y-3">
-                <div className="relative h-48 w-full rounded-lg overflow-hidden border-2 border-dashed border-grey-5 hover:border-primary-green-300 transition-colors bg-grey-6">
-                  <Image
-                    src={bannerPreview || "/placeholder.svg"}
-                    alt="Header Image"
-                    fill
-                    className="object-cover"
-                  />
+              <p className="text-xs text-grey-3">
+                Banners rotate in your storefront&apos;s hero. The first one is
+                your main banner.
+              </p>
+              {bannerItems.length > 0 ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {bannerItems.map((item, index) => {
+                    const prev = bannerItems[index - 1];
+                    const next = bannerItems[index + 1];
+                    const canMoveLeft =
+                      !!prev && Boolean(prev.file) === Boolean(item.file);
+                    const canMoveRight =
+                      !!next && Boolean(next.file) === Boolean(item.file);
+                    return (
+                      <div
+                        key={item.id}
+                        className="group relative h-32 overflow-hidden rounded-lg border border-grey-5 bg-grey-6"
+                      >
+                        <Image
+                          src={item.url}
+                          alt={`Banner ${index + 1}`}
+                          fill
+                          unoptimized={Boolean(item.file)}
+                          className="object-cover"
+                        />
+                        <div className="absolute left-2 top-2 flex gap-1">
+                          {index === 0 && (
+                            <span className="rounded-full bg-primary-green-300 px-2 py-0.5 text-[10px] font-bold text-white">
+                              Main
+                            </span>
+                          )}
+                          {item.file && (
+                            <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-grey-2">
+                              New
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute right-2 top-2 flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => moveBanner(item.id, -1)}
+                            disabled={!canMoveLeft || isSubmitting}
+                            aria-label={`Move banner ${index + 1} earlier`}
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white/90 text-grey-2 shadow-sm hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveBanner(item.id, 1)}
+                            disabled={!canMoveRight || isSubmitting}
+                            aria-label={`Move banner ${index + 1} later`}
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white/90 text-grey-2 shadow-sm hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeBanner(item.id)}
+                            disabled={isSubmitting}
+                            aria-label={`Remove banner ${index + 1}`}
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-white/90 text-error-1 shadow-sm hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <input
-                  ref={bannerInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBannerChange}
-                  className="hidden"
-                  id="bannerUpload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-grey-5 text-grey-2 hover:bg-secondary-6 hover:border-primary-green-300"
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={isSubmitting}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Header Image
-                </Button>
-                <ErrorMessage message={errors.headerImage} />
-              </div>
+              ) : (
+                <div className="flex h-32 w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-grey-5 bg-grey-6 text-xs text-grey-3">
+                  <ImageIconLucide className="mb-1 h-5 w-5 text-grey-4" />
+                  No banners yet
+                </div>
+              )}
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleBannerChange}
+                className="hidden"
+                id="bannerUpload"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full border-grey-5 text-grey-2 hover:bg-secondary-6 hover:border-primary-green-300"
+                onClick={() => bannerInputRef.current?.click()}
+                disabled={isSubmitting || bannerItems.length >= MAX_BANNERS}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {bannerItems.length >= MAX_BANNERS
+                  ? `Maximum of ${MAX_BANNERS} banners`
+                  : "Add Banners"}
+              </Button>
+              <ErrorMessage message={errors.headerImage} />
             </div>
             {/* Store Logo */}
             <div className="space-y-3">
