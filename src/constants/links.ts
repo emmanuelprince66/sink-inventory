@@ -85,13 +85,6 @@ export const links = [
           "can_approve_expenses",
         ],
       },
-      {
-        title: "Orders",
-        url: "/orders",
-        icon: ClipboardList,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "ACCOUNTANT"],
-        permission: "view_orders", // Required permission
-      },
       // {
       //   title: "Logistics",
       //   url: "/logistics",
@@ -105,6 +98,27 @@ export const links = [
         icon: Truck,
         roles: ["OWNER", "ACCOUNTANT", "INVENTORY-MANAGER"],
         permission: "manage_suppliers",
+      },
+    ],
+  },
+  // Moved up from near the bottom so it renders directly above Stock.
+  // The title must match the key in COLLAPSIBLE_GROUPS (AppSidebar.tsx).
+  {
+    title: "Fulfillment", // was "Orders & Bookings"
+    items: [
+      {
+        title: "Orders",
+        url: "/orders",
+        icon: ClipboardList,
+        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "ACCOUNTANT"],
+        permission: "view_orders",
+      },
+      {
+        title: "Bookings",
+        url: "/bookings",
+        icon: CalendarDays,
+        roles: ["OWNER", "ADMIN-ATTENDANT"],
+        permission: null,
       },
     ],
   },
@@ -248,13 +262,6 @@ export const links = [
   {
     title: "Store Management",
     items: [
-      {
-        title: "Bookings",
-        url: "/bookings",
-        icon: CalendarDays,
-        roles: ["OWNER", "ADMIN-ATTENDANT"],
-        permission: null,
-      },
       {
         title: "Store Information",
         url: "/store-info",
