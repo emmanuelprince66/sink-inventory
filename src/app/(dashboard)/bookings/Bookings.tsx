@@ -25,6 +25,7 @@ import {
 import { Row } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { createBookingColumns } from "./BookingColumns";
+import BookingLinkCard from "./BookingLinkCard";
 
 const STATUS_FILTERS: { label: string; value: BookingStatusFilter }[] = [
   { label: "All", value: "all" },
@@ -190,6 +191,8 @@ const Bookings = () => {
           </p>
         </div>
       ) : null}
+
+      <BookingLinkCard />
 
       <section
         aria-label="Booking overview"

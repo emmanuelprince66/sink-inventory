@@ -34,8 +34,9 @@ import {
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useToast } from "@/hooks/toast/useToast";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Pencil, RefreshCw } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, RefreshCw } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
+import AddCategory from "../categories/AddCategory";
 
 type ServiceForm = {
   name: string;
@@ -94,6 +95,8 @@ const BookingServicesManager = ({
   const {
     data: categoryResponse,
     isFetched: categoriesFetched,
+    isRefetching: categoriesRefreshing,
+    refetch: refetchCategories,
   } = useGetCategoriesQuery({
     params: { id: businessId ?? "", type: "SERVICE", limit: 100 },
     enabled: Boolean(businessId),
@@ -106,6 +109,7 @@ const BookingServicesManager = ({
   const { mutateAsync: updateService, isPending: isUpdating } =
     useUpdateServiceMutation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editing, setEditing] = useState<BookingServiceRecord | null>(null);
   const [pendingEdit, setPendingEdit] = useState<BookingServiceRecord | null>(
     null,
@@ -165,18 +169,25 @@ const BookingServicesManager = ({
   useEffect(() => {
     if (!pendingEdit || !categoriesFetched) return;
     const service = pendingEdit;
-    const editForm = getEditForm(service);
-    if (!editForm.categoryId) {
-      showToast(
-        "Could not match this service to a category. Select its category before saving.",
-        "error",
-      );
-    }
     setEditing(service);
-    setForm(editForm);
+    setForm(getEditForm(service));
     setIsDialogOpen(true);
     setPendingEdit(null);
-  }, [categoriesFetched, categories, pendingEdit, showToast]);
+  }, [categoriesFetched, categories, pendingEdit]);
+
+  // AddCategory refreshes its own (unlimited) category query, not this one
+  // (limit 100 → different key), so refetch here and pre-select whatever is new.
+  const handleCategoryCreated = async () => {
+    setIsCategoryModalOpen(false);
+    const knownIds = new Set(categories.map(({ id }) => id));
+    const { data } = await refetchCategories();
+    const created = getServiceCategoryRecords(data).find(
+      ({ id }) => !knownIds.has(id),
+    );
+    if (created) {
+      setForm((current) => ({ ...current, categoryId: created.id }));
+    }
+  };
 
   useEffect(() => {
     setPage(1);
@@ -461,20 +472,50 @@ const BookingServicesManager = ({
               Service name
               <Input required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </label>
-            <label className="block space-y-1.5 text-sm font-medium text-grey-2">
-              Category
-              <select required className="h-10 w-full rounded-lg border border-grey-5 bg-white px-3 text-sm" value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>
-                <option value="">Select a category</option>
-                {editing &&
-                  form.categoryId &&
-                  !categories.some(({ id }) => id === form.categoryId) && (
-                    <option value={form.categoryId}>
-                      {getServiceCategoryName(editing) || "Current category"}
-                    </option>
-                  )}
-                {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-              </select>
-            </label>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="booking-service-category"
+                className="block text-sm font-medium text-grey-2"
+              >
+                Category
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  id="booking-service-category"
+                  required
+                  className="h-10 min-w-0 flex-1 rounded-lg border border-grey-5 bg-white px-3 text-sm"
+                  value={form.categoryId}
+                  onChange={(event) => setForm({ ...form, categoryId: event.target.value })}
+                >
+                  <option value="">
+                    {categoriesRefreshing
+                      ? "Loading categories..."
+                      : categories.length
+                        ? "Select a category"
+                        : "No service categories yet — add one"}
+                  </option>
+                  {editing &&
+                    form.categoryId &&
+                    !categories.some(({ id }) => id === form.categoryId) && (
+                      <option value={form.categoryId}>
+                        {getServiceCategoryName(editing) || "Current category"}
+                      </option>
+                    )}
+                  {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+                </select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => setIsCategoryModalOpen(true)}
+                  aria-label="Add service category"
+                  title="Add service category"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             <label className="block space-y-1.5 text-sm font-medium text-grey-2">
               Description
               <Input value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -603,6 +644,15 @@ const BookingServicesManager = ({
               </AccordionItem>
             </Accordion>
           </form>
+      </CustomModal>
+
+      <CustomModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        trigger={false}
+        title="Add Service Category"
+      >
+        <AddCategory type="SERVICE" closeModal={handleCategoryCreated} />
       </CustomModal>
     </section>
   );
