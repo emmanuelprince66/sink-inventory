@@ -5,10 +5,8 @@ import {
   useSetUserPinMutation,
   useUserPinStatusQuery,
 } from "@/api/user/pin";
+import CreatePinFields, { PinOtpField } from "@/components/app/CreatePinFields";
 import { CustomModal } from "@/components/app/CustomModal";
-import CreatePinFields, {
-  PinOtpField,
-} from "@/components/app/CreatePinFields";
 import { isValidNewPin, PIN_CREATE_LENGTH } from "@/components/app/pin-rules";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -16,7 +14,7 @@ import { ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 /**
- * Asks for the transaction PIN that authorises a payout or an approval.
+
  *
  * Also handles the case that makes this more than an input box: someone who
  * has never set a PIN. Sending them off to Settings mid-approval loses the
