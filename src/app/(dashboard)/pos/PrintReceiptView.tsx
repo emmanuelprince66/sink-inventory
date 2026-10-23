@@ -15,7 +15,7 @@ import {
   View,
 } from "@react-pdf/renderer";
 import { format } from "date-fns";
-import { ArrowBigLeftDash, Download, PlusCircle, Printer } from "lucide-react";
+import { Download, PlusCircle, Printer } from "lucide-react";
 import printJS from "print-js";
 import { useRef, useState } from "react";
 import { isRewardLine } from "./loyaltyReward";
@@ -455,13 +455,13 @@ const loyaltyFromSale = (createSaleResponse: any) => {
   // predate any of them.
   const label =
     (typeof applied === "object" && applied
-      ? applied.reward_summary ??
+      ? (applied.reward_summary ??
         applied.reward_product_name ??
         applied.reward_service_name ??
         applied.reward_description ??
         applied.description ??
         applied.name ??
-        applied.reward_type
+        applied.reward_type)
       : null) || "Loyalty Reward";
 
   const lines: any[] = sale?.products ?? sale?.items ?? [];
@@ -688,9 +688,7 @@ const ReceiptPDFDocument = ({
             <View style={styles.summarySection}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal (before VAT):</Text>
-                <Text style={styles.summaryValue}>
-                  {formatToNaira(total)}
-                </Text>
+                <Text style={styles.summaryValue}>{formatToNaira(total)}</Text>
               </View>
               <View style={styles.vatRow}>
                 <Text style={styles.vatLabel}>VAT ({vatInfo.rate}%):</Text>
@@ -951,15 +949,15 @@ const PrintReceiptView = ({
   return (
     <div className="grid grid-rows-[auto_minmax(0,1fr)_auto] h-full min-h-0 overflow-hidden">
       {/* Sticky top action bar */}
-      <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex justify-between items-center no-print">
-        <button
+      <div className="shrink-0 p-4 pb-3 border-b border-grey-5 bg-white flex justify-end  no-print">
+        {/* <button
           onClick={() => setShowPrintReceiptView(false)}
           className="p-1.5 rounded-full bg-secondary-6 hover:bg-secondary-5 transition-colors"
           aria-label="Go back"
           disabled={isPrinting}
         >
           <ArrowBigLeftDash className="text-primary-green-300" size={16} />
-        </button>
+        </button> */}
 
         <Button
           onClick={handleNewSale}
@@ -973,276 +971,278 @@ const PrintReceiptView = ({
 
       {/* Scrollable middle — receipt content */}
       <div className="h-full min-h-0 overflow-y-auto p-4 flex flex-col items-center gap-4">
-      <div
-        ref={receiptRef}
-        className="receipt-container bg-white rounded-lg w-full p-2"
-      >
-        {/* Receipt header */}
-        <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
-          <h2 className="receipt-title text-[13px] detail-value">
-            PAYMENT RECEIPT
-          </h2>
-          <p className="business-name receipt-little font-semibold">
-            {business?.name}
-          </p>
-          <p className="business-address text-[11px] receipt-little text-gray-500">
-            {business?.street && `${business.street}, `}
-            {business?.city}, {business?.state}, {business?.country}
-          </p>
-          {(business?.email || business?.owner?.email) && (
-            <p className="business-email text-[11px]  receipt-little text-gray-500">
-              {business?.email || business?.owner?.email}
+        <div
+          ref={receiptRef}
+          className="receipt-container bg-white rounded-lg w-full p-2"
+        >
+          {/* Receipt header */}
+          <div className="receipt-header text-center w-full business-info p-2 flex flex-col items-center gap-1 justify-center">
+            <h2 className="receipt-title text-[13px] detail-value">
+              PAYMENT RECEIPT
+            </h2>
+            <p className="business-name receipt-little font-semibold">
+              {business?.name}
             </p>
-          )}
-          {(business?.phone || business?.owner?.phone) && (
-            <p className="business-phone text-[11px]  receipt-little text-gray-500">
-              {business?.phone || business?.owner?.phone}
+            <p className="business-address text-[11px] receipt-little text-gray-500">
+              {business?.street && `${business.street}, `}
+              {business?.city}, {business?.state}, {business?.country}
             </p>
-          )}
-        </div>
-
-        {/* Items table */}
-        <div className="items-table w-full">
-          <table className="w-full table-auto ">
-            <thead className="w-full">
-              <tr className="text-left bg-green-50 w-full">
-                <th>ITEM</th>
-                <th className="text-center text-[11px] ">QTY</th>
-                <th className="text-right text-[11px] ">PRICE</th>
-                <th className="text-right text-[11px] ">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart.map((item) => {
-                const hasItemDiscount =
-                  item.type === "PRODUCT" &&
-                  item.discount_threshold &&
-                  item.discount &&
-                  (item.cartQuantity || 1) >= item.discount_threshold;
-
-                const itemDiscount = hasItemDiscount ? item.discount : 0;
-                const isReward = loyalty.isRewardItem(item);
-                const hasVat = item.allow_tax && vatInfo?.enabled;
-
-                return (
-                  <tr key={item.id}>
-                    <td className="item-name text-[11px]">
-                      <div>
-                        {item.name}
-                        {hasVat && <span className="vat-badge ml-1">+VAT</span>}
-                        {isReward && (
-                          <span className="reward-badge ml-1">
-                            FREE · LOYALTY
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="text-center text-[11px]">
-                      {item.cartQuantity || 1}
-                    </td>
-                    <td className="text-right text-[11px] price-cell">
-                      <div className="price-cell-container">
-                        <div className="price-main">
-                          {item?.selling_price
-                            ? formatToNaira(item.selling_price)
-                            : formatToNaira(Number(item.amount ?? 0))}
-                        </div>
-                        {hasItemDiscount && (
-                          <div className="discount-text">
-                            Discount - {formatToNaira(itemDiscount)}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="text-right text-[11px] price-cell">
-                      {formatToNaira(
-                        (item.selling_price || item.amount || 0) *
-                          (item.cartQuantity || 1),
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Discount section */}
-        {discount && discountAmount > 0 && (
-          <div className="summary-section">
-            <div className="summary-row flex justify-between items-center">
-              <span className="text-[11px] text-gray-500">Subtotal:</span>
-              <span className="text-[11px] font-bold">
-                {formatToNaira(subtotal)}
-              </span>
-            </div>
-            <div className="discount-row flex justify-between items-center">
-              <span className="text-[11px] text-red-600">
-                Discount (
-                {discount.type === "fixed"
-                  ? formatToNaira(Number(discount.value))
-                  : `${discount.value}%`}
-                ):
-              </span>
-              <span className="text-[11px] font-bold text-red-600">
-                -{formatToNaira(discountAmount)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* VAT Display Section */}
-        {vatInfo?.enabled && vatInfo?.amount > 0 && (
-          <div className="vat-section">
-            <div className="summary-row flex justify-between items-center">
-              <span className="text-[11px] text-gray-500">
-                Subtotal (before VAT):
-              </span>
-              <span className="text-[11px] font-bold">
-                {formatToNaira(total)}
-              </span>
-            </div>
-            <div className="vat-row flex justify-between items-center">
-              <span className="text-[11px] vat-label">
-                VAT ({vatInfo.rate}%):
-              </span>
-              <span className="text-[11px] font-bold vat-value">
-                +{formatToNaira(vatInfo.amount)}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Loyalty redemption — mirrors the PDF: the cart priced the item
-            normally, the backend zeroed it, so the total comes down here. */}
-        {loyalty.active && loyalty.discount > 0 && (
-          <div className="flex justify-between">
-            <span className="text-[11px]">{loyalty.label}:</span>
-            <span className="text-[11px]">
-              -{formatToNaira(loyalty.discount)}
-            </span>
-          </div>
-        )}
-
-        {/* Payment summary - Updated to use totalWithVat if VAT enabled */}
-        <div className="total-row">
-          <span className="text-[11px]">TOTAL:</span>
-          <span className=" text-[11px] detail-value">
-            {formatToNaira(
-              Math.max(
-                0,
-                (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
-                  loyalty.discount,
-              ),
+            {(business?.email || business?.owner?.email) && (
+              <p className="business-email text-[11px]  receipt-little text-gray-500">
+                {business?.email || business?.owner?.email}
+              </p>
             )}
-          </span>
-        </div>
+            {(business?.phone || business?.owner?.phone) && (
+              <p className="business-phone text-[11px]  receipt-little text-gray-500">
+                {business?.phone || business?.owner?.phone}
+              </p>
+            )}
+          </div>
 
-        {/* Transaction details */}
-        <div className="transaction-details">
-          <div className="detail-row flex justify-between items-center">
-            <span className="detail-label text-[11px] ">Date:</span>
-            <span className="detail-value text-[11px] ">
-              {format(
-                new Date(createSaleResponse?.data?.created_at || Date.now()),
-                "MMMM d, yyyy, h:mm a",
+          {/* Items table */}
+          <div className="items-table w-full">
+            <table className="w-full table-auto ">
+              <thead className="w-full">
+                <tr className="text-left bg-green-50 w-full">
+                  <th>ITEM</th>
+                  <th className="text-center text-[11px] ">QTY</th>
+                  <th className="text-right text-[11px] ">PRICE</th>
+                  <th className="text-right text-[11px] ">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map((item) => {
+                  const hasItemDiscount =
+                    item.type === "PRODUCT" &&
+                    item.discount_threshold &&
+                    item.discount &&
+                    (item.cartQuantity || 1) >= item.discount_threshold;
+
+                  const itemDiscount = hasItemDiscount ? item.discount : 0;
+                  const isReward = loyalty.isRewardItem(item);
+                  const hasVat = item.allow_tax && vatInfo?.enabled;
+
+                  return (
+                    <tr key={item.id}>
+                      <td className="item-name text-[11px]">
+                        <div>
+                          {item.name}
+                          {hasVat && (
+                            <span className="vat-badge ml-1">+VAT</span>
+                          )}
+                          {isReward && (
+                            <span className="reward-badge ml-1">
+                              FREE · LOYALTY
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-center text-[11px]">
+                        {item.cartQuantity || 1}
+                      </td>
+                      <td className="text-right text-[11px] price-cell">
+                        <div className="price-cell-container">
+                          <div className="price-main">
+                            {item?.selling_price
+                              ? formatToNaira(item.selling_price)
+                              : formatToNaira(Number(item.amount ?? 0))}
+                          </div>
+                          {hasItemDiscount && (
+                            <div className="discount-text">
+                              Discount - {formatToNaira(itemDiscount)}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-right text-[11px] price-cell">
+                        {formatToNaira(
+                          (item.selling_price || item.amount || 0) *
+                            (item.cartQuantity || 1),
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Discount section */}
+          {discount && discountAmount > 0 && (
+            <div className="summary-section">
+              <div className="summary-row flex justify-between items-center">
+                <span className="text-[11px] text-gray-500">Subtotal:</span>
+                <span className="text-[11px] font-bold">
+                  {formatToNaira(subtotal)}
+                </span>
+              </div>
+              <div className="discount-row flex justify-between items-center">
+                <span className="text-[11px] text-red-600">
+                  Discount (
+                  {discount.type === "fixed"
+                    ? formatToNaira(Number(discount.value))
+                    : `${discount.value}%`}
+                  ):
+                </span>
+                <span className="text-[11px] font-bold text-red-600">
+                  -{formatToNaira(discountAmount)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* VAT Display Section */}
+          {vatInfo?.enabled && vatInfo?.amount > 0 && (
+            <div className="vat-section">
+              <div className="summary-row flex justify-between items-center">
+                <span className="text-[11px] text-gray-500">
+                  Subtotal (before VAT):
+                </span>
+                <span className="text-[11px] font-bold">
+                  {formatToNaira(total)}
+                </span>
+              </div>
+              <div className="vat-row flex justify-between items-center">
+                <span className="text-[11px] vat-label">
+                  VAT ({vatInfo.rate}%):
+                </span>
+                <span className="text-[11px] font-bold vat-value">
+                  +{formatToNaira(vatInfo.amount)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Loyalty redemption — mirrors the PDF: the cart priced the item
+            normally, the backend zeroed it, so the total comes down here. */}
+          {loyalty.active && loyalty.discount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-[11px]">{loyalty.label}:</span>
+              <span className="text-[11px]">
+                -{formatToNaira(loyalty.discount)}
+              </span>
+            </div>
+          )}
+
+          {/* Payment summary - Updated to use totalWithVat if VAT enabled */}
+          <div className="total-row">
+            <span className="text-[11px]">TOTAL:</span>
+            <span className=" text-[11px] detail-value">
+              {formatToNaira(
+                Math.max(
+                  0,
+                  (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+                    loyalty.discount,
+                ),
               )}
             </span>
           </div>
-          <div className="detail-row flex justify-between items-center">
-            <span className="detail-label text-[11px] ">Receipt No:</span>
-            <span className="detail-value text-[11px] ">{receiptNumber}</span>
-          </div>
-          {customer && (
-            <div className="detail-row flex justify-between items-center">
-              <span className="detail-label text-[11px] ">Customer:</span>
-              <span className="detail-value text-[11px] ">
-                {customer?.name}
-              </span>
-            </div>
-          )}
-          {attendant && (
-            <div className="detail-row flex justify-between items-center">
-              <span className="detail-label text-[11px] ">Attendant:</span>
-              <span className="detail-value text-[11px] ">
-                {attendant?.name}
-              </span>
-            </div>
-          )}
-          {user?.role === "ATTENDANT" && (
-            <div className="detail-row flex justify-between items-center">
-              <span className="detail-label text-[11px] ">Attendant:</span>
-              <span className="detail-value text-[11px] capitalize ">
-                {user?.name}
-              </span>
-            </div>
-          )}
-        </div>
 
-        {/* Payment method */}
-        <div className="payment-method">
-          <span className="payment-method-title text-[11px]">
-            PAYMENT METHOD(S):
-          </span>
-          {multiplePayments && Object.keys(multiplePayments).length > 0 ? (
-            typeof multiplePayments === "object" &&
-            !Array.isArray(multiplePayments) ? (
-              Object.entries(multiplePayments).map(
-                ([method, amount], index) => (
+          {/* Transaction details */}
+          <div className="transaction-details">
+            <div className="detail-row flex justify-between items-center">
+              <span className="detail-label text-[11px] ">Date:</span>
+              <span className="detail-value text-[11px] ">
+                {format(
+                  new Date(createSaleResponse?.data?.created_at || Date.now()),
+                  "MMMM d, yyyy, h:mm a",
+                )}
+              </span>
+            </div>
+            <div className="detail-row flex justify-between items-center">
+              <span className="detail-label text-[11px] ">Receipt No:</span>
+              <span className="detail-value text-[11px] ">{receiptNumber}</span>
+            </div>
+            {customer && (
+              <div className="detail-row flex justify-between items-center">
+                <span className="detail-label text-[11px] ">Customer:</span>
+                <span className="detail-value text-[11px] ">
+                  {customer?.name}
+                </span>
+              </div>
+            )}
+            {attendant && (
+              <div className="detail-row flex justify-between items-center">
+                <span className="detail-label text-[11px] ">Attendant:</span>
+                <span className="detail-value text-[11px] ">
+                  {attendant?.name}
+                </span>
+              </div>
+            )}
+            {user?.role === "ATTENDANT" && (
+              <div className="detail-row flex justify-between items-center">
+                <span className="detail-label text-[11px] ">Attendant:</span>
+                <span className="detail-value text-[11px] capitalize ">
+                  {user?.name}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Payment method */}
+          <div className="payment-method">
+            <span className="payment-method-title text-[11px]">
+              PAYMENT METHOD(S):
+            </span>
+            {multiplePayments && Object.keys(multiplePayments).length > 0 ? (
+              typeof multiplePayments === "object" &&
+              !Array.isArray(multiplePayments) ? (
+                Object.entries(multiplePayments).map(
+                  ([method, amount], index) => (
+                    <div
+                      key={index}
+                      className="payment-method-entry detail-value flex justify-between w-full"
+                    >
+                      <span className="text-[10px] capitalize">
+                        {method.replace("_", " ")}:
+                      </span>
+                      <span className="text-green-600 text-[10px]">
+                        {formatToNaira(parseFloat(amount as string))}
+                      </span>
+                    </div>
+                  ),
+                )
+              ) : Array.isArray(multiplePayments) &&
+                multiplePayments.length > 0 ? (
+                multiplePayments.map((payment: any, index: number) => (
                   <div
                     key={index}
-                    className="payment-method-entry detail-value flex justify-between w-full"
+                    className="payment-method-entry flex justify-between w-full"
                   >
                     <span className="text-[10px] capitalize">
-                      {method.replace("_", " ")}:
+                      {payment.name.replace("_", " ")}:
                     </span>
                     <span className="text-green-600 text-[10px]">
-                      {formatToNaira(parseFloat(amount as string))}
+                      {formatToNaira(parseFloat(payment.amount))}
                     </span>
                   </div>
-                ),
-              )
-            ) : Array.isArray(multiplePayments) &&
-              multiplePayments.length > 0 ? (
-              multiplePayments.map((payment: any, index: number) => (
-                <div
-                  key={index}
-                  className="payment-method-entry flex justify-between w-full"
-                >
-                  <span className="text-[10px] capitalize">
-                    {payment.name.replace("_", " ")}:
-                  </span>
-                  <span className="text-green-600 text-[10px]">
-                    {formatToNaira(parseFloat(payment.amount))}
-                  </span>
-                </div>
-              ))
-            ) : null
-          ) : (
-            <span className="payment-method-value text-[11px]">
-              {(createSaleResponse?.data?.method || "cash")
-                .toUpperCase()
-                .replace("_", " ")}
-            </span>
-          )}
-        </div>
+                ))
+              ) : null
+            ) : (
+              <span className="payment-method-value text-[11px]">
+                {(createSaleResponse?.data?.method || "cash")
+                  .toUpperCase()
+                  .replace("_", " ")}
+              </span>
+            )}
+          </div>
 
-        {/* Footer */}
-        {cart.some((item) => item.type === "PRODUCT") && (
+          {/* Footer */}
+          {cart.some((item) => item.type === "PRODUCT") && (
+            <div className="receipt-footer flex justify-between flex-col items-center">
+              <p className="powered-by text-[9px] py-4 ">
+                Goods bought in good condition are not returnable.
+              </p>
+            </div>
+          )}
+
           <div className="receipt-footer flex justify-between flex-col items-center">
-            <p className="powered-by text-[9px] py-4 ">
-              Goods bought in good condition are not returnable.
+            <p className="thank-you text-[13px] ">THANK YOU!</p>
+            <p className="powered-by text-[9px] ">
+              Powered by Sync360 | www.sync360.africa
             </p>
           </div>
-        )}
-
-        <div className="receipt-footer flex justify-between flex-col items-center">
-          <p className="thank-you text-[13px] ">THANK YOU!</p>
-          <p className="powered-by text-[9px] ">
-            Powered by Sync360 | www.sync360.africa
-          </p>
         </div>
-      </div>
       </div>
 
       {/* Sticky bottom — Action buttons */}
