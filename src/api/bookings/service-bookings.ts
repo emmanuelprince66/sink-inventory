@@ -231,7 +231,12 @@ const bookingQueryKeys = {
     paymentStatus ?? "schedule",
   ],
   detail: (bookingId: string) => ["service-booking", bookingId],
-  services: (businessId: string) => ["service-catalogue", businessId],
+  services: (businessId: string, page: number, limit: number) => [
+    "service-catalogue",
+    businessId,
+    page,
+    limit,
+  ],
   schedule: (businessId: string) => ["service-schedule", businessId],
   settings: (businessId: string) => ["service-booking-settings", businessId],
   blocked: (businessId: string, date: string) => [
@@ -329,19 +334,54 @@ export const useMerchantBookingDetailQuery = (
     ...config,
   });
 
-const fetchServices = (businessId: string) =>
-  request<unknown>(`business/${businessId}/`);
+export const SERVICES_PAGE_SIZE = 100;
+
+const fetchServices = (businessId: string, page: number, limit: number) =>
+  request<unknown>(
+    `business/${businessId}?${new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    }).toString()}`,
+  );
 
 export const useServiceCatalogueQuery = (
   businessId: string,
-  config?: QueryConfigType<typeof fetchServices>,
-) =>
-  useQuery<ExtractFnReturnType<typeof fetchServices>>({
-    queryKey: bookingQueryKeys.services(businessId),
-    queryFn: () => fetchServices(businessId),
+  config?: QueryConfigType<typeof fetchServices> & {
+    page?: number;
+    limit?: number;
+  },
+) => {
+  const { page = 1, limit = SERVICES_PAGE_SIZE, ...queryConfig } = config ?? {};
+  return useQuery<ExtractFnReturnType<typeof fetchServices>>({
+    queryKey: bookingQueryKeys.services(businessId, page, limit),
+    queryFn: () => fetchServices(businessId, page, limit),
     enabled: Boolean(businessId),
-    ...config,
+    // Keep the current page on screen while the next one loads.
+    placeholderData: (previous) => previous,
+    ...queryConfig,
   });
+};
+
+/** Total pages/count from the paginated services response. Tolerates the
+ * shapes the API uses elsewhere ({ pages, total } or DRF-style { count }). */
+export const getServicePagination = (
+  response: BookingApiResponse<unknown> | undefined,
+  limit: number,
+) => {
+  const data = response?.data as
+    | { pages?: unknown; total?: unknown; count?: unknown }
+    | undefined;
+  const total = Number(data?.total ?? data?.count);
+  const pages = Number(data?.pages);
+  return {
+    total: Number.isFinite(total) ? total : undefined,
+    pages: Number.isFinite(pages) && pages > 0
+      ? pages
+      : Number.isFinite(total)
+        ? Math.max(1, Math.ceil(total / limit))
+        : 1,
+  };
+};
 
 const fetchSchedule = (businessId: string) =>
   request<{ schedules: ServiceScheduleDay[] }>(`schedule/${businessId}`);

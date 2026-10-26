@@ -13,6 +13,8 @@ import {
   getServiceRecords,
   useBookingPolicyQuery,
   useCreateServiceMutation,
+  getServicePagination,
+  SERVICES_PAGE_SIZE,
   useServiceCatalogueQuery,
   useUpdateServiceMutation,
 } from "@/api/bookings/service-bookings";
@@ -86,12 +88,15 @@ const BookingServicesManager = ({
   onCreateRequestHandled: () => void;
 }) => {
   const businessId = useBusinessStore((state) => state.business_id);
+  // Server-side pages; search below only filters the page on screen.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(SERVICES_PAGE_SIZE);
   const { showToast } = useToast();
   const { data: policyResponse } = useBookingPolicyQuery(businessId ?? "");
   const businessDepositPercentage =
     getBookingPolicy(policyResponse)?.min_deposit_percentage ?? null;
   const { data: catalogueResponse, isLoading, isError, refetch } =
-    useServiceCatalogueQuery(businessId ?? "");
+    useServiceCatalogueQuery(businessId ?? "", { page, limit: pageSize });
   const {
     data: categoryResponse,
     isFetched: categoriesFetched,
@@ -115,8 +120,6 @@ const BookingServicesManager = ({
     null,
   );
   const [form, setForm] = useState<ServiceForm>(EMPTY_FORM);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const categories: Option[] = getServiceCategoryRecords(categoryResponse);
   const staff: StaffOption[] = Array.isArray(staffResponse?.data)
     ? staffResponse.data
@@ -126,8 +129,7 @@ const BookingServicesManager = ({
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
   );
-  const totalPages = Math.max(1, Math.ceil(services.length / pageSize));
-  const pageServices = services.slice((page - 1) * pageSize, page * pageSize);
+  const { pages: totalPages } = getServicePagination(catalogueResponse, pageSize);
 
   const resolveServiceCategoryId = (service: BookingServiceRecord) => {
     const serviceCategoryId = getServiceCategoryId(service);
@@ -414,7 +416,7 @@ const BookingServicesManager = ({
       ) : (
         <CustomTable
           columns={columns}
-          data={pageServices}
+          data={services}
           loading={isLoading}
           noDataText={
             <div className="max-w-sm px-4 text-center">
@@ -572,11 +574,11 @@ const BookingServicesManager = ({
                   Enter minutes in 15-minute increments (default 30).
                 </span>
               </label>
+              <label className="block space-y-1.5 text-sm font-medium text-grey-2">
+                Slot capacity
+                <Input required type="number" min="1" step="1" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
+              </label>
             </div>
-            <label className="block space-y-1.5 text-sm font-medium text-grey-2">
-              Slot capacity
-              <Input required type="number" min="1" step="1" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} />
-            </label>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="assigned-staff" className="rounded-xl border border-grey-5 px-4">
                 <AccordionTrigger className="cursor-pointer py-3 hover:no-underline">
