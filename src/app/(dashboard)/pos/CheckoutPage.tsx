@@ -53,6 +53,14 @@ interface CheckoutPageProps {
   businessData?: any;
 }
 
+// Roles that can record which attendant served a sale.
+const ATTENDANT_PICKER_ROLES = new Set<string>([
+  "OWNER",
+  "ADMIN-ATTENDANT",
+  "INVENTORY-MANAGER",
+  "PRODUCTION-MANAGER",
+]);
+
 const CheckoutPage: React.FC<CheckoutPageProps> = ({
   clearCartFunc,
   businessData,
@@ -364,7 +372,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
             <p className="text-lg font-extrabold text-grey-1">Checkout</p>
             {/* Who serves the sale. Who it is FOR is set in the customer bar
                 above the products, since that has to come first. */}
-            {user && user?.role === "OWNER" && (
+            {user && ATTENDANT_PICKER_ROLES.has(user.role) && (
               <Button
                 onClick={() => setIsAttendantDrawerOpen(true)}
                 variant="outline"

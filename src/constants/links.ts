@@ -30,7 +30,13 @@ export const links = [
         title: "POS Terminal",
         url: "/pos",
         icon: ShoppingCart,
-        roles: ["OWNER", "ADMIN-ATTENDANT", "ATTENDANT", "PHARMACIST"],
+        roles: [
+          "OWNER",
+          "ADMIN-ATTENDANT",
+          "ATTENDANT",
+          "PHARMACIST",
+          "PRODUCTION-MANAGER",
+        ],
         permission: "process_sales", // Required permission to see this link
       },
     ],
