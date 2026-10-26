@@ -218,7 +218,18 @@ export const useBookings = () => {
       setPageSize(nextPageSize);
       setPage(1);
     },
-    stats,
+    stats: {
+      ...stats,
+      // Only the backend knows which paid bookings are still unserved.
+      unearnedRevenue: Number(payload?.summary?.unearned_revenue ?? 0),
+      // Prefer the backend's business-wide refund figures; the local ones only
+      // cover bookings in the selected range.
+      pendingRefunds:
+        payload?.summary?.pending_refunds ?? stats.pendingRefunds,
+      pendingRefundAmount: Number(
+        payload?.summary?.pending_refunds_amount ?? stats.pendingRefundAmount,
+      ),
+    },
     isLoading: isLoading || isFetching,
     error,
     refetch,

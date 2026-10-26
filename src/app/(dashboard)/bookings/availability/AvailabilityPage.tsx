@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
-import { Check, Clock3, Plus, Trash2 } from "lucide-react";
+import { Check, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import BookingPageHeader from "../BookingPageHeader";
 
@@ -27,6 +27,35 @@ const ADVANCE_OPTIONS = [7, 14, 30, 60, 90] as const;
 // 0 means no cancellations are permitted (backend semantics).
 const CANCELLATION_OPTIONS = [0, 2, 24, 48, 72] as const;
 const DEFAULT_MIN_DEPOSIT_PERCENTAGE = 30;
+
+// The merchant picks exactly one payment option; the API still stores three
+// booleans, so a choice is written as one true and two false.
+type PaymentChoice = "allow_full_payment" | "allow_deposit" | "allow_pay_at_business";
+const PAYMENT_OPTIONS: { key: PaymentChoice; title: string; description: string }[] = [
+  {
+    key: "allow_full_payment",
+    title: "Full Payment",
+    description: "Customer pays the full amount at booking.",
+  },
+  {
+    key: "allow_deposit",
+    title: "Deposit",
+    description: "Collect a partial deposit to secure the slot.",
+  },
+  {
+    key: "allow_pay_at_business",
+    title: "Pay at Business",
+    description: "Customer pays on arrival. No online payment required.",
+  },
+];
+// Older settings may have several enabled; show the first in this order.
+const getPaymentChoice = (policy: BookingPolicy): PaymentChoice =>
+  PAYMENT_OPTIONS.find(({ key }) => policy[key])?.key ?? "allow_full_payment";
+const paymentChoiceFlags = (choice: PaymentChoice) => ({
+  allow_full_payment: choice === "allow_full_payment",
+  allow_deposit: choice === "allow_deposit",
+  allow_pay_at_business: choice === "allow_pay_at_business",
+});
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DEFAULT_SCHEDULE: ServiceScheduleDay[] = DAYS.map((_, day_of_week) => ({
   day_of_week,
@@ -41,8 +70,8 @@ const DEFAULT_POLICY: BookingPolicy = {
   max_advance_days: 30,
   cancellation_window_hours: 2,
   allow_full_payment: true,
-  allow_deposit: true,
-  allow_pay_at_business: true,
+  allow_deposit: false,
+  allow_pay_at_business: false,
   min_deposit_percentage: DEFAULT_MIN_DEPOSIT_PERCENTAGE,
   is_deposit_non_refundable: false,
   custom_policy_text: "",
@@ -174,6 +203,7 @@ const AvailabilityPage = () => {
           businessId,
           payload: {
             ...policy,
+            ...paymentChoiceFlags(getPaymentChoice(policy)),
             min_deposit_percentage: minDepositPercentage,
             custom_policy_text: policy.custom_policy_text?.trim() || null,
           },
@@ -220,10 +250,7 @@ const AvailabilityPage = () => {
         <>
           <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
             <div className="mb-4">
-              <h2 className="font-extrabold text-grey-1">Weekly schedule</h2>
-              <p className="mt-1 text-xs text-grey-3">
-                Turn a day off or set the hours customers can choose.
-              </p>
+              <h2 className="font-extrabold text-grey-1">Weekly Schedule</h2>
             </div>
             <div className="space-y-3">
               {schedule.map((day) => (
@@ -352,36 +379,43 @@ const AvailabilityPage = () => {
           </section>
 
           <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
-            <div className="mb-4 flex items-center gap-2">
-              <Clock3 className="h-4 w-4 text-primary-green-300" />
-              <h2 className="font-extrabold text-grey-1">Booking interval</h2>
-            </div>
-            <p className="mb-3 text-xs text-grey-3">
-              How often a new appointment start time is offered.
+            <h2 className="font-extrabold text-grey-1">Booking Interval</h2>
+            <p className="mb-3 mt-1 text-xs text-grey-3">
+              How often should time slots appear for booking?
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {INTERVALS.map((interval) => (
-                <button
-                  key={interval}
-                  type="button"
-                  onClick={() => updateDraft({ booking_interval: interval })}
-                  className={`cursor-pointer rounded-xl border px-3 py-2.5 text-sm font-bold transition-colors ${
-                    policy.booking_interval === interval
-                      ? "border-primary-green-300 bg-secondary-6 text-primary-green-300"
-                      : "border-grey-5 text-grey-2 hover:bg-grey-6"
-                  }`}
-                >
-                  {interval} min
-                </button>
-              ))}
+            <div
+              role="radiogroup"
+              aria-label="Booking interval"
+              className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+            >
+              {INTERVALS.map((interval) => {
+                const selected = policy.booking_interval === interval;
+                return (
+                  <button
+                    key={interval}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => updateDraft({ booking_interval: interval })}
+                    className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-sm font-bold transition-colors ${
+                      selected
+                        ? "border-primary-green-300 bg-secondary-6 text-grey-1"
+                        : "border-grey-5 text-grey-2 hover:bg-grey-6"
+                    }`}
+                  >
+                    <RadioDot selected={selected} />
+                    {interval} min
+                  </button>
+                );
+              })}
             </div>
           </section>
 
           <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
-            <h2 className="mb-4 font-extrabold text-grey-1">Booking rules</h2>
+            <h2 className="mb-4 font-extrabold text-grey-1">Booking Rules</h2>
             <div className="grid gap-4 sm:grid-cols-3">
               <NumberSelect
-                label="Minimum booking notice"
+                label="Minimum Booking Notice"
                 value={policy.min_notice_hours}
                 options={NOTICE_OPTIONS.map((value) => ({
                   value,
@@ -390,7 +424,7 @@ const AvailabilityPage = () => {
                 onChange={(value) => updateDraft({ min_notice_hours: value })}
               />
               <NumberSelect
-                label="Book ahead"
+                label="How Far Ahead Can Customers Book?"
                 value={policy.max_advance_days}
                 options={ADVANCE_OPTIONS.map((value) => ({
                   value,
@@ -399,11 +433,11 @@ const AvailabilityPage = () => {
                 onChange={(value) => updateDraft({ max_advance_days: value })}
               />
               <NumberSelect
-                label="Cancellation notice"
+                label="Cancellation Window"
                 value={policy.cancellation_window_hours}
                 options={CANCELLATION_OPTIONS.map((value) => ({
                   value,
-                  label: value === 0 ? "No cancellations" : `${value} hours before`,
+                  label: value === 0 ? "No cancellations" : `${value} hours before appointment`,
                 }))}
                 onChange={(value) =>
                   updateDraft({ cancellation_window_hours: value })
@@ -413,49 +447,25 @@ const AvailabilityPage = () => {
           </section>
 
           <section className="rounded-2xl border border-grey-5 bg-white p-4 sm:p-6">
-            <h2 className="mb-1 font-extrabold text-grey-1">Payment options</h2>
-            <p className="mb-4 text-xs text-grey-3">
-              Choose how customers pay for a booking.
-            </p>
-            <div className="grid gap-3">
-              {([
-                {
-                  key: "allow_full_payment",
-                  title: "Full payment",
-                  description: "Allow customers to pay the full amount online.",
-                },
-                {
-                  key: "allow_deposit",
-                  title: "Deposit",
-                  description:
-                    "Allow a partial deposit to secure a booking. Each service sets its own minimum deposit percentage.",
-                },
-                {
-                  key: "allow_pay_at_business",
-                  title: "Pay at business",
-                  description: "Allow customers to pay when they arrive.",
-                },
-              ] as const).map((option) => {
-                const selected = policy[option.key];
+            <h2 className="mb-4 font-extrabold text-grey-1">Payment Options</h2>
+            <div role="radiogroup" aria-label="Payment options" className="grid gap-3">
+              {PAYMENT_OPTIONS.map((option) => {
+                const selected = getPaymentChoice(policy) === option.key;
                 return (
                   <button
                     key={option.key}
                     type="button"
-                    onClick={() => updateDraft({ [option.key]: !selected })}
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => updateDraft(paymentChoiceFlags(option.key))}
                     className={`flex w-full cursor-pointer items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
                       selected
                         ? "border-primary-green-300 bg-secondary-6/70 shadow-sm"
                         : "border-grey-5 bg-white hover:border-grey-4 hover:bg-grey-6"
                     }`}
                   >
-                    <span
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                        selected
-                          ? "border-primary-green-300 bg-primary-green-300 text-white"
-                          : "border-grey-4 bg-white"
-                      }`}
-                    >
-                      {selected && <Check className="h-3 w-3" />}
+                    <span className="mt-0.5">
+                      <RadioDot selected={selected} />
                     </span>
                     <span>
                       <span className="block text-sm font-bold text-grey-1">
@@ -470,7 +480,7 @@ const AvailabilityPage = () => {
               })}
             </div>
 
-            {policy.allow_deposit && (
+            {getPaymentChoice(policy) === "allow_deposit" && (
               <div className="mt-4 grid gap-4 rounded-xl border border-grey-5 bg-grey-6/50 p-4 sm:grid-cols-2 sm:items-start">
                 <label className="block space-y-1.5 text-sm font-semibold text-grey-2">
                   Default deposit (%)
@@ -582,6 +592,17 @@ const AvailabilitySkeleton = () => (
       </section>
     ))}
   </>
+);
+
+const RadioDot = ({ selected }: { selected: boolean }) => (
+  <span
+    aria-hidden
+    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+      selected ? "border-primary-green-300" : "border-grey-4 bg-white"
+    }`}
+  >
+    {selected && <span className="h-2 w-2 rounded-full bg-primary-green-300" />}
+  </span>
 );
 
 const NumberSelect = ({

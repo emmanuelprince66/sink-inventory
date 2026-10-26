@@ -17,7 +17,7 @@ import {
 import { format } from "date-fns";
 import { Download, PlusCircle, Printer } from "lucide-react";
 import printJS from "print-js";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { isRewardLine } from "./loyaltyReward";
 
 // Register fonts with all necessary variants
@@ -831,6 +831,39 @@ const ReceiptPDFDocument = ({
   }
 };
 
+// Sales whose receipt already opened the print dialog. Kept in localStorage
+// too (last 50) because the receipt view survives a page refresh.
+const AUTO_PRINTED_KEY = "pos:auto-printed-sales";
+const autoPrintedSales = new Set<string>();
+
+const hasAutoPrinted = (saleId: string) => {
+  if (autoPrintedSales.has(saleId)) return true;
+  try {
+    const stored: unknown = JSON.parse(
+      localStorage.getItem(AUTO_PRINTED_KEY) ?? "[]",
+    );
+    return Array.isArray(stored) && stored.includes(saleId);
+  } catch {
+    return false;
+  }
+};
+
+const markAutoPrinted = (saleId: string) => {
+  autoPrintedSales.add(saleId);
+  try {
+    const stored: unknown = JSON.parse(
+      localStorage.getItem(AUTO_PRINTED_KEY) ?? "[]",
+    );
+    const ids = Array.isArray(stored) ? stored : [];
+    localStorage.setItem(
+      AUTO_PRINTED_KEY,
+      JSON.stringify([...ids.filter((id) => id !== saleId), saleId].slice(-50)),
+    );
+  } catch {
+    // Storage blocked: the in-memory set still covers this session.
+  }
+};
+
 const PrintReceiptView = ({
   setShowReceipt,
   setShowPrintReceiptView,
@@ -938,6 +971,25 @@ const PrintReceiptView = ({
       setIsPrinting(false);
     }
   };
+
+  // Open the print dialog as soon as a new sale's receipt shows, so the
+  // cashier only has to confirm it. Once per sale: the receipt view is
+  // persisted in the cart store, so a refresh or cart switch remounts it.
+  const saleId: string | undefined = createSaleResponse?.data?.id;
+  useEffect(() => {
+    if (!saleId || !business || hasAutoPrinted(saleId)) return;
+    // Short delay lets the receipt (logo, fonts) finish rendering. Marked
+    // printed only when it fires, so StrictMode's mount/unmount/mount still
+    // prints exactly once.
+    const timer = setTimeout(() => {
+      if (hasAutoPrinted(saleId)) return;
+      markAutoPrinted(saleId);
+      handlePrint();
+    }, 400);
+    return () => clearTimeout(timer);
+    // handlePrint reads the live receiptRef, so it doesn't need to be a dep.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saleId, Boolean(business)]);
 
   // Handle new sale
   const handleNewSale = () => {

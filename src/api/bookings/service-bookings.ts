@@ -140,6 +140,8 @@ export type MerchantBookingsResponse = {
     today_bookings: number;
     upcoming: number;
     today_revenue: number;
+    /** Paid in advance for bookings not yet served. */
+    unearned_revenue?: number;
     pending: number;
     pending_refunds: number;
     pending_refunds_amount: number;
@@ -271,6 +273,45 @@ export const useMerchantBookingsQuery = (
     ),
     queryFn: () => fetchBookings(businessId, startDate, endDate, paymentStatus),
     enabled: Boolean(businessId && startDate && endDate),
+    ...config,
+  });
+
+export type RefundStatusFilter = "REFUND_PENDING" | "REFUNDED" | "REFUND";
+
+const fetchRefunds = (
+  businessId: string,
+  paymentStatus: RefundStatusFilter,
+  startDate?: string,
+  endDate?: string,
+) => {
+  const query = new URLSearchParams({ payment_status: paymentStatus });
+  // Date range is optional here, unlike the schedule view.
+  if (startDate) query.set("start_date", startDate);
+  if (endDate) query.set("end_date", endDate);
+  return request<MerchantBookingsResponse>(
+    `bookings/business/${businessId}?${query.toString()}`,
+  );
+};
+
+export const useMerchantRefundsQuery = (
+  businessId: string,
+  paymentStatus: RefundStatusFilter,
+  startDate?: string,
+  endDate?: string,
+  config?: QueryConfigType<typeof fetchRefunds>,
+) =>
+  useQuery<ExtractFnReturnType<typeof fetchRefunds>>({
+    // Under bookingQueryKeys.all so disbursing a refund invalidates it.
+    queryKey: [
+      ...bookingQueryKeys.all,
+      "refunds",
+      businessId,
+      paymentStatus,
+      startDate ?? "",
+      endDate ?? "",
+    ],
+    queryFn: () => fetchRefunds(businessId, paymentStatus, startDate, endDate),
+    enabled: Boolean(businessId),
     ...config,
   });
 

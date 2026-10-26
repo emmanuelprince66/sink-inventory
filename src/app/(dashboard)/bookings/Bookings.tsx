@@ -19,6 +19,7 @@ import {
   Banknote,
   ExternalLink,
   Plus,
+  RotateCcw,
   ShieldBan,
   WalletCards,
 } from "lucide-react";
@@ -128,8 +129,6 @@ const Bookings = () => {
     error,
     refetch,
     hasBusiness,
-    refundQueueActive,
-    toggleRefundQueue,
     statusCounts,
     statusFilter,
     setStatusFilter,
@@ -223,22 +222,22 @@ const Bookings = () => {
               tone="green"
             />
             <MetricCard
+              label="Unearned revenue"
+              value={formatCurrency(stats.unearnedRevenue)}
+              icon={Banknote}
+              tone="purple"
+            />
+            <MetricCard
               label="Pending bookings"
               value={stats.pending}
               icon={Clock3}
               tone="amber"
             />
             <MetricCard
-              label="Pending refunds"
-              value={stats.pendingRefunds}
+              label={`Pending refunds (${stats.pendingRefunds})`}
+              value={formatCurrency(stats.pendingRefundAmount)}
               icon={CircleAlert}
               tone="amber"
-            />
-            <MetricCard
-              label="Refund amount due"
-              value={formatCurrency(stats.pendingRefundAmount)}
-              icon={Banknote}
-              tone="purple"
             />
           </>
         )}
@@ -308,17 +307,22 @@ const Bookings = () => {
 
         <div className="flex items-center justify-between gap-3 border-b border-grey-5 px-4 py-3 sm:px-5">
           <span className="text-sm font-semibold text-grey-2">
-            {refundQueueActive ? "Pending refund queue" : "Appointments"}
+            Appointments
           </span>
           <Button
             type="button"
-            variant={refundQueueActive ? "default" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={toggleRefundQueue}
+            onClick={() => router.push("/bookings/refunds")}
             className="shrink-0"
           >
-            <CircleAlert className="h-4 w-4" />
-            {refundQueueActive ? "Show schedule" : `Refunds (${stats.pendingRefunds})`}
+            <RotateCcw className="h-4 w-4" />
+            Refunds
+            {stats.pendingRefunds > 0 && (
+              <span className="rounded-full bg-warning-2 px-1.5 py-0.5 text-[10px] font-extrabold text-warning-1">
+                {stats.pendingRefunds}
+              </span>
+            )}
           </Button>
         </div>
 
@@ -370,7 +374,7 @@ const Bookings = () => {
 
       <section
         aria-label="Booking management"
-        className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4"
       >
         <ManagementLink
           onClick={() => router.push("/inventory?tab=services")}
@@ -389,6 +393,12 @@ const Bookings = () => {
           icon={ShieldBan}
           title="Block time"
           description="Prevent bookings during selected periods"
+        />
+        <ManagementLink
+          onClick={() => router.push("/bookings/refunds")}
+          icon={RotateCcw}
+          title="Refunds"
+          description="Track and record refunds to customers"
         />
       </section>
     </div>
