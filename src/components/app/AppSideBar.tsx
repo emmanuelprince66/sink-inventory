@@ -48,7 +48,6 @@ const exactOrNested = (pathname: string, url: string) =>
   pathname === url || pathname.startsWith(`${url}/`);
 
 /**
- * Keyed by the `title` in links.ts (must match exactly).
  * Render order is NOT decided here; it follows the order of the `links` array.
  */
 const COLLAPSIBLE_GROUPS: Record<string, CollapsibleGroupConfig> = {
