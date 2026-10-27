@@ -36,6 +36,7 @@ export const links = [
           "ATTENDANT",
           "PHARMACIST",
           "PRODUCTION-MANAGER",
+          "INVENTORY-MANAGER",
         ],
         permission: "process_sales", // Required permission to see this link
       },
