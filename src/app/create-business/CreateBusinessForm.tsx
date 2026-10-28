@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 
+import { PhoneInput } from "@/components/app/PhoneInput";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
@@ -279,11 +280,13 @@ const CreateBusinessForm = ({
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input
-                      type="tel"
-                      placeholder="+234 800 000 0000"
-                      maxLength={15}
-                      {...field}
+                    <PhoneInput
+                      international
+                      defaultCountry="NG"
+                      value={field.value || undefined}
+                      onChange={(value) => field.onChange(value || "")}
+                      onBlur={field.onBlur}
+                      placeholder="Enter phone number"
                     />
                   </FormControl>
                   <FormMessage />

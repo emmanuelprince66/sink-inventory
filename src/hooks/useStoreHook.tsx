@@ -26,6 +26,7 @@ const resolveStoreThemeHex = (value?: string | null): string => {
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { compressImage } from "@/utils/compressImage";
 import { getStoreUrl } from "@/utils/storeUrl";
+import { PHONE_FORMAT_HINT, toE164Phone } from "@/utils/phone";
 import { isValidPhoneNumber } from "react-phone-number-input";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
@@ -245,8 +246,8 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
         // Prefer the direct business-level fields (current schema). Fall
         // back to owner.* for older API responses where they lived on the
         // owner relationship.
-        phone: findBusiness.phone || findBusiness.owner?.phone || "",
-        whatsappNumber: findBusiness.whatsapp_number || "",
+        phone: toE164Phone(findBusiness.phone || findBusiness.owner?.phone),
+        whatsappNumber: toE164Phone(findBusiness.whatsapp_number),
         email: findBusiness.email || findBusiness.owner?.email || "",
         address: findBusiness.street || "",
         city: findBusiness.city || "",
@@ -303,9 +304,8 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
     }
 
     // Phone validation
-    const phoneRegex = /^[\d\s\+\-\(\)]+$/;
-    if (formData.phone && !phoneRegex.test(formData.phone)) {
-      newErrors.phone = "Invalid phone number format";
+    if (formData.phone && !isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = PHONE_FORMAT_HINT;
     }
     if (!formData.phone.trim()) {
       newErrors.phone = "Contact phone is required";
@@ -639,7 +639,6 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
       // Call the mutation
       updateBusiness(formDataToSend, {
         onSuccess: (data) => {
-          showToast(data?.message, "success");
           console.log("Business updated successfully:", data);
           setStoreData(formData);
           setIsSubmitting(false);
@@ -647,7 +646,6 @@ export const useStoreHook = ({ setIsEditing }: { setIsEditing: any }) => {
           refetch();
         },
         onError: (error) => {
-          showToast("Something went wrong. please try again!", "error");
           console.error("Error submitting form:", error);
           setIsSubmitting(false);
         },

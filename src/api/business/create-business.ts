@@ -3,6 +3,7 @@ import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 import { useQueryClient } from "@tanstack/react-query";
+import { friendlyBusinessError } from "@/utils/phone";
 
 const createBusiness = async (body: any) => {
   const response = await fetch(`/api/businesses/create-business`, {
@@ -88,13 +89,10 @@ export const useCreateBusinessMutation = (config?: CreateBusinessProps) => {
       const isSubscriptionError = handleSubscriptionError(error);
 
       if (!isSubscriptionError) {
-        const errorMessage =
-          error?.details?.message ||
-          error?.error ||
-          error?.message ||
-          "Error creating business";
-
-        showToast(errorMessage, "error");
+        showToast(
+          friendlyBusinessError(error, "Couldn't create your business. Please try again."),
+          "error",
+        );
       }
       config?.onError?.(error, variables, context);
     },
@@ -117,13 +115,10 @@ export const useUpdateBusinessMutation = (config?: UpdateBusinessProps) => {
     onError: (error: any, variables: any, context: any) => {
       console.log("Error updating business:", error);
 
-      const errorMessage =
-        error?.details?.message ||
-        error?.error ||
-        error?.message ||
-        "Error updating business";
-
-      showToast(errorMessage, "error");
+      showToast(
+        friendlyBusinessError(error, "Couldn't save your changes. Please try again."),
+        "error",
+      );
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

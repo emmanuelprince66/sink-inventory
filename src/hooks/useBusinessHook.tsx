@@ -16,6 +16,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { PHONE_FORMAT_HINT, toE164Phone } from "@/utils/phone";
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -29,8 +31,7 @@ const businessSchema = z.object({
   street: z.string().min(1, "Street is required"),
   phone: z
     .string()
-    .max(15, "Phone must not exceed 15 characters")
-    .regex(/^[\d\s+\-()]*$/, "Invalid phone number format")
+    .refine((value) => !value || isValidPhoneNumber(value), PHONE_FORMAT_HINT)
     .optional()
     .or(z.literal("")),
   email: z
@@ -252,7 +253,7 @@ export const useBusinessHook = ({
         city: d.city ?? "",
         street: d.street ?? "",
         // Prefer the direct field, fall back to owner.* for backwards compat.
-        phone: d.phone ?? d.owner?.phone ?? "",
+        phone: toE164Phone(d.phone ?? d.owner?.phone),
         email: d.email ?? d.owner?.email ?? "",
         delivery_days: Array.isArray(d.delivery_days) ? d.delivery_days : [],
       });

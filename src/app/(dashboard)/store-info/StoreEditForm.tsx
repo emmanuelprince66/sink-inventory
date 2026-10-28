@@ -424,11 +424,13 @@ export default function StoreEditForm({ setIsEditing }: any) {
                 <Label htmlFor="phone" className="font-bold">
                   Contact Phone <span className="text-error-1">*</span>
                 </Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="+1 (555) 123-4567"
+                  international
+                  defaultCountry="NG"
+                  value={formData.phone || undefined}
+                  onChange={(value) => handleInputChange("phone", value || "")}
+                  placeholder="Enter phone number"
                   className={errors.phone ? "border-error-1" : ""}
                   disabled={isSubmitting}
                 />
