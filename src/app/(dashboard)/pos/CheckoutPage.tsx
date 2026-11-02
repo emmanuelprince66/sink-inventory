@@ -1,8 +1,14 @@
 "use client";
+import { allowsSalesWithoutStock, maxSellableQuantity } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
+import {
+  getLineDiscount,
+  useActiveCartState,
+  useCartStore,
+} from "@/lib/store/cart-store";
+import { describeDiscount } from "@/utils/discountTiers";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -66,6 +72,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   businessData,
 }) => {
   console.log("businessData in checkout", businessData);
+  const allowOversell = allowsSalesWithoutStock(businessData);
 
   // ---- Per-sale state (lives in active cart slot — isolated per Sale tab) ----
   const { state: cartState, update: updateCartState } = useActiveCartState();
@@ -303,7 +310,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const roundedValue = Math.round(numValue * 2) / 2;
     const item = cartItems.find((item) => item.id === itemId);
     if (!item) return;
-    const availableQuantity = item.quantity ?? 999;
+    const availableQuantity = maxSellableQuantity(item.quantity, allowOversell);
     updateCartItemQuantity(
       itemId,
       Math.min(Math.max(roundedValue, 0.5), availableQuantity),
@@ -529,6 +536,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     }
 
                     const discountInfo = getItemDiscountDisplay(item);
+                    const upsell = getLineDiscount(item)?.nextTierUpsell;
                     const bulkError = bulkQuantityErrors[item.id];
                     const priceError = priceEditErrors[item.id];
                     const isEditingPrice = editingPriceId === item.id;
@@ -640,15 +648,45 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               </p>
                             )}
                             {item.quantity !== undefined && (
-                              <p className="text-[10px] text-grey-4 mt-0.5">
+                              <p
+                                className={`text-[10px] mt-0.5 ${
+                                  item.quantity <= 0
+                                    ? "font-bold text-error-1"
+                                    : "text-grey-4"
+                                }`}
+                              >
                                 Available: {item.quantity}
                               </p>
                             )}
-                            {item.discount_threshold && (
+                            {/* Volume discount: the tier now applied, and how
+                                many more units reach the next one. */}
+                            {discountInfo?.tier && discountInfo.tierNumber && (
+                              <span className="inline-block mt-1 rounded-full bg-success-2 px-2 py-0.5 text-[10px] font-bold text-success-1">
+                                Tier {discountInfo.tierNumber}:{" "}
+                                {describeDiscount(
+                                  discountInfo.tier.discount_type,
+                                  discountInfo.tier.discount_value,
+                                )}{" "}
+                                applied
+                              </span>
+                            )}
+                            {upsell && (
                               <p className="text-[10px] text-info-1 mt-0.5">
-                                Discount threshold: {item.discount_threshold}
+                                Add {upsell.unitsNeeded} more for{" "}
+                                {describeDiscount(
+                                  upsell.potentialDiscountType,
+                                  upsell.potentialDiscountValue,
+                                )}
                               </p>
                             )}
+                            {!item.discount_thresholds?.length &&
+                              item.discount_threshold &&
+                              !discountInfo && (
+                                <p className="text-[10px] text-info-1 mt-0.5">
+                                  {item.discount}% off from{" "}
+                                  {item.discount_threshold} units
+                                </p>
+                              )}
                             {discountInfo && (
                               <div className="text-[10px] text-success-1 font-bold mt-0.5">
                                 <p>
@@ -701,10 +739,12 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               variant="outline"
                               size="icon"
                               className="h-8 w-8 cursor-pointer rounded-full border-primary-green-300/30 bg-white hover:border-primary-green-300 hover:bg-secondary-6"
-                              onClick={() => incrementQuantity(item.id)}
+                              onClick={() =>
+                                incrementQuantity(item.id, allowOversell)
+                              }
                               disabled={
                                 (item.cartQuantity || 1) >=
-                                (item.quantity ?? Infinity)
+                                maxSellableQuantity(item.quantity, allowOversell)
                               }
                             >
                               <PlusCircle
@@ -791,11 +831,11 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 size="icon"
                                 className="h-6 w-6 cursor-pointer border-grey-6 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
-                                  incrementDecimalQuantity(item.id)
+                                  incrementDecimalQuantity(item.id, allowOversell)
                                 }
                                 disabled={
                                   (item.cartQuantity || 0.5) >=
-                                  (item.quantity ?? Infinity)
+                                  maxSellableQuantity(item.quantity, allowOversell)
                                 }
                               >
                                 <PlusCircle

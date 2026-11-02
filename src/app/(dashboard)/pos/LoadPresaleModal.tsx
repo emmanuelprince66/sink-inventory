@@ -1,4 +1,5 @@
 "use client";
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
 import { useFetchPresaleQuery } from "@/api/sales/use-presale";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
@@ -21,6 +22,7 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
   onClose,
   onAddToCart,
 }) => {
+  const allowOversell = useAllowSalesWithoutStock();
   const [presaleCode, setPresaleCode] = useState("");
   const [fetchEnabled, setFetchEnabled] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
@@ -72,7 +74,7 @@ const LoadPresaleModal: React.FC<LoadPresaleModalProps> = ({
 
           const maxQuantity =
             product.stock_quantity || product.available_quantity || 999;
-          if (newQuantity > maxQuantity) {
+          if (!allowOversell && newQuantity > maxQuantity) {
             showToast(
               `Maximum available quantity is ${maxQuantity}`,
               "warning",

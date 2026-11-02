@@ -27,6 +27,7 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import RejectTransferDialog from "../approvals/RejectTransferDialog";
+import { canCurrentUserApprove } from "@/types/expense-governance";
 import {
   getCategoryMeta,
   getDecidedBy,
@@ -80,7 +81,8 @@ const ExpenseTransactionsView = ({
    * the approval cap and the rule that nobody approves what they raised.
    * Re-deriving any of that here could only disagree with it.
    */
-  const canDecide = (row: any) => row?.can_current_user_approve === true;
+  const canDecide = (row: any) =>
+    canCurrentUserApprove(row?.can_current_user_approve);
 
   const deciding = (row: any) =>
     (approvePending && approving?.id === row.id) ||

@@ -1,3 +1,5 @@
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { isUnsellable, maxSellableQuantity } from "@/utils/stock";
 import { Button } from "@/components/ui/button";
 import { formatToNaira } from "@/utils/formatMoney";
 import { Check, Minus, Plus } from "lucide-react";
@@ -49,6 +51,7 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
   availableVariations,
   onChangeVariation,
 }) => {
+  const allowOversell = useAllowSalesWithoutStock();
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null,
   );
@@ -91,8 +94,7 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 max-h-[60vh]">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             {availableVariations?.map((variation) => {
-              const isOutOfStock =
-                variation.quantity === 0 || variation.status === "OUT-OF-STOCK";
+              const isOutOfStock = isUnsellable(variation, allowOversell);
               const isSelected = selectedVariation?.id === variation.id;
 
               return (
@@ -164,7 +166,13 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
                 <button
                   onClick={() =>
                     setQuantity(
-                      Math.min(selectedVariation.quantity, quantity + 1),
+                      Math.min(
+                        maxSellableQuantity(
+                          selectedVariation.quantity,
+                          allowOversell,
+                        ),
+                        quantity + 1,
+                      ),
                     )
                   }
                   className="p-1.5 sm:p-2 rounded hover:bg-gray-200 transition-colors"

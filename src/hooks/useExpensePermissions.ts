@@ -45,10 +45,15 @@ const capOf = (value: unknown, isOwner: boolean): number | null => {
 export const useExpensePermissions = (): ExpensePermissions => {
   const { can, permissions, role } = useUserRole();
   const isOwner = role === "OWNER";
+  // Accountants can see and approve expenses/transfers by role (backend rule),
+  // with no per-staff flag. Whether a given item is approvable — including
+  // the ban on approving your own expense or transfer — still comes from each
+  // item's can_current_user_approve.
+  const isAccountant = role === "ACCOUNTANT";
 
   const canLog = can("can_log_expenses");
   const canTransfer = can("can_initiate_expense_transfer");
-  const canApprove = can("can_approve_expenses");
+  const canApprove = can("can_approve_expenses") || isAccountant;
 
   return {
     canLog,

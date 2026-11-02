@@ -1,6 +1,14 @@
 "use client";
 
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { isUnsellable, maxSellableQuantity } from "@/utils/stock";
 import { formatToNaira } from "@/utils/formatMoney";
+import {
+  DiscountThreshold,
+  describeDiscount,
+  sortTiers,
+  tierRangeLabel,
+} from "@/utils/discountTiers";
 import { Check, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -15,6 +23,7 @@ interface Variation {
   cost_price?: number;
   discount?: number;
   discount_threshold?: number;
+  discount_thresholds?: DiscountThreshold[];
   expiry_date?: string;
   low_stock_threshold?: number;
   sold?: number;
@@ -35,6 +44,7 @@ interface Product {
   unit?: string;
   discount?: number;
   discount_threshold?: number;
+  discount_thresholds?: DiscountThreshold[];
 }
 
 interface VariationSelectorModalProps {
@@ -50,6 +60,7 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
   product,
   onAddVariations,
 }) => {
+  const allowOversell = useAllowSalesWithoutStock();
   const [selectedVariations, setSelectedVariations] = useState<
     Record<string, number>
   >({});
@@ -69,7 +80,7 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
     setSelectedVariations((prev) => {
       const currentQty = prev[variationId] || 0;
       const variation = product.variations?.find((v) => v.id === variationId);
-      const maxQty = variation?.quantity || 0;
+      const maxQty = maxSellableQuantity(variation?.quantity, allowOversell);
       const newQty = Math.max(0, Math.min(currentQty + change, maxQty));
 
       if (newQty === 0) {
@@ -124,10 +135,12 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
       <div className="max-h-[60vh] overflow-y-auto mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {product.variations?.map((variation) => {
-            const isOutOfStock =
-              variation.quantity === 0 || variation.status === "OUT-OF-STOCK";
+            const isOutOfStock = isUnsellable(variation, allowOversell);
             const selectedQty = selectedVariations[variation.id] || 0;
-            const maxQuantity = variation.quantity || 0;
+            const maxQuantity = maxSellableQuantity(
+              variation.quantity,
+              allowOversell,
+            );
 
             return (
               <div
@@ -165,7 +178,23 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
                   </p>
                 </div>
 
-                {variation.discount && variation.discount_threshold && (
+                {variation.discount_thresholds?.length ? (
+                  <p className="text-xs text-blue-600 mb-2">
+                    {sortTiers(variation.discount_thresholds)
+                      .map(
+                        (tier) =>
+                          `${tierRangeLabel(tier)}: ${describeDiscount(
+                            tier.discount_type,
+                            tier.discount_value,
+                          )}`,
+                      )
+                      .join(" · ")}
+                  </p>
+                ) : null}
+
+                {!variation.discount_thresholds?.length &&
+                  variation.discount &&
+                  variation.discount_threshold && (
                   <p className="text-xs text-blue-600 mb-2">
                     {variation.discount}% off on {variation.discount_threshold}+
                     items

@@ -1,3 +1,4 @@
+import { DiscountThreshold, describeDiscount, sortTiers, tierRangeLabel } from "@/utils/discountTiers";
 import { Button } from "@/components/ui/button";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -60,7 +61,14 @@ const ViewDetails = ({
                 value={data?.sku || data?.id?.split("-")[0] || "N/A"}
               />
               <DetailItem label="Category" value={data?.category || "N/A"} />
-              <DetailItem label="Stock" value={data?.quantity || "0"} />
+              <DetailItem
+                label="Stock"
+                value={
+                  Number(data?.quantity) < 0
+                    ? `\u2212${Math.abs(Number(data.quantity))} (oversold)`
+                    : data?.quantity || "0"
+                }
+              />
               <DetailItem label="Total Sold" value={data?.sold || "0"} />
               <DetailItem
                 label="Low Stock Alert"
@@ -91,17 +99,25 @@ const ViewDetails = ({
                   data?.cost_price ? formatToNaira(data.cost_price) : "N/A"
                 }
               />
-              <DetailItem
-                label="Discount"
-                value={data?.discount ? `${data.discount}%` : "N/A"}
-              />
               <DetailItem label="Selling Price" value={sellingPriceDisplay} />
               <DetailItem
-                label="Discount Threshold"
+                label="Bulk Discounts"
+                spanFull
                 value={
-                  data?.discount_threshold
-                    ? `${data.discount_threshold} units`
-                    : "N/A"
+                  data?.discount_thresholds?.length
+                    ? sortTiers(data.discount_thresholds)
+                        .map(
+                          (tier: DiscountThreshold) =>
+                            `${tierRangeLabel(tier)} units: ${describeDiscount(
+                              tier.discount_type,
+                              tier.discount_value,
+                            )}`,
+                        )
+                        .join(" · ")
+                    : Number(data?.discount) > 0 &&
+                        Number(data?.discount_threshold) > 0
+                      ? `${data.discount_threshold}+ units: ${Number(data.discount)}% off`
+                      : "N/A"
                 }
               />
               <DetailItem label="Total Stock Value" value="N/A" spanFull />

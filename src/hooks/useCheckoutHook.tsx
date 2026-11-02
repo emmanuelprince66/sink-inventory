@@ -4,6 +4,10 @@ import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
 import { useCreateSalesMutation } from "@/api/sales/create-sales";
 import { queryKey } from "@/constants/query-key";
+import {
+  queueOfflineSale,
+  QueuedOfflineSale,
+} from "@/lib/offline/offlineSales";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
@@ -106,9 +110,68 @@ export const useCheckoutHook = ({
       closeSureModal();
       setShowPrintReceiptView(true);
     },
+    // Replaces the wrapper's onError (config is spread after it), so this
+    // toasts too. When "sell without stock" is off and the cart asks for more
+    // than is left, the backend names the item and what remains: drop that
+    // line to the available amount so the cashier can just retry.
+    onError: (error: any) => {
+      const message: string =
+        error?.message || error?.error || "Error creating sale";
+      showToast(message, "error");
+
+      const match = message.match(
+        /not enough stock for '(.+?)'.*?only\s+([\d.]+)\s+unit/i,
+      );
+      if (!match) return;
+      const [, name, remainingText] = match;
+      const remaining = Number(remainingText);
+      const { cartItems, updateCartItemQuantity, removeFromCart } =
+        useCartStore.getState();
+      const line = cartItems.find(
+        (item) => item.name?.trim().toLowerCase() === name.trim().toLowerCase(),
+      );
+      if (!line || !Number.isFinite(remaining)) return;
+      if (remaining > 0) {
+        updateCartItemQuantity(line.id, remaining);
+      } else {
+        removeFromCart(line.id);
+      }
+    },
   });
 
+  /**
+   * Offline checkout: keep the sale on this device for the sync queue, then
+   * finish exactly like an online sale. The receipt reads `data.id`, so it
+   * carries the client_sale_id the server will also use as the sale id.
+   */
+  const saveOfflineSale = async (sale: QueuedOfflineSale) => {
+    try {
+      await queueOfflineSale(sale);
+    } catch {
+      showToast(
+        "Couldn't save this sale on this device. Check your connection and try again.",
+        "error",
+      );
+      return;
+    }
+    showToast("Saved offline. It will sync when you're back online.", "success");
+    setCreateSaleResponse({
+      success: true,
+      offline: true,
+      data: {
+        id: sale.client_sale_id,
+        created_at: sale.payload.occurred_at,
+        method: sale.payload.method,
+        offline: true,
+      },
+    });
+    setSaleCompleted(true);
+    closeSureModal();
+    setShowPrintReceiptView(true);
+  };
+
   return {
+    saveOfflineSale,
     CustomerData,
     CustomerLoading,
     BusinessData,

@@ -1,6 +1,10 @@
 import { useGetCategoriesQuery } from "@/api/category/fetch-categories";
 import { useAddProductMutation } from "@/api/products/add-product";
 import { useEditProductMutation } from "@/api/products/edit-product";
+import {
+  fetchDiscountThresholds,
+  saveDiscountThresholds,
+} from "@/api/products/discount-thresholds";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
 import { useFetchProductByIdQuery } from "@/api/products/fetch-products-by-id";
 import { useFetchProductTransactionsQuery } from "@/api/products/get-transactions-history";
@@ -12,6 +16,13 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
 import { useUserRole } from "@/lib/store/user-store";
 import { compressImage } from "@/utils/compressImage";
+import {
+  DiscountThreshold,
+  DiscountTierFormRow,
+  tierRowsToPayload,
+  tiersToFormRows,
+  validateTiers,
+} from "@/utils/discountTiers";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
@@ -31,6 +42,40 @@ const variationSchema = z.object({
   values: z.array(z.string()).min(1, "At least one value is required"),
 });
 
+// One row of the bulk discount editor (strings while typing).
+const tierRowSchema = z.object({
+  min_quantity: z.string().default(""),
+  max_quantity: z.string().default(""),
+  discount_type: z.enum(["PERCENTAGE", "FIXED_AMOUNT"]).default("PERCENTAGE"),
+  discount_value: z.string().default(""),
+});
+
+/**
+ * Tiers to show when editing. An older single discount (X% off from N
+ * units) becomes tier 1, so it can be kept, changed or removed here.
+ */
+const tierRowsFromApi = (item: any): DiscountTierFormRow[] => {
+  const tiers = item?.discount_thresholds as DiscountThreshold[] | undefined;
+  if (tiers?.length) return tiersToFormRows(tiers);
+  if (Number(item?.discount) > 0 && Number(item?.discount_threshold) > 0) {
+    // Over 100 can't be a percentage: it was saved as naira off.
+    const value = Number(item.discount);
+    return [
+      {
+        min_quantity: String(Math.ceil(Number(item.discount_threshold))),
+        max_quantity: "",
+        discount_type: value > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
+        discount_value: String(value),
+      },
+    ];
+  }
+  return [];
+};
+
+const hasLegacyDiscount = (item: any) =>
+  !item?.discount_thresholds?.length &&
+  (Number(item?.discount) > 0 || Number(item?.discount_threshold) > 0);
+
 const productVariationSchema = z.object({
   id: z.string(),
   combination: z.string(),
@@ -42,6 +87,9 @@ const productVariationSchema = z.object({
   low_stock_threshold: z.string().default(""),
   discount_threshold: z.string().default(""),
   expiry_date: z.string().default(""),
+  discount_tiers: z.array(tierRowSchema).default([]),
+  /** Had an older single discount that the tiers now replace. */
+  had_legacy_discount: z.boolean().default(false),
 });
 
 // Backend limits (from POST /product/business/{id}/ schema).
@@ -122,6 +170,7 @@ const createProductSchema = (isEditMode: boolean) => {
     selling_price: z.string().default(""),
     discount_value: z.string().default(""),
     discount_threshold: z.string().default(""),
+    discount_tiers: z.array(tierRowSchema).default([]),
   });
 
   return baseSchema.superRefine((data, ctx) => {
@@ -175,6 +224,35 @@ const createProductSchema = (isEditMode: boolean) => {
           path: ["selling_price"],
         });
       }
+    }
+
+    // Bulk discount tiers: same rules the backend enforces.
+    if (data.variation_type === "single") {
+      const tierError = validateTiers(
+        tierRowsToPayload(data.discount_tiers),
+        Number(data.selling_price) || null,
+      );
+      if (tierError) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: tierError,
+          path: ["discount_tiers"],
+        });
+      }
+    } else {
+      data.product_variations.forEach((variation, index) => {
+        const tierError = validateTiers(
+          tierRowsToPayload(variation.discount_tiers),
+          Number(variation.selling_price) || null,
+        );
+        if (tierError) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${variation.combination || `Variation ${index + 1}`}: ${tierError}`,
+            path: ["product_variations", index, "discount_tiers"],
+          });
+        }
+      });
     }
 
     if (data.variation_type === "multiple") {
@@ -267,6 +345,8 @@ interface ProductVariation {
   low_stock_threshold: string;
   discount_threshold: string;
   expiry_date: string;
+  discount_tiers: DiscountTierFormRow[];
+  had_legacy_discount: boolean;
 }
 
 // ============================================================
@@ -382,6 +462,13 @@ export const useAddNewProductHook = ({
 
   // Track form initialization state
   const [isFormReady, setIsFormReady] = useState(false);
+
+  /**
+   * How many tiers each product / variation already has on the server, by id.
+   * "unknown" when they couldn't be read. Saving never sends an empty tier
+   * list for an "unknown" one, so tiers this form never showed can't be wiped.
+   */
+  const savedTierCounts = useRef<Record<string, number | "unknown">>({});
   const productIdRef = useRef<string | null>(null);
 
   console.log(
@@ -461,6 +548,7 @@ export const useAddNewProductHook = ({
       payment_method: "",
       discount_value: "",
       discount_threshold: "",
+      discount_tiers: [],
 
       allow_tax: false,
       in_house: false,
@@ -559,6 +647,8 @@ export const useAddNewProductHook = ({
         low_stock_threshold: "",
         discount_threshold: "",
         expiry_date: "",
+        discount_tiers: [],
+        had_legacy_discount: false,
       }));
 
       console.log(
@@ -639,13 +729,14 @@ export const useAddNewProductHook = ({
                 ? String(v.quantity)
                 : "",
             status: v.status || "IN-STOCK",
-            discount: v.discount ? String(v.discount) : "",
+            // The older single discount now lives in discount_tiers.
+            discount: "",
             low_stock_threshold: v.low_stock_threshold
               ? String(v.low_stock_threshold)
               : "",
-            discount_threshold: v.discount_threshold
-              ? String(v.discount_threshold)
-              : "",
+            discount_threshold: "",
+            discount_tiers: tierRowsFromApi(v),
+            had_legacy_discount: hasLegacyDiscount(v),
             expiry_date: v.expiry_date || "",
             watchlist: v.is_watchlist || false,
             sell_online: v.sell_online || false,
@@ -703,6 +794,7 @@ export const useAddNewProductHook = ({
           selling_price: "",
           discount_value: "",
           discount_threshold: "",
+          discount_tiers: [],
         },
         { keepDefaultValues: false },
       );
@@ -741,10 +833,10 @@ export const useAddNewProductHook = ({
           selling_price: itemsData.selling_price
             ? String(itemsData.selling_price)
             : "",
-          discount_value: itemsData.discount ? String(itemsData.discount) : "",
-          discount_threshold: itemsData.discount_threshold
-            ? String(itemsData.discount_threshold)
-            : "",
+          // The older single discount now lives in discount_tiers.
+          discount_value: "",
+          discount_threshold: "",
+          discount_tiers: tierRowsFromApi(itemsData),
           payment_method: "",
           type: "",
           percentage_discount: "",
@@ -795,6 +887,56 @@ export const useAddNewProductHook = ({
     getSupplierByName,
     getDepartmentByName,
   ]);
+
+  // Product-by-id may not include discount_thresholds; read them from the
+  // tiers endpoint so editing shows (and keeps) what's saved.
+  useEffect(() => {
+    if (!isEditMode || !isFormReady || !ProductData?.data) return;
+    const item = ProductData.data;
+    let cancelled = false;
+
+    const load = async (
+      id: string,
+      apiTiers: DiscountThreshold[] | undefined,
+      field: "discount_tiers" | `product_variations.${number}.discount_tiers`,
+    ) => {
+      if (Array.isArray(apiTiers)) {
+        savedTierCounts.current[id] = apiTiers.length;
+        return;
+      }
+      try {
+        const tiers = await fetchDiscountThresholds(id);
+        if (cancelled) return;
+        savedTierCounts.current[id] = tiers.length;
+        // Arrived late: don't overwrite anything the user already typed.
+        if (tiers.length && !form.getFieldState(field).isDirty) {
+          form.setValue(field, tiersToFormRows(tiers));
+        }
+      } catch {
+        savedTierCounts.current[id] = "unknown";
+      }
+    };
+
+    if (item.variations?.length) {
+      const rows = form.getValues("product_variations");
+      rows.forEach((row, index) => {
+        const apiVariation = item.variations.find((v: any) => v.id === row.id);
+        if (apiVariation) {
+          load(
+            row.id,
+            apiVariation.discount_thresholds,
+            `product_variations.${index}.discount_tiers`,
+          );
+        }
+      });
+    } else if (productId) {
+      load(String(productId), item.discount_thresholds, "discount_tiers");
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, isFormReady, ProductData, productId, form]);
 
   // ============================================================
   // FORM SUBMISSION - IMPROVED
@@ -904,8 +1046,12 @@ export const useAddNewProductHook = ({
       appendIfNotEmpty("status", values.stock_status);
       appendIfNotEmpty("cost_price", values.cost_price);
       appendIfNotEmpty("selling_price", values.selling_price);
-      appendIfNotEmpty("discount", values.discount_value);
-      appendIfNotEmpty("discount_threshold", values.discount_threshold);
+      // Tiers replace the older single discount: switch it off so removing
+      // every tier doesn't bring it back. Tiers save separately below.
+      if (isEditMode && hasLegacyDiscount(ProductData?.data)) {
+        formData.append("discount", "0");
+        formData.append("discount_threshold", "0");
+      }
     } else {
       console.log("🔀 [onSubmit] Processing MULTIPLE product variations");
       console.log(
@@ -941,12 +1087,23 @@ export const useAddNewProductHook = ({
             baseVariation.low_stock_threshold =
               variation.low_stock_threshold.trim();
           }
-          if (variation.discount?.trim()) {
-            baseVariation.discount = variation.discount.trim();
+          // Bulk discount tiers; [] clears them. They replace the older
+          // single discount, which is switched off if it was set.
+          const variationTiers = tierRowsToPayload(variation.discount_tiers);
+          const isSaved =
+            isEditMode && variation.id && !variation.id.startsWith("variation-");
+          // Saved variation whose tiers haven't loaded (or failed): leave
+          // the server's tiers alone rather than sending [].
+          if (
+            variationTiers.length ||
+            !isSaved ||
+            typeof savedTierCounts.current[variation.id] === "number"
+          ) {
+            baseVariation.discount_thresholds = variationTiers;
           }
-          if (variation.discount_threshold?.trim()) {
-            baseVariation.discount_threshold =
-              variation.discount_threshold.trim();
+          if (variation.had_legacy_discount) {
+            baseVariation.discount = "0";
+            baseVariation.discount_threshold = "0";
           }
           if (variation.expiry_date) {
             baseVariation.expiry_date = moment(variation.expiry_date).format(
@@ -992,6 +1149,40 @@ export const useAddNewProductHook = ({
       }
     }
 
+    /**
+     * A simple product's tiers go to their own endpoint once the product is
+     * saved (variations carry theirs inside variation_inputs). Skipped when
+     * there's nothing to add and nothing to clear.
+     */
+    const singleTiers = tierRowsToPayload(values.discount_tiers);
+    const savedCount = productId
+      ? savedTierCounts.current[String(productId)]
+      : 0;
+    const hadTiers =
+      (typeof savedCount === "number" && savedCount > 0) ||
+      hasLegacyDiscount(ProductData?.data);
+    const saveSingleTiers = async (id?: string) => {
+      if (values.variation_type !== "single") return;
+      if (!singleTiers.length && !(isEditMode && hadTiers)) return;
+      if (!id) {
+        showToast(
+          "Product saved, but the bulk discounts couldn't be attached. Edit the product to add them again.",
+          "error",
+        );
+        return;
+      }
+      try {
+        await saveDiscountThresholds(id, singleTiers);
+      } catch (error) {
+        showToast(
+          `Product saved, but the bulk discounts weren't: ${
+            error instanceof Error ? error.message : "please try again"
+          }`,
+          "error",
+        );
+      }
+    };
+
     console.log("=== 📋 FORM DATA DEBUG ===");
     console.log("🔧 Is Edit Mode:", isEditMode);
     console.log("🆔 Product ID:", productId);
@@ -1015,11 +1206,13 @@ export const useAddNewProductHook = ({
         {
           onSuccess: (response) => {
             console.log("✅ [onSubmit] Edit successful, response:", response);
-            queryClient.invalidateQueries({
-              queryKey: [queryKey.inventory.getAllInventory],
+            saveSingleTiers(productId as string).finally(() => {
+              queryClient.invalidateQueries({
+                queryKey: [queryKey.inventory.getAllInventory],
+              });
+              refetchProduct();
+              router.back();
             });
-            refetchProduct();
-            router.back();
           },
           onError: (error) => {
             console.error("❌ [onSubmit] Edit failed:", error);
@@ -1033,10 +1226,15 @@ export const useAddNewProductHook = ({
         {
           onSuccess: (response) => {
             console.log("✅ [onSubmit] Add successful, response:", response);
-            queryClient.invalidateQueries({
-              queryKey: [queryKey.inventory.getAllInventory],
+            const created = (response as any)?.data;
+            const newId: string | undefined =
+              created?.data?.id ?? created?.id ?? created?.product?.id;
+            saveSingleTiers(newId).finally(() => {
+              queryClient.invalidateQueries({
+                queryKey: [queryKey.inventory.getAllInventory],
+              });
+              router.back();
             });
-            router.back();
           },
           onError: (error) => {
             console.error("❌ [onSubmit] Add failed:", error);

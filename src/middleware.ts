@@ -18,7 +18,7 @@ const PROTECTED_PATHS = {
     "INVENTORY-MANAGER",
   ],
   "/customers": ["OWNER", "ADMIN-ATTENDANT", "ACCOUNTANT"],
-  "/expenses": ["OWNER", , "ADMIN-ATTENDANT", "ACCOUNTANT"],
+  "/expenses": ["OWNER", "ADMIN-ATTENDANT", "ACCOUNTANT"],
   "/create-business": [
     "OWNER",
     "ADMIN-ATTENDANT",

@@ -91,6 +91,8 @@ export const links = [
           "can_initiate_expense_transfer",
           "can_approve_expenses",
         ],
+        // Accountants see and approve expenses by role, no flags needed.
+        alwaysForRoles: ["ACCOUNTANT"],
       },
       // {
       //   title: "Logistics",

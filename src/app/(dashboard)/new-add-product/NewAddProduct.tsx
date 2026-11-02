@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
+import DiscountTiersEditor from "@/components/app/DiscountTiersEditor";
 import {
   Accordion,
   AccordionContent,
@@ -50,6 +51,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
 import { cn } from "@/lib/utils";
+import {
+  DiscountTierFormRow,
+  describeDiscount,
+  tierRangeLabel,
+  tierRowsToPayload,
+} from "@/utils/discountTiers";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -210,6 +217,32 @@ const NewAddProduct = ({
   >(null);
   const [bulkEditError, setBulkEditError] = useState<string | null>(null);
   const [showEditAllModal, setShowEditAllModal] = useState(false);
+  // Which variation's bulk discount tiers are open, if any. -1 = all of them.
+  const [tierEditorIndex, setTierEditorIndex] = useState<number | null>(null);
+  const [allVariationTierRows, setAllVariationTierRows] = useState<
+    DiscountTierFormRow[]
+  >([]);
+
+  // Variation indexes ticked in bulk edit.
+  const selectedVariationIndexes = () =>
+    productVariations
+      .map((variation, index) => (selectedVariations.includes(variation.id) ? index : -1))
+      .filter((index) => index >= 0);
+
+  const openSelectedTierEditor = () => {
+    const indexes = selectedVariationIndexes();
+    if (!indexes.length) {
+      showToast("Select at least one variation", "error");
+      return;
+    }
+    setAllVariationTierRows(
+      (
+        form.getValues(`product_variations.${indexes[0]}.discount_tiers`) ?? []
+      ).map((row) => ({ ...row })),
+    );
+    setTierEditorIndex(-1);
+  };
+
   const [editAllData, setEditAllData] = useState({
     cost_price: "",
     selling_price: "",
@@ -1189,45 +1222,6 @@ const NewAddProduct = ({
 
                               <FormField
                                 control={form.control}
-                                name="discount_threshold"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-sm font-medium text-grey-2">
-                                      Discount Threshold
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Enter discount threshold"
-                                        className="mt-1"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                    <FormMessage className="text-xs" />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={form.control}
-                                name="discount_value"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-sm font-medium text-grey-2">
-                                      Discount (%)
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Enter discount"
-                                        className="mt-1"
-                                        {...field}
-                                      />
-                                    </FormControl>
-                                    <FormMessage className="text-xs" />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
                                 name="low_stock_tresh"
                                 render={({ field }) => (
                                   <FormItem>
@@ -1280,6 +1274,28 @@ const NewAddProduct = ({
                                 )}
                               />
                             </div>
+
+                            {/* Volume pricing — replaces the old single
+                                discount threshold. */}
+                            <FormField
+                              control={form.control}
+                              name="discount_tiers"
+                              render={({ field }) => (
+                                <FormItem className="rounded-xl border border-grey-5 p-3">
+                                  <DiscountTiersEditor
+                                    rows={field.value ?? []}
+                                    onChange={(rows) => {
+                                      field.onChange(rows);
+                                      form.clearErrors("discount_tiers");
+                                    }}
+                                    sellingPrice={Number(
+                                      form.watch("selling_price"),
+                                    )}
+                                  />
+                                  <FormMessage className="text-xs" />
+                                </FormItem>
+                              )}
+                            />
                           </TabsContent>
 
                           <TabsContent value="multiple" className="space-y-4">
@@ -1452,6 +1468,11 @@ const NewAddProduct = ({
                                   Edit All
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  onClick={openSelectedTierEditor}
+                                >
+                                  Bulk Discounts
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() => handleBulkEdit("cost_price")}
                                 >
                                   Cost Price
@@ -1462,13 +1483,6 @@ const NewAddProduct = ({
                                   }
                                 >
                                   Selling Price
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleBulkEdit("discount_threshold")
-                                  }
-                                >
-                                  Discount Threshold
                                 </DropdownMenuItem>
                                 {!isEditMode && (
                                   <DropdownMenuItem
@@ -1481,11 +1495,6 @@ const NewAddProduct = ({
                                   onClick={() => handleBulkEdit("status")}
                                 >
                                   Status
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleBulkEdit("discount")}
-                                >
-                                  Discount
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleBulkEdit("expiry_date")}
@@ -1660,6 +1669,18 @@ const NewAddProduct = ({
                               <span className="font-medium text-grey-1">
                                 {variation.combination}
                               </span>
+                              {(() => {
+                                const count = tierRowsToPayload(
+                                  form.watch(
+                                    `product_variations.${index}.discount_tiers`,
+                                  ) ?? [],
+                                ).length;
+                                return count ? (
+                                  <span className="rounded-full bg-success-2 px-2 py-0.5 text-[10px] font-bold text-success-1">
+                                    {count} bulk tier{count === 1 ? "" : "s"}
+                                  </span>
+                                ) : null;
+                              })()}
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-4">
@@ -1745,29 +1766,36 @@ const NewAddProduct = ({
                               />
                               <FormField
                                 control={form.control}
-                                name={`product_variations.${index}.discount_threshold`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-grey-2">
-                                      Discount Threshold
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Enter discount threshold"
-                                        className="mt-1"
-                                        {...field}
-                                        onChange={(e) => {
-                                          field.onChange(e);
-                                          // ✅ CLEAR ERROR WHEN USER TYPES
-                                          form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`,
-                                          );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormMessage className="text-xs" />
-                                  </FormItem>
-                                )}
+                                name={`product_variations.${index}.discount_tiers`}
+                                render={({ field }) => {
+                                  const tiers = tierRowsToPayload(
+                                    field.value ?? [],
+                                  );
+                                  return (
+                                    <FormItem>
+                                      <FormLabel className="text-xs font-medium text-grey-2">
+                                        Bulk Discounts
+                                      </FormLabel>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="mt-1 h-12 w-full justify-start truncate rounded-md border-grey-5 px-4 text-sm font-normal text-grey-2"
+                                        title={tiers
+                                          .map(
+                                            (tier) =>
+                                              `${tierRangeLabel(tier)}: ${describeDiscount(tier.discount_type, tier.discount_value)}`,
+                                          )
+                                          .join(", ")}
+                                        onClick={() => setTierEditorIndex(index)}
+                                      >
+                                        {tiers.length
+                                          ? `${tiers.length} tier${tiers.length === 1 ? "" : "s"}`
+                                          : "Add tiers"}
+                                      </Button>
+                                      <FormMessage className="text-xs" />
+                                    </FormItem>
+                                  );
+                                }}
                               />
                               <FormField
                                 control={form.control}
@@ -1796,32 +1824,6 @@ const NewAddProduct = ({
                                           ))}
                                         </SelectContent>
                                       </Select>
-                                    </FormControl>
-                                    <FormMessage className="text-xs" />
-                                  </FormItem>
-                                )}
-                              />
-                              <FormField
-                                control={form.control}
-                                name={`product_variations.${index}.discount`}
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs font-medium text-grey-2">
-                                      Discount
-                                    </FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        placeholder="Enter discount"
-                                        className="mt-1"
-                                        {...field}
-                                        onChange={(e) => {
-                                          field.onChange(e);
-                                          // ✅ CLEAR ERROR WHEN USER TYPES
-                                          form.clearErrors(
-                                            `product_variations.${index}.discount_threshold`,
-                                          );
-                                        }}
-                                      />
                                     </FormControl>
                                     <FormMessage className="text-xs" />
                                   </FormItem>
@@ -2368,35 +2370,6 @@ const NewAddProduct = ({
               </Select>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-grey-2 mb-1 block">
-                Discount Threshold
-              </label>
-              <Input
-                value={editAllData.discount_threshold}
-                onChange={(e) => {
-                  setEditAllData({
-                    ...editAllData,
-                    discount_threshold: e.target.value,
-                  });
-                  setBulkEditError(null); // ✅ CLEAR ERROR WHEN USER TYPES
-                }}
-                placeholder="Enter discount threshold"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-grey-2 mb-1 block">
-                Discount
-              </label>
-              <Input
-                value={editAllData.discount}
-                onChange={(e) => {
-                  setEditAllData({ ...editAllData, discount: e.target.value });
-                  setBulkEditError(null);
-                }}
-                placeholder="Enter discount"
-              />
-            </div>
             <div className="col-span-2">
               <label className="text-sm font-medium text-grey-2 mb-1 block">
                 Low Stock Threshold
@@ -2587,6 +2560,112 @@ const NewAddProduct = ({
       >
         <AddDepartments closeModal={handleCloseDepartmentModal} />
       </CustomModal>
+
+      {/* Bulk discount tiers for every variation at once */}
+      {tierEditorIndex === -1 && (
+        <CustomModal
+          isOpen
+          onClose={() => setTierEditorIndex(null)}
+          trigger={false}
+          title={`Bulk discounts: ${selectedVariationIndexes().length} selected variation${
+            selectedVariationIndexes().length === 1 ? "" : "s"
+          }`}
+        >
+          <div className="space-y-4">
+            <DiscountTiersEditor
+              rows={allVariationTierRows}
+              onChange={setAllVariationTierRows}
+              // Cheapest variation, so a fixed discount fits every one.
+              sellingPrice={(() => {
+                const lowest = Math.min(
+                  ...selectedVariationIndexes().map(
+                    (i) =>
+                      Number(
+                        form.getValues(`product_variations.${i}.selling_price`),
+                      ) || Infinity,
+                  ),
+                );
+                return Number.isFinite(lowest) ? lowest : undefined;
+              })()}
+            />
+            <div className="flex flex-wrap justify-end gap-2 border-t border-grey-5 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setTierEditorIndex(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="bg-primary-green-300 text-white"
+                onClick={() => {
+                  const indexes = selectedVariationIndexes();
+                  indexes.forEach((i) => {
+                    form.setValue(
+                      `product_variations.${i}.discount_tiers`,
+                      allVariationTierRows.map((row) => ({ ...row })),
+                      { shouldDirty: true },
+                    );
+                    form.clearErrors(`product_variations.${i}.discount_tiers`);
+                  });
+                  showToast(
+                    `Bulk discounts applied to ${indexes.length} variation${indexes.length === 1 ? "" : "s"}`,
+                    "success",
+                  );
+                  setTierEditorIndex(null);
+                }}
+              >
+                Apply to selected
+              </Button>
+            </div>
+          </div>
+        </CustomModal>
+      )}
+
+      {/* Bulk discount tiers for one variation */}
+      {tierEditorIndex !== null && tierEditorIndex >= 0 && (
+        <CustomModal
+          isOpen
+          onClose={() => setTierEditorIndex(null)}
+          trigger={false}
+          title={`Bulk discounts: ${
+            form.watch(`product_variations.${tierEditorIndex}.combination`) ||
+            `Variation ${tierEditorIndex + 1}`
+          }`}
+        >
+          <div className="space-y-4">
+            <DiscountTiersEditor
+              rows={
+                form.watch(`product_variations.${tierEditorIndex}.discount_tiers`) ??
+                []
+              }
+              onChange={(rows) => {
+                form.setValue(
+                  `product_variations.${tierEditorIndex}.discount_tiers`,
+                  rows,
+                  { shouldDirty: true },
+                );
+                form.clearErrors(
+                  `product_variations.${tierEditorIndex}.discount_tiers`,
+                );
+              }}
+              sellingPrice={Number(
+                form.watch(`product_variations.${tierEditorIndex}.selling_price`),
+              )}
+            />
+            <div className="flex flex-wrap justify-end gap-2 border-t border-grey-5 pt-3">
+              <Button
+                type="button"
+                className="bg-primary-green-300 text-white"
+                onClick={() => setTierEditorIndex(null)}
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </CustomModal>
+      )}
     </div>
   );
 };

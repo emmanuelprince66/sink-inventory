@@ -1,5 +1,6 @@
 "use client";
 
+import { allowsSalesWithoutStock, isUnsellable } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
 import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
@@ -10,6 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
 import { useFreshSaleDate } from "@/hooks/useFreshSaleDate";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Switch } from "@/components/ui/switch";
+import {
+  setManualOfflineMode,
+  useManualOfflineMode,
+  usePosOffline,
+} from "@/lib/offline/offlineMode";
 import { usePosHook } from "@/hooks/usePosHook";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useUserRole } from "@/lib/store/user-store";
@@ -27,13 +34,14 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CartTabs from "./CartTabs";
 import CustomerBar from "./CustomerBar";
 import SelfCheckoutOrderModal from "./SelfCheckoutOrderModal";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
 import { isOrderCode } from "./instoreDraft";
 import LoadPresaleModal from "./LoadPresaleModal";
+import OfflineSyncBanner from "./OfflineSyncBanner";
 import { ScannerButton } from "./ScannerButton";
 import VariationSelectorModal from "./VariationSelectorModal";
 
@@ -167,11 +175,10 @@ const Pos: React.FC = () => {
     return formatToNaira(product.selling_price || product.amount || 0);
   };
 
-  const handleProductClick = (product: Product): void => {
-    const isOutOfStock =
-      product.quantity === 0 || product.status === "OUT-OF-STOCK";
+  const allowOversell = allowsSalesWithoutStock(businessData);
 
-    if (isOutOfStock) return;
+  const handleProductClick = (product: Product): void => {
+    if (isUnsellable(product, allowOversell)) return;
 
     // If product has variations, show modal
     if (product.variations && product.variations.length > 0) {
@@ -247,6 +254,17 @@ const Pos: React.FC = () => {
 
   // Show generate code button for pharmacist
   const showGenerateCodeButton = isPharmacist && cartItems.length > 0;
+
+  // Presales and self checkout orders are looked up on the server.
+  const isOnline = !usePosOffline();
+  const manualOffline = useManualOfflineMode();
+
+  // Checkout and the receipt load lazily. Fetch them up front so a till
+  // that drops offline before its first sale can still finish one.
+  useEffect(() => {
+    import("./CheckoutPage").catch(() => undefined);
+    import("./PrintReceiptView").catch(() => undefined);
+  }, []);
 
   // Show load presale button for attendant
   const showLoadPresaleButton = isAttendant;
@@ -387,11 +405,24 @@ const Pos: React.FC = () => {
           )}
         </div>
 
+        {/* Offline mode: for a connection that's up but unreliable */}
+        {!isPharmacist && (
+          <label className="flex items-center gap-2 rounded-full border border-grey-5 px-3 py-1.5 cursor-pointer">
+            <Switch
+              checked={manualOffline}
+              onCheckedChange={setManualOfflineMode}
+              aria-label="Offline mode"
+            />
+            <span className="text-xs font-bold text-grey-2">Offline mode</span>
+          </label>
+        )}
+
         {/* Load Presale Button for Attendants */}
         {showLoadPresaleButton && (
           <Button
             onClick={() => setShowLoadPresaleModal(true)}
             variant="outline"
+            disabled={!isOnline}
           >
             <Package className="h-4 w-4 mr-2" />
             Load Presale
@@ -406,12 +437,15 @@ const Pos: React.FC = () => {
               setShowSelfCheckoutModal(true);
             }}
             variant="outline"
+            disabled={!isOnline}
           >
             <QrCode className="h-4 w-4 mr-2" />
             Self Checkout Order
           </Button>
         )}
       </header>
+
+      {!isPharmacist && <OfflineSyncBanner />}
 
       {/* Cart Tabs — supports multiple simultaneous sales */}
       <CartTabs />
@@ -466,8 +500,9 @@ const Pos: React.FC = () => {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
                 {ProductData?.data?.results?.data?.map((product: Product) => {
-                  const isOutOfStock =
-                    product.quantity === 0 || product.status === "OUT-OF-STOCK";
+                  // Greyed out only when it can't be sold; with "sell
+                  // without stock" on, empty items stay clickable.
+                  const isOutOfStock = isUnsellable(product, allowOversell);
                   const hasVariations =
                     product.variations && product.variations.length > 0;
                   const isWatchlist = product.watchlist === true;

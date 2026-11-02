@@ -1,18 +1,30 @@
-import { formatToNaira } from "@/utils/formatMoney";
+import {
+  fetchDiscountThresholds,
+  saveDiscountThresholds,
+} from "@/api/products/discount-thresholds";
+import DiscountTiersEditor from "@/components/app/DiscountTiersEditor";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { queryKey } from "@/constants/query-key";
+import { useToast } from "@/hooks/toast/useToast";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
+import {
+  calculateProductDiscount,
+  DiscountTierFormRow,
+  tierRowsToPayload,
+  tiersToFormRows,
+  validateTiers,
+} from "@/utils/discountTiers";
+import { formatToNaira } from "@/utils/formatMoney";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react";
 
+/**
+ * Bulk discount tiers for one product, from the inventory list. Loads the
+ * saved tiers first, so saving never wipes ones this screen didn't show.
+ */
 const SetDiscountModal = ({
   productId,
   product,
@@ -22,101 +34,149 @@ const SetDiscountModal = ({
   closeModal: any;
   product: any;
 }) => {
-  const { addDiscountForm, addDiscountSubmit, loading } = useInventoryHook({
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+  // Used only to switch off the older single discount, if set.
+  const { addDiscountSubmit, loading: clearingLegacy } = useInventoryHook({
     productId,
     product,
     closeModal,
   });
 
-  // Watch form values to calculate profit warning
-  const watchedValues = addDiscountForm.watch();
-  const priceDiscount = parseFloat(watchedValues.price_discount) || 0;
-  const productThreshold = parseFloat(watchedValues.product_threshold) || 0;
+  const hasLegacy =
+    Number(product?.discount) > 0 || Number(product?.discount_threshold) > 0;
 
-  // Calculate if profit would be negative
-  const costPrice = product?.cost_price || 0;
-  const sellingPrice = product?.selling_price || 0;
-  const currentProfit = sellingPrice - costPrice;
-  const profitAfterDiscount = currentProfit - priceDiscount;
+  const { data: savedTiers, isLoading, isError } = useQuery({
+    queryKey: ["product-discount-thresholds", productId],
+    queryFn: () => fetchDiscountThresholds(productId),
+    enabled: !!productId,
+  });
 
-  // Show warning if discount makes profit negative
-  const showWarning = priceDiscount > 0 && profitAfterDiscount < 0;
+  const [rows, setRows] = useState<DiscountTierFormRow[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  // Calculate break-even discount (maximum discount before going negative)
-  const maxDiscount = Math.max(0, currentProfit);
+  useEffect(() => {
+    if (!savedTiers) return;
+    if (savedTiers.length) {
+      setRows(tiersToFormRows(savedTiers));
+    } else if (
+      Number(product?.discount) > 0 &&
+      Number(product?.discount_threshold) > 0
+    ) {
+      // Older single discount, shown as tier 1.
+      setRows([
+        {
+          min_quantity: String(Math.ceil(Number(product.discount_threshold))),
+          max_quantity: "",
+          // Over 100 can't be a percentage: it was saved as naira off.
+          discount_type:
+            Number(product.discount) > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
+          discount_value: String(Number(product.discount)),
+        },
+      ]);
+    }
+  }, [savedTiers, product]);
+
+  const sellingPrice = Number(product?.selling_price) || 0;
+  const costPrice = Number(product?.cost_price) || 0;
+  const tiers = tierRowsToPayload(rows);
+  const error = validateTiers(tiers, sellingPrice || null);
+
+  // Deepest discount across tiers, to warn before selling at a loss.
+  const deepestUnitPrice = tiers.length
+    ? Math.min(
+        ...tiers.map(
+          (tier) =>
+            calculateProductDiscount(sellingPrice, tier.min_quantity, [tier])
+              .discountedUnitPrice,
+        ),
+      )
+    : sellingPrice;
+  const showLossWarning =
+    tiers.length > 0 && costPrice > 0 && deepestUnitPrice < costPrice;
+
+  const handleSave = async () => {
+    if (error) return;
+    setSaving(true);
+    try {
+      await saveDiscountThresholds(productId, tiers);
+      queryClient.invalidateQueries({
+        queryKey: ["product-discount-thresholds", productId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [queryKey.inventory.getAllInventory],
+      });
+      if (hasLegacy) {
+        // Closes the modal and refreshes when done.
+        addDiscountSubmit({ product_threshold: "0", price_discount: "0" });
+      } else {
+        showToast("Bulk discounts saved", "success");
+        closeModal?.();
+      }
+    } catch (e) {
+      showToast(
+        e instanceof Error ? e.message : "Couldn't save the bulk discounts",
+        "error",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (product?.variations?.length) {
+    return (
+      <p className="text-sm text-grey-2">
+        This product has variations. Set bulk discounts for each variation
+        from <span className="font-bold">Edit Product</span>.
+      </p>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-1/3 bg-grey-5" />
+        <Skeleton className="h-9 w-full bg-grey-5" />
+        <Skeleton className="h-9 w-full bg-grey-5" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full">
-      <Form {...addDiscountForm}>
-        <form
-          onSubmit={addDiscountForm.handleSubmit(addDiscountSubmit)}
-          className="space-y-5"
-        >
-          {/* Product Threshold Field */}
-          <FormField
-            control={addDiscountForm.control}
-            name="product_threshold"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Product Threshold</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Enter Product Threshold....."
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <div className="w-full space-y-5">
+      {isError && (
+        <p className="text-xs text-error-1">
+          Couldn&apos;t load the saved tiers. Close and try again before saving.
+        </p>
+      )}
 
-          {/* Price Discount Field */}
-          <FormField
-            control={addDiscountForm.control}
-            name="price_discount"
-            render={({ field }) => (
-              <FormItem className="flex-1">
-                <FormLabel>Price Discount</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter Price Discount....." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <DiscountTiersEditor
+        rows={rows}
+        onChange={setRows}
+        sellingPrice={sellingPrice}
+      />
 
-          {/* Profit Warning */}
-          {showWarning && (
-            <div className="bg-error-2 border border-error-1/30 rounded-xl p-4 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-error-1 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-error-1 mb-1">
-                  Warning: Negative Profit
-                </h4>
-                <p className="text-sm font-medium text-error-1 mb-2">
-                  This discount will result in a negative profit for this item.
-                </p>
-                <div className="text-xs font-medium text-error-1 space-y-1">
-                  <div>Cost Price: {formatToNaira(costPrice)}</div>
-                  <div>Selling Price: {formatToNaira(sellingPrice)}</div>
-                  <div>Current Profit: {formatToNaira(currentProfit)}</div>
-                  <div>Discount: {formatToNaira(priceDiscount)}</div>
-                  <div className="font-bold">
-                    Profit After Discount: {formatToNaira(profitAfterDiscount)}
-                  </div>
-                  <div className="pt-1 border-t border-error-1/30">
-                    Maximum recommended discount: {formatToNaira(maxDiscount)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+      {showLossWarning && (
+        <div className="bg-error-2 border border-error-1/30 rounded-xl p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-error-1 mt-0.5 flex-shrink-0" />
+          <div className="text-xs font-medium text-error-1 space-y-1">
+            <p className="text-sm font-bold">Warning: selling at a loss</p>
+            <p>
+              Your deepest tier sells at {formatToNaira(deepestUnitPrice)} per
+              unit, below the cost price of {formatToNaira(costPrice)}.
+            </p>
+          </div>
+        </div>
+      )}
 
-          <Button type="submit" className="w-full h-[48px]" disabled={loading}>
-            {loading ? <Spinner /> : "Save"}
-          </Button>
-        </form>
-      </Form>
+      <Button
+        type="button"
+        className="w-full h-[48px]"
+        disabled={saving || clearingLegacy || !!error || isError}
+        onClick={handleSave}
+      >
+        {saving || clearingLegacy ? <Spinner /> : "Save"}
+      </Button>
     </div>
   );
 };

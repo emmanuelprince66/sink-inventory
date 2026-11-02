@@ -7,6 +7,7 @@ import { useUserRole } from "@/lib/store/user-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
+import { allowsSalesWithoutStock, isUnsellable } from "@/utils/stock";
 
 export const usePosHook = ({
   searchInput,
@@ -19,7 +20,7 @@ export const usePosHook = ({
   addToCart?: any;
   setSearchInput?: any;
   cartItems?: any;
-  incrementQuantity?: (itemId: string) => void;
+  incrementQuantity?: (itemId: string, allowOversell?: boolean) => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
@@ -39,6 +40,7 @@ export const usePosHook = ({
 
   // Extract business data for use in components
   const businessData = findBusiness;
+  const allowOversell = allowsSalesWithoutStock(findBusiness);
 
   console.log("BusinessData", BusinessData);
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
@@ -219,8 +221,8 @@ export const usePosHook = ({
         return;
       }
 
-      // Check stock status
-      if (cart.quantity === 0 || cart.status === "OUT-OF-STOCK") {
+      // Out of stock blocks the sale unless the business sells past zero.
+      if (isUnsellable(cart, allowOversell)) {
         showToast("This item is out of stock", "error");
         return;
       }
@@ -233,14 +235,21 @@ export const usePosHook = ({
       // Product already in cart — bump the quantity instead of blocking.
       const productExist = cartItems?.find((item: any) => item.id === cart.id);
       if (productExist) {
-        incrementQuantity?.(cart.id);
+        incrementQuantity?.(cart.id, allowOversell);
         return;
       }
 
       addToCart(cart);
       showToast(`${cart.name} added to cart`, "success");
     },
-    [cartItems, addToCart, incrementQuantity, showToast, saleCompleted],
+    [
+      cartItems,
+      addToCart,
+      incrementQuantity,
+      showToast,
+      saleCompleted,
+      allowOversell,
+    ],
   );
 
   // Effect to handle when scanned product data is fetched

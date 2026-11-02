@@ -105,16 +105,22 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       header: "Quantity",
       cell: ({ row }) => {
         const inventory = row.original;
-        const isOutOfStock =
-          inventory.quantity === 0 || inventory.quantity === null;
+        const quantity = inventory.quantity;
+        const isOutOfStock = quantity === 0 || quantity === null;
+        // Negative when sold past zero with "sell without stock" on.
+        const isOversold = typeof quantity === "number" && quantity < 0;
 
         return (
           <div
             className={cn("font-bold text-grey-1", {
-              "text-error-1": isOutOfStock,
+              "text-error-1": isOutOfStock || isOversold,
             })}
           >
-            {isOutOfStock ? "0 (Out of stock)" : inventory.quantity}
+            {isOutOfStock
+              ? "0 (Out of stock)"
+              : isOversold
+                ? `\u2212${Math.abs(quantity)} (Oversold)`
+                : quantity}
           </div>
         );
       },

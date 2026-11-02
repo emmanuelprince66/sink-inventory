@@ -1,3 +1,5 @@
+import { allowsSalesWithoutStock } from "@/utils/stock";
+import { calculateProductDiscount } from "@/utils/discountTiers";
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetCustomerQuery } from "@/api/customer/useGetCustomerQuery";
@@ -257,7 +259,8 @@ export const useOrdersHook = ({
   const updateProductQuantity = (productId: string, quantity: number) => {
     const availableQty = getAvailableQuantity(productId);
 
-    if (quantity > availableQty) {
+    // "Sell without stock" on: any quantity is fine.
+    if (!allowsSalesWithoutStock(findBusiness) && quantity > availableQty) {
       setProductErrors((prev) => ({
         ...prev,
         [productId]: `Only ${availableQty} units available`,
@@ -284,25 +287,26 @@ export const useOrdersHook = ({
   };
 
   // Get discount for a product based on quantity and threshold
-  const getProductDiscount = (product: any) => {
+  // Volume tier (or the older single threshold) for this line.
+  const getProductDiscountResult = (product: any) => {
     const selectedVariation = getSelectedVariation(product);
     const targetProduct = selectedVariation || product;
-
-    const quantity = product.quantity || 1;
-    const discountThreshold = targetProduct.discount_threshold;
-    const discountAmount = targetProduct.discount || 0;
-
-    // Only apply discount if threshold is set and quantity meets/exceeds it
-    if (
-      discountThreshold &&
-      quantity >= discountThreshold &&
-      discountAmount > 0
-    ) {
-      return discountAmount;
-    }
-
-    return 0;
+    return calculateProductDiscount(
+      Number(getProductPrice(product)) || 0,
+      product.quantity || 1,
+      targetProduct.discount_thresholds ?? [],
+      Number(targetProduct.discount) || 0,
+      Number(targetProduct.discount_threshold) || 0,
+    );
   };
+
+  /** Per-unit discount for the line. */
+  const getProductDiscount = (product: any) =>
+    getProductDiscountResult(product).unitDiscount;
+
+  /** Units still needed for the next tier, if there is one. */
+  const getProductUpsell = (product: any) =>
+    getProductDiscountResult(product).nextTierUpsell;
 
   // Check if product qualifies for discount
   const isDiscountApplied = (product: any) => {
@@ -513,6 +517,7 @@ export const useOrdersHook = ({
     getProductPrice,
     getAvailableQuantity,
     getProductDiscount,
+    getProductUpsell,
     isDiscountApplied,
     calculateSubtotal,
     handleRowClick,

@@ -134,6 +134,7 @@ export function AppSidebar() {
   // opt-in per link, so every existing entry keeps behaving as it did.
   const canSeeLink = (item: any) => {
     if (!item.roles.includes(role)) return false;
+    if (item.alwaysForRoles?.includes(role)) return true;
     if (!item.anyPermission?.length) return true;
     return canAny(item.anyPermission);
   };

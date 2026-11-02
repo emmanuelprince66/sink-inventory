@@ -1,5 +1,6 @@
 "use client";
 
+import { describeDiscount } from "@/utils/discountTiers";
 import { formatToNaira } from "@/utils/formatMoney";
 import AddressAutocomplete from "@/components/app/AddressAutocomplete";
 import { DatePicker } from "@/components/app/DatePicker";
@@ -76,6 +77,7 @@ const CreateOrders = () => {
     updateProductQuantity,
     getProductPrice,
     getProductDiscount,
+    getProductUpsell,
     isDiscountApplied,
     calculateSubtotal,
     calculateTotalDiscount,
@@ -565,18 +567,7 @@ const CreateOrders = () => {
                           <p className="text-xs text-primary-green-300">
                             {formatToNaira(getProductDiscount(product))} off
                             per unit
-                            {getSelectedVariation(product)
-                              ?.discount_threshold && (
-                              <span className="text-grey-3">
-                                {" "}
-                                (Buy{" "}
-                                {
-                                  getSelectedVariation(product)
-                                    .discount_threshold
-                                }
-                                + items)
-                              </span>
-                            )}
+
                           </p>
                         </div>
                         <div className="text-right">
@@ -591,25 +582,23 @@ const CreateOrders = () => {
                       </div>
                     )}
 
-                  {/* Show threshold info when not yet reached */}
-                  {selectedVariations[product.id] &&
-                    !isDiscountApplied(product) &&
-                    getSelectedVariation(product)?.discount_threshold &&
-                    getSelectedVariation(product)?.discount > 0 && (
+                  {/* Next volume tier, when there is one to reach */}
+                  {(() => {
+                    const upsell = getProductUpsell(product);
+                    if (!upsell) return null;
+                    return (
                       <div className="flex items-center gap-2 bg-secondary-6 p-2 rounded-xl border border-secondary-4">
                         <BadgePercent className="w-4 h-4 text-primary-green-300" />
                         <p className="text-xs text-primary-green-100">
-                          Buy{" "}
-                          {getSelectedVariation(product).discount_threshold -
-                            (product.quantity || 1)}{" "}
-                          more to get{" "}
-                          {formatToNaira(
-                            getSelectedVariation(product).discount,
-                          )}{" "}
-                          off per unit
+                          Buy {upsell.unitsNeeded} more to get{" "}
+                          {describeDiscount(
+                            upsell.potentialDiscountType,
+                            upsell.potentialDiscountValue,
+                          )}
                         </p>
                       </div>
-                    )}
+                    );
+                  })()}
                 </div>
               ))}
 

@@ -1,9 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { CreditCard, Truck } from "lucide-react";
+import { CreditCard, Package, Truck } from "lucide-react";
 import { useState } from "react";
 import BnplCard from "./BnplCard";
+import SellWithoutStockCard from "./SellWithoutStockCard";
 import ShippingTab from "./ShippingTab";
 
 // Payment Add-ons was disabled while BNPL activation only flipped local state
@@ -11,7 +12,7 @@ import ShippingTab from "./ShippingTab";
 // through PATCH /business/<id>/ and reads the saved value back, so the toggle
 // reflects what the backend actually holds.
 
-type SectionKey = "shipping" | "addons";
+type SectionKey = "shipping" | "addons" | "inventory";
 
 const SECTIONS: {
   key: SectionKey;
@@ -30,6 +31,12 @@ const SECTIONS: {
     label: "Payment Add-ons",
     description: "Optional checkout features",
     icon: <CreditCard className="w-5 h-5" />,
+  },
+  {
+    key: "inventory",
+    label: "Inventory & Sales",
+    description: "Stock rules for the till and storefront",
+    icon: <Package className="w-5 h-5" />,
   },
 ];
 
@@ -101,6 +108,17 @@ const GeneralSettings = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <BnplCard />
+              </div>
+            </SectionHeading>
+          )}
+
+          {active === "inventory" && (
+            <SectionHeading
+              title="Inventory & Sales"
+              subtitle="Control how stock levels affect sales at the till and on your storefront."
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <SellWithoutStockCard />
               </div>
             </SectionHeading>
           )}

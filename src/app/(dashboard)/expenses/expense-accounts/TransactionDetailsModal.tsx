@@ -14,6 +14,7 @@ import { Check, ClipboardList, User, X } from "lucide-react";
 import moment from "moment";
 import { useState } from "react";
 import RejectTransferDialog from "../approvals/RejectTransferDialog";
+import { canCurrentUserApprove } from "@/types/expense-governance";
 import {
   getCategoryMeta,
   getDecidedBy,
@@ -63,9 +64,9 @@ const TransactionDetailsModal = ({
   const busy = approvePending || rejectPending;
   // Comes back as a boolean, but the schema types it as a string — a literal
   // "false" would otherwise be truthy and offer an Approve button that 403s.
-  const canDecide =
-    transaction.can_current_user_approve === true ||
-    transaction.can_current_user_approve === "true";
+  const canDecide = canCurrentUserApprove(
+    transaction.can_current_user_approve,
+  );
 
   const categoryLabel = getRefLabel(transaction.category, "Uncategorised");
   const catMeta = getCategoryMeta(categoryLabel);

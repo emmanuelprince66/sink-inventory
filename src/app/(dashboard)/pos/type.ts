@@ -1,4 +1,5 @@
 // Type definitions for POS system
+import type { DiscountThreshold } from "@/utils/discountTiers";
 
 export interface Variation {
   id: string;
@@ -10,6 +11,8 @@ export interface Variation {
   cost_price?: number;
   discount?: number;
   discount_threshold?: number;
+  /** Volume tiers. When set, they replace discount/discount_threshold. */
+  discount_thresholds?: DiscountThreshold[];
   expiry_date?: string;
   low_stock_threshold?: number;
   sold?: number;
@@ -30,6 +33,8 @@ export interface Product {
   unit?: string;
   discount?: number;
   discount_threshold?: number;
+  /** Volume tiers. When set, they replace discount/discount_threshold. */
+  discount_thresholds?: DiscountThreshold[];
   cost_price?: number;
   expiry_date?: string;
   low_stock_threshold?: number;
@@ -51,6 +56,8 @@ export interface CartItem {
   category?: string;
   discount?: number;
   discount_threshold?: number;
+  /** Volume tiers. When set, they replace discount/discount_threshold. */
+  discount_thresholds?: DiscountThreshold[];
   // Variation-specific fields
   parentProductId?: string;
   parentProductName?: string;
@@ -61,6 +68,8 @@ export interface CartItem {
   low_stock_threshold?: number;
   sold?: number;
   unit?: string;
+  /** Price when added, so a till markdown below it can be detected. */
+  list_price?: number;
   // Loyalty redemption. A reward puts its free product or service in the cart
   // as its own line so the cashier hands over something they can see, rather
   // than a discount that only appears at the total.

@@ -17,6 +17,7 @@ import {
 import { format } from "date-fns";
 import { Download, PlusCircle, Printer } from "lucide-react";
 import printJS from "print-js";
+import { getLineDiscount } from "@/lib/store/cart-store";
 import { useEffect, useRef, useState } from "react";
 import { isRewardLine } from "./loyaltyReward";
 
@@ -608,13 +609,8 @@ const ReceiptPDFDocument = ({
 
             {/* Table Rows */}
             {cart.map((item) => {
-              const hasItemDiscount =
-                item.type === "PRODUCT" &&
-                item.discount_threshold &&
-                item.discount &&
-                (item.cartQuantity || 1) >= item.discount_threshold;
-
-              const itemDiscount = hasItemDiscount ? item.discount : 0;
+              // Per-unit volume discount (tier or legacy threshold).
+              const itemDiscount = getLineDiscount(item)?.unitDiscount ?? 0;
               const hasVat = item.allow_tax && vatInfo?.enabled;
               const isReward = loyalty.isRewardItem(item);
 
@@ -636,7 +632,7 @@ const ReceiptPDFDocument = ({
                     <Text>
                       {formatToNaira(item?.selling_price ?? item.amount ?? 0)}
                     </Text>
-                    {hasItemDiscount && (
+                    {itemDiscount > 0 && (
                       <Text
                         style={{
                           fontSize: 6,
@@ -1064,13 +1060,8 @@ const PrintReceiptView = ({
               </thead>
               <tbody>
                 {cart.map((item) => {
-                  const hasItemDiscount =
-                    item.type === "PRODUCT" &&
-                    item.discount_threshold &&
-                    item.discount &&
-                    (item.cartQuantity || 1) >= item.discount_threshold;
-
-                  const itemDiscount = hasItemDiscount ? item.discount : 0;
+                  // Per-unit volume discount (tier or legacy threshold).
+              const itemDiscount = getLineDiscount(item)?.unitDiscount ?? 0;
                   const isReward = loyalty.isRewardItem(item);
                   const hasVat = item.allow_tax && vatInfo?.enabled;
 
@@ -1099,7 +1090,7 @@ const PrintReceiptView = ({
                               ? formatToNaira(item.selling_price)
                               : formatToNaira(Number(item.amount ?? 0))}
                           </div>
-                          {hasItemDiscount && (
+                          {itemDiscount > 0 && (
                             <div className="discount-text">
                               Discount - {formatToNaira(itemDiscount)}
                             </div>

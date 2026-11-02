@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/toast/useToast";
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
+import { usePosOffline } from "@/lib/offline/offlineMode";
+import { newClientSaleId } from "@/lib/offline/offlineSales";
 import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useIsUserSubscribeStore } from "@/lib/store/useIsUserSubscribeStore";
@@ -28,7 +30,7 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { format } from "date-fns";
 import { ArrowBigLeftDash, CalendarIcon, Gift, X } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AddBankForm } from "../settings/bank/AddBankForm";
 import { isRewardLine } from "./loyaltyReward";
 
@@ -175,6 +177,17 @@ const ReceiptPage = ({
    */
   const settledByLoyalty = loyaltyRewardValue > 0 && payableTotal === 0;
 
+  /**
+   * Offline, only Cash and Bank Transfer can be taken: the sale is saved on
+   * this device and synced later. Advance, credit, partial and split payments,
+   * and loyalty redemptions, need the server to check them at the till.
+   */
+  // False with no connection, and when Offline mode is switched on.
+  const isOnline = !usePosOffline();
+  const hasLoyaltyRedemption =
+    !!loyaltyReward?.id || cart.some((item: any) => isRewardLine(item));
+  const offlineBlocked = !isOnline && hasLoyaltyRedemption;
+
   const [payloadData, setPayloadData] = useState({});
   console.log("payloadData", payloadData);
 
@@ -258,6 +271,7 @@ const ReceiptPage = ({
     createSale,
     createSalePending,
     resetCreateSale,
+    saveOfflineSale,
     BankDataLoading,
     BankData,
     BankError,
@@ -315,11 +329,31 @@ const ReceiptPage = ({
     if (paymentMethod === "LOYALTY") setPaymentMethod("");
   }, [settledByLoyalty, paymentMethod, isChecked]);
 
+  // Losing the connection mid-checkout drops any choice offline can't take.
+  useEffect(() => {
+    if (isOnline) return;
+    if (isChecked) {
+      setIsChecked(false);
+      setSplitPayments([]);
+    }
+    if (paymentMethod && !["CASH", "BANK"].includes(paymentMethod)) {
+      setPaymentMethod("");
+      setPartialAmount("");
+      setPartialPaymentMethod("");
+      setDueDate(undefined);
+    }
+  }, [isOnline, isChecked, paymentMethod]);
+
   // Define payment method options based on customer presence. A sale the
   // reward covered has exactly one, so the picker has nothing to offer.
   const paymentMethodOptions = settledByLoyalty
     ? [{ label: "Loyalty Reward", value: "LOYALTY" }]
-    : customer
+    : !isOnline
+      ? [
+          { label: "Cash", value: "CASH" },
+          { label: "Bank Transfer", value: "BANK" },
+        ]
+      : customer
       ? [
           { label: "Cash", value: "CASH" },
           { label: "Credit", value: "CREDIT" },
@@ -474,7 +508,99 @@ const ReceiptPage = ({
 
   console.log("cart", cart);
 
+  /**
+   * No connection: save the sale on this device in the shape the sync
+   * endpoint takes, then show the receipt as usual. It's posted to
+   * sale/<id>/sync/ when the till is back online.
+   */
+  // Saving to the device is async, so guard against a double tap queuing
+  // the same sale twice under two different ids.
+  const [offlineSaving, setOfflineSaving] = useState(false);
+  const offlineSavingRef = useRef(false);
+
+  const handleOfflineSale = async () => {
+    if (offlineBlocked || offlineSavingRef.current) return;
+    if (paymentMethod !== "CASH" && paymentMethod !== "BANK") {
+      showToast("Only Cash or Bank Transfer can be taken offline", "error");
+      return;
+    }
+    if (paymentMethod === "BANK" && !selectedBank) {
+      showToast("Bank selection is required", "error");
+      return;
+    }
+    if (!business_id) return;
+
+    // Now, or the picked sales date at the current time of day.
+    const occurred = new Date();
+    if (cartState.dateManuallySet && selectedDate) {
+      occurred.setFullYear(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+      );
+    }
+
+    const { getItemDiscountDisplay } = useCartStore.getState();
+    const clientSaleId = newClientSaleId();
+
+    offlineSavingRef.current = true;
+    setOfflineSaving(true);
+    await saveOfflineSale({
+      client_sale_id: clientSaleId,
+      business_id,
+      total: payableTotal,
+      created_at: new Date().toISOString(),
+      // Shown on the Offline Sales page so the cashier can see what's queued.
+      display: {
+        items: cart.map((item: any) => {
+          const quantity = item.cartQuantity || 1;
+          const price =
+            Number(item?.type === "SERVICE" ? item.amount : item?.selling_price) || 0;
+          const discount = getItemDiscountDisplay(item)?.totalItemDiscount ?? 0;
+          return {
+            name: item.name,
+            quantity,
+            line_total: price * quantity - discount,
+          };
+        }),
+        ...(attendant?.name && { attendant_name: attendant.name }),
+        ...(customer?.name && { customer_name: customer.name }),
+      },
+      payload: {
+        client_sale_id: clientSaleId,
+        idempotency_key: `pos-${clientSaleId}`,
+        occurred_at: occurred.toISOString(),
+        method: paymentMethod,
+        ...(customer?.id && { customer: customer.id }),
+        ...(attendant?.id && { attendant: attendant.id }),
+        ...(paymentMethod === "BANK" && { bank: selectedBank }),
+        description: "Offline POS checkout",
+        products: cart.map((item: any) => {
+          const unitPrice =
+            Number(
+              item?.type === "SERVICE" ? item.amount : item?.selling_price,
+            ) || 0;
+          const discount = getItemDiscountDisplay(item)?.totalItemDiscount ?? 0;
+          return {
+            id: item.productId ?? item.id,
+            type: item.type,
+            quantity: item.cartQuantity || 1,
+            unit_price: unitPrice.toFixed(2),
+            discount: discount.toFixed(2),
+          };
+        }),
+      },
+    });
+    offlineSavingRef.current = false;
+    setOfflineSaving(false);
+  };
+
   const handleSubmitPayment = () => {
+    if (!isOnline) {
+      handleOfflineSale();
+      return;
+    }
+
     const payload = createPayload();
 
     if (payload) {
@@ -856,8 +982,9 @@ const ReceiptPage = ({
             </div>
           )}
 
-          {/* Split Bill Toggle — nothing to split when the reward covered it */}
-          {!settledByLoyalty && (
+          {/* Split Bill Toggle — nothing to split when the reward covered it,
+              and not offered offline */}
+          {!settledByLoyalty && isOnline && (
           <div className="w-full bg-primary-green-200 flex flex-end p-1 rounded-lg">
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -1297,10 +1424,19 @@ const ReceiptPage = ({
 
           {/* Sticky bottom — Pay button */}
           <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5">
+            {!isOnline && (
+              <p
+                className={`mb-2 text-[11px] ${offlineBlocked ? "font-bold text-error-1" : "text-grey-3"}`}
+              >
+                {offlineBlocked
+                  ? "Loyalty rewards can't be redeemed offline. Remove the reward or wait for the connection."
+                  : "Offline: this sale is saved on this device and synced when the connection is back."}
+              </p>
+            )}
             <Button
               className="w-full bg-primary-green-300 text-white"
               onClick={openSureModal}
-              disabled={isSubmitDisabled()}
+              disabled={isSubmitDisabled() || offlineBlocked}
             >
               Pay{" "}
               {/* {formatToNaira(vatInfo?.enabled ? vatInfo.totalWithVat : total)} */}
@@ -1322,9 +1458,9 @@ const ReceiptPage = ({
                 <Button
                   className="bg-primary-green-300 text-white "
                   onClick={handleSubmitPayment}
-                  disabled={createSalePending}
+                  disabled={createSalePending || offlineSaving}
                 >
-                  {createSalePending ? <Spinner /> : "Yes"}
+                  {createSalePending || offlineSaving ? <Spinner /> : "Yes"}
                 </Button>
 
                 <Button

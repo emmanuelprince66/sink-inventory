@@ -1,3 +1,8 @@
+import { maxSellableQuantity } from "@/utils/stock";
+import {
+  calculateProductDiscount,
+  LineDiscountResult,
+} from "@/utils/discountTiers";
 import { isRewardLine } from "@/app/(dashboard)/pos/loyaltyReward";
 import { CartItem } from "@/app/(dashboard)/pos/type";
 import { create } from "zustand";
@@ -123,15 +128,37 @@ interface CartStore {
   getAutomaticDiscountAmount: () => number;
   getTotalPrice: () => number;
   getEligibleItems: () => CartItem[];
-  incrementQuantity: (itemId: string) => void;
+  incrementQuantity: (itemId: string, allowOversell?: boolean) => void;
   decrementQuantity: (itemId: string) => void;
-  incrementDecimalQuantity: (itemId: string) => void;
+  incrementDecimalQuantity: (itemId: string, allowOversell?: boolean) => void;
   decrementDecimalQuantity: (itemId: string) => void;
   getItemDiscountDisplay: (item: CartItem) => {
     totalItemDiscount: number;
     perUnitDiscount: number;
+    /** Set when a discount_thresholds tier applied (1-based). */
+    tierNumber: number | null;
+    tier: LineDiscountResult["appliedTier"];
   } | null;
 }
+
+/**
+ * The volume discount on one cart line: its tier (discount_thresholds), or
+ * the legacy single threshold. Services and loyalty reward lines get none,
+ * and neither does a line the cashier marked below its normal price: the
+ * backend keeps that price as-is and doesn't stack a volume discount on it.
+ */
+export const getLineDiscount = (item: CartItem): LineDiscountResult | null => {
+  if (item.type !== "PRODUCT" || isRewardLine(item)) return null;
+  const price = Number(item.amount || item.selling_price || 0);
+  if (item.list_price != null && price < Number(item.list_price)) return null;
+  return calculateProductDiscount(
+    price,
+    item.cartQuantity || 1,
+    item.discount_thresholds ?? [],
+    Number(item.discount) || 0,
+    Number(item.discount_threshold) || 0,
+  );
+};
 
 const generateCartId = () =>
   `cart_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
@@ -338,7 +365,14 @@ export const useCartStore = create<CartStore>()(
               ...slot,
               items: [
                 ...slot.items,
-                { ...item, cartQuantity: item.cartQuantity || 1 },
+                {
+                  ...item,
+                  cartQuantity: item.cartQuantity || 1,
+                  // Normal price, so a till markdown can be told apart.
+                  list_price:
+                    item.list_price ??
+                    Number(item.amount || item.selling_price || 0),
+                },
               ],
             };
           }),
@@ -376,9 +410,14 @@ export const useCartStore = create<CartStore>()(
               if (item.id === id) {
                 if (item.type === "SERVICE") {
                   return { ...item, amount: price };
-                } else {
-                  return { ...item, selling_price: price };
                 }
+                // Variation lines carry `amount` too, and the subtotal reads
+                // it first, so both have to move.
+                return {
+                  ...item,
+                  selling_price: price,
+                  ...(item.amount != null && { amount: price }),
+                };
               }
               return item;
             }),
@@ -437,34 +476,26 @@ export const useCartStore = create<CartStore>()(
         }, 0),
 
       getAutomaticDiscountAmount: () =>
-        get().cartItems.reduce((totalDiscount, item) => {
-          if (
-            item.type === "PRODUCT" &&
-            item.discount_threshold &&
-            item.discount &&
-            (item.cartQuantity || 1) >= item.discount_threshold
-          ) {
-            return totalDiscount + item.discount * (item.cartQuantity || 1);
-          }
-          return totalDiscount;
-        }, 0),
+        get().cartItems.reduce(
+          (total, item) => total + (getLineDiscount(item)?.totalDiscount ?? 0),
+          0,
+        ),
 
       getTotalPrice: () =>
         get().getSubtotal() - get().getAutomaticDiscountAmount(),
 
       getEligibleItems: () =>
         get().cartItems.filter(
-          (item) =>
-            item.type === "PRODUCT" &&
-            item.discount_threshold &&
-            item.discount &&
-            (item.cartQuantity || 1) >= item.discount_threshold,
+          (item) => (getLineDiscount(item)?.totalDiscount ?? 0) > 0,
         ),
 
-      incrementQuantity: (itemId) => {
+      incrementQuantity: (itemId, allowOversell = false) => {
         const item = get().cartItems.find((item) => item.id === itemId);
         if (!item) return;
-        const availableQuantity = item.quantity ?? 999;
+        const availableQuantity = maxSellableQuantity(
+          item.quantity,
+          allowOversell,
+        );
         const currentQuantity = item.cartQuantity || 1;
         if (currentQuantity < availableQuantity) {
           get().updateCartItemQuantity(itemId, currentQuantity + 1);
@@ -480,10 +511,13 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      incrementDecimalQuantity: (itemId) => {
+      incrementDecimalQuantity: (itemId, allowOversell = false) => {
         const item = get().cartItems.find((item) => item.id === itemId);
         if (!item) return;
-        const availableQuantity = item.quantity ?? 999;
+        const availableQuantity = maxSellableQuantity(
+          item.quantity,
+          allowOversell,
+        );
         const currentQuantity = item.cartQuantity || 0.5;
         const newQuantity = parseFloat((currentQuantity + 0.5).toFixed(1));
         if (newQuantity <= availableQuantity) {
@@ -503,19 +537,14 @@ export const useCartStore = create<CartStore>()(
       },
 
       getItemDiscountDisplay: (item) => {
-        if (
-          item.type === "PRODUCT" &&
-          item.discount_threshold &&
-          item.discount &&
-          (item.cartQuantity || 1) >= item.discount_threshold
-        ) {
-          const totalItemDiscount = item.discount * (item.cartQuantity || 1);
-          return {
-            totalItemDiscount,
-            perUnitDiscount: item.discount,
-          };
-        }
-        return null;
+        const result = getLineDiscount(item);
+        if (!result || result.totalDiscount <= 0) return null;
+        return {
+          totalItemDiscount: result.totalDiscount,
+          perUnitDiscount: result.unitDiscount,
+          tierNumber: result.appliedTierNumber,
+          tier: result.appliedTier,
+        };
       },
     }),
     {
