@@ -319,9 +319,13 @@ const syncChunk = async (
   const already: string[] = [];
   const rejected = new Map<string, string>();
   results.forEach((row) => {
-    if (row.status === "SYNCED") saved.push(row.client_sale_id);
-    else if (row.status === "ALREADY_SYNCED") already.push(row.client_sale_id);
-    else rejected.set(
+    // A repeat can arrive as status "ALREADY_SYNCED", or as status "SUCCESS"
+    // with message "ALREADY_SYNCED". Both mean the server has this sale.
+    if (row.status === "ALREADY_SYNCED" || row.message === "ALREADY_SYNCED") {
+      already.push(row.client_sale_id);
+    } else if (row.status === "SYNCED" || row.status === "SUCCESS") {
+      saved.push(row.client_sale_id);
+    } else rejected.set(
         row.client_sale_id,
         row.message || row.status || "Not synced",
       );
