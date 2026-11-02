@@ -94,11 +94,11 @@ export function calculateProductDiscount(
     fallbackThreshold > 0 &&
     quantity >= fallbackThreshold
   ) {
-    // Capped: some older values were saved as naira, not percent.
-    unitDiscount = Math.min(
-      price,
-      round2(price * (Number(fallbackDiscount) / 100)),
-    );
+    // Over 100 can't be a percentage: older values were saved as naira off.
+    unitDiscount =
+      Number(fallbackDiscount) > 100
+        ? Math.min(Number(fallbackDiscount), price)
+        : round2(price * (Number(fallbackDiscount) / 100));
   }
 
   const totalDiscount = round2(unitDiscount * quantity);
