@@ -19,6 +19,7 @@ import {
 } from "@/lib/store/cart-store";
 import { describeDiscount } from "@/utils/discountTiers";
 import { useUserRole } from "@/lib/store/user-store";
+import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   Edit3,
@@ -124,6 +125,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     useState<CartItem | null>(null);
   const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
   const { user } = useUserRole();
+  const canSeeStock = useCanSeeStock();
 
   const {
     cartItems,
@@ -698,7 +700,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 {priceError}
                               </p>
                             )}
-                            {available != null && (
+                            {canSeeStock && available != null ? (
                               <p
                                 className={`text-[10px] mt-0.5 ${
                                   available <= 0 || overStock
@@ -709,6 +711,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 Available: {available}
                                 {overStock && " - reduce the quantity to continue"}
                               </p>
+                            ) : (
+                              overStock && (
+                                <p className="text-[10px] mt-0.5 font-bold text-error-1">
+                                  Not enough stock - reduce the quantity to
+                                  continue
+                                </p>
+                              )
                             )}
                             {/* Volume discount: the tier now applied, and how
                                 many more units reach the next one. */}

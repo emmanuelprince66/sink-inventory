@@ -5,6 +5,7 @@ import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
 import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { useQueuedStock } from "@/hooks/useQueuedStock";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { formatToNaira } from "@/utils/formatMoney";
@@ -38,6 +39,7 @@ const GeneratePresaleCodeModal: React.FC<GeneratePresaleCodeModalProps> = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
   const allowOversell = useAllowSalesWithoutStock();
+  const canSeeStock = useCanSeeStock();
   const { queuedFor } = useQueuedStock();
 
   /** Stock less anything sold offline and not synced yet. */
@@ -155,7 +157,9 @@ const GeneratePresaleCodeModal: React.FC<GeneratePresaleCodeModalProps> = ({
 
     const maxQuantity = maxQuantityOf(item);
     if (newQuantity > maxQuantity) {
-      showToast(`Maximum available quantity is ${maxQuantity}`, "warning");
+      showToast(canSeeStock
+                ? `Maximum available quantity is ${maxQuantity}`
+                : "Not enough stock for that quantity", "warning");
       return;
     }
 

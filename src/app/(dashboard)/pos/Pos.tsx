@@ -13,6 +13,7 @@ import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
 import { useFreshSaleDate } from "@/hooks/useFreshSaleDate";
 import { useOfflineCacheRefresh } from "@/hooks/useOfflineCache";
 import { useQueuedStock } from "@/hooks/useQueuedStock";
+import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -117,6 +118,7 @@ const Pos: React.FC = () => {
 
   const { user } = useUserRole();
   const userRole = user?.role;
+  const canSeeStock = useCanSeeStock();
 
   const {
     cartItems,
@@ -707,7 +709,7 @@ const Pos: React.FC = () => {
                           </p>
                         )}
                       </div>
-                      {product.type === "PRODUCT" && stock != null && (
+                      {canSeeStock && product.type === "PRODUCT" && stock != null && (
                         <p
                           className={`mt-1 text-[8px] md:text-[10px] ${
                             stock <= 0

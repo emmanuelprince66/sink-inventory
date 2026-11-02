@@ -1,6 +1,7 @@
 "use client";
 
 import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { useQueuedStock } from "@/hooks/useQueuedStock";
 import {
   isUnsellable,
@@ -66,6 +67,7 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
   onAddVariations,
 }) => {
   const allowOversell = useAllowSalesWithoutStock();
+  const canSeeStock = useCanSeeStock();
   const { queuedFor } = useQueuedStock();
   const [selectedVariations, setSelectedVariations] = useState<
     Record<string, number>
@@ -190,9 +192,11 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
                   <p className="text-sm font-semibold text-green-600">
                     {formatToNaira(variation.selling_price)}
                   </p>
-                  <p className="text-xs text-gray-500">
-                    Available: {variation.quantity}
-                  </p>
+                  {canSeeStock && (
+                    <p className="text-xs text-gray-500">
+                      Available: {variation.quantity}
+                    </p>
+                  )}
                 </div>
 
                 {variation.discount_thresholds?.length ? (
