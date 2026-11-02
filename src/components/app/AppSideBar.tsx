@@ -14,6 +14,7 @@ import {
 import { links } from "@/constants/links";
 import { useUserRole } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
+import { countAllQueuedSales } from "@/lib/offline/offlineSales";
 import { deleteCookie } from "cookies-next";
 import {
   ChevronDown,
@@ -122,7 +123,18 @@ export function AppSidebar() {
     });
   }, []);
 
-  const handleLogOut = () => {
+  const handleLogOut = async () => {
+    // They stay on this device, but nothing can send them without a login.
+    const waiting = await countAllQueuedSales().catch(() => 0);
+    if (
+      waiting > 0 &&
+      !window.confirm(
+        `${waiting} offline sale${waiting === 1 ? " hasn't" : "s haven't"} synced yet. They'll stay on this device and sync when someone with access to that business logs in here. Log out anyway?`,
+      )
+    ) {
+      return;
+    }
+
     deleteCookie("accessToken");
     deleteCookie("userRole");
     deleteCookie("refreshToken");

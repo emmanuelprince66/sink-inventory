@@ -45,6 +45,9 @@ const PrintReceiptView = dynamic(() => import("./PrintReceiptView"), {
   ),
 });
 
+/** Long after the attempt, identical items are a new sale, not a retry. */
+const SALE_ATTEMPT_MAX_AGE_MS = 30 * 60 * 1000;
+
 const ReceiptPage = ({
   cart,
   attendant,
@@ -112,8 +115,10 @@ const ReceiptPage = ({
   const setDueDate = (v: Date | undefined) => updateCartState({ dueDate: v });
   const setIsChecked = (v: boolean) => updateCartState({ isChecked: v });
   const setPaymentMethod = (v: string) => updateCartState({ paymentMethod: v });
+  // The sale is confirmed, so its ID is spent: a repeat purchase of the same
+  // items mustn't look like a retry of this one.
   const setCreateSaleResponse = (v: any) =>
-    updateCartState({ saleResponse: v });
+    updateCartState({ saleResponse: v, saleAttempt: null });
   const setSelectedBank = (v: string) => updateCartState({ selectedBank: v });
   const setSelectedBankForSplitPayment = (v: string) =>
     updateCartState({ selectedAccount: v });
@@ -192,6 +197,8 @@ const ReceiptPage = ({
   console.log("payloadData", payloadData);
 
   const { showToast } = useToast();
+  // Sale saved on the device can't be recalculated later, so say so up front.
+  const vatUnknown = !isOnline && Boolean(vatInfo?.unknown);
   const [openAddBankModal, setOpenAddBankModal] = useState(false);
   const openAddBankModalFunc = () => setOpenAddBankModal(true);
   const closeAddBankModal = () => setOpenAddBankModal(false);
@@ -508,10 +515,31 @@ const ReceiptPage = ({
 
   console.log("cart", cart);
 
+  /** This attempt's sale ID: the same one again if it's a retry. */
+  const saleAttemptId = () => {
+    const signature = JSON.stringify(
+      cart.map((item: any) => [
+        item.productId ?? item.id,
+        item.cartQuantity || 1,
+        item.selling_price ?? item.amount,
+      ]),
+    );
+    const saved = cartState.saleAttempt;
+    if (
+      saved?.signature === signature &&
+      Date.now() - saved.at < SALE_ATTEMPT_MAX_AGE_MS
+    ) {
+      return saved.id;
+    }
+    const id = newClientSaleId();
+    updateCartState({ saleAttempt: { id, signature, at: Date.now() } });
+    return id;
+  };
+
   /**
    * No connection: save the sale on this device in the shape the sync
    * endpoint takes, then show the receipt as usual. It's posted to
-   * sale/<id>/sync/ when the till is back online.
+   * sale/<id>/sync/ in the background whenever there's internet.
    */
   // Saving to the device is async, so guard against a double tap queuing
   // the same sale twice under two different ids.
@@ -541,16 +569,21 @@ const ReceiptPage = ({
     }
 
     const { getItemDiscountDisplay } = useCartStore.getState();
-    const clientSaleId = newClientSaleId();
+    const clientSaleId = saleAttemptId();
 
     offlineSavingRef.current = true;
     setOfflineSaving(true);
     await saveOfflineSale({
       client_sale_id: clientSaleId,
       business_id,
-      total: payableTotal,
+      // What the customer's receipt says, tax included.
+      total: Math.max(
+        0,
+        (vatInfo?.enabled ? vatInfo.totalWithVat : total) -
+          (loyaltyRewardValue || 0),
+      ),
       created_at: new Date().toISOString(),
-      // Shown on the Offline Sales page so the cashier can see what's queued.
+      // Shown in the Offline Sales drawer so the cashier can see what's queued.
       display: {
         items: cart.map((item: any) => {
           const quantity = item.cartQuantity || 1;
@@ -563,7 +596,11 @@ const ReceiptPage = ({
             line_total: price * quantity - discount,
           };
         }),
-        ...(attendant?.name && { attendant_name: attendant.name }),
+        ...(vatInfo?.enabled &&
+          vatInfo.amount > 0 && { vat_amount: vatInfo.amount }),
+        ...((attendant?.name ?? (user as any)?.name) && {
+          attendant_name: attendant?.name ?? (user as any)?.name,
+        }),
         ...(customer?.name && { customer_name: customer.name }),
       },
       payload: {
@@ -572,8 +609,17 @@ const ReceiptPage = ({
         occurred_at: occurred.toISOString(),
         method: paymentMethod,
         ...(customer?.id && { customer: customer.id }),
-        ...(attendant?.id && { attendant: attendant.id }),
+        // Who served it. Without this the backend records whoever's login
+        // happens to send the sale, which may be the next cashier on shift.
+        ...((attendant?.id ?? user?.id) && {
+          attendant: attendant?.id ?? user?.id,
+        }),
         ...(paymentMethod === "BANK" && { bank: selectedBank }),
+        // So the server's tax matches the printed receipt even if the rate
+        // changes before this syncs. Left out if the rate couldn't be read.
+        ...(!vatInfo?.unknown && {
+          tax_rate: Number(vatInfo?.rate || 0).toFixed(2),
+        }),
         description: "Offline POS checkout",
         products: cart.map((item: any) => {
           const unitPrice =
@@ -605,6 +651,7 @@ const ReceiptPage = ({
 
     if (payload) {
       const apiPayload: any = {
+        client_sale_id: saleAttemptId(),
         date: selectedDate
           ? format(selectedDate, "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),
@@ -1424,13 +1471,18 @@ const ReceiptPage = ({
 
           {/* Sticky bottom — Pay button */}
           <div className="shrink-0 bg-white p-4 pt-3 border-t border-grey-5">
+            {vatUnknown && (
+              <p className="mb-2 text-[11px] font-bold text-error-1">
+                Tax settings couldn&apos;t load, so this total has no VAT.
+              </p>
+            )}
             {!isOnline && (
               <p
                 className={`mb-2 text-[11px] ${offlineBlocked ? "font-bold text-error-1" : "text-grey-3"}`}
               >
                 {offlineBlocked
                   ? "Loyalty rewards can't be redeemed offline. Remove the reward or wait for the connection."
-                  : "Offline: this sale is saved on this device and synced when the connection is back."}
+                  : "Offline: this sale is saved on this device and syncs on its own when there's internet."}
               </p>
             )}
             <Button

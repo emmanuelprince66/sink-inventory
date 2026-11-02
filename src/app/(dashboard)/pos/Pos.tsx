@@ -1,6 +1,6 @@
 "use client";
 
-import { allowsSalesWithoutStock, isUnsellable } from "@/utils/stock";
+import { isUnsellable, productStockView, withQueuedStock } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
 import NoCartItem from "@/components/app/NoCartItem";
 import { SearchInput } from "@/components/app/SearchInput";
@@ -9,7 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/toast/useToast";
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
 import { useFreshSaleDate } from "@/hooks/useFreshSaleDate";
+import { useOfflineCacheRefresh } from "@/hooks/useOfflineCache";
+import { useQueuedStock } from "@/hooks/useQueuedStock";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -26,6 +29,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  CloudOff,
   FileText,
   Package,
   QrCode,
@@ -36,12 +40,15 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CartTabs from "./CartTabs";
+import ConnectionStatus from "./ConnectionStatus";
 import CustomerBar from "./CustomerBar";
 import SelfCheckoutOrderModal from "./SelfCheckoutOrderModal";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
 import { isOrderCode } from "./instoreDraft";
 import LoadPresaleModal from "./LoadPresaleModal";
+import OfflineSalesDrawer from "./OfflineSalesDrawer";
 import OfflineSyncBanner from "./OfflineSyncBanner";
+import OfflineSyncStatus from "./OfflineSyncStatus";
 import { ScannerButton } from "./ScannerButton";
 import VariationSelectorModal from "./VariationSelectorModal";
 
@@ -102,6 +109,7 @@ const Pos: React.FC = () => {
   const [showSelfCheckoutModal, setShowSelfCheckoutModal] =
     useState<boolean>(false);
   const [scannedOrderCode, setScannedOrderCode] = useState<string>("");
+  const [showOfflineSales, setShowOfflineSales] = useState<boolean>(false);
 
   // Below lg (1024px — phones + tablets), the cart doesn't fit as a side
   // column, so it moves into a bottom-sheet triggered by a floating bar.
@@ -130,6 +138,8 @@ const Pos: React.FC = () => {
     handleScanResult,
     handleAddToCart,
     ProductDataLoading,
+    offlineProducts,
+    findSavedProduct,
     page,
     scannedProductLoading,
     setPage,
@@ -175,10 +185,13 @@ const Pos: React.FC = () => {
     return formatToNaira(product.selling_price || product.amount || 0);
   };
 
-  const allowOversell = allowsSalesWithoutStock(businessData);
+  const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
 
   const handleProductClick = (product: Product): void => {
-    if (isUnsellable(product, allowOversell)) return;
+    if (isUnsellable(productStockView(product, queuedFor).view, allowOversell)) {
+      return;
+    }
 
     // If product has variations, show modal
     if (product.variations && product.variations.length > 0) {
@@ -259,11 +272,16 @@ const Pos: React.FC = () => {
   const isOnline = !usePosOffline();
   const manualOffline = useManualOfflineMode();
 
+  // Saves products (and customers, for roles with a sale to attach one to) on
+  // this device in the background, for search and scanning offline.
+  useOfflineCacheRefresh({ customers: !isPharmacist });
+
   // Checkout and the receipt load lazily. Fetch them up front so a till
   // that drops offline before its first sale can still finish one.
   useEffect(() => {
     import("./CheckoutPage").catch(() => undefined);
     import("./PrintReceiptView").catch(() => undefined);
+    import("print-js").catch(() => undefined);
   }, []);
 
   // Show load presale button for attendant
@@ -285,11 +303,73 @@ const Pos: React.FC = () => {
    */
   const handlePosScan = (scanned: string): void => {
     if (showSelfCheckoutButton && isOrderCode(scanned)) {
+      if (!isOnline) {
+        showToast("Self checkout orders need a connection", "error");
+        return;
+      }
       setScannedOrderCode(scanned.trim().toUpperCase());
       setShowSelfCheckoutModal(true);
       return;
     }
+    if (!isOnline) {
+      handleOfflineScan(scanned);
+      return;
+    }
     handleScanResult(scanned);
+  };
+
+  /** The online scan asks the server; this asks the saved product list. */
+  const handleOfflineScan = (scanned: string): void => {
+    if (offlineProducts.loading) {
+      showToast("Still loading saved products. Scan again in a moment.", "info");
+      return;
+    }
+    if (offlineProducts.empty) {
+      showToast(
+        "No products are saved on this device yet, so this code can't be looked up offline.",
+        "error",
+      );
+      return;
+    }
+
+    const match = findSavedProduct(scanned);
+    if (!match) {
+      showToast(`No saved product matches ${scanned.trim()}`, "error");
+      return;
+    }
+
+    const { product, variation } = match;
+    if (!variation) {
+      // A code on the product itself: same as tapping its card.
+      if (
+        isUnsellable(productStockView(product, queuedFor).view, allowOversell)
+      ) {
+        showToast(`${product.name} is out of stock`, "error");
+        return;
+      }
+      handleProductClick(product);
+      return;
+    }
+
+    if (
+      isUnsellable(
+        withQueuedStock(variation, queuedFor(variation.id)),
+        allowOversell,
+      )
+    ) {
+      showToast(`${variation.name} is out of stock`, "error");
+      return;
+    }
+    // The same line the variation picker builds.
+    handleAddToCart({
+      ...variation,
+      amount: variation.selling_price,
+      parentProductId: product.id,
+      parentProductName: product.name,
+      type: product.type,
+      category: product.category,
+      parentProductVariations: product.variations,
+    });
   };
 
   // Rendered once, either inside the desktop/tablet-landscape side column
@@ -407,14 +487,20 @@ const Pos: React.FC = () => {
 
         {/* Offline mode: for a connection that's up but unreliable */}
         {!isPharmacist && (
-          <label className="flex items-center gap-2 rounded-full border border-grey-5 px-3 py-1.5 cursor-pointer">
-            <Switch
-              checked={manualOffline}
-              onCheckedChange={setManualOfflineMode}
-              aria-label="Offline mode"
-            />
-            <span className="text-xs font-bold text-grey-2">Offline mode</span>
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 rounded-full border border-grey-5 px-3 py-1.5 cursor-pointer">
+              <Switch
+                checked={manualOffline}
+                onCheckedChange={setManualOfflineMode}
+                aria-label="Offline mode"
+              />
+              <span className="text-xs font-bold text-grey-2">
+                Offline mode
+              </span>
+            </label>
+            <ConnectionStatus />
+            <OfflineSyncStatus onOpen={() => setShowOfflineSales(true)} />
+          </div>
         )}
 
         {/* Load Presale Button for Attendants */}
@@ -445,7 +531,9 @@ const Pos: React.FC = () => {
         )}
       </header>
 
-      {!isPharmacist && <OfflineSyncBanner />}
+      {!isPharmacist && (
+        <OfflineSyncBanner onOpenSales={() => setShowOfflineSales(true)} />
+      )}
 
       {/* Cart Tabs — supports multiple simultaneous sales */}
       <CartTabs />
@@ -497,12 +585,50 @@ const Pos: React.FC = () => {
                   </div>
                 ))}
               </div>
+            ) : offlineProducts.active &&
+              (offlineProducts.empty || offlineProducts.noMatches) ? (
+              <div className="flex flex-col items-center gap-3 px-4 py-14 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-warning-2 text-warning-1">
+                  <CloudOff className="h-6 w-6" />
+                </span>
+                {offlineProducts.empty ? (
+                  <>
+                    <p className="text-sm font-extrabold text-grey-1">
+                      No products saved on this device yet
+                    </p>
+                    <p className="max-w-sm text-xs text-grey-3">
+                      Products are saved for offline use when the POS is open
+                      with a working connection. Connect, turn off Offline mode
+                      and keep this page open for a moment.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-extrabold text-grey-1">
+                      No saved products match &ldquo;{offlineProducts.term}
+                      &rdquo;
+                    </p>
+                    <p className="max-w-sm text-xs text-grey-3">
+                      Check the spelling or try the SKU or barcode. Products
+                      added since this device last saved its list won&apos;t
+                      show until the list next updates.
+                    </p>
+                  </>
+                )}
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 md:gap-3">
                 {ProductData?.data?.results?.data?.map((product: Product) => {
+                  // Stock on the card takes off anything sold offline that
+                  // hasn't synced. The product itself is left as the server
+                  // sent it, since that's what goes in the cart.
+                  const { stock, view: stockView } = productStockView(
+                    product,
+                    queuedFor,
+                  );
                   // Greyed out only when it can't be sold; with "sell
                   // without stock" on, empty items stay clickable.
-                  const isOutOfStock = isUnsellable(product, allowOversell);
+                  const isOutOfStock = isUnsellable(stockView, allowOversell);
                   const hasVariations =
                     product.variations && product.variations.length > 0;
                   const isWatchlist = product.watchlist === true;
@@ -574,13 +700,24 @@ const Pos: React.FC = () => {
                         {product.type === "PRODUCT" && (
                           <p
                             className={`text-[8px] font-bold px-2 py-1 rounded-full ${getStatusColor(
-                              product.status,
+                              stockView.status,
                             )}`}
                           >
-                            {product.status || "N/A"}
+                            {stockView.status || "N/A"}
                           </p>
                         )}
                       </div>
+                      {product.type === "PRODUCT" && stock != null && (
+                        <p
+                          className={`mt-1 text-[8px] md:text-[10px] ${
+                            stock <= 0
+                              ? "font-bold text-error-1"
+                              : "font-medium text-grey-3"
+                          }`}
+                        >
+                          Stock: {stock}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -707,6 +844,13 @@ const Pos: React.FC = () => {
           onAddVariations={handleAddVariations}
         />
       </CustomModal>
+
+      {!isPharmacist && (
+        <OfflineSalesDrawer
+          open={showOfflineSales}
+          onOpenChange={setShowOfflineSales}
+        />
+      )}
 
       <SelfCheckoutOrderModal
         key={scannedOrderCode || "manual"}

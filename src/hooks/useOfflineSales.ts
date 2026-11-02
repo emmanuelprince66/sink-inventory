@@ -1,14 +1,17 @@
 "use client";
 
-import { queryKey } from "@/constants/query-key";
 import { useManualOfflineMode } from "@/lib/offline/offlineMode";
 import {
+  getAllQueuedSales,
   getQueuedSales,
+  getSyncIssue,
+  isSyncingOffline,
   QueuedOfflineSale,
   subscribeOfflineSales,
-  syncOfflineQueue,
+  SyncIssue,
   SyncOutcome,
 } from "@/lib/offline/offlineSales";
+import { syncAndSettle } from "@/lib/offline/offlineSyncRun";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
@@ -16,9 +19,9 @@ import { useToast } from "./toast/useToast";
 import { useOnlineStatus } from "./useOnlineStatus";
 
 /**
- * The offline sales queue for the current business. Syncing is manual: sales
- * stay on this device until someone presses Sync on the Offline Sales page,
- * which is only allowed with Offline mode off and a connection.
+ * The offline sales queue for the current business, for showing it and for the
+ * Sync now button. The sending itself happens in the background: see
+ * OfflineSalesAutoSync.
  */
 export const useOfflineSales = () => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -30,6 +33,8 @@ export const useOfflineSales = () => {
   const [pending, setPending] = useState<QueuedOfflineSale[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [issue, setIssue] = useState<SyncIssue | null>(null);
+  const [otherBusinessStuck, setOtherBusinessStuck] = useState(0);
 
   const refresh = useCallback(async () => {
     if (!business_id) {
@@ -37,6 +42,19 @@ export const useOfflineSales = () => {
       setLoaded(true);
       return;
     }
+    setSyncing(isSyncingOffline(business_id));
+    setIssue(getSyncIssue(business_id));
+    getAllQueuedSales()
+      .then((sales) =>
+        setOtherBusinessStuck(
+          sales.filter(
+            (sale) =>
+              sale.business_id !== business_id &&
+              getSyncIssue(sale.business_id)?.needsAttention,
+          ).length,
+        ),
+      )
+      .catch(() => undefined);
     try {
       setPending(await getQueuedSales(business_id));
     } catch {
@@ -51,41 +69,29 @@ export const useOfflineSales = () => {
     return subscribeOfflineSales(refresh);
   }, [refresh]);
 
-  /** Why syncing isn't allowed right now, or null when it is. */
-  const syncBlockedReason = manualOffline
-    ? "Turn off Offline mode to sync."
-    : !isOnline
-      ? "You're offline. Connect to the internet to sync."
-      : null;
+  /** Why syncing can't happen right now, or null when it can. */
+  const syncBlockedReason = !isOnline
+    ? "No internet. These sales will sync when it's back."
+    : null;
 
+  // Pressed by a person, so this also retries sales the server refused. No
+  // success message: the status and the drawer already show it. A failure is
+  // worth saying, since they're waiting on the result.
   const syncNow = useCallback(async (): Promise<SyncOutcome | null> => {
     if (!business_id || syncBlockedReason) return null;
-
-    setSyncing(true);
-    try {
-      const outcome = await syncOfflineQueue(business_id);
-      if (outcome.synced) {
-        showToast(
-          `${outcome.synced} offline sale${outcome.synced === 1 ? "" : "s"} synced`,
-          "success",
-        );
-        // Stock and sales history moved on the server.
-        [
-          queryKey.inventory.getAllInventory,
-          queryKey.sales.getAllSalesHistory,
-          queryKey.transactions.getAllTransactions,
-        ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
-      }
-      if (outcome.failed) {
-        showToast(
-          `${outcome.failed} sale${outcome.failed === 1 ? "" : "s"} could not sync. See the reason next to each one.`,
-          "error",
-        );
-      }
-      return outcome;
-    } finally {
-      setSyncing(false);
+    const outcome = await syncAndSettle(business_id, queryClient, {
+      includeRejected: true,
+    });
+    if (outcome.lostLock) {
+      showToast("Another tab is syncing these. Try again in a moment.", "info");
+    } else if (outcome.failed) {
+      showToast(
+        outcome.error ??
+          `${outcome.failed} sale${outcome.failed === 1 ? "" : "s"} could not sync.`,
+        "error",
+      );
     }
+    return outcome;
   }, [business_id, syncBlockedReason, queryClient, showToast]);
 
   return {
@@ -93,6 +99,9 @@ export const useOfflineSales = () => {
     manualOffline,
     pending,
     pendingCount: pending.length,
+    failedCount: pending.filter((sale) => sale.rejected).length,
+    issue,
+    otherBusinessStuck,
     loaded,
     syncing,
     syncBlockedReason,

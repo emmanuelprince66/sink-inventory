@@ -5,6 +5,7 @@ import { useFetchLoyaltyProgramsQuery } from "@/api/loyalty/fetch-loyalty-progra
 import SegmentTag from "@/components/SegmentTag";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import { useActiveCartState, useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,10 @@ const CustomerBar = () => {
 
   const { showToast } = useToast();
 
+  // Loyalty lives on the server, so offline it isn't looked up at all. The
+  // customer still goes on the sale and the backend applies points on sync.
+  const posOffline = usePosOffline();
+
   const loyaltyCode = customer?.loyalty_code ?? null;
   const {
     data: walletResponse,
@@ -66,7 +71,7 @@ const CustomerBar = () => {
     isSuccess: walletLoaded,
   } = useFetchLoyaltyProgressQuery({
     params: { loyaltyCode: loyaltyCode ?? "" },
-    enabled: Boolean(loyaltyCode),
+    enabled: Boolean(loyaltyCode) && !posOffline,
   } as any);
 
   const wallet = walletResponse?.data;
@@ -85,7 +90,7 @@ const CustomerBar = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const { data: programsResponse } = useFetchLoyaltyProgramsQuery({
     params: { id: business_id ?? "" },
-    enabled: Boolean(business_id) && Boolean(loyaltyCode),
+    enabled: Boolean(business_id) && Boolean(loyaltyCode) && !posOffline,
   } as any);
 
   const programs = useMemo(
@@ -127,7 +132,7 @@ const CustomerBar = () => {
    * it. `available_rewards` lists what is unspent, so absence is the answer.
    */
   useEffect(() => {
-    if (!appliedReward?.id || !walletLoaded) return;
+    if (posOffline || !appliedReward?.id || !walletLoaded) return;
     if (wallet?.loyalty_code && wallet.loyalty_code !== loyaltyCode) return;
 
     const stillOffered = availableRewards.some(
@@ -238,9 +243,12 @@ const CustomerBar = () => {
   };
 
   const openLoyaltyFor = (selected: any) => {
-    if (!selected?.loyalty_code) {
+    if (!selected?.loyalty_code || posOffline) {
       // Nothing to show a cashier about someone with no card — the modal would
-      // only say "not enrolled" over a button they already pressed.
+      // only say "not enrolled" over a button they already pressed. Offline
+      // there's no wallet to show for anyone. A reward on the sale belonged to
+      // whoever was selected before, so its free line goes too.
+      clearRewardLines();
       updateCartState({ customer: selected, loyaltyReward: null });
       setIsCustomerDrawerOpen(false);
       return;
@@ -266,9 +274,15 @@ const CustomerBar = () => {
       <LoyaltyScanner
         open={isScannerOpen}
         onOpenChange={setIsScannerOpen}
-        onResolved={(code: string, matched?: any) =>
-          setLoyaltyView({ code, customer: matched })
-        }
+        onResolved={(code: string, matched?: any) => {
+          if (posOffline) {
+            // Straight onto the sale: there's no wallet to look at first.
+            clearRewardLines();
+            updateCartState({ customer: matched, loyaltyReward: null });
+            return;
+          }
+          setLoyaltyView({ code, customer: matched });
+        }}
       />
 
       <CustomerLoyaltyModal
@@ -300,8 +314,9 @@ const CustomerBar = () => {
           <div className="min-w-0">
             <p className="text-sm font-extrabold text-grey-1">Customer</p>
             <p className="text-[11px] text-grey-3">
-              Add or scan a card first — any reward waiting shows up before a
-              single item is rung up.
+              {posOffline
+                ? "You're offline. You can still add a customer; their loyalty updates when the sale syncs."
+                : "Add or scan a card first — any reward waiting shows up before a single item is rung up."}
             </p>
           </div>
           <div className="flex w-full gap-2 sm:w-auto">
@@ -327,7 +342,8 @@ const CustomerBar = () => {
     );
   }
 
-  const rewardReady = Boolean(readyReward) && !appliedReward;
+  // Redeeming is blocked offline, so don't offer it from a remembered wallet.
+  const rewardReady = Boolean(readyReward) && !appliedReward && !posOffline;
 
   return (
     <div
@@ -374,17 +390,27 @@ const CustomerBar = () => {
 
           <p className="mt-0.5 truncate text-[11px] text-grey-3">
             {customer.phone || wallet?.phone || "No phone"}
-            {wallet?.program ? ` · ${wallet.program}` : ""}
-            {enrollment?.progress_display
-              ? ` · ${enrollment.progress_display}`
-              : loyaltyCode
-                ? walletLoading
-                  ? " · loading loyalty…"
-                  : ""
-                : " · No loyalty card"}
+            {posOffline ? (
+              loyaltyCode ? (
+                " · Loyalty updates when this sale syncs"
+              ) : (
+                ""
+              )
+            ) : (
+              <>
+                {wallet?.program ? ` · ${wallet.program}` : ""}
+                {enrollment?.progress_display
+                  ? ` · ${enrollment.progress_display}`
+                  : loyaltyCode
+                    ? walletLoading
+                      ? " · loading loyalty…"
+                      : ""
+                    : " · No loyalty card"}
+              </>
+            )}
           </p>
 
-          {target > 0 && (
+          {target > 0 && !posOffline && (
             <div className="mt-1.5 h-1.5 max-w-xs overflow-hidden rounded-full bg-grey-6">
               <div
                 className="h-full rounded-full bg-primary-green-300"
@@ -395,7 +421,7 @@ const CustomerBar = () => {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          {loyaltyCode && (
+          {loyaltyCode && !posOffline && (
             <Button
               variant="outline"
               className="h-9 border-grey-5 px-3 text-[11px] hover:border-primary-green-300 hover:bg-secondary-6"

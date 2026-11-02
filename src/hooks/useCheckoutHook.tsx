@@ -8,6 +8,7 @@ import {
   queueOfflineSale,
   QueuedOfflineSale,
 } from "@/lib/offline/offlineSales";
+import { setManualOfflineMode } from "@/lib/offline/offlineMode";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
@@ -115,6 +116,28 @@ export const useCheckoutHook = ({
     // than is left, the backend names the item and what remains: drop that
     // line to the available amount so the cashier can just retry.
     onError: (error: any) => {
+      // Connected to Wi-Fi with no internet: the browser says online, so the
+      // only sign is the request failing. TypeError is the browser's own
+      // failure; "fetch failed" is the same thing from our API route.
+      const unreachable =
+        error instanceof TypeError ||
+        /fetch failed|failed to fetch|network/i.test(String(error?.message));
+      if (unreachable) {
+        showToast("Can't reach the internet.", "error", {
+          duration: 15000,
+          description:
+            "Turn on Offline mode to keep selling, then press Pay again. It won't be recorded twice.",
+          action: {
+            label: "Turn on Offline mode",
+            onClick: () => {
+              setManualOfflineMode(true);
+              closeSureModal?.();
+            },
+          },
+        });
+        return;
+      }
+
       const message: string =
         error?.message || error?.error || "Error creating sale";
       showToast(message, "error");
@@ -154,7 +177,7 @@ export const useCheckoutHook = ({
       );
       return;
     }
-    showToast("Saved offline. It will sync when you're back online.", "success");
+    showToast("Sale saved", "success");
     setCreateSaleResponse({
       success: true,
       offline: true,

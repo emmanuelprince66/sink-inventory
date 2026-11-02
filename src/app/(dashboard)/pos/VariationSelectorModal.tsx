@@ -1,7 +1,12 @@
 "use client";
 
 import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
-import { isUnsellable, maxSellableQuantity } from "@/utils/stock";
+import { useQueuedStock } from "@/hooks/useQueuedStock";
+import {
+  isUnsellable,
+  maxSellableQuantity,
+  withQueuedStock,
+} from "@/utils/stock";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   DiscountThreshold,
@@ -61,6 +66,7 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
   onAddVariations,
 }) => {
   const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
   const [selectedVariations, setSelectedVariations] = useState<
     Record<string, number>
   >({});
@@ -80,7 +86,12 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
     setSelectedVariations((prev) => {
       const currentQty = prev[variationId] || 0;
       const variation = product.variations?.find((v) => v.id === variationId);
-      const maxQty = maxSellableQuantity(variation?.quantity, allowOversell);
+      const maxQty = maxSellableQuantity(
+        variation
+          ? withQueuedStock(variation, queuedFor(variationId)).quantity
+          : undefined,
+        allowOversell,
+      );
       const newQty = Math.max(0, Math.min(currentQty + change, maxQty));
 
       if (newQty === 0) {
@@ -134,7 +145,13 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
       {/* Variations List */}
       <div className="max-h-[60vh] overflow-y-auto mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {product.variations?.map((variation) => {
+          {product.variations?.map((rawVariation) => {
+            // For display and caps only. What goes in the cart keeps the
+            // server's figure, or the queued units would come off it twice.
+            const variation = withQueuedStock(
+              rawVariation,
+              queuedFor(rawVariation.id),
+            );
             const isOutOfStock = isUnsellable(variation, allowOversell);
             const selectedQty = selectedVariations[variation.id] || 0;
             const maxQuantity = maxSellableQuantity(

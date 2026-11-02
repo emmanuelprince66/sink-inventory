@@ -3,6 +3,11 @@
 import { fetchCustomers } from "@/api/customer/useGetCustomerQuery";
 import { Spinner } from "@/components/app/Spinner";
 import { useToast } from "@/hooks/toast/useToast";
+import {
+  findCustomerByLoyaltyCode,
+  readCached,
+} from "@/lib/offline/offlineCache";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useState } from "react";
 import { BarCodeScanner } from "./BarCodeScanner";
@@ -29,11 +34,21 @@ const LoyaltyScanner = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
   const [looking, setLooking] = useState(false);
+  const posOffline = usePosOffline();
 
   const handleScan = async (raw: string) => {
     const code = (raw || "").trim();
     onOpenChange(false);
     if (!code || !business_id) return;
+
+    // Offline there's no wallet to show, only who the card belongs to.
+    if (posOffline) {
+      const saved = await readCached("customers", business_id).catch(() => []);
+      const match = findCustomerByLoyaltyCode(saved, code);
+      if (match) onResolved(code, match);
+      else showToast("No customer with this card is saved on this device", "error");
+      return;
+    }
 
     setLooking(true);
     try {

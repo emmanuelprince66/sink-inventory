@@ -7,7 +7,21 @@ import { useUserRole } from "@/lib/store/user-store";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
-import { allowsSalesWithoutStock, isUnsellable } from "@/utils/stock";
+import { isUnsellable, stockIdOf, withQueuedStock } from "@/utils/stock";
+import {
+  findProductByCode,
+  getStockCorrectedAt,
+  mergeCached,
+  paginate,
+  searchProducts,
+  toSearchableProducts,
+} from "@/lib/offline/offlineCache";
+import { usePosOffline } from "@/lib/offline/offlineMode";
+import { useAllowSalesWithoutStock } from "./useAllowSalesWithoutStock";
+import { useCachedList } from "./useOfflineCache";
+import { useQueuedStock } from "./useQueuedStock";
+
+const PAGE_SIZE = 50;
 
 export const usePosHook = ({
   searchInput,
@@ -20,7 +34,11 @@ export const usePosHook = ({
   addToCart?: any;
   setSearchInput?: any;
   cartItems?: any;
-  incrementQuantity?: (itemId: string, allowOversell?: boolean) => void;
+  incrementQuantity?: (
+    itemId: string,
+    allowOversell?: boolean,
+    queued?: number,
+  ) => void;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
 
@@ -40,7 +58,9 @@ export const usePosHook = ({
 
   // Extract business data for use in components
   const businessData = findBusiness;
-  const allowOversell = allowsSalesWithoutStock(findBusiness);
+  const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
+  const posOffline = usePosOffline();
 
   console.log("BusinessData", BusinessData);
   const debouncedSearchTerm = useDebounce(searchInput || "", 500);
@@ -64,6 +84,7 @@ export const usePosHook = ({
   // Main product search query for regular search input
   const {
     data: ProductData,
+    dataUpdatedAt: productDataUpdatedAt,
     isLoading: ProductDataLoading,
     refetch: refetchProducts,
   } = useGetInventoryQuery({
@@ -71,10 +92,11 @@ export const usePosHook = ({
       id: business_id,
       search: searchTerm,
       page,
-      limit: 50,
+      limit: PAGE_SIZE,
       include_raw_material: "false", // Exclude raw materials from regular search results
     },
-    enabled: !!business_id,
+    // Offline the grid reads the saved products below instead.
+    enabled: !!business_id && !posOffline,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -103,7 +125,7 @@ export const usePosHook = ({
       id: business_id,
       search: scannedSku,
     },
-    enabled: !!scannedSku && !!business_id,
+    enabled: !!scannedSku && !!business_id && !posOffline,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -184,6 +206,77 @@ export const usePosHook = ({
     };
   }, [scannedInventoryData, allProductsData]);
 
+  /* ---- Offline: the saved product list stands in for search and paging ---- */
+  const cachedProducts = useCachedList("products", posOffline);
+  const searchableProducts = useMemo(
+    () => toSearchableProducts(cachedProducts.items),
+    [cachedProducts.items],
+  );
+
+  // Nothing saved yet but this page is still in memory (the first background
+  // save hadn't finished when the connection went): keep showing it rather than
+  // replacing products the cashier can see with a message.
+  const offlineTerm = debouncedSearchTerm.trim();
+  const keepPageInMemory =
+    !cachedProducts.loading &&
+    !cachedProducts.items.length &&
+    !offlineTerm &&
+    Boolean(ProductData?.data?.results?.data?.length);
+  const usingSavedProducts = posOffline && !keepPageInMemory;
+
+  const offlineMatches = useMemo(
+    () =>
+      offlineTerm
+        ? searchProducts(searchableProducts, offlineTerm)
+        : cachedProducts.items,
+    [offlineTerm, searchableProducts, cachedProducts.items],
+  );
+
+  const offlineProductData = useMemo(() => {
+    const { rows, pages } = paginate(offlineMatches, page, PAGE_SIZE);
+    return {
+      data: { pages, results: { data: rows } },
+    };
+  }, [offlineMatches, page]);
+
+  // A narrower search can leave the page number past the end.
+  useEffect(() => {
+    if (usingSavedProducts && page > offlineProductData.data.pages) {
+      setPage(offlineProductData.data.pages);
+    }
+  }, [usingSavedProducts, page, offlineProductData.data.pages]);
+
+  // Offline, a scan has nothing in flight to wait for.
+  useEffect(() => {
+    if (posOffline && scannedSku) setScannedSku(null);
+  }, [posOffline, scannedSku]);
+
+  // Between full refreshes, keep the saved copy of whatever the grid just
+  // fetched current, so stock moved by online sales is right if the connection
+  // drops straight after.
+  // Only a page newer than the saved stock: one fetched before synced sales
+  // were taken off it would put those units back.
+  const lastMergedAt = useRef(0);
+  useEffect(() => {
+    if (posOffline || !business_id) return;
+    if (
+      productDataUpdatedAt <= lastMergedAt.current ||
+      productDataUpdatedAt <= getStockCorrectedAt(business_id)
+    ) {
+      return;
+    }
+    const rows = ProductData?.data?.results?.data;
+    if (Array.isArray(rows)) {
+      lastMergedAt.current = productDataUpdatedAt;
+      mergeCached("products", business_id, rows).catch(() => undefined);
+    }
+  }, [ProductData, productDataUpdatedAt, posOffline, business_id]);
+
+  const findSavedProduct = useCallback(
+    (code: string) => findProductByCode(cachedProducts.items, code),
+    [cachedProducts.items],
+  );
+
   // Utility function to normalize SKU/Barcode values
   const normalizeCode = useCallback(
     (code: string | number | null | undefined): string => {
@@ -222,7 +315,14 @@ export const usePosHook = ({
       }
 
       // Out of stock blocks the sale unless the business sells past zero.
-      if (isUnsellable(cart, allowOversell)) {
+      // Stock here counts what's been sold offline; the cart keeps the server's
+      // figure, so `cart` itself goes in unchanged.
+      if (
+        isUnsellable(
+          withQueuedStock(cart, queuedFor(stockIdOf(cart))),
+          allowOversell,
+        )
+      ) {
         showToast("This item is out of stock", "error");
         return;
       }
@@ -235,7 +335,7 @@ export const usePosHook = ({
       // Product already in cart — bump the quantity instead of blocking.
       const productExist = cartItems?.find((item: any) => item.id === cart.id);
       if (productExist) {
-        incrementQuantity?.(cart.id, allowOversell);
+        incrementQuantity?.(cart.id, allowOversell, queuedFor(stockIdOf(cart)));
         return;
       }
 
@@ -249,6 +349,7 @@ export const usePosHook = ({
       showToast,
       saleCompleted,
       allowOversell,
+      queuedFor,
     ],
   );
 
@@ -338,12 +439,30 @@ export const usePosHook = ({
   }, [scannedSku, refetchScannedProduct]);
 
   return {
-    ProductData: filteredProductData,
+    ProductData: usingSavedProducts ? offlineProductData : filteredProductData,
     handleScanResult,
     handleAddToCart,
     scannedProductLoading,
     BusinessDataLoading,
-    ProductDataLoading,
+    ProductDataLoading: usingSavedProducts
+      ? cachedProducts.loading
+      : ProductDataLoading,
+    offlineProducts: {
+      /** The grid is showing the saved list rather than the server's. */
+      active: usingSavedProducts,
+      loading: posOffline && cachedProducts.loading,
+      /** Nothing has been saved on this device for this business. */
+      empty:
+        posOffline && !cachedProducts.loading && !cachedProducts.items.length,
+      /** The saved list has products, but none match this search. */
+      noMatches:
+        usingSavedProducts &&
+        !cachedProducts.loading &&
+        cachedProducts.items.length > 0 &&
+        offlineMatches.length === 0,
+      term: offlineTerm,
+    },
+    findSavedProduct,
     page,
     setPage,
     scannedSku,

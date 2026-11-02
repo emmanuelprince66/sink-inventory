@@ -92,7 +92,9 @@ const CustomerDrawer = ({
     error: customerError,
     refetch: refetchCustomers,
     hasBusiness,
-  } = useCustomerOptions(searchInput, page);
+    savedListEmpty,
+    usingSavedList,
+  } = useCustomerOptions(searchInput, page, { savedWhenOffline: isPos });
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
@@ -143,10 +145,21 @@ const CustomerDrawer = ({
             />
           </div>
           <div className="w-full p-2">
-            <Button className="w-full h-12" onClick={openCustomerModalFunc}>
+            {/* Creating a customer needs the server. */}
+            <Button
+              className="w-full h-12"
+              onClick={openCustomerModalFunc}
+              disabled={usingSavedList}
+            >
               <Plus />
               Create Customer
             </Button>
+            {usingSavedList && (
+              <p className="mt-2 text-center text-[11px] text-grey-3">
+                You&apos;re offline. Showing customers saved on this device; new
+                customers can be added once you&apos;re back online.
+              </p>
+            )}
           </div>
           <div className="mt-2 space-y-4 flex-grow overflow-y-auto w-full">
             {" "}
@@ -177,6 +190,12 @@ const CustomerDrawer = ({
             ) : !hasBusiness ? (
               <div className="p-4 text-center text-sm text-gray-500">
                 Select a business to load its customers.
+              </div>
+            ) : savedListEmpty ? (
+              <div className="p-4 text-center text-sm text-grey-3">
+                No customers saved on this device yet. They&apos;re saved when
+                the POS is open with a working connection. You can still make
+                this sale without a customer.
               </div>
             ) : customers.length > 0 ? (
               // Show actual customer data when loaded

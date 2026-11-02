@@ -1,5 +1,6 @@
 "use client";
 
+import { clearOfflineCache } from "@/lib/offline/offlineCache";
 import { useBusinessDataStore } from "./useBusinessDataStore";
 import { useBusinessStore } from "./useBusinessStore";
 import { useIsUserSubscribeStore } from "./useIsUserSubscribeStore";
@@ -42,6 +43,10 @@ export const resetBusinessScopedStores = ({
   useSelectedBankStore.getState().clearSelectedBank();
   useIsUserSubscribeStore.getState().clearIsSubscribed();
   useSelectedOrderStore.getState().clearSelectedOrder();
+
+  // The saved product and customer lists. Offline sales waiting to sync are
+  // in a separate database and are not touched.
+  clearOfflineCache().catch(() => undefined);
 
   // The actions above rewrite the persisted entry with the cleared state,
   // which is enough. Dropping the entries outright as well means a store

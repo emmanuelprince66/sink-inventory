@@ -7,6 +7,7 @@ import { NotificationModalProvider } from "../providers/notification-modal-provi
 import { RealtimeProvider } from "../providers/RealtimeProvider";
 import { AppSidebar } from "./AppSideBar";
 import BusinessDataSync from "./BusinessDataSync";
+import OfflineSalesAutoSync from "./OfflineSalesAutoSync";
 import { TopBar } from "./TopBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           snapshot, so keeping that snapshot current is what keeps the whole
           dashboard in the right currency. */}
       <BusinessDataSync />
+      <OfflineSalesAutoSync />
       {/* Inside the shell, so the socket only opens for a signed-in dashboard —
           never on /login or the public /loyalty/join pages. */}
       <RealtimeProvider>

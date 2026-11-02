@@ -50,6 +50,10 @@ const subscribe = (listener: () => void) => {
   };
 };
 
+/** usePosOffline for code outside React, read at the moment it's called. */
+export const isPosOfflineNow = (): boolean =>
+  manualOffline || (typeof navigator !== "undefined" && !navigator.onLine);
+
 /** Whether the cashier switched Offline mode on. */
 export const useManualOfflineMode = (): boolean =>
   useSyncExternalStore(

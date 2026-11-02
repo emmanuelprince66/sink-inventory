@@ -4,8 +4,15 @@ import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/toast/useToast";
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { useQueuedStock } from "@/hooks/useQueuedStock";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { formatToNaira } from "@/utils/formatMoney";
+import {
+  adjustedQuantity,
+  maxSellableQuantity,
+  stockIdOf,
+} from "@/utils/stock";
 import { Check, Copy, FileText, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
@@ -30,6 +37,15 @@ const GeneratePresaleCodeModal: React.FC<GeneratePresaleCodeModalProps> = ({
   const [copied, setCopied] = useState(false);
   const business_id = useBusinessStore((state) => state.business_id);
   const { showToast } = useToast();
+  const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
+
+  /** Stock less anything sold offline and not synced yet. */
+  const maxQuantityOf = (item: any) =>
+    maxSellableQuantity(
+      adjustedQuantity(item.quantity, queuedFor(stockIdOf(item))),
+      allowOversell,
+    );
 
   const { mutate: createPresale, isPending } = useCreatePresaleMutation({
     businessId: business_id,
@@ -137,7 +153,7 @@ const GeneratePresaleCodeModal: React.FC<GeneratePresaleCodeModalProps> = ({
       return;
     }
 
-    const maxQuantity = item.quantity ?? 999;
+    const maxQuantity = maxQuantityOf(item);
     if (newQuantity > maxQuantity) {
       showToast(`Maximum available quantity is ${maxQuantity}`, "warning");
       return;
@@ -222,8 +238,7 @@ const GeneratePresaleCodeModal: React.FC<GeneratePresaleCodeModalProps> = ({
                               onClick={() => handleQuantityChange(item.id, 1)}
                               className="text-gray-600 hover:text-gray-800 text-xs font-bold w-5 h-5 flex items-center justify-center"
                               disabled={
-                                (item.cartQuantity || 1) >=
-                                (item.quantity ?? 999)
+                                (item.cartQuantity || 1) >= maxQuantityOf(item)
                               }
                             >
                               +

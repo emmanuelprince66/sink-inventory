@@ -1,5 +1,14 @@
 "use client";
-import { allowsSalesWithoutStock, maxSellableQuantity } from "@/utils/stock";
+import {
+  adjustedQuantity,
+  maxSellableQuantity,
+  stockIdOf,
+} from "@/utils/stock";
+import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
+import { useQueuedStock } from "@/hooks/useQueuedStock";
+import { usePosOffline } from "@/lib/offline/offlineMode";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -72,7 +81,18 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   businessData,
 }) => {
   console.log("businessData in checkout", businessData);
-  const allowOversell = allowsSalesWithoutStock(businessData);
+  const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
+  const posOffline = usePosOffline();
+
+  // A cart line keeps the server's stock figure; what's on hand also takes off
+  // anything sold offline that hasn't synced.
+  type StockLine = { id?: unknown; productId?: unknown; quantity?: unknown };
+  const queuedForLine = (item: StockLine) => queuedFor(stockIdOf(item));
+  const availableOf = (item: StockLine) =>
+    adjustedQuantity(item.quantity, queuedForLine(item));
+  const maxQuantityOf = (item: StockLine) =>
+    maxSellableQuantity(availableOf(item), allowOversell);
 
   // ---- Per-sale state (lives in active cart slot — isolated per Sale tab) ----
   const { state: cartState, update: updateCartState } = useActiveCartState();
@@ -136,17 +156,27 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const rewardLineValue = getLoyaltyRewardValue();
 
 
+  // If the business can't load (no internet), use the copy saved on this device
+  // so a sale doesn't silently lose its VAT.
+  const savedBusiness = useBusinessDataStore((state) => state.businessData);
+  const activeBusinessId = useBusinessStore((state) => state.business_id);
+  const taxBusiness =
+    businessData ??
+    (savedBusiness?.id === activeBusinessId ? savedBusiness : null);
+
   // VAT calculation logic - Per product basis
   const vatCalculation = useMemo(() => {
     // Check if business has VAT enabled
     const hasVatEnabled =
-      businessData?.tax_rate &&
-      parseFloat(businessData.tax_rate) > 0 &&
-      businessData.tax_rate_last_updated;
+      taxBusiness?.tax_rate &&
+      parseFloat(taxBusiness.tax_rate) > 0 &&
+      taxBusiness.tax_rate_last_updated;
 
     if (!hasVatEnabled) {
       return {
         enabled: false,
+        // Nothing to read the rate from, as opposed to VAT being switched off.
+        unknown: !taxBusiness,
         rate: 0,
         amount: 0,
         totalWithVat: totalBeforeTax,
@@ -154,7 +184,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       };
     }
 
-    const vatRate = parseFloat(businessData.tax_rate);
+    const vatRate = parseFloat(taxBusiness.tax_rate);
 
     // Calculate VAT only for items with allow_tax: true. A redeemed line is
     // left out: the customer pays nothing for it, so there is nothing to tax.
@@ -185,7 +215,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
       totalWithVat: totalWithVat,
       itemsBreakdown,
     };
-  }, [businessData, totalBeforeTax, cartItems]);
+  }, [taxBusiness, totalBeforeTax, cartItems]);
 
   /** The bill with tax on it — what a percentage reward is worked out from. */
   const taxedTotal = vatCalculation.enabled
@@ -238,6 +268,19 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     (error) => error !== "",
   );
 
+  // Online, the server checks stock when the sale goes through. Offline nothing
+  // does, so a line left over its stock (usually because another sale tab just
+  // sold it) has to be fixed here or it would only fail later, at sync.
+  const overStockLines = posOffline
+    ? cartItems.filter((item: any) => {
+        if (String(item.type ?? "PRODUCT").toUpperCase() !== "PRODUCT") {
+          return false;
+        }
+        if (isRewardLine(item)) return false;
+        return (item.cartQuantity || 1) > maxQuantityOf(item);
+      })
+    : [];
+
   // Check if user is pharmacist - they shouldn't see checkout page
   const isPharmacist = user && user.role === "PHARMACIST";
 
@@ -258,7 +301,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const inputValue = bulkQuantityInputs[itemId];
     const numValue = parseInt(inputValue);
     if (inputValue && !isNaN(numValue) && numValue > 0) {
-      updateCartItemQuantity(itemId, numValue);
+      // Offline there's no server check behind this to catch too many.
+      const line = cartItems.find((item) => item.id === itemId);
+      const capped =
+        posOffline && line
+          ? Math.min(numValue, maxQuantityOf(line))
+          : numValue;
+      if (capped > 0) updateCartItemQuantity(itemId, capped);
       setBulkQuantityInputs((prev) => ({ ...prev, [itemId]: "" }));
       setBulkQuantityErrors((prev) => ({ ...prev, [itemId]: "" }));
     }
@@ -310,7 +359,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     const roundedValue = Math.round(numValue * 2) / 2;
     const item = cartItems.find((item) => item.id === itemId);
     if (!item) return;
-    const availableQuantity = maxSellableQuantity(item.quantity, allowOversell);
+    const availableQuantity = maxQuantityOf(item);
     updateCartItemQuantity(
       itemId,
       Math.min(Math.max(roundedValue, 0.5), availableQuantity),
@@ -542,6 +591,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                     const isEditingPrice = editingPriceId === item.id;
                     const currentPrice = item.selling_price || item.amount || 0;
                     const hasVariations = item.parentProductId;
+                    const available = availableOf(item);
+                    const overStock = overStockLines.includes(item);
 
                     return (
                       <div
@@ -647,15 +698,16 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 {priceError}
                               </p>
                             )}
-                            {item.quantity !== undefined && (
+                            {available != null && (
                               <p
                                 className={`text-[10px] mt-0.5 ${
-                                  item.quantity <= 0
+                                  available <= 0 || overStock
                                     ? "font-bold text-error-1"
                                     : "text-grey-4"
                                 }`}
                               >
-                                Available: {item.quantity}
+                                Available: {available}
+                                {overStock && " - reduce the quantity to continue"}
                               </p>
                             )}
                             {/* Volume discount: the tier now applied, and how
@@ -740,11 +792,14 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               size="icon"
                               className="h-8 w-8 cursor-pointer rounded-full border-primary-green-300/30 bg-white hover:border-primary-green-300 hover:bg-secondary-6"
                               onClick={() =>
-                                incrementQuantity(item.id, allowOversell)
+                                incrementQuantity(
+                                  item.id,
+                                  allowOversell,
+                                  queuedForLine(item),
+                                )
                               }
                               disabled={
-                                (item.cartQuantity || 1) >=
-                                maxSellableQuantity(item.quantity, allowOversell)
+                                (item.cartQuantity || 1) >= maxQuantityOf(item)
                               }
                             >
                               <PlusCircle
@@ -831,11 +886,15 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 size="icon"
                                 className="h-6 w-6 cursor-pointer border-grey-6 hover:border-primary-green-300 hover:bg-secondary-6"
                                 onClick={() =>
-                                  incrementDecimalQuantity(item.id, allowOversell)
+                                  incrementDecimalQuantity(
+                                    item.id,
+                                    allowOversell,
+                                    queuedForLine(item),
+                                  )
                                 }
                                 disabled={
                                   (item.cartQuantity || 0.5) >=
-                                  maxSellableQuantity(item.quantity, allowOversell)
+                                  maxQuantityOf(item)
                                 }
                               >
                                 <PlusCircle
@@ -965,7 +1024,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                 disabled={
                   cartItems.length === 0 ||
                   hasBulkQuantityErrors ||
-                  hasPriceEditErrors
+                  hasPriceEditErrors ||
+                  overStockLines.length > 0
                 }
               >
                 Complete Order

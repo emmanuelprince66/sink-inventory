@@ -18,6 +18,86 @@ export const toQuantity = (value: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+/**
+ * Offline sales waiting to sync haven't reached the server yet, so its stock
+ * figure still counts those units. Stock on screen is always worked out as
+ * server stock minus what's queued (see useQueuedStock); the product data and
+ * cart lines themselves keep the server's number, so it corrects itself as
+ * soon as the sales sync. Null when the item has no stock count.
+ */
+export const adjustedQuantity = (
+  quantity: unknown,
+  queued: number = 0,
+): number | null => {
+  const qty = toQuantity(quantity);
+  if (qty == null) return null;
+  // Decimals are sold too; don't let 1.5 - 0.1 show as 1.4000000000000001.
+  return queued ? Math.round((qty - queued) * 1000) / 1000 : qty;
+};
+
+/** The id a cart line or product is queued under in an offline sale. */
+export const stockIdOf = (item: { id?: unknown; productId?: unknown }): string =>
+  String(item.productId ?? item.id ?? "");
+
+/** A copy of the item showing its stock after `queued` units have gone. */
+export const withQueuedStock = <T>(item: T, queued: number): T => {
+  if (!queued) return item;
+  const source = item as any;
+  const quantity = adjustedQuantity(source.quantity, queued);
+  if (quantity == null) return item;
+
+  const lowAt = toQuantity(source.low_stock_threshold);
+  const status =
+    quantity <= 0
+      ? "OUT-OF-STOCK"
+      : lowAt != null && quantity <= lowAt && source.status !== "OUT-OF-STOCK"
+        ? "LOW"
+        : source.status;
+  return { ...source, quantity, status };
+};
+
+/**
+ * What a product card shows and checks. A product with variations holds its
+ * stock on the variations, so that's what is added up. `view` is what to pass
+ * to isUnsellable; it only differs from the product once sales are queued, so
+ * nothing changes for a till with an empty queue.
+ */
+export const productStockView = <T>(
+  product: T,
+  queuedFor: (id: string) => number,
+): { stock: number | null; view: T } => {
+  const source = product as any;
+  const variations: any[] = source.variations ?? [];
+
+  if (!variations.length) {
+    const view = withQueuedStock(product, queuedFor(stockIdOf(source)));
+    return { stock: toQuantity((view as any).quantity), view };
+  }
+
+  const counts = variations.map((variation) =>
+    adjustedQuantity(variation.quantity, queuedFor(stockIdOf(variation))),
+  );
+  const known = counts.filter((count): count is number => count != null);
+  const stock = known.length
+    ? Math.round(known.reduce((sum, count) => sum + count, 0) * 1000) / 1000
+    : toQuantity(source.quantity);
+
+  if (!variations.some((variation) => queuedFor(stockIdOf(variation)))) {
+    return { stock, view: product };
+  }
+  const sellable = known.filter((count) => count > 0);
+  // A variation with no count isn't tracked, so it can always be sold.
+  const canSell = sellable.length > 0 || known.length < counts.length;
+  return {
+    stock,
+    view: {
+      ...source,
+      quantity: sellable.reduce((sum, count) => sum + count, 0),
+      status: canSell ? source.status : "OUT-OF-STOCK",
+    },
+  };
+};
+
 /** Highest cart quantity allowed for an item with `available` on hand. */
 export const maxSellableQuantity = (
   available: number | string | null | undefined,

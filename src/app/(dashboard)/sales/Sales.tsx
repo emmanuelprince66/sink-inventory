@@ -1,5 +1,6 @@
 "use client";
 
+import OfflineSalesNote from "./OfflineSalesNote";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
@@ -332,6 +333,7 @@ const Sales = () => {
 
   return (
     <div className="w-0 min-w-full h-full flex flex-col justify-start gap-4 sm:gap-6 items-start">
+      <OfflineSalesNote />
       {/* Header Section */}
       <div className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full mb-4 sm:mb-6 gap-3 sm:gap-0">

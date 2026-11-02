@@ -1,5 +1,11 @@
 import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
-import { isUnsellable, maxSellableQuantity } from "@/utils/stock";
+import { useQueuedStock } from "@/hooks/useQueuedStock";
+import {
+  adjustedQuantity,
+  isUnsellable,
+  maxSellableQuantity,
+  withQueuedStock,
+} from "@/utils/stock";
 import { Button } from "@/components/ui/button";
 import { formatToNaira } from "@/utils/formatMoney";
 import { Check, Minus, Plus } from "lucide-react";
@@ -52,6 +58,7 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
   onChangeVariation,
 }) => {
   const allowOversell = useAllowSalesWithoutStock();
+  const { queuedFor } = useQueuedStock();
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null,
   );
@@ -93,7 +100,13 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
 
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 max-h-[60vh]">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-            {availableVariations?.map((variation) => {
+            {availableVariations?.map((rawVariation) => {
+              // For display and caps only. The line that goes in the cart keeps
+              // the server's figure, or queued units would come off it twice.
+              const variation = withQueuedStock(
+                rawVariation,
+                queuedFor(rawVariation.id),
+              );
               const isOutOfStock = isUnsellable(variation, allowOversell);
               const isSelected = selectedVariation?.id === variation.id;
 
@@ -101,7 +114,7 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
                 <div
                   key={variation.id}
                   onClick={() =>
-                    !isOutOfStock && setSelectedVariation(variation)
+                    !isOutOfStock && setSelectedVariation(rawVariation)
                   }
                   className={`border border-gray-100 rounded-lg p-3 cursor-pointer transition-all ${
                     isOutOfStock
@@ -168,7 +181,10 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
                     setQuantity(
                       Math.min(
                         maxSellableQuantity(
-                          selectedVariation.quantity,
+                          adjustedQuantity(
+                            selectedVariation.quantity,
+                            queuedFor(selectedVariation.id),
+                          ),
                           allowOversell,
                         ),
                         quantity + 1,

@@ -5,6 +5,7 @@ import { useFetchLoyaltyProgressQuery } from "@/api/loyalty/fetch-loyalty-progre
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { cn } from "@/lib/utils";
 import { toList, type Paginated } from "@/types/api";
@@ -52,9 +53,10 @@ const CustomerLoyaltyModal = ({
   /** Which reward, if any, this sale is already redeeming. */
   appliedRewardId?: string | null;
 }) => {
+  const posOffline = usePosOffline();
   const { data, isLoading } = useFetchLoyaltyProgressQuery({
     params: { loyaltyCode: loyaltyCode ?? "" },
-    enabled: Boolean(loyaltyCode) && open,
+    enabled: Boolean(loyaltyCode) && open && !posOffline,
   } as any);
 
   const wallet = data?.data;
@@ -67,7 +69,7 @@ const CustomerLoyaltyModal = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const { data: programsResponse } = useFetchLoyaltyProgramsQuery({
     params: { id: business_id ?? "" },
-    enabled: Boolean(business_id) && open,
+    enabled: Boolean(business_id) && open && !posOffline,
   } as any);
 
   const programs = useMemo(
@@ -99,7 +101,18 @@ const CustomerLoyaltyModal = ({
       title="Loyalty Details"
     >
       <div className="flex w-full min-w-0 flex-col gap-4">
-        {isLoading ? (
+        {posOffline ? (
+          // Opened just before the connection went. Nothing here works offline.
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-grey-5 px-4 py-10 text-center">
+            <p className="text-sm font-bold text-grey-1">
+              {customer?.name ?? "This customer"}
+            </p>
+            <p className="max-w-xs text-xs text-grey-3">
+              Loyalty isn&apos;t available offline. They can still be added to
+              this sale, and their loyalty updates when it syncs.
+            </p>
+          </div>
+        ) : isLoading ? (
           <div className="flex min-h-[220px] w-full items-center justify-center">
             <Spinner className="text-primary-green-300" />
           </div>

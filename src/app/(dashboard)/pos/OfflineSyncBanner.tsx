@@ -3,24 +3,31 @@
 import { Button } from "@/components/ui/button";
 import { useOfflineSales } from "@/hooks/useOfflineSales";
 import { setManualOfflineMode } from "@/lib/offline/offlineMode";
-import { CloudOff, CloudUpload } from "lucide-react";
-import Link from "next/link";
-
-const OFFLINE_SALES_PATH = "/pos/offline-sales";
+import { CloudOff, TriangleAlert } from "lucide-react";
 
 /**
- * What state the till is in: Offline mode on, no connection, or sales saved
- * offline that still need syncing. Hidden when none of those apply.
+ * Shown while the till isn't taking normal sales (Offline mode, no connection)
+ * or when sales need a person. Sales that are simply waiting to sync don't need
+ * a banner: they go on their own, and the status by the switch shows them.
  */
-const OfflineSyncBanner = () => {
-  const { isOnline, manualOffline, pendingCount } = useOfflineSales();
-  const salesLabel = `${pendingCount} offline sale${pendingCount === 1 ? "" : "s"}`;
+const OfflineSyncBanner = ({ onOpenSales }: { onOpenSales: () => void }) => {
+  const {
+    isOnline,
+    manualOffline,
+    pendingCount,
+    failedCount,
+    issue,
+    otherBusinessStuck,
+  } = useOfflineSales();
 
-  const viewLink = pendingCount > 0 && (
-    <Button asChild variant="outline" size="sm">
-      <Link href={OFFLINE_SALES_PATH}>View offline sales ({pendingCount})</Link>
-    </Button>
-  );
+  const problem =
+    failedCount > 0
+      ? `${failedCount} offline sale${failedCount === 1 ? "" : "s"} couldn't sync and need${failedCount === 1 ? "s" : ""} a look.`
+      : issue?.needsAttention
+        ? issue.message
+        : otherBusinessStuck > 0
+          ? `${otherBusinessStuck} offline sale${otherBusinessStuck === 1 ? "" : "s"} from another business can't sync with this login. Log in with an account that has that business.`
+          : null;
 
   if (manualOffline || !isOnline) {
     return (
@@ -32,16 +39,20 @@ const OfflineSyncBanner = () => {
               {manualOffline ? "Offline mode is on" : "You're offline"}
             </p>
             <p className="text-xs text-grey-2">
-              Sales are saved on this device (Cash and Bank Transfer only).
-              {pendingCount > 0 && ` ${salesLabel} saved so far.`}{" "}
-              {manualOffline
-                ? "When the internet is working, turn off Offline mode and sync them from Offline Sales."
-                : "When you're back online, sync them from Offline Sales."}
+              Sales are saved on this device (Cash and Bank Transfer only) and
+              sync on their own {isOnline ? "in the background" : "when the internet is back"}.
             </p>
+            {problem && (
+              <p className="mt-0.5 text-xs font-bold text-error-1">{problem}</p>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {viewLink}
+          {pendingCount > 0 && (
+            <Button variant="outline" size="sm" onClick={onOpenSales}>
+              View offline sales ({pendingCount})
+            </Button>
+          )}
           {manualOffline && (
             <Button
               variant="outline"
@@ -56,25 +67,24 @@ const OfflineSyncBanner = () => {
     );
   }
 
-  if (pendingCount === 0) return null;
+  if (!problem) return null;
 
-  // Online with sales still on this device: keep reminding until synced.
   return (
-    <div className="w-full flex items-center justify-between gap-3 flex-wrap rounded-2xl border border-info-1/30 bg-info-2 px-4 py-3">
+    <div className="w-full flex items-center justify-between gap-3 flex-wrap rounded-2xl border border-error-1/30 bg-error-2 px-4 py-3">
       <div className="flex items-start gap-3">
-        <CloudUpload className="mt-0.5 h-5 w-5 shrink-0 text-info-1" />
-        <div className="text-sm">
-          <p className="font-bold text-grey-1">
-            {salesLabel} not synced yet
-          </p>
-          <p className="text-xs text-grey-2">
-            They aren&apos;t in your sales or stock until you sync them.
-          </p>
-        </div>
+        <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-error-1" />
+        <p className="text-sm font-bold text-error-1">{problem}</p>
       </div>
-      <Button asChild size="sm" className="bg-primary-green-300 text-white">
-        <Link href={OFFLINE_SALES_PATH}>Review &amp; sync</Link>
-      </Button>
+      {pendingCount > 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-white"
+          onClick={onOpenSales}
+        >
+          View offline sales
+        </Button>
+      )}
     </div>
   );
 };

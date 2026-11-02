@@ -1,4 +1,4 @@
-import { maxSellableQuantity } from "@/utils/stock";
+import { adjustedQuantity, maxSellableQuantity, toQuantity } from "@/utils/stock";
 import {
   calculateProductDiscount,
   LineDiscountResult,
@@ -43,6 +43,13 @@ export interface CartSlotState {
   tempSplitPayment: { method: string; amount: string; bank: string };
   remainingAmount: number;
   saleResponse: any | null;
+  /**
+   * The ID this sale goes up under, kept while it isn't confirmed. If a request
+   * reaches the server but the reply is lost, the retry (online or offline)
+   * sends the same ID, so the server recognises it instead of recording it
+   * twice. Only for the same items: a changed cart is a different sale.
+   */
+  saleAttempt: { id: string; signature: string; at: number } | null;
   showReceipt: boolean;
   showPrintReceiptView: boolean;
 }
@@ -65,6 +72,7 @@ const emptyState = (): CartSlotState => ({
   remainingAmount: 0,
   saleResponse: null,
   showReceipt: false,
+  saleAttempt: null,
   showPrintReceiptView: false,
 });
 
@@ -101,6 +109,8 @@ interface CartStore {
   removeFromCart: (id: string) => void;
   updateCartItemQuantity: (id: string, quantity: number) => void;
   updateCartItemPrice: (id: string, price: number) => void;
+  /** Offline sales synced: lines' stock figures are now that much too high. */
+  deductSoldStock: (sold: Record<string, number>) => void;
   /** Full reset of the slot — items, customer, payment, the lot. */
   clearCart: () => void;
   /**
@@ -128,9 +138,21 @@ interface CartStore {
   getAutomaticDiscountAmount: () => number;
   getTotalPrice: () => number;
   getEligibleItems: () => CartItem[];
-  incrementQuantity: (itemId: string, allowOversell?: boolean) => void;
+  /**
+   * `queued`: units of this item in offline sales not yet synced. A cart line
+   * keeps the server's stock figure, so the caller passes what to take off it.
+   */
+  incrementQuantity: (
+    itemId: string,
+    allowOversell?: boolean,
+    queued?: number,
+  ) => void;
   decrementQuantity: (itemId: string) => void;
-  incrementDecimalQuantity: (itemId: string, allowOversell?: boolean) => void;
+  incrementDecimalQuantity: (
+    itemId: string,
+    allowOversell?: boolean,
+    queued?: number,
+  ) => void;
   decrementDecimalQuantity: (itemId: string) => void;
   getItemDiscountDisplay: (item: CartItem) => {
     totalItemDiscount: number;
@@ -402,6 +424,45 @@ export const useCartStore = create<CartStore>()(
         );
       },
 
+      deductSoldStock: (sold) => {
+        if (!Object.keys(sold).length) return;
+        const less = <T extends { id?: string; productId?: string; quantity?: unknown }>(
+          item: T,
+        ): T => {
+          const units = sold[String(item.productId ?? item.id)];
+          const quantity = toQuantity(item.quantity);
+          if (!units || quantity == null) return item;
+          return {
+            ...item,
+            quantity: Math.round((quantity - units) * 1000) / 1000,
+          };
+        };
+        set((state) => {
+          const carts = Object.fromEntries(
+            Object.entries(state.carts).map(([cartId, slot]) => [
+              cartId,
+              {
+                ...slot,
+                items: slot.items.map((item) => {
+                  const line = less(item);
+                  return line.parentProductVariations
+                    ? {
+                        ...line,
+                        parentProductVariations:
+                          line.parentProductVariations.map(less),
+                      }
+                    : line;
+                }),
+              },
+            ]),
+          );
+          return {
+            carts,
+            cartItems: carts[state.activeCartId]?.items ?? state.cartItems,
+          };
+        });
+      },
+
       updateCartItemPrice: (id, price) =>
         set((state) =>
           updateSlot(state, state.activeCartId, (slot) => ({
@@ -435,7 +496,11 @@ export const useCartStore = create<CartStore>()(
             ...slot,
             items: [],
             saleCompleted: false,
-            state: { ...(slot.state ?? emptyState()), loyaltyReward: null },
+            state: {
+              ...(slot.state ?? emptyState()),
+              loyaltyReward: null,
+              saleAttempt: null,
+            },
           })),
         ),
 
@@ -489,11 +554,11 @@ export const useCartStore = create<CartStore>()(
           (item) => (getLineDiscount(item)?.totalDiscount ?? 0) > 0,
         ),
 
-      incrementQuantity: (itemId, allowOversell = false) => {
+      incrementQuantity: (itemId, allowOversell = false, queued = 0) => {
         const item = get().cartItems.find((item) => item.id === itemId);
         if (!item) return;
         const availableQuantity = maxSellableQuantity(
-          item.quantity,
+          adjustedQuantity(item.quantity, queued),
           allowOversell,
         );
         const currentQuantity = item.cartQuantity || 1;
@@ -511,11 +576,11 @@ export const useCartStore = create<CartStore>()(
         }
       },
 
-      incrementDecimalQuantity: (itemId, allowOversell = false) => {
+      incrementDecimalQuantity: (itemId, allowOversell = false, queued = 0) => {
         const item = get().cartItems.find((item) => item.id === itemId);
         if (!item) return;
         const availableQuantity = maxSellableQuantity(
-          item.quantity,
+          adjustedQuantity(item.quantity, queued),
           allowOversell,
         );
         const currentQuantity = item.cartQuantity || 0.5;
