@@ -37,3 +37,23 @@ export const fetchDiscountThresholds = async (
   const inner = body?.data;
   return (Array.isArray(inner) ? inner : inner?.data) ?? [];
 };
+
+/**
+ * Switches off the older single discount on a product or variation, so removing
+ * its tiers later doesn't bring it back. A variation is its own product record.
+ */
+export const clearOldDiscount = async (productId: string) => {
+  const payload = new FormData();
+  payload.append("discount", "0");
+  payload.append("discount_threshold", "0");
+  const response = await fetch(`/api/products/${productId}/edit-product`, {
+    method: "PATCH",
+    body: payload,
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(
+      body?.message || body?.error || "Couldn't switch off the old discount",
+    );
+  }
+};

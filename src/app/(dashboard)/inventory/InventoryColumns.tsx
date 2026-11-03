@@ -405,6 +405,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
               onClose={closeSetDiscountModal}
               trigger={false}
               title="Set Discount"
+              size={(inventory as any).variations?.length ? "lg" : undefined}
             >
               <SetDiscountModal
                 productId={inventory.id}

@@ -19,6 +19,7 @@ import { compressImage } from "@/utils/compressImage";
 import {
   DiscountThreshold,
   DiscountTierFormRow,
+  tierRowsFromItem,
   tierRowsToPayload,
   tiersToFormRows,
   validateTiers,
@@ -54,23 +55,7 @@ const tierRowSchema = z.object({
  * Tiers to show when editing. An older single discount (X% off from N
  * units) becomes tier 1, so it can be kept, changed or removed here.
  */
-const tierRowsFromApi = (item: any): DiscountTierFormRow[] => {
-  const tiers = item?.discount_thresholds as DiscountThreshold[] | undefined;
-  if (tiers?.length) return tiersToFormRows(tiers);
-  if (Number(item?.discount) > 0 && Number(item?.discount_threshold) > 0) {
-    // Over 100 can't be a percentage: it was saved as naira off.
-    const value = Number(item.discount);
-    return [
-      {
-        min_quantity: String(Math.ceil(Number(item.discount_threshold))),
-        max_quantity: "",
-        discount_type: value > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
-        discount_value: String(value),
-      },
-    ];
-  }
-  return [];
-};
+const tierRowsFromApi = tierRowsFromItem;
 
 const hasLegacyDiscount = (item: any) =>
   !item?.discount_thresholds?.length &&

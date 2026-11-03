@@ -205,6 +205,27 @@ export const tierRowsToPayload = (
       discount_value: Number(row.discount_value),
     }));
 
+/**
+ * Editor rows for a product or variation: its tiers, or an older single
+ * discount shown as tier 1. Over 100 can't be a percentage, so that's ₦ off.
+ */
+export const tierRowsFromItem = (item: any): DiscountTierFormRow[] => {
+  if (item?.discount_thresholds?.length) {
+    return tiersToFormRows(item.discount_thresholds);
+  }
+  const value = Number(item?.discount);
+  const threshold = Number(item?.discount_threshold);
+  if (!(value > 0) || !(threshold > 0)) return [];
+  return [
+    {
+      min_quantity: String(Math.ceil(threshold)),
+      max_quantity: "",
+      discount_type: value > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
+      discount_value: String(value),
+    },
+  ];
+};
+
 export const tiersToFormRows = (
   tiers?: DiscountThreshold[] | null,
 ): DiscountTierFormRow[] =>

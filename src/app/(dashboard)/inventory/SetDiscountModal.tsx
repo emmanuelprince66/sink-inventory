@@ -12,6 +12,7 @@ import { useInventoryHook } from "@/hooks/useInventoryHook";
 import {
   calculateProductDiscount,
   DiscountTierFormRow,
+  tierRowsFromItem,
   tierRowsToPayload,
   tiersToFormRows,
   validateTiers,
@@ -20,12 +21,13 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+import VariationDiscountsForm from "./VariationDiscountsForm";
 
 /**
  * Bulk discount tiers for one product, from the inventory list. Loads the
  * saved tiers first, so saving never wipes ones this screen didn't show.
  */
-const SetDiscountModal = ({
+const SingleProductDiscountForm = ({
   productId,
   product,
   closeModal,
@@ -59,21 +61,9 @@ const SetDiscountModal = ({
     if (!savedTiers) return;
     if (savedTiers.length) {
       setRows(tiersToFormRows(savedTiers));
-    } else if (
-      Number(product?.discount) > 0 &&
-      Number(product?.discount_threshold) > 0
-    ) {
+    } else {
       // Older single discount, shown as tier 1.
-      setRows([
-        {
-          min_quantity: String(Math.ceil(Number(product.discount_threshold))),
-          max_quantity: "",
-          // Over 100 can't be a percentage: it was saved as naira off.
-          discount_type:
-            Number(product.discount) > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
-          discount_value: String(Number(product.discount)),
-        },
-      ]);
+      setRows(tierRowsFromItem({ ...product, discount_thresholds: [] }));
     }
   }, [savedTiers, product]);
 
@@ -123,15 +113,6 @@ const SetDiscountModal = ({
     }
   };
 
-  if (product?.variations?.length) {
-    return (
-      <p className="text-sm text-grey-2">
-        This product has variations. Set bulk discounts for each variation
-        from <span className="font-bold">Edit Product</span>.
-      </p>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -180,5 +161,24 @@ const SetDiscountModal = ({
     </div>
   );
 };
+
+const SetDiscountModal = ({
+  productId,
+  product,
+  closeModal,
+}: {
+  productId: any;
+  closeModal: any;
+  product: any;
+}) =>
+  product?.variations?.length ? (
+    <VariationDiscountsForm product={product} closeModal={closeModal} />
+  ) : (
+    <SingleProductDiscountForm
+      productId={productId}
+      product={product}
+      closeModal={closeModal}
+    />
+  );
 
 export default SetDiscountModal;
