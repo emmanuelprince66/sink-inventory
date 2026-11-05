@@ -9,6 +9,8 @@
  * taken once.
  */
 
+import { markServerUnreachable } from "./offlineMode";
+
 export type OfflineSaleMethod = "CASH" | "CARD" | "BANK";
 
 export interface OfflineSaleProduct {
@@ -291,6 +293,7 @@ const syncChunk = async (
       signal: controller.signal,
     });
   } catch {
+    markServerUnreachable();
     throw new Error("Can't reach the server right now. Trying again soon.");
   } finally {
     clearTimeout(timeout);

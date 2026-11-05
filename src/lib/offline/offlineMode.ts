@@ -1,73 +1,91 @@
-import { useSyncExternalStore } from "react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useSyncExternalStore } from "react";
 
 /**
- * Manual "Offline mode" for the POS. The cashier turns it on when the
- * internet is connected but unreliable (Wi-Fi with no internet, very slow
- * data), which the browser still reports as online. Checkout then saves
- * sales on the device exactly as it does with no connection; syncing keeps
- * trying in the background whenever there is a real connection.
+ * Whether the POS can reach the server. It decides this by itself, so there's
+ * nothing for a cashier to switch.
  *
- * Remembered per device so a refresh doesn't switch it off.
+ * The browser only knows about the network, so it still says "online" on Wi-Fi
+ * with no internet. The sign in that case is a request failing or hanging. That
+ * marks the server unreachable, and sales go straight to this device instead of
+ * making each customer wait for a timeout. Meanwhile the connection is checked
+ * in the background, and a couple of good checks in a row bring it back, so a
+ * shaky connection doesn't flip back and forth.
  */
-const STORAGE_KEY = "pos:offline-mode";
+const CHECK_EVERY_MS = 20_000;
+const CHECK_TIMEOUT_MS = 5_000;
+const GOOD_CHECKS_NEEDED = 2;
+
+let unreachable = false;
+let goodChecks = 0;
+let checkTimer: ReturnType<typeof setInterval> | undefined;
 const listeners = new Set<() => void>();
 
-const read = (): boolean => {
-  try {
-    return localStorage.getItem(STORAGE_KEY) === "on";
-  } catch {
-    return false;
-  }
-};
-
-let manualOffline = typeof window !== "undefined" ? read() : false;
-
-export const setManualOfflineMode = (on: boolean) => {
-  manualOffline = on;
-  try {
-    if (on) localStorage.setItem(STORAGE_KEY, "on");
-    else localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // Storage blocked: still works for this tab.
-  }
+const setUnreachable = (value: boolean) => {
+  if (value === unreachable) return;
+  unreachable = value;
   listeners.forEach((listener) => listener());
 };
 
-const subscribe = (listener: () => void) => {
+const stopChecking = () => {
+  clearInterval(checkTimer);
+  checkTimer = undefined;
+  window.removeEventListener("online", checkConnection);
+};
+
+async function checkConnection() {
+  if (!navigator.onLine) {
+    goodChecks = 0;
+    return;
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), CHECK_TIMEOUT_MS);
+  try {
+    const response = await fetch("/api/connection-check", {
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    goodChecks = response.ok ? goodChecks + 1 : 0;
+  } catch {
+    goodChecks = 0;
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (goodChecks >= GOOD_CHECKS_NEEDED) {
+    stopChecking();
+    setUnreachable(false);
+  }
+}
+
+/** A request couldn't reach the server, whatever the browser says. */
+export const markServerUnreachable = () => {
+  goodChecks = 0;
+  setUnreachable(true);
+  if (checkTimer === undefined) {
+    checkTimer = setInterval(checkConnection, CHECK_EVERY_MS);
+    window.addEventListener("online", checkConnection);
+  }
+};
+
+/** Called when the server becomes reachable or stops being. */
+export const subscribeConnection = (listener: () => void) => {
   listeners.add(listener);
-  // Keep other tabs on this device in step.
-  const onStorage = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) {
-      manualOffline = read();
-      listener();
-    }
-  };
-  window.addEventListener("storage", onStorage);
   return () => {
     listeners.delete(listener);
-    window.removeEventListener("storage", onStorage);
   };
 };
 
 /** usePosOffline for code outside React, read at the moment it's called. */
 export const isPosOfflineNow = (): boolean =>
-  manualOffline || (typeof navigator !== "undefined" && !navigator.onLine);
+  unreachable || (typeof navigator !== "undefined" && !navigator.onLine);
 
-/** Whether the cashier switched Offline mode on. */
-export const useManualOfflineMode = (): boolean =>
-  useSyncExternalStore(
-    subscribe,
-    () => manualOffline,
-    () => false,
-  );
-
-/**
- * Whether the POS should take sales offline: no connection, or Offline mode
- * switched on.
- */
+/** Whether the POS should take sales offline right now. */
 export const usePosOffline = (): boolean => {
   const isOnline = useOnlineStatus();
-  const manual = useManualOfflineMode();
-  return !isOnline || manual;
+  const isUnreachable = useSyncExternalStore(
+    subscribeConnection,
+    () => unreachable,
+    () => false,
+  );
+  return !isOnline || isUnreachable;
 };

@@ -9,7 +9,7 @@ import {
   OFFLINE_CACHE_TTL_MS,
   refreshOfflineCache,
 } from "@/lib/offline/offlineCacheRefresh";
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useEffect, useState } from "react";
 
@@ -25,8 +25,7 @@ const START_DELAY_MS = 2000;
  */
 export const useOfflineCacheRefresh = ({ customers }: { customers: boolean }) => {
   const businessId = useBusinessStore((state) => state.business_id);
-  // Offline mode doesn't matter here: with internet, the list stays current.
-  const isOnline = useOnlineStatus();
+  const isOnline = !usePosOffline();
 
   useEffect(() => {
     if (!businessId || !isOnline) return;

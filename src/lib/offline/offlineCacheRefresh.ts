@@ -5,6 +5,7 @@ import {
   OfflineCacheKind,
   replaceCached,
 } from "./offlineCache";
+import { isPosOfflineNow } from "./offlineMode";
 
 const PAGE_SIZE = 50;
 // Stops a bad `pages` value from looping forever.
@@ -28,7 +29,7 @@ const fetchers: Record<
 const fetchAllPages = async (kind: OfflineCacheKind, businessId: string) => {
   const all: any[] = [];
   for (let page = 1; page <= MAX_PAGES; page += 1) {
-    if (!navigator.onLine) throw new Error("Offline");
+    if (isPosOfflineNow()) throw new Error("Offline");
 
     const response = await fetchers[kind](businessId, page);
     const rows = response?.data?.results?.data;

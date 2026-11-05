@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  isPosOfflineNow,
+  subscribeConnection,
+} from "@/lib/offline/offlineMode";
+import {
   getAllQueuedSales,
   subscribeOfflineSales,
 } from "@/lib/offline/offlineSales";
@@ -31,10 +35,8 @@ const waitingByBusiness = async () => {
 };
 
 /**
- * Sends offline sales in the background whenever there's internet, including
- * while Offline mode is on: that mode means checkout doesn't wait on the
- * connection, not that sales stay off the server. Covers every business with
- * sales on this device, since an owner can switch business mid-shift, and
+ * Sends offline sales in the background once the internet is back. Covers every
+ * business with sales on this device, since an owner can switch business mid-shift, and
  * mounted in the dashboard layout so it keeps going on any page. Each business
  * backs off on its own, so sales this login can't send never delay ones it can.
  * Renders nothing and shows no messages; the POS shows the quiet status.
@@ -81,7 +83,7 @@ const OfflineSalesAutoSync = () => {
     };
 
     const run = async () => {
-      if (stopped || !navigator.onLine) return;
+      if (stopped || isPosOfflineNow()) return;
       const waiting = await waitingByBusiness();
       const due = Array.from(waiting.keys()).filter(
         (businessId) => notBefore(businessId) <= Date.now(),
@@ -118,12 +120,16 @@ const OfflineSalesAutoSync = () => {
     });
 
     const unsubscribe = subscribeOfflineSales(onQueueChanged);
+    const unsubscribeConnection = subscribeConnection(() => {
+      if (!isPosOfflineNow()) onOnline();
+    });
     window.addEventListener("online", onOnline);
 
     return () => {
       stopped = true;
       clearTimeout(timer);
       unsubscribe();
+      unsubscribeConnection();
       window.removeEventListener("online", onOnline);
     };
   }, [queryClient]);

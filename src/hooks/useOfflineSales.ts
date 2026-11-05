@@ -1,6 +1,6 @@
 "use client";
 
-import { useManualOfflineMode } from "@/lib/offline/offlineMode";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import {
   getAllQueuedSales,
   getQueuedSales,
@@ -16,7 +16,6 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
-import { useOnlineStatus } from "./useOnlineStatus";
 
 /**
  * The offline sales queue for the current business, for showing it and for the
@@ -25,8 +24,7 @@ import { useOnlineStatus } from "./useOnlineStatus";
  */
 export const useOfflineSales = () => {
   const business_id = useBusinessStore((state) => state.business_id);
-  const isOnline = useOnlineStatus();
-  const manualOffline = useManualOfflineMode();
+  const isOnline = !usePosOffline();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -96,7 +94,6 @@ export const useOfflineSales = () => {
 
   return {
     isOnline,
-    manualOffline,
     pending,
     pendingCount: pending.length,
     failedCount: pending.filter((sale) => sale.rejected).length,

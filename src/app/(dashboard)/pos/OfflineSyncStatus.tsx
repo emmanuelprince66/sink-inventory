@@ -14,7 +14,6 @@ const OfflineSyncStatus = ({ onOpen }: { onOpen: () => void }) => {
     pendingCount,
     failedCount,
     syncing,
-    manualOffline,
     issue,
     otherBusinessStuck,
   } = useOfflineSales();
@@ -34,9 +33,7 @@ const OfflineSyncStatus = ({ onOpen }: { onOpen: () => void }) => {
           ? "Syncing…"
           : pendingCount > 0
             ? `${pendingCount} waiting`
-            : manualOffline
-              ? "All synced"
-              : null;
+            : null;
 
   if (!label) return null;
 

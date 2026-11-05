@@ -24,7 +24,6 @@ import {
   Banknote,
   CheckCircle2,
   ChevronDown,
-  CloudOff,
   CloudUpload,
   Printer,
   Landmark,
@@ -64,9 +63,8 @@ const groupByDay = (sales: QueuedOfflineSale[]) => {
 };
 
 /**
- * Sales taken offline and kept on this device. Nothing reaches the server
- * until someone presses Sync here, which needs Offline mode off and a
- * connection, so the cashier always knows which state the till is in.
+ * Sales taken offline and kept on this device until they sync, which happens
+ * on its own once the internet is back. Sync now is the backup.
  *
  * A drawer imported directly by the POS rather than a route of its own: a page
  * that hadn't been loaded yet can't be reached with no connection, which is
@@ -85,7 +83,6 @@ const OfflineSalesDrawer = ({
     loaded,
     syncing,
     syncBlockedReason,
-    manualOffline,
     isOnline,
     syncNow,
     failedCount,
@@ -146,9 +143,7 @@ const OfflineSalesDrawer = ({
                         : "text-primary-green-300",
                     )}
                   >
-                    {manualOffline ? (
-                      <CloudOff className="h-5 w-5" />
-                    ) : !isOnline ? (
+                    {!isOnline ? (
                       <WifiOff className="h-5 w-5" />
                     ) : (
                       <CloudUpload className="h-5 w-5" />
@@ -167,7 +162,7 @@ const OfflineSalesDrawer = ({
                     <p className="mt-0.5 text-sm text-grey-2">
                       {syncBlockedReason ??
                         issue?.message ??
-                        "These sales sync on their own while there's internet, even in Offline mode. You don't need to do anything."}
+                        "These sales sync on their own. You don't need to do anything."}
                     </p>
                   </div>
                 </div>

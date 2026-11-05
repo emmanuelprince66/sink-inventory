@@ -15,10 +15,7 @@ import { useOfflineCacheRefresh } from "@/hooks/useOfflineCache";
 import { useQueuedStock } from "@/hooks/useQueuedStock";
 import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { Switch } from "@/components/ui/switch";
 import {
-  setManualOfflineMode,
-  useManualOfflineMode,
   usePosOffline,
 } from "@/lib/offline/offlineMode";
 import { usePosHook } from "@/hooks/usePosHook";
@@ -272,7 +269,6 @@ const Pos: React.FC = () => {
 
   // Presales and self checkout orders are looked up on the server.
   const isOnline = !usePosOffline();
-  const manualOffline = useManualOfflineMode();
 
   // Saves products (and customers, for roles with a sale to attach one to) on
   // this device in the background, for search and scanning offline.
@@ -487,19 +483,8 @@ const Pos: React.FC = () => {
           )}
         </div>
 
-        {/* Offline mode: for a connection that's up but unreliable */}
         {!isPharmacist && (
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 rounded-full border border-grey-5 px-3 py-1.5 cursor-pointer">
-              <Switch
-                checked={manualOffline}
-                onCheckedChange={setManualOfflineMode}
-                aria-label="Offline mode"
-              />
-              <span className="text-xs font-bold text-grey-2">
-                Offline mode
-              </span>
-            </label>
             <ConnectionStatus />
             <OfflineSyncStatus onOpen={() => setShowOfflineSales(true)} />
           </div>
@@ -600,8 +585,8 @@ const Pos: React.FC = () => {
                     </p>
                     <p className="max-w-sm text-xs text-grey-3">
                       Products are saved for offline use when the POS is open
-                      with a working connection. Connect, turn off Offline mode
-                      and keep this page open for a moment.
+                      with a working connection. Connect and keep this page
+                      open for a moment.
                     </p>
                   </>
                 ) : (

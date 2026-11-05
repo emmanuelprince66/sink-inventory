@@ -7,6 +7,9 @@ interface CreateServiceApiPayload {
   [key: string]: any;
 }
 
+/** Past this, the POS stops waiting and saves the sale on the device. */
+const SALE_TIMEOUT_MS = 10_000;
+
 const createSales = async ({
   businessId,
   apiPayload,
@@ -14,17 +17,28 @@ const createSales = async ({
   businessId: any;
   apiPayload: CreateServiceApiPayload;
 }) => {
-  const response = await fetch(`/api/sales/${businessId}/create-sale`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(apiPayload),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), SALE_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`/api/sales/${businessId}/create-sale`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(apiPayload),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw errorData;
+    const errorData = await response.json().catch(() => ({}));
+    // Bad gateway and the like: the API itself can't be reached.
+    throw response.status >= 502
+      ? { ...errorData, unreachable: true }
+      : errorData;
   }
   return response.json();
 };

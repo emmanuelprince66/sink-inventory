@@ -1,22 +1,15 @@
 "use client";
 
-import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import { useManualOfflineMode } from "@/lib/offline/offlineMode";
+import { usePosOffline } from "@/lib/offline/offlineMode";
 import { cn } from "@/lib/utils";
 
-/**
- * What state the till is in, at a glance. Offline mode wins the label when
- * both apply, since that's the one the cashier has to turn off themselves.
- */
+/** Whether the till is online or taking sales offline, at a glance. */
 const ConnectionStatus = ({ className }: { className?: string }) => {
-  const isOnline = useOnlineStatus();
-  const manualOffline = useManualOfflineMode();
+  const offline = usePosOffline();
 
-  const status = manualOffline
-    ? { label: "Offline mode", dot: "bg-warning-1", tone: "bg-warning-2 text-grey-1" }
-    : !isOnline
-      ? { label: "No connection", dot: "bg-error-1", tone: "bg-error-2 text-error-1" }
-      : { label: "Online", dot: "bg-success-1", tone: "bg-success-2 text-success-1" };
+  const status = offline
+    ? { label: "Offline", dot: "bg-warning-1", tone: "bg-warning-2 text-grey-1" }
+    : { label: "Online", dot: "bg-success-1", tone: "bg-success-2 text-success-1" };
 
   return (
     <span

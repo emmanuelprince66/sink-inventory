@@ -187,7 +187,7 @@ const ReceiptPage = ({
    * this device and synced later. Advance, credit, partial and split payments,
    * and loyalty redemptions, need the server to check them at the till.
    */
-  // False with no connection, and when Offline mode is switched on.
+  // False with no connection, or when the server can't be reached.
   const isOnline = !usePosOffline();
   const hasLoyaltyRedemption =
     !!loyaltyReward?.id || cart.some((item: any) => isRewardLine(item));
@@ -287,6 +287,24 @@ const ReceiptPage = ({
     closeSureModal,
     setShowPrintReceiptView,
     setCreateSaleResponse,
+    // The internet went while paying. Finish the sale on this device if this
+    // payment type can be taken offline; the cashier has nothing else to do.
+    onUnreachable: () => {
+      const canSaveOffline =
+        !isChecked &&
+        (paymentMethod === "CASH" || paymentMethod === "BANK") &&
+        !hasLoyaltyRedemption;
+      if (canSaveOffline) {
+        handleOfflineSale();
+        return;
+      }
+      closeSureModal();
+      showToast(
+        "No internet. This sale needs a connection. Choose Cash or Bank Transfer to save it on this device.",
+        "error",
+        { duration: 10000 },
+      );
+    },
   });
 
   console.log("BankError----5-neek55", BankError);

@@ -8,7 +8,7 @@ import {
   queueOfflineSale,
   QueuedOfflineSale,
 } from "@/lib/offline/offlineSales";
-import { setManualOfflineMode } from "@/lib/offline/offlineMode";
+import { markServerUnreachable } from "@/lib/offline/offlineMode";
 import { useCartStore } from "@/lib/store/cart-store";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,11 +21,14 @@ export const useCheckoutHook = ({
   closeSureModal,
   setCreateSaleResponse,
   page,
+  onUnreachable,
 }: {
   searchInput?: string;
   setShowPrintReceiptView?: any;
   closeSureModal?: any;
   setCreateSaleResponse?: any;
+  /** A sale's request couldn't reach the server. */
+  onUnreachable?: () => void;
   page?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -116,25 +119,19 @@ export const useCheckoutHook = ({
     // than is left, the backend names the item and what remains: drop that
     // line to the available amount so the cashier can just retry.
     onError: (error: any) => {
-      // Connected to Wi-Fi with no internet: the browser says online, so the
-      // only sign is the request failing. TypeError is the browser's own
-      // failure; "fetch failed" is the same thing from our API route.
+      // Wi-Fi with no internet, or too slow to answer: the browser says online,
+      // so the only sign is the request failing. TypeError is the browser's own
+      // failure, AbortError our time limit, "fetch failed" our API route's.
       const unreachable =
+        error?.unreachable ||
         error instanceof TypeError ||
-        /fetch failed|failed to fetch|network/i.test(String(error?.message));
+        error?.name === "AbortError" ||
+        /fetch failed|failed to fetch/i.test(String(error?.message));
       if (unreachable) {
-        showToast("Can't reach the internet.", "error", {
-          duration: 15000,
-          description:
-            "Turn on Offline mode to keep selling, then press Pay again. It won't be recorded twice.",
-          action: {
-            label: "Turn on Offline mode",
-            onClick: () => {
-              setManualOfflineMode(true);
-              closeSureModal?.();
-            },
-          },
-        });
+        // The sale may have reached the server. Saving it uses the same sale
+        // ID, so the server won't record it twice.
+        onUnreachable?.();
+        markServerUnreachable();
         return;
       }
 
@@ -177,7 +174,7 @@ export const useCheckoutHook = ({
       );
       return;
     }
-    showToast("Sale saved", "success");
+    showToast("Sale saved on this device", "success");
     setCreateSaleResponse({
       success: true,
       offline: true,
