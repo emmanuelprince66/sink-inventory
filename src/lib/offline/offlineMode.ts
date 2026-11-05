@@ -13,7 +13,8 @@ import { useSyncExternalStore } from "react";
  * shaky connection doesn't flip back and forth.
  */
 const CHECK_EVERY_MS = 20_000;
-const CHECK_TIMEOUT_MS = 5_000;
+// Longer than the server's own 8s wait on the API, so a slow reply still counts.
+const CHECK_TIMEOUT_MS = 10_000;
 const GOOD_CHECKS_NEEDED = 2;
 
 let unreachable = false;

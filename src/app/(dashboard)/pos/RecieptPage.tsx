@@ -542,7 +542,11 @@ const ReceiptPage = ({
         item.selling_price ?? item.amount,
       ]),
     );
-    const saved = cartState.saleAttempt;
+    // Read from the store, not this render's copy: when a sale times out, the
+    // offline save runs from the render that sent it, before the ID it just
+    // stored would show up there. A stale read would mint a second ID.
+    const live = useCartStore.getState();
+    const saved = live.carts[live.activeCartId]?.state?.saleAttempt;
     if (
       saved?.signature === signature &&
       Date.now() - saved.at < SALE_ATTEMPT_MAX_AGE_MS

@@ -12,7 +12,9 @@ export async function GET() {
     const response = await fetch(BaseUrl, {
       method: "HEAD",
       cache: "no-store",
-      signal: AbortSignal.timeout(4000),
+      // The API can be slow without being down (replies of 10s+ seen on
+      // staging), so only a long silence counts as unreachable.
+      signal: AbortSignal.timeout(8000),
     });
     return NextResponse.json(
       { reachable: response.status < 500 },
