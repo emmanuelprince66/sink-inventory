@@ -69,7 +69,7 @@ const VariationDiscountsForm = ({
 
   // The list should carry each variation's tiers. Any it doesn't are read from
   // the server first, so saving can't overwrite tiers this screen never saw.
-  const { data: fetched, isLoading } = useQuery({
+  const { data: fetched, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["variation-discount-thresholds", product?.id],
     queryFn: async () => {
       const missing = variations.filter(
@@ -208,6 +208,26 @@ const VariationDiscountsForm = ({
     showToast("Bulk discounts saved", "success");
     closeModal?.();
   };
+
+  if (isError && !fetched) {
+    return (
+      <div className="flex flex-col items-start gap-3">
+        <p className="text-sm text-error-1">
+          Couldn&apos;t load the saved bulk discounts, so they can&apos;t be
+          edited safely yet.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isFetching}
+          onClick={() => refetch()}
+        >
+          {isFetching ? <Spinner /> : "Try again"}
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading || !fetched) {
     return (

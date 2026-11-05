@@ -28,6 +28,8 @@ const EMPTY: Totals = Object.freeze({});
 const totalsOf = (sales: QueuedOfflineSale[]): Totals => {
   const totals: Record<string, number> = {};
   sales.forEach((sale) => {
+    // The server may already have counted this one.
+    if (sale.uncertain) return;
     sale.payload.products.forEach((line) => {
       if (NO_STOCK_TYPES.has(String(line.type ?? "").toUpperCase())) return;
       const id = String(line.id);

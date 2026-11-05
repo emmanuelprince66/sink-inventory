@@ -295,15 +295,16 @@ const ReceiptPage = ({
         (paymentMethod === "CASH" || paymentMethod === "BANK") &&
         !hasLoyaltyRedemption;
       if (canSaveOffline) {
-        handleOfflineSale();
+        handleOfflineSale(sentSaleIdRef.current ?? undefined);
         return;
       }
       closeSureModal();
-      showToast(
-        "No internet. This sale needs a connection. Choose Cash or Bank Transfer to save it on this device.",
-        "error",
-        { duration: 10000 },
-      );
+      // It may have reached the server before the connection dropped.
+      showToast("The connection dropped while sending this sale.", "error", {
+        duration: 15000,
+        description:
+          "It may have gone through. Check Sales History before trying again, or take Cash or Bank Transfer instead.",
+      });
     },
   });
 
@@ -535,13 +536,16 @@ const ReceiptPage = ({
 
   /** This attempt's sale ID: the same one again if it's a retry. */
   const saleAttemptId = () => {
-    const signature = JSON.stringify(
+    // How it's paid is part of it: the same items as Cash after a Credit
+    // attempt is a different sale, and must not be taken for a repeat of it.
+    const signature = JSON.stringify([
+      isChecked ? "MULTIPLE" : paymentMethod,
       cart.map((item: any) => [
         item.productId ?? item.id,
         item.cartQuantity || 1,
         item.selling_price ?? item.amount,
       ]),
-    );
+    ]);
     // Read from the store, not this render's copy: when a sale times out, the
     // offline save runs from the render that sent it, before the ID it just
     // stored would show up there. A stale read would mint a second ID.
@@ -567,8 +571,15 @@ const ReceiptPage = ({
   // the same sale twice under two different ids.
   const [offlineSaving, setOfflineSaving] = useState(false);
   const offlineSavingRef = useRef(false);
+  /** The ID the last online attempt went up under. */
+  const sentSaleIdRef = useRef<string | null>(null);
 
-  const handleOfflineSale = async () => {
+  /**
+   * `sentId` is set when an online attempt of this sale timed out: the save
+   * reuses that attempt's ID, so it's this exact sale, and marks it as possibly
+   * already on the server.
+   */
+  const handleOfflineSale = async (sentId?: string) => {
     if (offlineBlocked || offlineSavingRef.current) return;
     if (paymentMethod !== "CASH" && paymentMethod !== "BANK") {
       showToast("Only Cash or Bank Transfer can be taken offline", "error");
@@ -591,13 +602,16 @@ const ReceiptPage = ({
     }
 
     const { getItemDiscountDisplay } = useCartStore.getState();
-    const clientSaleId = saleAttemptId();
+    const clientSaleId = sentId ?? saleAttemptId();
 
     offlineSavingRef.current = true;
     setOfflineSaving(true);
     await saveOfflineSale({
       client_sale_id: clientSaleId,
       business_id,
+      // The server may already have it, in which case its stock is already
+      // taken: don't subtract it again on this device.
+      ...(sentId && { uncertain: true }),
       // What the customer's receipt says, tax included.
       total: Math.max(
         0,
@@ -672,8 +686,10 @@ const ReceiptPage = ({
     const payload = createPayload();
 
     if (payload) {
+      const saleId = saleAttemptId();
+      sentSaleIdRef.current = saleId;
       const apiPayload: any = {
-        client_sale_id: saleAttemptId(),
+        client_sale_id: saleId,
         date: selectedDate
           ? format(selectedDate, "yyyy-MM-dd")
           : format(new Date(), "yyyy-MM-dd"),

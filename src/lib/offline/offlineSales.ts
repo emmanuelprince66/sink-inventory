@@ -9,7 +9,7 @@
  * taken once.
  */
 
-import { markServerUnreachable } from "./offlineMode";
+import { markServerReachable, markServerUnreachable } from "./offlineMode";
 
 export type OfflineSaleMethod = "CASH" | "CARD" | "BANK";
 
@@ -51,6 +51,12 @@ export interface QueuedOfflineSale {
    * Not set when a request merely failed: those sales just keep waiting.
    */
   rejected?: boolean;
+  /**
+   * Saved after an online attempt timed out, so the server may already have it
+   * (sync then answers ALREADY_SYNCED). Its stock isn't subtracted on this
+   * device, since the server's count may already include it.
+   */
+  uncertain?: boolean;
   /** For the Offline Sales drawer only; never sent to the server. */
   display?: {
     items: { name: string; quantity: number; line_total: number }[];
@@ -376,6 +382,8 @@ const doSync = async (
     }
 
     issues.delete(businessId);
+    // A reply came back, so the server is reachable whatever the checks say.
+    markServerReachable();
     const { saved, already, rejected } = result;
     const done = [...saved, ...already];
     settling.set(businessId, [

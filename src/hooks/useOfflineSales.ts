@@ -16,6 +16,7 @@ import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "./toast/useToast";
+import { useOnlineStatus } from "./useOnlineStatus";
 
 /**
  * The offline sales queue for the current business, for showing it and for the
@@ -25,6 +26,9 @@ import { useToast } from "./toast/useToast";
 export const useOfflineSales = () => {
   const business_id = useBusinessStore((state) => state.business_id);
   const isOnline = !usePosOffline();
+  // Sync now only needs the network: a successful sync is itself proof the
+  // server is back, so it can clear a wrong "offline".
+  const browserOnline = useOnlineStatus();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
@@ -68,7 +72,7 @@ export const useOfflineSales = () => {
   }, [refresh]);
 
   /** Why syncing can't happen right now, or null when it can. */
-  const syncBlockedReason = !isOnline
+  const syncBlockedReason = !browserOnline
     ? "No internet. These sales will sync when it's back."
     : null;
 

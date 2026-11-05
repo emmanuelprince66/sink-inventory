@@ -1,4 +1,5 @@
 import {
+  clearOldDiscount,
   fetchDiscountThresholds,
   saveDiscountThresholds,
 } from "@/api/products/discount-thresholds";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
-import { useInventoryHook } from "@/hooks/useInventoryHook";
 import {
   calculateProductDiscount,
   DiscountTierFormRow,
@@ -38,12 +38,6 @@ const SingleProductDiscountForm = ({
 }) => {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  // Used only to switch off the older single discount, if set.
-  const { addDiscountSubmit, loading: clearingLegacy } = useInventoryHook({
-    productId,
-    product,
-    closeModal,
-  });
 
   const hasLegacy =
     Number(product?.discount) > 0 || Number(product?.discount_threshold) > 0;
@@ -96,13 +90,11 @@ const SingleProductDiscountForm = ({
       queryClient.invalidateQueries({
         queryKey: [queryKey.inventory.getAllInventory],
       });
-      if (hasLegacy) {
-        // Closes the modal and refreshes when done.
-        addDiscountSubmit({ product_threshold: "0", price_discount: "0" });
-      } else {
-        showToast("Bulk discounts saved", "success");
-        closeModal?.();
-      }
+      // Tiers replace the older single discount; left on, it would come back
+      // the moment the tiers were removed.
+      if (hasLegacy) await clearOldDiscount(productId);
+      showToast("Bulk discounts saved", "success");
+      closeModal?.();
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : "Couldn't save the bulk discounts",
@@ -153,10 +145,10 @@ const SingleProductDiscountForm = ({
       <Button
         type="button"
         className="w-full h-[48px]"
-        disabled={saving || clearingLegacy || !!error || isError}
+        disabled={saving || !!error || isError}
         onClick={handleSave}
       >
-        {saving || clearingLegacy ? <Spinner /> : "Save"}
+        {saving ? <Spinner /> : "Save"}
       </Button>
     </div>
   );

@@ -82,7 +82,21 @@ export async function POST(
       cache: "no-store",
     });
 
-    const responseData = await response.json();
+    // A gateway (nginx, load balancer) answers with an HTML page when the API
+    // behind it is down. That's "unreachable", not a sale the API refused.
+    const responseData = await response.json().catch(() => null);
+    if (responseData === null) {
+      console.error("Backend sent no JSON:", response.status);
+      return NextResponse.json(
+        {
+          success: false,
+          unreachable: true,
+          message: "The server couldn't be reached.",
+          error: "Bad gateway",
+        },
+        { status: 502 }
+      );
+    }
 
     if (!response.ok) {
       console.error("Backend API error:", responseData);
@@ -107,10 +121,12 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
+    // The API couldn't be reached at all.
     console.error("Server error:", error);
     return NextResponse.json(
       {
         success: false,
+        unreachable: true,
         error: "Internal server error",
         message:
           error instanceof Error
