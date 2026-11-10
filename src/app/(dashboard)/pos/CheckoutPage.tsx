@@ -128,7 +128,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const { user } = useUserRole();
   const canSeeStock = useCanSeeStock();
   // Changing a price at the till is a manual discount.
-  const canEditPrice = useCan().can("sales", "discount", true);
+  const canDiscount = useCan().can("sales", "discount", true);
+  // Without "discount", a product's price can still be lowered online: the
+  // server asks for a manager's PIN at checkout. Offline it can't, and it
+  // doesn't check service or combo prices, so those stay locked.
+  const canEditPriceOf = (item: any) =>
+    canDiscount ||
+    (!posOffline && String(item?.type ?? "PRODUCT").toUpperCase() === "PRODUCT");
 
   const {
     cartItems,
@@ -686,7 +692,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 <p className="text-xs font-bold text-primary-green-300">
                                   {formatToNaira(currentPrice)}
                                 </p>
-                                {canEditPrice && (
+                                {canEditPriceOf(item) && (
                                   <button
                                     type="button"
                                     className="p-1 rounded hover:bg-grey-6 cursor-pointer"

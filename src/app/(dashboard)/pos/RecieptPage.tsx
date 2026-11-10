@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { isOverridePinInvalid } from "@/api/user/override-pin";
 import ManagerOverrideDialog, { OVERRIDE_PIN_WRONG } from "@/components/app/ManagerOverrideDialog";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -125,6 +126,7 @@ const ReceiptPage = ({
   };
   // A sale refused for a permission a manager can approve with their PIN.
   const [overrideOpen, setOverrideOpen] = useState(false);
+  const canDiscount = useCan().can("sales", "discount", true);
   const [overrideError, setOverrideError] = useState("");
   const lastApiPayloadRef = useRef<any>(null);
   const setSelectedBank = (v: string) => updateCartState({ selectedBank: v });
@@ -594,6 +596,22 @@ const ReceiptPage = ({
    */
   const handleOfflineSale = async (sentId?: string) => {
     if (offlineBlocked || offlineSavingRef.current) return;
+    // A lowered price needs a manager's PIN, which can't be checked offline.
+    if (
+      !canDiscount &&
+      cart.some(
+        (item: any) =>
+          item.list_price != null &&
+          Number(item.amount || item.selling_price || 0) <
+            Number(item.list_price),
+      )
+    ) {
+      showToast(
+        "A lowered price needs a manager's approval, which needs internet. Put the normal price back to sell offline.",
+        "error",
+      );
+      return;
+    }
     if (paymentMethod !== "CASH" && paymentMethod !== "BANK") {
       showToast("Only Cash or Bank Transfer can be taken offline", "error");
       return;
