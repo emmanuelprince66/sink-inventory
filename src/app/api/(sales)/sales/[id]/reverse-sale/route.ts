@@ -18,6 +18,9 @@ export async function POST(
   }
 
   const apiUrl = new URL(`${BaseUrl}sale/reverse/`);
+  // A manager's override PIN, when one approved this reversal.
+  const incoming = await request.json().catch(() => ({}));
+  const overridePin = incoming?.manager_override_pin;
 
   try {
     const response = await fetch(apiUrl, {
@@ -26,7 +29,10 @@ export async function POST(
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({
+        id,
+        ...(overridePin && { manager_override_pin: overridePin }),
+      }),
     });
 
     if (!response.ok) {
@@ -35,7 +41,13 @@ export async function POST(
       if (contentType?.includes("application/json")) {
         const errorData = await response.json();
         return NextResponse.json(
-          { error: errorData.message || "Failed to reverse sale" },
+          {
+            error: errorData.message || "Failed to reverse sale",
+            message: errorData.message || "Failed to reverse sale",
+            code: errorData.code,
+            module: errorData.module,
+            action: errorData.action,
+          },
           { status: response.status }
         );
       } else {

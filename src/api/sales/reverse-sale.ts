@@ -1,14 +1,15 @@
+import { canBeOverridden, isOverridePinInvalid } from "@/api/user/override-pin";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { MutationConfig, useMutation } from "@/lib/react-query";
 
-const reverseSale = async (id: string) => {
+const reverseSale = async ({ id, pin }: { id: string; pin?: string }) => {
   const response = await fetch(`/api/sales/${id}/reverse-sale`, {
     method: "POST",
-    // headers: {
-    //   "Content-Type": "application/json",
-    // },
-    body: JSON.stringify({ id }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id, ...(pin && { manager_override_pin: pin }) }),
   });
 
   if (!response.ok) {
@@ -31,17 +32,21 @@ export const useReverseSaleMutation = (config?: UseReverseSaleOptions) => {
 
   return useMutation({
     mutationKey: [queryKey.sales.reverseSale],
-    mutationFn: (id: string) => {
-      if (!id) {
+    mutationFn: (input: string | { id: string; pin?: string }) => {
+      const args = typeof input === "string" ? { id: input } : input;
+      if (!args.id) {
         throw new Error("Product ID is required");
       }
-      return reverseSale(id);
+      return reverseSale(args);
     },
     retry: false,
     onError: (error: any, variables: any, context: any) => {
       console.log("Error reversing sale:", error);
-      const errorMessage = error?.message || "Error reversing sale";
-      showToast(errorMessage, "error");
+      // Asking for a manager's PIN, or a wrong one: the dialog says so.
+      if (!canBeOverridden(error) && !isOverridePinInvalid(error)) {
+        const errorMessage = error?.message || "Error reversing sale";
+        showToast(errorMessage, "error");
+      }
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

@@ -1,4 +1,6 @@
 "use client";
+import { useOverridePinStatusQuery } from "@/api/user/override-pin";
+import OverridePinSettings from "./pin/OverridePinSettings";
 import { isAdminLike } from "@/utils/pageAccess";
 import { useCan } from "@/hooks/useCan";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -246,6 +248,7 @@ const SECTION_PARAMS: Record<string, string> = {
   Password: "password",
   "Transaction Pin": "wallet-pin",
   "User Transaction Pin": "transaction-pin",
+  "Override Pin": "override-pin",
 };
 
 const SECURITY_TABS = [
@@ -255,6 +258,12 @@ const SECURITY_TABS = [
     value: "User Transaction Pin",
     label: "Transaction PIN",
     shortLabel: "PIN",
+    ownerOnly: false,
+  },
+  {
+    value: "Override Pin",
+    label: "Manager override PIN",
+    shortLabel: "Override",
     ownerOnly: false,
   },
 ] as const;
@@ -267,7 +276,14 @@ const SecurityPrivacyTabs = ({
   /** ?section= — lets a link open a specific panel, not just the tab. */
   initialSection?: string | null;
 }) => {
-  const visibleTabs = SECURITY_TABS.filter((tab) => isOwner || !tab.ownerOnly);
+  // Only people who can approve something get an override PIN.
+  const { data: overrideStatus } = useOverridePinStatusQuery();
+  const canOverride = isOwner || Boolean(overrideStatus?.eligible);
+  const visibleTabs = SECURITY_TABS.filter(
+    (tab) =>
+      (isOwner || !tab.ownerOnly) &&
+      (tab.value !== "Override Pin" || canOverride),
+  );
 
   /**
    * Which panel to land on.
@@ -334,6 +350,14 @@ const SecurityPrivacyTabs = ({
             <TransactionPinSettings />
           </div>
         </TabsContent>
+
+        {canOverride && (
+          <TabsContent value="Override Pin" className="mt-0">
+            <div className="w-full overflow-hidden">
+              <OverridePinSettings />
+            </div>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

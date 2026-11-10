@@ -1,3 +1,5 @@
+import { canBeOverridden, isOverridePinInvalid } from "@/api/user/override-pin";
+import ManagerOverrideDialog, { OVERRIDE_PIN_WRONG } from "@/components/app/ManagerOverrideDialog";
 import { useCan } from "@/hooks/useCan";
 import { isAdminLike } from "@/utils/pageAccess";
 import {
@@ -440,9 +442,18 @@ const OrderHistoryDetails = ({
   // Reversing needs sales "reverse"; without a checklist, the admin roles.
   const { can: canDo, role: userRole } = useCan();
   const canReverse = canDo("sales", "reverse", isAdminLike(userRole));
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideError, setOverrideError] = useState("");
   const { ReverseSalePending, handleReverseSale, loading } = useSalesHook({
     closeModal,
   });
+  // Allowed by the checklist but refused anyway (it changed): ask a manager.
+  const askForManager = (error: any) => {
+    if (canBeOverridden(error)) {
+      setOverrideError("");
+      setOverrideOpen(true);
+    }
+  };
   const receiptRef = useRef<HTMLDivElement>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -729,10 +740,19 @@ const OrderHistoryDetails = ({
                 </p>
               </div>
 
-              {/* Reverse Sale Button */}
-              {canReverse && (
+              {/* Reverse Sale Button: without the permission, a manager
+                  approves it with their override PIN. */}
               <div
-                onClick={() => handleReverseSale(orderDetails?.id)}
+                onClick={() => {
+                  if (!canReverse) {
+                    setOverrideError("");
+                    setOverrideOpen(true);
+                    return;
+                  }
+                  handleReverseSale(orderDetails?.id, undefined, {
+                    onError: askForManager,
+                  });
+                }}
                 className="w-full bg-warning-2 text-warning-1 font-bold rounded-xl gap-2 p-3 flex items-center justify-center border border-warning-1/30 cursor-pointer no-print mt-4 hover:bg-warning-2/70 transition-colors"
               >
                 {ReverseSalePending || loading ? (
@@ -740,11 +760,32 @@ const OrderHistoryDetails = ({
                 ) : (
                   <>
                     <Undo2 size={16} />
-                    <span>Reverse Sale</span>
+                    <span>
+                      {canReverse
+                        ? "Reverse Sale"
+                        : "Reverse Sale (manager approval)"}
+                    </span>
                   </>
                 )}
               </div>
-              )}
+
+              <ManagerOverrideDialog
+                open={overrideOpen}
+                onClose={() => setOverrideOpen(false)}
+                actionText="reverse this sale"
+                loading={ReverseSalePending || loading}
+                error={overrideError}
+                onSubmit={(pin) =>
+                  handleReverseSale(orderDetails?.id, pin, {
+                    onError: (error) =>
+                      setOverrideError(
+                        isOverridePinInvalid(error)
+                          ? OVERRIDE_PIN_WRONG
+                          : error?.message || "Couldn't reverse this sale.",
+                      ),
+                  })
+                }
+              />
             </div>
 
             {/* Action buttons - Print and Download */}

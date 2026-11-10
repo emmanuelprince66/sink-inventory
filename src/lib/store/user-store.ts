@@ -157,6 +157,9 @@ export const useUserStore = create<UserStore>()(
         const { user } = get();
         if (user) {
           const updatedUser = { ...user, ...userData };
+          // The page guard reads these cookies, so they follow along.
+          if (userData.role) cookieHelpers.set("userRole", userData.role);
+          if (userData.permissions) syncPermissionsCookie(userData.permissions);
           set({
             user: updatedUser,
             permissions: userData.permissions || user.permissions,

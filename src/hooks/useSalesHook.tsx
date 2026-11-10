@@ -92,9 +92,13 @@ export const useSalesHook = ({
       },
     });
 
-  const handleReverseSale = (productId: any) => {
+  const handleReverseSale = (
+    productId: any,
+    pin?: string,
+    callbacks?: { onError?: (error: any) => void },
+  ) => {
     setLoading(true);
-    reverseSale(productId);
+    reverseSale(pin ? { id: productId, pin } : productId, callbacks);
   };
 
   const debouncedSearchTerm = useDebounce(searchInput, 500);

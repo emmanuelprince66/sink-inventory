@@ -1,3 +1,4 @@
+import { canBeOverridden, isOverridePinInvalid } from "@/api/user/override-pin";
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
@@ -23,6 +24,7 @@ export const useCheckoutHook = ({
   setCreateSaleResponse,
   page,
   onUnreachable,
+  onNeedsOverride,
 }: {
   searchInput?: string;
   setShowPrintReceiptView?: any;
@@ -30,6 +32,8 @@ export const useCheckoutHook = ({
   setCreateSaleResponse?: any;
   /** A sale's request couldn't reach the server. */
   onUnreachable?: () => void;
+  /** Refused for a permission a manager's PIN can approve. */
+  onNeedsOverride?: (error: any) => void;
   page?: any;
 }) => {
   const business_id = useBusinessStore((state) => state.business_id);
@@ -134,6 +138,12 @@ export const useCheckoutHook = ({
         // ID, so the server won't record it twice.
         onUnreachable?.();
         markServerUnreachable();
+        return;
+      }
+
+      // Needs a manager's approval, or the PIN given was wrong.
+      if (canBeOverridden(error) || isOverridePinInvalid(error)) {
+        onNeedsOverride?.(error);
         return;
       }
 

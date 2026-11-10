@@ -106,6 +106,10 @@ export async function POST(
           message: responseData.message || "Transaction failed",
           error: responseData.error || "Transaction failed",
           details: responseData.details || null,
+          // Permission refusals, so the till can ask for a manager's PIN.
+          code: responseData.code,
+          module: responseData.module,
+          action: responseData.action,
         },
         { status: response.status }
       );

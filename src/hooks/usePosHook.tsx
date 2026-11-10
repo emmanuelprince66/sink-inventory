@@ -1,3 +1,4 @@
+import { useCan } from "@/hooks/useCan";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
 import { useGetInventoryQuery } from "@/api/inventory/fetch-inventory";
 import { useFetchDepartmentsQuery } from "@/api/products/fetch-departments";
@@ -306,11 +307,19 @@ export const usePosHook = ({
     [normalizeCode],
   );
 
+  const canSellWatchlist = useCan().can("products", "sell_watchlist", true);
+
   // Memoized add to cart handler
   const handleAddToCart = useCallback(
     (cart: any) => {
       if (!cart) {
         showToast("Invalid product", "error");
+        return;
+      }
+
+      // Scanning finds watchlist items too; the grid alone isn't enough.
+      if (cart.watchlist === true && !canSellWatchlist) {
+        showToast("You don't have permission to sell watchlist items", "error");
         return;
       }
 

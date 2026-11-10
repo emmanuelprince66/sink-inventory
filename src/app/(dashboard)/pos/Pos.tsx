@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { isUnsellable, productStockView, withQueuedStock } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
 import NoCartItem from "@/components/app/NoCartItem";
@@ -187,7 +188,14 @@ const Pos: React.FC = () => {
   const allowOversell = useAllowSalesWithoutStock();
   const { queuedFor } = useQueuedStock();
 
+  // Watchlist items need products "sell_watchlist" (the server checks too).
+  const canSellWatchlist = useCan().can("products", "sell_watchlist", true);
+
   const handleProductClick = (product: Product): void => {
+    if (product.watchlist === true && !canSellWatchlist) {
+      showToast("You don't have permission to sell watchlist items", "error");
+      return;
+    }
     if (isUnsellable(productStockView(product, queuedFor).view, allowOversell)) {
       return;
     }
@@ -619,6 +627,7 @@ const Pos: React.FC = () => {
                   const hasVariations =
                     product.variations && product.variations.length > 0;
                   const isWatchlist = product.watchlist === true;
+                  const watchlistLocked = isWatchlist && !canSellWatchlist;
                   const isInCart = cartItems.some(
                     (item: any) => item.id === product.id,
                   );
@@ -627,8 +636,13 @@ const Pos: React.FC = () => {
                     <div
                       key={product.id}
                       onClick={() => handleProductClick(product)}
+                      title={
+                        watchlistLocked
+                          ? "You don't have permission to sell watchlist items"
+                          : undefined
+                      }
                       className={`border rounded-xl p-2 md:p-2 transition-all relative ${
-                        isOutOfStock
+                        isOutOfStock || watchlistLocked
                           ? "border-grey-5 cursor-not-allowed opacity-50"
                           : isInCart
                             ? "border-primary-green-300 ring-1 ring-primary-green-300 shadow-sm cursor-pointer group"

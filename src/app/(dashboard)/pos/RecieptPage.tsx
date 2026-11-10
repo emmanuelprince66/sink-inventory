@@ -1,4 +1,6 @@
 "use client";
+import { isOverridePinInvalid } from "@/api/user/override-pin";
+import ManagerOverrideDialog, { OVERRIDE_PIN_WRONG } from "@/components/app/ManagerOverrideDialog";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Spinner } from "@/components/app/Spinner";
 import UserNotSubscribe from "@/components/app/UserNotSubscribe";
@@ -117,8 +119,14 @@ const ReceiptPage = ({
   const setPaymentMethod = (v: string) => updateCartState({ paymentMethod: v });
   // The sale is confirmed, so its ID is spent: a repeat purchase of the same
   // items mustn't look like a retry of this one.
-  const setCreateSaleResponse = (v: any) =>
+  const setCreateSaleResponse = (v: any) => {
+    setOverrideOpen(false);
     updateCartState({ saleResponse: v, saleAttempt: null });
+  };
+  // A sale refused for a permission a manager can approve with their PIN.
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideError, setOverrideError] = useState("");
+  const lastApiPayloadRef = useRef<any>(null);
   const setSelectedBank = (v: string) => updateCartState({ selectedBank: v });
   const setSelectedBankForSplitPayment = (v: string) =>
     updateCartState({ selectedAccount: v });
@@ -287,6 +295,11 @@ const ReceiptPage = ({
     closeSureModal,
     setShowPrintReceiptView,
     setCreateSaleResponse,
+    onNeedsOverride: (error) => {
+      closeSureModal();
+      setOverrideError(isOverridePinInvalid(error) ? OVERRIDE_PIN_WRONG : "");
+      setOverrideOpen(true);
+    },
     // The internet went while paying. Finish the sale on this device if this
     // payment type can be taken offline; the cashier has nothing else to do.
     onUnreachable: () => {
@@ -753,6 +766,7 @@ const ReceiptPage = ({
 
       console.log("apiPayload", apiPayload);
 
+      lastApiPayloadRef.current = apiPayload;
       createSale({
         apiPayload,
         businessId: business_id,
@@ -1532,6 +1546,25 @@ const ReceiptPage = ({
               {/* {formatToNaira(vatInfo?.enabled ? vatInfo.totalWithVat : total)} */}
             </Button>
           </div>
+
+          <ManagerOverrideDialog
+            open={overrideOpen}
+            onClose={() => setOverrideOpen(false)}
+            actionText="give this discount"
+            loading={createSalePending}
+            error={overrideError}
+            onSubmit={(pin) => {
+              if (!lastApiPayloadRef.current) return;
+              setOverrideError("");
+              createSale({
+                apiPayload: {
+                  ...lastApiPayloadRef.current,
+                  manager_override_pin: pin,
+                },
+                businessId: business_id,
+              });
+            }}
+          />
 
           <CustomModal
             isOpen={sureModal}

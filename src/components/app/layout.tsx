@@ -8,6 +8,7 @@ import { RealtimeProvider } from "../providers/RealtimeProvider";
 import { AppSidebar } from "./AppSideBar";
 import BusinessDataSync from "./BusinessDataSync";
 import OfflineSalesAutoSync from "./OfflineSalesAutoSync";
+import PermissionsSync from "./PermissionsSync";
 import { TopBar } from "./TopBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           dashboard in the right currency. */}
       <BusinessDataSync />
       <OfflineSalesAutoSync />
+      <PermissionsSync />
       {/* Inside the shell, so the socket only opens for a signed-in dashboard —
           never on /login or the public /loyalty/join pages. */}
       <RealtimeProvider>
