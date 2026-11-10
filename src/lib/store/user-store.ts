@@ -1,9 +1,23 @@
 // stores/user-store.ts
+import {
+  encodeMatrix,
+  matrixFromPermissions,
+  PERMISSIONS_COOKIE,
+} from "@/utils/pageAccess";
 import { getUserPermissions, hasPermission } from "@/utils/permissions";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { resetBusinessScopedStores } from "./reset-business-scope";
 import { Permission, Permissions, User, UserRole } from "./types";
+
+// The staff permissions checklist, readable by the server-side page guard.
+// Removed when there's none, so an older login falls back to role rules.
+const syncPermissionsCookie = (permissions: unknown) => {
+  if (typeof document === "undefined") return;
+  const matrix = matrixFromPermissions(permissions);
+  if (matrix) cookieHelpers.set(PERMISSIONS_COOKIE, encodeMatrix(matrix));
+  else cookieHelpers.remove(PERMISSIONS_COOKIE);
+};
 
 // Cookie helper functions
 const cookieHelpers = {
@@ -88,6 +102,7 @@ export const useUserStore = create<UserStore>()(
         // Set cookies
         cookieHelpers.set("accessToken", userData.tokens.access);
         cookieHelpers.set("userRole", userData.role);
+        syncPermissionsCookie(userData.permissions);
         if (userData.tokens.refresh) {
           cookieHelpers.set("refreshToken", userData.tokens.refresh);
         }
@@ -105,6 +120,7 @@ export const useUserStore = create<UserStore>()(
         cookieHelpers.remove("accessToken");
         cookieHelpers.remove("refreshToken");
         cookieHelpers.remove("userRole");
+        cookieHelpers.remove(PERMISSIONS_COOKIE);
 
         // The selected business and everything hanging off it belong to the
         // session that just ended, not to the browser.
@@ -120,7 +136,12 @@ export const useUserStore = create<UserStore>()(
 
       setLoading: (loading) => set({ isLoading: loading }),
 
-      hydrate: () => set({ isHydrated: true }),
+      hydrate: () => {
+        // Sessions from before the cookie existed get it on the next load.
+        const { permissions, user } = get();
+        if (user) syncPermissionsCookie(permissions ?? user.permissions);
+        set({ isHydrated: true });
+      },
 
       updatePermissions: (permissions) => {
         const { user } = get();
@@ -218,6 +239,7 @@ export const useUserRole = () => {
       const roleHierarchy: Record<UserRole, number> = {
         OWNER: 5,
         "ADMIN-ATTENDANT": 4,
+        MANAGER: 4,
         "INVENTORY-MANAGER": 3,
         "PRODUCTION-MANAGER": 3,
         PHARMACIST: 2,

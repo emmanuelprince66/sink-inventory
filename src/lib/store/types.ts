@@ -11,6 +11,7 @@ export interface BusinessStore {
 export type UserRole =
   | "OWNER"
   | "ADMIN-ATTENDANT"
+  | "MANAGER"
   | "ATTENDANT"
   | "PHARMACIST"
   | "PRODUCTION-MANAGER"

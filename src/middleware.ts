@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "./lib/store/types";
+import { decodeMatrix, pageAllowed, PERMISSIONS_COOKIE } from "./utils/pageAccess";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forget-password", "/unauthorized"];
 // Customer-facing loyalty routes reached by scanning a campaign QR code. These
@@ -75,10 +76,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.nextUrl));
   }
 
-  // Check role-based permissions
+  // The staff permissions checklist decides, where it covers the page.
+  const matrix = decodeMatrix(request.cookies.get(PERMISSIONS_COOKIE)?.value);
+  const allowed = pageAllowed(path, userRole, matrix);
+  if (allowed === false) {
+    return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
+  }
+  if (allowed === true) return NextResponse.next();
+
+  // Otherwise the old role rules.
   for (const [protectedPath, allowedRoles] of Object.entries(PROTECTED_PATHS)) {
     if (path.startsWith(protectedPath)) {
-      if (!userRole || !allowedRoles.includes(userRole)) {
+      // Managers reach what Admin Attendants reach; the backend limits the rest.
+      const pageRole = userRole === "MANAGER" ? "ADMIN-ATTENDANT" : userRole;
+      if (!pageRole || !allowedRoles.includes(pageRole)) {
         return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
       }
     }

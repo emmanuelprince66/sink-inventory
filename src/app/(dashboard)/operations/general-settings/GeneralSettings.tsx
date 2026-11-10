@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { CreditCard, Package, Truck } from "lucide-react";
 import { useState } from "react";
 import BnplCard from "./BnplCard";
+import AutoPricingCard from "./AutoPricingCard";
 import SellWithoutStockCard from "./SellWithoutStockCard";
 import ShippingTab from "./ShippingTab";
 
@@ -119,6 +120,7 @@ const GeneralSettings = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <SellWithoutStockCard />
+                <AutoPricingCard />
               </div>
             </SectionHeading>
           )}

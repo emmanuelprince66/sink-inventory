@@ -1,6 +1,7 @@
 "use client";
 
 import { CustomModal } from "@/components/app/CustomModal";
+import AutoPriceHint from "@/components/app/AutoPriceHint";
 import DiscountTiersEditor from "@/components/app/DiscountTiersEditor";
 import {
   Accordion,
@@ -50,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/toast/useToast";
 import { useAddNewProductHook } from "@/hooks/useAddNewProductHook";
+import { useProductAutoPrice } from "@/hooks/useAutoPricing";
 import { cn } from "@/lib/utils";
 import {
   DiscountTierFormRow,
@@ -146,6 +148,8 @@ const NewAddProduct = ({
     editProductPending,
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
+
+  const autoPricing = useProductAutoPrice(form, isEditMode);
 
   /**
    * Writes a scanned catalogue match into the form.
@@ -1190,6 +1194,15 @@ const NewAddProduct = ({
                                         {...field}
                                       />
                                     </FormControl>
+                                    {autoPricing.enabled && (
+                                      <AutoPriceHint
+                                        control={form.control}
+                                        setValue={form.setValue}
+                                        costName="cost_price"
+                                        sellingName="selling_price"
+                                        margin={autoPricing.margin}
+                                      />
+                                    )}
                                     <FormMessage className="text-xs" />
                                   </FormItem>
                                 )}
@@ -1733,6 +1746,15 @@ const NewAddProduct = ({
                                         }}
                                       />
                                     </FormControl>
+                                    {autoPricing.enabled && (
+                                      <AutoPriceHint
+                                        control={form.control}
+                                        setValue={form.setValue}
+                                        costName={`product_variations.${index}.cost_price`}
+                                        sellingName={`product_variations.${index}.selling_price`}
+                                        margin={autoPricing.margin}
+                                      />
+                                    )}
                                     <FormMessage className="text-xs" />
                                   </FormItem>
                                 )}

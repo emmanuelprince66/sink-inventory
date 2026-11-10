@@ -12,6 +12,7 @@ export interface StaffRow {
 
 const ROLE_STYLES: Record<string, string> = {
   "ADMIN-ATTENDANT": "bg-info-2 text-info-1",
+  MANAGER: "bg-info-2 text-info-1",
   ATTENDANT: "bg-grey-6 text-grey-3",
   "INVENTORY-MANAGER": "bg-[#f5f3ff] text-[#7c3aed]",
   "PRODUCTION-MANAGER": "bg-warning-2 text-warning-1",
@@ -24,12 +25,15 @@ interface GetColumnsProps {
   onManageBusinesses: (staff: StaffRow) => void;
   onEdit: (staff: StaffRow) => void;
   onDelete: (staff: StaffRow) => void;
+  /** Edit, delete and change businesses; staff "manage_roles". */
+  canManage?: boolean;
 }
 
 export const getStaffColumns = ({
   onManageBusinesses,
   onEdit,
   onDelete,
+  canManage = true,
 }: GetColumnsProps): ColumnDef<StaffRow>[] => [
   {
     accessorKey: "name",
@@ -74,6 +78,7 @@ export const getStaffColumns = ({
     header: "Action",
     cell: ({ row }) => {
       const staff = row.original;
+      if (!canManage) return null;
       return (
         <div className="flex gap-1 items-center">
           <button

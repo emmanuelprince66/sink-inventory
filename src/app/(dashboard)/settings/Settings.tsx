@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useUserRole } from "@/lib/store/user-store";
@@ -15,6 +16,7 @@ import Tax from "./tax/Tax";
 
 const Settings = () => {
   const { user } = useUserRole();
+  const { can } = useCan();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -143,7 +145,11 @@ const Settings = () => {
             )}
 
             {user &&
-              (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
+              can(
+                "staff",
+                "view",
+                user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT",
+              ) && (
                 <TabsContent value="HR" className="mt-0">
                   <div className="w-full overflow-hidden">
                     <VeiwStaff />

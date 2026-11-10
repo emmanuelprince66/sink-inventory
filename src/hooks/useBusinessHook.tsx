@@ -1,6 +1,8 @@
 // hooks/useBusinessHook.ts
 "use client";
 
+import { useUserStore } from "@/lib/store/user-store";
+import { homePathFor, matrixFromPermissions } from "@/utils/pageAccess";
 import {
   useCreateBusinessMutation,
   useUpdateBusinessMutation,
@@ -176,7 +178,12 @@ export const useBusinessHook = ({
     };
 
     const route = role ? roleRouteMap[role] || "/pos" : "/pos";
-    router.push(route);
+    // With a permissions checklist, the first page it allows.
+    const matrix = matrixFromPermissions(
+      useUserStore.getState().permissions ??
+        useUserStore.getState().user?.permissions,
+    );
+    router.push(homePathFor(role, matrix, route));
   };
 
   // ── Create ────────────────────────────────────────────────────────────────

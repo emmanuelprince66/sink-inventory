@@ -1,4 +1,6 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
+import { pageAllowed } from "@/utils/pageAccess";
 import { useLogoutMutation } from "@/api/auth/logout-user";
 import {
   Sidebar,
@@ -94,6 +96,7 @@ export function AppSidebar() {
   const { mutate: logout, isPending } = useLogoutMutation();
   const pathname = usePathname();
   const { role, canAny } = useUserRole();
+  const { matrix } = useCan();
   const { unreadNotifications } = useRealtime();
 
   // One record instead of four booleans. Initial values come from the config.
@@ -145,8 +148,13 @@ export function AppSidebar() {
   // Role first, then any permission the link declares. `anyPermission` is
   // opt-in per link, so every existing entry keeps behaving as it did.
   const canSeeLink = (item: any) => {
-    if (!item.roles.includes(role)) return false;
-    if (item.alwaysForRoles?.includes(role)) return true;
+    // The staff permissions checklist decides, where it covers the page.
+    const allowed = pageAllowed(item.url, role, matrix);
+    if (allowed !== null) return allowed;
+    // Managers get the Admin Attendant's menu; the backend limits what they do.
+    const menuRole = role === "MANAGER" ? "ADMIN-ATTENDANT" : role;
+    if (!item.roles.includes(menuRole)) return false;
+    if (item.alwaysForRoles?.includes(menuRole)) return true;
     if (!item.anyPermission?.length) return true;
     return canAny(item.anyPermission);
   };

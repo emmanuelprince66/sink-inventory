@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import OfflineSalesNote from "./OfflineSalesNote";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -201,6 +202,7 @@ const Sales = () => {
     to: new Date(),
   });
   const { user } = useUserRole();
+  const { can: canDo } = useCan();
 
   const [searchInput, setSearchInput] = useState("");
   const [ShowAttendants, setShowAttendants] = useState(false);
@@ -408,10 +410,14 @@ const Sales = () => {
           ) : (
             <>
               {user &&
-                (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT" ||
-                  user?.role === "ACCOUNTANT" ||
-                  user?.role === "PRODUCTION-MANAGER") && (
+                canDo(
+                  "reports",
+                  "view",
+                  user?.role === "OWNER" ||
+                    user?.role === "ADMIN-ATTENDANT" ||
+                    user?.role === "ACCOUNTANT" ||
+                    user?.role === "PRODUCTION-MANAGER",
+                ) && (
                   <>
                     {/* Mobile: 2 columns */}
                     <div className="grid grid-cols-2 gap-2 md:hidden">

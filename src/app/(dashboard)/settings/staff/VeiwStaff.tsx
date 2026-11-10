@@ -1,3 +1,4 @@
+import { useCan } from "@/hooks/useCan";
 import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
 import { Spinner } from "@/components/app/Spinner";
@@ -59,19 +60,23 @@ const ViewStaff = () => {
   const openAddStaffModalFunc = () => setOpenAddStaffModal(true);
 
   const { user } = useUserRole();
+  const { can } = useCan();
+  const isAdmin = user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT";
+  const canInvite = can("staff", "invite", isAdmin);
+  const canManage = can("staff", "manage_roles", isAdmin);
 
   const columns = getStaffColumns({
     onManageBusinesses: handleManageBusinesses,
     onEdit: handleEditStaff,
     onDelete: handleDeleteStaffModal,
+    canManage,
   });
 
   return (
     <>
       <div className="flex h-full w-full flex-col gap-3 items-start">
         <div className="w-full flex justify-end">
-          {user &&
-            (user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT") && (
+          {user && canInvite && (
               <Button
                 onClick={openAddStaffModalFunc}
                 className="flex items-center gap-1.5"

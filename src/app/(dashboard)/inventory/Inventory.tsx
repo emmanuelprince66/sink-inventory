@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { CustomCard } from "@/components/app/CustomCard";
 import GenerateReportModal from "@/components/app/GenerateReportModal";
 import { SearchInput } from "@/components/app/SearchInput";
@@ -159,6 +160,7 @@ const Inventory = () => {
   const { role, can } = useUserRole();
   const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
   const canManageInventory = role ? allowedRoles.includes(role) : false;
+  const { can: canDo } = useCan();
   const canManageServices = role === "OWNER" || role === "ADMIN-ATTENDANT";
   console.log("can", can("damage_items"));
   console.log("can-1", can("transfer_items"));
@@ -609,17 +611,20 @@ const Inventory = () => {
                 </DropdownMenu>
               )}
 
-              {role === "ADMIN-ATTENDANT" ||
-                (role === "OWNER" && (
-                  <Link href={"/categories"} className="w-full sm:w-auto">
-                    <Button
-                      variant="outline"
-                      className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 w-full sm:w-auto"
-                    >
-                      Manage Category
-                    </Button>
-                  </Link>
-                ))}
+              {canDo(
+                "products",
+                "edit",
+                role === "ADMIN-ATTENDANT" || role === "OWNER",
+              ) && (
+                <Link href={"/categories"} className="w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    className="text-grey-2 border-grey-5 hover:bg-grey-6 hover:text-grey-2 w-full sm:w-auto"
+                  >
+                    Manage Category
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
 

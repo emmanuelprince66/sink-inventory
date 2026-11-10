@@ -85,6 +85,44 @@ export async function PATCH(
       );
     }
 
+    // Name and phone save on single_attendant; role and permissions only stick
+    // through edit_attendant. Leaving set_permissions out re-applies the
+    // role's defaults, which is how Reset works.
+    const permissionsResponse = await fetch(
+      `${BaseUrl}business/edit_attendant/${attendantId}/`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          role: payload.role,
+          ...(payload.set_permissions && {
+            set_permissions: payload.set_permissions,
+          }),
+        }),
+        cache: "no-store",
+      },
+    );
+
+    if (!permissionsResponse.ok) {
+      const permissionsError = await permissionsResponse
+        .json()
+        .catch(() => null);
+      return NextResponse.json(
+        {
+          success: false,
+          code: permissionsError?.code ?? null,
+          message:
+            permissionsError?.message ||
+            "Details saved, but the role and permissions couldn't be updated",
+          error: permissionsError?.error || "Permissions update failed",
+        },
+        { status: permissionsResponse.status },
+      );
+    }
+
     // Successful response
     return NextResponse.json(
       {

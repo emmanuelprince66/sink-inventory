@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import {
   adjustedQuantity,
   maxSellableQuantity,
@@ -126,6 +127,8 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
   const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
   const { user } = useUserRole();
   const canSeeStock = useCanSeeStock();
+  // Changing a price at the till is a manual discount.
+  const canEditPrice = useCan().can("sales", "discount", true);
 
   const {
     cartItems,
@@ -683,15 +686,17 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 <p className="text-xs font-bold text-primary-green-300">
                                   {formatToNaira(currentPrice)}
                                 </p>
-                                <button
-                                  type="button"
-                                  className="p-1 rounded hover:bg-grey-6 cursor-pointer"
-                                  onClick={() =>
-                                    startPriceEdit(item.id, currentPrice)
-                                  }
-                                >
-                                  <Edit3 size={11} className="text-grey-4" />
-                                </button>
+                                {canEditPrice && (
+                                  <button
+                                    type="button"
+                                    className="p-1 rounded hover:bg-grey-6 cursor-pointer"
+                                    onClick={() =>
+                                      startPriceEdit(item.id, currentPrice)
+                                    }
+                                  >
+                                    <Edit3 size={11} className="text-grey-4" />
+                                  </button>
+                                )}
                               </div>
                             )}
 

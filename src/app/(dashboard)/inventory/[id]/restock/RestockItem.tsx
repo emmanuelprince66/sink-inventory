@@ -27,6 +27,8 @@ import { useGetRestockHistory } from "@/hooks/useGetRestockHistory";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import AutoPriceHint from "@/components/app/AutoPriceHint";
+import { useRestockAutoPrice } from "@/hooks/useAutoPricing";
 import PriceAlertPanel from "./PriceAlertPanel";
 
 const RestockItem = ({
@@ -52,6 +54,7 @@ const RestockItem = ({
     applyingPrice,
     finishPriceAlert,
   } = useGetRestockHistory({ data, closeModal });
+  const autoPricing = useRestockAutoPrice(form);
 
   if (priceAlert) {
     return (
@@ -260,6 +263,15 @@ const RestockItem = ({
                     disabled={hasVariations && !form.watch("variation_id")}
                   />
                 </FormControl>
+                {autoPricing.enabled && (
+                  <AutoPriceHint
+                    control={form.control}
+                    setValue={form.setValue}
+                    costName="cost_price"
+                    sellingName="selling_price"
+                    margin={autoPricing.margin}
+                  />
+                )}
                 <FormMessage />
               </FormItem>
             )}
