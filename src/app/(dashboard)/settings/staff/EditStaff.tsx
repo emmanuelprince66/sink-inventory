@@ -95,8 +95,7 @@ export const EditStaff = ({
         <Form {...editform}>
           <form
             onSubmit={editform.handleSubmit((values) => {
-              const { ok, setPermissions } = matrix.resolveForSave();
-              if (ok) onSubmitEditForm(values, setPermissions);
+              onSubmitEditForm(values, matrix.resolveForSave());
             })}
             className="space-y-5"
           >

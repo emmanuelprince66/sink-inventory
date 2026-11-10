@@ -18,12 +18,15 @@ const AutoPriceHint = ({
   costName,
   sellingName,
   margin,
+  followsCost = true,
 }: {
   control: any;
   setValue: (name: any, value: any, options?: any) => void;
   costName: string;
   sellingName: string;
   margin: number;
+  /** False when changing the cost won't update the price here. */
+  followsCost?: boolean;
 }) => {
   const cost = useWatch({ control, name: costName });
   const selling = useWatch({ control, name: sellingName });
@@ -37,7 +40,7 @@ const AutoPriceHint = ({
   if (!isCustom) {
     return (
       <span className="mt-1 inline-block rounded-full bg-success-2 px-2 py-0.5 text-[10px] font-bold text-success-1">
-        Auto ({margin}% margin)
+        {followsCost ? "Auto" : "Matches"} ({margin}% margin)
       </span>
     );
   }

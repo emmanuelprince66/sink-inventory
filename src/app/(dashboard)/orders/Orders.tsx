@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { CardGridSkeleton } from "@/components/app/CardGridSkeleton";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -164,6 +165,8 @@ const CustomOrderCard = ({
 };
 
 const Orders = () => {
+  // Creating and changing orders; viewing needs only orders "view".
+  const canManageOrders = useCan().can("orders", "manage", true);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
     to: new Date(),
@@ -356,6 +359,7 @@ const Orders = () => {
                 className="w-full sm:w-auto mx-auto sm:mx-auto"
               />
             </div>
+            {canManageOrders && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button className="w-full sm:w-auto">
@@ -386,6 +390,7 @@ const Orders = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            )}
           </div>
         </div>
 
@@ -700,10 +705,10 @@ const Orders = () => {
                     key={order.id}
                     order={order}
                     type={activeTab}
-                    onAssignDelivery={(id) => {
+                    onAssignDelivery={canManageOrders ? (id) => {
                       setAssignTargetOrderId(id);
                       setOpenAssignDelivery(true);
-                    }}
+                    } : undefined}
                   />
                 ))}
               </div>

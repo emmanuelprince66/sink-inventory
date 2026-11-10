@@ -6,7 +6,9 @@
  * No browser-only code here: middleware imports it too.
  */
 
-export type PermissionsMatrix = Record<string, string[]>;
+import { isMatrix, type PermissionsMatrix } from "./permissionsMatrix";
+
+export type { PermissionsMatrix };
 
 /** "module:action" pairs; any one of them is enough. */
 type Rule = string[];
@@ -20,6 +22,7 @@ const PAGE_RULES: [string, Rule][] = [
   ["/new-add-product", ["products:create", "products:edit"]],
   ["/categories", ["products:edit"]],
   ["/departments", ["products:edit"]],
+  ["/orders/create", ["orders:manage"]],
   ["/pos", ["sales:create"]],
   ["/payment-terminal", ["sales:create"]],
   ["/overview", ["dashboard:view"]],
@@ -82,6 +85,10 @@ export const pageAllowed = (
   return rule ? matrixAllows(matrix, rule) : null;
 };
 
+/** Roles that, without a checklist, get the Admin Attendant's access. */
+export const isAdminLike = (role: string | undefined) =>
+  role === "OWNER" || role === "ADMIN-ATTENDANT" || role === "MANAGER";
+
 export const homePathFor = (
   role: string | undefined,
   matrix: PermissionsMatrix | null,
@@ -107,11 +114,7 @@ export const decodeMatrix = (
   if (!value) return null;
   try {
     const parsed = JSON.parse(decodeURIComponent(value));
-    return parsed &&
-      typeof parsed === "object" &&
-      Object.values(parsed).every(Array.isArray)
-      ? (parsed as PermissionsMatrix)
-      : null;
+    return isMatrix(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -122,9 +125,5 @@ export const matrixFromPermissions = (
   permissions: any,
 ): PermissionsMatrix | null => {
   const matrix = permissions?.permissions_matrix;
-  return matrix &&
-    typeof matrix === "object" &&
-    Object.values(matrix).every(Array.isArray)
-    ? (matrix as PermissionsMatrix)
-    : null;
+  return isMatrix(matrix) ? matrix : null;
 };

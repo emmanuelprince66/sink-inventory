@@ -1,4 +1,5 @@
 "use client";
+import { isAdminLike } from "@/utils/pageAccess";
 import { useCan } from "@/hooks/useCan";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -145,11 +146,7 @@ const Settings = () => {
             )}
 
             {user &&
-              can(
-                "staff",
-                "view",
-                user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT",
-              ) && (
+              can("staff", "view", isAdminLike(user?.role)) && (
                 <TabsContent value="HR" className="mt-0">
                   <div className="w-full overflow-hidden">
                     <VeiwStaff />

@@ -1,5 +1,6 @@
 "use client";
 
+import { isAdminLike } from "@/utils/pageAccess";
 import { useCan } from "@/hooks/useCan";
 import { CustomCard } from "@/components/app/CustomCard";
 import GenerateReportModal from "@/components/app/GenerateReportModal";
@@ -611,11 +612,7 @@ const Inventory = () => {
                 </DropdownMenu>
               )}
 
-              {canDo(
-                "products",
-                "edit",
-                role === "ADMIN-ATTENDANT" || role === "OWNER",
-              ) && (
+              {canDo("products", "edit", isAdminLike(role)) && (
                 <Link href={"/categories"} className="w-full sm:w-auto">
                   <Button
                     variant="outline"

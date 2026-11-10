@@ -1,3 +1,5 @@
+import { useCan } from "@/hooks/useCan";
+import { isAdminLike } from "@/utils/pageAccess";
 import {
   Document,
   Font,
@@ -435,6 +437,9 @@ const OrderHistoryDetails = ({
   business?: any; // Make it optional
   closeModal: () => void;
 }) => {
+  // Reversing needs sales "reverse"; without a checklist, the admin roles.
+  const { can: canDo, role: userRole } = useCan();
+  const canReverse = canDo("sales", "reverse", isAdminLike(userRole));
   const { ReverseSalePending, handleReverseSale, loading } = useSalesHook({
     closeModal,
   });
@@ -725,6 +730,7 @@ const OrderHistoryDetails = ({
               </div>
 
               {/* Reverse Sale Button */}
+              {canReverse && (
               <div
                 onClick={() => handleReverseSale(orderDetails?.id)}
                 className="w-full bg-warning-2 text-warning-1 font-bold rounded-xl gap-2 p-3 flex items-center justify-center border border-warning-1/30 cursor-pointer no-print mt-4 hover:bg-warning-2/70 transition-colors"
@@ -738,6 +744,7 @@ const OrderHistoryDetails = ({
                   </>
                 )}
               </div>
+              )}
             </div>
 
             {/* Action buttons - Print and Download */}

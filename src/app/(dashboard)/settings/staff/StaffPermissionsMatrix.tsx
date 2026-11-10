@@ -104,13 +104,19 @@ const StaffPermissionsMatrix = ({
           return (
             <div
               key={module}
-              className="overflow-hidden rounded-lg border border-grey-5"
+              className={cn(
+                "overflow-hidden rounded-xl border bg-white transition-colors",
+                isOpen ? "border-primary-green-300" : "border-grey-5",
+              )}
             >
               <button
                 type="button"
                 aria-expanded={isOpen}
                 onClick={() => setOpenModule(isOpen ? null : module)}
-                className="flex w-full cursor-pointer items-center justify-between gap-3 p-3 text-left hover:bg-grey-6/60"
+                className={cn(
+                  "flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-left transition-colors",
+                  isOpen ? "bg-secondary-6" : "hover:bg-grey-6/60",
+                )}
               >
                 <span className="text-sm font-bold text-grey-1">
                   {moduleLabel(module)}
@@ -118,13 +124,15 @@ const StaffPermissionsMatrix = ({
                 <span className="flex shrink-0 items-center gap-2">
                   <span
                     className={cn(
-                      "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                      count
+                      "rounded-full px-2.5 py-0.5 text-[11px] font-bold",
+                      allOn
                         ? "bg-success-2 text-success-1"
-                        : "bg-grey-6 text-grey-3",
+                        : count
+                          ? "bg-warning-2 text-grey-1"
+                          : "bg-grey-6 text-grey-3",
                     )}
                   >
-                    {count} of {actions.length}
+                    {allOn ? "All" : count ? `${count} of ${actions.length}` : "None"}
                   </span>
                   <ChevronDown
                     className={cn(
@@ -136,34 +144,51 @@ const StaffPermissionsMatrix = ({
               </button>
 
               {isOpen && (
-                <div className="space-y-2 border-t border-grey-6 p-3">
-                  {actions.length > 1 && (
-                    <button
-                      type="button"
-                      className="cursor-pointer text-xs font-bold text-primary-green-300 underline"
-                      onClick={() => setActions(module, allOn ? [] : actions)}
-                    >
-                      {allOn ? "Turn all off" : "Turn all on"}
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    {actions.map((action) => (
-                      <label
-                        key={action}
-                        className="flex cursor-pointer items-start gap-2"
+                <div className="border-t border-grey-5 px-4 pb-4 pt-3">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="text-xs font-medium text-grey-3">
+                      {count} of {actions.length} allowed
+                    </p>
+                    {actions.length > 1 && (
+                      <button
+                        type="button"
+                        className="cursor-pointer rounded-md px-2 py-1 text-xs font-bold text-primary-green-300 transition-colors hover:bg-secondary-6"
+                        onClick={() => setActions(module, allOn ? [] : actions)}
                       >
-                        <Checkbox
-                          className="mt-0.5"
-                          checked={enabled.includes(action)}
-                          onCheckedChange={(checked) =>
-                            toggleAction(module, action, checked === true)
-                          }
-                        />
-                        <span className="text-sm text-grey-2">
-                          {actionLabel(module, action)}
-                        </span>
-                      </label>
-                    ))}
+                        {allOn ? "Clear all" : "Select all"}
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {actions.map((action) => {
+                      const checked = enabled.includes(action);
+                      return (
+                        <label
+                          key={action}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2.5 transition-colors",
+                            checked
+                              ? "border-primary-green-300/40 bg-secondary-6"
+                              : "border-grey-5 bg-white hover:bg-grey-6/60",
+                          )}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(next) =>
+                              toggleAction(module, action, next === true)
+                            }
+                          />
+                          <span
+                            className={cn(
+                              "text-sm",
+                              checked ? "font-medium text-grey-1" : "text-grey-2",
+                            )}
+                          >
+                            {actionLabel(module, action)}
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               )}

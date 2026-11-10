@@ -38,8 +38,9 @@ export async function PATCH(
     const requestData = await request.json();
     console.log("Received data:", requestData);
 
-    // Extract payload from the request data
-    const payload = requestData;
+    // Not for the backend: says to leave saved permissions alone.
+    const { keep_saved_permissions: keepSavedPermissions, ...payload } =
+      requestData ?? {};
 
     console.log("payload---r", payload);
 
@@ -88,6 +89,17 @@ export async function PATCH(
     // Name and phone save on single_attendant; role and permissions only stick
     // through edit_attendant. Leaving set_permissions out re-applies the
     // role's defaults, which is how Reset works.
+    if (keepSavedPermissions && !payload.set_permissions) {
+      return NextResponse.json(
+        {
+          success: true,
+          data: responseData,
+          message: "Attendant updated successfully",
+        },
+        { status: 200 },
+      );
+    }
+
     const permissionsResponse = await fetch(
       `${BaseUrl}business/edit_attendant/${attendantId}/`,
       {

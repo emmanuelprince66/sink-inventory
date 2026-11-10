@@ -71,7 +71,7 @@ export const sameMatrix = (a: PermissionsMatrix, b: PermissionsMatrix) => {
   });
 };
 
-const isMatrix = (value: unknown): value is PermissionsMatrix =>
+export const isMatrix = (value: unknown): value is PermissionsMatrix =>
   Boolean(value) &&
   typeof value === "object" &&
   Object.values(value as object).every(Array.isArray);

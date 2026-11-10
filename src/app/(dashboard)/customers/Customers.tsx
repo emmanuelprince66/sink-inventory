@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { Download, Plus } from "lucide-react";
 
 import { CustomModal } from "@/components/app/CustomModal";
@@ -109,6 +110,7 @@ const Customers = () => {
   const [page, setPage] = useState(1);
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
+  const canCreateCustomer = useCan().can("customers", "create", true);
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
   const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
@@ -182,13 +184,15 @@ const Customers = () => {
               </Button>
             </Link>
 
-            <Button
-              className="h-10 flex-1 gap-1.5 rounded-xl sm:flex-none"
-              onClick={openCustomerModalFunc}
-            >
-              <Plus className="w-4 h-4" />
-              Add Customer
-            </Button>
+            {canCreateCustomer && (
+              <Button
+                className="h-10 flex-1 gap-1.5 rounded-xl sm:flex-none"
+                onClick={openCustomerModalFunc}
+              >
+                <Plus className="w-4 h-4" />
+                Add Customer
+              </Button>
+            )}
           </div>
         </div>
       </div>

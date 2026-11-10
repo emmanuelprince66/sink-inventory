@@ -48,8 +48,7 @@ export const AddStaff = ({ closeModal }: { closeModal: () => void }) => {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((values) => {
-              const { ok, setPermissions } = matrix.resolveForSave();
-              if (ok) onSubmit(values, setPermissions);
+              onSubmit(values, matrix.resolveForSave());
             })} className="space-y-5">
             {/* Personal Information Section */}
             <div className="bg-gray-50 p-4 rounded-lg space-y-4">

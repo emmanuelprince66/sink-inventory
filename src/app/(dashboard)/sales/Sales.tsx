@@ -1,5 +1,6 @@
 "use client";
 
+import { isAdminLike } from "@/utils/pageAccess";
 import { useCan } from "@/hooks/useCan";
 import OfflineSalesNote from "./OfflineSalesNote";
 import { CustomCard } from "@/components/app/CustomCard";
@@ -413,8 +414,7 @@ const Sales = () => {
                 canDo(
                   "reports",
                   "view",
-                  user?.role === "OWNER" ||
-                    user?.role === "ADMIN-ATTENDANT" ||
+                  isAdminLike(user?.role) ||
                     user?.role === "ACCOUNTANT" ||
                     user?.role === "PRODUCTION-MANAGER",
                 ) && (

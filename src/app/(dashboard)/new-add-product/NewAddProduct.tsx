@@ -149,7 +149,11 @@ const NewAddProduct = ({
     generateProductVariations,
   } = useAddNewProductHook({ id, handleOpenNotSubscribeModal, page });
 
-  const autoPricing = useProductAutoPrice(form, isEditMode);
+  const autoPricing = useProductAutoPrice(
+    form,
+    isEditMode,
+    ProductData?.data,
+  );
 
   /**
    * Writes a scanned catalogue match into the form.
@@ -1201,6 +1205,9 @@ const NewAddProduct = ({
                                         costName="cost_price"
                                         sellingName="selling_price"
                                         margin={autoPricing.margin}
+                                        followsCost={
+                                          !isEditMode || autoPricing.recalculate
+                                        }
                                       />
                                     )}
                                     <FormMessage className="text-xs" />
@@ -1753,6 +1760,9 @@ const NewAddProduct = ({
                                         costName={`product_variations.${index}.cost_price`}
                                         sellingName={`product_variations.${index}.selling_price`}
                                         margin={autoPricing.margin}
+                                        followsCost={
+                                          !isEditMode || autoPricing.recalculate
+                                        }
                                       />
                                     )}
                                     <FormMessage className="text-xs" />

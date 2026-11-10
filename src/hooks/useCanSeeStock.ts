@@ -1,6 +1,6 @@
 import { useCan } from "./useCan";
 
-const STOCK_ROLES = new Set(["OWNER", "ADMIN-ATTENDANT"]);
+const STOCK_ROLES = new Set(["OWNER", "ADMIN-ATTENDANT", "MANAGER"]);
 
 /**
  * Whether this login may see stock counts on the POS: inventory "view" in the

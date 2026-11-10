@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { PermissionsMatrix } from "@/utils/permissionsMatrix";
+import type { MatrixSave } from "./useStaffPermissionMatrix";
 import { useToast } from "./toast/useToast";
 
 const staffSchema = z.object({
@@ -182,7 +182,7 @@ export const useAttendantsHook = ({
 
   const onSubmit = (
     values: AddStaffFormValues,
-    setPermissions?: { permissions_matrix: PermissionsMatrix },
+    save: MatrixSave = {},
   ) => {
     const payload: any = {
       firstname: values.firstname,
@@ -192,7 +192,9 @@ export const useAttendantsHook = ({
     };
 
     // Left out when it matches the role's defaults.
-    if (setPermissions) payload.set_permissions = setPermissions;
+    if (save.setPermissions) payload.set_permissions = save.setPermissions;
+    // Saved permissions couldn't be read: save the details, keep them as is.
+    if (save.keepSaved) payload.keep_saved_permissions = true;
 
     console.log("payload", payload);
 
@@ -215,7 +217,7 @@ export const useAttendantsHook = ({
 
   const onSubmitEditForm = (
     values: EditStaffFormValues,
-    setPermissions?: { permissions_matrix: PermissionsMatrix },
+    save: MatrixSave = {},
   ) => {
     const payload: any = {
       firstname: values.firstname,
@@ -225,7 +227,9 @@ export const useAttendantsHook = ({
     };
 
     // Left out when it matches the role's defaults.
-    if (setPermissions) payload.set_permissions = setPermissions;
+    if (save.setPermissions) payload.set_permissions = save.setPermissions;
+    // Saved permissions couldn't be read: save the details, keep them as is.
+    if (save.keepSaved) payload.keep_saved_permissions = true;
 
     console.log("payload", payload);
 

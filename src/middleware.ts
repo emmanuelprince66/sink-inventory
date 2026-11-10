@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { UserRole } from "./lib/store/types";
-import { decodeMatrix, pageAllowed, PERMISSIONS_COOKIE } from "./utils/pageAccess";
+import {
+  decodeMatrix,
+  homePathFor,
+  pageAllowed,
+  PERMISSIONS_COOKIE,
+} from "./utils/pageAccess";
 
 const PUBLIC_PATHS = ["/login", "/signup", "/forget-password", "/unauthorized"];
 // Customer-facing loyalty routes reached by scanning a campaign QR code. These
@@ -68,7 +73,10 @@ export function middleware(request: NextRequest) {
     path !== "/unauthorized" &&
     !isCustomerLoyaltyPath
   ) {
-    return NextResponse.redirect(new URL("/pos", request.nextUrl));
+    const matrix = decodeMatrix(request.cookies.get(PERMISSIONS_COOKIE)?.value);
+    return NextResponse.redirect(
+      new URL(homePathFor(userRole, matrix, "/pos"), request.nextUrl),
+    );
   }
 
   // Redirect unauthenticated users from protected paths
@@ -77,8 +85,8 @@ export function middleware(request: NextRequest) {
   }
 
   // The staff permissions checklist decides, where it covers the page.
-  const matrix = decodeMatrix(request.cookies.get(PERMISSIONS_COOKIE)?.value);
-  const allowed = pageAllowed(path, userRole, matrix);
+  const permissionsMatrix = decodeMatrix(request.cookies.get(PERMISSIONS_COOKIE)?.value);
+  const allowed = pageAllowed(path, userRole, permissionsMatrix);
   if (allowed === false) {
     return NextResponse.redirect(new URL("/unauthorized", request.nextUrl));
   }

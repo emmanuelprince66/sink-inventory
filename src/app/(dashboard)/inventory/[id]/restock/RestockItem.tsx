@@ -270,6 +270,7 @@ const RestockItem = ({
                     costName="cost_price"
                     sellingName="selling_price"
                     margin={autoPricing.margin}
+                    followsCost={autoPricing.recalculate}
                   />
                 )}
                 <FormMessage />

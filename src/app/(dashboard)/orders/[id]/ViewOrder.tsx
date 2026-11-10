@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { CustomModal } from "@/components/app/CustomModal";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,8 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
   } = useOrdersHook({ id });
 
   const [openUpdateStatusModal, setOpenUpdateStatusModal] = useState(false);
+  // Changing an order; viewing, printing and contacting need only "view".
+  const canManageOrders = useCan().can("orders", "manage", true);
 
   const [selectedShippingStatus, setSelectedShippingStatus] =
     useState<ShippingStatus>("PENDING");
@@ -269,13 +272,15 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-52 p-1.5">
-                    <DropdownMenuItem
-                      onClick={handleMarkProcessing}
-                      disabled={editOrderShippingStatusLoading}
-                      className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2"
-                    >
-                      Mark as Processing
-                    </DropdownMenuItem>
+                    {canManageOrders && (
+                      <DropdownMenuItem
+                        onClick={handleMarkProcessing}
+                        disabled={editOrderShippingStatusLoading}
+                        className="rounded-lg py-1.5 font-semibold text-grey-2 focus:bg-secondary-6 focus:text-grey-2"
+                      >
+                        Mark as Processing
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       asChild
                       className="p-0 focus:bg-transparent"
@@ -303,14 +308,18 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                       <Phone className="w-3.5 h-3.5 mr-0.5" />
                       Contact Customer
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-grey-6" />
-                    <DropdownMenuItem
-                      onClick={() => setShowCancelConfirm(true)}
-                      className="rounded-lg py-1.5 font-semibold text-error-1 focus:bg-error-2/40 focus:text-error-1"
-                    >
-                      <XCircle className="w-3.5 h-3.5 mr-0.5" />
-                      Cancel Order
-                    </DropdownMenuItem>
+                    {canManageOrders && (
+                      <>
+                        <DropdownMenuSeparator className="bg-grey-6" />
+                        <DropdownMenuItem
+                          onClick={() => setShowCancelConfirm(true)}
+                          className="rounded-lg py-1.5 font-semibold text-error-1 focus:bg-error-2/40 focus:text-error-1"
+                        >
+                          <XCircle className="w-3.5 h-3.5 mr-0.5" />
+                          Cancel Order
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -641,7 +650,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                     type="payment"
                   />
 
-                  {orderData.payment_status !== "PAID" && (
+                  {canManageOrders && orderData.payment_status !== "PAID" && (
                     <p
                       onClick={() => setOpenUpdateStatusModal(true)}
                       className="px-2 py-1 cursor-pointer rounded-lg hover:bg-grey-6 text-xs border border-grey-5 font-bold text-grey-2"
@@ -736,7 +745,7 @@ const ViewOrder = ({ id }: ViewOrderProps) => {
                   {/* Manual status-update action — Shipbubble orders get their
                     shipping_status from Shipbubble's webhooks, so this
                     flow only makes sense for manual deliveries. */}
-                  {orderData.delivery?.type !== "SHIPBUBBLE" && (
+                  {canManageOrders && orderData.delivery?.type !== "SHIPBUBBLE" && (
                     <div>
                       <h4 className="text-sm font-bold text-grey-2 mb-3">
                         Update shipping status:

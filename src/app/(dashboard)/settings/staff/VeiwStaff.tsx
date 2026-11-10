@@ -1,3 +1,4 @@
+import { isAdminLike } from "@/utils/pageAccess";
 import { useCan } from "@/hooks/useCan";
 import { CustomModal } from "@/components/app/CustomModal";
 import { CustomTable } from "@/components/app/CutomTable";
@@ -61,7 +62,7 @@ const ViewStaff = () => {
 
   const { user } = useUserRole();
   const { can } = useCan();
-  const isAdmin = user?.role === "OWNER" || user?.role === "ADMIN-ATTENDANT";
+  const isAdmin = isAdminLike(user?.role);
   const canInvite = can("staff", "invite", isAdmin);
   const canManage = can("staff", "manage_roles", isAdmin);
 

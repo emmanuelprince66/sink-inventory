@@ -9,7 +9,6 @@ import {
 } from "@/utils/permissionsMatrix";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useToast } from "./toast/useToast";
 
 const fetchRoleDefaults = async () => {
   const response = await fetch("/api/business/role-permission-defaults");
@@ -18,10 +17,24 @@ const fetchRoleDefaults = async () => {
   return body;
 };
 
+const sameActions = (a: string[] = [], b: string[] = []) =>
+  [...a].sort().join() === [...b].sort().join();
+
+export interface MatrixSave {
+  /** Full replacement to send, or none to keep or re-apply the defaults. */
+  setPermissions?: { permissions_matrix: PermissionsMatrix };
+  /** The saved permissions couldn't be read: leave them as they are. */
+  keepSaved?: boolean;
+}
+
 /**
  * The permission checklist on Add/Edit Staff. A role fills it with that role's
  * defaults, and the owner fine-tunes from there. Picking a role replaces the
  * checklist; ticking boxes doesn't change the role.
+ *
+ * Only the modules ticked here are sent as changed. The rest come from the
+ * latest saved copy at save time, so permissions saved elsewhere on the screen
+ * in the meantime (the expense section) aren't undone.
  */
 export const useStaffPermissionMatrix = ({
   role,
@@ -32,7 +45,6 @@ export const useStaffPermissionMatrix = ({
   attendantId?: string;
   savedRole?: string;
 }) => {
-  const { showToast } = useToast();
   const isEdit = Boolean(attendantId);
 
   const defaultsQuery = useQuery({
@@ -54,7 +66,10 @@ export const useStaffPermissionMatrix = ({
   );
 
   const [matrix, setMatrix] = useState<PermissionsMatrix | null>(null);
-  const edited = useRef(false);
+  /** Modules changed by hand since the checklist was last filled in. */
+  const touched = useRef(new Set<string>());
+  /** True after Reset or a role change: the base is the role's defaults. */
+  const fromDefaults = useRef(false);
   const appliedRole = useRef<string | undefined>(undefined);
 
   const roleDefault = role ? (defaults?.role_defaults[role] ?? null) : null;
@@ -66,18 +81,22 @@ export const useStaffPermissionMatrix = ({
       return;
     }
     // Same role with boxes already ticked: a refetch mustn't undo them.
-    if (appliedRole.current === role && edited.current) return;
+    if (appliedRole.current === role && touched.current.size) return;
     if (isEdit && savedQuery.isLoading) return;
 
-    const failedToReadSaved = isSavedRole && savedQuery.isError;
-    const next = failedToReadSaved
-      ? null
-      : isSavedRole
-        ? (savedMatrix ?? roleDefault)
-        : roleDefault;
+    const useSaved = isSavedRole && !fromDefaults.current;
+    const next = useSaved
+      ? savedQuery.isError
+        ? null
+        : (savedMatrix ?? roleDefault)
+      : roleDefault;
 
+    if (appliedRole.current !== role) {
+      // A different role starts from its own defaults.
+      fromDefaults.current = !isSavedRole;
+      touched.current.clear();
+    }
     appliedRole.current = role;
-    edited.current = false;
     setMatrix(next);
   }, [
     role,
@@ -90,36 +109,46 @@ export const useStaffPermissionMatrix = ({
   ]);
 
   const onChange = useCallback((next: PermissionsMatrix) => {
-    edited.current = true;
-    setMatrix(next);
+    setMatrix((current) => {
+      const modules = new Set([
+        ...Object.keys(current ?? {}),
+        ...Object.keys(next),
+      ]);
+      modules.forEach((module) => {
+        if (!sameActions(current?.[module], next[module])) {
+          touched.current.add(module);
+        }
+      });
+      return next;
+    });
   }, []);
 
   const resetToDefaults = useCallback(() => {
     if (!roleDefault) return;
-    edited.current = false;
+    touched.current.clear();
+    fromDefaults.current = true;
     setMatrix(roleDefault);
   }, [roleDefault]);
 
-  /**
-   * What to send with the form. Left out when it matches the role's defaults,
-   * which is how the backend re-applies them. On Edit, nothing can be sent
-   * until the saved permissions are known: leaving it out would wipe them.
-   */
-  const resolveForSave = useCallback((): {
-    ok: boolean;
-    setPermissions?: { permissions_matrix: PermissionsMatrix };
-  } => {
-    if (!matrix) {
-      if (!isEdit) return { ok: true };
-      showToast(
-        "Staff permissions haven't loaded yet. Try again in a moment.",
-        "error",
-      );
-      return { ok: false };
+  const resolveForSave = useCallback((): MatrixSave => {
+    const base = fromDefaults.current || !isSavedRole ? roleDefault : savedMatrix;
+
+    // Nothing known to build on: on an unchanged role, leave what's saved;
+    // otherwise the backend applies the new role's defaults.
+    if (!base) return isSavedRole ? { keepSaved: true } : {};
+
+    const final: PermissionsMatrix = { ...base };
+    touched.current.forEach((module) => {
+      final[module] = matrix?.[module] ?? [];
+    });
+
+    // Matching the role's defaults: leaving it out re-applies them.
+    if (roleDefault && sameMatrix(final, roleDefault)) return {};
+    if (isSavedRole && !touched.current.size && !fromDefaults.current) {
+      return { keepSaved: true };
     }
-    if (roleDefault && sameMatrix(matrix, roleDefault)) return { ok: true };
-    return { ok: true, setPermissions: { permissions_matrix: matrix } };
-  }, [matrix, isEdit, roleDefault, showToast]);
+    return { setPermissions: { permissions_matrix: final } };
+  }, [isSavedRole, roleDefault, savedMatrix, matrix]);
 
   return {
     resolveForSave,

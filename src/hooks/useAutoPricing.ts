@@ -28,10 +28,19 @@ const sameAsSuggested = (selling: unknown, suggested: number) =>
  * On a saved product it only follows the cost if the business has
  * "recalculate on cost change" on. New products and new variations always do.
  */
-export const useProductAutoPrice = (form: any, isEditMode: boolean) => {
+export const useProductAutoPrice = (
+  form: any,
+  isEditMode: boolean,
+  /** The saved product, to tell a hand-set price from an automatic one. */
+  savedProduct?: any,
+) => {
   const pricing = useAutoPricing();
   // Prices typed by hand. Blank, or back to the suggestion, counts as automatic.
   const custom = useRef(new Set<string>());
+  // Saved rows already checked against their saved cost and price.
+  const checked = useRef(new Set<string>());
+  const saved = useRef(savedProduct);
+  saved.current = savedProduct;
 
   useEffect(() => {
     if (!pricing.enabled) return;
@@ -62,8 +71,26 @@ export const useProductAutoPrice = (form: any, isEditMode: boolean) => {
         return;
       }
 
-      if (custom.current.has(key)) return;
       const isSaved = isEditMode && !rowId.startsWith("variation-");
+      // A saved price that didn't match its saved cost was set by hand, and
+      // changing the cost mustn't silently replace it.
+      if (isSaved && !checked.current.has(key)) {
+        checked.current.add(key);
+        const item =
+          index === undefined
+            ? saved.current
+            : saved.current?.variations?.find((v: any) => v.id === rowId);
+        if (
+          item &&
+          !sameAsSuggested(
+            item.selling_price,
+            calculateSuggestedSellingPrice(item.cost_price, pricing.margin),
+          )
+        ) {
+          custom.current.add(key);
+        }
+      }
+      if (custom.current.has(key)) return;
       if (isSaved && !pricing.recalculate) return;
 
       form.setValue(`${prefix}selling_price`, suggested ? String(suggested) : "", {
@@ -111,7 +138,14 @@ export const useRestockAutoPrice = (form: any) => {
           return;
         }
 
-        if (name === "cost_price" && !custom.current && suggested) {
+        // Restocking changes an existing product's cost, so the business's
+        // "recalculate on cost change" setting decides.
+        if (
+          name === "cost_price" &&
+          pricing.recalculate &&
+          !custom.current &&
+          suggested
+        ) {
           form.setValue("selling_price", suggested, {
             shouldDirty: true,
             shouldValidate: true,
@@ -121,7 +155,7 @@ export const useRestockAutoPrice = (form: any) => {
     );
 
     return () => subscription.unsubscribe();
-  }, [form, pricing.enabled, pricing.margin]);
+  }, [form, pricing.enabled, pricing.margin, pricing.recalculate]);
 
   return pricing;
 };

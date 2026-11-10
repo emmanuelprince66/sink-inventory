@@ -1,4 +1,6 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
+import { isAdminLike } from "@/utils/pageAccess";
 import { formatToNaira } from "@/utils/formatMoney";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -43,6 +45,9 @@ const Contact = ({ id }: { id: string }) => {
   const [openDeleteCustomerModal, setOpenDeleteCustomerModal] =
     useState(false);
   const [openEditCustomerModal, setOpenEditCustomerModal] = useState(false);
+  const { can, role } = useCan();
+  const canEdit = can("customers", "edit", true);
+  const canDelete = can("customers", "delete", isAdminLike(role));
 
   const closeOpenUpdateCustomerWalletModal = () =>
     setOpenUpdateCustomerWalletModal(false);
@@ -85,13 +90,15 @@ const Contact = ({ id }: { id: string }) => {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            onClick={openUpdateCustomerWalletModalFunc}
-            className="flex-1 sm:flex-none gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            Add Wallet
-          </Button>
+          {canEdit && (
+            <Button
+              onClick={openUpdateCustomerWalletModalFunc}
+              className="flex-1 sm:flex-none gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              Add Wallet
+            </Button>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -110,14 +117,14 @@ const Contact = ({ id }: { id: string }) => {
             >
               <DropdownMenuItem
                 onClick={() => setOpenEditCustomerModal(true)}
-                disabled={!customer}
+                disabled={!customer || !canEdit}
                 className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Customer
               </DropdownMenuItem>
               <DropdownMenuItem
-                disabled={Number(customer?.wallet) < 0}
+                disabled={Number(customer?.wallet) < 0 || !canDelete}
                 onClick={() => setOpenDeleteCustomerModal(true)}
                 className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
               >
