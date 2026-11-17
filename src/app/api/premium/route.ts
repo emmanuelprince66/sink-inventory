@@ -16,7 +16,14 @@ export async function GET(request: Request) {
   }
 
   try {
-    const response = await fetch(`${BaseUrl}user/active_plan/`, {
+    // A branch other than the founding one has its own plan and usage; the
+    // backend answers for the founding branch when this is left out.
+    const businessId = new URL(request.url).searchParams.get("business_id");
+    const apiUrl = new URL(`${BaseUrl}user/active_plan/`);
+    if (businessId) apiUrl.searchParams.set("business_id", businessId);
+
+    const response = await fetch(apiUrl.toString(), {
+      cache: "no-store",
       method: "GET",
       headers: {
         "Content-Type": "application/json",

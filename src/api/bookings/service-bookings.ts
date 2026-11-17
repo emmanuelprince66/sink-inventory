@@ -1,5 +1,6 @@
 "use client";
 
+import { handleSubscriptionError } from "@/api/sub/subscription-interceptor";
 import {
   ExtractFnReturnType,
   QueryConfigType,
@@ -208,6 +209,13 @@ const request = async <T,>(
     | BookingApiResponse<T>
     | null;
   if (!response.ok) {
+    // "1" / "2": no plan, or not on this plan — on a branch billed on its own
+    // that means the branch. The upgrade modal explains it; the toast would
+    // otherwise read just "1". The monthly booking-quota refusal is a plain
+    // sentence and falls through to be shown as-is.
+    if (handleSubscriptionError(payload)) {
+      throw new Error("This needs an active subscription.");
+    }
     throw new Error(
       payload?.message ?? payload?.error ?? "Could not complete booking request",
     );

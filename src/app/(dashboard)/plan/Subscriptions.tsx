@@ -3,9 +3,12 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useGetAllBusinessQuery } from "@/api/business/get-business";
 import { usePremiumHook } from "@/hooks/usePremiumHook";
+import { isSeparatelyBilled } from "@/utils/branchSubscription";
 import { formatToNaira } from "@/utils/formatMoney";
-import { Check, X } from "lucide-react";
+import { Check, Store, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 // Define the plan data type
@@ -29,7 +32,13 @@ interface PlanData {
   store_front: boolean;
   track_income: boolean;
   bank_expenses_traking: boolean;
+  /** Per rolling 30 days; -1 is unlimited. */
+  no_of_bookings: number;
+  custom_domain: boolean;
 }
+
+// Plain "not on this plan" features — shown with an X, never "Coming soon".
+const PLAN_TIER_FEATURES = new Set(["custom_domain"]);
 
 type BillingPeriod = "monthly" | "quarterly" | "biannually" | "annually";
 
@@ -65,10 +74,24 @@ const Subscriptions = () => {
     useState<BillingPeriod>("quarterly");
   const [loadingPlanId, setLoadingPlanId] = useState<number | null>(null);
 
+  // Opened from a branch that's billed on its own: the payment goes to that
+  // branch. A founding branch id is dropped — it's covered by the account plan.
+  const requestedBranchId = useSearchParams().get("business_id");
+  const { data: AllBusinessData } = useGetAllBusinessQuery({
+    enabled: Boolean(requestedBranchId),
+  } as any);
+  const branch = requestedBranchId
+    ? (AllBusinessData?.results ?? []).find(
+        (b: any) => b?.id === requestedBranchId,
+      )
+    : null;
+  const planBusinessId = isSeparatelyBilled(branch) ? branch.id : null;
+
   const { UserPlanData, UserPlanDataLoading, handleSubUser, subUserLoading } =
     usePremiumHook({
       searchInput,
       page,
+      planBusinessId,
     });
 
   console.log("UserPlanData", UserPlanData);
@@ -99,7 +122,8 @@ const Subscriptions = () => {
     if (value === -1) return "Unlimited";
     if (value === 0 && key.includes("count")) return "0";
     if (typeof value === "boolean") return value;
-    return value.toString();
+    // A plan saved before a field existed doesn't carry it.
+    return value == null ? "—" : String(value);
   };
 
   // Function to get feature label
@@ -112,6 +136,8 @@ const Subscriptions = () => {
       invoice_count: "Invoice limit",
       inventory_count: "Inventory limit",
       customers_count: "Customer limit",
+      no_of_bookings: "Bookings / month",
+      custom_domain: "Custom Domain",
       bulk_email: "Bulk Email",
       bulk_sms: "Bulk SMS",
       in_store_checkout: "In-store Checkout",
@@ -131,6 +157,8 @@ const Subscriptions = () => {
     "invoice_count",
     "inventory_count",
     "customers_count",
+    "no_of_bookings",
+    "custom_domain",
     "bulk_email",
     "bulk_sms",
     "in_store_checkout",
@@ -150,6 +178,16 @@ const Subscriptions = () => {
         <p className="text-grey-3 text-sm mt-1">
           Flexible plans designed to grow with your business.
         </p>
+        {planBusinessId && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-secondary-6 px-4 py-2 text-sm text-grey-1">
+            <Store className="h-4 w-4 text-primary-green-300" />
+            <span>
+              Subscribing branch{" "}
+              <span className="font-extrabold">{branch?.name}</span>. Your
+              other branches aren&apos;t affected.
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Billing Period Tabs — segmented pill control, matches Customers/Campaigns switch */}
@@ -257,7 +295,9 @@ const Subscriptions = () => {
                           {displayValue}
                         </span>
                       )}
-                      {!isIncluded && isBoolean && (
+                      {!isIncluded &&
+                        isBoolean &&
+                        !PLAN_TIER_FEATURES.has(key) && (
                         <span className="text-[10px] font-extrabold uppercase text-warning-1 bg-warning-2 px-2 py-0.5 rounded-full">
                           Coming soon
                         </span>
@@ -270,7 +310,12 @@ const Subscriptions = () => {
               {/* Choose Plan Button */}
               <div className="mt-4 w-full">
                 <Button
-                  disabled={subUserLoading && loadingPlanId === plan.id}
+                  // Until the branch list answers, a click would bill the
+                  // account plan instead of the branch asked for.
+                  disabled={
+                    (subUserLoading && loadingPlanId === plan.id) ||
+                    (Boolean(requestedBranchId) && !AllBusinessData)
+                  }
                   onClick={() => handlePlanSelection(plan, selectedPeriod)}
                   className={`w-full ${scheme.button}`}
                 >

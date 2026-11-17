@@ -17,6 +17,13 @@ export interface BusinessType {
   street: string;
   logo: string;
   currency: string;
+  /** The owner's first business — covered by the account-level plan. */
+  is_founding?: boolean;
+  /** Non-founding branches only: has its own active plan. */
+  is_subscribed?: boolean;
+  subscription?: string | null;
+  subscription_date?: string | null;
+  subscription_end_date?: string | null;
 }
 
 export interface BusinessResponse {

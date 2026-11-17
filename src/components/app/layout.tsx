@@ -6,6 +6,7 @@ import { RouteGuard } from "../auth/route-guard";
 import { NotificationModalProvider } from "../providers/notification-modal-provider";
 import { RealtimeProvider } from "../providers/RealtimeProvider";
 import { AppSidebar } from "./AppSideBar";
+import BranchSubscriptionBanner from "./BranchSubscriptionBanner";
 import BusinessDataSync from "./BusinessDataSync";
 import OfflineSalesAutoSync from "./OfflineSalesAutoSync";
 import PermissionsSync from "./PermissionsSync";
@@ -34,6 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <TopBar />
             {/* px-8 py-6 matches the Figma reference content gutter; pages must not add their own page-level padding. */}
             <div className="px-4 md:px-8 py-6 min-h-[80vh] w-full min-w-0">
+              <BranchSubscriptionBanner />
               {children}
             </div>
           </main>

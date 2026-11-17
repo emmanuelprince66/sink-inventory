@@ -2,12 +2,69 @@ import { CustomCard } from "@/components/app/CustomCard";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePremiumHook } from "@/hooks/usePremiumHook";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import {
+  isBranchLocked,
+  isSeparatelyBilled,
+  planBusinessIdFor,
+  subscribeHrefFor,
+} from "@/utils/branchSubscription";
 import { formatToNaira } from "@/utils/formatMoney";
-import { CheckCircle, Infinity } from "lucide-react";
+import { CheckCircle, Infinity, Lock } from "lucide-react";
 import Link from "next/link";
+
+const Limit = ({ value }: { value?: number }) =>
+  value != null && value < 0 ? (
+    <Infinity className="w-4 h-4 text-grey-3" />
+  ) : (
+    <>{value ?? 0}</>
+  );
+
 const Subscription = () => {
-  const { AllSubscriptionsData, AllSubscriptionsLoading } = usePremiumHook({});
-  console.log("AllSubscriptionsData", AllSubscriptionsData);
+  // A branch after the owner's first is billed on its own, so this tab shows
+  // the plan of the branch in scope, not the account's.
+  const business = useBusinessDataStore((state) => state.businessData);
+  const separatelyBilled = isSeparatelyBilled(business);
+  const locked = isBranchLocked(business);
+  const subscribeHref = subscribeHrefFor(business);
+
+  const { AllSubscriptionsData, AllSubscriptionsLoading } = usePremiumHook({
+    planBusinessId: planBusinessIdFor(business),
+  });
+
+  if (locked) {
+    return (
+      <div className="w-full flex flex-col gap-5 items-start">
+        <p className="text-xl sm:text-2xl font-extrabold text-grey-1">
+          Your Subscription
+        </p>
+        <CustomCard
+          className="w-full rounded-2xl border-none bg-warning-2 p-0"
+          contentClassName="p-5 sm:p-6 flex flex-col gap-4 items-start"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-warning-1">
+            <Lock className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-lg font-extrabold text-grey-1">
+              {business?.name || "This branch"} isn&apos;t subscribed
+            </p>
+            <p className="mt-1 text-sm text-grey-2 max-w-xl">
+              Your account plan covers your first business only. Each extra
+              branch needs its own plan before you can add staff, upload
+              products or services, add customers, run campaigns, take
+              bookings or connect a custom domain.
+            </p>
+          </div>
+          <Link href={subscribeHref}>
+            <Button>
+              <p className="text-xs">Subscribe this branch</p>
+            </Button>
+          </Link>
+        </CustomCard>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col justify-start gap-5 items-start">
@@ -19,7 +76,9 @@ const Subscription = () => {
 
           <div className="flex items-center gap-2">
             <p className="text-sm text-grey-3">
-              Manage your active plan or explore other options.
+              {separatelyBilled
+                ? `The plan for ${business?.name || "this branch"}. Each branch is billed on its own.`
+                : "Manage your active plan or explore other options."}
             </p>
           </div>
         </div>
@@ -73,7 +132,7 @@ const Subscription = () => {
                 </p>
               </span>
 
-              <Link href={"/plan"}>
+              <Link href={subscribeHref}>
                 <Button className="bg-white text-grey-1 hover:bg-grey-6">
                   <p className="text-xs">View Subscriptions</p>
                 </Button>
@@ -146,6 +205,25 @@ const Subscription = () => {
                   )}
                 </p>
               </span>
+              {AllSubscriptionsData?.bookings_limit != null && (
+                <span className="flex items-center gap-1">
+                  <p className="text-sm text-grey-3">Bookings this month : </p>
+                  <p className="text-sm font-semibold text-grey-2 flex items-center gap-0.5">
+                    {AllSubscriptionsData?.bookings_count ?? 0} /{" "}
+                    <Limit value={AllSubscriptionsData?.bookings_limit} />
+                  </p>
+                </span>
+              )}
+              {AllSubscriptionsData?.custom_domain_allowed != null && (
+                <span className="flex items-center gap-1">
+                  <p className="text-sm text-grey-3">Custom domain : </p>
+                  <p className="text-sm font-semibold text-grey-2">
+                    {AllSubscriptionsData.custom_domain_allowed
+                      ? "Included"
+                      : "Not on this plan"}
+                  </p>
+                </span>
+              )}
             </div>
           </CustomCard>
         )}

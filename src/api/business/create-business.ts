@@ -115,10 +115,14 @@ export const useUpdateBusinessMutation = (config?: UpdateBusinessProps) => {
     onError: (error: any, variables: any, context: any) => {
       console.log("Error updating business:", error);
 
-      showToast(
-        friendlyBusinessError(error, "Couldn't save your changes. Please try again."),
-        "error",
-      );
+      // Setting a new custom domain is plan-gated: "1" no plan, "2" not on
+      // this plan. The upgrade modal explains those; a toast would just say "1".
+      if (!handleSubscriptionError(error)) {
+        showToast(
+          friendlyBusinessError(error, "Couldn't save your changes. Please try again."),
+          "error",
+        );
+      }
       config?.onError?.(error, variables, context);
     },
     onSuccess: (data: any, variables: any, context: any) => {

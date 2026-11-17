@@ -8,12 +8,19 @@ import { useDebounce } from "./useDebounce";
 export const usePremiumHook = ({
   searchInput,
   page,
+  planBusinessId,
 }: {
   searchInput?: string;
   page?: number;
+  /**
+   * A non-founding branch's id: its own plan and usage are read, and a
+   * subscription bought here goes to that branch. Leave it out for the
+   * founding branch / account plan.
+   */
+  planBusinessId?: string | null;
 }) => {
   const { data: AllSubscriptionsData, isLoading: AllSubscriptionsLoading } =
-    useGetAllSubscriptionsQuery();
+    useGetAllSubscriptionsQuery({ businessId: planBusinessId });
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -40,10 +47,12 @@ export const usePremiumHook = ({
     console.log("data", data);
     console.log("selectedPeriod", selectedPeriod);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       plan: data?.id,
       duration: selectedPeriod.toUpperCase(),
     };
+    // Without it the payment renews the account plan, not this branch.
+    if (planBusinessId) payload.business_id = planBusinessId;
 
     subUser(payload, {
       onSuccess: (data) => {

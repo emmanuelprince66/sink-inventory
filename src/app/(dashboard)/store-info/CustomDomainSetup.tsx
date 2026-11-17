@@ -1,6 +1,14 @@
 "use client";
 
 import { useUpdateBusinessMutation } from "@/api/business/create-business";
+import { useGetAllSubscriptionsQuery } from "@/api/premium/get-all-subscriptions";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
+import {
+  isBranchLocked,
+  planBusinessIdFor,
+  subscribeHrefFor,
+} from "@/utils/branchSubscription";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
@@ -13,6 +21,7 @@ import {
   Globe2,
   Info,
   Loader2,
+  Lock,
   ShieldCheck,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -75,6 +84,16 @@ export default function CustomDomainSetup({
   const [isChangingDomain, setIsChangingDomain] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Setting a new domain is plan-gated (per branch, for a branch billed on its
+  // own). An already-connected domain stays visible and can be re-saved; only
+  // entering a new one is locked.
+  const business = useBusinessDataStore((state) => state.businessData);
+  const { data: activePlan, isLoading: planLoading } =
+    useGetAllSubscriptionsQuery({ businessId: planBusinessIdFor(business) });
+  const domainLocked =
+    isBranchLocked(business) ||
+    (!planLoading && activePlan?.custom_domain_allowed === false);
 
   useEffect(() => {
     setDomainInput(customDomain || "");
@@ -201,6 +220,39 @@ export default function CustomDomainSetup({
             >
               Edit domain
             </Button>
+          </div>
+        </div>
+      ) : domainLocked ? (
+        <div className="space-y-4 p-5 sm:p-6">
+          <div className="flex items-start gap-3 rounded-xl border border-warning-1/30 bg-warning-2 p-4">
+            <Lock className="mt-0.5 h-5 w-5 shrink-0 text-warning-1" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-grey-1">
+                Custom domains aren&apos;t on your current plan
+              </p>
+              <p className="mt-1 text-xs text-grey-3">
+                {isBranchLocked(business)
+                  ? "This branch needs its own subscription before it can connect a domain."
+                  : "Upgrade to a plan that includes custom domains to use your own web address."}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button asChild className="w-full sm:w-auto">
+              <Link href={subscribeHrefFor(business)}>
+                {isBranchLocked(business) ? "Subscribe this branch" : "View plans"}
+              </Link>
+            </Button>
+            {savedDomain && isChangingDomain && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => setIsChangingDomain(false)}
+              >
+                Back
+              </Button>
+            )}
           </div>
         </div>
       ) : (
