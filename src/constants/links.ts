@@ -38,7 +38,7 @@ export const links = [
           "PRODUCTION-MANAGER",
           "INVENTORY-MANAGER",
         ],
-        permission: "process_sales", // Required permission to see this link
+        permission: "process_sales",
       },
     ],
   },
