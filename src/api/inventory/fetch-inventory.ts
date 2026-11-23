@@ -60,10 +60,21 @@ export const fetchInventory = async ({
   url.searchParams.append("page", page.toString());
   url.searchParams.append("limit", limit.toString());
 
-  const response = await fetch(url.toString(), { method: "GET" });
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), { method: "GET" });
+  } catch (cause) {
+    // The browser couldn't reach our own server at all.
+    const error = new Error("Couldn't reach the server");
+    (error as any).unreachable = true;
+    throw error;
+  }
   if (!response.ok) {
+    const body = await response.json().catch(() => null);
     const error = new Error("Error fetching inventory data");
     (error as any).status = response.status;
+    // Our API route couldn't reach the backend.
+    (error as any).unreachable = body === null || body?.unreachable === true;
     throw error;
   }
   return response.json();
@@ -90,6 +101,9 @@ export const useGetInventoryQuery = ({
         console.log("isPending", isPending);
       }
       if ([404, 401].includes(error.status)) return false;
+      // No point retrying into a dead connection: the POS switches to the
+      // saved products as soon as this fails.
+      if (error?.unreachable) return false;
       return failureCount < 2;
     },
     queryKey: [

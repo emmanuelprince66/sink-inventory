@@ -106,7 +106,16 @@ export async function GET(
       try {
         errorData = await response.json();
       } catch (e) {
-        errorData = { message: "Failed to fetch inventory data" };
+        // A gateway answering with an HTML page means the API behind it is
+        // down — the POS reads that as "work offline", like a failed sale.
+        return NextResponse.json(
+          {
+            unreachable: true,
+            error: "The server couldn't be reached.",
+            status: response.status,
+          },
+          { status: 502 },
+        );
       }
       return NextResponse.json(
         {
@@ -127,6 +136,8 @@ export async function GET(
     console.error("Error fetching inventory data:", error);
     return NextResponse.json(
       {
+        // The request to the API itself failed (no internet, DNS, refused).
+        unreachable: true,
         error: "Internal server error",
         details: error instanceof Error ? error.message : String(error),
       },

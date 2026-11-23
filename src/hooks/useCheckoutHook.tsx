@@ -11,6 +11,7 @@ import {
 } from "@/lib/offline/offlineSales";
 import { markServerUnreachable } from "@/lib/offline/offlineMode";
 import { useCartStore } from "@/lib/store/cart-store";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./toast/useToast";
@@ -39,10 +40,18 @@ export const useCheckoutHook = ({
   const business_id = useBusinessStore((state) => state.business_id);
 
   const {
-    data: BusinessData,
+    data: ServerBusinessData,
     isLoading: BusinessDataLoading,
     error: bankError,
   } = useFetchBusinessById(business_id);
+  // Offline after a refresh the server's copy never arrives; the receipt
+  // header (name, address, phone) comes from the saved snapshot instead.
+  const savedBusiness = useBusinessDataStore((state) => state.businessData);
+  const BusinessData =
+    ServerBusinessData ??
+    (savedBusiness?.id && savedBusiness.id === business_id
+      ? { data: savedBusiness }
+      : undefined);
 
   const { showToast } = useToast();
   const canSeeStock = useCanSeeStock();

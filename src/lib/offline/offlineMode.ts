@@ -33,6 +33,31 @@ let recoveredAt = 0;
 let checkTimer: ReturnType<typeof setInterval> | undefined;
 const listeners = new Set<() => void>();
 
+/**
+ * Survives a page refresh. Without it a refresh on Wi-Fi with no internet
+ * starts out "online" again (the browser still says so), the product list
+ * asks the server, and the grid sits empty until something fails. Per tab,
+ * and only while the hold it started still runs.
+ */
+const REMEMBER_KEY = "sync360-pos-unreachable-until";
+
+const remember = (until: number | null) => {
+  try {
+    if (until) sessionStorage.setItem(REMEMBER_KEY, String(until));
+    else sessionStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    // Private mode or blocked storage: it just won't carry over a refresh.
+  }
+};
+
+const remembered = (): number => {
+  try {
+    return Number(sessionStorage.getItem(REMEMBER_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+};
+
 const setUnreachable = (value: boolean) => {
   if (value === unreachable) return;
   unreachable = value;
@@ -81,6 +106,7 @@ async function checkConnection() {
 export const markServerReachable = () => {
   goodChecks = 0;
   if (checkTimer !== undefined) stopChecking();
+  remember(null);
   if (!unreachable) return;
   recoveredAt = Date.now();
   setUnreachable(false);
@@ -93,6 +119,7 @@ export const markServerUnreachable = () => {
     const flapping = recoveredAt && Date.now() - recoveredAt < FLAP_WINDOW_MS;
     holdMs = flapping ? Math.min(holdMs * 2, LONGEST_HOLD_MS) : FIRST_HOLD_MS;
     holdUntil = Date.now() + holdMs;
+    remember(holdUntil);
   }
   setUnreachable(true);
   if (checkTimer === undefined) {
@@ -123,3 +150,18 @@ export const usePosOffline = (): boolean => {
   );
   return !isOnline || isUnreachable;
 };
+
+// Picks up where the last page left off: a refresh inside the hold starts
+// offline, so the grid shows the saved products straight away and the usual
+// checks bring it back once the server answers.
+if (typeof window !== "undefined") {
+  const until = remembered();
+  if (until > Date.now()) {
+    holdUntil = until;
+    unreachable = true;
+    checkTimer = setInterval(checkConnection, CHECK_EVERY_MS);
+    window.addEventListener("online", onBrowserOnline);
+  } else if (until) {
+    remember(null);
+  }
+}

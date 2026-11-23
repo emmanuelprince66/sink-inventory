@@ -17,7 +17,11 @@ import {
   searchProducts,
   toSearchableProducts,
 } from "@/lib/offline/offlineCache";
-import { usePosOffline } from "@/lib/offline/offlineMode";
+import {
+  markServerUnreachable,
+  usePosOffline,
+} from "@/lib/offline/offlineMode";
+import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useAllowSalesWithoutStock } from "./useAllowSalesWithoutStock";
 import { useCachedList } from "./useOfflineCache";
 import { useQueuedStock } from "./useQueuedStock";
@@ -55,7 +59,15 @@ export const usePosHook = ({
     refetchOnMount: "always",
   });
 
-  const findBusiness = BusinessData?.data;
+  // Offline (a refresh with no connection, say) the server's copy never comes,
+  // and receipts and tax need it. The snapshot BusinessDataSync keeps fresh
+  // stands in — only for this business.
+  const savedBusiness = useBusinessDataStore((state) => state.businessData);
+  const findBusiness =
+    BusinessData?.data ??
+    (savedBusiness?.id && savedBusiness.id === business_id
+      ? savedBusiness
+      : undefined);
 
   // Extract business data for use in components
   const businessData = findBusiness;
@@ -87,6 +99,7 @@ export const usePosHook = ({
     data: ProductData,
     dataUpdatedAt: productDataUpdatedAt,
     isLoading: ProductDataLoading,
+    error: productError,
     refetch: refetchProducts,
   } = useGetInventoryQuery({
     params: {
@@ -206,6 +219,13 @@ export const usePosHook = ({
       },
     };
   }, [scannedInventoryData, allProductsData]);
+
+  // The browser can say "online" on Wi-Fi with no internet. A product page that
+  // can't reach the server is the first sign after a refresh, so it switches
+  // the POS to the saved list instead of leaving the grid empty.
+  useEffect(() => {
+    if ((productError as any)?.unreachable) markServerUnreachable();
+  }, [productError]);
 
   /* ---- Offline: the saved product list stands in for search and paging ---- */
   const cachedProducts = useCachedList("products", posOffline);
