@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/useCan";
 import { Edit2 } from "lucide-react";
 import Link from "next/link";
 
 const ViewMore = ({ expenses }: { expenses: any }) => {
+  const canEdit = useCan().can("expenses", "create", true);
   return (
     <>
       <div className="bg-[#FEFFFE] p-6 rounded-lg shadow-sm border w-full border-gray-200 max-w-4xl mx-auto">
@@ -28,14 +30,16 @@ const ViewMore = ({ expenses }: { expenses: any }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-4 pt-4 border-t">
-          <Link href={`/expenses/${expenses?.id}`}>
-            <Button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
-              <Edit2 size={16} />
-              Edit Expense
-            </Button>
-          </Link>
-        </div>
+        {canEdit && (
+          <div className="flex justify-end gap-4 pt-4 border-t">
+            <Link href={`/expenses/${expenses?.id}`}>
+              <Button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 transition-colors">
+                <Edit2 size={16} />
+                Edit Expense
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
     </>
   );

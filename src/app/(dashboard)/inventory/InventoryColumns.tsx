@@ -5,6 +5,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCan } from "@/hooks/useCan";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
 import { getFirstProductImage } from "@/utils/productMedia";
@@ -213,6 +214,13 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
       cell: ({ row }) => {
         const inventory = row.original;
         const isProduct = inventory.type === "PRODUCT";
+        // Rendered as a component (it holds state), so the hook is safe here.
+        // These were open to every non-accountant before the checklist.
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { can: canDo } = useCan();
+        const canEdit = canDo("products", "edit", true);
+        const canDelete = canDo("products", "delete", true);
+        const canWaste = canDo("inventory", "damage", true);
         const [openEditPriceModal, setOpenEditPriceModal] = useState(false);
         const [addDiscountModal, setAddDiscountModal] = useState(false);
 
@@ -272,19 +280,21 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                 align="end"
                 className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
               >
-                <DropdownMenuItem
-                  onClick={openEditPriceModalFunc}
-                  className="cursor-pointer px-4 py-2 capitalize hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
-                >
-                  Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
-                </DropdownMenuItem>
+                {canEdit && (
+                  <DropdownMenuItem
+                    onClick={openEditPriceModalFunc}
+                    className="cursor-pointer px-4 py-2 capitalize hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
+                  >
+                    Edit {` ${inventory.type?.toLocaleLowerCase()} `} price
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   onClick={openViewDetailsFunc}
                   className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
                 >
                   <span>View more details</span>
                 </DropdownMenuItem>
-                {isProduct && (
+                {isProduct && canEdit && (
                   <DropdownMenuItem
                     onClick={handleOpenSetDiscountModal}
                     className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -292,7 +302,7 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                     Set Discount
                   </DropdownMenuItem>
                 )}
-                {isProduct && (
+                {isProduct && canWaste && (
                   <DropdownMenuItem
                     onClick={handleOpenWasteModal}
                     className="cursor-pointer px-4 py-2 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -351,12 +361,14 @@ export const columns = (role: any, can: any): ColumnDef<InventoryItem>[] => {
                   </DropdownMenuItem>
                 )}
 
-                <DropdownMenuItem
-                  onClick={() => setOpenDeleteProductModal(true)}
-                  className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
-                >
-                  Delete Product
-                </DropdownMenuItem>
+                {canDelete && (
+                  <DropdownMenuItem
+                    onClick={() => setOpenDeleteProductModal(true)}
+                    className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
+                  >
+                    Delete Product
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 

@@ -190,6 +190,7 @@ const Pos: React.FC = () => {
 
   // Watchlist items need products "sell_watchlist" (the server checks too).
   const canSellWatchlist = useCan().can("products", "sell_watchlist", true);
+  const canMakePresale = useCan().can("sales", "presale", true);
 
   const handleProductClick = (product: Product): void => {
     if (product.watchlist === true && !canSellWatchlist) {
@@ -273,7 +274,8 @@ const Pos: React.FC = () => {
   const isOwner = userRole === "OWNER";
 
   // Show generate code button for pharmacist
-  const showGenerateCodeButton = isPharmacist && cartItems.length > 0;
+  const showGenerateCodeButton =
+    isPharmacist && canMakePresale && cartItems.length > 0;
 
   // Presales and self checkout orders are looked up on the server.
   const isOnline = !usePosOffline();

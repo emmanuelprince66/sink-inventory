@@ -162,10 +162,19 @@ const Inventory = () => {
   const allowedRoles = ["OWNER", "ADMIN-ATTENDANT", "INVENTORY-MANAGER"];
   const canManageInventory = role ? allowedRoles.includes(role) : false;
   const { can: canDo } = useCan();
-  const canManageServices = role === "OWNER" || role === "ADMIN-ATTENDANT";
-  console.log("can", can("damage_items"));
-  console.log("can-1", can("transfer_items"));
-  console.log("role", role);
+  // The checklist decides when there is one; the old role rules otherwise.
+  const canCreateProducts = canDo("products", "create", canManageInventory);
+  const canManageServices = canDo(
+    "products",
+    "edit",
+    role === "OWNER" || role === "ADMIN-ATTENDANT",
+  );
+  const canCreateServices = canDo(
+    "products",
+    "create",
+    role === "OWNER" || role === "ADMIN-ATTENDANT",
+  );
+  const canGenerateReport = canDo("reports", "view", canManageInventory);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -314,9 +323,10 @@ const Inventory = () => {
             Inventory
           </p>
 
-          {canManageInventory && (
+          {(canCreateProducts || canCreateServices || canGenerateReport) && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               {/* Add New dropdown */}
+              {(canCreateProducts || canCreateServices) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button className="flex-1 sm:flex-none bg-primary-green-300 hover:bg-primary-green-300/90 text-white px-4 py-2 text-sm gap-1.5">
@@ -326,6 +336,7 @@ const Inventory = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[200px]">
+                  {canCreateProducts && (
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -335,7 +346,8 @@ const Inventory = () => {
                       New Product
                     </Link>
                   </DropdownMenuItem>
-                  {canManageServices && (
+                  )}
+                  {canCreateServices && (
                     <DropdownMenuItem
                       onClick={() => {
                         setActiveTab("SERVICE");
@@ -347,6 +359,7 @@ const Inventory = () => {
                       New Service
                     </DropdownMenuItem>
                   )}
+                  {canCreateProducts && (
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-secondary-6 hover:text-primary-green-300 transition-colors"
@@ -356,8 +369,10 @@ const Inventory = () => {
                       New Combo
                     </Link>
                   </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
               {/* More actions dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -375,6 +390,7 @@ const Inventory = () => {
                     <DownloadInventoryButton business_id={business_id} />
                   </div>
                   */}
+                  {canGenerateReport && (
                   <DropdownMenuItem
                     onClick={openGenerateReport}
                     className="cursor-pointer px-4 py-2.5 hover:bg-grey-6 transition-colors"
@@ -382,6 +398,8 @@ const Inventory = () => {
                     <FileDown className="w-4 h-4 mr-2" />
                     Generate Report
                   </DropdownMenuItem>
+                  )}
+                  {canCreateProducts && (
                   <DropdownMenuItem
                     asChild
                     className="cursor-pointer px-4 py-2.5 hover:bg-grey-6 transition-colors"
@@ -391,6 +409,7 @@ const Inventory = () => {
                       Bulk Upload
                     </Link>
                   </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

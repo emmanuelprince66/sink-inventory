@@ -1,5 +1,6 @@
 import { DiscountThreshold, describeDiscount, sortTiers, tierRangeLabel } from "@/utils/discountTiers";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/useCan";
 import { useInventoryHook } from "@/hooks/useInventoryHook";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ArrowUpRight, Edit2, Trash2 } from "lucide-react";
@@ -13,6 +14,10 @@ const ViewDetails = ({
   closeModal: () => void;
 }) => {
   const { handleDeleteProduct, deleting } = useInventoryHook({ closeModal });
+  const { can } = useCan();
+  const canRestock = can("inventory", "restock", true);
+  const canEdit = can("products", "edit", true);
+  const canDelete = can("products", "delete", true);
 
   // Check if product has variations
   const hasVariations = data?.variations && data.variations.length > 0;
@@ -133,15 +138,17 @@ const ViewDetails = ({
 
           {/* History Buttons - Stack on mobile */}
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full col-span-1 md:col-span-2">
-            <Link
-              href={`/inventory/${data?.id}/restock`}
-              className="w-full sm:w-auto"
-            >
-              <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-grey-6 hover:bg-grey-5 rounded-lg border border-grey-5 transition-colors">
-                <span className="font-medium text-xs">Restock History</span>
-                <ArrowUpRight size={16} className="text-grey-3" />
-              </button>
-            </Link>
+            {canRestock && (
+              <Link
+                href={`/inventory/${data?.id}/restock`}
+                className="w-full sm:w-auto"
+              >
+                <button className="w-full sm:w-[10rem] cursor-pointer flex items-center justify-between p-2 sm:p-3 bg-grey-6 hover:bg-grey-5 rounded-lg border border-grey-5 transition-colors">
+                  <span className="font-medium text-xs">Restock History</span>
+                  <ArrowUpRight size={16} className="text-grey-3" />
+                </button>
+              </Link>
+            )}
             <Link
               href={`/inventory/${data?.id}/transfer-history`}
               className="w-full sm:w-auto"
@@ -166,7 +173,9 @@ const ViewDetails = ({
         </div>
 
         {/* Action Buttons - Stack on mobile */}
+        {(canEdit || canDelete) && (
         <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-3 sm:pt-4 border-t">
+          {canEdit && (
           <Link
             href={`/new-add-product/${data?.id}/edit-product`}
             className="w-full sm:w-auto"
@@ -176,7 +185,9 @@ const ViewDetails = ({
               <span className="text-sm sm:text-base">Edit Details</span>
             </Button>
           </Link>
+          )}
 
+          {canDelete && (
           <Button
             disabled={deleting}
             onClick={() => handleDeleteProduct(data?.id, data?.type)}
@@ -187,7 +198,9 @@ const ViewDetails = ({
               {deleting ? "Deleting..." : "Delete"}
             </span>
           </Button>
+          )}
         </div>
+        )}
       </div>
     </div>
   );

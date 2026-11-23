@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import {
   MerchantBooking,
   useMerchantRefundsQuery,
@@ -106,7 +107,8 @@ const RefundsPage = () => {
   const businessId = useBusinessStore((state) => state.business_id);
   // Same rule as the booking details page: only owners/admins disburse.
   const { isOwner, isAdminAttendant } = useUserRole();
-  const canDisburse = isOwner || isAdminAttendant;
+  const { can } = useCan();
+  const canDisburse = can("bookings", "manage", isOwner || isAdminAttendant);
   const [tab, setTab] = useState<RefundTab>("pending");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();

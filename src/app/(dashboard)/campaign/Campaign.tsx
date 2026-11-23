@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { CustomCard } from "@/components/app/CustomCard";
 import { CustomModal } from "@/components/app/CustomModal";
 import { SearchInput } from "@/components/app/SearchInput";
@@ -19,6 +20,9 @@ import CampaignSettings from "./CampaignSettings";
 import UnitUsage from "./UnitUsage";
 
 const Campaign = () => {
+  // campaigns:view reads campaigns and groups; sending, credits and groups
+  // need campaigns:create.
+  const canCreate = useCan().can("campaigns", "create", true);
   const [searchInput, setSearchInput] = useState("");
   const router = useRouter();
 
@@ -83,13 +87,15 @@ const Campaign = () => {
             </p>
           </div>
 
-          <Button
-            className="w-full sm:w-auto gap-1.5"
-            onClick={goToNewCampaign}
-          >
-            <Plus className="w-4 h-4" />
-            Create Campaign
-          </Button>
+          {canCreate && (
+            <Button
+              className="w-full sm:w-auto gap-1.5"
+              onClick={goToNewCampaign}
+            >
+              <Plus className="w-4 h-4" />
+              Create Campaign
+            </Button>
+          )}
         </div>
       </div>
 
@@ -144,13 +150,15 @@ const Campaign = () => {
             </div>
           </div>
 
-          <Button
-            onClick={goToFundCampaign}
-            className="w-full sm:w-auto gap-1.5 shrink-0"
-          >
-            <Zap className="w-4 h-4" />
-            Get Credits
-          </Button>
+          {canCreate && (
+            <Button
+              onClick={goToFundCampaign}
+              className="w-full sm:w-auto gap-1.5 shrink-0"
+            >
+              <Zap className="w-4 h-4" />
+              Get Credits
+            </Button>
+          )}
         </div>
       )}
 
@@ -238,15 +246,17 @@ const Campaign = () => {
               {/* Creating a group belongs to the Groups tab, not the page —
                   on every other tab the button had nothing to do with what
                   was on screen. */}
-              <div className="w-full flex justify-end mb-4">
-                <Button
-                  onClick={openAddGroupModalFunc}
-                  className="w-full sm:w-auto gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create Group
-                </Button>
-              </div>
+              {canCreate && (
+                <div className="w-full flex justify-end mb-4">
+                  <Button
+                    onClick={openAddGroupModalFunc}
+                    className="w-full sm:w-auto gap-1.5"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Create Group
+                  </Button>
+                </div>
+              )}
 
               {CampaignGroupLoading || !CampaignGroupData ? (
                 <TableSkeleton

@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -16,6 +17,7 @@ import UpdateBalance from "./UpdateBalance";
 
 const SupplierById = ({ id }: { id: string }) => {
   const router = useRouter();
+  const canManage = useCan().can("suppliers", "manage", true);
   const {
     SupplierByIdData,
     SupplierByIdLoading,
@@ -64,13 +66,15 @@ const SupplierById = ({ id }: { id: string }) => {
           </h1>
         </div>
 
-        <Button
-          onClick={openUpdateSupplyModalFunc}
-          className="flex items-center gap-1.5 w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Update Balance
-        </Button>
+        {canManage && (
+          <Button
+            onClick={openUpdateSupplyModalFunc}
+            className="flex items-center gap-1.5 w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Update Balance
+          </Button>
+        )}
       </div>
 
       {SupplierByIdLoading || !SupplierByIdData ? (

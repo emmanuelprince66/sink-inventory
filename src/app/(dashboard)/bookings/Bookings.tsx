@@ -6,6 +6,7 @@ import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
 import { Button } from "@/components/ui/button";
+import { useCan } from "@/hooks/useCan";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingStatusFilter, useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types/booking";
@@ -115,6 +116,11 @@ const BookingsTableSkeleton = () => (
 
 const Bookings = () => {
   const router = useRouter();
+  // View-only staff see the diary; creating, the schedule and blocked times
+  // need bookings:manage. Sessions without a checklist keep the old behaviour.
+  const { can } = useCan();
+  const canManage = can("bookings", "manage", true);
+  const canEditServices = can("products", "edit", true);
   const {
     dateRange,
     bookings,
@@ -155,13 +161,15 @@ const Bookings = () => {
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-          <Button
-            onClick={() => router.push("/bookings/new")}
-            className="h-10 w-full shrink-0 sm:w-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Create booking
-          </Button>
+          {canManage && (
+            <Button
+              onClick={() => router.push("/bookings/new")}
+              className="h-10 w-full shrink-0 sm:w-auto"
+            >
+              <Plus className="h-4 w-4" />
+              Create booking
+            </Button>
+          )}
           <span className="w-full sm:w-64">
             <DatePickerWithRange
               date={dateRange}
@@ -376,24 +384,30 @@ const Bookings = () => {
         aria-label="Booking management"
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4"
       >
-        <ManagementLink
-          onClick={() => router.push("/inventory?tab=services")}
-          icon={ExternalLink}
-          title="Services & setup"
-          description="Manage services customers can book"
-        />
-        <ManagementLink
-          onClick={() => router.push("/bookings/availability")}
-          icon={CalendarDays}
-          title="Payment & availability"
-          description="Set your weekly hours and booking rules"
-        />
-        <ManagementLink
-          onClick={() => router.push("/bookings/blocked-times")}
-          icon={ShieldBan}
-          title="Block time"
-          description="Prevent bookings during selected periods"
-        />
+        {canEditServices && (
+          <ManagementLink
+            onClick={() => router.push("/inventory?tab=services")}
+            icon={ExternalLink}
+            title="Services & setup"
+            description="Manage services customers can book"
+          />
+        )}
+        {canManage && (
+          <>
+            <ManagementLink
+              onClick={() => router.push("/bookings/availability")}
+              icon={CalendarDays}
+              title="Payment & availability"
+              description="Set your weekly hours and booking rules"
+            />
+            <ManagementLink
+              onClick={() => router.push("/bookings/blocked-times")}
+              icon={ShieldBan}
+              title="Block time"
+              description="Prevent bookings during selected periods"
+            />
+          </>
+        )}
         <ManagementLink
           onClick={() => router.push("/bookings/refunds")}
           icon={RotateCcw}

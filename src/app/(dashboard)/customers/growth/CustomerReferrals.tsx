@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { CustomModal } from "@/components/app/CustomModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFormatMoney } from "@/utils/formatMoney";
@@ -34,6 +35,7 @@ const SummaryTile = ({
 
 const CustomerReferrals = () => {
   const router = useRouter();
+  const canManage = useCan().can("loyalty", "manage", true);
   const formatMoney = useFormatMoney();
   const {
     business_id,
@@ -89,6 +91,7 @@ const CustomerReferrals = () => {
               Turn your loyal customers into your best marketers
             </p>
           </div>
+          {canManage && (
           <button
             onClick={() => setView({ kind: "create" })}
             className="flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-primary-green-100 px-4 text-sm font-bold text-white hover:bg-primary-green-100/90 cursor-pointer"
@@ -96,6 +99,7 @@ const CustomerReferrals = () => {
             <Plus className="h-4 w-4" />
             New Programme
           </button>
+          )}
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

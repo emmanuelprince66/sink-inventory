@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +11,7 @@ const ACTION_CLASS =
 
 const LoyaltyProgramsHeader = () => {
   const router = useRouter();
+  const canManage = useCan().can("loyalty", "manage", true);
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -20,6 +22,7 @@ const LoyaltyProgramsHeader = () => {
       <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:shrink-0">
         {/* A page, not a modal — nine steps plus the QR handover needs the
             room, and it gets its own URL. */}
+        {canManage && (
         <button
           onClick={() => router.push("/customers/loyalty/create")}
           className={`${ACTION_CLASS} bg-primary-green-100 text-white hover:bg-primary-green-100/90`}
@@ -27,6 +30,7 @@ const LoyaltyProgramsHeader = () => {
           <Plus className="w-4 h-4" />
           Create Campaign
         </button>
+        )}
         {/* Tiers and Members are hidden for now, not deleted. The overlays
             behind them (LoyaltyTiers, LoyaltyMembers) and their modalView
             cases in LoyaltyProgramOverlays are all still wired, so bringing

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { Spinner } from "@/components/app/Spinner";
 import { cn } from "@/lib/utils";
 import type { LoyaltyProgram } from "@/types/loyalty";
@@ -24,6 +25,7 @@ const CampaignCard = ({
   onOpenLandingPage,
   openingLandingPage,
 }: CampaignCardProps) => {
+  const canManage = useCan().can("loyalty", "manage", true);
   const formatMoney = useFormatMoney();
   const isActive = (program.status ?? "ACTIVE") === "ACTIVE";
   // Sample rows carry a non-UUID id; only real programmes can be opened.
@@ -127,6 +129,7 @@ const CampaignCard = ({
           unreadable pill. */}
       <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {canManage && (
           <button
             onClick={() => onEdit(program)}
             disabled={!isPersisted}
@@ -134,6 +137,7 @@ const CampaignCard = ({
           >
             Edit
           </button>
+          )}
           <button
             onClick={() => onShowQr(program)}
             disabled={!isPersisted}

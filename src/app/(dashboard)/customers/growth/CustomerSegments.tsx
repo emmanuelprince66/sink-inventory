@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { formatToNaira, getCurrencySymbol } from "@/utils/formatMoney";
 import { useDeleteSegmentMutation } from "@/api/segment/delete-segment";
 import { useFetchSegmentsQuery } from "@/api/segment/fetch-segments";
@@ -55,6 +56,7 @@ const SegmentCard = ({
   onView: () => void;
   onChanged: () => void;
 }) => {
+  const canManage = useCan().can("campaigns", "create", true);
   const tone = toneFor(segment.segment_type, segment.name);
   const isActive = segment.is_active !== false;
   const isBirthday = isBirthdaySegment(segment);
@@ -179,7 +181,7 @@ const SegmentCard = ({
             dressed up as a toggle. Restored as a pause/resume pair once the
             list endpoint can return inactive segments too.
             A paused segment that somehow appears here can still be resumed. */}
-        {!isActive && (
+        {canManage && !isActive && (
           <button
             onClick={() => updateSegment({ is_active: true })}
             disabled={toggling || !segment.id}
@@ -194,7 +196,7 @@ const SegmentCard = ({
           </button>
         )}
         {/* Defaults are seeded by the backend and cannot be removed. */}
-        {!segment.is_default && (
+        {canManage && !segment.is_default && (
           <button
             onClick={() => deleteSegment(undefined)}
             disabled={deleting || !segment.id}
@@ -219,6 +221,9 @@ const CustomerSegments = () => {
   const [selected, setSelected] = useState<CustomerSegment | null>(null);
   const [editing, setEditing] = useState<CustomerSegment | null>(null);
   const [creating, setCreating] = useState(false);
+  // Segments are campaign audiences: viewing them is campaigns:view (the tab),
+  // building, editing or messaging one is campaigns:create.
+  const canManage = useCan().can("campaigns", "create", true);
   // The outreach campaign's starting point — ids captured from the segment
   // view so the audience is exactly the membership that was on screen, plus
   // pre-filled text for a birthday offer.
@@ -245,6 +250,7 @@ const CustomerSegments = () => {
         <p className="text-sm text-grey-3">
           Customer segments. Click a segment to view its customers.
         </p>
+        {canManage && (
         <button
           onClick={() => setCreating(true)}
           className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-primary-green-300 text-white text-sm font-bold hover:bg-primary-green-300/90 cursor-pointer"
@@ -252,6 +258,7 @@ const CustomerSegments = () => {
           <Plus className="w-4 h-4" />
           Create Segment
         </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -295,11 +302,11 @@ const CustomerSegments = () => {
             {isBirthdaySegment(selected) ? (
               <BirthdayCustomers
                 segment={selected}
-                onEditConditions={() => {
+                onEditConditions={canManage ? () => {
                   setEditing(selected);
                   setSelected(null);
-                }}
-                onSendOffer={(customerIds, name) => {
+                } : undefined}
+                onSendOffer={!canManage ? undefined : (customerIds, name) => {
                   setMessaging({
                     customerIds,
                     title:
@@ -316,11 +323,11 @@ const CustomerSegments = () => {
             ) : (
               <SegmentCustomers
                 segmentId={selected.id}
-                onEditConditions={() => {
+                onEditConditions={canManage ? () => {
                   setEditing(selected);
                   setSelected(null);
-                }}
-                onMessage={(customerIds) => {
+                } : undefined}
+                onMessage={!canManage ? undefined : (customerIds) => {
                   setMessaging({ customerIds, title: "Message Segment" });
                   setSelected(null);
                 }}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { useUserRole } from "@/lib/store/user-store";
 
 /**
@@ -53,7 +54,11 @@ export const useExpensePermissions = (): ExpensePermissions => {
 
   const canLog = can("can_log_expenses");
   const canTransfer = can("can_initiate_expense_transfer");
-  const canApprove = can("can_approve_expenses") || isAccountant;
+  // With a checklist, approving is expenses:approve like everyone else; the
+  // accountant role rule is for sessions without one.
+  const { matrix } = useCan();
+  const canApprove =
+    can("can_approve_expenses") || (!matrix && isAccountant);
 
   return {
     canLog,

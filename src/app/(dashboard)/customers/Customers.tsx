@@ -74,6 +74,15 @@ const GROWTH_TABS = [
 
 type GrowthTab = (typeof GROWTH_TABS)[number];
 
+// The permission each tab needs beyond customers:view. Segments are campaign
+// audiences; loyalty, rewards and referrals are the loyalty module.
+const TAB_PERMISSION: Partial<Record<GrowthTab, [string, string]>> = {
+  Segments: ["campaigns", "view"],
+  "Loyalty Programs": ["loyalty", "view"],
+  Rewards: ["loyalty", "view"],
+  Referrals: ["loyalty", "view"],
+};
+
 // The tinted wallet/debt/customers KPI cards that lived here were removed —
 // their figures now appear in the Wallet & Credit, Total Spend & Basket and
 // Total Customers cards rendered by CustomerSummaryCards.
@@ -84,9 +93,14 @@ const Customers = () => {
 
   // ?tab=Loyalty%20Programs — falls back to Overview for a missing or unknown
   // value, so a stale link can never render a blank screen.
+  const { can } = useCan();
+  const visibleTabs = GROWTH_TABS.filter((tab) => {
+    const need = TAB_PERMISSION[tab];
+    return !need || can(need[0], need[1], true);
+  });
   const tabParam = searchParams.get("tab") as GrowthTab | null;
   const activeTopTab: GrowthTab =
-    tabParam && GROWTH_TABS.includes(tabParam) ? tabParam : "Overview";
+    tabParam && visibleTabs.includes(tabParam) ? tabParam : "Overview";
 
   const setActiveTopTab = useCallback(
     (tab: GrowthTab) => {
@@ -110,7 +124,7 @@ const Customers = () => {
   const [page, setPage] = useState(1);
 
   const [openAddCustomerModal, setOpenAddCustomerModal] = useState(false);
-  const canCreateCustomer = useCan().can("customers", "create", true);
+  const canCreateCustomer = can("customers", "create", true);
   const [showNotSubscribeModal, setShowNotSubscribeModal] = useState(false);
   const handleOpenNotSubscribeModal = () => setShowNotSubscribeModal(true);
   const handleCloseNotSubscribeModal = () => setShowNotSubscribeModal(false);
@@ -174,15 +188,17 @@ const Customers = () => {
           </div>
 
           <div className="flex gap-2">
-            <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
-              <Button
-                variant="outline"
-                className="h-10 w-full gap-1.5 rounded-xl"
-              >
-                <Download className="w-4 h-4" />
-                Import
-              </Button>
-            </Link>
+            {canCreateCustomer && (
+              <Link href={"/customers/upload"} className="flex-1 sm:flex-none">
+                <Button
+                  variant="outline"
+                  className="h-10 w-full gap-1.5 rounded-xl"
+                >
+                  <Download className="w-4 h-4" />
+                  Import
+                </Button>
+              </Link>
+            )}
 
             {canCreateCustomer && (
               <Button
@@ -200,7 +216,7 @@ const Customers = () => {
       {/* Growth tabs */}
       <div className="border-b border-grey-5 overflow-x-auto scrollbar-hide">
         <div className="flex items-center gap-6 min-w-max">
-          {GROWTH_TABS.map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTopTab(tab)}

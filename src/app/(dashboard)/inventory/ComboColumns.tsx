@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCan } from "@/hooks/useCan";
 import { formatToNaira } from "@/utils/formatMoney";
 import { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal, Package } from "lucide-react";
@@ -120,6 +121,10 @@ export const comboColumns: ColumnDef<Combo>[] = [
 
 const ComboActions = ({ combo }: { combo: Combo }) => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const { can } = useCan();
+  const canEdit = can("products", "edit", true);
+  const canDelete = can("products", "delete", true);
+  if (!canEdit && !canDelete) return null;
 
   return (
     <>
@@ -134,20 +139,24 @@ const ComboActions = ({ combo }: { combo: Combo }) => {
           align="end"
           className="bg-white border border-grey-5 shadow-lg min-w-[180px]"
         >
-          <DropdownMenuItem
-            asChild
-            className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
-          >
-            <Link href={`/inventory/combo/${combo.id}`}>
-              Edit Combo
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => setOpenDeleteModal(true)}
-            className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
-          >
-            Delete Combo
-          </DropdownMenuItem>
+          {canEdit && (
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer px-4 py-2 hover:bg-primary-green-300/10 hover:text-primary-green-300 transition-colors"
+            >
+              <Link href={`/inventory/combo/${combo.id}`}>
+                Edit Combo
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {canDelete && (
+            <DropdownMenuItem
+              onClick={() => setOpenDeleteModal(true)}
+              className="cursor-pointer text-error-1 px-4 py-2 hover:bg-error-2 hover:text-error-1 transition-colors"
+            >
+              Delete Combo
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

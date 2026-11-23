@@ -1,4 +1,5 @@
 "use client";
+import { useCan } from "@/hooks/useCan";
 import { AlertCircle, Plus, Users, Wallet } from "lucide-react";
 
 import { CustomCard } from "@/components/app/CustomCard";
@@ -69,6 +70,11 @@ const Supply = () => {
   const { handleRowClick, SupplierData, SupplierLoading } = useSupplyHook({});
 
   const [openAddSupplyModal, setOpenAddSupplyModal] = useState(false);
+  const canManageSuppliers = useCan().can(
+    "suppliers",
+    "manage",
+    role === "OWNER" || role === "ADMIN-ATTENDANT" || role === "ACCOUNTANT",
+  );
   const closeOpenSupplyModal = () => setOpenAddSupplyModal(false);
   const openSupplyModalFunc = () => setOpenAddSupplyModal(true);
 
@@ -81,9 +87,7 @@ const Supply = () => {
             Supplier
           </p>
 
-          {(role === "OWNER" ||
-            role === "ADMIN-ATTENDANT" ||
-            role === "ACCOUNTANT") && (
+          {canManageSuppliers && (
             <Button
               onClick={openSupplyModalFunc}
               className="flex items-center gap-1.5 w-full sm:w-auto"

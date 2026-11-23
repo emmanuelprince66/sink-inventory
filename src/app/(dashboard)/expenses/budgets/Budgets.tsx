@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { useFetchBudgetsQuery } from "@/api/expenses/fetch-budgets";
 import { SearchInput } from "@/components/app/SearchInput";
 import { TableSkeleton } from "@/components/app/TableSkeleton";
@@ -34,6 +35,12 @@ const Budgets = () => {
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
+  // Budgets cap what everyone else spends, so setting one sits with the people
+  // who approve spending. Others (e.g. transfer holders) can still read them.
+  const canSetBudgets = useCan().can("expenses", "approve", true);
+  const openBudget = (b: Budget) => {
+    if (canSetBudgets) setEditingBudget(b);
+  };
 
   const { data: BudgetsData, isLoading } = useFetchBudgetsQuery({
     params: { id: business_id as string, search: debouncedSearch, limit: 100 },
@@ -65,10 +72,12 @@ const Budgets = () => {
           </h1>
         </div>
 
-        <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
-          <Plus className="w-4 h-4 mr-1.5" />
-          Create Budget
-        </Button>
+        {canSetBudgets && (
+          <Button onClick={() => setCreateOpen(true)} className="w-full sm:w-auto">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Budget
+          </Button>
+        )}
       </div>
 
       <div className="rounded-xl border border-grey-5 bg-white overflow-hidden">
@@ -146,7 +155,7 @@ const Budgets = () => {
                     return (
                       <tr
                         key={b.id}
-                        onClick={() => setEditingBudget(b)}
+                        onClick={() => openBudget(b)}
                         className="border-b border-grey-5 hover:bg-secondary-6/40 cursor-pointer"
                       >
                         <td className="py-3 px-4">
@@ -199,7 +208,7 @@ const Budgets = () => {
                 return (
                   <li key={b.id}>
                     <button
-                      onClick={() => setEditingBudget(b)}
+                      onClick={() => openBudget(b)}
                       className="w-full p-3 flex items-center gap-3 hover:bg-secondary-6/40 transition-colors text-left cursor-pointer"
                     >
                       <div

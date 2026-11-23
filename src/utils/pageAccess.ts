@@ -14,15 +14,35 @@ export type { PermissionsMatrix };
 type Rule = string[];
 
 /** Most specific first: the first prefix that matches decides. */
+// Matched in order, first prefix wins — so a sub-page that needs more than
+// viewing comes before its section. `*` stands for one path segment (an id).
 const PAGE_RULES: [string, Rule][] = [
+  ["/inventory/*/restock", ["inventory:restock"]],
+  ["/inventory/combo/*", ["products:edit"]],
+  ["/inventory/combo", ["products:create"]],
+  ["/product/upload-product", ["products:create"]],
   ["/inventory/restock-history", ["inventory:restock"]],
   ["/inventory/product-history", ["inventory:restock"]],
   ["/inventory/production-history", ["inventory:production"]],
   ["/inventory", ["inventory:view", "products:view"]],
-  ["/new-add-product", ["products:create", "products:edit"]],
+  ["/new-add-product/*/edit-product", ["products:edit"]],
+  ["/new-add-product", ["products:create"]],
   ["/categories", ["products:edit"]],
   ["/departments", ["products:edit"]],
   ["/orders/create", ["orders:manage"]],
+  ["/bookings/new", ["bookings:manage"]],
+  ["/bookings/availability", ["bookings:manage"]],
+  ["/bookings/blocked-times", ["bookings:manage"]],
+  ["/customers/upload", ["customers:create"]],
+  ["/customers/loyalty/create", ["loyalty:manage"]],
+  ["/expenses/approvals", ["expenses:approve", "expenses:transfer"]],
+  ["/expenses/transfer", ["expenses:transfer"]],
+  ["/expenses/budgets", ["expenses:view"]],
+  ["/expenses/categories", ["expenses:view"]],
+  // /expenses/<id> is the edit form.
+  ["/expenses/*", ["expenses:create"]],
+  ["/campaign/new", ["campaigns:create"]],
+  ["/campaign/fund", ["campaigns:create"]],
   ["/pos", ["sales:create"]],
   ["/payment-terminal", ["sales:create"]],
   ["/overview", ["dashboard:view"]],
@@ -56,10 +76,20 @@ const HOME_PAGES = [
   "/customers",
 ];
 
-export const ruleForPath = (path: string): Rule | null => {
-  const match = PAGE_RULES.find(
-    ([prefix]) => path === prefix || path.startsWith(`${prefix}/`),
+const prefixMatches = (prefix: string, path: string) => {
+  if (!prefix.includes("*")) {
+    return path === prefix || path.startsWith(`${prefix}/`);
+  }
+  const want = prefix.split("/");
+  const have = path.split("/");
+  return (
+    have.length >= want.length &&
+    want.every((part, i) => part === "*" ? have[i] !== "" : part === have[i])
   );
+};
+
+export const ruleForPath = (path: string): Rule | null => {
+  const match = PAGE_RULES.find(([prefix]) => prefixMatches(prefix, path));
   return match ? match[1] : null;
 };
 

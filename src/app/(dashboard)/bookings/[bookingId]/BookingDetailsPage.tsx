@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import {
   normalizeMerchantBooking,
@@ -446,6 +447,7 @@ const BookingDetailsSkeleton = () => (
 
 const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
   const router = useRouter();
+  const { can } = useCan();
   const { showToast } = useToast();
   const businessId = useBusinessStore((state) => state.business_id);
   const { isOwner, isAdminAttendant, isAttendant } = useUserRole();
@@ -558,8 +560,19 @@ const BookingDetailsPage = ({ bookingId }: { bookingId: string }) => {
 
   const canManage =
     booking.status !== "cancelled" && booking.status !== "completed";
-  const canManageSettings = isOwner || isAdminAttendant;
-  const canUpdateProgress = isAttendant || canManageSettings;
+  // bookings:manage covers progress, payment, reschedule, cancel and refunds;
+  // with only bookings:view the booking is read-only. The role rules stay for
+  // sessions without a checklist.
+  const canManageSettings = can(
+    "bookings",
+    "manage",
+    isOwner || isAdminAttendant,
+  );
+  const canUpdateProgress = can(
+    "bookings",
+    "manage",
+    isAttendant || isOwner || isAdminAttendant,
+  );
 
   const bookingTone = getBookingTone(booking.status);
   const startsAt = parseISO(booking.startsAt);

@@ -1,5 +1,6 @@
 "use client";
 
+import { useCan } from "@/hooks/useCan";
 import CustomPagination from "@/components/app/CustomPagination";
 import { DatePickerWithRange } from "@/components/app/DateRangePicker";
 import { SearchInput } from "@/components/app/SearchInput";
@@ -61,6 +62,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
 
   // Modals
   const [openBudgetEdit, setOpenBudgetEdit] = useState(false);
+  const canSetBudgets = useCan().can("expenses", "approve", true);
   const [selectedTxn, setSelectedTxn] = useState<any | null>(null);
 
   // Dedicated category-detail endpoint — returns this category's card stats
@@ -149,13 +151,15 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
           </h1>
         </div>
 
-        <Button
-          onClick={() => setOpenBudgetEdit(true)}
-          className="w-full sm:w-auto"
-        >
-          <PiggyBank className="w-4 h-4 mr-1.5" />
-          {hasBudget ? "Edit budget" : "Set budget"}
-        </Button>
+        {canSetBudgets && (
+          <Button
+            onClick={() => setOpenBudgetEdit(true)}
+            className="w-full sm:w-auto"
+          >
+            <PiggyBank className="w-4 h-4 mr-1.5" />
+            {hasBudget ? "Edit budget" : "Set budget"}
+          </Button>
+        )}
       </header>
 
       {/* Budget summary */}

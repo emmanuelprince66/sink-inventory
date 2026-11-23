@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCan } from "@/hooks/useCan";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 
@@ -63,7 +64,10 @@ export const columns: ColumnDef<any>[] = [
       const router = useRouter();
       const [deleteGroup, setDeleteGroup] = useState(false);
       const [editGroupModal, setEditGroupModal] = useState(false);
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const canCreate = useCan().can("campaigns", "create", true);
 
+      if (!canCreate) return null;
       return (
         <>
           <DropdownMenu>

@@ -4,6 +4,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useCan } from "@/hooks/useCan";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 
@@ -83,6 +84,8 @@ export const columns: ColumnDef<Supplier>[] = [
     cell: ({ row }) => {
       const router = useRouter();
       const [deleteSellerModal, setDeleteSellerModal] = useState(false);
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const canManage = useCan().can("suppliers", "manage", true);
       return (
         <>
           <DropdownMenu>
@@ -102,12 +105,14 @@ export const columns: ColumnDef<Supplier>[] = [
               >
                 View more
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteSellerModal(true)}
-                className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
-              >
-                Delete Supplier
-              </DropdownMenuItem>
+              {canManage && (
+                <DropdownMenuItem
+                  onClick={() => setDeleteSellerModal(true)}
+                  className="cursor-pointer px-4 py-2 text-error-1 hover:bg-error-2 hover:text-error-1 transition-colors"
+                >
+                  Delete Supplier
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
