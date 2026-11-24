@@ -6,7 +6,6 @@ export const metadata: Metadata = {
   description: "Check how close you are to your next reward.",
 };
 
-// Members return here via their loyalty code to check progress without
 // re-joining. Public, like the join page.
 const LoyaltyProgressPage = async ({
   params,
