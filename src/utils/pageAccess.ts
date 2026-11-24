@@ -48,7 +48,7 @@ const PAGE_RULES: [string, Rule][] = [
   ["/overview", ["dashboard:view"]],
   ["/sales", ["sales:view"]],
   ["/transactions", ["banking:view", "sales:view"]],
-  ["/analytics", ["reports:view"]],
+  ["/analytics", ["reports:view", "sales:view"]],
   ["/expenses", ["expenses:view"]],
   ["/supply", ["suppliers:view"]],
   ["/orders", ["orders:view"]],

@@ -5,8 +5,12 @@ import { useFetchMaxSalesAnalyticQuery } from "@/api/analytic/fetch-max-sale";
 import { useFetchProductAnalyticQuery } from "@/api/analytic/fetch-product-analytics";
 import { useFetchSalesAnalyticQuery } from "@/api/analytic/fetch-sales-analytic";
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
+import { useCan } from "@/hooks/useCan";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import moment from "moment";
+
+// Without a permissions checklist, these roles see the report tabs.
+const REPORT_ROLES = new Set(["OWNER", "ADMIN-ATTENDANT", "ACCOUNTANT"]);
 import { DateRange } from "react-day-picker";
 
 export const useAnalyticHook = ({
@@ -28,6 +32,10 @@ export const useAnalyticHook = ({
 }) => {
   console.log("taxYear", taxYear);
   const business_id = useBusinessStore((state) => state.business_id);
+  // Product, customer and tax analytics need reports:view on the server;
+  // sales:view alone (e.g. an attendant) only gets the Sales tab.
+  const { can, role } = useCan();
+  const canViewReports = can("reports", "view", REPORT_ROLES.has(role ?? ""));
 
   const { data: AttendantsData, isLoading: AttendantsLoading } =
     useFetchAttendants(business_id);
@@ -44,7 +52,7 @@ export const useAnalyticHook = ({
           ? moment(dateRange.to).format("YYYY-MM-DD")
           : undefined,
       },
-      enabled: !!business_id,
+      enabled: !!business_id && canViewReports,
     });
 
   console.log("TaxAnalyticData", TaxAnalyticData);
@@ -102,7 +110,7 @@ export const useAnalyticHook = ({
           ? moment(dateRange.to).format("YYYY-MM-DD")
           : undefined,
       },
-      enabled: !!business_id,
+      enabled: !!business_id && canViewReports,
     });
 
   const { data: CustomerAnalyticData, isLoading: CustomerAnalyticLoading } =
@@ -116,10 +124,11 @@ export const useAnalyticHook = ({
           ? moment(dateRange.to).format("YYYY-MM-DD")
           : undefined,
       },
-      enabled: !!business_id,
+      enabled: !!business_id && canViewReports,
     });
 
   return {
+    canViewReports,
     SalesAnalyticData,
     AttendantsData,
     CustomerAnalyticData,

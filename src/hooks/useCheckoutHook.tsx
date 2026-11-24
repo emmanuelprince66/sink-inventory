@@ -15,7 +15,6 @@ import { useBusinessDataStore } from "@/lib/store/useBusinessDataStore";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./toast/useToast";
-import { useCanSeeStock } from "./useCanSeeStock";
 import { useDebounce } from "./useDebounce";
 
 export const useCheckoutHook = ({
@@ -54,7 +53,6 @@ export const useCheckoutHook = ({
       : undefined);
 
   const { showToast } = useToast();
-  const canSeeStock = useCanSeeStock();
   const queryClient = useQueryClient();
   const setSaleCompleted = useCartStore((state) => state.setSaleCompleted);
 
@@ -161,16 +159,6 @@ export const useCheckoutHook = ({
       const match = message.match(
         /not enough stock for '(.+?)'.*?only\s+([\d.]+)\s+unit/i,
       );
-
-      // Roles that can't see stock get the gist without the count, and the line
-      // isn't set to what's left, which would show it just the same.
-      if (match && !canSeeStock) {
-        showToast(
-          `Not enough stock for ${match[1]}. Reduce the quantity and try again.`,
-          "error",
-        );
-        return;
-      }
       showToast(message, "error");
       if (!match) return;
       const [, name, remainingText] = match;

@@ -5,7 +5,6 @@ import GenerateReportButton from "@/components/app/GenerateReportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAnalyticHook } from "@/hooks/useAnalyticHook";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
-import { useUserRole } from "@/lib/store/user-store";
 import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import ShowAllAttendants from "../sales/ShowAllAttendants";
@@ -17,15 +16,7 @@ import SkeletonComp from "./SkeletonComp";
 import TaxAnalytics from "./TaxAnalytics";
 
 const Analytics = () => {
-  const { user } = useUserRole();
   const business_id = useBusinessStore((state) => state.business_id);
-
-  const AnalyticsOptionsTab =
-    user?.role === "OWNER" ||
-    user?.role === "ADMIN-ATTENDANT" ||
-    user?.role === "ACCOUNTANT"
-      ? (["Sales", "Products", "Customers", "Tax"] as const)
-      : (["Sales"] as const);
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: new Date(),
@@ -44,6 +35,7 @@ const Analytics = () => {
   >("Sales");
 
   const {
+    canViewReports,
     SalesAnalyticLoading,
     AttendantsData,
     ProductAnalyticLoading,
@@ -57,6 +49,11 @@ const Analytics = () => {
     dateRange,
     searchInput,
   });
+
+  // Products, Customers and Tax need reports:view; sales:view alone gets Sales.
+  const AnalyticsOptionsTab = canViewReports
+    ? (["Sales", "Products", "Customers", "Tax"] as const)
+    : (["Sales"] as const);
 
   // const { mutate: downloadReport, isPending: isDownloading } =
   //   useDownloadAnalyticsReport();
@@ -158,10 +155,7 @@ const Analytics = () => {
                 )}
               </TabsContent>
 
-              {user &&
-                (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT" ||
-                  user?.role === "ACCOUNTANT") && (
+              {canViewReports && (
                   <TabsContent value="Products" className="mt-0">
                     {ProductAnalyticLoading ? (
                       <SkeletonComp />
@@ -175,10 +169,7 @@ const Analytics = () => {
                   </TabsContent>
                 )}
 
-              {user &&
-                (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT" ||
-                  user?.role === "ACCOUNTANT") && (
+              {canViewReports && (
                   <TabsContent value="Customers" className="mt-0">
                     {CustomerAnalyticLoading ? (
                       <SkeletonComp />
@@ -192,10 +183,7 @@ const Analytics = () => {
                   </TabsContent>
                 )}
 
-              {user &&
-                (user?.role === "OWNER" ||
-                  user?.role === "ADMIN-ATTENDANT" ||
-                  user?.role === "ACCOUNTANT") && (
+              {canViewReports && (
                   <TabsContent value="Tax" className="mt-0">
                     <div className="w-full overflow-hidden">
                       <TaxAnalytics dateRange={dateRange} />

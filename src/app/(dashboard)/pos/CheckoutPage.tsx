@@ -20,7 +20,6 @@ import {
 } from "@/lib/store/cart-store";
 import { describeDiscount } from "@/utils/discountTiers";
 import { useUserRole } from "@/lib/store/user-store";
-import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   Edit3,
@@ -126,7 +125,6 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
     useState<CartItem | null>(null);
   const [showVariationModal, setShowVariationModal] = useState<boolean>(false);
   const { user } = useUserRole();
-  const canSeeStock = useCanSeeStock();
   // Changing a price at the till is a manual discount.
   const canDiscount = useCan().can("sales", "discount", true);
   // Without "discount", a product's price can still be lowered online: the
@@ -711,7 +709,7 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                                 {priceError}
                               </p>
                             )}
-                            {canSeeStock && available != null ? (
+                            {available != null ? (
                               <p
                                 className={`text-[10px] mt-0.5 ${
                                   available <= 0 || overStock

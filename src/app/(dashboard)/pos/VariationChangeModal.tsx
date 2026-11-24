@@ -1,5 +1,4 @@
 import { useAllowSalesWithoutStock } from "@/hooks/useAllowSalesWithoutStock";
-import { useCanSeeStock } from "@/hooks/useCanSeeStock";
 import { useQueuedStock } from "@/hooks/useQueuedStock";
 import {
   adjustedQuantity,
@@ -59,7 +58,6 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
   onChangeVariation,
 }) => {
   const allowOversell = useAllowSalesWithoutStock();
-  const canSeeStock = useCanSeeStock();
   const { queuedFor } = useQueuedStock();
   const [selectedVariation, setSelectedVariation] = useState<Variation | null>(
     null,
@@ -154,11 +152,9 @@ const VariationChangeModal: React.FC<VariationChangeModalProps> = ({
                     <p className="text-sm font-semibold text-green-600 truncate">
                       {formatToNaira(variation.selling_price)}
                     </p>
-                    {canSeeStock && (
-                      <p className="text-xs text-gray-1000 whitespace-nowrap">
-                        Qty: {variation.quantity}
-                      </p>
-                    )}
+                    <p className="text-xs text-gray-1000 whitespace-nowrap">
+                      Qty: {variation.quantity}
+                    </p>
                   </div>
                 </div>
               );
