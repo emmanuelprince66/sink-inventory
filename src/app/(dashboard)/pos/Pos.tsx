@@ -1,6 +1,5 @@
 "use client";
 
-import { useWarnBeforeOfflineRefresh } from "@/hooks/useWarnBeforeOfflineRefresh";
 import { useCan } from "@/hooks/useCan";
 import { isUnsellable, productStockView, withQueuedStock } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -44,6 +43,7 @@ import ConnectionStatus from "./ConnectionStatus";
 import CustomerBar from "./CustomerBar";
 import SelfCheckoutOrderModal from "./SelfCheckoutOrderModal";
 import GeneratePresaleCodeModal from "./GeneratePresaleCodeModal";
+import OfflineReloadDialog from "./OfflineReloadDialog";
 import { isOrderCode } from "./instoreDraft";
 import LoadPresaleModal from "./LoadPresaleModal";
 import OfflineSalesDrawer from "./OfflineSalesDrawer";
@@ -280,7 +280,6 @@ const Pos: React.FC = () => {
 
   // Presales and self checkout orders are looked up on the server.
   const isOnline = !usePosOffline();
-  useWarnBeforeOfflineRefresh();
 
   // Saves products (and customers, for roles with a sale to attach one to) on
   // this device in the background, for search and scanning offline.
@@ -867,6 +866,7 @@ const Pos: React.FC = () => {
         initialCode={scannedOrderCode}
       />
 
+      <OfflineReloadDialog />
       <GeneratePresaleCodeModal
         isOpen={showGeneratePresaleModal}
         onClose={() => setShowGeneratePresaleModal(false)}

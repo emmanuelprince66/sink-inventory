@@ -62,7 +62,11 @@ const OfflineSyncBanner = ({ onOpenSales }: { onOpenSales: () => void }) => {
             </p>
             <p className="text-xs text-grey-2">
               Sales are saved on this device (Cash and Bank Transfer only) and
-              sync on their own when the internet is back.
+              sync automatically when the internet returns.
+            </p>
+            <p className="mt-1 text-xs text-grey-2">
+              Keep this tab open while offline. Refreshing or closing it may
+              leave the till unavailable until you reconnect.
             </p>
             {problem && (
               <p className="mt-0.5 text-xs font-bold text-error-1">{problem}</p>
