@@ -272,7 +272,7 @@ export const useExpensesHook = ({
       const payload: {
         entry_type: string;
         name: string;
-        category_id?: string;
+        category_id?: string | null;
         amount: number;
         date: string;
         note?: string;
@@ -281,7 +281,12 @@ export const useExpensesHook = ({
         name: values.name,
         amount: amount,
         date: formattedDate,
-        ...(values.category_id ? { category_id: values.category_id } : {}),
+        // A transfer left without a category clears the old one (null).
+        ...(values.category_id
+          ? { category_id: values.category_id }
+          : values.entry_type === "TRANSFER"
+            ? { category_id: null }
+            : {}),
       };
 
       // Only add note if it exists and isn't empty
