@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { isPosOfflineNow } from "@/lib/offline/offlineMode";
 import { toast } from "sonner";
 
 type ToastStatus = "success" | "error" | "warning" | "info" | "default";
@@ -20,12 +21,26 @@ interface ToastOptions {
     | React.ReactNode;
 }
 
+/**
+ * The browser's own wording when a request can't leave the device
+ * (Chrome/Edge, Firefox, Safari). Many screens toast `error.message` as-is,
+ * which turns into a bare "Failed to fetch".
+ */
+const BROWSER_NETWORK_ERROR = /^(failed to fetch|networkerror when attempting to fetch resource\.?|load failed|fetch failed)$/i;
+
 export function useToast() {
   const showToast = (
     title: string,
     status: ToastStatus = "default",
     options?: ToastOptions
   ) => {
+    if (status === "error" && BROWSER_NETWORK_ERROR.test(String(title).trim())) {
+      // Offline, the POS already says so in its banner, and every list that
+      // can't load would otherwise stack its own toast.
+      if (isPosOfflineNow()) return;
+      title = "Couldn't reach the server. Check your internet connection.";
+    }
+
     const baseOptions = {
       duration: 5000,
       ...options,
