@@ -14,6 +14,14 @@ const WARMED_KEY = "sync360-pos-shell-saved-at";
 /** A POS left open all day re-saves now and then, to pick up a new deploy. */
 const REWARM_AFTER_MS = 30 * 60_000;
 
+/** Identifies the running build by the build files this page loaded. */
+const currentBuild = () =>
+  Array.from(document.querySelectorAll<HTMLScriptElement>("script[src]"))
+    .map((script) => script.getAttribute("src") || "")
+    .filter((src) => src.includes("/_next/static/"))
+    .sort()
+    .join("|");
+
 const supported = () =>
   typeof window !== "undefined" && "serviceWorker" in navigator;
 
@@ -47,9 +55,14 @@ export const setUpOfflineShell = async () => {
 export const saveOfflinePage = async (path = "/pos") => {
   if (!supported() || process.env.NODE_ENV !== "production") return;
   try {
-    const last = Number(sessionStorage.getItem(WARMED_KEY)) || 0;
-    if (Date.now() - last < REWARM_AFTER_MS) return;
-    sessionStorage.setItem(WARMED_KEY, String(Date.now()));
+    // A new deploy changes the build files this page loads. Re-save straight
+    // away then, or the device keeps opening the old POS offline.
+    const build = currentBuild();
+    const saved = JSON.parse(sessionStorage.getItem(WARMED_KEY) || "{}");
+    const fresh =
+      saved.build === build && Date.now() - (saved.at || 0) < REWARM_AFTER_MS;
+    if (fresh) return;
+    sessionStorage.setItem(WARMED_KEY, JSON.stringify({ build, at: Date.now() }));
   } catch {
     // Storage blocked: save anyway, it's only a little extra traffic.
   }
