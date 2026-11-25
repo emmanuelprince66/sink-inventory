@@ -15,6 +15,7 @@ import moment from "moment";
 import { useState } from "react";
 import RejectTransferDialog from "../approvals/RejectTransferDialog";
 import { canCurrentUserApprove } from "@/types/expense-governance";
+import { EntryTypeBadge } from "@/components/app/EntryType";
 import {
   getCategoryMeta,
   getDecidedBy,
@@ -145,8 +146,9 @@ const TransactionDetailsModal = ({
                 <p className="text-[11px] font-bold uppercase tracking-wider text-grey-3">
                   Category
                 </p>
-                <p className="text-sm font-bold text-grey-1 mt-0.5">
+                <p className="text-sm font-bold text-grey-1 mt-0.5 flex flex-wrap items-center gap-1.5">
                   {categoryLabel}
+                  <EntryTypeBadge value={transaction.entry_type} />
                 </p>
                 <p className="text-2xl sm:text-3xl font-bold text-grey-1 mt-2">
                   {formatToNaira(transaction.amount)}

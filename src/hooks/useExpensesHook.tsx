@@ -18,24 +18,69 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useToast } from "./toast/useToast";
 import { useDebounce } from "./useDebounce";
+import { entryTypeOf } from "@/types/expense-governance";
 
-const addExpenseSchema = z.object({
-  name: z.string().min(1, "Supply name is required"),
-  category_id: z.string().min(1, "Category  is required"),
-  amount: z.string().min(1, "Amount is required"),
-  date: z.string().min(1, "Date is required"),
-  note: z.string().optional(),
+const ENTRY_TYPE_VALUES = ["EXPENSE", "PURCHASE", "TRANSFER"] as const;
+
+/** Every line needs a category, except on a TRANSFER. */
+const requireCategory = (
+  entryType: string,
+  categoryId: string | undefined,
+  context: z.RefinementCtx,
+  path: (string | number)[],
+) => {
+  if (entryType !== "TRANSFER" && !categoryId) {
+    context.addIssue({ code: "custom", message: "Category  is required", path });
+  }
+};
+
+const expenseLineSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  category_id: z.string(),
+  amount: z
+    .string()
+    .min(1, "Amount is required")
+    .refine((value) => Number(value) > 0, "Enter an amount above zero"),
 });
+
+/**
+ * One or more lines logged together, sharing a type, date and note. A single
+ * line goes up as a plain entry; several go up as the bulk body.
+ */
+const addExpenseSchema = z
+  .object({
+    entry_type: z.enum(ENTRY_TYPE_VALUES),
+    items: z.array(expenseLineSchema).min(1),
+    date: z.string().min(1, "Date is required"),
+    note: z.string().optional(),
+  })
+  .superRefine((values, context) => {
+    values.items.forEach((line, index) =>
+      requireCategory(values.entry_type, line.category_id, context, [
+        "items",
+        index,
+        "category_id",
+      ]),
+    );
+  });
 
 export type AddExpenseFormValues = z.infer<typeof addExpenseSchema>;
 
-const editExpenseSchema = z.object({
-  name: z.string().min(1, "Supply name is required"),
-  category_id: z.string().min(1, "Category  is required"),
-  amount: z.string().min(1, "Amount is required"),
-  date: z.string().min(1, "Date is required"),
-  note: z.string().optional(),
-});
+/** Editing also reclassifies: entry_type and category_id go up with the edit. */
+const editExpenseSchema = z
+  .object({
+    entry_type: z.enum(ENTRY_TYPE_VALUES),
+    name: z.string().min(1, "Supply name is required"),
+    category_id: z.string(),
+    amount: z.string().min(1, "Amount is required"),
+    date: z.string().min(1, "Date is required"),
+    note: z.string().optional(),
+  })
+  .superRefine((values, context) =>
+    requireCategory(values.entry_type, values.category_id, context, [
+      "category_id",
+    ]),
+  );
 
 export type editExpenseFormValues = z.infer<typeof editExpenseSchema>;
 
@@ -94,7 +139,21 @@ export const useExpensesHook = ({
   // console.log("ExpenseData----333", ExpenseData);
 
   const { mutate: editExpense, isPending: editExpenseLoading } =
-    useEditExpenseMutation();
+    useEditExpenseMutation({
+      // A reclassified entry moves between the Expense and Purchase cards, so
+      // every list and the single read are dropped, not just this screen.
+      // (Passing onSuccess replaces the mutation's own, toast included.)
+      onSuccess: () => {
+        showToast("Expense updated successfully", "success");
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.expenses.getAllExpenses],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [queryKey.expenses.getTransactions],
+        });
+        ExpensesDataRefetch();
+      },
+    });
 
   const { mutate: createExpenses, isPending: createExpensesLoading } =
     useCreateExpensesMutation({
@@ -115,9 +174,8 @@ export const useExpensesHook = ({
   const form = useForm<AddExpenseFormValues>({
     resolver: zodResolver(addExpenseSchema),
     defaultValues: {
-      name: "",
-      category_id: "",
-      amount: "",
+      entry_type: "EXPENSE",
+      items: [{ name: "", category_id: "", amount: "" }],
       date: "",
       note: "",
     },
@@ -126,6 +184,7 @@ export const useExpensesHook = ({
   const editForm = useForm<editExpenseFormValues>({
     resolver: zodResolver(editExpenseSchema),
     defaultValues: {
+      entry_type: "EXPENSE",
       name: "",
       category_id: "",
       amount: "",
@@ -143,10 +202,18 @@ export const useExpensesHook = ({
         handleOpenNotSubscribeModal?.();
         return;
       }
-      const amount = Number(values.amount);
-      if (isNaN(amount)) {
-        throw new Error("Amount must be a valid number");
-      }
+      const lines = values.items.map((line) => {
+        const amount = Number(line.amount);
+        if (isNaN(amount)) {
+          throw new Error("Amount must be a valid number");
+        }
+        return {
+          name: line.name.trim(),
+          amount,
+          // A transfer may go up without one.
+          ...(line.category_id ? { category_id: line.category_id } : {}),
+        };
+      });
 
       // Format date using moment
       let formattedDate: string;
@@ -161,26 +228,18 @@ export const useExpensesHook = ({
         throw new Error("Date is required");
       }
 
-      // Create payload
-      const payload: {
-        name: string;
-        category_id: string | number;
-        amount: number;
-        date: string;
-        note?: string;
-      } = {
-        name: values.name,
-        category_id: values.category_id,
-        amount: amount,
+      // One line goes up flat; several go up as the bulk body, sharing the
+      // type, date and note.
+      const shared = {
+        entry_type: values.entry_type,
         date: formattedDate,
+        ...(values.note?.trim() ? { note: values.note.trim() } : {}),
       };
+      const payload =
+        lines.length === 1
+          ? { ...shared, ...lines[0] }
+          : { ...shared, items: lines };
 
-      // Only add note if it exists and isn't empty
-      if (values.note?.trim()) {
-        payload.note = values.note.trim();
-      }
-
-      console.log("Valid payload:", payload);
       createExpenses({ payload, businessId: business_id });
     } catch (error) {
       console.error("Validation error:", error);
@@ -211,16 +270,18 @@ export const useExpensesHook = ({
 
       // Create payload
       const payload: {
+        entry_type: string;
         name: string;
-        category_id: string;
+        category_id?: string;
         amount: number;
         date: string;
         note?: string;
       } = {
+        entry_type: values.entry_type,
         name: values.name,
-        category_id: values.category_id,
         amount: amount,
         date: formattedDate,
+        ...(values.category_id ? { category_id: values.category_id } : {}),
       };
 
       // Only add note if it exists and isn't empty
@@ -282,6 +343,7 @@ export const useExpensesHook = ({
   useEffect(() => {
     if (expenseId && ExpenseData && !ExpenseDataLoading) {
       const initialValues = {
+        entry_type: entryTypeOf(ExpenseData?.data?.entry_type),
         name: ExpenseData?.data?.name || "",
         category_id: ExpenseData?.data?.category?.id || "",
         amount: ExpenseData?.data?.amount?.toString() || "",

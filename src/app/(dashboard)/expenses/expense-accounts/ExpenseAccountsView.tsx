@@ -1,6 +1,7 @@
 "use client";
 
 import { useFetchExpensesQuery } from "@/api/expenses/fetch-expenses";
+import { entryTypeOf } from "@/types/expense-governance";
 import { CardGridSkeleton } from "@/components/app/CardGridSkeleton";
 import { SearchInput } from "@/components/app/SearchInput";
 import {
@@ -134,6 +135,9 @@ const ExpenseAccountsView = ({
       limit: 200,
       start_date,
       end_date,
+      // Every type, so a category used only for stock still gets a card;
+      // the totals below keep expenses and purchases apart.
+      entry_type: "ALL",
       search: debouncedCategorySearch || undefined,
       category: categoryFilter !== ALL_CATEGORIES ? categoryFilter : undefined,
     },
@@ -146,6 +150,8 @@ const ExpenseAccountsView = ({
       ExpenseCategory & {
         total: number;
         count: number;
+        purchased: number;
+        purchaseCount: number;
         latestExpenseName?: string;
         latestDate?: string;
       }
@@ -158,16 +164,24 @@ const ExpenseAccountsView = ({
         name,
         total: 0,
         count: 0,
+        purchased: 0,
+        purchaseCount: 0,
         latestExpenseName: undefined,
         latestDate: undefined,
       };
       // Track the most recently dated expense in this category so the card
       // can show what it was actually for, not just a bare count.
       const isNewer = !prev.latestDate || (item.date && item.date >= prev.latestDate);
+      // Only expenses count toward spend and the budget bar; purchases are
+      // shown beside them, and transfers count toward neither.
+      const type = entryTypeOf(item.entry_type);
+      const value = Number(item.amount) || 0;
       map.set(id, {
         ...prev,
-        total: prev.total + (item.amount || 0),
-        count: prev.count + 1,
+        total: prev.total + (type === "EXPENSE" ? value : 0),
+        count: prev.count + (type === "EXPENSE" ? 1 : 0),
+        purchased: prev.purchased + (type === "PURCHASE" ? value : 0),
+        purchaseCount: prev.purchaseCount + (type === "PURCHASE" ? 1 : 0),
         latestExpenseName: isNewer ? item.name || prev.latestExpenseName : prev.latestExpenseName,
         latestDate: isNewer ? item.date || prev.latestDate : prev.latestDate,
       });
@@ -281,6 +295,8 @@ const ExpenseAccountsView = ({
                 stats={{
                   total: c.total,
                   count: c.count,
+                  purchased: c.purchased,
+                  purchaseCount: c.purchaseCount,
                   latestExpenseName: c.latestExpenseName,
                 }}
                 onViewMore={() => goToCategory(c.id)}
@@ -314,7 +330,13 @@ const ExpenseCard = ({
 }: {
   category: ExpenseCategory;
   budget?: Budget;
-  stats?: { total: number; count: number; latestExpenseName?: string };
+  stats?: {
+    total: number;
+    count: number;
+    purchased?: number;
+    purchaseCount?: number;
+    latestExpenseName?: string;
+  };
   onViewMore: () => void;
 }) => {
   const meta = getCategoryMeta(category.name);
@@ -383,7 +405,9 @@ const ExpenseCard = ({
           )}
         </div>
         <p className="text-[11px] text-grey-3 mt-0.5">
-          {count} {count === 1 ? "transaction" : "transactions"}
+          {count} {count === 1 ? "expense" : "expenses"}
+          {(stats?.purchaseCount ?? 0) > 0 &&
+            ` · ${formatToNaira(stats?.purchased ?? 0)} purchased`}
         </p>
         {latestExpenseName && (
           <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-grey-6 px-2 py-1 text-[11px] font-semibold text-grey-2 truncate max-w-full w-fit">

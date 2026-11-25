@@ -25,6 +25,8 @@ import { formatToNaira } from "@/utils/formatMoney";
 import { Check, ChevronRight, Copy, FilterX, Inbox, X } from "lucide-react";
 import moment from "moment";
 import { useEffect, useState } from "react";
+import { EntryTypeBadge } from "@/components/app/EntryType";
+import { ENTRY_TYPES, type EntryFilter } from "@/types/expense-governance";
 import { DateRange } from "react-day-picker";
 import RejectTransferDialog from "../approvals/RejectTransferDialog";
 import { canCurrentUserApprove } from "@/types/expense-governance";
@@ -62,6 +64,7 @@ const ExpenseTransactionsView = ({
   const business_id = useBusinessStore((state) => state.business_id);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>(initialCategory || ALL);
+  const [entryType, setEntryType] = useState<EntryFilter>("ALL");
   // The row a decision is being taken on. Held as the row rather than a
   // boolean so the dialogs can name what is being decided.
   const [approving, setApproving] = useState<any | null>(null);
@@ -125,6 +128,7 @@ const ExpenseTransactionsView = ({
       page,
       limit: PAGE_SIZE,
       category: category !== ALL ? category : undefined,
+      entry_type: entryType,
       start_date: dateRange?.from
         ? moment(dateRange.from).format("YYYY-MM-DD")
         : undefined,
@@ -138,11 +142,12 @@ const ExpenseTransactionsView = ({
   const raw = ExpensesData?.data;
   const { items, total, pages } = unwrapPaginated(raw);
 
-  const filtersActive = !!search || category !== ALL;
+  const filtersActive = !!search || category !== ALL || entryType !== "ALL";
 
   const resetFilters = () => {
     setSearch("");
     setCategory(ALL);
+    setEntryType("ALL");
     setPage(1);
   };
 
@@ -176,6 +181,25 @@ const ExpenseTransactionsView = ({
               {categories.map((c) => (
                 <SelectItem key={c.id} value={c.id}>
                   {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={entryType}
+            onValueChange={(v) => {
+              setEntryType(v as EntryFilter);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="h-10 min-h-0 font-bold text-grey-2 md:w-[160px]">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All types</SelectItem>
+              {ENTRY_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}s
                 </SelectItem>
               ))}
             </SelectContent>
@@ -303,6 +327,7 @@ const ExpenseTransactionsView = ({
                             <span className="text-sm text-grey-2">
                               {categoryLabel}
                             </span>
+                            <EntryTypeBadge value={t.entry_type} />
                           </div>
                         </td>
                         <td className="py-3 px-4 text-sm text-grey-2">
@@ -416,8 +441,11 @@ const ExpenseTransactionsView = ({
                         <CatIcon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-sm font-bold text-grey-1 truncate block">
-                          {getExpenseReference(t)}
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-sm font-bold text-grey-1 truncate">
+                            {getExpenseReference(t)}
+                          </span>
+                          <EntryTypeBadge value={t.entry_type} />
                         </span>
                         <p className="text-[11px] text-grey-3 truncate mt-0.5">
                           {categoryLabel} · {getRefLabel(t.added_by)}

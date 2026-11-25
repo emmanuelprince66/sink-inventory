@@ -54,8 +54,9 @@ export async function POST(
       );
     }
 
-    // Validate required fields
-    if (!payload.name) {
+    // One entry carries a name; a bulk entry carries its names on each item.
+    const isBulk = Array.isArray(payload.items) && payload.items.length > 0;
+    if (!payload.name && !isBulk) {
       return NextResponse.json(
         {
           success: false,

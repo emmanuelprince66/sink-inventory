@@ -99,6 +99,9 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
 
   const spent = summary?.spent ?? 0;
   const transactionCount = summary?.transaction_count ?? total;
+  // Stock purchases in this category: tracked apart from spend and budget.
+  const purchased = Number(summary?.purchased ?? 0);
+  const purchaseCount = Number(summary?.purchase_count ?? 0);
   const budgetAmount = budgetObj?.total_budget_amount ?? 0;
   const durationMonths = budgetObj?.duration_months ?? 0;
   const monthlyBudget =
@@ -182,7 +185,7 @@ const CategoryDetail = ({ categoryId }: CategoryDetailProps) => {
               value={formatToNaira(spent)}
               icon={<TrendingDown className="w-[15px] h-[15px]" />}
               tone="error"
-              subtitle={`${transactionCount} ${transactionCount === 1 ? "transaction" : "transactions"}`}
+              subtitle={`${transactionCount} ${transactionCount === 1 ? "expense" : "expenses"}${purchaseCount > 0 ? ` · ${formatToNaira(purchased)} purchased` : ""}`}
             />
             <StatTile
               label="Remaining"

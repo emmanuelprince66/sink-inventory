@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   approvalBlockReason,
   canCurrentUserApprove,
+  entryTypeLabel,
   type ExpenseTransfer,
   isPending,
 } from "@/types/expense-governance";
@@ -75,6 +76,9 @@ const TransferDetailsModal = ({
 
   const amount = Number(transfer.amount ?? 0);
   const charges = Number(transfer.charges ?? 0);
+  const stampDuty = Number(transfer.stamp_duty ?? 0);
+  // The backend's own total when it sends one.
+  const totalDebit = Number(transfer.total_debit ?? 0) || amount + charges + stampDuty;
   const pending = isPending(transfer.status);
   const actionable =
     pending && canCurrentUserApprove(transfer.can_current_user_approve);
@@ -152,9 +156,15 @@ const TransferDetailsModal = ({
               <span>{formatToNaira(amount)}</span>
               <span className="text-grey-4">+</span>
               <span>{formatToNaira(charges)} bank charge</span>
+              {stampDuty > 0 && (
+                <>
+                  <span className="text-grey-4">+</span>
+                  <span>{formatToNaira(stampDuty)} stamp duty</span>
+                </>
+              )}
               <ArrowRight className="h-3 w-3 text-grey-4" />
               <span className="font-extrabold text-grey-1">
-                {formatToNaira(amount + charges)} leaves the wallet
+                {formatToNaira(totalDebit)} leaves the wallet
               </span>
             </div>
           )}
@@ -180,10 +190,44 @@ const TransferDetailsModal = ({
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
-            label="Category"
-            value={transfer.category_name || "Uncategorised"}
-          />
+          <Field label="Type" value={entryTypeLabel(transfer.entry_type)} />
+          {/* A split payout lists each category's share; otherwise its one
+              category. */}
+          {Array.isArray(transfer.items) && transfer.items.length > 0 ? (
+            <Field
+              className="sm:col-span-2"
+              label="Split across categories"
+              value={
+                <span className="flex flex-col gap-1">
+                  {transfer.items.map((line: any, index: number) => (
+                    <span
+                      key={line.id ?? index}
+                      className="flex justify-between gap-3"
+                    >
+                      <span>
+                        {[line.category_name, line.name]
+                          .filter(Boolean)
+                          .join(" · ") || "Category"}
+                      </span>
+                      <span className="font-bold">
+                        {formatToNaira(Number(line.amount) || 0)}
+                      </span>
+                    </span>
+                  ))}
+                </span>
+              }
+            />
+          ) : (
+            <Field
+              label="Category"
+              value={
+                transfer.category_name ||
+                (transfer.entry_type === "TRANSFER"
+                  ? "No category"
+                  : "Uncategorised")
+              }
+            />
+          )}
           <Field
             label="Requested by"
             value={transfer.initiated_by_name || "—"}

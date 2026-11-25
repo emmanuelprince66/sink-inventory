@@ -89,6 +89,21 @@ export interface ExpenseTransfer {
   amount: string;
   /** Bank charge, worked out by the backend from the amount. */
   charges: string;
+  /** ₦50 from ₦10,000; with charges, what total_debit adds to the amount. */
+  stamp_duty?: string;
+  /** amount + charges + stamp_duty: what actually leaves the account. */
+  total_debit?: string;
+  /** EXPENSE, PURCHASE or TRANSFER. Older rows come without it. */
+  entry_type?: string;
+  /** A split payout's lines, one per category. Empty for a single category. */
+  items?: {
+    id?: string;
+    category?: string | null;
+    category_name?: string | null;
+    name?: string | null;
+    amount: string;
+    note?: string | null;
+  }[];
   category: string | null;
   category_name: string | null;
   beneficiary_account_number: string;
@@ -134,6 +149,13 @@ export interface InitiateTransferBody {
   account_number: string;
   bank_code: string;
   category_id?: string;
+  /** What the money is. Defaults to EXPENSE on the backend. */
+  entry_type?: EntryType;
+  /**
+   * One bank transfer split across categories: one fee for the total, one
+   * expense record per line. When sent, `amount` must equal their sum.
+   */
+  items?: { category_id: string; amount: string; name?: string }[];
   narration?: string;
   /** Sent for instant execution; omitted to submit for approval. */
   pin?: string;
@@ -220,10 +242,58 @@ export const presentationFor = (status?: string | null) =>
  */
 export const estimateCharges = (amount: number): number => {
   if (!Number.isFinite(amount) || amount <= 0) return 0;
-  if (amount <= 50_000) return 25;
-  if (amount < 500_000) return 50;
-  return 100;
+  if (amount < 50_000) return 50;
+  if (amount < 500_000) return 100;
+  return 500;
 };
+
+/** ₦50 stamp duty from ₦10,000 — added on top of the charge, as the backend does. */
+export const estimateStampDuty = (amount: number): number =>
+  Number.isFinite(amount) && amount >= 10_000 ? 50 : 0;
+
+/**
+ * What a money-out entry is.
+ *
+ * EXPENSE — running costs: counts toward the Expense card, budgets and profit.
+ * PURCHASE — stock and raw materials: the Purchase card only.
+ * TRANSFER — moving money between accounts: neither card, no budget, no
+ * profit, and no category needed.
+ *
+ * Rows from before entry types existed come without one; they are expenses.
+ */
+export type EntryType = "EXPENSE" | "PURCHASE" | "TRANSFER";
+export type EntryFilter = EntryType | "ALL";
+
+export const ENTRY_TYPES: readonly {
+  value: EntryType;
+  label: string;
+  hint: string;
+}[] = [
+  {
+    value: "EXPENSE",
+    label: "Expense",
+    hint: "Running costs: fuel, rent, utilities, salaries. Counts toward budgets and profit.",
+  },
+  {
+    value: "PURCHASE",
+    label: "Purchase",
+    hint: "Stock or raw materials. Tracked on the Purchases card, not as an expense.",
+  },
+  {
+    value: "TRANSFER",
+    label: "Transfer",
+    hint: "Moving money between accounts. Not an expense; a category is optional.",
+  },
+];
+
+export const entryTypeOf = (value: unknown): EntryType => {
+  const type = String(value ?? "").toUpperCase();
+  return type === "PURCHASE" || type === "TRANSFER" ? type : "EXPENSE";
+};
+
+export const entryTypeLabel = (value: unknown) =>
+  ENTRY_TYPES.find((item) => item.value === entryTypeOf(value))?.label ??
+  "Expense";
 
 /**
  * A day's allowance cannot be smaller than a single transaction's.

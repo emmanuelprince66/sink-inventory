@@ -27,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { CalendarIcon } from "lucide-react";
+import { EntryTypePicker } from "@/components/app/EntryType";
 
 const EditExpense = () => {
   const {
@@ -45,7 +46,7 @@ const EditExpense = () => {
       !ExpenseData ||
       CategoriesDataLoading ||
       !CategoriesData ||
-      (!form.formState.isDirty && !form.watch("category_id")) ? (
+      (!form.formState.isDirty && !form.watch("name")) ? (
         <div className="w-1/2 mx-auto my-4 pb-6">
           {Array.from({ length: 12 }).map((_, index) => (
             <div className="flex flex-col gap-6 items-start">
@@ -67,6 +68,17 @@ const EditExpense = () => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                {/* Changing the type reclassifies the entry: a purchase moves
+                    off the Expense card, a transfer needs no category. */}
+                <EntryTypePicker
+                  value={form.watch("entry_type")}
+                  onChange={(value) =>
+                    form.setValue("entry_type", value, {
+                      shouldDirty: true,
+                      shouldValidate: form.formState.isSubmitted,
+                    })
+                  }
+                />
                 {/* Bank Name */}
                 <FormField
                   control={form.control}
@@ -108,7 +120,11 @@ const EditExpense = () => {
 
                     return (
                       <FormItem className="flex-1 w-full bg-white">
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>
+                          {form.watch("entry_type") === "TRANSFER"
+                            ? "Category (Optional)"
+                            : "Category"}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}

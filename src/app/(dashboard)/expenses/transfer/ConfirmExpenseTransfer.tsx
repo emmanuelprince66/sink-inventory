@@ -11,7 +11,10 @@ import { useQueryClient } from "@/lib/react-query";
 import { useBusinessStore } from "@/lib/store/useBusinessStore";
 import {
   classifyPinFault,
+  entryTypeLabel,
   estimateCharges,
+  estimateStampDuty,
+  type EntryType,
   type ExpenseSettings,
   routeForAmount,
 } from "@/types/expense-governance";
@@ -65,6 +68,14 @@ const ConfirmExpenseTransfer = ({
     narration: string;
     categoryId?: string;
     categoryName?: string;
+    entryType: EntryType;
+    /** A split payout: the amount is their sum, the fee is charged once. */
+    items?: {
+      categoryId: string;
+      categoryName: string;
+      name: string;
+      amount: string;
+    }[];
   };
   onCancel: () => void;
   onDone: () => void;
@@ -83,6 +94,7 @@ const ConfirmExpenseTransfer = ({
 
   const amount = Number(details.amount) || 0;
   const charges = estimateCharges(amount);
+  const stampDuty = estimateStampDuty(amount);
 
   // The business ceiling, which binds everyone including the owner. Distinct
   // from the personal limits below: over this, the payout is refused outright
@@ -180,7 +192,18 @@ const ConfirmExpenseTransfer = ({
         account_number: details.accountNumber,
         bank_code: details.bankCode,
         pin,
-        ...(details.categoryId ? { category_id: details.categoryId } : {}),
+        entry_type: details.entryType,
+        ...(details.items?.length
+          ? {
+              items: details.items.map((line) => ({
+                category_id: line.categoryId,
+                amount: (Number(line.amount) || 0).toFixed(2),
+                ...(line.name ? { name: line.name } : {}),
+              })),
+            }
+          : details.categoryId
+            ? { category_id: details.categoryId }
+            : {}),
         ...(details.narration ? { narration: details.narration } : {}),
       },
     });
@@ -250,11 +273,22 @@ const ConfirmExpenseTransfer = ({
           />
           <Line label="Amount" value={formatToNaira(amount)} />
           <Line label="Bank charge" value={formatToNaira(charges)} />
+          {stampDuty > 0 && (
+            <Line label="Stamp duty" value={formatToNaira(stampDuty)} />
+          )}
           <Line
             label="Total from account"
-            value={formatToNaira(amount + charges)}
+            value={formatToNaira(amount + charges + stampDuty)}
             strong
           />
+          <Line label="Type" value={entryTypeLabel(details.entryType)} />
+          {details.items?.map((line, index) => (
+            <Line
+              key={index}
+              label={[line.categoryName, line.name].filter(Boolean).join(" · ")}
+              value={formatToNaira(Number(line.amount) || 0)}
+            />
+          ))}
           {details.categoryName && (
             <Line label="Category" value={details.categoryName} />
           )}
@@ -348,7 +382,7 @@ const ConfirmExpenseTransfer = ({
         description={
           expectApproval
             ? `${formatToNaira(amount)} to ${details.accountName} goes to an approver. Nothing leaves the account yet.`
-            : `${formatToNaira(amount + charges)} will leave the expense account.`
+            : `${formatToNaira(amount + charges + stampDuty)} will leave the expense account.`
         }
         actionLabel={expectApproval ? "Submit for approval" : "Send now"}
         onSubmit={(pin) => submit(pin)}

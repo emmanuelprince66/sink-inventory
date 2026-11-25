@@ -11,15 +11,20 @@ import {
   expenseAccountLabel,
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
-import { routeForAmount } from "@/types/expense-governance";
+import { routeForAmount, type EntryType } from "@/types/expense-governance";
+import { EntryTypePicker } from "@/components/app/EntryType";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowLeft, Lock, Wallet } from "lucide-react";
+import { ArrowLeft, Lock, Plus, Split, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
+
+/** One category's share of a split payout. */
+type SplitLine = { category: SelectValue; name: string; amount: string };
+const blankLine = (): SplitLine => ({ category: null, name: "", amount: "" });
 
 /**
  * Spending out of an expense account.
@@ -49,6 +54,35 @@ const ExpenseTransfer = () => {
   const [message, setMessage] = useState("");
   const [bankOptions, setBankOptions] = useState<SelectOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
+  // What the money is, and — for an expense or purchase — whether one bank
+  // transfer is split across several categories (one fee, one entry each).
+  const [entryType, setEntryType] = useState<EntryType>("EXPENSE");
+  const [split, setSplit] = useState(false);
+  const [splitLines, setSplitLines] = useState<SplitLine[]>([]);
+  const splitting = split && entryType !== "TRANSFER";
+  const splitTotal = splitLines.reduce(
+    (sum, line) => sum + (Number(line.amount) || 0),
+    0,
+  );
+  // The amount that leaves the account: the lines' sum when split.
+  const payAmount = splitting
+    ? splitTotal > 0
+      ? String(splitTotal)
+      : ""
+    : amount;
+  const updateLine = (index: number, change: Partial<SplitLine>) =>
+    setSplitLines((lines) =>
+      lines.map((line, i) => (i === index ? { ...line, ...change } : line)),
+    );
+  const startSplit = () => {
+    // What's already typed becomes the first line.
+    setSplitLines([{ category, name: "", amount }, blankLine()]);
+    setSplit(true);
+  };
+  const stopSplit = () => {
+    setSplit(false);
+    setSplitLines([]);
+  };
 
   // The balance comes from here rather than from the transfer hook's own
   // transaction query, so the number on this screen is the same one the
@@ -117,7 +151,17 @@ const ExpenseTransfer = () => {
       return;
     }
 
-    if (!recipientBank || !accountNumber || !amount) {
+    if (splitting) {
+      const incomplete = splitLines.some(
+        (line) => !(line.category as any)?.value || !(Number(line.amount) > 0),
+      );
+      if (incomplete) {
+        setMessage("Give every split line a category and an amount.");
+        return;
+      }
+    }
+
+    if (!recipientBank || !accountNumber || !payAmount) {
       setMessage("Please fill in all required fields.");
       return;
     }
@@ -145,12 +189,12 @@ const ExpenseTransfer = () => {
       return;
     }
 
-    if (parseFloat(amount) <= 0) {
+    if (parseFloat(payAmount) <= 0) {
       setMessage("Please enter a valid amount greater than zero.");
       return;
     }
 
-    if (parseFloat(amount) > balance) {
+    if (parseFloat(payAmount) > balance) {
       setMessage("Insufficient balance in this expense account.");
       return;
     }
@@ -169,7 +213,7 @@ const ExpenseTransfer = () => {
      */
     if (
       routeForAmount({
-        amount: parseFloat(amount),
+        amount: parseFloat(payAmount),
         canApprove,
         transferCap,
         approvalCap,
@@ -202,13 +246,24 @@ const ExpenseTransfer = () => {
           bankName: String((recipientBank as any)?.label ?? ""),
           accountNumber,
           accountName: beneficiaryInfo?.data?.name || accountName,
-          amount,
+          amount: payAmount,
           narration,
-          categoryId: (category as any)?.value
-            ? String((category as any).value)
-            : undefined,
-          categoryName: (category as any)?.label
-            ? String((category as any).label)
+          entryType,
+          categoryId:
+            !splitting && (category as any)?.value
+              ? String((category as any).value)
+              : undefined,
+          categoryName:
+            !splitting && (category as any)?.label
+              ? String((category as any).label)
+              : undefined,
+          items: splitting
+            ? splitLines.map((line) => ({
+                categoryId: String((line.category as any)?.value ?? ""),
+                categoryName: String((line.category as any)?.label ?? ""),
+                name: line.name.trim(),
+                amount: line.amount,
+              }))
             : undefined,
         }}
         onCancel={() => setShowConfirmTransfer(false)}
@@ -220,6 +275,8 @@ const ExpenseTransfer = () => {
           setAccountName("");
           setAmount("");
           setNarration("");
+          setEntryType("EXPENSE");
+          stopSplit();
         }}
       />
     );
@@ -372,20 +429,34 @@ const ExpenseTransfer = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <CustomSelect
-                    label="Category (Optional)"
-                    options={categoryOptions}
-                    value={category}
-                    onChange={setCategory}
-                    isLoading={CategoriesDataLoading}
-                    placeholder="Select a category..."
-                  />
-                  <p className="text-xs text-warning-1 mt-1">
-                    Attach an expense category so this shows up under the right
-                    heading in your reports.
-                  </p>
-                </div>
+                <EntryTypePicker value={entryType} onChange={setEntryType} />
+
+                {!splitting && (
+                  <div className="space-y-2">
+                    <CustomSelect
+                      label="Category (Optional)"
+                      options={categoryOptions}
+                      value={category}
+                      onChange={setCategory}
+                      isLoading={CategoriesDataLoading}
+                      placeholder="Select a category..."
+                    />
+                    <p className="text-xs text-warning-1 mt-1">
+                      Attach a category so this shows up under the right
+                      heading in your reports.
+                    </p>
+                    {entryType !== "TRANSFER" && (
+                      <button
+                        type="button"
+                        onClick={startSplit}
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-green-300 hover:underline cursor-pointer"
+                      >
+                        <Split className="h-3.5 w-3.5" />
+                        Split across categories
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -407,7 +478,101 @@ const ExpenseTransfer = () => {
                   />
                 </div>
 
+                {/* One bank transfer, one fee for the total, one entry per
+                    line under its own category. */}
+                {splitting && (
+                  <div className="space-y-3 rounded-xl border border-grey-5 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold text-grey-1">
+                        Split across categories
+                      </p>
+                      <button
+                        type="button"
+                        onClick={stopSplit}
+                        className="text-xs font-bold text-grey-3 hover:text-grey-1 cursor-pointer"
+                      >
+                        Use one category
+                      </button>
+                    </div>
+                    {splitLines.map((line, index) => (
+                      <div
+                        key={index}
+                        className="space-y-3 border-t border-grey-5 pt-3 first:border-0 first:pt-0"
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-bold uppercase tracking-wide text-grey-3">
+                            Line {index + 1}
+                          </p>
+                          {splitLines.length > 2 && (
+                            <button
+                              type="button"
+                              aria-label={`Remove line ${index + 1}`}
+                              onClick={() =>
+                                setSplitLines((lines) =>
+                                  lines.filter((_, i) => i !== index),
+                                )
+                              }
+                              className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                        <CustomSelect
+                          label="Category"
+                          options={categoryOptions}
+                          value={line.category}
+                          onChange={(value) =>
+                            updateLine(index, { category: value })
+                          }
+                          isLoading={CategoriesDataLoading}
+                          placeholder="Select a category..."
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Input
+                            type="text"
+                            aria-label={`Line ${index + 1} description`}
+                            placeholder="Description (optional), e.g. Flour"
+                            value={line.name}
+                            onChange={(e) =>
+                              updateLine(index, { name: e.target.value })
+                            }
+                          />
+                          <Input
+                            type="number"
+                            aria-label={`Line ${index + 1} amount`}
+                            placeholder="Amount (NGN)"
+                            value={line.amount}
+                            onChange={(e) =>
+                              updateLine(index, { amount: e.target.value })
+                            }
+                            min="0.01"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between gap-3 border-t border-grey-5 pt-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSplitLines((lines) => [...lines, blankLine()])
+                        }
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary-green-300/60 px-3 py-2 text-xs font-bold text-primary-green-300 hover:bg-secondary-6 cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add line
+                      </button>
+                      <p className="text-sm font-extrabold text-grey-1">
+                        Total {formatToNaira(splitTotal)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
+                  {!splitting && (
+                    <>
                   <label
                     htmlFor="amount"
                     className="block text-sm font-medium text-grey-2"
@@ -424,6 +589,8 @@ const ExpenseTransfer = () => {
                     step="0.01"
                     required
                   />
+                    </>
+                  )}
                   {/* Stated up front rather than only at the confirm step, and
                       worded by tier: the same limit routes an approver's payout
                       to a second signature, but refuses a non-approver's. */}

@@ -39,6 +39,7 @@ import {
   FileDown,
   ClipboardCheck,
   PiggyBank,
+  Package,
   Plus,
   TrendingDown,
   TrendingUp,
@@ -60,6 +61,7 @@ type ExpenseTab = "accounts" | "transactions";
 const OVERVIEW_CARD_STYLES = {
   error: { bg: "bg-error-2", iconColor: "text-error-1" },
   success: { bg: "bg-success-2", iconColor: "text-success-1" },
+  neutral: { bg: "bg-secondary-6", iconColor: "text-primary-green-300" },
 } as const;
 
 const CustomExpenseCard = ({
@@ -72,7 +74,8 @@ const CustomExpenseCard = ({
   tone: keyof typeof OVERVIEW_CARD_STYLES;
 }) => {
   const style = OVERVIEW_CARD_STYLES[tone];
-  const Icon = tone === "success" ? TrendingUp : TrendingDown;
+  const Icon =
+    tone === "neutral" ? Package : tone === "success" ? TrendingUp : TrendingDown;
   return (
     <CustomCard
       className={cn(
@@ -413,11 +416,14 @@ const Expenses = () => {
 
           {ExpensesLoading || !ExpensesData ? (
             <StatCardSkeletonRow
-              count={3}
-              gridClassName="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
+              count={4}
+              gridClassName="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4"
             />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            // Expenses and purchases are separate totals from the backend:
+            // stock bought for resale is not an operating cost, so it never
+            // counts toward the expense figures, budgets or profit.
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
               <CustomExpenseCard
                 title="Total Expenses"
                 tone="error"
@@ -429,6 +435,11 @@ const Expenses = () => {
                 title="Spent This Month"
                 tone="success"
                 amount={formatToNaira(accountSummary?.spent_this_month ?? 0)}
+              />
+              <CustomExpenseCard
+                title="Purchases This Month"
+                tone="neutral"
+                amount={formatToNaira(accountSummary?.purchased_this_month ?? 0)}
               />
               <ExpenseAccountBalanceCard
                 // The selected account's own figures, so the card agrees with

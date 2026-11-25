@@ -56,9 +56,15 @@ export async function POST(
       );
     }
 
-    const insert = {
-      name: payload.name,
-    };
+    // Only the fields the PATCH accepts. entry_type and category_id together
+    // are how an entry is reclassified (expense / purchase / transfer).
+    const EDITABLE = ["name", "amount", "category_id", "date", "note", "entry_type"];
+    const insert = Object.fromEntries(
+      EDITABLE.filter((key) => payload[key] !== undefined).map((key) => [
+        key,
+        payload[key],
+      ]),
+    );
 
     console.log("inset", insert);
 

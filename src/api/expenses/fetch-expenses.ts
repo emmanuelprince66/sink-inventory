@@ -9,6 +9,8 @@ type fetchSalesExpensesProps = {
   id: string;
   search?: string;
   category?: string;
+  /** EXPENSE | PURCHASE | TRANSFER | ALL. */
+  entry_type?: string;
   start_date?: string;
   end_date?: string;
   page?: number;
@@ -21,6 +23,7 @@ export const fetchExpenses = async ({
   start_date = "",
   end_date = "",
   category = "",
+  entry_type = "",
   page = 1,
   limit = 30,
 }: fetchSalesExpensesProps) => {
@@ -30,6 +33,7 @@ export const fetchExpenses = async ({
   if (start_date) url.searchParams.append("start_date", start_date);
   if (end_date) url.searchParams.append("end_date", end_date);
   if (category) url.searchParams.append("category", category);
+  if (entry_type) url.searchParams.append("entry_type", entry_type);
   url.searchParams.append("page", page.toString());
   url.searchParams.append("limit", limit.toString());
 
@@ -75,6 +79,7 @@ export const useFetchExpensesQuery = ({
       params.start_date,
       params.end_date,
       params.category,
+      params.entry_type,
       params.limit,
       params.page,
     ],

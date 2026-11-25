@@ -26,7 +26,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PopoverContent } from "@radix-ui/react-popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus, X } from "lucide-react";
+import { useFieldArray, useWatch } from "react-hook-form";
+import { EntryTypePicker } from "@/components/app/EntryType";
+import { formatToNaira } from "@/utils/formatMoney";
 const AddExpenses = ({
   closeModal,
   handleOpenNotSubscribeModal,
@@ -41,75 +44,149 @@ const AddExpenses = ({
     CategoriesData,
     CategoriesDataLoading,
   } = useExpensesHook({ closeModal, handleOpenNotSubscribeModal });
+  const lines = useFieldArray({ control: form.control, name: "items" });
+  const entryType = useWatch({ control: form.control, name: "entry_type" });
+  const items = useWatch({ control: form.control, name: "items" });
+  const several = lines.fields.length > 1;
+  const total = (items ?? []).reduce(
+    (sum, line) => sum + (Number(line?.amount) || 0),
+    0,
+  );
   return (
     <>
       <div className="flex h-full w-full items-center justify-center">
         <div className="w-full max-w-xl bg-white p-4 rounded shadow-md">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Bank Name */}
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel> Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter expense name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              <EntryTypePicker
+                value={entryType}
+                onChange={(value) =>
+                  form.setValue("entry_type", value, {
+                    shouldValidate: form.formState.isSubmitted,
+                  })
+                }
               />
 
-              {/* Account Number */}
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter amount" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {lines.fields.map((line, index) => (
+                <div
+                  key={line.id}
+                  className={cn(
+                    "space-y-4",
+                    several && "rounded-xl border border-grey-5 p-3",
+                  )}
+                >
+                  {several && (
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold uppercase tracking-wide text-grey-3">
+                        Item {index + 1}
+                      </p>
+                      <button
+                        type="button"
+                        aria-label={`Remove item ${index + 1}`}
+                        onClick={() => lines.remove(index)}
+                        className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
 
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem className="flex-1 w-full bg-white">
-                    <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full border border-green-300">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white cursor-pointer border border-green-100">
-                        {!CategoriesDataLoading
-                          ? CategoriesData?.data?.map((category: any) => (
-                              <SelectItem
-                                key={category.id}
-                                value={category.id}
-                                className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
-                              >
-                                {category.name}
-                              </SelectItem>
-                            ))
-                          : "Loading..."}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {entryType === "PURCHASE" ? "Item or supplier" : "Name"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={
+                              entryType === "PURCHASE"
+                                ? "e.g. Flour, 20 bags"
+                                : "Enter expense name"
+                            }
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.amount`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Amount</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter amount" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.category_id`}
+                    render={({ field }) => (
+                      <FormItem className="flex-1 w-full bg-white">
+                        <FormLabel>
+                          {entryType === "TRANSFER"
+                            ? "Category (Optional)"
+                            : "Category"}
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full border border-green-300">
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white cursor-pointer border border-green-100">
+                            {!CategoriesDataLoading
+                              ? CategoriesData?.data?.map((category: any) => (
+                                  <SelectItem
+                                    key={category.id}
+                                    value={category.id}
+                                    className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                                  >
+                                    {category.name}
+                                  </SelectItem>
+                                ))
+                              : "Loading..."}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              ))}
+
+              {/* Several items at once, e.g. fuel and data on the same day.
+                  Each becomes its own entry under its own category. */}
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() =>
+                    lines.append({ name: "", category_id: "", amount: "" })
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary-green-300/60 px-3 py-2 text-xs font-bold text-primary-green-300 hover:bg-secondary-6 cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Add another item
+                </button>
+                {several && (
+                  <p className="text-sm font-bold text-grey-1">
+                    Total {formatToNaira(total)}
+                  </p>
                 )}
-              />
+              </div>
 
               <FormField
                 control={form.control}
@@ -186,7 +263,13 @@ const AddExpenses = ({
                 type="submit"
                 className="w-full h-[48px] mt-6"
               >
-                {createExpensesLoading ? <Spinner /> : "Add Expense"}
+                {createExpensesLoading ? (
+                  <Spinner />
+                ) : several ? (
+                  `Add ${lines.fields.length} items`
+                ) : (
+                  `Add ${entryType === "PURCHASE" ? "Purchase" : entryType === "TRANSFER" ? "Transfer" : "Expense"}`
+                )}
               </Button>
             </form>
           </Form>
