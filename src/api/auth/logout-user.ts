@@ -1,5 +1,6 @@
 "use client";
 
+import { clearOfflinePages } from "@/lib/offline/appShell";
 import { queryKey } from "@/constants/query-key";
 import { useToast } from "@/hooks/toast/useToast";
 import { useUserStore } from "@/lib/store/user-store";
@@ -42,6 +43,7 @@ export const useLogoutMutation = (options?: LogoutOptions) => {
    * hard reload. `clearSession()` also wipes the business-scoped stores.
    */
   const teardown = () => {
+    clearOfflinePages();
     clearSession();
     queryClient.clear();
     router.push(options?.redirectPath || "/login");

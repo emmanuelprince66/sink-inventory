@@ -32,6 +32,15 @@ const nextConfig = {
           },
         ],
       },
+      // Loaded into the service worker: always re-checked, so a deploy reaches
+      // tills on their next visit.
+      {
+        source: "/offline-sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
       // Service worker headers
       {
         source: "/firebase-messaging-sw.js",

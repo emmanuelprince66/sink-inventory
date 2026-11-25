@@ -1,6 +1,9 @@
 importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"
 );
+// Offline POS: saves the POS page and its files so it opens with no
+// connection. Same worker on purpose; see the top of offline-sw.js.
+importScripts("/offline-sw.js");
 importScripts(
   "https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"
 );

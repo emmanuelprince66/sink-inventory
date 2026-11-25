@@ -1,5 +1,6 @@
 "use client";
 
+import { saveOfflinePage } from "@/lib/offline/appShell";
 import { useCan } from "@/hooks/useCan";
 import { isUnsellable, productStockView, withQueuedStock } from "@/utils/stock";
 import { CustomModal } from "@/components/app/CustomModal";
@@ -278,6 +279,11 @@ const Pos: React.FC = () => {
 
   // Presales and self checkout orders are looked up on the server.
   const isOnline = !usePosOffline();
+  // Keep this page on the device so a refresh with no connection still opens
+  // it (see lib/offline/appShell.ts).
+  useEffect(() => {
+    if (isOnline) saveOfflinePage("/pos");
+  }, [isOnline]);
 
   // Saves products (and customers, for roles with a sale to attach one to) on
   // this device in the background, for search and scanning offline.

@@ -1,6 +1,8 @@
 // app/app/layout.tsx
 "use client";
 
+import { setUpOfflineShell } from "@/lib/offline/appShell";
+import { useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RouteGuard } from "../auth/route-guard";
 import { NotificationModalProvider } from "../providers/notification-modal-provider";
@@ -13,6 +15,11 @@ import PermissionsSync from "./PermissionsSync";
 import { TopBar } from "./TopBar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  // Once per dashboard load: the worker that lets the POS open offline.
+  useEffect(() => {
+    setUpOfflineShell();
+  }, []);
+
   return (
     <SidebarProvider>
       <NotificationModalProvider />
