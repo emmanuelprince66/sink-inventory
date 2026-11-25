@@ -9,6 +9,8 @@
  * offline even for someone who never turned notifications on.
  */
 
+import { clearSnapshots } from "./posSnapshot";
+
 const SW_URL = "/firebase-messaging-sw.js";
 const WARMED_KEY = "sync360-pos-shell-saved-at";
 /** A POS left open all day re-saves now and then, to pick up a new deploy. */
@@ -74,7 +76,9 @@ export const saveOfflinePage = async (path = "/pos") => {
  * mustn't open for the next one.
  */
 export const clearOfflinePages = async () => {
-  if (typeof window === "undefined" || !("caches" in window)) return;
+  if (typeof window === "undefined") return;
+  clearSnapshots();
+  if (!("caches" in window)) return;
   try {
     sessionStorage.removeItem(WARMED_KEY);
   } catch {

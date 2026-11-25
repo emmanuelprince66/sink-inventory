@@ -1,4 +1,6 @@
 import { canBeOverridden, isOverridePinInvalid } from "@/api/user/override-pin";
+import { useEffect } from "react";
+import { readSnapshot, saveSnapshot } from "@/lib/offline/posSnapshot";
 import { useFetchAttendants } from "@/api/attendants/get-all-attendants";
 import { useFetchBankQuery } from "@/api/bank/fetch-bank";
 import { useFetchBusinessById } from "@/api/business/get-business-by-id";
@@ -57,10 +59,19 @@ export const useCheckoutHook = ({
   const setSaleCompleted = useCartStore((state) => state.setSaleCompleted);
 
   const {
-    data: BankData,
+    data: ServerBankData,
     isLoading: BankDataLoading,
     error: BankError,
   } = useFetchBankQuery(business_id);
+
+  // Banks and attendants are kept on this device as they arrive, so a refresh
+  // with no connection still offers them at checkout instead of "You haven't
+  // added any bank accounts yet".
+  useEffect(() => {
+    if (ServerBankData) saveSnapshot("banks", business_id, ServerBankData);
+  }, [ServerBankData, business_id]);
+  const BankData =
+    ServerBankData ?? (BankError ? readSnapshot("banks", business_id) : undefined);
 
   // console.log("businessData", BusinessData);
   console.log("BankError---5", BankError?.data?.error);
@@ -84,8 +95,19 @@ export const useCheckoutHook = ({
       staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
-  const { data: AttendantsData, isLoading: AttendantsLoading } =
-    useFetchAttendants(business_id);
+  const {
+    data: ServerAttendantsData,
+    isLoading: AttendantsLoading,
+    error: AttendantsError,
+  } = useFetchAttendants(business_id);
+  useEffect(() => {
+    if (ServerAttendantsData) {
+      saveSnapshot("attendants", business_id, ServerAttendantsData);
+    }
+  }, [ServerAttendantsData, business_id]);
+  const AttendantsData =
+    ServerAttendantsData ??
+    (AttendantsError ? readSnapshot("attendants", business_id) : undefined);
 
   const {
     mutate: createSale,
