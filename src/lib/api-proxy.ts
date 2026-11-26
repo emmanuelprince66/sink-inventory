@@ -17,7 +17,7 @@ import { NextResponse } from "next/server";
  */
 
 interface ProxyOptions {
-  /** Upstream path after BaseUrl, e.g. "expenses/settings/<id>/". */
+  /** Upstream path after BaseUrl, e.g "expenses/settings/<id>/". */
   path: string;
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   /** Parsed JSON body for writes. Omitted on GET. */
