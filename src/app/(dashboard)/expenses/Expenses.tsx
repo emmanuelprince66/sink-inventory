@@ -533,7 +533,7 @@ const Expenses = () => {
         isOpen={addExpensesModal}
         onClose={closeAddExpensesModal}
         trigger={false}
-        title="Add New Expense"
+        title="Add Expense"
       >
         <AddExpenses
           handleOpenNotSubscribeModal={handleOpenNotSubscribeModal}

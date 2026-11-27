@@ -28,7 +28,10 @@ import { cn } from "@/lib/utils";
 import { PopoverContent } from "@radix-ui/react-popover";
 import { CalendarIcon, Plus, X } from "lucide-react";
 import { useFieldArray, useWatch } from "react-hook-form";
-import { EntryTypePicker } from "@/components/app/EntryType";
+import { ExpenseKindChooser, type ExpenseKind } from "@/components/app/EntryType";
+import { useExpensePermissions } from "@/hooks/useExpensePermissions";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { formatToNaira } from "@/utils/formatMoney";
 const AddExpenses = ({
   closeModal,
@@ -44,6 +47,19 @@ const AddExpenses = ({
     CategoriesData,
     CategoriesDataLoading,
   } = useExpensesHook({ closeModal, handleOpenNotSubscribeModal });
+  const router = useRouter();
+  const { canTransfer } = useExpensePermissions();
+  // Step one picks what this is; only a manual expense or purchase continues to the form here.
+  const [kind, setKind] = useState<ExpenseKind | null>(null);
+  const pick = (next: ExpenseKind) => {
+    if (next === "WALLET_TRANSFER") {
+      closeModal();
+      router.push("/expenses/transfer");
+      return;
+    }
+    form.setValue("entry_type", next);
+    setKind(next);
+  };
   const lines = useFieldArray({ control: form.control, name: "items" });
   const entryType = useWatch({ control: form.control, name: "entry_type" });
   const items = useWatch({ control: form.control, name: "items" });
@@ -56,16 +72,38 @@ const AddExpenses = ({
     <>
       <div className="flex h-full w-full items-center justify-center">
         <div className="w-full max-w-xl bg-white p-4 rounded shadow-md">
+          {!kind ? (
+            <ExpenseKindChooser
+              onPick={pick}
+              transferBlockedReason={
+                canTransfer
+                  ? undefined
+                  : "You don't have permission to move money. Ask the business owner."
+              }
+            />
+          ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <EntryTypePicker
-                value={entryType}
-                onChange={(value) =>
-                  form.setValue("entry_type", value, {
-                    shouldValidate: form.formState.isSubmitted,
-                  })
-                }
-              />
+              {/* Which manual entry this is, and the way back to the three choices. */}
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-grey-6 px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-extrabold text-grey-1">
+                    {kind === "PURCHASE" ? "Log Purchase" : "Log Expense"}
+                  </p>
+                  <p className="text-xs text-grey-3">
+                    {kind === "PURCHASE"
+                      ? "Spent to buy goods to sell. Recorded only: no money moves."
+                      : "Spent to run the business. Recorded only: no money moves."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setKind(null)}
+                  className="shrink-0 text-xs font-bold text-primary-green-300 hover:underline cursor-pointer"
+                >
+                  Change
+                </button>
+              </div>
 
               {lines.fields.map((line, index) => (
                 <div
@@ -273,6 +311,7 @@ const AddExpenses = ({
               </Button>
             </form>
           </Form>
+          )}
         </div>
       </div>
     </>

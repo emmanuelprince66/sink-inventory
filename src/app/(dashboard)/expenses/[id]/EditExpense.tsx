@@ -78,6 +78,12 @@ const EditExpense = () => {
                       shouldValidate: form.formState.isSubmitted,
                     })
                   }
+                  // Manual entries are expenses or purchases; Transfer stays only for older entries already marked so.
+                  only={
+                    ExpenseData?.data?.entry_type === "TRANSFER"
+                      ? ["EXPENSE", "PURCHASE", "TRANSFER"]
+                      : ["EXPENSE", "PURCHASE"]
+                  }
                 />
                 {/* Bank Name */}
                 <FormField

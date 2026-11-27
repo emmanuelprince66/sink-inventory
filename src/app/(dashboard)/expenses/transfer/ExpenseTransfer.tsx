@@ -12,7 +12,7 @@ import {
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
 import { routeForAmount, type EntryType } from "@/types/expense-governance";
-import { EntryTypePicker } from "@/components/app/EntryType";
+import { TransferPurposeRadio } from "@/components/app/EntryType";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,8 @@ const ExpenseTransfer = () => {
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
   // What the money is, and — for an expense or purchase — whether one bank
   // transfer is split across several categories (one fee, one entry each).
-  const [entryType, setEntryType] = useState<EntryType>("EXPENSE");
+  // Asked first ("What is this transfer for?"); the form shows once it is answered.
+  const [entryType, setEntryType] = useState<EntryType | null>(null);
   const [split, setSplit] = useState(false);
   const [splitLines, setSplitLines] = useState<SplitLine[]>([]);
   const splitting = split && entryType !== "TRANSFER";
@@ -248,7 +249,7 @@ const ExpenseTransfer = () => {
           accountName: beneficiaryInfo?.data?.name || accountName,
           amount: payAmount,
           narration,
-          entryType,
+          entryType: entryType ?? "EXPENSE",
           categoryId:
             !splitting && (category as any)?.value
               ? String((category as any).value)
@@ -275,7 +276,7 @@ const ExpenseTransfer = () => {
           setAccountName("");
           setAmount("");
           setNarration("");
-          setEntryType("EXPENSE");
+          setEntryType(null);
           stopSplit();
         }}
       />
@@ -355,7 +356,31 @@ const ExpenseTransfer = () => {
                 </p>
               </div>
 
+              {!entryType ? (
+                <div className="space-y-5">
+                  <TransferPurposeRadio value={entryType} onChange={setEntryType} />
+                  <p className="text-xs text-grey-3">
+                    Then fill in who you’re paying. It may need your PIN and an approver before the money moves.
+                  </p>
+                </div>
+              ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* The answer to "What is this transfer for?", and the way back to change it. */}
+                <div className="flex items-center justify-between gap-3 rounded-xl bg-primary-green-500 px-3 py-2.5">
+                  <p className="min-w-0 text-sm text-grey-2">
+                    For: <b className="text-grey-1">{entryType === "PURCHASE" ? "Purchase" : "Expense"}</b>
+                    <span className="text-grey-3">
+                      {entryType === "PURCHASE" ? " · goods to sell" : " · running the business"}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setEntryType(null)}
+                    className="shrink-0 text-xs font-bold text-primary-green-300 hover:underline cursor-pointer"
+                  >
+                    Change
+                  </button>
+                </div>
                 {/* Always shown, even with a single account: this is the one
                     field on the form that decides whose money moves, and a
                     merchant should see it stated rather than inferred. */}
@@ -429,7 +454,6 @@ const ExpenseTransfer = () => {
                   />
                 </div>
 
-                <EntryTypePicker value={entryType} onChange={setEntryType} />
 
                 {!splitting && (
                   <div className="space-y-2">
@@ -629,6 +653,7 @@ const ExpenseTransfer = () => {
                   Transfer Now
                 </Button>
               </form>
+              )}
             </div>
           </div>
         )}
