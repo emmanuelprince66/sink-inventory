@@ -1,8 +1,9 @@
 // components/DateRangePicker.tsx
 "use client";
 
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { endOfToday, format, startOfToday } from "date-fns";
+import { CalendarIcon, Lock } from "lucide-react";
+import { useEffect } from "react";
 import { DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,19 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useUserStore } from "@/lib/store/user-store";
 import { cn } from "@/lib/utils";
+
+/** Roles that may only look at today's figures. */
+const TODAY_ONLY_ROLES = new Set(["ATTENDANT"]);
+
+const isTodayOnly = (date: DateRange | undefined) => {
+  const today = new Date().toDateString();
+  return (
+    date?.from?.toDateString() === today &&
+    (!date.to || date.to.toDateString() === today)
+  );
+};
 
 interface DatePickerWithRangeProps {
   className?: string;
@@ -29,6 +42,40 @@ export function DatePickerWithRange({
   onDateChange,
   singleDay = false,
 }: DatePickerWithRangeProps) {
+  // Attendants see today only, on every screen this filter appears: the range
+  // is pinned to today and the picker can't be opened.
+  const role = useUserStore((state) => state.user?.role);
+  const lockedToToday = TODAY_ONLY_ROLES.has(role ?? "");
+
+  useEffect(() => {
+    if (lockedToToday && !isTodayOnly(date)) {
+      onDateChange({ from: startOfToday(), to: endOfToday() });
+    }
+    // onDateChange is often an inline function; re-running on it would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedToToday, date]);
+
+  if (lockedToToday) {
+    return (
+      <div className={cn("grid gap-2", className)}>
+        <Button
+          id="date"
+          type="button"
+          variant="outline"
+          disabled
+          title="Attendants can only view today's records"
+          className={cn(
+            "w-full justify-start text-left font-normal bg-white border-grey-5 disabled:opacity-100 disabled:cursor-not-allowed",
+            triggerClassName,
+          )}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-grey-4" />
+          <span className="truncate">Today · {format(new Date(), "MMM d")}</span>
+          <Lock className="ml-auto h-3.5 w-3.5 shrink-0 text-grey-4" />
+        </Button>
+      </div>
+    );
+  }
   const currentYear = new Date().getFullYear();
   const formatCompact = (d: Date) =>
     format(d, d.getFullYear() === currentYear ? "MMM d" : "MMM d, yy");
