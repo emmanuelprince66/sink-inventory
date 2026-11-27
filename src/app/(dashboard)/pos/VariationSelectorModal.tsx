@@ -7,6 +7,7 @@ import {
   maxSellableQuantity,
   withQueuedStock,
 } from "@/utils/stock";
+import { isFlatLegacyDiscount } from "@/utils/discountTiers";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
   DiscountThreshold,
@@ -213,7 +214,13 @@ const VariationSelectorModal: React.FC<VariationSelectorModalProps> = ({
                   variation.discount &&
                   variation.discount_threshold && (
                   <p className="text-xs text-blue-600 mb-2">
-                    {variation.discount}% off on {variation.discount_threshold}+
+                    {isFlatLegacyDiscount(
+                      Number(variation.discount),
+                      (variation as any).discount_type,
+                    )
+                      ? `${formatToNaira(Number(variation.discount))} off`
+                      : `${variation.discount}% off`}{" "}
+                    on {variation.discount_threshold}+
                     items
                   </p>
                 )}

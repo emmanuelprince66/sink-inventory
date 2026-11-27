@@ -179,6 +179,7 @@ export const getLineDiscount = (item: CartItem): LineDiscountResult | null => {
     item.discount_thresholds ?? [],
     Number(item.discount) || 0,
     Number(item.discount_threshold) || 0,
+    item.discount_type,
   );
 };
 

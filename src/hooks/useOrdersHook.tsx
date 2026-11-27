@@ -297,6 +297,7 @@ export const useOrdersHook = ({
       targetProduct.discount_thresholds ?? [],
       Number(targetProduct.discount) || 0,
       Number(targetProduct.discount_threshold) || 0,
+      targetProduct.discount_type,
     );
   };
 

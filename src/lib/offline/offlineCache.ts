@@ -17,6 +17,12 @@ interface CacheRow {
   business_id: string;
   id: string;
   data: any;
+  /**
+   * Where the server listed it. Rows are keyed by id, and ids are random, so
+   * without this the offline grid came back shuffled — a product the cashier
+   * knew was third turned up fiftieth.
+   */
+  position?: number;
 }
 
 const DB_NAME = "sync360-pos-cache";
@@ -68,7 +74,12 @@ const rangeFor = (businessId: string) =>
 const toRows = (businessId: string, items: any[]): CacheRow[] =>
   items
     .filter((item) => item?.id != null)
-    .map((item) => ({ business_id: businessId, id: String(item.id), data: item }));
+    .map((item, position) => ({
+      business_id: businessId,
+      id: String(item.id),
+      data: item,
+      position,
+    }));
 
 const write = async (
   kind: OfflineCacheKind,
@@ -118,7 +129,19 @@ export const mergeCached = async (
 ) => {
   if (!items.length) return;
   await write(kind, (store) => {
-    toRows(businessId, items).forEach((row) => store.put(row));
+    toRows(businessId, items).forEach((row) => {
+      // A page of the grid only refreshes the item, not where it sits in the
+      // full list; one that's new goes after the rest until the next full
+      // download places it.
+      const existing = store.get([row.business_id, row.id]);
+      existing.onsuccess = () => {
+        const saved = existing.result as CacheRow | undefined;
+        store.put({
+          ...row,
+          position: saved?.position ?? Number.MAX_SAFE_INTEGER,
+        });
+      };
+    });
   });
 };
 
@@ -193,7 +216,17 @@ export const readCached = async <T = any>(
       .objectStore(kind)
       .getAll(rangeFor(businessId));
     request.onsuccess = () =>
-      resolve((request.result as CacheRow[]).map((row) => row.data));
+      resolve(
+        (request.result as CacheRow[])
+          // Server order; lists saved before positions existed keep theirs
+          // until the next download.
+          .sort(
+            (a, b) =>
+              (a.position ?? Number.MAX_SAFE_INTEGER) -
+              (b.position ?? Number.MAX_SAFE_INTEGER),
+          )
+          .map((row) => row.data),
+      );
     request.onerror = () => reject(request.error);
   });
 };

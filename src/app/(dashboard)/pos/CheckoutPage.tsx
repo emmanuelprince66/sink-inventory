@@ -18,7 +18,7 @@ import {
   useActiveCartState,
   useCartStore,
 } from "@/lib/store/cart-store";
-import { describeDiscount } from "@/utils/discountTiers";
+import { describeDiscount, isFlatLegacyDiscount } from "@/utils/discountTiers";
 import { useUserRole } from "@/lib/store/user-store";
 import { formatToNaira } from "@/utils/formatMoney";
 import {
@@ -753,8 +753,13 @@ const CheckoutPage: React.FC<CheckoutPageProps> = ({
                               item.discount_threshold &&
                               !discountInfo && (
                                 <p className="text-[10px] text-info-1 mt-0.5">
-                                  {item.discount}% off from{" "}
-                                  {item.discount_threshold} units
+                                  {isFlatLegacyDiscount(
+                                    Number(item.discount),
+                                    (item as any).discount_type,
+                                  )
+                                    ? `${formatToNaira(Number(item.discount))} off`
+                                    : `${item.discount}% off`}{" "}
+                                  from {item.discount_threshold} units
                                 </p>
                               )}
                             {discountInfo && (

@@ -47,12 +47,30 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 export const sortTiers = (tiers: DiscountThreshold[] = []) =>
   [...tiers].sort((a, b) => Number(a.min_quantity) - Number(b.min_quantity));
 
+/**
+ * Whether an older single discount (product.discount, no tiers) is naira off
+ * rather than a percentage. The API now sends `discount_type` with it:
+ * "PRICE" is ₦ off even at 100 or less (₦80 off used to show as 80%);
+ * "PERCENTAGE" is % off, except over 100, which can't be a percentage. Only
+ * a payload without the field falls back to guessing by size.
+ */
+export const isFlatLegacyDiscount = (
+  value: number,
+  discountType?: string | null,
+): boolean => {
+  const type = String(discountType ?? "").toUpperCase();
+  if (type === "PRICE" || type === "FIXED_AMOUNT") return true;
+  return Number(value) > 100;
+};
+
 export function calculateProductDiscount(
   sellingPrice: number,
   quantity: number,
   thresholds: DiscountThreshold[] = [],
   fallbackDiscount: number = 0,
   fallbackThreshold: number = 0,
+  /** The product's (or variation's) `discount_type` for fallbackDiscount. */
+  fallbackDiscountType?: string | null,
 ): LineDiscountResult {
   const price = Number(sellingPrice) || 0;
   const gross = price * quantity;
@@ -94,9 +112,7 @@ export function calculateProductDiscount(
     fallbackThreshold > 0 &&
     quantity >= fallbackThreshold
   ) {
-    // Over 100 can't be a percentage: older values were saved as naira off.
-    unitDiscount =
-      Number(fallbackDiscount) > 100
+    unitDiscount = isFlatLegacyDiscount(fallbackDiscount, fallbackDiscountType)
         ? Math.min(Number(fallbackDiscount), price)
         : round2(price * (Number(fallbackDiscount) / 100));
   }
@@ -207,7 +223,8 @@ export const tierRowsToPayload = (
 
 /**
  * Editor rows for a product or variation: its tiers, or an older single
- * discount shown as tier 1. Over 100 can't be a percentage, so that's ₦ off.
+ * discount shown as tier 1, typed by its `discount_type` (see
+ * isFlatLegacyDiscount).
  */
 export const tierRowsFromItem = (item: any): DiscountTierFormRow[] => {
   if (item?.discount_thresholds?.length) {
@@ -220,7 +237,9 @@ export const tierRowsFromItem = (item: any): DiscountTierFormRow[] => {
     {
       min_quantity: String(Math.ceil(threshold)),
       max_quantity: "",
-      discount_type: value > 100 ? "FIXED_AMOUNT" : "PERCENTAGE",
+      discount_type: isFlatLegacyDiscount(value, item?.discount_type)
+        ? "FIXED_AMOUNT"
+        : "PERCENTAGE",
       discount_value: String(value),
     },
   ];

@@ -11,6 +11,8 @@ export interface Variation {
   cost_price?: number;
   discount?: number;
   discount_threshold?: number;
+  /** How `discount` is meant: "PRICE" is ₦ off, "PERCENTAGE" is % off. */
+  discount_type?: string | null;
   /** Volume tiers. When set, they replace discount/discount_threshold. */
   discount_thresholds?: DiscountThreshold[];
   expiry_date?: string;
@@ -33,6 +35,7 @@ export interface Product {
   unit?: string;
   discount?: number;
   discount_threshold?: number;
+  discount_type?: string | null;
   /** Volume tiers. When set, they replace discount/discount_threshold. */
   discount_thresholds?: DiscountThreshold[];
   cost_price?: number;
@@ -56,6 +59,7 @@ export interface CartItem {
   category?: string;
   discount?: number;
   discount_threshold?: number;
+  discount_type?: string | null;
   /** Volume tiers. When set, they replace discount/discount_threshold. */
   discount_thresholds?: DiscountThreshold[];
   // Variation-specific fields
