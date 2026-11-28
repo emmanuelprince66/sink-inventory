@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   expenseAccountLabel,
   useExpenseAccounts,
 } from "@/hooks/useExpenseAccounts";
@@ -17,14 +23,24 @@ import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useTransactionsHook } from "@/hooks/useTransactionsHook";
 import { cn } from "@/lib/utils";
 import { formatToNaira } from "@/utils/formatMoney";
-import { ArrowLeft, Lock, Plus, Split, Wallet, X } from "lucide-react";
+import { ArrowLeft, Lock, Plus, Wallet, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ConfirmExpenseTransfer from "./ConfirmExpenseTransfer";
 
-/** One category's share of a split payout. */
-type SplitLine = { category: SelectValue; name: string; amount: string };
-const blankLine = (): SplitLine => ({ category: null, name: "", amount: "" });
+/** One expense included in a payout. */
+type SplitLine = {
+  id: string;
+  category: SelectValue;
+  name: string;
+  amount: string;
+};
+const blankLine = (id: string): SplitLine => ({
+  id,
+  category: null,
+  name: "",
+  amount: "",
+});
 
 /**
  * Spending out of an expense account.
@@ -54,12 +70,14 @@ const ExpenseTransfer = () => {
   const [message, setMessage] = useState("");
   const [bankOptions, setBankOptions] = useState<SelectOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
-  // What the money is, and — for an expense or purchase — whether one bank
-  // transfer is split across several categories (one fee, one entry each).
+  // What the money is, and — for an expense or purchase — whether the payout
+  // includes multiple expense items (one fee, one entry per item).
   // Asked first ("What is this transfer for?"); the form shows once it is answered.
   const [entryType, setEntryType] = useState<EntryType | null>(null);
   const [split, setSplit] = useState(false);
   const [splitLines, setSplitLines] = useState<SplitLine[]>([]);
+  const [openSplitItems, setOpenSplitItems] = useState<string[]>([]);
+  const nextSplitLineId = useRef(0);
   const splitting = split && entryType !== "TRANSFER";
   const splitTotal = splitLines.reduce(
     (sum, line) => sum + (Number(line.amount) || 0),
@@ -76,13 +94,28 @@ const ExpenseTransfer = () => {
       lines.map((line, i) => (i === index ? { ...line, ...change } : line)),
     );
   const startSplit = () => {
-    // What's already typed becomes the first line.
-    setSplitLines([{ category, name: "", amount }, blankLine()]);
+    // Keep the amount and category already entered as the first expense.
+    const firstLine = {
+      ...blankLine(String(nextSplitLineId.current++)),
+      category,
+      amount,
+    };
+    const secondLine = blankLine(String(nextSplitLineId.current++));
+    setSplitLines([firstLine, secondLine]);
+    setOpenSplitItems([firstLine.id]);
     setSplit(true);
   };
   const stopSplit = () => {
+    setCategory(splitLines[0]?.category ?? null);
+    setAmount(splitTotal > 0 ? String(splitTotal) : "");
     setSplit(false);
     setSplitLines([]);
+    setOpenSplitItems([]);
+  };
+  const addExpenseItem = () => {
+    const line = blankLine(String(nextSplitLineId.current++));
+    setSplitLines((lines) => [...lines, line]);
+    setOpenSplitItems([line.id]);
   };
 
   // The balance comes from here rather than from the transfer hook's own
@@ -157,7 +190,11 @@ const ExpenseTransfer = () => {
         (line) => !(line.category as any)?.value || !(Number(line.amount) > 0),
       );
       if (incomplete) {
-        setMessage("Give every split line a category and an amount.");
+        setMessage(
+          entryType === "PURCHASE"
+            ? "Give every purchase item a category and an amount."
+            : "Give every expense item a category and an amount.",
+        );
         return;
       }
     }
@@ -277,7 +314,9 @@ const ExpenseTransfer = () => {
           setAmount("");
           setNarration("");
           setEntryType(null);
-          stopSplit();
+          setSplit(false);
+          setSplitLines([]);
+          setOpenSplitItems([]);
         }}
       />
     );
@@ -475,8 +514,8 @@ const ExpenseTransfer = () => {
                         onClick={startSplit}
                         className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-green-300 hover:underline cursor-pointer"
                       >
-                        <Split className="h-3.5 w-3.5" />
-                        Split across categories
+                        <Plus className="h-3.5 w-3.5" />
+                        Split into multiple {entryType === "PURCHASE" ? "purchases" : "expenses"}
                       </button>
                     )}
                   </div>
@@ -503,89 +542,121 @@ const ExpenseTransfer = () => {
                 </div>
 
                 {/* One bank transfer, one fee for the total, one entry per
-                    line under its own category. */}
+                    expense item under its own category. */}
                 {splitting && (
                   <div className="space-y-3 rounded-xl border border-grey-5 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-bold text-grey-1">
-                        Split across categories
+                        {entryType === "PURCHASE" ? "Purchase breakdown" : "Expense breakdown"}
                       </p>
                       <button
                         type="button"
                         onClick={stopSplit}
                         className="text-xs font-bold text-grey-3 hover:text-grey-1 cursor-pointer"
                       >
-                        Use one category
+                        Use a single {entryType === "PURCHASE" ? "purchase" : "expense"}
                       </button>
                     </div>
-                    {splitLines.map((line, index) => (
-                      <div
-                        key={index}
-                        className="space-y-3 border-t border-grey-5 pt-3 first:border-0 first:pt-0"
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-bold uppercase tracking-wide text-grey-3">
-                            Line {index + 1}
-                          </p>
-                          {splitLines.length > 2 && (
-                            <button
-                              type="button"
-                              aria-label={`Remove line ${index + 1}`}
-                              onClick={() =>
-                                setSplitLines((lines) =>
-                                  lines.filter((_, i) => i !== index),
-                                )
+                    <Accordion
+                      type="multiple"
+                      value={openSplitItems}
+                      onValueChange={setOpenSplitItems}
+                      className="space-y-2"
+                    >
+                      {splitLines.map((line, index) => (
+                        <AccordionItem
+                          key={line.id}
+                          value={line.id}
+                          className="rounded-xl border border-grey-5 px-3"
+                        >
+                          <div className="flex items-center gap-2">
+                            <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
+                              <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                                <span className="flex min-w-0 flex-col">
+                                  <span className="truncate font-bold text-grey-1">
+                                    {line.name.trim() ||
+                                      `${entryType === "PURCHASE" ? "Purchase" : "Expense"} ${index + 1}`}
+                                  </span>
+                                  {(line.category as any)?.label && (
+                                    <span className="truncate text-xs font-normal text-grey-3">
+                                      {(line.category as any).label}
+                                    </span>
+                                  )}
+                                </span>
+                                {Number(line.amount) > 0 && (
+                                  <span className="shrink-0 text-xs font-semibold text-grey-3">
+                                    {formatToNaira(Number(line.amount))}
+                                  </span>
+                                )}
+                              </span>
+                            </AccordionTrigger>
+                            {splitLines.length > 1 && (
+                              <button
+                                type="button"
+                                aria-label={`Remove ${entryType === "PURCHASE" ? "purchase" : "expense"} ${index + 1}`}
+                                onClick={() => {
+                                  setSplitLines((lines) =>
+                                    lines.filter((item) => item.id !== line.id),
+                                  );
+                                  setOpenSplitItems((open) =>
+                                    open.filter((id) => id !== line.id),
+                                  );
+                                }}
+                                className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <AccordionContent className="space-y-3">
+                            <CustomSelect
+                              label={entryType === "PURCHASE" ? "Purchase category" : "Expense category"}
+                              options={categoryOptions}
+                              value={line.category}
+                              onChange={(value) =>
+                                updateLine(index, { category: value })
                               }
-                              className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                        <CustomSelect
-                          label="Category"
-                          options={categoryOptions}
-                          value={line.category}
-                          onChange={(value) =>
-                            updateLine(index, { category: value })
-                          }
-                          isLoading={CategoriesDataLoading}
-                          placeholder="Select a category..."
-                        />
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <Input
-                            type="text"
-                            aria-label={`Line ${index + 1} description`}
-                            placeholder="Description (optional), e.g. Flour"
-                            value={line.name}
-                            onChange={(e) =>
-                              updateLine(index, { name: e.target.value })
-                            }
-                          />
-                          <Input
-                            type="number"
-                            aria-label={`Line ${index + 1} amount`}
-                            placeholder="Amount (NGN)"
-                            value={line.amount}
-                            onChange={(e) =>
-                              updateLine(index, { amount: e.target.value })
-                            }
-                            min="0.01"
-                            step="0.01"
-                          />
-                        </div>
-                      </div>
-                    ))}
+                              isLoading={CategoriesDataLoading}
+                              placeholder="Select a category..."
+                            />
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <Input
+                                type="text"
+                                aria-label={`${entryType === "PURCHASE" ? "Purchase" : "Expense"} ${index + 1} description`}
+                                placeholder={
+                                  entryType === "PURCHASE"
+                                    ? "What did you purchase?"
+                                    : "What was the expense for?"
+                                }
+                                value={line.name}
+                                onChange={(e) =>
+                                  updateLine(index, { name: e.target.value })
+                                }
+                              />
+                              <Input
+                                type="number"
+                                aria-label={`${entryType === "PURCHASE" ? "Purchase" : "Expense"} ${index + 1} amount`}
+                                placeholder="Amount (NGN)"
+                                value={line.amount}
+                                onChange={(e) =>
+                                  updateLine(index, { amount: e.target.value })
+                                }
+                                min="0.01"
+                                step="0.01"
+                              />
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                     <div className="flex items-center justify-between gap-3 border-t border-grey-5 pt-3">
                       <button
                         type="button"
-                        onClick={() =>
-                          setSplitLines((lines) => [...lines, blankLine()])
-                        }
+                        onClick={addExpenseItem}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary-green-300/60 px-3 py-2 text-xs font-bold text-primary-green-300 hover:bg-secondary-6 cursor-pointer"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        Add line
+                        Add {entryType === "PURCHASE" ? "purchase" : "expense"}
                       </button>
                       <p className="text-sm font-extrabold text-grey-1">
                         Total {formatToNaira(splitTotal)}

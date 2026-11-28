@@ -3,6 +3,12 @@
 import { Spinner } from "@/components/app/Spinner";
 import { Button } from "@/components/ui/button";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Form,
   FormControl,
   FormField,
@@ -31,7 +37,7 @@ import { useFieldArray, useWatch } from "react-hook-form";
 import { ExpenseKindChooser, type ExpenseKind } from "@/components/app/EntryType";
 import { useExpensePermissions } from "@/hooks/useExpensePermissions";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatToNaira } from "@/utils/formatMoney";
 const AddExpenses = ({
   closeModal,
@@ -64,6 +70,21 @@ const AddExpenses = ({
   const entryType = useWatch({ control: form.control, name: "entry_type" });
   const items = useWatch({ control: form.control, name: "items" });
   const several = lines.fields.length > 1;
+  const [openItems, setOpenItems] = useState<string[]>([]);
+  const previousItemIds = useRef<string[]>([]);
+  useEffect(() => {
+    const itemIds = lines.fields.map((line) => line.id);
+    const addedItemIds = itemIds.filter(
+      (id) => !previousItemIds.current.includes(id),
+    );
+    if (previousItemIds.current.length === 0 && itemIds.length > 0) {
+      setOpenItems([itemIds[0]]);
+    } else if (addedItemIds.length > 0) {
+      setOpenItems(addedItemIds);
+    }
+    setOpenItems((open) => open.filter((id) => itemIds.includes(id)));
+    previousItemIds.current = itemIds;
+  }, [lines.fields]);
   const total = (items ?? []).reduce(
     (sum, line) => sum + (Number(line?.amount) || 0),
     0,
@@ -105,106 +126,140 @@ const AddExpenses = ({
                 </button>
               </div>
 
-              {lines.fields.map((line, index) => (
-                <div
-                  key={line.id}
-                  className={cn(
-                    "space-y-4",
-                    several && "rounded-xl border border-grey-5 p-3",
-                  )}
-                >
-                  {several && (
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold uppercase tracking-wide text-grey-3">
-                        Item {index + 1}
-                      </p>
-                      <button
-                        type="button"
-                        aria-label={`Remove item ${index + 1}`}
-                        onClick={() => lines.remove(index)}
-                        className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
+              <Accordion
+                type="multiple"
+                value={openItems}
+                onValueChange={setOpenItems}
+                className="space-y-3"
+              >
+                {lines.fields.map((line, index) => {
+                  const name = items?.[index]?.name?.trim();
+                  const amount = Number(items?.[index]?.amount) || 0;
+                  const categoryName = CategoriesData?.data?.find(
+                    (category: any) =>
+                      category.id === items?.[index]?.category_id,
+                  )?.name;
+                  return (
+                    <AccordionItem
+                      key={line.id}
+                      value={line.id}
+                      className="rounded-xl border border-grey-5 px-3"
+                    >
+                      <div className="flex items-center gap-2">
+                        <AccordionTrigger className="min-w-0 py-3 hover:no-underline">
+                          <span className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                            <span className="flex min-w-0 flex-col">
+                              <span className="truncate font-bold text-grey-1">
+                                {name || `Item ${index + 1}`}
+                              </span>
+                              {categoryName && (
+                                <span className="truncate text-xs font-normal text-grey-3">
+                                  {categoryName}
+                                </span>
+                              )}
+                            </span>
+                            {amount > 0 && (
+                              <span className="shrink-0 text-xs font-semibold text-grey-3">
+                                {formatToNaira(amount)}
+                              </span>
+                            )}
+                          </span>
+                        </AccordionTrigger>
+                        {several && (
+                          <button
+                            type="button"
+                            aria-label={`Remove item ${index + 1}`}
+                            onClick={() => lines.remove(index)}
+                            className="rounded-md p-1 text-grey-3 hover:bg-error-2 hover:text-error-1 cursor-pointer"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <AccordionContent className="space-y-4">
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.name`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {entryType === "PURCHASE"
+                                  ? "Item or supplier"
+                                  : "Name"}
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder={
+                                    entryType === "PURCHASE"
+                                      ? "e.g. Flour, 20 bags"
+                                      : "Enter expense name"
+                                  }
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.name`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {entryType === "PURCHASE" ? "Item or supplier" : "Name"}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={
-                              entryType === "PURCHASE"
-                                ? "e.g. Flour, 20 bags"
-                                : "Enter expense name"
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.amount`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Amount</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter amount" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.amount`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter amount" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name={`items.${index}.category_id`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1 w-full bg-white">
-                        <FormLabel>
-                          {entryType === "TRANSFER"
-                            ? "Category (Optional)"
-                            : "Category"}
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full border border-green-300">
-                              <SelectValue placeholder="Select a category" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white cursor-pointer border border-green-100">
-                            {!CategoriesDataLoading
-                              ? CategoriesData?.data?.map((category: any) => (
-                                  <SelectItem
-                                    key={category.id}
-                                    value={category.id}
-                                    className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
-                                  >
-                                    {category.name}
-                                  </SelectItem>
-                                ))
-                              : "Loading..."}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              ))}
+                        <FormField
+                          control={form.control}
+                          name={`items.${index}.category_id`}
+                          render={({ field }) => (
+                            <FormItem className="flex-1 w-full bg-white">
+                              <FormLabel>
+                                {entryType === "TRANSFER"
+                                  ? "Category (Optional)"
+                                  : "Category"}
+                              </FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-full border border-green-300">
+                                    <SelectValue placeholder="Select a category" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-white cursor-pointer border border-green-100">
+                                  {!CategoriesDataLoading
+                                    ? CategoriesData?.data?.map(
+                                        (category: any) => (
+                                          <SelectItem
+                                            key={category.id}
+                                            value={category.id}
+                                            className="hover:bg-primary-green-300 hover:text-white cursor-pointer"
+                                          >
+                                            {category.name}
+                                          </SelectItem>
+                                        ),
+                                      )
+                                    : "Loading..."}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
 
               {/* Several items at once, e.g. fuel and data on the same day.
                   Each becomes its own entry under its own category. */}
@@ -217,7 +272,7 @@ const AddExpenses = ({
                   className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-primary-green-300/60 px-3 py-2 text-xs font-bold text-primary-green-300 hover:bg-secondary-6 cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Add another item
+                  Add another {entryType === "PURCHASE" ? "purchase" : "expense"}
                 </button>
                 {several && (
                   <p className="text-sm font-bold text-grey-1">

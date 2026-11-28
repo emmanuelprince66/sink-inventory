@@ -221,13 +221,10 @@ const Expenses = () => {
   const [createExpenseAccountOpen, setCreateExpenseAccountOpen] =
     useState(false);
   const [addExpensesModal, setAddExpensesModal] = useState(false);
-  // Today-only made every card on this page (and the category grid) look
-  // nearly empty by default, and disagree with drill-down pages like
-  // CategoryDetail that default to a 6-month window for the same category
-  // — same data, wildly different numbers, purely from the date filter.
-  // Match that convention here so the overview is consistent by default.
+  // Open on the current day's record by default. The picker remains available
+  // so the owner or staff member can deliberately expand the range.
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: moment().subtract(6, "months").startOf("day").toDate(),
+    from: moment().startOf("day").toDate(),
     to: moment().endOf("day").toDate(),
   });
 

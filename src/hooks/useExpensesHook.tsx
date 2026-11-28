@@ -176,7 +176,7 @@ export const useExpensesHook = ({
     defaultValues: {
       entry_type: "EXPENSE",
       items: [{ name: "", category_id: "", amount: "" }],
-      date: "",
+      date: moment().startOf("day").toISOString(),
       note: "",
     },
     mode: "onChange",

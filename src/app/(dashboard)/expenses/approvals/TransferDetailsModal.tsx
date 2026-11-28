@@ -191,12 +191,12 @@ const TransferDetailsModal = ({
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Type" value={entryTypeLabel(transfer.entry_type)} />
-          {/* A split payout lists each category's share; otherwise its one
+          {/* An itemized payout lists each expense; otherwise its one
               category. */}
           {Array.isArray(transfer.items) && transfer.items.length > 0 ? (
             <Field
               className="sm:col-span-2"
-              label="Split across categories"
+              label="Expenses"
               value={
                 <span className="flex flex-col gap-1">
                   {transfer.items.map((line: any, index: number) => (
