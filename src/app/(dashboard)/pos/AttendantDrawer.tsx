@@ -6,7 +6,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton"; // Make sure to import Skeleton
+import { Skeleton } from "@/components/ui/skeleton"; // Make sto import Skeleton
 import { useCheckoutHook } from "@/hooks/useCheckoutHook";
 
 const AttendantDrawer = ({ open, onOpenChange, onAttendantSelect }: any) => {
